@@ -1,0 +1,158 @@
+@startuml ClassDiagram
+
+' Seguridad
+
+package Seguridad {
+
+    class Usuario {
+        nombre : String
+        apellido : String
+        telefono : int
+        correo : String
+        contrasena : String
+        estado : boolean
+        idioma : idioma
+    }
+
+    class Rol {
+        rol : String
+    }
+
+    class RegistroCambio {
+        accion : String
+        idRol : int
+        fecha : LocalDate
+        descripcion : String
+    }
+
+    Usuario --> Rol
+    Rol --> RegistroCambio
+
+}
+
+' Académico
+
+package Academico {
+
+    class Profesor {
+        identificacion : int
+    }
+
+    class Estudiante {
+        identificacion : int
+    }
+
+    class Curso {
+        curso : String
+    }
+
+    class Salon {
+        salon : String
+    }
+
+    class Horario {
+        idCurso : int
+        idProfesor : int
+        descripcion : String
+        dia : String
+        horaInicio : LocalTime
+    }
+
+    Profesor --> Salon
+    Curso --> Estudiante
+    Horario --> Curso
+    Horario --> Profesor
+
+}
+
+' Asistencia
+
+package Asistencia {
+
+    class RegistroAsistencia {
+        asistencia : boolean
+        hora : LocalTime
+        observacion : String
+    }
+
+    class Justificacion {
+        justificacion : byte
+        aprobacion : boolean
+    }
+
+    RegistroAsistencia --> Justificacion
+
+}
+
+' Alertas
+
+package Alertas {
+
+    class Alerta {
+        alerta : String
+    }
+
+    class AlertaUsuario {
+        estado : boolean
+    }
+
+    Alerta --> AlertaUsuario
+
+}
+
+' Configuración
+
+package Configuracion {
+
+    class ParametrosPersona {
+        rasgos : JSONB
+    }
+
+    class Idioma {
+        idioma : String
+    }
+
+}
+
+' Dispositivos IoT
+
+package IoT {
+
+    class DispositivoIoT {
+        dispositivo : String
+        estado : boolean
+        observacion : String
+    }
+
+}
+
+' Auditoría
+
+package Auditoria {
+
+    class Logs {
+        accion : String
+        tabla : String
+        idRegistroAfectado : String
+        descripcion : String
+        fecha : LocalDate
+    }
+
+}
+
+' Relationships
+
+Usuario --> Estudiante
+Usuario --> Profesor
+Usuario --> ParametrosPersona
+Usuario --> Idioma
+
+Estudiante --> Curso
+
+Usuario --> AlertaUsuario
+
+DispositivoIoT --> Usuario
+
+Logs --> Usuario
+
+@enduml
