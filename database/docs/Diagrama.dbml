@@ -1,0 +1,381 @@
+//
+//    SECURITY
+//
+
+Table Person {
+	id_person int [ pk, unique ]
+	name varchar
+	last_name varchar
+	email varchar [unique]
+	phone varchar
+  status bool
+}
+
+Table Role {
+	id_role int [ pk, unique ]
+	name varchar [unique]
+  description varchar
+}
+
+Table User {
+	id_user int [ pk, unique ]
+  id_person int [unique]
+	username varchar [unique]
+	password varchar
+	status boolean
+	created_at datetime
+	last_login datetime
+}
+
+Table Module {
+  id_module int [pk, unique]
+  name varchar
+  description varchar
+  icon varchar
+  order int
+}
+
+Table View {
+  id_view int [pk, unique]
+  name varchar
+  route varchar
+  title varchar
+  is_public bool
+}
+
+Table Action {
+  id_action int [pk, unique]
+  name varchar
+  description varchar
+  http_method varchar
+  enabled bool
+}
+
+Table User_Role {
+	id_user int
+	id_role int
+	assigned_date datetime
+}
+
+Table Role_Module {
+	id_role int
+	id_module int
+}
+
+Table View_Module {
+	id_view int
+	id_module int
+}
+
+Table View_Action {
+	id_view int
+	id_action int
+}
+
+//    RELATIONS
+
+Ref "." {
+	Person.id_person < User.id_person [ delete: no action, update: no action ]
+}
+
+Ref "." {
+	User.id_user < User_Role.id_user [ delete: no action, update: no action ]
+}
+
+Ref "." {
+	Role.id_role < User_Role.id_role [ delete: no action, update: no action ]
+}
+
+Ref "." {
+	Role.id_role < Role_Module.id_role [ delete: no action, update: no action ]
+}
+
+Ref "." {
+	Module.id_module < Role_Module.id_module [ delete: no action, update: no action ]
+}
+
+Ref "." {
+	View.id_view < View_Module.id_view [ delete: no action, update: no action ]
+}
+
+Ref "." {
+	Module.id_module < View_Module.id_module [ delete: no action, update: no action ]
+}
+
+Ref "." {
+	View.id_view < View_Action.id_view [ delete: no action, update: no action ]
+}
+
+Ref "." {
+	Action.id_action < View_Action.id_action [ delete: no action, update: no action ]
+}
+
+//    END RELATIONS
+
+//
+//    END SECURITY
+//
+
+
+
+// 
+//    ACADEMIC
+//
+
+Table Student {
+	id_student int [ pk, unique ]
+	id_person int
+}
+
+Table Teacher {
+	id_teacher int [ pk, unique ]
+	id_person int
+}
+
+Table Course {
+	id_course int [ pk, unique ]
+	course_name varchar
+	course_code varchar 
+}
+
+Table Classroom {
+	id_classroom int [ pk, unique ]
+	classroom_name varchar
+}
+
+Table Schedule {
+	id_schedule int [ pk, unique ]
+	id_course int
+	id_teacher int
+	id_classroom int
+	day varchar
+	start_time time
+	end_time time
+}
+
+Table Enrollment {
+	id_enrollment int [ pk, unique ]
+	id_student int
+	id_course int
+	enrollment_date datetime
+	status varchar
+}
+
+//    RELATIONS
+
+Ref "." {
+	Student.id_student < Enrollment.id_student [ delete: no action, update: no action ]
+}
+
+Ref "." {
+	Course.id_course < Enrollment.id_course [ delete: no action, update: no action ]
+}
+
+Ref "." {
+	Course.id_course < Schedule.id_course [ delete: no action, update: no action ]
+}
+
+Ref "." {
+	Teacher.id_teacher < Schedule.id_teacher [ delete: no action, update: no action ]
+}
+
+Ref "." {
+	Classroom.id_classroom < Schedule.id_classroom [ delete: no action, update: no action ]
+}
+
+//    END RELATIONS
+
+//
+//    END ACADEMIC
+//
+
+
+
+//
+//    ATTENDANCE
+//
+
+Table Attendance {
+	id_attendance int [ pk, unique ]
+	id_student int
+	id_schedule int
+	date date
+	time time
+	status varchar
+}
+
+Table Justification {
+	id_justification int [ pk, unique ]
+	id_attendance int
+	justification text
+	approval boolean
+}
+
+//    RELATIONS
+
+Ref "." {
+	Attendance.id_attendance < Justification.id_attendance [ delete: no action, update: no action ]
+}
+
+//    END RELATIONS
+
+//
+//    END ATTENDACE
+//
+
+
+
+//
+//    ALERTS
+//
+
+Table Alert {
+	id_alert int [ pk, unique ]
+	message text
+}
+
+Table User_Alert {
+	id_user_alert int [ pk, unique ]
+	id_user int
+	id_alert int
+	status varchar
+}
+
+//    RELATIONS
+
+Ref "." {
+	Alert.id_alert < User_Alert.id_alert [ delete: no action, update: no action ]
+}
+
+//    END RELATIONS
+
+//
+//    END ALERTS
+//
+
+
+
+//
+//    CONFIGURATION
+//
+
+Table Language {
+	id_language int [ pk, unique ]
+	language_name varchar
+}
+
+Table User_Language {
+	id_language int [ pk, unique ]
+	id_user int
+	status bool
+}
+
+Table Person_Parameters {
+	id_parameters int [ pk, unique ]
+	id_person int
+	traits text
+}
+
+//    RELATIONS
+
+
+
+//    END RELATIONS
+
+//
+//    END CONFIGURATION
+//
+
+
+
+//
+//    IOT DEVICES
+//
+
+Table IoT_Device {
+	id_device int [ pk, unique ]
+	device_name varchar
+	status varchar
+	observation text
+}
+
+Table Device_Location {
+	id_location int [ pk, unique ]
+	id_device int
+	id_classroom int
+}
+
+//    RELATIONS
+
+Ref "." {
+	IoT_Device.id_device < Device_Location.id_device [ delete: no action, update: no action ]
+}
+
+//    END RELATIONS
+
+//
+//    END IOT DEVICES
+//
+
+
+
+//
+//    AUDIT
+//
+
+Table Log {
+	id_log int [ pk, unique ]
+	action varchar
+	table_name varchar
+	affected_record int
+	description text
+	date datetime
+} 
+
+//    RELATIONS
+
+
+
+//    END RELATIONS
+
+//
+//    END AUDIT
+//
+
+
+
+Ref "." {
+	Person.id_person < Student.id_person [ delete: no action, update: no action ]
+}
+
+Ref "." {
+	Person.id_person < Teacher.id_person [ delete: no action, update: no action ]
+}
+
+Ref "." {
+	Student.id_student < Attendance.id_student [ delete: no action, update: no action ]
+}
+
+Ref "." {
+	Schedule.id_schedule < Attendance.id_schedule [ delete: no action, update: no action ]
+}
+
+Ref "." {
+	User.id_user < User_Alert.id_user [ delete: no action, update: no action ]
+}
+
+Ref "." {
+	Person.id_person < Person_Parameters.id_person [ delete: no action, update: no action ]
+}
+
+Ref "." {
+	Classroom.id_classroom < Device_Location.id_classroom [ delete: no action, update: no action ]
+}
+
+Ref "." {
+	Language.id_language < User_Language.id_language [ delete: no action, update: no action ]
+}
+
+Ref "." {
+	User.id_user < User_Language.id_user [ delete: no action, update: no action ]
+}
