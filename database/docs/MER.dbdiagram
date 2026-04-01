@@ -1,0 +1,564 @@
+{
+  "version": "1.0.0",
+  "darkMode": true,
+  "gridEnabling": false,
+  "detailLevel": "All",
+  "tablePositions": [
+    {
+      "name": "Person",
+      "schemaName": "public",
+      "x": 534.81494140625,
+      "y": 479
+    },
+    {
+      "name": "Role",
+      "schemaName": "public",
+      "x": 12,
+      "y": 12
+    },
+    {
+      "name": "User",
+      "schemaName": "public",
+      "x": 1064.69482421875,
+      "y": 344
+    },
+    {
+      "name": "Module",
+      "schemaName": "public",
+      "x": 12,
+      "y": 186
+    },
+    {
+      "name": "View",
+      "schemaName": "public",
+      "x": 12,
+      "y": 424
+    },
+    {
+      "name": "Action",
+      "schemaName": "public",
+      "x": 12,
+      "y": 662
+    },
+    {
+      "name": "User_Role",
+      "schemaName": "public",
+      "x": 1560.18603515625,
+      "y": 12
+    },
+    {
+      "name": "Role_Module",
+      "schemaName": "public",
+      "x": 534.81494140625,
+      "y": 53
+    },
+    {
+      "name": "View_Module",
+      "schemaName": "public",
+      "x": 534.81494140625,
+      "y": 195
+    },
+    {
+      "name": "View_Action",
+      "schemaName": "public",
+      "x": 534.81494140625,
+      "y": 337
+    },
+    {
+      "name": "School",
+      "schemaName": "public",
+      "x": 12,
+      "y": 1042
+    },
+    {
+      "name": "Course",
+      "schemaName": "public",
+      "x": 534.81494140625,
+      "y": 846
+    },
+    {
+      "name": "Classroom",
+      "schemaName": "public",
+      "x": 534.81494140625,
+      "y": 1322
+    },
+    {
+      "name": "Schedule",
+      "schemaName": "public",
+      "x": 1064.69482421875,
+      "y": 948
+    },
+    {
+      "name": "Enrollment",
+      "schemaName": "public",
+      "x": 1064.69482421875,
+      "y": 678
+    },
+    {
+      "name": "Period",
+      "schemaName": "public",
+      "x": 534.81494140625,
+      "y": 1052
+    },
+    {
+      "name": "Attendance",
+      "schemaName": "public",
+      "x": 1560.18603515625,
+      "y": 488
+    },
+    {
+      "name": "Justification",
+      "schemaName": "public",
+      "x": 2058.7919921875,
+      "y": 12
+    },
+    {
+      "name": "Language",
+      "schemaName": "public",
+      "x": 12,
+      "y": 900
+    },
+    {
+      "name": "Facial_Embedding",
+      "schemaName": "public",
+      "x": 1064.69482421875,
+      "y": 74
+    },
+    {
+      "name": "IoT_Device",
+      "schemaName": "public",
+      "x": 1064.69482421875,
+      "y": 1282
+    },
+    {
+      "name": "Log",
+      "schemaName": "public",
+      "x": 1560.18603515625,
+      "y": 186
+    }
+  ],
+  "tableGroupCollapseStates": [],
+  "stickyNoteLayouts": [],
+  "referencePaths": [
+    {
+      "firstFieldNames": [
+        "id_person"
+      ],
+      "firstTableName": "Person",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_person"
+      ],
+      "secondTableName": "User",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_user"
+      ],
+      "firstTableName": "User",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_user"
+      ],
+      "secondTableName": "User_Role",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_role"
+      ],
+      "firstTableName": "Role",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_role"
+      ],
+      "secondTableName": "User_Role",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_role"
+      ],
+      "firstTableName": "Role",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_role"
+      ],
+      "secondTableName": "Role_Module",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_module"
+      ],
+      "firstTableName": "Module",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_module"
+      ],
+      "secondTableName": "Role_Module",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_view"
+      ],
+      "firstTableName": "View",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_view"
+      ],
+      "secondTableName": "View_Module",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_module"
+      ],
+      "firstTableName": "Module",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_module"
+      ],
+      "secondTableName": "View_Module",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_view"
+      ],
+      "firstTableName": "View",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_view"
+      ],
+      "secondTableName": "View_Action",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_action"
+      ],
+      "firstTableName": "Action",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_action"
+      ],
+      "secondTableName": "View_Action",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_period"
+      ],
+      "firstTableName": "Period",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_period"
+      ],
+      "secondTableName": "Schedule",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_period"
+      ],
+      "firstTableName": "Period",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_period"
+      ],
+      "secondTableName": "Enrollment",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_person"
+      ],
+      "firstTableName": "Person",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_student"
+      ],
+      "secondTableName": "Enrollment",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_course"
+      ],
+      "firstTableName": "Course",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_course"
+      ],
+      "secondTableName": "Enrollment",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_course"
+      ],
+      "firstTableName": "Course",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_course"
+      ],
+      "secondTableName": "Schedule",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_person"
+      ],
+      "firstTableName": "Person",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_teacher"
+      ],
+      "secondTableName": "Schedule",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_classroom"
+      ],
+      "firstTableName": "Classroom",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_classroom"
+      ],
+      "secondTableName": "Schedule",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_school"
+      ],
+      "firstTableName": "School",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_school"
+      ],
+      "secondTableName": "Person",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_school"
+      ],
+      "firstTableName": "School",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_school"
+      ],
+      "secondTableName": "Course",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_school"
+      ],
+      "firstTableName": "School",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_school"
+      ],
+      "secondTableName": "Classroom",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_school"
+      ],
+      "firstTableName": "School",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_school"
+      ],
+      "secondTableName": "Period",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_schedule"
+      ],
+      "firstTableName": "Schedule",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_schedule"
+      ],
+      "secondTableName": "Attendance",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_attendance"
+      ],
+      "firstTableName": "Attendance",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_attendance"
+      ],
+      "secondTableName": "Justification",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_person"
+      ],
+      "firstTableName": "Person",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_student"
+      ],
+      "secondTableName": "Attendance",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_device"
+      ],
+      "firstTableName": "IoT_Device",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_device"
+      ],
+      "secondTableName": "Attendance",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_language"
+      ],
+      "firstTableName": "Language",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_language"
+      ],
+      "secondTableName": "User",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_person"
+      ],
+      "firstTableName": "Person",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_person"
+      ],
+      "secondTableName": "Facial_Embedding",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_classroom"
+      ],
+      "firstTableName": "Classroom",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_classroom"
+      ],
+      "secondTableName": "IoT_Device",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id_user"
+      ],
+      "firstTableName": "User",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "id_user"
+      ],
+      "secondTableName": "Log",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    }
+  ]
+}
