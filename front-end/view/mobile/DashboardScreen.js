@@ -39,13 +39,6 @@ export default function DashboardScreen() {
     });
   };
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await cargarEstadisticas();
-    setRefreshing(false);
-  };
-
-  // Manejadores para el BottomBar
   const handleSettings = () => {
     console.log("Abrir configuración");
     navigation.navigate("Menu")
@@ -53,12 +46,11 @@ export default function DashboardScreen() {
 
   const handleProfile = () => {
     console.log("Abrir perfil");
-    // Navegar a pantalla de perfil
+    navigation.navigate("TakePhoto");
   };
 
   const handleSearch = () => {
     console.log("Abrir búsqueda");
-    // Navegar a pantalla de búsqueda
   };
 
   const menuAccionesRapidas = [
@@ -151,12 +143,7 @@ export default function DashboardScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollViewWrapper>
         <View style={styles.container}>
-          <CustomTabs
-            onPressSettings={handleSettings}
-            onPressProfile={handleProfile}
-            onPressSearch={handleSearch}
-            style={styles.customTabs}
-          />
+          <CustomTabs/>
           {/* Header con fecha */}
           <View style={styles.header}>
             <View style={styles.dataBar}>
@@ -243,7 +230,6 @@ export default function DashboardScreen() {
             ))}
           </View>
 
-          {/* Novedades */}
           <View style={styles.novedadesSection}>
             <Text style={styles.sectionTitle}>Novedades</Text>
             {novedadesRecientes.map((item) => (
@@ -263,15 +249,10 @@ export default function DashboardScreen() {
               </View>
             ))}
           </View>
-          {/* Espacio adicional para el BottomBar */}
           <View style={styles.bottomSpace} />
         </View>
       </ScrollViewWrapper>
-      <BottomBar
-        onPressSettings={handleSettings}
-        onPressProfile={handleProfile}
-        onPressSearch={handleSearch}
-      />
+      <BottomBar/>
     </SafeAreaView >
   );
 }

@@ -1,38 +1,41 @@
 import React from "react";
 import { View, TouchableOpacity, Image, StyleSheet } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
-export default function BottomBar({ onPressSettings, onPressProfile, onPressSearch }) {
+export default function BottomBar() {
+  const navigation = useNavigation();
+
   const handleMenu = () => {
-    navigation.navigate(Menu);
+    navigation.navigate("Menu");
   };
 
   const handleFoto = () => {
-    navigation.navigate(Foto);
+    navigation.navigate("TakePhoto");
   };
 
   const handleBusqueda = () => {
-    navigation.navigate(Busqueda);
+    navigation.navigate("Busqueda");
   };
 
   return (
 
     <View style={styles.container} >
 
-      <TouchableOpacity onPress={onPressSettings}>
+      <TouchableOpacity onPress={handleMenu}>
         <Image
           source={require("../../assets/images/configuraciones.png")}
           style={styles.icon}
         />
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={onPressProfile}>
+      <TouchableOpacity onPress={handleFoto}>
         <Image
           source={require("../../assets/images/perfil-del-usuario.png")}
           style={styles.iconCenter}
         />
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={onPressSearch}>
+      <TouchableOpacity onPress={handleBusqueda}>
         <Image
           source={require("../../assets/images/lupa.png")}
           style={styles.icon}

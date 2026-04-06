@@ -5,6 +5,7 @@ import {
   StyleSheet,
   SafeAreaView,
   KeyboardAvoidingView,
+  TouchableOpacity,
   Platform,
 } from "react-native";
 import PrimaryButton from "../../components/auth/PrimaryButton";
@@ -19,6 +20,10 @@ export default function MenuScreen() {
 
   const handleBack = () => {
     navigation.goBack();
+  };
+
+  const handleFacialFailRedirect = () => {
+    navigation.navigate("FacialFail");
   };
 
   const sharedProps = {
@@ -75,12 +80,14 @@ export default function MenuScreen() {
             </Text>
 
             <Separador />
-            <Text style={styles.sectionTitle}>
-              ¿Falla en el reconocimiento facial?
-            </Text>
-            <Text style={styles.sectionText}>
-              En caso tal de que no se funcione el reconocimiento facial lo que se deberia hacer el lo siguiente.
-            </Text>
+            <TouchableOpacity onPress={handleFacialFailRedirect}>
+              <Text style={styles.sectionTitle}>
+                ¿Falla en el reconocimiento facial?
+              </Text>
+              <Text style={styles.sectionText}>
+                En caso tal de que no se funcione el reconocimiento facial lo que se deberia hacer el lo siguiente.
+              </Text>
+            </TouchableOpacity>
 
             <PrimaryButton
               title={isLoading ? "Volviendo a la Principal..." : "Volver"}

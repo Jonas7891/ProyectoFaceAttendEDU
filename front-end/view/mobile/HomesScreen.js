@@ -55,6 +55,14 @@ export default function HomesScreen() {
 
       if (email === "hola@gmail.com" && password === "7891") {
         navigation.navigate("Dashboard");
+        const userData = {
+          name: "Administrador",
+        };
+      } else if (email === "chao@gmail.com" && password === "7891") {
+        navigation.navigate("Dashboard");
+        const userData = {
+          name: "Estudiante",
+        };
       } else {
         Alert.alert("Error", "Credenciales inválidas");
       }

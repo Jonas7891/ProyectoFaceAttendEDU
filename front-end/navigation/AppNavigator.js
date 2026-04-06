@@ -6,6 +6,10 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomesScreen from '../view/mobile/HomesScreen';
 import MenuScreen from '../view/mobile/MenuScreen';
 import DashboardScreen from '../view/mobile/DashboardScreen';
+import NewsScreen from '../view/mobile/NewsScreen';
+import HistoricalScreen from '../view/mobile/HistoricalScreen';
+import FacialFail from '../view/mobile/FacialFail';
+import TakePhoto from '../view/mobile/UpdatePhoto';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -36,6 +40,10 @@ export default function AppNavigator() {
           <>
             <Stack.Screen name="Dashboard" component={DashboardScreen} />
             <Stack.Screen name="Menu" component={MenuScreen} />
+            <Stack.Screen name="Novedades" component={NewsScreen} />
+            <Stack.Screen name="Historial" component={HistoricalScreen} />
+            <Stack.Screen name="FacialFail" component={FacialFail} />
+            <Stack.Screen name="TakePhoto" component={TakePhoto} />
           </>
         )}
       </Stack.Navigator>

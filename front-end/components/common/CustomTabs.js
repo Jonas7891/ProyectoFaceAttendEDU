@@ -1,30 +1,54 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 
 export default function CustomTabs({ onChange }) {
+  const navigation = useNavigation();
+  const route = useRoute();
   const [selected, setSelected] = useState(0);
 
-  const HandleInicio = () => {
-    setSelected(0);
-    if (onChange) onChange(0);
+  const getTabIndex = (routeName) => {
+    switch (routeName) {
+      case 'Dashboard':
+      case 'Inicio':
+        return 0;
+      case 'Novedades':
+        return 1;
+      case 'Historial':
+        return 2;
+      default:
+        return 0;
+    }
   };
 
-  const HandleNovedades = () => {
-    setSelected(1);
-    if (onChange) onChange(1);
-  };
+  useEffect(() => {
+    if (route?.name) {
+      const currentIndex = getTabIndex(route.name);
+      setSelected(currentIndex);
+      if (onChange) onChange(currentIndex);
+    }
+  }, [route?.name]);
 
-  const HandleHistorial = () => {
-    setSelected(2);
-    if (onChange) onChange(2);
+  const handleNavigation = (index, screenName) => {
+    setSelected(index);
+    if (onChange) onChange(index);
+    
+    if (screenName === 'Dashboard' || screenName === 'Inicio') {
+      navigation.navigate({
+        name: screenName,
+        params: {},
+        merge: true,
+      });
+    } else {
+      navigation.navigate(screenName);
+    }
   };
 
   return (
     <View style={styles.container}>
-      
       <TouchableOpacity
         style={[styles.button, selected === 0 && styles.activeButton]}
-        onPress={HandleInicio}
+        onPress={() => handleNavigation(0, "Dashboard")}
       >
         <Text style={[styles.text, selected === 0 && styles.activeText]}>
           Inicio
@@ -33,7 +57,7 @@ export default function CustomTabs({ onChange }) {
 
       <TouchableOpacity
         style={[styles.button, selected === 1 && styles.activeButton]}
-        onPress={HandleNovedades}
+        onPress={() => handleNavigation(1, "Novedades")}
       >
         <Text style={[styles.text, selected === 1 && styles.activeText]}>
           Novedades
@@ -42,13 +66,12 @@ export default function CustomTabs({ onChange }) {
 
       <TouchableOpacity
         style={[styles.button, selected === 2 && styles.activeButton]}
-        onPress={HandleHistorial}
+        onPress={() => handleNavigation(2, "Historial")}
       >
         <Text style={[styles.text, selected === 2 && styles.activeText]}>
           Historial
         </Text>
       </TouchableOpacity>
-
     </View>
   );
 }
