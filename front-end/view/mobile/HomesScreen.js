@@ -13,6 +13,7 @@ import {
   TouchableOpacity
 } from "react-native";
 import PrimaryButton from "../../components/auth/PrimaryButton";
+import SelectableButton from "../../components/auth/SelectableButton";
 import CustomLogo from "../../components/auth/logo";
 import { useNavigation } from "@react-navigation/native";
 import RegisterModal from '../../components/auth/RegisterModal';
@@ -98,11 +99,9 @@ export default function HomesScreen() {
                 <Text style={styles.textoSesion}>
                   {"\n"}
                   Inicio de Sesión
+                  {"\n"}
                 </Text>
 
-                <Text style={styles.textoCredenciales}>
-                  Ingrese sus credenciales.
-                </Text>
                 <View style={styles.inputContainer}>
                   <Text style={styles.inputTitulo}>Correo Electrónico</Text>
                   <TextInput
@@ -132,6 +131,12 @@ export default function HomesScreen() {
                     placeholderTextColor="#999999"
                     returnKeyType="done"
                     accessibilityLabel="Campo de contraseña"
+                  />
+
+                  <SelectableButton
+                    title="Aceptar Términos y Condiciones"
+                    selectable={true}
+                    initialSelected={false}
                   />
                 </View>
 

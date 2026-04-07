@@ -19,13 +19,13 @@ export default function PrimaryButton({
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: '#ff1100',
+    backgroundColor: '#1081D2',
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 20,
     borderWidth: 1,
-    borderColor: '#ff1100',
+    borderColor: '#1081D2',
     width: 200,
     alignSelf: 'center'
   },

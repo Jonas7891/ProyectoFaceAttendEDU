@@ -143,20 +143,22 @@ export default function DashboardScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollViewWrapper>
         <View style={styles.container}>
-          <CustomTabs/>
+          <CustomTabs />
           {/* Header con fecha */}
           <View style={styles.header}>
             <View style={styles.dataBar}>
-              <Text style={styles.greeting}>Buenos días,</Text>
-              <Text style={styles.adminName}>Administrador</Text>
-              <Text style={styles.date}>
-                {new Date().toLocaleDateString('es-ES', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </Text>
+              <View style={styles.leftContent}>
+                <Text style={styles.greeting}>Buenos días,</Text>
+                <Text style={styles.adminName}>Administrador</Text>
+                <Text style={styles.date}>
+                  {new Date().toLocaleDateString('es-ES', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </Text>
+              </View>
             </View>
           </View>
 
@@ -252,7 +254,7 @@ export default function DashboardScreen() {
           <View style={styles.bottomSpace} />
         </View>
       </ScrollViewWrapper>
-      <BottomBar/>
+      <BottomBar />
     </SafeAreaView >
   );
 }
@@ -296,11 +298,6 @@ const styles = StyleSheet.create({
   notificationButton: {
     position: "relative",
     padding: 8,
-  },
-  notificationIcon: {
-    width: 24,
-    height: 24,
-    tintColor: "#666666",
   },
   notificationBadge: {
     position: "absolute",
