@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, Image } from 'react-native';
 
 export default function PrimaryButton({
   title,
@@ -27,9 +27,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#1081D2',
     width: 200,
-    alignSelf: 'center'
+    alignSelf: 'center',
+    textAlign: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
   buttonDisabled: {
+    textAlign: 'center',
     opacity: 0.6,
   },
   text: {

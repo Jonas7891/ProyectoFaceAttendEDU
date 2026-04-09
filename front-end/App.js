@@ -1,13 +1,15 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import HomesScreen from './view/mobile/HomesScreen';
-import MenuScreen from './view/mobile/MenuScreen';
-import DashboardScreen from './view/mobile/DashboardScreen';
-import NewsScreen from './view/mobile/NewsScreen';
-import HistoricalScreen from './view/mobile/HistoricalScreen';
-import FacialFail from './view/mobile/FacialFail';
-import TakePhoto from './view/mobile/UpdatePhoto';
+import HomesScreen from './view/mobile/Screens/Homes/HomesScreen';
+import MenuScreen from './view/mobile/Screens/Menu/MenuScreen';
+import DashboardScreen from './view/mobile/Screens/Dashboard/DashboardScreen';
+import NewsScreen from './view/mobile/Screens/News/NewsScreen';
+import HistoricalScreen from './view/mobile/Screens/Historical/HistoricalScreen';
+import FacialFail from './view/mobile/Screens/FacialFail/FacialFailScreen';
+import UpdatePhoto from './view/mobile/Screens/UpdatePhoto/UpdatePhotoScreen';
+import TakePhotoScreen from './view/mobile/Screens/TakePhoto/TakePhotoScreen';
+import DisplayingAttendance from './view/mobile/Screens/Attendance/DisplayingAttendance';
 
 const Stack = createStackNavigator();
 
@@ -46,8 +48,18 @@ export default function App() {
           options={{ headerShown: false }}
         />
         <Stack.Screen 
-          name="TakePhoto" 
-          component={TakePhoto} 
+          name="UpdatePhoto" 
+          component={UpdatePhoto} 
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="TakePhoto"
+          component={TakePhotoScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="DisplayingAttendance"
+          component={DisplayingAttendance}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

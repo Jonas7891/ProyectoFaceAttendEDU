@@ -9,9 +9,9 @@ import {
     Alert,
     StyleSheet
 } from 'react-native';
-import { DocumentSelector } from '../common/DocumentSelector';
-import { RHSelector } from '../common/RHSelector';
-import { QuestionInput } from '../common/QuestionInput';
+import { DocumentSelector } from './DocumentSelector';
+import { RHSelector } from './RHSelector';
+import { QuestionInput } from './QuestionInput';
 import { ProgressBar } from './ProgressBar';
 
 const questions = [

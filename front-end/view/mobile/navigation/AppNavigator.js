@@ -3,13 +3,15 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
-import HomesScreen from '../view/mobile/HomesScreen';
-import MenuScreen from '../view/mobile/MenuScreen';
-import DashboardScreen from '../view/mobile/DashboardScreen';
-import NewsScreen from '../view/mobile/NewsScreen';
-import HistoricalScreen from '../view/mobile/HistoricalScreen';
-import FacialFail from '../view/mobile/FacialFail';
-import TakePhoto from '../view/mobile/UpdatePhoto';
+import HomesScreen from '../Screens/Homes/HomesScreen';
+import MenuScreen from '../Screens/Menu/MenuScreen';
+import DashboardScreen from '../Screens/Dashboard/DashboardScreen';
+import NewsScreen from '../Screens/News/NewsScreen';
+import HistoricalScreen from '../Screens/Historical/HistoricalScreen';
+import FacialFail from '../Screens/FacialFail/FacialFailScreen';
+import UpdatePhoto from '../Screens/UpdatePhoto/UpdatePhotoScreen';
+import TakePhoto from '../Screens/TakePhoto/TakePhotoScreen';
+import DisplayingAttendance from '../Screens/Attendance/DisplayingAttendance';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -43,7 +45,9 @@ export default function AppNavigator() {
             <Stack.Screen name="Novedades" component={NewsScreen} />
             <Stack.Screen name="Historial" component={HistoricalScreen} />
             <Stack.Screen name="FacialFail" component={FacialFail} />
+            <Stack.Screen name="UpdatePhoto" component={UpdatePhoto} />
             <Stack.Screen name="TakePhoto" component={TakePhoto} />
+            <Stack.Screen name="DisplayingAttendance" component={DisplayingAttendance} />
           </>
         )}
       </Stack.Navigator>

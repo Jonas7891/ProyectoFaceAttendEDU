@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
   Text,
   View,
-  StyleSheet,
   TextInput,
   SafeAreaView,
   KeyboardAvoidingView,
@@ -12,12 +11,13 @@ import {
   Keyboard,
   TouchableOpacity
 } from "react-native";
-import PrimaryButton from "../../components/auth/PrimaryButton";
-import SelectableButton from "../../components/auth/SelectableButton";
-import CustomLogo from "../../components/auth/logo";
+import PrimaryButton from "../../Components/Auth/PrimaryButton";
+import SelectableButton from "../../Components/Auth/SelectableButton";
+import CustomLogo from "../../Components/Auth/logo";
 import { useNavigation } from "@react-navigation/native";
-import RegisterModal from '../../components/auth/RegisterModal';
-import ScrollView from "../../components/common/ScrollView";
+import RegisterModal from '../../Components/Common/RegisterModal';
+import ScrollView from "../../Components/Common/ScrollView";
+import styles from "../Style/Style";
 
 export default function HomesScreen() {
   const [email, setEmail] = useState("");
@@ -59,11 +59,6 @@ export default function HomesScreen() {
         const userData = {
           name: "Administrador",
         };
-      } else if (email === "chao@gmail.com" && password === "7891") {
-        navigation.navigate("Dashboard");
-        const userData = {
-          name: "Estudiante",
-        };
       } else {
         Alert.alert("Error", "Credenciales inválidas");
       }
@@ -75,7 +70,7 @@ export default function HomesScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeAreaWhite}>
       <ScrollView>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "position" : "position"}
@@ -89,7 +84,7 @@ export default function HomesScreen() {
               <View style={styles.contentContainer}>
                 <View style={styles.logoContainer}>
                   <CustomLogo
-                    size="xlarge"
+                    size="large"
                     rounded={true}
                     backgroundColor="#000000"
                     marginBottom={20}
@@ -97,9 +92,7 @@ export default function HomesScreen() {
                 </View>
 
                 <Text style={styles.textoSesion}>
-                  {"\n"}
                   Inicio de Sesión
-                  {"\n"}
                 </Text>
 
                 <View style={styles.inputContainer}>
@@ -166,70 +159,3 @@ export default function HomesScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    justifyContent: "space-between",
-  },
-  contentContainer: {
-    flex: 1,
-    paddingHorizontal: 30,
-    paddingTop: 20,
-  },
-  logoContainer: {
-    marginTop: 40,
-  },
-  textoSesion: {
-    textAlign: "left",
-    color: "#000000",
-    fontWeight: "700",
-    fontSize: 30,
-    marginBottom: 10,
-  },
-  textoCredenciales: {
-    textAlign: "left",
-    color: "#666666",
-    fontWeight: "400",
-    fontSize: 16,
-    marginBottom: 30,
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  inputTitulo: {
-    textAlign: "left",
-    color: "#000000",
-    fontWeight: "500",
-    marginBottom: 8,
-    fontSize: 16,
-  },
-  inputEscrito: {
-    textAlign: "left",
-    color: "#000000",
-    fontWeight: "400",
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: "#CCCCCC",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: "#FFFFFF",
-  },
-  noRegistro: {
-    color: "#666666",
-    fontSize: 14,
-    textAlign: "center"
-  },
-  sesionNoRegistro: {
-    marginHorizontal: 100,
-    marginTop: 60,
-  }
-});

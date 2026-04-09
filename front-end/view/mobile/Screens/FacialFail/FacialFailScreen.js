@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
     Text,
     View,
-    StyleSheet,
     SafeAreaView,
     TouchableOpacity,
     ScrollView,
@@ -12,10 +11,11 @@ import {
     Keyboard
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import PrimaryButton from "../../components/auth/PrimaryButton";
-import { QuestionnaireModal } from "../../components/auth/QuestionnaireModal";
-import { FacialUpdateModal } from "../../components/auth/FacialUpdateModal";
-import CustomLogo from "../../components/auth/logo";
+import PrimaryButton from "../../Components/Auth/PrimaryButton";
+import { QuestionnaireModal } from "../../Components/Common/QuestionnaireModal";
+import { FacialUpdateModal } from "../../Components/Common/FacialUpdateModal";
+import CustomLogo from "../../Components/Auth/logo";
+import styles from "../Style/Style";
 
 export default function FacialFail() {
     const navigation = useNavigation();
@@ -37,7 +37,7 @@ export default function FacialFail() {
     };
 
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={styles.safeAreaFacialFail}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <KeyboardAvoidingView
                     behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -123,92 +123,3 @@ export default function FacialFail() {
         </SafeAreaView>
     );
 }
-
-const styles = StyleSheet.create({
-    safeArea: {
-        flex: 1,
-        backgroundColor: "#F5F5F5",
-        marginTop: Platform.OS === 'android' ? 25 : 20
-    },
-    scrollContent: {
-        flexGrow: 1,
-    },
-    keyboardView: {
-        flex: 1,
-    },
-    container: {
-        flex: 1,
-        paddingHorizontal: 20,
-        paddingTop: 20,
-        paddingBottom: 30,
-    },
-    headerContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 20,
-        marginTop: 10,
-    },
-    mainTitle: {
-        fontSize: 30,
-        fontWeight: "bold",
-        color: "#1a1a1a",
-        flex: 1,
-        textAlign: "center",
-    },
-    subtitle: {
-        fontSize: 16,
-        fontWeight: "600",
-        color: "#333",
-        marginBottom: 20,
-    },
-    optionCard: {
-        backgroundColor: "#FFF",
-        borderRadius: 10,
-        padding: 16,
-        marginBottom: 16,
-        borderWidth: 1,
-        borderColor: "#E0E0E0",
-    },
-    optionTitle: {
-        fontSize: 16,
-        fontWeight: "bold",
-        color: "#1a1a1a",
-        marginBottom: 8,
-    },
-    optionDescription: {
-        fontSize: 14,
-        color: "#666",
-        lineHeight: 20,
-        fontStyle: "italic",
-    },
-    separator: {
-        borderTopWidth: 1,
-        borderTopColor: "#E0E0E0",
-        marginVertical: 20,
-    },
-    recommendationsTitle: {
-        fontSize: 16,
-        fontWeight: "bold",
-        color: "#1a1a1a",
-        marginBottom: 12,
-    },
-    recommendationCard: {
-        backgroundColor: "#FFF",
-        borderRadius: 10,
-        padding: 16,
-        borderWidth: 1,
-        borderColor: "#E0E0E0",
-    },
-    recommendationSubtitle: {
-        fontSize: 15,
-        fontWeight: "600",
-        color: "#333",
-        marginBottom: 8,
-    },
-    recommendationText: {
-        fontSize: 14,
-        color: "#666",
-        lineHeight: 20,
-    },
-});

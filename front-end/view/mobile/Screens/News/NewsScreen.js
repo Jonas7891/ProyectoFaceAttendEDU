@@ -2,15 +2,15 @@ import React, { useState } from "react";
 import {
     Text,
     View,
-    StyleSheet,
     SafeAreaView,
     Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import BottomBar from "../../components/common/BarraNavegacion";
-import ScrollViewWrapper from "../../components/common/ScrollView";
-import CustomTabs from "../../components/common/CustomTabs";
-import Separador from "../../components/auth/Separador";
+import BottomBar from "../../Components/Common/NavigationBar";
+import ScrollViewWrapper from "../../Components/Common/ScrollView";
+import CustomTabs from "../../Components/Common/CustomTabs";
+import Separador from "../../Components/Common/Separador";
+import styles from "../Style/Style";
 
 export default function NewsScreen() {
     const navigation = useNavigation();
@@ -40,7 +40,7 @@ export default function NewsScreen() {
 
                     <View style={{ marginLeft: 25, marginRight: 25 }}>
                         <Image
-                            source={require("../../assets/images/persona.png")}
+                            source={require("../../../../assets/images/persona.png")}
                             style={{ width: "100%", height: 200, marginTop: 40, borderRadius: 10}}
                         />
                     </View>
@@ -78,29 +78,3 @@ export default function NewsScreen() {
         </SafeAreaView >
     );
 }
-
-const styles = StyleSheet.create({
-    safeArea: {
-        flex: 1,
-        backgroundColor: "#F5F5F5",
-        marginTop: 20
-    },
-    scrollContent: {
-        flexGrow: 1,
-    },
-    container: {
-        flex: 1,
-        paddingHorizontal: 20,
-        paddingTop: 20,
-    },
-    header: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "flex-start",
-        marginTop: 20,
-        marginBottom: 20,
-    },
-    bottomSpace: {
-        height: 90,
-    }
-});

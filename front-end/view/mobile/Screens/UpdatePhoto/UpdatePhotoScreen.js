@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
     Text,
     View,
-    StyleSheet,
     SafeAreaView,
     TouchableOpacity,
     ScrollView,
@@ -12,7 +11,8 @@ import {
     Platform,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { QuestionInput } from "../../components/common/QuestionInput";
+import { QuestionInput } from "../../Components/Common/QuestionInput";
+import styles from "../Style/Style";
 
 export default function UpdatePhoto() {
     const navigation = useNavigation();
@@ -69,15 +69,19 @@ export default function UpdatePhoto() {
                     <TouchableOpacity onPress={handleBack} activeOpacity={0.7}>
                         <View style={styles.backIcon}>
                             <Image
-                                source={require("../../assets/images/flecha.png")}
+                                source={require("../../../../assets/images/flecha.png")}
                                 style={styles.backIconImage}
                             />
                         </View>
                     </TouchableOpacity>
 
+                    <View>
+                        <Text>{"\n"}</Text>
+                    </View>
+
                     <View style={styles.imagePhoto}>
                         <Image
-                            source={require("../../assets/images/perfil-del-usuario.png")}
+                            source={require("../../../../assets/images/perfil-del-usuario.png")}
                             style={styles.image}
                             resizeMode="contain"
                         />
@@ -135,7 +139,7 @@ export default function UpdatePhoto() {
                     >
                         <View style={styles.buttonContent}>
                             <Image
-                                source={require("../../assets/images/fotografia.png")}
+                                source={require("../../../../assets/images/fotografia.png")}
                                 style={styles.icon}
                             />
                             <Text style={styles.registerButtonText}>
@@ -144,6 +148,9 @@ export default function UpdatePhoto() {
                         </View>
                     </TouchableOpacity>
 
+                    <View>
+                        <Text>{"\n"}{"\n"}</Text>
+                    </View>
                     <TouchableOpacity
                         onPress={handleMenu}
                         style={styles.settingsContainer}
@@ -151,7 +158,7 @@ export default function UpdatePhoto() {
                     >
                         <View style={styles.settingsContent}>
                             <Image
-                                source={require("../../assets/images/configuraciones.png")}
+                                source={require("../../../../assets/images/configuraciones.png")}
                                 style={styles.settingsIcon}
                             />
                         </View>
@@ -164,147 +171,3 @@ export default function UpdatePhoto() {
         </SafeAreaView>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#F5F5F5',
-    },
-    keyboardView: {
-        flex: 1,
-    },
-    scrollViewContent: {
-        flexGrow: 1,
-        paddingBottom: 30,
-    },
-    backIcon: {
-        top: 20,
-        left: 20,
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        marginBottom: 20,
-    },
-    backIconImage: {
-        width: '100%',
-        height: '100%',
-    },
-    imagePhoto: {
-        width: 150,
-        height: 150,
-        marginBottom: 20,
-        alignSelf: 'center',
-        overflow: 'hidden',
-    },
-    image: {
-        width: '100%',
-        height: '100%',
-    },
-    header: {
-        paddingHorizontal: 20,
-        paddingBottom: 10,
-    },
-    headerTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#1A1A2E',
-        textAlign: 'center',
-    },
-    instructionText: {
-        marginHorizontal: 30,
-        textAlign: 'center',
-        marginTop: 10,
-        marginBottom: 10,
-        fontSize: 14,
-        color: '#666',
-        lineHeight: 20,
-    },
-    formSection: {
-        backgroundColor: '#FFFFFF',
-        marginHorizontal: 20,
-        marginTop: 20,
-        marginBottom: 10,
-        padding: 20,
-        borderRadius: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    formTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#1A1A2E',
-        marginBottom: 20,
-        textAlign: 'center',
-    },
-    inputContainer: {
-        marginBottom: 20,
-    },
-    inputLabel: {
-        fontSize: 14,
-        fontWeight: '500',
-        color: '#333',
-        marginBottom: 8,
-    },
-    registerButton: {
-        backgroundColor: '#4CAF50',
-        marginHorizontal: 20,
-        marginVertical: 15,
-        paddingVertical: 14,
-        paddingHorizontal: 24,
-        borderRadius: 12,
-        shadowColor: '#4CAF50',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 5,
-        alignSelf: 'center',
-    },
-    registerButtonSuccess: {
-        backgroundColor: '#2E7D32',
-    },
-    buttonContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    registerButtonText: {
-        color: '#FFFFFF',
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginLeft: 12,
-    },
-    icon: {
-        width: 24,
-        height: 24,
-        tintColor: "#FFFFFF",
-    },
-    settingsContainer: {
-        marginTop: 10,
-        marginBottom: 10,
-        alignSelf: "center",
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        borderRadius: 12,
-    },
-    settingsContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    settingsIcon: {
-        width: 40,
-        height: 40,
-        tintColor: "black"
-    },
-    settingsText: {
-        color: 'black',
-        fontSize: 20,
-        fontWeight: '600',
-    },
-    footer: {
-        height: 40,
-    },
-});
