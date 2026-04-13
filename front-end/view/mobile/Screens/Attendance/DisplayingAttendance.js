@@ -6,11 +6,14 @@ import {
     TextInput,
     TouchableOpacity,
     FlatList,
+    Image
 } from "react-native";
 import styles from "../Style/Style";
 import BottomBar from "../../Components/Common/NavigationBar";
+import { useNavigation } from "@react-navigation/native";
 
 export default function DisplayingAttendance() {
+    const navigation = useNavigation();
     const [searchText, setSearchText] = useState("");
     const [filterType, setFilterType] = useState("nombre");
 
@@ -24,6 +27,11 @@ export default function DisplayingAttendance() {
 
     const handleSearch = () => {
         console.log("Abrir búsqueda");
+    }
+
+    const handleBack = () => {
+        console.log("Volver atrás");
+        navigation.goBack();
     }
 
     const asistenciasRecientes = [
@@ -60,6 +68,14 @@ export default function DisplayingAttendance() {
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.containerAttendance}>
+                <TouchableOpacity onPress={handleBack} activeOpacity={0.2} style={{ marginBottom: 20 }}>
+                    <View style={styles.backIcon}>
+                        <Image
+                            source={require("../../../../assets/images/flecha.png")}
+                            style={styles.backIconImage}
+                        />
+                    </View>
+                </TouchableOpacity>
                 {/* Selector de tipo de filtro */}
                 <View style={styles.filterButtonsContainer}>
                     <TouchableOpacity

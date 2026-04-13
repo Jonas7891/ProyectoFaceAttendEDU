@@ -15,7 +15,8 @@ import PrimaryButton from "../../Components/Auth/PrimaryButton";
 import SelectableButton from "../../Components/Auth/SelectableButton";
 import CustomLogo from "../../Components/Auth/logo";
 import { useNavigation } from "@react-navigation/native";
-import RegisterModal from '../../Components/Common/RegisterModal';
+import RegisterModal from '../../Components/Auth/RegisterModal';
+import TerminosModal from "../../Components/Auth/TerminosModal";
 import ScrollView from "../../Components/Common/ScrollView";
 import styles from "../Style/Style";
 
@@ -24,7 +25,10 @@ export default function HomesScreen() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation();
-  const [ModalVisible, setModalVisible] = useState(false);
+
+  // ✅ Variables separadas para cada modal
+  const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
+  const [isTerminosModalVisible, setIsTerminosModalVisible] = useState(false);
 
   const sharedProps = {
     isLoading
@@ -126,11 +130,21 @@ export default function HomesScreen() {
                     accessibilityLabel="Campo de contraseña"
                   />
 
-                  <SelectableButton
-                    title="Aceptar Términos y Condiciones"
-                    selectable={true}
-                    initialSelected={false}
-                  />
+                  <View style={styles.rowContainer}>
+                    <SelectableButton
+                      selectable={true}
+                      initialSelected={false}
+                    />
+
+                    <TouchableOpacity
+                      onPress={() => setIsTerminosModalVisible(true)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.terminosText}>
+                        Aceptación de términos y condiciones.
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
                 <PrimaryButton
@@ -140,7 +154,7 @@ export default function HomesScreen() {
               </View>
 
               <TouchableOpacity
-                onPress={() => setModalVisible(true)}
+                onPress={() => setIsRegisterModalVisible(true)}
                 activeOpacity={0.7}
                 style={styles.sesionNoRegistro}
               >
@@ -148,9 +162,15 @@ export default function HomesScreen() {
                   ¿No tiene cuenta registrada?
                 </Text>
               </TouchableOpacity>
+
               <RegisterModal
-                isVisible={ModalVisible}
-                onClose={() => setModalVisible(false)}
+                isVisible={isRegisterModalVisible}
+                onClose={() => setIsRegisterModalVisible(false)}
+              />
+
+              <TerminosModal
+                isVisible={isTerminosModalVisible}
+                onClose={() => setIsTerminosModalVisible(false)}
               />
             </View>
           </TouchableWithoutFeedback>

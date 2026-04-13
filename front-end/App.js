@@ -10,6 +10,9 @@ import FacialFail from './view/mobile/Screens/FacialFail/FacialFailScreen';
 import UpdatePhoto from './view/mobile/Screens/UpdatePhoto/UpdatePhotoScreen';
 import TakePhotoScreen from './view/mobile/Screens/TakePhoto/TakePhotoScreen';
 import DisplayingAttendance from './view/mobile/Screens/Attendance/DisplayingAttendance';
+import MenuJustifyScreen from './view/mobile/Screens/MenuJustifiy/MenuJustifyScreen';
+import ConsultJustify from './view/mobile/Screens/ConsultJustify/ConsultJustifyScreen'
+import AddJustify from './view/mobile/Screens/AddOrEditJustify/AddJustifyScreen'
 
 const Stack = createStackNavigator();
 
@@ -60,6 +63,21 @@ export default function App() {
         <Stack.Screen
           name="DisplayingAttendance"
           component={DisplayingAttendance}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="MenuJustify"
+          component={MenuJustifyScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ConsultJustify"
+          component={ConsultJustify}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AddJustify"
+          component={AddJustify}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
