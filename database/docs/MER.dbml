@@ -1,0 +1,459 @@
+//
+//    SECURITY
+//
+
+Table School {
+  id_school  int      [pk, unique, not null]
+  name       varchar  [not null]
+  nit        varchar  [not null, unique]
+  address    varchar  [null]
+  phone      varchar  [null]
+  email      varchar  [null]
+  status     boolean  [not null, default: true]
+  created_at datetime [not null]
+  updated_at datetime [null]
+}
+
+Table Person {
+  id_person  int      [pk, unique, not null]
+  id_school  int      [not null]
+  name       varchar  [not null]
+  last_name  varchar  [not null]
+  email      varchar  [null]
+  phone      varchar  [null]
+  is_student boolean  [not null, default: false]
+  is_teacher boolean  [not null, default: false]
+  status     boolean  [not null, default: true]
+  created_at datetime [not null]
+  updated_at datetime [null]
+
+  indexes {
+    (email, id_school) [unique, name: 'uq_person_email_school']
+  }
+}
+
+Table Role {
+  id_role     int     [pk, unique, not null]
+  name        varchar [not null, unique]
+  description varchar [null]
+}
+
+Table User {
+  id_user     int      [pk, unique, not null]
+  id_person   int      [not null, unique]
+  id_language int      [null]
+  username    varchar  [not null, unique]
+  password    varchar  [not null]
+  status      boolean  [not null, default: true]
+  created_at  datetime [not null]
+  updated_at  datetime [null]
+  last_login  datetime [null]
+}
+
+Table Module {
+  id_module   int     [pk, unique, not null]
+  name        varchar [not null]
+  description varchar [null]
+  icon        varchar [null]
+  order       int     [not null]
+}
+
+Table View {
+  id_view   int     [pk, unique, not null]
+  name      varchar [not null]
+  route     varchar [not null]
+  title     varchar [not null]
+  is_public boolean [not null, default: false]
+}
+
+Table Action {
+  id_action   int     [pk, unique, not null]
+  name        varchar [not null]
+  description varchar [null]
+  http_method varchar [not null]
+  enabled     boolean [not null, default: true]
+}
+
+Table User_Role {
+  id_user       int      [not null]
+  id_role       int      [not null]
+  assigned_date datetime [not null]
+  expiry_date   datetime [null]         // null = vigente, fecha = rol expirado
+
+  indexes {
+    (id_user, id_role) [pk]
+  }
+}
+
+Table Role_Module {
+  id_role   int [not null]
+  id_module int [not null]
+
+  indexes {
+    (id_role, id_module) [pk]
+  }
+}
+
+Table View_Module {
+  id_view   int [not null]
+  id_module int [not null]
+
+  indexes {
+    (id_view, id_module) [pk]
+  }
+}
+
+Table View_Action {
+  id_view   int [not null]
+  id_action int [not null]
+
+  indexes {
+    (id_view, id_action) [pk]
+  }
+}
+
+//    RELATIONS
+
+Ref: School.id_school < Person.id_school
+
+Ref: Person.id_person < User.id_person
+
+Ref: User.id_user < User_Role.id_user
+
+Ref: Role.id_role < User_Role.id_role
+
+Ref: Role.id_role < Role_Module.id_role
+
+Ref: Module.id_module < Role_Module.id_module
+
+Ref: View.id_view < View_Module.id_view
+
+Ref: Module.id_module < View_Module.id_module
+
+Ref: View.id_view < View_Action.id_view
+
+Ref: Action.id_action < View_Action.id_action
+
+//    END RELATIONS
+
+//
+//    END SECURITY
+//
+
+
+
+//
+//    ACADEMIC
+//
+
+Table Course {
+  id_course   int     [pk, unique, not null]
+  id_school   int     [not null]
+  course_name varchar [not null]
+  course_code varchar [not null]
+
+  indexes {
+    (course_code, id_school) [unique, name: 'uq_course_code_school']
+  }
+}
+
+Table Classroom {
+  id_classroom   int     [pk, unique, not null]
+  id_school      int     [not null]
+  classroom_name varchar [not null]
+}
+
+Table Period {
+  id_period  int      [pk, unique, not null]
+  id_school  int      [not null]
+  name       varchar  [not null]
+  start_date date     [not null]
+  end_date   date     [not null]
+  is_active  boolean  [not null, default: false]
+
+  indexes {
+    (id_school, name) [unique, name: 'uq_period_name_school']
+  }
+}
+
+Table Schedule {
+  id_schedule  int  [pk, unique, not null]
+  id_period    int  [not null]
+  id_course    int  [not null]
+  id_teacher   int  [not null]
+  id_classroom int  [not null]
+  day          Days [not null]
+  start_time   time [not null]
+  end_time     time [not null]
+
+  indexes {
+    // Evita que el mismo salón tenga dos clases al mismo tiempo en el mismo periodo
+    (id_classroom, day, start_time, id_period) [unique, name: 'uq_schedule_classroom_slot']
+    // Evita que el mismo docente tenga dos clases al mismo tiempo en el mismo periodo
+    (id_teacher, day, start_time, id_period) [unique, name: 'uq_schedule_teacher_slot']
+  }
+}
+
+Enum Days {
+  "Lunes"
+  "Martes"
+  "Miercoles"
+  "Jueves"
+  "Viernes"
+  "Sabado"
+  "Domingo"
+}
+
+Enum Enrollment_Status {
+  "Active"
+  "Withdrawn"
+  "Completed"
+}
+
+Table Enrollment {
+  id_enrollment   int               [pk, unique, not null]
+  id_student      int               [not null]
+  id_course       int               [not null]
+  id_period       int               [not null]
+  enrollment_date datetime          [not null]
+  status          Enrollment_Status [not null, default: "Active"]
+
+  indexes {
+    // Un estudiante no puede matricularse dos veces en el mismo curso en el mismo periodo
+    (id_student, id_course, id_period) [unique, name: 'uq_enrollment_student_course_period']
+  }
+}
+
+//    RELATIONS
+
+Ref: School.id_school < Course.id_school
+
+Ref: School.id_school < Classroom.id_school
+
+Ref: School.id_school < Period.id_school
+
+Ref: Period.id_period < Schedule.id_period
+
+Ref: Period.id_period < Enrollment.id_period
+
+Ref: Person.id_person < Enrollment.id_student
+
+Ref: Course.id_course < Enrollment.id_course
+
+Ref: Course.id_course < Schedule.id_course
+
+Ref: Person.id_person < Schedule.id_teacher
+
+Ref: Classroom.id_classroom < Schedule.id_classroom
+
+//    END RELATIONS
+
+//
+//    END ACADEMIC
+//
+
+
+
+//
+//    ATTENDANCE
+//
+
+Enum Attendance_Status {
+  "Present"
+  "Absent"
+  "Late"
+  "Justified"
+}
+
+Table Attendance {
+  id_attendance int               [pk, unique, not null]
+  id_student    int               [not null]
+  id_schedule   int               [not null]
+  id_device     int               [not null]
+  date          date              [not null]
+  time          time              [not null]
+  status        Attendance_Status [not null]
+
+  indexes {
+    (id_student, id_schedule, date) [unique, name: 'uq_attendance_student_schedule_date']
+    id_schedule  [name: 'idx_attendance_schedule']
+    date         [name: 'idx_attendance_date']
+  }
+}
+
+Enum Approval_Status {
+  "Pending"
+  "Approved"
+  "Rejected"
+}
+
+Table Justification {
+  id_justification int             [pk, unique, not null]
+  id_attendance    int             [not null, unique]    // una sola justificación por registro
+  justification    text            [not null]
+  approval         Approval_Status [not null, default: "Pending"]
+  created_at       datetime        [not null]
+  reviewed_by      int             [null]                // null hasta ser revisada
+  reviewed_at      datetime        [null]                // null hasta ser revisada
+}
+
+//    RELATIONS
+
+Ref: Schedule.id_schedule < Attendance.id_schedule
+
+Ref: Person.id_person < Attendance.id_student
+
+Ref: IoT_Device.id_device < Attendance.id_device
+
+Ref: Attendance.id_attendance < Justification.id_attendance
+
+Ref: User.id_user < Justification.reviewed_by
+
+//    END RELATIONS
+
+//
+//    END ATTENDANCE
+//
+
+
+
+//
+//    CONFIGURATION
+//
+
+Table Language {
+  id_language   int     [pk, unique, not null]
+  language_name varchar [not null]
+}
+
+Table Facial_Embedding {
+  id_embedding  int      [pk, unique, not null]
+  id_person     int      [not null]
+  embedding     pgvector [not null]
+  model_version varchar  [not null]
+  is_active     boolean  [not null, default: true]
+  created_at    datetime [not null]
+
+  indexes {
+    (id_person, is_active) [name: 'idx_embedding_person_active']
+  }
+}
+
+//    RELATIONS
+
+Ref: Language.id_language < User.id_language
+
+Ref: Person.id_person < Facial_Embedding.id_person
+
+//    END RELATIONS
+
+//
+//    END CONFIGURATION
+//
+
+
+
+//
+//    IOT DEVICES
+//
+
+Enum Device_Status {
+  "Active"
+  "Inactive"
+  "Maintenance"
+}
+
+Table IoT_Device {
+  id_device       int           [pk, unique, not null]
+  id_classroom    int           [not null]
+  device_name     varchar       [not null]
+  mac_address     varchar       [null, unique]   // identificador físico único del dispositivo
+  ip_address      varchar       [null]
+  status          Device_Status [not null, default: "Active"]
+  last_connection datetime      [null]
+  observation     text          [null]
+}
+
+//    RELATIONS
+
+Ref: Classroom.id_classroom < IoT_Device.id_classroom
+
+//    END RELATIONS
+
+//
+//    END IOT DEVICES
+//
+
+
+
+//
+//    AUDIT
+//
+
+Table Log {
+  id_log          int      [pk, unique, not null]
+  id_user         int      [null]           // null para acciones del sistema
+  action          varchar  [not null]
+  table_name      varchar  [not null]
+  affected_record varchar  [null]           // varchar para soportar IDs de cualquier tipo
+  description     text     [null]
+  date            datetime [not null]
+
+  indexes {
+    (table_name, affected_record) [name: 'idx_log_table_record']
+    date                          [name: 'idx_log_date']
+    id_user                       [name: 'idx_log_user']
+  }
+}
+
+//    RELATIONS
+
+Ref: User.id_user < Log.id_user
+
+//    END RELATIONS
+
+//
+//    END AUDIT
+//
+
+
+
+TableGroup Security [color: #3498DB] {
+  School
+  Person
+  Role
+  User
+  Module
+  View
+  Action
+  User_Role
+  Role_Module
+  View_Module
+  View_Action
+}
+
+TableGroup Academic [color: #0a9e48] {
+  Course
+  Classroom
+  Schedule
+  Enrollment
+  Period
+}
+
+TableGroup Attendance [color: #e67e22] {
+  Attendance
+  Justification
+}
+
+TableGroup Configuration [color: #9b59b6] {
+  Language
+  Facial_Embedding
+}
+
+TableGroup IoT [color: #e74c3c] {
+  IoT_Device
+}
+
+TableGroup Audit [color: #95a5a6] {
+  Log
+}
