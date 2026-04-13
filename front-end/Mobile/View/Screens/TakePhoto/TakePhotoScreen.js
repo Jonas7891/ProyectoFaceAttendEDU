@@ -54,7 +54,7 @@ export default function TakePhotoScreen() {
                     <TouchableOpacity onPress={handleBack} activeOpacity={0.7}>
                         <View style={styles.backIcon}>
                             <Image
-                                source={require("../../../../assets/images/flecha.png")}
+                                source={require("../../../assets/images/flecha.png")}
                                 style={styles.backIconImage}
                             />
                         </View>
@@ -68,7 +68,7 @@ export default function TakePhotoScreen() {
                     }}>
                         <View style={styles.imagePhoto}>
                             <Image
-                                source={require("../../../../assets/images/perfil-del-usuario.png")}
+                                source={require("../../../assets/images/perfil-del-usuario.png")}
                                 style={styles.image}
                                 resizeMode="contain"
                             />
@@ -95,7 +95,7 @@ export default function TakePhotoScreen() {
                         >
                             <View style={styles.buttonContent}>
                                 <Image
-                                    source={require("../../../../assets/images/fotografia.png")}
+                                    source={require("../../../assets/images/fotografia.png")}
                                     style={styles.icon}
                                 />
                                 <Text style={styles.registerButtonText}>
@@ -114,7 +114,7 @@ export default function TakePhotoScreen() {
                         >
                             <View style={styles.settingsContent}>
                                 <Image
-                                    source={require("../../../../assets/images/configuraciones.png")}
+                                    source={require("../../../assets/images/configuraciones.png")}
                                     style={styles.settingsIcon}
                                 />
                             </View>

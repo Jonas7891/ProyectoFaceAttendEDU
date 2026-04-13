@@ -1,18 +1,18 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import HomesScreen from './view/mobile/Screens/Homes/HomesScreen';
-import MenuScreen from './view/mobile/Screens/Menu/MenuScreen';
-import DashboardScreen from './view/mobile/Screens/Dashboard/DashboardScreen';
-import NewsScreen from './view/mobile/Screens/News/NewsScreen';
-import HistoricalScreen from './view/mobile/Screens/Historical/HistoricalScreen';
-import FacialFail from './view/mobile/Screens/FacialFail/FacialFailScreen';
-import UpdatePhoto from './view/mobile/Screens/UpdatePhoto/UpdatePhotoScreen';
-import TakePhotoScreen from './view/mobile/Screens/TakePhoto/TakePhotoScreen';
-import DisplayingAttendance from './view/mobile/Screens/Attendance/DisplayingAttendance';
-import MenuJustifyScreen from './view/mobile/Screens/MenuJustifiy/MenuJustifyScreen';
-import ConsultJustify from './view/mobile/Screens/ConsultJustify/ConsultJustifyScreen'
-import AddJustify from './view/mobile/Screens/AddOrEditJustify/AddJustifyScreen'
+import HomesScreen from './View/Screens/Homes/HomesScreen';
+import MenuScreen from './View/Screens/Menu/MenuScreen';
+import DashboardScreen from './View/Screens/Dashboard/DashboardScreen';
+import NewsScreen from './View/Screens/News/NewsScreen';
+import HistoricalScreen from './View/Screens/Historical/HistoricalScreen';
+import FacialFail from './View/Screens/FacialFail/FacialFailScreen';
+import UpdatePhoto from './View/Screens/UpdatePhoto/UpdatePhotoScreen';
+import TakePhotoScreen from './View/Screens/TakePhoto/TakePhotoScreen';
+import DisplayingAttendance from './View/Screens/Attendance/DisplayingAttendance';
+import MenuJustifyScreen from './View/Screens/MenuJustifiy/MenuJustifyScreen';
+import ConsultJustify from './View/Screens/ConsultJustify/ConsultJustifyScreen'
+import AddJustify from './View/Screens/AddOrEditJustify/AddJustifyScreen'
 
 const Stack = createStackNavigator();
 

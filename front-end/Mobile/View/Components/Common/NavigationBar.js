@@ -23,21 +23,21 @@ export default function BottomBar() {
 
       <TouchableOpacity onPress={handleMenu}>
         <Image
-          source={require("../../../../assets/images/configuraciones.png")}
+          source={require("../../../assets/images/configuraciones.png")}
           style={styles.icon}
         />
       </TouchableOpacity>
 
       <TouchableOpacity onPress={handleFoto}>
         <Image
-          source={require("../../../../assets/images/perfil-del-usuario.png")}
+          source={require("../../../assets/images/perfil-del-usuario.png")}
           style={styles.iconCenter}
         />
       </TouchableOpacity>
 
       <TouchableOpacity onPress={handleBusqueda}>
         <Image
-          source={require("../../../../assets/images/lupa.png")}
+          source={require("../../../assets/images/lupa.png")}
           style={styles.icon}
         />
       </TouchableOpacity>

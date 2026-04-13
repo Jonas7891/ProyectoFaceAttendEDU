@@ -71,7 +71,7 @@ export default function DisplayingAttendance() {
                 <TouchableOpacity onPress={handleBack} activeOpacity={0.2} style={{ marginBottom: 20 }}>
                     <View style={styles.backIcon}>
                         <Image
-                            source={require("../../../../assets/images/flecha.png")}
+                            source={require("../../../assets/images/flecha.png")}
                             style={styles.backIconImage}
                         />
                     </View>

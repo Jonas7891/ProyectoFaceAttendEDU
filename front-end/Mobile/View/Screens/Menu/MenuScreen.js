@@ -63,7 +63,7 @@ export default function MenuScreen() {
             <TouchableOpacity onPress={handleBack} activeOpacity={0.2}>
               <View style={styles.backIcon}>
                 <Image
-                  source={require("../../../../assets/images/flecha.png")}
+                  source={require("../../../assets/images/flecha.png")}
                   style={styles.backIconImage}
                 />
               </View>
@@ -86,7 +86,7 @@ export default function MenuScreen() {
                     Ingresar Parámetros Faciales
                   </Text>
                   <Image
-                    source={require("../../../../assets/images/flecha.png")}
+                    source={require("../../../assets/images/flecha.png")}
                     style={styles.arrowImage}
                   />
                 </View>
@@ -99,7 +99,7 @@ export default function MenuScreen() {
                     Actualizar Parámetros Faciales
                   </Text>
                   <Image
-                    source={require("../../../../assets/images/flecha.png")}
+                    source={require("../../../assets/images/flecha.png")}
                     style={styles.arrowImage}
                   />
                 </View>
@@ -112,7 +112,7 @@ export default function MenuScreen() {
                     Configuración de Justificaciones
                   </Text>
                   <Image
-                    source={require("../../../../assets/images/flecha.png")}
+                    source={require("../../../assets/images/flecha.png")}
                     style={styles.arrowImage}
                   />
                 </View>
@@ -125,7 +125,7 @@ export default function MenuScreen() {
                     Configuración del Aplicativo
                   </Text>
                   <Image
-                    source={require("../../../../assets/images/flecha.png")}
+                    source={require("../../../assets/images/flecha.png")}
                     style={styles.arrowImage}
                   />
                 </View>
@@ -138,7 +138,7 @@ export default function MenuScreen() {
                     ¿Falla en el reconocimiento facial?
                   </Text>
                   <Image
-                    source={require("../../../../assets/images/flecha.png")}
+                    source={require("../../../assets/images/flecha.png")}
                     style={styles.arrowImage}
                   />
                 </View>

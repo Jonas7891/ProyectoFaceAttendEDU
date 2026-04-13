@@ -70,7 +70,7 @@ export default function MenuJustifyScreen() {
                     Consultar Justificaciones
                   </Text>
                   <Image
-                    source={require("../../../../assets/images/flecha.png")}
+                    source={require("../../../assets/images/flecha.png")}
                     style={styles.arrowImage}
                   />
                 </View>
@@ -84,7 +84,7 @@ export default function MenuJustifyScreen() {
                     Envio de Excusa / Justificación
                   </Text>
                   <Image
-                    source={require("../../../../assets/images/flecha.png")}
+                    source={require("../../../assets/images/flecha.png")}
                     style={styles.arrowImage}
                   />
                 </View>

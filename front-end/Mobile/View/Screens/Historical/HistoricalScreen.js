@@ -105,7 +105,7 @@ export default function HistoricalScreen() {
                                     <View style={[styles.statusBadge]}>
                                         <TouchableOpacity>
                                             <Image
-                                                source={require("../../../../assets/images/lupa.png")}
+                                                source={require("../../../assets/images/lupa.png")}
                                                 style={styles.iconSearch}
                                             />
                                         </TouchableOpacity>
