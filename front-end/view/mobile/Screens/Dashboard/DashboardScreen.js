@@ -51,6 +51,11 @@ export default function DashboardScreen() {
     console.log("Abrir búsqueda");
   };
 
+  const handleVerAsistencias = () => {
+    console.log("Ver asistencias");
+    navigation.navigate("DisplayingAttendance");
+  }
+
   const menuAccionesRapidas = [
     {
       id: 1,
@@ -205,7 +210,7 @@ export default function DashboardScreen() {
           <View style={styles.recentSection}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Asistencias Recientes</Text>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={handleVerAsistencias}>
                 <Text style={styles.seeAllText}>Ver todos</Text>
               </TouchableOpacity>
             </View>

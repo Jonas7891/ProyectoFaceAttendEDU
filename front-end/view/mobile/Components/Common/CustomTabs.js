@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 
 export default function CustomTabs({ onChange }) {
@@ -80,6 +80,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     justifyContent: "center",
+    ...(Platform.OS === "android" && { paddingTop: 40 }),
   },
   button: {
     backgroundColor: "#D9D9D9",

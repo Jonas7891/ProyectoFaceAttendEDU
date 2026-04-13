@@ -12,6 +12,9 @@ import FacialFail from '../Screens/FacialFail/FacialFailScreen';
 import UpdatePhoto from '../Screens/UpdatePhoto/UpdatePhotoScreen';
 import TakePhoto from '../Screens/TakePhoto/TakePhotoScreen';
 import DisplayingAttendance from '../Screens/Attendance/DisplayingAttendance';
+import MenuJustify from '../Screens/MenuJustifiy/MenuJustifyScreen';
+import ConsultJustifiy from '../Screens/ConsultJustify/ConsultJustifyScreen';
+import AddJustification from '../Screens/AddOrEditJustify/AddJustifyScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -48,6 +51,9 @@ export default function AppNavigator() {
             <Stack.Screen name="UpdatePhoto" component={UpdatePhoto} />
             <Stack.Screen name="TakePhoto" component={TakePhoto} />
             <Stack.Screen name="DisplayingAttendance" component={DisplayingAttendance} />
+            <Stack.Screen name="MenuJustify" component={MenuJustify} />
+            <Stack.Screen name="ConsultJustify" component={ConsultJustifiy} />
+            <Stack.Screen name="AddJustify" component={AddJustification} />
           </>
         )}
       </Stack.Navigator>

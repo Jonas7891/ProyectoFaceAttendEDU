@@ -37,9 +37,9 @@ export default function MenuScreen() {
     navigation.navigate("FacialFail");
   };
 
-  const handleDisplayingAttendance = () => {
-    navigation.navigate("DisplayingAttendance");
-  };
+  const handleMenuJustify = () => {
+    navigation.navigate("MenuJustify");
+  }
 
   const sharedProps = {
     isLoading
@@ -106,10 +106,10 @@ export default function MenuScreen() {
               </TouchableOpacity>
 
               <Separador />
-              <TouchableOpacity onPress={handleDisplayingAttendance}>
+              <TouchableOpacity onPress={handleMenuJustify}>
                 <View style={{ justifyContent: "left", alignItems: "center", flexDirection: "row" }}>
                   <Text style={styles.sectionTitleMenu}>
-                    Visualización de Asistencias
+                    Configuración de Justificaciones
                   </Text>
                   <Image
                     source={require("../../../../assets/images/flecha.png")}
@@ -122,7 +122,7 @@ export default function MenuScreen() {
               <TouchableOpacity>
                 <View style={{ justifyContent: "left", alignItems: "center", flexDirection: "row" }}>
                   <Text style={styles.sectionTitleMenu}>
-                    Configuración de Justificaciones
+                    Configuración del Aplicativo
                   </Text>
                   <Image
                     source={require("../../../../assets/images/flecha.png")}

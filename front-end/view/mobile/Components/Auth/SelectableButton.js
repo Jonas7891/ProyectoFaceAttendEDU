@@ -53,11 +53,10 @@ export default function PrimaryButton({
 const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'left',
         paddingVertical: 12,
-        paddingHorizontal: 16,
         marginTop: 10,
-        alignSelf: 'center',
+        alignSelf: 'left',
     },
     checkbox: {
         width: 24,
