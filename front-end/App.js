@@ -1,18 +1,18 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import HomesScreen from './view/mobile/Screens/Homes/HomesScreen';
-import MenuScreen from './view/mobile/Screens/Menu/MenuScreen';
-import DashboardScreen from './view/mobile/Screens/Dashboard/DashboardScreen';
-import NewsScreen from './view/mobile/Screens/News/NewsScreen';
-import HistoricalScreen from './view/mobile/Screens/Historical/HistoricalScreen';
-import FacialFail from './view/mobile/Screens/FacialFail/FacialFailScreen';
-import UpdatePhoto from './view/mobile/Screens/UpdatePhoto/UpdatePhotoScreen';
-import TakePhotoScreen from './view/mobile/Screens/TakePhoto/TakePhotoScreen';
-import DisplayingAttendance from './view/mobile/Screens/Attendance/DisplayingAttendance';
-import MenuJustifyScreen from './view/mobile/Screens/MenuJustifiy/MenuJustifyScreen';
-import ConsultJustify from './view/mobile/Screens/ConsultJustify/ConsultJustifyScreen'
-import AddJustify from './view/mobile/Screens/AddOrEditJustify/AddJustifyScreen'
+import HomesScreen from './View/mobile/Screens/Homes/HomesScreen';
+import MenuScreen from './View/mobile/Screens/Menu/MenuScreen';
+import DashboardScreen from './View/mobile/Screens/Dashboard/DashboardScreen';
+import NewsScreen from './View/mobile/Screens/News/NewsScreen';
+import HistoricalScreen from './View/mobile/Screens/Historical/HistoricalScreen';
+import FacialFail from './View/mobile/Screens/FacialFail/FacialFailScreen';
+import UpdatePhoto from './View/mobile/Screens/UpdatePhoto/UpdatePhotoScreen';
+import TakePhotoScreen from './View/mobile/Screens/TakePhoto/TakePhotoScreen';
+import DisplayingAttendance from './View/mobile/Screens/Attendance/DisplayingAttendance';
+import MenuJustifyScreen from './View/mobile/Screens/MenuJustifiy/MenuJustifyScreen';
+import ConsultJustify from './View/mobile/Screens/ConsultJustify/ConsultJustifyScreen'
+import AddJustify from './View/mobile/Screens/AddOrEditJustify/AddJustifyScreen'
 
 const Stack = createStackNavigator();
 
