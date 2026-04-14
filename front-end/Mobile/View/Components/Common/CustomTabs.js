@@ -10,7 +10,6 @@ export default function CustomTabs({ onChange }) {
   const { t, i18n } = useTranslation();
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // CORRECCIÓN: Manejar cambio de idioma correctamente
   useEffect(() => {
     // Función que se ejecuta cuando cambia el idioma
     const handleLanguageChange = () => {
@@ -62,7 +61,7 @@ export default function CustomTabs({ onChange }) {
       navigation.navigate(screenName);
     }
   };
-
+  
   return (
     <View key={refreshKey} style={styles.container}>
       <TouchableOpacity

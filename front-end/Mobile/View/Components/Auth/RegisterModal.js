@@ -7,8 +7,11 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 export default function RegisterModal({ isVisible, onClose }) {
+  const { t } = useTranslation();
+
   return (
     <Modal
       visible={isVisible}
@@ -18,19 +21,19 @@ export default function RegisterModal({ isVisible, onClose }) {
     >
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
-          <Text style={styles.title}>Solicitud de Cuenta Personal</Text>
+          <Text style={styles.title}>{t('registerModal.title')}</Text>
 
           <ScrollView
             style={styles.content}
             showsVerticalScrollIndicator={false}
           >
             <Text style={styles.paragraph}>
-              Si no tienes una cuenta creada, la debes solicitar al administrador.
+              {t('registerModal.description')}
             </Text>
           </ScrollView>
 
           <TouchableOpacity style={styles.button} onPress={onClose}>
-            <Text style={styles.buttonText}>Cerrar</Text>
+            <Text style={styles.buttonText}>{t('registerModal.close')}</Text>
           </TouchableOpacity>
         </View>
       </View>

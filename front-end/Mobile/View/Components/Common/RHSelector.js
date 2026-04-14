@@ -5,6 +5,7 @@ import {
     TouchableOpacity,
     StyleSheet
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 const tiposRH = [
     { id: "a+", label: "A+" },
@@ -18,9 +19,11 @@ const tiposRH = [
 ];
 
 export const RHSelector = ({ selectedRH, onSelect }) => {
+    const { t } = useTranslation();
+
     return (
         <View style={styles.selectorContainer}>
-            <Text style={styles.selectorLabel}>Selecciona tu tipo de RH:</Text>
+            <Text style={styles.selectorLabel}>{t('rhSelector.label')}</Text>
             <View style={styles.rhGridContainer}>
                 {tiposRH.map((rh) => (
                     <TouchableOpacity

@@ -8,34 +8,36 @@ import {
     Alert,
     StyleSheet
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 const facialChanges = [
-    { id: "beard", label: "Cambio de barba/bigote" },
-    { id: "hair", label: "Cambio de peinado" },
-    { id: "glasses", label: "Uso de gafas" },
-    { id: "weight", label: "Cambio de peso significativo" },
-    { id: "makeup", label: "Maquillaje diferente" },
-    { id: "expression", label: "Expresión facial diferente" }
+    { id: "beard", label: "facialUpdate.beardChange" },
+    { id: "hair", label: "facialUpdate.hairChange" },
+    { id: "glasses", label: "facialUpdate.glasses" },
+    { id: "weight", label: "facialUpdate.weightChange" },
+    { id: "makeup", label: "facialUpdate.makeup" },
+    { id: "expression", label: "facialUpdate.expression" }
 ];
 
 export const FacialUpdateModal = ({ visible, onClose, onSuccess }) => {
+    const { t } = useTranslation();
     const [selectedChange, setSelectedChange] = useState(null);
 
     const handleUpdate = () => {
         if (!selectedChange) {
-            Alert.alert("Selecciona una opción", "Por favor selecciona qué cambio has tenido en tu rostro");
+            Alert.alert(t('facialUpdate.selectOption'), t('facialUpdate.selectOptionMessage'));
             return;
         }
 
         Alert.alert(
-            "Actualizar Parámetros",
-            "¿Estás seguro de que deseas actualizar tus parámetros faciales?",
+            t('facialUpdate.updateParams'),
+            t('facialUpdate.confirmUpdate'),
             [
-                { text: "Cancelar", style: "cancel" },
+                { text: t('common.cancel'), style: "cancel" },
                 {
-                    text: "Actualizar",
+                    text: t('facialUpdate.updateParams'),
                     onPress: () => {
-                        Alert.alert("Éxito", "Tus parámetros faciales han sido actualizados");
+                        Alert.alert(t('facialUpdate.success'), t('facialUpdate.paramsUpdated'));
                         onSuccess();
                         onClose();
                         setSelectedChange(null);
@@ -56,12 +58,12 @@ export const FacialUpdateModal = ({ visible, onClose, onSuccess }) => {
                 <View style={styles.modalOverlay}>
                     <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
                         <View style={styles.modalContainer}>
-                            <Text style={styles.modalTitle}>Actualizaciones de Parámetros Faciales</Text>
+                            <Text style={styles.modalTitle}>{t('facialUpdate.updateParams')}</Text>
                             <Text style={styles.modalSubtitle}>
-                                Muchas ocasiones el Reconocimiento Facial puede fallar por cierta modificación en el rostro de un usuario
+                                {t('facialFail.updateParamsDescription')}
                             </Text>
 
-                            <Text style={styles.selectLabel}>Selecciona el cambio que has tenido:</Text>
+                            <Text style={styles.selectLabel}>{t('facialUpdate.selectOption')}:</Text>
 
                             {facialChanges.map((change) => (
                                 <TouchableOpacity
@@ -75,7 +77,7 @@ export const FacialUpdateModal = ({ visible, onClose, onSuccess }) => {
                                     <View style={styles.radioCircle}>
                                         {selectedChange === change.id && <View style={styles.radioSelected} />}
                                     </View>
-                                    <Text style={styles.changeLabel}>{change.label}</Text>
+                                    <Text style={styles.changeLabel}>{t(change.label)}</Text>
                                 </TouchableOpacity>
                             ))}
 
@@ -84,13 +86,13 @@ export const FacialUpdateModal = ({ visible, onClose, onSuccess }) => {
                                     style={[styles.modalButton, styles.cancelModalButton]}
                                     onPress={onClose}
                                 >
-                                    <Text style={styles.cancelModalButtonText}>Cancelar</Text>
+                                    <Text style={styles.cancelModalButtonText}>{t('common.cancel')}</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={[styles.modalButton, styles.confirmModalButton]}
                                     onPress={handleUpdate}
                                 >
-                                    <Text style={styles.confirmModalButtonText}>Actualizar</Text>
+                                    <Text style={styles.confirmModalButtonText}>{t('facialUpdate.updateParams')}</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>

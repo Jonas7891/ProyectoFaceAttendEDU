@@ -7,8 +7,11 @@ import {
     ScrollView,
     TouchableOpacity,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 export default function TerminosModal({ isVisible, onClose }) {
+    const { t } = useTranslation();
+
     return (
         <Modal
             visible={isVisible}
@@ -18,99 +21,86 @@ export default function TerminosModal({ isVisible, onClose }) {
         >
             <View style={styles.overlay}>
                 <View style={styles.modalContainer}>
-                    <Text style={styles.title}>TÉRMINOS Y CONDICIONES</Text>
+                    <Text style={styles.title}>{t('termsModal.title')}</Text>
 
                     <ScrollView
                         style={styles.content}
                         showsVerticalScrollIndicator={false}
                     >
                         <Text style={styles.paragraph}>
-                            <Text style={styles.subtitle}>1. ACEPTACIÓN DE LOS TÉRMINOS {"\n\n"}</Text>
+                            <Text style={styles.subtitle}>{t('termsModal.acceptanceTitle')} {"\n\n"}</Text>
+                            {t('termsModal.acceptanceText')} {"\n\n"}
 
-                            Al acceder, registrarse y utilizar el presente aplicativo móvil, el usuario declara haber leído, entendido y aceptado de manera libre, previa, expresa e informada los presentes Términos y Condiciones, así como la Política de Tratamiento de Datos Personales.{"\n\n"}
+                            <Text style={styles.subtitle}>{t('termsModal.objectTitle')} {"\n\n"}</Text>
+                            {t('termsModal.objectText')} {"\n\n"}
 
-                            <Text style={styles.subtitle}>2. OBJETO DEL APLICATIVO {"\n\n"}</Text>
+                            <Text style={styles.subtitle}>{t('termsModal.authorizationTitle')} {"\n\n"}</Text>
+                            {t('termsModal.authorizationText')} {"\n\n"}
 
-                            El aplicativo tiene como finalidad gestionar el registro de asistencia de usuarios en espacios públicos o privados mediante tecnología de reconocimiento facial, permitiendo la validación de identidad de manera automatizada.{"\n\n"}
+                            <Text style={styles.subtitle}>{t('termsModal.sensitiveDataTitle')} {"\n\n"}</Text>
+                            {t('termsModal.sensitiveDataText')} {"\n\n"}
 
-                            <Text style={styles.subtitle}>3. AUTORIZACIÓN PARA EL TRATAMIENTO DE DATOS PERSONALES {"\n\n"}</Text>
+                            {'\u00A0\u00A0\u00A0\u00A0'}{t('termsModal.purpose1')} {"\n\n"}
+                            {'\u00A0\u00A0\u00A0\u00A0'}{t('termsModal.purpose2')} {"\n\n"}
+                            {'\u00A0\u00A0\u00A0\u00A0'}{t('termsModal.purpose3')} {"\n\n"}
 
-                            El usuario autoriza de manera previa, expresa e informada al responsable del aplicativo para recolectar, almacenar, usar, procesar y suprimir sus datos personales, conforme a lo establecido en la legislación colombiana vigente.{"\n\n"}
+                            {t('termsModal.sensitiveDataNote')} {"\n\n"}
 
-                            <Text style={styles.subtitle}>4. TRATAMIENTO DE DATOS SENSIBLES (BIOMÉTRICOS) {"\n\n"}</Text>
+                            <Text style={styles.subtitle}>{t('termsModal.finalityTitle')} {"\n\n"}</Text>
+                            {t('termsModal.finalityText')} {"\n\n"}
 
-                            El usuario autoriza expresamente el tratamiento de sus datos biométricos (imagen facial), los cuales son considerados datos sensibles, con las siguientes finalidades:{"\n\n"}
+                            {'\u00A0\u00A0\u00A0\u00A0'}{t('termsModal.finality1')} {"\n\n"}
+                            {'\u00A0\u00A0\u00A0\u00A0'}{t('termsModal.finality2')} {"\n\n"}
+                            {'\u00A0\u00A0\u00A0\u00A0'}{t('termsModal.finality3')} {"\n\n"}
+                            {'\u00A0\u00A0\u00A0\u00A0'}{t('termsModal.finality4')} {"\n\n"}
+                            {'\u00A0\u00A0\u00A0\u00A0'}{t('termsModal.finality5')} {"\n\n"}
 
-                            {'\u00A0\u00A0\u00A0\u00A0'}4.1 Validar la identidad del usuario.{"\n\n"}
-                            {'\u00A0\u00A0\u00A0\u00A0'}4.2 Registrar su asistencia en los lugares autorizados.{"\n\n"}
-                            {'\u00A0\u00A0\u00A0\u00A0'}4.3 Prevenir suplantaciones o fraudes.{"\n\n"}
+                            <Text style={styles.subtitle}>{t('termsModal.rightsTitle')} {"\n\n"}</Text>
+                            {t('termsModal.rightsText')} {"\n\n"}
 
-                            El usuario reconoce que no está obligado a autorizar el tratamiento de datos sensibles; sin embargo, entiende que la negativa puede impedir el uso del aplicativo.{"\n\n"}
+                            {'\u00A0\u00A0\u00A0\u00A0'}{t('termsModal.rights1')} {"\n\n"}
+                            {'\u00A0\u00A0\u00A0\u00A0'}{t('termsModal.rights2')} {"\n\n"}
+                            {'\u00A0\u00A0\u00A0\u00A0'}{t('termsModal.rights3')} {"\n\n"}
+                            {'\u00A0\u00A0\u00A0\u00A0'}{t('termsModal.rights4')} {"\n\n"}
+                            {'\u00A0\u00A0\u00A0\u00A0'}{t('termsModal.rights5')} {"\n\n"}
 
-                            <Text style={styles.subtitle}>5. FINALIDAD DEL TRATAMIENTO DE LOS DATOS {"\n\n"}</Text>
+                            {t('termsModal.rightsNote')} {"\n\n"}
 
-                            Los datos personales recolectados serán utilizados para:{"\n\n"}
+                            <Text style={styles.subtitle}>{t('termsModal.storageTitle')} {"\n\n"}</Text>
+                            {t('termsModal.storageText1')} {"\n\n"}
+                            {t('termsModal.storageText2')} {"\n\n"}
 
-                            {'\u00A0\u00A0\u00A0\u00A0'}5.1 Registro y control de asistencia.{"\n\n"}
-                            {'\u00A0\u00A0\u00A0\u00A0'}5.2 Identificación del usuario.{"\n\n"}
-                            {'\u00A0\u00A0\u00A0\u00A0'}5.3 Seguridad y control de acceso.{"\n\n"}
-                            {'\u00A0\u00A0\u00A0\u00A0'}5.4 Cumplimiento de obligaciones legales.{"\n\n"}
-                            {'\u00A0\u00A0\u00A0\u00A0'}5.5 Mejora del servicio.{"\n\n"}
+                            <Text style={styles.subtitle}>{t('termsModal.transferTitle')} {"\n\n"}</Text>
+                            {t('termsModal.transferText')} {"\n\n"}
 
-                            <Text style={styles.subtitle}>6. DERECHOS DEL TITULAR DE LOS DATOS {"\n\n"}</Text>
+                            <Text style={styles.subtitle}>{t('termsModal.responsibilitiesTitle')} {"\n\n"}</Text>
+                            {t('termsModal.responsibilitiesText')} {"\n\n"}
 
-                            El usuario, como titular de los datos personales, tiene derecho a:{"\n\n"}
+                            {'\u00A0\u00A0\u00A0\u00A0'}{t('termsModal.responsibilities1')} {"\n\n"}
+                            {'\u00A0\u00A0\u00A0\u00A0'}{t('termsModal.responsibilities2')} {"\n\n"}
+                            {'\u00A0\u00A0\u00A0\u00A0'}{t('termsModal.responsibilities3')} {"\n\n"}
+                            {'\u00A0\u00A0\u00A0\u00A0'}{t('termsModal.responsibilities4')} {"\n\n"}
 
-                            {'\u00A0\u00A0\u00A0\u00A0'}6.1 Conocer, actualizar y rectificar sus datos.{"\n\n"}
-                            {'\u00A0\u00A0\u00A0\u00A0'}6.2 Solicitar prueba de la autorización otorgada.{"\n\n"}
-                            {'\u00A0\u00A0\u00A0\u00A0'}6.3 Ser informado sobre el uso de sus datos.{"\n\n"}
-                            {'\u00A0\u00A0\u00A0\u00A0'}6.4 Revocar la autorización y/o solicitar la supresión de sus datos.{"\n\n"}
-                            {'\u00A0\u00A0\u00A0\u00A0'}6.5 Acceder de forma gratuita a sus datos personales.{"\n\n"}
+                            <Text style={styles.subtitle}>{t('termsModal.liabilityTitle')} {"\n\n"}</Text>
+                            {t('termsModal.liabilityText')} {"\n\n"}
 
-                            Para ejercer estos derechos, el usuario podrá comunicarse a través de los canales establecidos por el aplicativo.{"\n\n"}
+                            {'\u00A0\u00A0\u00A0\u00A0'}{t('termsModal.liability1')} {"\n\n"}
+                            {'\u00A0\u00A0\u00A0\u00A0'}{t('termsModal.liability2')} {"\n\n"}
+                            {'\u00A0\u00A0\u00A0\u00A0'}{t('termsModal.liability3')} {"\n\n"}
 
-                            <Text style={styles.subtitle}>7. ALMACENAMIENTO Y SEGURIDAD DE LA INFORMACIÓN {"\n\n"}</Text>
+                            <Text style={styles.subtitle}>{t('termsModal.modificationsTitle')} {"\n\n"}</Text>
+                            {t('termsModal.modificationsText')} {"\n\n"}
 
-                            Los datos personales serán almacenados por el tiempo necesario para cumplir con las finalidades descritas o conforme a las disposiciones legales aplicables.{"\n\n"}
-                            El aplicativo implementará medidas de seguridad técnicas, humanas y administrativas para proteger la información contra acceso no autorizado, pérdida, uso indebido o fraude.{"\n\n"}
+                            <Text style={styles.subtitle}>{t('termsModal.legislationTitle')} {"\n\n"}</Text>
+                            {t('termsModal.legislationText')} {"\n\n"}
 
-                            <Text style={styles.subtitle}>8. TRANSFERENCIA Y TRANSMISIÓN DE DATOS {"\n\n"}</Text>
-
-                            El usuario autoriza que sus datos personales puedan ser compartidos con terceros encargados del tratamiento, únicamente cuando sea necesario para el funcionamiento del aplicativo o por requerimiento legal, garantizando en todo caso la protección de la información.{"\n\n"}
-
-                            <Text style={styles.subtitle}>9. RESPONSABILIDADES DEL USUARIO {"\n\n"}</Text>
-
-                            El usuario se compromete a:{"\n\n"}
-
-                            {'\u00A0\u00A0\u00A0\u00A0'}9.1 Proporcionar información veraz y actualizada.{"\n\n"}
-                            {'\u00A0\u00A0\u00A0\u00A0'}9.2 Hacer uso adecuado del aplicativo.{"\n\n"}
-                            {'\u00A0\u00A0\u00A0\u00A0'}9.3 No suplantar la identidad de terceros.{"\n\n"}
-                            {'\u00A0\u00A0\u00A0\u00A0'}9.4 Cumplir con las normas aplicables en el uso del servicio.{"\n\n"}
-
-                            <Text style={styles.subtitle}>10. LIMITACIÓN DE RESPONSABILIDAD {"\n\n"}</Text>
-
-                            El aplicativo no será responsable por:{"\n\n"}
-
-                            {'\u00A0\u00A0\u00A0\u00A0'}10.1 Fallas técnicas ajenas a su control.{"\n\n"}
-                            {'\u00A0\u00A0\u00A0\u00A0'}10.2 Uso indebido del sistema por parte del usuario.{"\n\n"}
-                            {'\u00A0\u00A0\u00A0\u00A0'}10.3 Accesos no autorizados derivados de negligencia del usuario.{"\n\n"}
-
-                            <Text style={styles.subtitle}>11. MODIFICACIONES {"\n\n"}</Text>
-
-                            El aplicativo se reserva el derecho de modificar en cualquier momento los presentes Términos y Condiciones. Las modificaciones serán informadas oportunamente a los usuarios.{"\n\n"}
-
-                            <Text style={styles.subtitle}>12. LEGISLACIÓN APLICABLE {"\n\n"}</Text>
-
-                            Los presentes Términos y Condiciones se rigen por las leyes de la República de Colombia, en especial por la Ley 1581 de 2012 y sus decretos reglamentarios.{"\n\n"}
-
-                            <Text style={styles.subtitle}>13. ACEPTACIÓN FINAL {"\n\n"}</Text>
-
-                            El usuario declara que ha leído, comprendido y aceptado la totalidad de los presentes Términos y Condiciones, así como la Política de Tratamiento de Datos Personales, autorizando el uso de sus datos conforme a lo aquí establecido.{"\n\n"}
+                            <Text style={styles.subtitle}>{t('termsModal.acceptanceFinalTitle')} {"\n\n"}</Text>
+                            {t('termsModal.acceptanceFinalText')} {"\n\n"}
                         </Text>
                     </ScrollView>
 
                     <TouchableOpacity style={styles.button} onPress={onClose}>
-                        <Text style={styles.buttonText}>Cerrar</Text>
+                        <Text style={styles.buttonText}>{t('common.close')}</Text>
                     </TouchableOpacity>
                 </View>
             </View>

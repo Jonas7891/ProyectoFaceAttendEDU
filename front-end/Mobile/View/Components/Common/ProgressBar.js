@@ -4,13 +4,15 @@ import {
     Text,
     StyleSheet
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 export const ProgressBar = ({ currentStep, totalSteps }) => {
+    const { t } = useTranslation();
     const progress = (currentStep / totalSteps) * 100;
     
     return (
         <View style={styles.progressContainer}>
-            <Text style={styles.progressText}>Pregunta {currentStep} de {totalSteps}</Text>
+            <Text style={styles.progressText}>{t('progressBar.question', { currentStep, totalSteps })}</Text>
             <View style={styles.progressBar}>
                 <View style={[styles.progressFill, { width: `${progress}%` }]} />
             </View>

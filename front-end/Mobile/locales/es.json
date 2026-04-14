@@ -8,7 +8,8 @@
     "success": "Éxito",
     "settings": "Configuración",
     "profile": "Perfil",
-    "search": "Búsqueda"
+    "search": "Búsqueda",
+    "close": "Cerrar"
   },
   "login": {
     "title": "Inicio de Sesión",
@@ -46,7 +47,15 @@
     "updateFacialParams": "Actualizar Parámetros Faciales",
     "justificationConfig": "Configuración de Justificaciones",
     "appSettings": "Configuración del Aplicativo",
-    "facialRecognitionFail": "¿Falla en el reconocimiento facial?"
+    "facialRecognitionFail": "¿Falla en el reconocimiento facial?",
+    "logout": "Cerrar Sesión",
+    "loggingOut": "Cerrando Sesión..."
+  },
+  "logout": {
+    "title": "Cerrar Sesión",
+    "message": "¿Estás seguro de que deseas cerrar sesión?",
+    "cancel": "Cancelar",
+    "confirm": "Sí, cerrar sesión"
   },
   "updatePhoto": {
     "title": "Foto para Reconocimiento Facial",
@@ -78,7 +87,9 @@
     "updateParamsDescription": "Muchas ocasiones el Reconocimiento Facial puede fallar por cierta modificación en el rostro de un usuario",
     "recommendations": "Recomendaciones:",
     "cameraQuality": "Calidad o Ángulo de la Camara",
-    "cameraQualityDescription": "Otra de las razones por la que ocurre fallos en el sistema es debido a la iluminación del lugar, la calidad de la camara o en que angulo se pone el dispositivo para realizar el escaneo."
+    "cameraQualityDescription": "Otra de las razones por la que ocurre fallos en el sistema es debido a la iluminación del lugar, la calidad de la camara o en que angulo se pone el dispositivo para realizar el escaneo.",
+    "backToMenu": "Volver",
+    "returningToMenu": "Volviendo al Menu..."
   },
   "dashboard": {
     "greeting": "Buen día",
@@ -117,17 +128,39 @@
     "justifiedDelays": "Retardos Justificados",
     "noAbsencesRegistered": "No hay inasistencias registradas",
     "noDelaysRegistered": "No hay retardos registrados",
-    "back": "Volver"
+    "back": "Volver",
+    "statusApproved": "Aprobada",
+    "statusPending": "Pendiente",
+    "dateLabel": "Fecha",
+    "timeLabel": "Hora",
+    "reasonLabel": "Motivo"
   },
   "justify": {
     "title": "Justificaciones",
     "addAbsence": "Agregar Inasistencia",
     "addDelay": "Agregar Retardo",
+    "absenceType": "Inasistencia",
+    "delayType": "Retardo",
     "selectDate": "Selecciona una Fecha",
+    "dateLabel": "Fecha",
+    "timeLabel": "Hora",
     "enterReason": "Ingresa el Motivo",
+    "descriptionLabel": "Descripción de la Justificación",
     "reasonPlaceholder": "Describe el motivo de tu inasistencia o retardo...",
     "submit": "Enviar Justificación",
-    "successMessage": "¡Justificación enviada correctamente!"
+    "successMessage": "¡Justificación enviada correctamente!",
+    "dateFormat": "YYYY-MM-DD",
+    "timeFormat": "HH:MM AM/PM",
+    "descriptionPlaceholder": "Escribe aquí la descripción del motivo...",
+    "attachDocument": "Adjuntar Documento",
+    "selectFile": "Seleccionar Archivo",
+    "supportedFormats": "Formatos soportados: PDF, Imagen (JPG, PNG), Word (DOC, DOCX)",
+    "upload": "Subir",
+    "missingTimeError": "Por favor ingresa la hora del retardo",
+    "missingAttachmentError": "Por favor sube un archivo adjunto"
+  },
+  "menuJustify": {
+    "backToDashboard": "Volver al Dashboard"
   },
   "news": {
     "title": "Novedades",
@@ -141,5 +174,101 @@
   },
   "homes": {
     "greeting": "Inicio de Sesión"
+  },
+  "registerModal": {
+    "title": "Solicitud de Cuenta Personal",
+    "description": "Si no tienes una cuenta creada, la debes solicitar al administrador.",
+    "close": "Cerrar"
+  },
+  "termsModal": {
+    "title": "TÉRMINOS Y CONDICIONES",
+    "acceptanceTitle": "1. ACEPTACIÓN DE LOS TÉRMINOS",
+    "acceptanceText": "Al acceder, registrarse y utilizar el presente aplicativo móvil, el usuario declara haber leído, entendido y aceptado de manera libre, previa, expresa e informada los presentes Términos y Condiciones, así como la Política de Tratamiento de Datos Personales.",
+    "objectTitle": "2. OBJETO DEL APLICATIVO",
+    "objectText": "El aplicativo tiene como finalidad gestionar el registro de asistencia de usuarios en espacios públicos o privados mediante tecnología de reconocimiento facial, permitiendo la validación de identidad de manera automatizada.",
+    "authorizationTitle": "3. AUTORIZACIÓN PARA EL TRATAMIENTO DE DATOS PERSONALES",
+    "authorizationText": "El usuario autoriza de manera previa, expresa e informada al responsable del aplicativo para recolectar, almacenar, usar, procesar y suprimir sus datos personales, conforme a lo establecido en la legislación colombiana vigente.",
+    "sensitiveDataTitle": "4. TRATAMIENTO DE DATOS SENSIBLES (BIOMÉTRICOS)",
+    "sensitiveDataText": "El usuario autoriza expresamente el tratamiento de sus datos biométricos (imagen facial), los cuales son considerados datos sensibles, con las siguientes finalidades:",
+    "purpose1": "4.1 Validar la identidad del usuario.",
+    "purpose2": "4.2 Registrar su asistencia en los lugares autorizados.",
+    "purpose3": "4.3 Prevenir suplantaciones o fraudes.",
+    "sensitiveDataNote": "El usuario reconoce que no está obligado a autorizar el tratamiento de datos sensibles; sin embargo, entiende que la negativa puede impedir el uso del aplicativo.",
+    "finalityTitle": "5. FINALIDAD DEL TRATAMIENTO DE LOS DATOS",
+    "finalityText": "Los datos personales recolectados serán utilizados para:",
+    "finality1": "5.1 Registro y control de asistencia.",
+    "finality2": "5.2 Identificación del usuario.",
+    "finality3": "5.3 Seguridad y control de acceso.",
+    "finality4": "5.4 Cumplimiento de obligaciones legales.",
+    "finality5": "5.5 Mejora del servicio.",
+    "rightsTitle": "6. DERECHOS DEL TITULAR DE LOS DATOS",
+    "rightsText": "El usuario, como titular de los datos personales, tiene derecho a:",
+    "rights1": "6.1 Conocer, actualizar y rectificar sus datos.",
+    "rights2": "6.2 Solicitar prueba de la autorización otorgada.",
+    "rights3": "6.3 Ser informado sobre el uso de sus datos.",
+    "rights4": "6.4 Revocar la autorización y/o solicitar la supresión de sus datos.",
+    "rights5": "6.5 Acceder de forma gratuita a sus datos personales.",
+    "rightsNote": "Para ejercer estos derechos, el usuario podrá comunicarse a través de los canales establecidos por el aplicativo.",
+    "storageTitle": "7. ALMACENAMIENTO Y SEGURIDAD DE LA INFORMACIÓN",
+    "storageText1": "Los datos personales serán almacenados por el tiempo necesario para cumplir con las finalidades descritas o conforme a las disposiciones legales aplicables.",
+    "storageText2": "El aplicativo implementará medidas de seguridad técnicas, humanas y administrativas para proteger la información contra acceso no autorizado, pérdida, uso indebido o fraude.",
+    "transferTitle": "8. TRANSFERENCIA Y TRANSMISIÓN DE DATOS",
+    "transferText": "El usuario autoriza que sus datos personales puedan ser compartidos con terceros encargados del tratamiento, únicamente cuando sea necesario para el funcionamiento del aplicativo o por requerimiento legal, garantizando en todo caso la protección de la información.",
+    "responsibilitiesTitle": "9. RESPONSABILIDADES DEL USUARIO",
+    "responsibilitiesText": "El usuario se compromete a:",
+    "responsibilities1": "9.1 Proporcionar información veraz y actualizada.",
+    "responsibilities2": "9.2 Hacer uso adecuado del aplicativo.",
+    "responsibilities3": "9.3 No suplantar la identidad de terceros.",
+    "responsibilities4": "9.4 Cumplir con las normas aplicables en el uso del servicio.",
+    "liabilityTitle": "10. LIMITACIÓN DE RESPONSABILIDAD",
+    "liabilityText": "El aplicativo no será responsable por:",
+    "liability1": "10.1 Fallas técnicas ajenas a su control.",
+    "liability2": "10.2 Uso indebido del sistema por parte del usuario.",
+    "liability3": "10.3 Accesos no autorizados derivados de negligencia del usuario.",
+    "modificationsTitle": "11. MODIFICACIONES",
+    "modificationsText": "El aplicativo se reserva el derecho de modificar en cualquier momento los presentes Términos y Condiciones. Las modificaciones serán informadas oportunamente a los usuarios.",
+    "legislationTitle": "12. LEGISLACIÓN APLICABLE",
+    "legislationText": "Los presentes Términos y Condiciones se rigen por las leyes de la República de Colombia, en especial por la Ley 1581 de 2012 y sus decretos reglamentarios.",
+    "acceptanceFinalTitle": "13. ACEPTACIÓN FINAL",
+    "close": "Cerrar",
+    "acceptanceFinalText": "El usuario declara que ha leído, comprendido y aceptado la totalidad de los presentes Términos y Condiciones, así como la Política de Tratamiento de Datos Personales, autorizando el uso de sus datos conforme a lo aquí establecido."
+  },
+  "questionnaire": {
+    "documentQuestion": "Selecciona tu tipo de documento de identidad:",
+    "documentPlaceholder": "Ejemplo: 12345678",
+    "rhQuestion": "Selecciona tu tipo de RH (Factor Rh):",
+    "relativeDocumentQuestion": "¿Documento del familiar asociado?",
+    "birthDateQuestion": "¿Cuál es tu fecha de nacimiento?",
+    "birthDatePlaceholder": "DD/MM/AAAA",
+    "birthDateHint": "Formato: 15/08/1990",
+    "addressQuestion": "¿Cuál es tu dirección de residencia?",
+    "addressPlaceholder": "Calle, número, ciudad",
+    "addressHint": "Ejemplo: Calle 123 #45-67, Bogotá",
+    "phoneQuestion": "¿Cuál es tu número de teléfono de contacto?",
+    "phonePlaceholder": "Ejemplo: 3001234567",
+    "phoneHint": "Ingresa tu número sin espacios"
+  },
+  "facialUpdate": {
+    "beardChange": "Cambio de barba/bigote",
+    "hairChange": "Cambio de peinado",
+    "glasses": "Uso de gafas",
+    "weightChange": "Cambio de peso significativo",
+    "makeup": "Maquillaje diferente",
+    "expression": "Expresión facial diferente",
+    "selectOption": "Selecciona una opción",
+    "selectOptionMessage": "Por favor selecciona qué cambio has tenido en tu rostro",
+    "updateParams": "Actualizar Parámetros",
+    "confirmUpdate": "¿Estás seguro de que deseas actualizar tus parámetros faciales?",
+    "success": "Éxito",
+    "paramsUpdated": "Tus parámetros faciales han sido actualizados"
+  },
+  "documentSelector": {
+    "label": "Tipo de documento:"
+  },
+  "rhSelector": {
+    "label": "Selecciona tu tipo de RH:"
+  },
+  "progressBar": {
+    "question": "Pregunta {{currentStep}} de {{totalSteps}}"
   }
 }

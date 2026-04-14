@@ -113,7 +113,7 @@ export default function MenuJustifyScreen() {
             {/* Botón fijo en la parte inferior */}
             <View style={styles.buttonContainer}>
               <PrimaryButton
-                title="Volver al Dashboard"
+                title={t('menuJustify.backToDashboard')}
                 onPress={handleBack}
                 {...sharedProps}
               />

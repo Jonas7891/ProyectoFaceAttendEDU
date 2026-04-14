@@ -9,69 +9,71 @@ import {
     Alert,
     StyleSheet
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { DocumentSelector } from './DocumentSelector';
 import { RHSelector } from './RHSelector';
 import { QuestionInput } from './QuestionInput';
 import { ProgressBar } from './ProgressBar';
 
-const questions = [
-    {
-        id: 1,
-        question: "Selecciona tu tipo de documento de identidad:",
-        type: "selector",
-        selectorType: "document"
-    },
-    {
-        id: 2,
-        question: "¿Cuál es tu número de documento de identidad?",
-        placeholder: "Ejemplo: 12345678",
-        type: "input",
-        keyboardType: "numeric"
-    },
-    {
-        id: 3,
-        question: "Selecciona tu tipo de RH (Factor Rh):",
-        type: "selector",
-        selectorType: "rh"
-    },
-    {
-        id: 4,
-        question: "¿Documento del familiar asociado?",
-        placeholder: "Ejemplo: 12345678",
-        type: "input",
-        keyboardType: "numeric"
-    },
-    {
-        id: 5,
-        question: "¿Cuál es tu fecha de nacimiento?",
-        placeholder: "DD/MM/AAAA",
-        hint: "Formato: 15/08/1990",
-        type: "input",
-        keyboardType: "numeric"
-    },
-    {
-        id: 6,
-        question: "¿Cuál es tu dirección de residencia?",
-        placeholder: "Calle, número, ciudad",
-        hint: "Ejemplo: Calle 123 #45-67, Bogotá",
-        type: "input"
-    },
-    {
-        id: 7,
-        question: "¿Cuál es tu número de teléfono de contacto?",
-        placeholder: "Ejemplo: 3001234567",
-        hint: "Ingresa tu número sin espacios",
-        type: "input",
-        keyboardType: "numeric"
-    }
-];
-
 export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
+    const { t } = useTranslation();
     const [step, setStep] = useState(1);
     const [answers, setAnswers] = useState({});
     const [selectedDocument, setSelectedDocument] = useState(null);
     const [selectedRH, setSelectedRH] = useState(null);
     const inputRef = useRef(null);
+
+    const questions = [
+        {
+            id: 1,
+            question: t('questionnaire.documentQuestion'),
+            type: "selector",
+            selectorType: "document"
+        },
+        {
+            id: 2,
+            question: t('questionnaire.documentPlaceholder'),
+            placeholder: t('questionnaire.documentPlaceholder'),
+            type: "input",
+            keyboardType: "numeric"
+        },
+        {
+            id: 3,
+            question: t('questionnaire.rhQuestion'),
+            type: "selector",
+            selectorType: "rh"
+        },
+        {
+            id: 4,
+            question: t('questionnaire.relativeDocumentQuestion'),
+            placeholder: t('questionnaire.documentPlaceholder'),
+            type: "input",
+            keyboardType: "numeric"
+        },
+        {
+            id: 5,
+            question: t('questionnaire.birthDateQuestion'),
+            placeholder: t('questionnaire.birthDatePlaceholder'),
+            hint: t('questionnaire.birthDateHint'),
+            type: "input",
+            keyboardType: "numeric"
+        },
+        {
+            id: 6,
+            question: t('questionnaire.addressQuestion'),
+            placeholder: t('questionnaire.addressPlaceholder'),
+            hint: t('questionnaire.addressHint'),
+            type: "input"
+        },
+        {
+            id: 7,
+            question: t('questionnaire.phoneQuestion'),
+            placeholder: t('questionnaire.phonePlaceholder'),
+            hint: t('questionnaire.phoneHint'),
+            type: "input",
+            keyboardType: "numeric"
+        }
+    ];
 
     const dismissKeyboard = () => {
         Keyboard.dismiss();

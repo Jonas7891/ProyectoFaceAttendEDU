@@ -5,6 +5,7 @@ import {
     TouchableOpacity,
     StyleSheet
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 const documentosColombia = [
     { id: "cc", label: "Cédula de Ciudadanía (CC)", abreviatura: "CC" },
@@ -13,9 +14,11 @@ const documentosColombia = [
 ];
 
 export const DocumentSelector = ({ selectedDocument, onSelect }) => {
+    const { t } = useTranslation();
+
     return (
         <View style={styles.selectorContainer}>
-            <Text style={styles.selectorLabel}>Tipo de documento:</Text>
+            <Text style={styles.selectorLabel}>{t('documentSelector.label')}</Text>
             <View style={styles.optionsContainer}>
                 {documentosColombia.map((doc) => (
                     <TouchableOpacity

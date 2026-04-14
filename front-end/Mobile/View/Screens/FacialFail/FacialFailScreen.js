@@ -115,7 +115,7 @@ export default function FacialFail() {
                             </View>
 
                             <PrimaryButton
-                                title={isLoading ? "Volviendo al Menu..." : "Volver"}
+                                title={isLoading ? t('facialFail.returningToMenu') : t('facialFail.backToMenu')}
                                 onPress={handleBack}
                                 isLoading={isLoading}
                             />
