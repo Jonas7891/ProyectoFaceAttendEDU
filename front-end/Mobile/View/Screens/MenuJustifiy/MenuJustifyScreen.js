@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Text,
   View,
@@ -9,6 +9,7 @@ import {
   Image,
   ScrollView,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import PrimaryButton from "../../Components/Auth/PrimaryButton";
 import CustomLogo from "../../Components/Auth/logo";
 import { useNavigation } from "@react-navigation/native";
@@ -17,8 +18,21 @@ import styles from "../Style/Style";
 
 export default function MenuJustifyScreen() {
   const navigation = useNavigation();
-
+  const { t, i18n } = useTranslation();
+  const [refreshKey, setRefreshKey] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const handleLanguageChange = () => {
+      setRefreshKey(prev => prev + 1);
+    };
+
+    i18n.on('languageChanged', handleLanguageChange);
+
+    return () => {
+      i18n.off('languageChanged', handleLanguageChange);
+    };
+  }, [i18n]);
 
   const handleBack = () => {
     navigation.navigate("Dashboard");
@@ -52,7 +66,7 @@ export default function MenuJustifyScreen() {
             <View style={styles.mainContent}>
               <View style={styles.headerContainer}>
                 <Text style={styles.mainTitle}>
-                  Información de {"\n"} Tus Justificaciones
+                  {t('justify.title')} {"\n"} 
                 </Text>
                 <CustomLogo
                   size="small"
@@ -67,7 +81,7 @@ export default function MenuJustifyScreen() {
               <TouchableOpacity onPress={handleConsultJustify}>
                 <View style={styles.menuItem}>
                   <Text style={styles.sectionTitleMenu}>
-                    Consultar Justificaciones
+                    {t('consultJustify.mainTitle')}
                   </Text>
                   <Image
                     source={require("../../../assets/images/flecha.png")}
@@ -81,7 +95,7 @@ export default function MenuJustifyScreen() {
               <TouchableOpacity onPress={handleAddOrEditJustify}>
                 <View style={styles.menuItem}>
                   <Text style={styles.sectionTitleMenu}>
-                    Envio de Excusa / Justificación
+                    {t('justify.addAbsence')}
                   </Text>
                   <Image
                     source={require("../../../assets/images/flecha.png")}

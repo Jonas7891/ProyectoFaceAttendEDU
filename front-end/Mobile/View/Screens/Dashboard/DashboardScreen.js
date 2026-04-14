@@ -7,6 +7,7 @@ import {
   Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import BottomBar from "../../Components/Common/NavigationBar";
 import ScrollViewWrapper from "../../Components/Common/ScrollView";
 import CustomTabs from "../../Components/Common/CustomTabs";
@@ -14,6 +15,8 @@ import styles from "../Style/Style";
 
 export default function DashboardScreen() {
   const navigation = useNavigation();
+  const { t, i18n } = useTranslation();
+  const [refreshKey, setRefreshKey] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState({
     totalEmpleados: 0,
@@ -26,6 +29,18 @@ export default function DashboardScreen() {
   useEffect(() => {
     cargarEstadisticas();
   }, []);
+
+  useEffect(() => {
+    const handleLanguageChange = () => {
+      setRefreshKey(prev => prev + 1);
+    };
+
+    i18n.on('languageChanged', handleLanguageChange);
+
+    return () => {
+      i18n.off('languageChanged', handleLanguageChange);
+    };
+  }, [i18n]);
 
   const cargarEstadisticas = () => {
     setStats({
@@ -59,29 +74,29 @@ export default function DashboardScreen() {
   const menuAccionesRapidas = [
     {
       id: 1,
-      title: "Registrar Asistencia",
-      description: "Registro facial de empleados",
+      title: t('dashboard.registerAttendance'),
+      description: t('dashboard.registerAttendanceDesc'),
       color: "#4CAF50",
       screen: "RegistroAsistencia"
     },
     {
       id: 2,
-      title: "Gestión de Empleados",
-      description: "Agregar, editar o eliminar empleados",
+      title: t('dashboard.employeeManagement'),
+      description: t('dashboard.employeeManagementDesc'),
       color: "#2196F3",
       screen: "GestionEmpleados"
     },
     {
       id: 3,
-      title: "Reportes",
-      description: "Generar reportes de asistencia",
+      title: t('dashboard.reports'),
+      description: t('dashboard.reportsDesc'),
       color: "#FF9800",
       screen: "Reportes"
     },
     {
       id: 4,
-      title: "Configuración Facial",
-      description: "Actualizar parámetros faciales",
+      title: t('dashboard.facialConfig'),
+      description: t('dashboard.facialConfigDesc'),
       color: "#9C27B0",
       screen: "ConfiguracionFacial"
     }
@@ -121,23 +136,23 @@ export default function DashboardScreen() {
   const novedadesRecientes = [
     {
       id: 1,
-      titulo: "Nuevo empleado registrado",
-      descripcion: "María González se ha registrado exitosamente",
-      tiempo: "Hace 5 minutos",
+      titulo: t('dashboard.newEmployeeRegistered'),
+      descripcion: `María González ${t('dashboard.newEmployeeMsg')}`,
+      tiempo: `${t('dashboard.ago')} 5 ${t('dashboard.minutesAgo')}`,
       tipo: "success"
     },
     {
       id: 2,
-      titulo: "Tardanza detectada",
-      descripcion: "Carlos Ruiz registró entrada 15 minutos tarde",
-      tiempo: "Hace 30 minutos",
+      titulo: t('dashboard.latenessDetected'),
+      descripcion: `Carlos Ruiz ${t('dashboard.latenessMsg')} 15 ${t('dashboard.minutesLate')}`,
+      tiempo: `${t('dashboard.ago')} 30 ${t('dashboard.minutesAgo')}`,
       tipo: "warning"
     },
     {
       id: 3,
-      titulo: "Reconocimiento facial mejorado",
-      descripcion: "El sistema ha actualizado sus algoritmos",
-      tiempo: "Hace 2 horas",
+      titulo: t('dashboard.facialRecognitionImproved'),
+      descripcion: t('dashboard.facialRecognitionMsg'),
+      tiempo: `${t('dashboard.ago')} 2 ${t('dashboard.hoursAgo')}`,
       tipo: "info"
     }
   ];
@@ -151,10 +166,10 @@ export default function DashboardScreen() {
           <View style={styles.header}>
             <View style={styles.dataBar}>
               <View style={styles.leftContent}>
-                <Text style={styles.greeting}>Buen día</Text>
-                <Text style={styles.adminName}>Administrador</Text>
+                <Text style={styles.greeting}>{t('dashboard.greeting')}</Text>
+                <Text style={styles.adminName}>{t('dashboard.admin')}</Text>
                 <Text style={styles.date}>
-                  {new Date().toLocaleDateString('es-ES', {
+                  {new Date().toLocaleDateString(i18n.language === 'en' ? 'en-US' : i18n.language === 'pt' ? 'pt-BR' : i18n.language === 'fr' ? 'fr-FR' : 'es-ES', {
                     weekday: 'long',
                     year: 'numeric',
                     month: 'long',
@@ -168,7 +183,7 @@ export default function DashboardScreen() {
           {/* Indicador de asistencia */}
           <View style={styles.attendanceIndicator}>
             <View style={styles.indicatorHeader}>
-              <Text style={styles.sectionTitle}>Asistencia Hoy</Text>
+              <Text style={styles.sectionTitle}>{t('dashboard.attendance')}</Text>
               <Text style={styles.percentageText}>
                 {stats.porcentajeAsistencia}%
               </Text>
@@ -183,13 +198,13 @@ export default function DashboardScreen() {
             </View>
             <View style={styles.indicatorDetails}>
               <Text style={styles.indicatorText}>
-                {stats.presentesHoy} de {stats.totalEmpleados} empleados presentes
+                {stats.presentesHoy} {t('dashboard.employeesPresent')} {stats.totalEmpleados} {t('dashboard.employeesAttending')}
               </Text>
             </View>
           </View>
 
           {/* Acciones rápidas */}
-          <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
+          <Text style={styles.sectionTitle}>{t('dashboard.quickActions')}</Text>
           <View style={styles.quickActionsContainer}>
             {menuAccionesRapidas.map((item) => (
               <TouchableOpacity
@@ -209,7 +224,7 @@ export default function DashboardScreen() {
           {/* Asistencias recientes */}
           <View style={styles.recentSection}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Asistencias Recientes</Text>
+              <Text style={styles.sectionTitle}>{t('dashboard.recentAttendance')}</Text>
               <TouchableOpacity onPress={handleVerAsistencias}>
                 <Text style={styles.seeAllText}>Ver todos</Text>
               </TouchableOpacity>
@@ -236,7 +251,7 @@ export default function DashboardScreen() {
           </View>
 
           <View style={styles.novedadesSection}>
-            <Text style={styles.sectionTitle}>Novedades</Text>
+            <Text style={styles.sectionTitle}>{t('dashboard.recentNews')}</Text>
             {novedadesRecientes.map((item) => (
               <View key={item.id} style={styles.novedadCard}>
                 <View style={[

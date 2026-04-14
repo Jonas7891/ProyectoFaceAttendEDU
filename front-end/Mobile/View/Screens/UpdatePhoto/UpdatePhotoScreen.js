@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Text,
     View,
@@ -9,13 +9,17 @@ import {
     Image,
     KeyboardAvoidingView,
     Platform,
+    Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import { QuestionInput } from "../../Components/Common/QuestionInput";
 import styles from "../Style/Style";
 
 export default function UpdatePhoto() {
     const navigation = useNavigation();
+    const { t, i18n } = useTranslation();
+    const [refreshKey, setRefreshKey] = useState(0);
     const [attendanceRegistered, setAttendanceRegistered] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -23,6 +27,20 @@ export default function UpdatePhoto() {
         documento: "",
         telefono: ""
     });
+
+    // CORREGIDO: El useEffect estaba mal escrito
+    useEffect(() => {
+        const handleLanguageChange = () => {
+            setRefreshKey(prev => prev + 1);
+        };
+
+        i18n.on('languageChanged', handleLanguageChange);
+
+        // CORREGIDO: La función de limpieza estaba mal escrita
+        return () => {
+            i18n.off('languageChanged', handleLanguageChange);
+        };
+    }, [i18n]);
 
     const handleInputChange = (field, value) => {
         setFormData(prevState => ({
@@ -33,15 +51,21 @@ export default function UpdatePhoto() {
 
     const handleRegisterAttendance = () => {
         if (!formData.nombreCompleto || !formData.documento || !formData.telefono) {
-            alert("Por favor, complete todos los campos");
+            Alert.alert(
+                t('updatePhoto.error', { defaultValue: 'Error' }),
+                t('updatePhoto.completeFields', { defaultValue: 'Por favor, complete todos los campos' })
+            );
             return;
         }
 
         console.log("Datos del usuario:", formData);
         setAttendanceRegistered(true);
-        setTimeout(() => {
+
+        const timeout = setTimeout(() => {
             setAttendanceRegistered(false);
         }, 1500);
+
+        return () => clearTimeout(timeout);
     };
 
     const handleMenu = () => {
@@ -53,7 +77,7 @@ export default function UpdatePhoto() {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={styles.container} key={refreshKey}>
             <StatusBar barStyle="dark-content" backgroundColor="#F5F5F5" />
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -88,20 +112,26 @@ export default function UpdatePhoto() {
                     </View>
 
                     <View style={styles.header}>
-                        <Text style={styles.headerTitle}>Foto para Reconocimiento Facial</Text>
+                        <Text style={styles.headerTitle}>
+                            {t('updatePhoto.title', { defaultValue: 'Actualizar Foto' })}
+                        </Text>
                     </View>
 
                     <Text style={styles.instructionText}>
-                        Centra tu rostro de tal manera que cubra la mayor parte de la cámara para un mejor escaneo y velocidad de reconocimiento.
+                        {t('updatePhoto.instructions', { defaultValue: 'Complete los siguientes datos para actualizar su foto' })}
                     </Text>
 
                     <View style={styles.formSection}>
-                        <Text style={styles.formTitle}>Información Personal</Text>
+                        <Text style={styles.formTitle}>
+                            {t('updatePhoto.personalInfo', { defaultValue: 'Información Personal' })}
+                        </Text>
 
                         <View style={styles.inputContainer}>
-                            <Text style={styles.inputLabel}>Nombre Completo</Text>
+                            <Text style={styles.inputLabel}>
+                                {t('updatePhoto.fullName', { defaultValue: 'Nombre Completo' })}
+                            </Text>
                             <QuestionInput
-                                placeholder="Ejemplo: Juan Pérez"
+                                placeholder={t('updatePhoto.fullNamePlaceholder', { defaultValue: 'Ej: Juan Pérez' })}
                                 value={formData.nombreCompleto}
                                 onChangeText={(value) => handleInputChange("nombreCompleto", value)}
                                 keyboardType="default"
@@ -109,9 +139,11 @@ export default function UpdatePhoto() {
                         </View>
 
                         <View style={styles.inputContainer}>
-                            <Text style={styles.inputLabel}>Número de documento de identidad</Text>
+                            <Text style={styles.inputLabel}>
+                                {t('updatePhoto.documentNumber', { defaultValue: 'Número de Documento' })}
+                            </Text>
                             <QuestionInput
-                                placeholder="Ejemplo: 12345678"
+                                placeholder={t('updatePhoto.documentPlaceholder', { defaultValue: 'Ej: 12345678' })}
                                 value={formData.documento}
                                 onChangeText={(value) => handleInputChange("documento", value)}
                                 keyboardType="numeric"
@@ -119,9 +151,11 @@ export default function UpdatePhoto() {
                         </View>
 
                         <View style={styles.inputContainer}>
-                            <Text style={styles.inputLabel}>Número de Teléfono</Text>
+                            <Text style={styles.inputLabel}>
+                                {t('updatePhoto.phoneNumber', { defaultValue: 'Número de Teléfono' })}
+                            </Text>
                             <QuestionInput
-                                placeholder="Ejemplo: 3001234567"
+                                placeholder={t('updatePhoto.phonePlaceholder', { defaultValue: 'Ej: 3001234567' })}
                                 value={formData.telefono}
                                 onChangeText={(value) => handleInputChange("telefono", value)}
                                 keyboardType="phone-pad"
@@ -143,7 +177,10 @@ export default function UpdatePhoto() {
                                 style={styles.icon}
                             />
                             <Text style={styles.registerButtonText}>
-                                {attendanceRegistered ? '✓ Asistencia Registrada' : 'Registrar Asistencia'}
+                                {attendanceRegistered
+                                    ? t('updatePhoto.attendanceRegistered', { defaultValue: '¡Registro Exitoso!' })
+                                    : t('updatePhoto.registerAttendance', { defaultValue: 'Registrar Asistencia' })
+                                }
                             </Text>
                         </View>
                     </TouchableOpacity>
@@ -151,6 +188,7 @@ export default function UpdatePhoto() {
                     <View>
                         <Text>{"\n"}{"\n"}</Text>
                     </View>
+
                     <TouchableOpacity
                         onPress={handleMenu}
                         style={styles.settingsContainer}
@@ -162,7 +200,9 @@ export default function UpdatePhoto() {
                                 style={styles.settingsIcon}
                             />
                         </View>
-                        <Text style={styles.settingsText}>Ajustes</Text>
+                        <Text style={styles.settingsText}>
+                            {t('updatePhoto.settings', { defaultValue: 'Configuración' })}
+                        </Text>
                     </TouchableOpacity>
 
                     <View style={styles.footer} />

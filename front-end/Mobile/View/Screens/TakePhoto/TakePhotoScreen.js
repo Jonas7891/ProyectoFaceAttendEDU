@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Text,
     View,
@@ -11,11 +11,26 @@ import {
     Platform,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import styles from "../Style/Style";
 
 export default function TakePhotoScreen() {
     const navigation = useNavigation();
+    const { t, i18n } = useTranslation();
+    const [refreshKey, setRefreshKey] = useState(0);
     const [facialParamsRegistered, setFacialParamsRegistered] = useState(false);
+
+    useEffect(() => {
+        const handleLanguageChange = () => {
+            setRefreshKey(prev => prev + 1);
+        };
+
+        i18n.on('languageChanged', handleLanguageChange);
+
+        return () => {
+            i18n.off('languageChanged', handleLanguageChange);
+        };
+    }, [i18n]);
 
     const handleFacialParams = () => {
         // Simulación de ingreso de parámetros faciales
@@ -76,13 +91,12 @@ export default function TakePhotoScreen() {
 
                         <View style={styles.header}>
                             <Text style={styles.headerTitle}>
-                                Foto para Reconocimiento Facial{"\n"}Inicial
+                                {t('takePhoto.title')}
                             </Text>
                         </View>
 
                         <Text style={styles.instructionText}>
-                            Centra tu rostro de tal manera que cubra la mayor parte de la cámara
-                            para un mejor escaneo y velocidad de reconocimiento.
+                            {t('takePhoto.instructions')}
                         </Text>
 
                         <TouchableOpacity
@@ -100,8 +114,8 @@ export default function TakePhotoScreen() {
                                 />
                                 <Text style={styles.registerButtonText}>
                                     {facialParamsRegistered
-                                        ? '✓ Parámetros Registrados'
-                                        : 'Ingresar Parámetros Faciales'
+                                        ? t('takePhoto.facialParamsRegistered')
+                                        : t('takePhoto.registerFacialParams')
                                     }
                                 </Text>
                             </View>
@@ -118,7 +132,7 @@ export default function TakePhotoScreen() {
                                     style={styles.settingsIcon}
                                 />
                             </View>
-                            <Text style={styles.settingsText}>Ajustes</Text>
+                            <Text style={styles.settingsText}>{t('updatePhoto.settings')}</Text>
                         </TouchableOpacity>
                     </View>
 

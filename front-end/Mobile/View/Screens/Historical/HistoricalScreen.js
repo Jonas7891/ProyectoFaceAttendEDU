@@ -8,6 +8,7 @@ import {
     Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import BottomBar from "../../Components/Common/NavigationBar";
 import ScrollViewWrapper from "../../Components/Common/ScrollView";
 import CustomTabs from "../../Components/Common/CustomTabs";
@@ -15,6 +16,8 @@ import styles from "../Style/Style";
 
 export default function HistoricalScreen() {
     const navigation = useNavigation();
+    const { t, i18n } = useTranslation();
+    const [refreshKey, setRefreshKey] = useState(0);
     const [refreshing, setRefreshing] = useState(false);
     const [stats, setStats] = useState({
         totalEmpleados: 0,
@@ -27,6 +30,18 @@ export default function HistoricalScreen() {
     useEffect(() => {
         cargarEstadisticas();
     }, []);
+
+    useEffect(() => {
+        const handleLanguageChange = () => {
+            setRefreshKey(prev => prev + 1);
+        };
+
+        i18n.on('languageChanged', handleLanguageChange);
+
+        return () => {
+            i18n.off('languageChanged', handleLanguageChange);
+        };
+    }, [i18n]);
 
     const cargarEstadisticas = () => {
         setStats({
@@ -91,7 +106,7 @@ export default function HistoricalScreen() {
 
                     <View style={styles.informacionContainer}>
                         <Text style={styles.informacionText}>
-                            Trabajadores Registrados
+                            {t('dashboard.recentAttendance')}
                         </Text>
 
                         <View style={styles.recentSection}>

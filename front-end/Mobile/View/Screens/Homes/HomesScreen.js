@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Text,
   View,
@@ -11,6 +11,7 @@ import {
   Keyboard,
   TouchableOpacity
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import PrimaryButton from "../../Components/Auth/PrimaryButton";
 import SelectableButton from "../../Components/Auth/SelectableButton";
 import CustomLogo from "../../Components/Auth/logo";
@@ -24,11 +25,24 @@ export default function HomesScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const navigation = useNavigation();
+  const { t, i18n } = useTranslation();
 
-  // ✅ Variables separadas para cada modal
   const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
   const [isTerminosModalVisible, setIsTerminosModalVisible] = useState(false);
+
+  useEffect(() => {
+    const handleLanguageChange = () => {
+      setRefreshKey(prev => prev + 1);
+    };
+
+    i18n.on('languageChanged', handleLanguageChange);
+
+    return () => {
+      i18n.off('languageChanged', handleLanguageChange);
+    };
+  }, [i18n]);
 
   const sharedProps = {
     isLoading
@@ -44,12 +58,12 @@ export default function HomesScreen() {
 
   const handleLogin = async () => {
     if (!email.trim()) {
-      Alert.alert("Error", "Por favor ingrese su correo electrónico");
+      Alert.alert(t('common.error'), t('login.errorEmail'));
       return;
     }
 
     if (!password.trim()) {
-      Alert.alert("Error", "Por favor ingrese su contraseña");
+      Alert.alert(t('common.error'), t('login.errorPassword'));
       return;
     }
 
@@ -64,10 +78,10 @@ export default function HomesScreen() {
           name: "Administrador",
         };
       } else {
-        Alert.alert("Error", "Credenciales inválidas");
+        Alert.alert(t('common.error'), t('login.invalidCredentials'));
       }
     } catch (error) {
-      Alert.alert("Error", "Ocurrió un error al iniciar sesión");
+      Alert.alert(t('common.error'), t('login.loginError'));
     } finally {
       setIsLoading(false);
     }
@@ -96,16 +110,16 @@ export default function HomesScreen() {
                 </View>
 
                 <Text style={styles.textoSesion}>
-                  Inicio de Sesión
+                  {t('login.title')}
                 </Text>
 
                 <View style={styles.inputContainer}>
-                  <Text style={styles.inputTitulo}>Correo Electrónico</Text>
+                  <Text style={styles.inputTitulo}>{t('login.email')}</Text>
                   <TextInput
                     style={styles.inputEscrito}
                     onChangeText={handleEmailChange}
                     value={email}
-                    placeholder="ejemplo@correo.com"
+                    placeholder={t('login.emailPlaceholder')}
                     placeholderTextColor="#999999"
                     keyboardType="email-address"
                     autoCapitalize="none"
@@ -117,12 +131,12 @@ export default function HomesScreen() {
                 </View>
 
                 <View style={styles.inputContainer}>
-                  <Text style={styles.inputTitulo}>Contraseña</Text>
+                  <Text style={styles.inputTitulo}>{t('login.password')}</Text>
                   <TextInput
                     style={styles.inputEscrito}
                     onChangeText={handlePasswordChange}
                     value={password}
-                    placeholder="Ingrese su contraseña"
+                    placeholder={t('login.passwordPlaceholder')}
                     secureTextEntry={true}
                     textContentType="password"
                     placeholderTextColor="#999999"
@@ -141,14 +155,14 @@ export default function HomesScreen() {
                       activeOpacity={0.7}
                     >
                       <Text style={styles.terminosText}>
-                        Aceptación de términos y condiciones.
+                        {t('login.terms')}
                       </Text>
                     </TouchableOpacity>
                   </View>
                 </View>
 
                 <PrimaryButton
-                  title={isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
+                  title={isLoading ? t('login.loading') : t('login.title')}
                   onPress={handleLogin}
                 />
               </View>
@@ -159,7 +173,7 @@ export default function HomesScreen() {
                 style={styles.sesionNoRegistro}
               >
                 <Text style={styles.noRegistro}>
-                  ¿No tiene cuenta registrada?
+                  {t('login.noAccount')}
                 </Text>
               </TouchableOpacity>
 

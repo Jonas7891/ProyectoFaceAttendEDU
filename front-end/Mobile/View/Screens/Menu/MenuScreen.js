@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Text,
   View,
@@ -9,6 +9,7 @@ import {
   Image,
   ScrollView,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import PrimaryButton from "../../Components/Auth/PrimaryButton";
 import DangerButton from "../../Components/Auth/DangerButton";
 import CustomLogo from "../../Components/Auth/logo";
@@ -18,8 +19,21 @@ import styles from "../Style/Style";
 
 export default function MenuScreen() {
   const navigation = useNavigation();
-
+  const { t, i18n } = useTranslation();
+  const [refreshKey, setRefreshKey] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const handleLanguageChange = () => {
+      setRefreshKey(prev => prev + 1);
+    };
+
+    i18n.on('languageChanged', handleLanguageChange);
+
+    return () => {
+      i18n.off('languageChanged', handleLanguageChange);
+    };
+  }, [i18n]);
 
   const handleBack = () => {
     navigation.navigate("Dashboard");
@@ -39,7 +53,11 @@ export default function MenuScreen() {
 
   const handleMenuJustify = () => {
     navigation.navigate("MenuJustify");
-  }
+  };
+
+  const handleSettings = () => {
+    navigation.navigate("LanguageSettings")
+  };
 
   const sharedProps = {
     isLoading
@@ -83,7 +101,7 @@ export default function MenuScreen() {
               <TouchableOpacity onPress={handleTakePhoto}>
                 <View style={{ justifyContent: "left", alignItems: "center", flexDirection: "row" }}>
                   <Text style={styles.sectionTitleMenu}>
-                    Ingresar Parámetros Faciales
+                    {t('menu.facialParams')}
                   </Text>
                   <Image
                     source={require("../../../assets/images/flecha.png")}
@@ -94,9 +112,9 @@ export default function MenuScreen() {
 
               <Separador />
               <TouchableOpacity onPress={handleUpdatePhoto}>
-                <View style={{ justifyContent: "left", alignItems: "center", flexDirection: "row" }}>
+                <View style={{ justifyChange: "left", alignItems: "center", flexDirection: "row" }}>
                   <Text style={styles.sectionTitleMenu}>
-                    Actualizar Parámetros Faciales
+                    {t('menu.updateFacialParams')}
                   </Text>
                   <Image
                     source={require("../../../assets/images/flecha.png")}
@@ -109,7 +127,7 @@ export default function MenuScreen() {
               <TouchableOpacity onPress={handleMenuJustify}>
                 <View style={{ justifyContent: "left", alignItems: "center", flexDirection: "row" }}>
                   <Text style={styles.sectionTitleMenu}>
-                    Configuración de Justificaciones
+                    {t('menu.justificationConfig')}
                   </Text>
                   <Image
                     source={require("../../../assets/images/flecha.png")}
@@ -119,10 +137,10 @@ export default function MenuScreen() {
               </TouchableOpacity>
 
               <Separador />
-              <TouchableOpacity>
+              <TouchableOpacity onPress={handleSettings}>
                 <View style={{ justifyContent: "left", alignItems: "center", flexDirection: "row" }}>
                   <Text style={styles.sectionTitleMenu}>
-                    Configuración del Aplicativo
+                    {t('menu.appSettings')}
                   </Text>
                   <Image
                     source={require("../../../assets/images/flecha.png")}
@@ -135,7 +153,7 @@ export default function MenuScreen() {
               <TouchableOpacity onPress={handleFacialFail}>
                 <View style={{ justifyContent: "left", alignItems: "center", flexDirection: "row" }}>
                   <Text style={styles.sectionTitleMenu}>
-                    ¿Falla en el reconocimiento facial?
+                    {t('menu.facialRecognitionFail')}
                   </Text>
                   <Image
                     source={require("../../../assets/images/flecha.png")}

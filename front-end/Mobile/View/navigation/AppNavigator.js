@@ -15,6 +15,7 @@ import DisplayingAttendance from './Screens/Attendance/DisplayingAttendance';
 import MenuJustify from './Screens/MenuJustifiy/MenuJustifyScreen';
 import ConsultJustifiy from './Screens/ConsultJustify/ConsultJustifyScreen';
 import AddJustification from './Screens/AddOrEditJustify/AddJustifyScreen';
+import LanguageSettingsScreen from '../Screens/Settings/LanguageSettingsScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -54,6 +55,7 @@ export default function AppNavigator() {
             <Stack.Screen name="MenuJustify" component={MenuJustify} />
             <Stack.Screen name="ConsultJustify" component={ConsultJustifiy} />
             <Stack.Screen name="AddJustify" component={AddJustification} />
+            <Stack.Screen name='LanguageSettings' component={LanguageSettingsScreen} />
           </>
         )}
       </Stack.Navigator>

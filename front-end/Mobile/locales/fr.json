@@ -1,0 +1,145 @@
+{
+  "common": {
+    "back": "Retour",
+    "save": "Sauvegarder",
+    "cancel": "Annuler",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "settings": "Paramètres",
+    "profile": "Profil",
+    "search": "Recherche"
+  },
+  "login": {
+    "title": "Connexion",
+    "email": "Email",
+    "password": "Mot de passe",
+    "emailPlaceholder": "exemple@email.com",
+    "passwordPlaceholder": "Entrez votre mot de passe",
+    "terms": "Acceptation des termes et conditions.",
+    "noAccount": "Vous n'avez pas de compte ?",
+    "loading": "Connexion...",
+    "errorEmail": "Veuillez saisir votre email",
+    "errorPassword": "Veuillez saisir votre mot de passe",
+    "invalidCredentials": "Identifiants invalides",
+    "loginError": "Une erreur s'est produite lors de la connexion"
+  },
+  "tabs": {
+    "home": "Accueil",
+    "news": "Nouvelles",
+    "history": "Historique"
+  },
+  "attendance": {
+    "filterByName": "Filtrer par nom",
+    "filterByDate": "Filtrer par date",
+    "searchByName": "Rechercher par nom...",
+    "searchByDate": "Rechercher par date (AAAA-MM-JJ)..."
+  },
+  "settings": {
+    "language": "Langue",
+    "selectLanguage": "Sélectionnez une langue",
+    "languageChanged": "Langue changée avec succès",
+    "errorChangingLanguage": "Impossible de changer la langue"
+  },
+  "menu": {
+    "facialParams": "Entrer les paramètres faciaux",
+    "updateFacialParams": "Mettre à jour les paramètres faciaux",
+    "justificationConfig": "Configuration des justifications",
+    "appSettings": "Paramètres de l'application",
+    "facialRecognitionFail": "Échec de la reconnaissance faciale ?"
+  },
+  "updatePhoto": {
+    "title": "Photo pour la reconnaissance faciale",
+    "instructions": "Centrez votre visage de manière à couvrir la majeure partie de la caméra pour un meilleur balayage et une vitesse de reconnaissance.",
+    "personalInfo": "Informations personnelles",
+    "fullName": "Nom Complet",
+    "fullNamePlaceholder": "Exemple: Jean Dupont",
+    "documentNumber": "Numéro de document d'identité",
+    "documentPlaceholder": "Exemple: 12345678",
+    "phoneNumber": "Numéro de téléphone",
+    "phonePlaceholder": "Exemple: 3001234567",
+    "registerAttendance": "Enregistrer la présence",
+    "attendanceRegistered": "✓ Présence enregistrée",
+    "completeFields": "Veuillez compléter tous les champs",
+    "settings": "Paramètres"
+  },
+  "takePhoto": {
+    "title": "Photo pour la reconnaissance faciale initiale",
+    "instructions": "Centrez votre visage de manière à couvrir la majeure partie de la caméra pour un meilleur balayage et une vitesse de reconnaissance.",
+    "registerFacialParams": "Enregistrer les paramètres faciaux",
+    "facialParamsRegistered": "✓ Paramètres enregistrés"
+  },
+  "facialFail": {
+    "title": "Échec de la reconnaissance faciale",
+    "subtitle": "Sélectionnez l'option en fonction de votre cas:",
+    "questionnaire": "1. Questionnaire",
+    "questionnaireDescription": "Un questionnaire doit être complété avec des questions spécifiques que seul l'utilisateur connaîtrait",
+    "updateParams": "2. Mises à jour des paramètres faciaux",
+    "updateParamsDescription": "Souvent, la reconnaissance faciale peut échouer en raison de certains changements sur le visage d'un utilisateur",
+    "recommendations": "Recommandations:",
+    "cameraQuality": "Qualité ou angle de la caméra",
+    "cameraQualityDescription": "Une autre raison pour laquelle des défaillances se produisent dans le système est due à l'éclairage, à la qualité de la caméra ou à l'angle auquel l'appareil est positionné pour la numérisation."
+  },
+  "dashboard": {
+    "greeting": "Bonne journée",
+    "admin": "Administrateur",
+    "attendance": "Présence aujourd'hui",
+    "employeesPresent": "de",
+    "employeesAttending": "employés présents",
+    "quickActions": "Actions rapides",
+    "registerAttendance": "Enregistrer la présence",
+    "registerAttendanceDesc": "Reconnaissance faciale des employés",
+    "employeeManagement": "Gestion des employés",
+    "employeeManagementDesc": "Ajouter, modifier ou supprimer des employés",
+    "reports": "Rapports",
+    "reportsDesc": "Générer des rapports de présence",
+    "facialConfig": "Configuration faciale",
+    "facialConfigDesc": "Mettre à jour les paramètres faciaux",
+    "recentAttendance": "Présences récentes",
+    "recentNews": "Actualités récentes",
+    "newEmployeeRegistered": "Nouvel employé enregistré",
+    "newEmployeeMsg": "a été enregistré avec succès",
+    "latenessDetected": "Retard détecté",
+    "latenessMsg": "a enregistré l'entrée",
+    "minutesLate": "minutes de retard",
+    "facialRecognitionImproved": "Reconnaissance faciale améliorée",
+    "facialRecognitionMsg": "Le système a mis à jour ses algorithmes",
+    "minutesAgo": "minutes",
+    "hoursAgo": "heures",
+    "ago": "depuis"
+  },
+  "consultJustify": {
+    "mainTitle": "Justifications valides",
+    "subtitle": "Gérez vos justifications pour les absences et les retards",
+    "absences": "Absences",
+    "delays": "Retards",
+    "justifiedAbsences": "Absences justifiées",
+    "justifiedDelays": "Retards justifiés",
+    "noAbsencesRegistered": "Aucune absence enregistrée",
+    "noDelaysRegistered": "Aucun retard enregistré",
+    "back": "Retour"
+  },
+  "justify": {
+    "title": "Justifications",
+    "addAbsence": "Ajouter une absence",
+    "addDelay": "Ajouter un retard",
+    "selectDate": "Sélectionnez une date",
+    "enterReason": "Entrez la raison",
+    "reasonPlaceholder": "Décrivez la raison de votre absence ou retard...",
+    "submit": "Soumettre la justification",
+    "successMessage": "Justification soumise avec succès!"
+  },
+  "news": {
+    "title": "Actualités",
+    "content": "Imaginez que vous devez utiliser une application pour enregistrer votre présence faciale. La première chose que le système fait est d'afficher un cadre à l'écran pour que vous sachiez exactement où placer votre visage. Au fur et à mesure que vous vous ajustez, il devient vert pour vous faire savoir que vous êtes prêt.\n\nIl est important de vous placer dans un endroit bien éclairé. Une fois que votre visage est bien visible, le système vous demande un petit geste, comme cligner des yeux ou bouger légèrement la tête, pour s'assurer qu'il ne s'agit pas d'une photo ou d'un faux.\n\nLe meilleur, c'est que le scan ne prend pas beaucoup de temps, seulement deux ou trois secondes, et immédiatement un message clair apparaît à l'écran pour vous dire si la présence a été enregistrée ou s'il y a eu un problème. Tout est conçu pour être rapide et simple : ouvrez l'application, appuyez sur le bouton pour accéder à la section Scan Facial, positionnez-vous dans le cadre, clignez des yeux et en quelques secondes, votre présence est enregistrée.",
+    "creationDate": "Date de création",
+    "unknownDate": "##/##/####"
+  },
+  "history": {
+    "title": "Historique",
+    "noHistory": "Aucun historique de présence"
+  },
+  "homes": {
+    "greeting": "Connexion"
+  }
+}

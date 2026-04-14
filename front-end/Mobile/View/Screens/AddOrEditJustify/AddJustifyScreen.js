@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Text,
   View,
@@ -12,12 +12,15 @@ import {
   Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import PrimaryButton from "../../Components/Auth/PrimaryButton";
 import Separador from "../../Components/Common/Separador";
 import styles from "../Style/Style";
 
 export default function AddJustification() {
   const navigation = useNavigation();
+  const { t, i18n } = useTranslation();
+  const [refreshKey, setRefreshKey] = useState(0);
   
   const [justificationType, setJustificationType] = useState("inasistencia");
   const [description, setDescription] = useState("");
@@ -25,6 +28,18 @@ export default function AddJustification() {
   const [isLoading, setIsLoading] = useState(false);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
+
+  useEffect(() => {
+    const handleLanguageChange = () => {
+      setRefreshKey(prev => prev + 1);
+    };
+
+    i18n.on('languageChanged', handleLanguageChange);
+
+    return () => {
+      i18n.off('languageChanged', handleLanguageChange);
+    };
+  }, [i18n]);
 
   const handleBack = () => {
     navigation.goBack();
@@ -36,22 +51,22 @@ export default function AddJustification() {
 
   const handleSubmit = async () => {
     if (!description.trim()) {
-      Alert.alert("Error", "Por favor ingresa una descripción de la justificación");
+      Alert.alert(t('common.error'), t('justify.enterReason'));
       return;
     }
 
     if (!date) {
-      Alert.alert("Error", "Por favor ingresa la fecha");
+      Alert.alert(t('common.error'), t('justify.selectDate'));
       return;
     }
 
     if (justificationType === "retardo" && !time) {
-      Alert.alert("Error", "Por favor ingresa la hora del retardo");
+      Alert.alert(t('common.error'), "Por favor ingresa la hora del retardo");
       return;
     }
 
     if (!selectedFile) {
-      Alert.alert("Error", "Por favor sube un archivo adjunto");
+      Alert.alert(t('common.error'), "Por favor sube un archivo adjunto");
       return;
     }
 
@@ -61,12 +76,12 @@ export default function AddJustification() {
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       Alert.alert(
-        "Éxito", 
-        `Justificación de ${justificationType === "inasistencia" ? "Inasistencia" : "Retardo"} enviada correctamente`,
+        t('common.success'), 
+        t('justify.successMessage'),
         [{ text: "OK", onPress: () => navigation.goBack() }]
       );
     } catch (error) {
-      Alert.alert("Error", "No se pudo enviar la justificación");
+      Alert.alert(t('common.error'), "No se pudo enviar la justificación");
     } finally {
       setIsLoading(false);
     }
@@ -86,17 +101,17 @@ export default function AddJustification() {
           <View style={styles.containerAddJustification}>
             {/* Título principal */}
             <Text style={styles.mainTitleAddJustification}>
-              Agregar Excusa por Retardo o Inasistencia
+              {t('justify.title')}
             </Text>
 
             <Text style={styles.descriptionText}>
-              Llena el formato para agregar la justificación en caso de Inasistencia o Retardo.
+              {t('justify.addAbsence')}
             </Text>
 
             <Separador />
 
             {/* Selector de tipo de justificación */}
-            <Text style={styles.inputLabel}>Tipo de Justificación</Text>
+            <Text style={styles.inputLabel}>{t('justify.selectDate')}</Text>
             <View style={styles.typeSelector}>
               <TouchableOpacity
                 style={[

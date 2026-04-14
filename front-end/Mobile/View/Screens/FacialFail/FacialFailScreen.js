@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Text,
     View,
@@ -11,6 +11,7 @@ import {
     Keyboard
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import PrimaryButton from "../../Components/Auth/PrimaryButton";
 import { QuestionnaireModal } from "../../Components/Common/QuestionnaireModal";
 import { FacialUpdateModal } from "../../Components/Common/FacialUpdateModal";
@@ -19,9 +20,23 @@ import styles from "../Style/Style";
 
 export default function FacialFail() {
     const navigation = useNavigation();
+    const { t, i18n } = useTranslation();
+    const [refreshKey, setRefreshKey] = useState(0);
     const [showQuestionnaire, setShowQuestionnaire] = useState(false);
     const [showFacialUpdate, setShowFacialUpdate] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        const handleLanguageChange = () => {
+            setRefreshKey(prev => prev + 1);
+        };
+
+        i18n.on('languageChanged', handleLanguageChange);
+
+        return () => {
+            i18n.off('languageChanged', handleLanguageChange);
+        };
+    }, [i18n]);
 
     const handleQuestionnaire = () => {
         setShowQuestionnaire(true);
@@ -48,7 +63,7 @@ export default function FacialFail() {
                         <View style={styles.container}>
                             <View style={styles.headerContainer}>
                                 <Text style={styles.mainTitle}>
-                                    Fallo en el Reconocimiento {"\n"} Facial
+                                    {t('facialFail.title')}
                                 </Text>
                                 <CustomLogo
                                     size="small"
@@ -59,7 +74,7 @@ export default function FacialFail() {
                             </View>
 
                             <Text style={styles.subtitle}>
-                                Selecciona la opción con base a tu caso:
+                                {t('facialFail.subtitle')}
                             </Text>
 
                             <TouchableOpacity
@@ -67,9 +82,9 @@ export default function FacialFail() {
                                 onPress={handleQuestionnaire}
                                 activeOpacity={0.7}
                             >
-                                <Text style={styles.optionTitle}>1. Cuestionario</Text>
+                                <Text style={styles.optionTitle}>{t('facialFail.questionnaire')}</Text>
                                 <Text style={styles.optionDescription}>
-                                    Se debe realizar un cuestionario en el que se pregunten por cosas específicas las cuales solo conozca un usuario
+                                    {t('facialFail.questionnaireDescription')}
                                 </Text>
                             </TouchableOpacity>
 
@@ -78,24 +93,24 @@ export default function FacialFail() {
                                 onPress={handleFacialUpdate}
                                 activeOpacity={0.7}
                             >
-                                <Text style={styles.optionTitle}>2. Actualizaciones de Parametros Faciales</Text>
+                                <Text style={styles.optionTitle}>{t('facialFail.updateParams')}</Text>
                                 <Text style={styles.optionDescription}>
-                                    Muchas ocasiones el Reconocimiento Facial puede fallar por cierta modificación en el rostro de un usuario
+                                    {t('facialFail.updateParamsDescription')}
                                 </Text>
                             </TouchableOpacity>
 
                             <View style={styles.separator} />
 
                             <Text style={styles.recommendationsTitle}>
-                                Recomendaciones:
+                                {t('facialFail.recommendations')}
                             </Text>
 
                             <View style={styles.recommendationCard}>
                                 <Text style={styles.recommendationSubtitle}>
-                                    Calidad o Ángulo de la Camara
+                                    {t('facialFail.cameraQuality')}
                                 </Text>
                                 <Text style={styles.recommendationText}>
-                                    Otra de las razones por la que ocurre fallos en el sistema es debido a la iluminación del lugar, la calidad de la camara o en que angulo se pone el dispositivo para realizar el escaneo.
+                                    {t('facialFail.cameraQualityDescription')}
                                 </Text>
                             </View>
 

@@ -3,7 +3,7 @@ import { TouchableOpacity, Text, StyleSheet, Image } from 'react-native';
 
 export default function PrimaryButton({
   title,
-  onPress = () => {},
+  onPress = () => { },
   disabled = false,
 }) {
   return (

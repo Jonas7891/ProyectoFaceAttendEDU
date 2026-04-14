@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Text,
     View,
@@ -7,6 +7,7 @@ import {
     Platform,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import BottomBar from "../../Components/Common/NavigationBar";
 import ScrollViewWrapper from "../../Components/Common/ScrollView";
 import CustomTabs from "../../Components/Common/CustomTabs";
@@ -15,6 +16,20 @@ import styles from "../Style/Style";
 
 export default function NewsScreen() {
     const navigation = useNavigation();
+    const { t, i18n } = useTranslation();
+    const [refreshKey, setRefreshKey] = useState(0);
+
+    useEffect(() => {
+        const handleLanguageChange = () => {
+            setRefreshKey(prev => prev + 1);
+        };
+
+        i18n.on('languageChanged', handleLanguageChange);
+
+        return () => {
+            i18n.off('languageChanged', handleLanguageChange);
+        };
+    }, [i18n]);
 
     const handleSettings = () => {
         console.log("Abrir configuración");
@@ -23,21 +38,17 @@ export default function NewsScreen() {
 
     const handleProfile = () => {
         console.log("Abrir perfil");
-
     };
 
     const handleSearch = () => {
         console.log("Abrir búsqueda");
-
     };
 
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={styles.safeArea} key={refreshKey}>
             <ScrollViewWrapper>
                 <View style={styles.container}>
-                    <CustomTabs
-                        style={styles.customTabs}
-                    />
+                    <CustomTabs style={styles.customTabs} />
 
                     <View style={{ marginLeft: 25, marginRight: 25 }}>
                         <Image
@@ -48,37 +59,21 @@ export default function NewsScreen() {
 
                     <View>
                         <Text style={{ fontSize: 18, fontWeight: "bold", marginTop: 30 }}>
-                            Recomendaciones de Usuarios
+                            {t('news.title')}
                         </Text>
 
                         <Text style={{ fontSize: 18, fontWeight: "100", marginTop: 15 }}>
-                            Fecha de creación: ##/##/####
+                            {t('news.creationDate')}: {t('news.unknownDate')}
                         </Text>
                     </View>
 
-                    <View style={{ marginTop: 15, }}>
+                    <View style={{ marginTop: 15 }}>
                         <Separador style={{ fontWeight: "800" }} />
                     </View>
 
                     <View style={{ marginHorizontal: Platform.OS === 'android' ? 10 : 0 }}>
                         <Text style={{ fontSize: 15, marginTop: 15, textAlign: "justify" }}>
-                            Imagínate que tienes que usar una aplicación para registrar tu asistencia
-                            con el rostro, lo primero es que el sistema te muestra un recuadro en la
-                            pantalla para que sepas exactamente dónde poner la cara. A medida que te
-                            vas acomodando, se pone en verde para que sepas que ya estás listo.{" "}
-                            {"\n"}
-                            {"\n"}
-                            Es importante que te pongas en un lugar con buena luz. Una vez que el
-                            rostro se ve bien, el sistema te pide un pequeño gesto, como parpadear o
-                            mover un poco la cabeza, para asegurarse de que no sea una foto o algo
-                            falso. {"\n"}
-                            {"\n"}
-                            Lo mejor es que el escaneo no tarda mucho, apenas unos dos o tres
-                            segundos, y enseguida te aparece en la pantalla un mensaje claro que dice
-                            si la asistencia quedó registrada o si hubo algún problema. Todo está
-                            pensado para que sea rápido y sencillo: abres la app, presionas el botón
-                            para dirigirte al apartado de Escaneo Facial, te acomodas en el recuadro,
-                            parpadeas y en cuestión de segundos ya tienes tu asistencia guardada.
+                            {t('news.content')}
                         </Text>
                     </View>
 
@@ -90,6 +85,6 @@ export default function NewsScreen() {
                 onPressProfile={handleProfile}
                 onPressSearch={handleSearch}
             />
-        </SafeAreaView >
+        </SafeAreaView>
     );
 }

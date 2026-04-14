@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import {
+import React, { useState, useEffect } from "react";
+import { 
     Text,
     View,
     SafeAreaView,
@@ -11,14 +11,28 @@ import {
     FlatList,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import PrimaryButton from "../../Components/Auth/PrimaryButton";
 import Separador from "../../Components/Common/Separador";
 import styles from "../Style/Style";
 
 export default function ValidJustificationsScreen() {
     const navigation = useNavigation();
-
+    const { t, i18n } = useTranslation();
+    const [refreshKey, setRefreshKey] = useState(0);
     const [activeSection, setActiveSection] = useState("inasistencias");
+
+    useEffect(() => {
+        const handleLanguageChange = () => {
+            setRefreshKey(prev => prev + 1);
+        };
+
+        i18n.on('languageChanged', handleLanguageChange);
+
+        return () => {
+            i18n.off('languageChanged', handleLanguageChange);
+        };
+    }, [i18n]);
 
     // Datos de ejemplo para inasistencias justificadas
     const inasistenciasData = [
@@ -85,12 +99,12 @@ export default function ValidJustificationsScreen() {
                     <View style={styles.containerValidJustifications}>
                         {/* Título principal */}
                         <Text style={styles.mainTitleValidJustifications}>
-                            Consulta de Justificaciones
+                            {t('consultJustify.mainTitle')}
                         </Text>
 
                         {/* Subtítulo */}
                         <Text style={styles.subTitleValidJustifications}>
-                            Lista de Justificaciones
+                            {t('consultJustify.subtitle')}
                         </Text>
 
                         <Separador />
@@ -109,7 +123,7 @@ export default function ValidJustificationsScreen() {
                                         activeSection === "inasistencias" && styles.activeSectionTabText,
                                     ]}
                                 >
-                                    Sección de Inasistencias
+                                    {t('consultJustify.absences')}
                                 </Text>
                             </TouchableOpacity>
                             <TouchableOpacity
@@ -125,7 +139,7 @@ export default function ValidJustificationsScreen() {
                                         activeSection === "retardos" && styles.activeSectionTabText,
                                     ]}
                                 >
-                                    Sección de Retardos
+                                    {t('consultJustify.delays')}
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -133,7 +147,7 @@ export default function ValidJustificationsScreen() {
                         {/* Lista de inasistencias */}
                         {activeSection === "inasistencias" && (
                             <View style={styles.listContainer}>
-                                <Text style={styles.sectionTitle}>Inasistencias Justificadas</Text>
+                                <Text style={styles.sectionTitle}>{t('consultJustify.justifiedAbsences')}</Text>
                                 {inasistenciasData.length > 0 ? (
                                     <FlatList
                                         data={inasistenciasData}
@@ -143,7 +157,7 @@ export default function ValidJustificationsScreen() {
                                     />
                                 ) : (
                                     <View style={styles.emptyContainer}>
-                                        <Text style={styles.emptyText}>No hay inasistencias registradas</Text>
+                                        <Text style={styles.emptyText}>{t('consultJustify.noAbsencesRegistered')}</Text>
                                     </View>
                                 )}
                             </View>
@@ -152,7 +166,7 @@ export default function ValidJustificationsScreen() {
                         {/* Lista de retardos */}
                         {activeSection === "retardos" && (
                             <View style={styles.listContainer}>
-                                <Text style={styles.sectionTitle}>Retardos Justificados</Text>
+                                <Text style={styles.sectionTitle}>{t('consultJustify.justifiedDelays')}</Text>
                                 {retardosData.length > 0 ? (
                                     <FlatList
                                         data={retardosData}
@@ -162,7 +176,7 @@ export default function ValidJustificationsScreen() {
                                     />
                                 ) : (
                                     <View style={styles.emptyContainer}>
-                                        <Text style={styles.emptyText}>No hay retardos registrados</Text>
+                                        <Text style={styles.emptyText}>{t('consultJustify.noDelaysRegistered')}</Text>
                                     </View>
                                 )}
                             </View>
@@ -173,7 +187,7 @@ export default function ValidJustificationsScreen() {
 
                         {/* Botón Volver */}
                         <View style={styles.buttonContainer}>
-                            <PrimaryButton title="Volver" onPress={handleBack} />
+                            <PrimaryButton title={t('consultJustify.back')} onPress={handleBack} />
                         </View>
                     </View>
                 </ScrollView>

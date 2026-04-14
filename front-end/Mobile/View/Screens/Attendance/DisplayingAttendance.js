@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Text,
     View,
@@ -11,11 +11,26 @@ import {
 import styles from "../Style/Style";
 import BottomBar from "../../Components/Common/NavigationBar";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from 'react-i18next';
 
 export default function DisplayingAttendance() {
     const navigation = useNavigation();
+    const { t, i18n } = useTranslation();
+    const [refreshKey, setRefreshKey] = useState(0);
     const [searchText, setSearchText] = useState("");
     const [filterType, setFilterType] = useState("nombre");
+
+    useEffect(() => {
+        const handleLanguageChange = () => {
+            setRefreshKey(prev => prev + 1);
+        };
+
+        i18n.on('languageChanged', handleLanguageChange);
+
+        return () => {
+            i18n.off('languageChanged', handleLanguageChange);
+        };
+    }, [i18n]);
 
     const handleSettings = () => {
         console.log("Abrir configuración");
@@ -84,7 +99,7 @@ export default function DisplayingAttendance() {
                             setFilterType("nombre");
                             setSearchText("");
                         }}>
-                        <Text style={styles.filterButtonText}>Filtrar por Nombre</Text>
+                        <Text style={styles.filterButtonText}>{t('attendance.filterByName')}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={[styles.filterButton, filterType === "fecha" && styles.activeFilter]}
@@ -92,14 +107,14 @@ export default function DisplayingAttendance() {
                             setFilterType("fecha");
                             setSearchText("");
                         }}>
-                        <Text style={styles.filterButtonText}>Filtrar por Fecha</Text>
+                        <Text style={styles.filterButtonText}>{t('attendance.filterByDate')}</Text>
                     </TouchableOpacity>
                 </View>
 
                 {/* Input de búsqueda */}
                 <TextInput
                     style={styles.searchInput}
-                    placeholder={filterType === "nombre" ? "Buscar por nombre..." : "Buscar por fecha (YYYY-MM-DD)..."}
+                    placeholder={filterType === "nombre" ? t('attendance.searchByName') : t('attendance.searchByDate')}
                     value={searchText}
                     onChangeText={setSearchText}
                 />
