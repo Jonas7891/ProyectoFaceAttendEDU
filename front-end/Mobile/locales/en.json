@@ -1,0 +1,145 @@
+{
+  "common": {
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "settings": "Settings",
+    "profile": "Profile",
+    "search": "Search"
+  },
+  "login": {
+    "title": "Login",
+    "email": "Email",
+    "password": "Password",
+    "emailPlaceholder": "example@email.com",
+    "passwordPlaceholder": "Enter your password",
+    "terms": "Acceptance of terms and conditions.",
+    "noAccount": "Don't have an account?",
+    "loading": "Logging in...",
+    "errorEmail": "Please enter your email",
+    "errorPassword": "Please enter your password",
+    "invalidCredentials": "Invalid credentials",
+    "loginError": "An error occurred while logging in"
+  },
+  "tabs": {
+    "home": "Home",
+    "news": "News",
+    "history": "History"
+  },
+  "attendance": {
+    "filterByName": "Filter by Name",
+    "filterByDate": "Filter by Date",
+    "searchByName": "Search by name...",
+    "searchByDate": "Search by date (YYYY-MM-DD)..."
+  },
+  "settings": {
+    "language": "Language",
+    "selectLanguage": "Select a language",
+    "languageChanged": "Language changed successfully",
+    "errorChangingLanguage": "Could not change language"
+  },
+  "menu": {
+    "facialParams": "Enter Facial Parameters",
+    "updateFacialParams": "Update Facial Parameters",
+    "justificationConfig": "Justification Configuration",
+    "appSettings": "Application Settings",
+    "facialRecognitionFail": "Facial recognition failure?"
+  },
+  "updatePhoto": {
+    "title": "Photo for Facial Recognition",
+    "instructions": "Center your face so that it covers most of the camera for better scanning and recognition speed.",
+    "personalInfo": "Personal Information",
+    "fullName": "Full Name",
+    "fullNamePlaceholder": "Example: John Smith",
+    "documentNumber": "Identity Document Number",
+    "documentPlaceholder": "Example: 12345678",
+    "phoneNumber": "Phone Number",
+    "phonePlaceholder": "Example: 3001234567",
+    "registerAttendance": "Register Attendance",
+    "attendanceRegistered": "✓ Attendance Registered",
+    "completeFields": "Please complete all fields",
+    "settings": "Settings"
+  },
+  "takePhoto": {
+    "title": "Photo for Initial Facial Recognition",
+    "instructions": "Center your face so that it covers most of the camera for better scanning and recognition speed.",
+    "registerFacialParams": "Register Facial Parameters",
+    "facialParamsRegistered": "✓ Parameters Registered"
+  },
+  "facialFail": {
+    "title": "Facial Recognition Failure",
+    "subtitle": "Select the option based on your case:",
+    "questionnaire": "1. Questionnaire",
+    "questionnaireDescription": "A questionnaire should be completed asking specific questions that only the user would know",
+    "updateParams": "2. Facial Parameter Updates",
+    "updateParamsDescription": "Often facial recognition may fail due to certain changes in a user's face",
+    "recommendations": "Recommendations:",
+    "cameraQuality": "Camera Quality or Angle",
+    "cameraQualityDescription": "Another reason failures occur in the system is due to lighting, camera quality or the angle at which the device is positioned for scanning."
+  },
+  "dashboard": {
+    "greeting": "Good day",
+    "admin": "Administrator",
+    "attendance": "Attendance Today",
+    "employeesPresent": "of",
+    "employeesAttending": "employees present",
+    "quickActions": "Quick Actions",
+    "registerAttendance": "Register Attendance",
+    "registerAttendanceDesc": "Facial recognition of employees",
+    "employeeManagement": "Employee Management",
+    "employeeManagementDesc": "Add, edit or remove employees",
+    "reports": "Reports",
+    "reportsDesc": "Generate attendance reports",
+    "facialConfig": "Facial Configuration",
+    "facialConfigDesc": "Update facial parameters",
+    "recentAttendance": "Recent Attendance",
+    "recentNews": "Recent News",
+    "newEmployeeRegistered": "New employee registered",
+    "newEmployeeMsg": "has been successfully registered",
+    "latenessDetected": "Lateness detected",
+    "latenessMsg": "registered entry",
+    "minutesLate": "minutes late",
+    "facialRecognitionImproved": "Facial recognition improved",
+    "facialRecognitionMsg": "The system has updated its algorithms",
+    "minutesAgo": "minutes",
+    "hoursAgo": "hours",
+    "ago": "ago"
+  },
+  "consultJustify": {
+    "mainTitle": "Valid Justifications",
+    "subtitle": "Manage your justifications for absences and delays",
+    "absences": "Absences",
+    "delays": "Delays",
+    "justifiedAbsences": "Justified Absences",
+    "justifiedDelays": "Justified Delays",
+    "noAbsencesRegistered": "No absences registered",
+    "noDelaysRegistered": "No delays registered",
+    "back": "Back"
+  },
+  "justify": {
+    "title": "Justifications",
+    "addAbsence": "Add Absence",
+    "addDelay": "Add Delay",
+    "selectDate": "Select a Date",
+    "enterReason": "Enter the Reason",
+    "reasonPlaceholder": "Describe the reason for your absence or delay...",
+    "submit": "Submit Justification",
+    "successMessage": "Justification submitted successfully!"
+  },
+  "news": {
+    "title": "News",
+    "content": "Imagine you have to use an application to register your facial attendance. First, the system shows you a box on the screen so you know exactly where to place your face. As you adjust, it turns green to let you know you're ready.\n\nIt's important to be in a place with good lighting. Once your face looks good, the system asks for a small gesture, like blinking or moving your head a little, to make sure it's not a photo or something fake.\n\nThe best part is that the scan doesn't take long, just about two or three seconds, and immediately a clear message appears on the screen telling you whether the attendance was registered or if there was any problem. Everything is designed to be quick and simple: open the app, press the button to go to the Facial Scanning section, position yourself in the box, blink, and within seconds your attendance is saved.",
+    "creationDate": "Creation Date",
+    "unknownDate": "##/##/####"
+  },
+  "history": {
+    "title": "History",
+    "noHistory": "No attendance history"
+  },
+  "homes": {
+    "greeting": "Login"
+  }
+}

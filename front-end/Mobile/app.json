@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "FaceAttend EDU",
+    "slug": "FaceAttend EDU",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/logoFaceAttend.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true
+    },
+    "plugins": [
+      "expo-localization"
+    ]
+  }
+}
