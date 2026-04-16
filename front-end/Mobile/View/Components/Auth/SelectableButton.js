@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
+import { TouchableOpacity, Text, View } from 'react-native';
+import stylesAuth from './Style/Style'
 
 export default function PrimaryButton({
     title,
@@ -26,69 +27,26 @@ export default function PrimaryButton({
     return (
         <TouchableOpacity
             style={[
-                styles.container,
-                disabled && styles.containerDisabled,
+                stylesAuth.containerSelectable,
+                disabled && stylesAuth.containerDisabledSelectable,
             ]}
             onPress={handlePress}
             disabled={disabled}
             activeOpacity={0.7}
         >
             <View style={[
-                styles.checkbox,
-                isChecked && styles.checkboxChecked,
-                disabled && styles.checkboxDisabled
+                stylesAuth.checkboxSelectable,
+                isChecked && stylesAuth.checkboxCheckedSelectable,
+                disabled && stylesAuth.checkboxDisabledSelectable
             ]}>
-                {isChecked && <Text style={styles.checkmark}>✓</Text>}
+                {isChecked && <Text style={stylesAuth.checkmarkSelectable}>✓</Text>}
             </View>
             <Text style={[
-                styles.text,
-                disabled && styles.textDisabled
+                stylesAuth.textSelectable,
+                disabled && stylesAuth.textDisabledSelectable
             ]}>
                 {title}
             </Text>
         </TouchableOpacity>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flexDirection: 'row',
-        alignItems: 'left',
-        paddingVertical: 12,
-        marginTop: 10,
-        alignSelf: 'left',
-    },
-    checkbox: {
-        width: 24,
-        height: 24,
-        borderRadius: 4,
-        borderWidth: 2,
-        borderColor: '#1081D2',
-        backgroundColor: '#FFFFFF',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-    },
-    checkboxChecked: {
-        backgroundColor: '#1081D2',
-    },
-    checkboxDisabled: {
-        opacity: 0.5,
-    },
-    checkmark: {
-        color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    text: {
-        color: '#333333',
-        fontSize: 16,
-        fontWeight: '500',
-    },
-    textDisabled: {
-        opacity: 0.5,
-    },
-    containerDisabled: {
-        opacity: 0.6,
-    },
-});

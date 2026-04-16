@@ -2,10 +2,10 @@ import React from "react";
 import {
   ScrollView,
   View,
-  StyleSheet,
   RefreshControl,
   ActivityIndicator,
 } from "react-native";
+import stylesCommon from "./Style/Style";
 
 export default function ScrollViews({
   children,
@@ -21,7 +21,7 @@ export default function ScrollViews({
 }) {
   if (loading) {
     return (
-      <View style={[styles.loadingContainer, contentContainerStyle]}>
+      <View style={[stylesCommon.loadingContainer, contentContainerStyle]}>
         <ActivityIndicator color="#4CAF50" />
       </View>
     );
@@ -38,9 +38,9 @@ export default function ScrollViews({
 
   return (
     <ScrollView
-      style={[styles.scrollView]}
+      style={[stylesCommon.scrollViewWrapper]}
       contentContainerStyle={[
-        styles.contentContainer,
+        stylesCommon.contentContainerScroll,
         contentContainerStyle,
         { paddingBottom: bottomSpace }
       ]}
@@ -53,17 +53,3 @@ export default function ScrollViews({
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
-    flexGrow: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});

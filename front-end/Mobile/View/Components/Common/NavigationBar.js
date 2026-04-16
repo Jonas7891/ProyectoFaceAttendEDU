@@ -1,6 +1,7 @@
 import React from "react";
-import { View, TouchableOpacity, Image, StyleSheet } from "react-native";
+import { View, TouchableOpacity, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import stylesCommon from "./Style/Style";
 
 export default function BottomBar() {
   const navigation = useNavigation();
@@ -19,59 +20,29 @@ export default function BottomBar() {
 
   return (
 
-    <View style={styles.container} >
+    <View style={stylesCommon.navBarContainer} >
 
       <TouchableOpacity onPress={handleMenu}>
         <Image
           source={require("../../../assets/images/configuraciones.png")}
-          style={styles.icon}
+          style={stylesCommon.navIcon}
         />
       </TouchableOpacity>
 
       <TouchableOpacity onPress={handleFoto}>
         <Image
           source={require("../../../assets/images/perfil-del-usuario.png")}
-          style={styles.iconCenter}
+          style={stylesCommon.navIconCenter}
         />
       </TouchableOpacity>
 
       <TouchableOpacity onPress={handleBusqueda}>
         <Image
           source={require("../../../assets/images/lupa.png")}
-          style={styles.icon}
+          style={stylesCommon.navIcon}
         />
       </TouchableOpacity>
 
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    position: "absolute",
-    bottom: 20,
-    left: 20,
-    right: 20,
-    height: 70,
-    backgroundColor: "#EDEDED",
-    borderRadius: 20,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  icon: {
-    width: 28,
-    height: 28,
-    tintColor: "#000",
-  },
-  iconCenter: {
-    width: 40,
-    height: 40,
-    tintColor: "#000",
-  },
-});

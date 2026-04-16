@@ -3,8 +3,8 @@ import {
     View,
     Text,
     TextInput,
-    StyleSheet
 } from 'react-native';
+import stylesCommon from './Style/Style';
 
 export const QuestionInput = forwardRef(({ 
     placeholder, 
@@ -17,7 +17,7 @@ export const QuestionInput = forwardRef(({
         <View>
             <TextInput
                 ref={ref}
-                style={styles.questionInput}
+                style={stylesCommon.questionInput}
                 placeholder={placeholder}
                 placeholderTextColor="#999"
                 onChangeText={onChangeText}
@@ -27,28 +27,10 @@ export const QuestionInput = forwardRef(({
                 blurOnSubmit={true}
             />
             {hint && (
-                <Text style={styles.hintText}>
+                <Text style={stylesCommon.hintText}>
                     💡 {hint}
                 </Text>
             )}
         </View>
     );
-});
-
-const styles = StyleSheet.create({
-    questionInput: {
-        borderWidth: 1,
-        borderColor: "#E0E0E0",
-        borderRadius: 8,
-        padding: 12,
-        fontSize: 14,
-        backgroundColor: "#F9F9F9",
-        marginBottom: 8,
-    },
-    hintText: {
-        fontSize: 12,
-        color: "#999",
-        marginBottom: 20,
-        fontStyle: "italic",
-    },
 });

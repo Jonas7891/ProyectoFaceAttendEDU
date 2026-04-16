@@ -3,9 +3,9 @@ import {
     View,
     Text,
     TouchableOpacity,
-    StyleSheet
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import stylesCommon from './Style/Style';
 
 const documentosColombia = [
     { id: "cc", label: "Cédula de Ciudadanía (CC)", abreviatura: "CC" },
@@ -17,30 +17,30 @@ export const DocumentSelector = ({ selectedDocument, onSelect }) => {
     const { t } = useTranslation();
 
     return (
-        <View style={styles.selectorContainer}>
-            <Text style={styles.selectorLabel}>{t('documentSelector.label')}</Text>
-            <View style={styles.optionsContainer}>
+        <View style={stylesCommon.selectorContainer}>
+            <Text style={stylesCommon.selectorLabelSelector}>{t('documentSelector.label')}</Text>
+            <View style={stylesCommon.optionsContainerSelector}>
                 {documentosColombia.map((doc) => (
                     <TouchableOpacity
                         key={doc.id}
                         style={[
-                            styles.option,
-                            selectedDocument?.id === doc.id && styles.optionSelected
+                            stylesCommon.optionSelector,
+                            selectedDocument?.id === doc.id && stylesCommon.optionSelected
                         ]}
                         onPress={() => onSelect(doc)}
                         activeOpacity={0.7}
                     >
-                        <View style={styles.radioContainer}>
+                        <View style={stylesCommon.radioContainerSelector}>
                             <View style={[
-                                styles.radioOuter,
-                                selectedDocument?.id === doc.id && styles.radioOuterSelected
+                                stylesCommon.radioOuterSelector,
+                                selectedDocument?.id === doc.id && stylesCommon.radioOuterSelected
                             ]}>
-                                {selectedDocument?.id === doc.id && <View style={styles.radioInner} />}
+                                {selectedDocument?.id === doc.id && <View style={stylesCommon.radioInnerSelector} />}
                             </View>
                         </View>
                         <Text style={[
-                            styles.optionText,
-                            selectedDocument?.id === doc.id && styles.optionTextSelected
+                            stylesCommon.optionTextSelector,
+                            selectedDocument?.id === doc.id && stylesCommon.optionTextSelected
                         ]}>
                             {doc.label}
                         </Text>
@@ -50,62 +50,3 @@ export const DocumentSelector = ({ selectedDocument, onSelect }) => {
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    selectorContainer: {
-        marginBottom: 20,
-    },
-    selectorLabel: {
-        fontSize: 14,
-        fontWeight: "600",
-        color: "#333",
-        marginBottom: 12,
-    },
-    optionsContainer: {
-        gap: 10,
-    },
-    option: {
-        flexDirection: "row",
-        alignItems: "center",
-        paddingVertical: 12,
-        paddingHorizontal: 12,
-        borderRadius: 8,
-        backgroundColor: "#F9F9F9",
-        borderWidth: 1,
-        borderColor: "#E0E0E0",
-    },
-    optionSelected: {
-        backgroundColor: "#E3F2FD",
-        borderColor: "#007AFF",
-    },
-    radioContainer: {
-        marginRight: 12,
-    },
-    radioOuter: {
-        width: 20,
-        height: 20,
-        borderRadius: 10,
-        borderWidth: 2,
-        borderColor: "#999",
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    radioOuterSelected: {
-        borderColor: "#007AFF",
-    },
-    radioInner: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-        backgroundColor: "#007AFF",
-    },
-    optionText: {
-        fontSize: 14,
-        color: "#555",
-        flex: 1,
-    },
-    optionTextSelected: {
-        color: "#007AFF",
-        fontWeight: "500",
-    },
-});
