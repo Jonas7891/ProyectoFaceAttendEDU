@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import PrimaryButton from '../../Components/Auth/PrimaryButton';
 import i18n from '../../../i18n';
+import styles from '../Style/Style';
 
 export default function LanguageSettingsScreen() {
   const { t, i18n } = useTranslation();
@@ -37,7 +38,7 @@ export default function LanguageSettingsScreen() {
     try {
       await i18n.changeLanguage(selectedLanguage);
       await AsyncStorage.setItem('appLanguage', selectedLanguage);
-      
+
       Alert.alert(t('common.success'), t('settings.languageChanged'), [
         { text: 'OK', onPress: () => navigation.goBack() }
       ]);
@@ -49,47 +50,27 @@ export default function LanguageSettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <Text style={styles.title}>{t('settings.language')}</Text>
-        <Text style={styles.subtitle}>{t('settings.selectLanguage')}</Text>
+    <SafeAreaView style={styles.languageSettingsSafeArea}>
+      <View style={styles.languageSettingsContainer}>
+        <Text style={styles.languageSettingsTitle}>{t('settings.language')}</Text>
+        <Text style={styles.languageSettingsSubtitle}>{t('settings.selectLanguage')}</Text>
 
         {languages.map((lang) => (
           <TouchableOpacity
             key={lang.code}
             style={[
-              styles.option,
-              selectedLanguage === lang.code && styles.selectedOption,
+              styles.languageSettingsOption,
+              selectedLanguage === lang.code && styles.languageSettingsSelectedOption,
             ]}
             onPress={() => setSelectedLanguage(lang.code)}
           >
-            <Text style={styles.optionText}>{lang.flag} {lang.name}</Text>
-            {selectedLanguage === lang.code && <Text style={styles.checkmark}>✓</Text>}
+            <Text style={styles.languageSettingsOptionText}>{lang.flag} {lang.name}</Text>
+            {selectedLanguage === lang.code && <Text style={styles.languageSettingsCheckmark}>✓</Text>}
           </TouchableOpacity>
         ))}
 
         <PrimaryButton title={t('common.save')} onPress={handleSave} isLoading={isLoading} />
       </View>
     </SafeAreaView>
-  );
-}
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#fff' },
-  container: { flex: 1, padding: 20 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
-  subtitle: { fontSize: 16, marginBottom: 30, textAlign: 'center', color: '#666' },
-  option: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  selectedOption: { borderColor: '#41c0ff', backgroundColor: '#E0F7FA', borderWidth: 2 },
-  optionText: { fontSize: 16 },
-  checkmark: { fontSize: 18, color: '#41c0ff', fontWeight: 'bold' },
-});
+  )
+};

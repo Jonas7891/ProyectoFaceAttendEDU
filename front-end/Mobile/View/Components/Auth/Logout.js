@@ -1,36 +1,49 @@
-import { Alert } from "react-native";
+import React from 'react';
+import { TouchableOpacity, Text, Image, Alert } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { useNavigation } from '@react-navigation/native';
+import stylesAuth from "./Style/Style";
 
-const handleLogout = () => {
-  Alert.alert(
-    "Cerrar Sesión",
-    "¿Estás seguro de que deseas cerrar sesión?",
-    [
-      {
-        text: "Cancelar",
-        style: "cancel"
-      },
-      {
-        text: "Sí, cerrar sesión",
-        onPress: () => {
-          navigation.reset({
-            index: 0,
-            routes: [{ name: "Homes" }],
-          });
+const LogoutButton = () => {
+  const { t } = useTranslation();
+  const navigation = useNavigation();
+
+  const handleLogout = () => {
+    Alert.alert(
+      t('logout.title'),
+      t('logout.message'),
+      [
+        {
+          text: t('logout.cancel'),
+          style: 'cancel'
         },
-        style: "destructive"
-      }
-    ]
+        {
+          text: t('logout.confirm'),
+          onPress: () => {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Homes' }],
+            });
+          },
+          style: 'destructive'
+        }
+      ]
+    );
+  };
+
+  return (
+    <TouchableOpacity 
+      style={stylesAuth.logoutButton} 
+      onPress={handleLogout}
+      activeOpacity={0.7}
+    >
+      <Image 
+        source={require('../../../assets/images/cerrar-sesion.png')} 
+        style={stylesAuth.logoutIcon}
+      />
+      <Text style={stylesAuth.logoutText}>{t('menu.logout')}</Text>
+    </TouchableOpacity>
   );
 };
 
-<TouchableOpacity 
-  style={styles.logoutButton} 
-  onPress={handleLogout}
-  activeOpacity={0.7}
->
-  <Image 
-    source={require("../../assets/images/cerrar-sesion.png")} 
-    style={styles.logoutIcon}
-  />
-  <Text style={styles.logoutText}>Cerrar Sesión</Text>
-</TouchableOpacity>
+export default LogoutButton;

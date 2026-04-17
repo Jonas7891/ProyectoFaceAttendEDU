@@ -61,12 +61,12 @@ export default function AddJustification() {
     }
 
     if (justificationType === "retardo" && !time) {
-      Alert.alert(t('common.error'), "Por favor ingresa la hora del retardo");
+      Alert.alert(t('common.error'), t('justify.missingTimeError'));
       return;
     }
 
     if (!selectedFile) {
-      Alert.alert(t('common.error'), "Por favor sube un archivo adjunto");
+      Alert.alert(t('common.error'), t('justify.missingAttachmentError'));
       return;
     }
 
@@ -126,7 +126,7 @@ export default function AddJustification() {
                     justificationType === "inasistencia" && styles.activeTypeButtonText,
                   ]}
                 >
-                   Inasistencia
+                   {t('justify.absenceType')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -142,16 +142,16 @@ export default function AddJustification() {
                     justificationType === "retardo" && styles.activeTypeButtonText,
                   ]}
                 >
-                   Retardo
+                   {t('justify.delayType')}
                 </Text>
               </TouchableOpacity>
             </View>
 
             {/* Campo de fecha */}
-            <Text style={styles.inputLabel}>Fecha</Text>
+            <Text style={styles.inputLabel}>{t('justify.dateLabel')}</Text>
             <TextInput
               style={styles.textInput}
-              placeholder="YYYY-MM-DD"
+              placeholder={t('justify.dateFormat')}
               placeholderTextColor="#999"
               value={date}
               onChangeText={setDate}
@@ -160,10 +160,10 @@ export default function AddJustification() {
             {/* Campo de hora (solo para retardos) */}
             {justificationType === "retardo" && (
               <>
-                <Text style={styles.inputLabel}>Hora</Text>
+                <Text style={styles.inputLabel}>{t('justify.timeLabel')}</Text>
                 <TextInput
                   style={styles.textInput}
-                  placeholder="HH:MM AM/PM"
+                  placeholder={t('justify.timeFormat')}
                   placeholderTextColor="#999"
                   value={time}
                   onChangeText={setTime}
@@ -172,10 +172,10 @@ export default function AddJustification() {
             )}
 
             {/* Campo de descripción */}
-            <Text style={styles.inputLabel}>Descripción de la Justificación</Text>
+            <Text style={styles.inputLabel}>{t('justify.descriptionLabel')}</Text>
             <TextInput
               style={[styles.textInput, styles.textArea]}
-              placeholder="Escribe aquí la descripción del motivo..."
+              placeholder={t('justify.descriptionPlaceholder')}
               placeholderTextColor="#999"
               value={description}
               onChangeText={setDescription}
@@ -185,9 +185,9 @@ export default function AddJustification() {
             />
 
             {/* Sección de subir archivo */}
-            <Text style={styles.inputLabel}>Adjuntar Documento</Text>
+            <Text style={styles.inputLabel}>{t('justify.attachDocument')}</Text>
             <TouchableOpacity style={styles.uploadButton}>
-              <Text style={styles.uploadButtonText}>Seleccionar Archivo</Text>
+              <Text style={styles.uploadButtonText}>{t('justify.selectFile')}</Text>
             </TouchableOpacity>
 
             {selectedFile && (
@@ -205,7 +205,7 @@ export default function AddJustification() {
             )}
 
             <Text style={styles.supportedFormats}>
-              Formatos soportados: PDF, Imagen (JPG, PNG), Word (DOC, DOCX)
+              {t('justify.supportedFormats')}
             </Text>
 
             {/* Espaciador */}
@@ -214,7 +214,7 @@ export default function AddJustification() {
             {/* Botón Subir */}
             <View style={styles.buttonContainer}>
               <PrimaryButton
-                title="Subir"
+                title={t('justify.upload')}
                 onPress={handleSubmit}
                 isLoading={isLoading}
               />
@@ -222,7 +222,7 @@ export default function AddJustification() {
 
             {/* Botón Volver secundario */}
             <TouchableOpacity onPress={handleBack} style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>Volver</Text>
+              <Text style={styles.secondaryButtonText}>{t('common.back')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

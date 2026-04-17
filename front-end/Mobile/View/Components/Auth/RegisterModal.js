@@ -3,12 +3,15 @@ import {
   Modal,
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import stylesAuth from "./Style/Style";
 
 export default function RegisterModal({ isVisible, onClose }) {
+  const { t } = useTranslation();
+
   return (
     <Modal
       visible={isVisible}
@@ -16,67 +19,24 @@ export default function RegisterModal({ isVisible, onClose }) {
       transparent={true}
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
-          <Text style={styles.title}>Solicitud de Cuenta Personal</Text>
+      <View style={stylesAuth.overlayRegister}>
+        <View style={stylesAuth.modalContainerRegister}>
+          <Text style={stylesAuth.titleRegister}>{t('registerModal.title')}</Text>
 
           <ScrollView
-            style={styles.content}
+            style={stylesAuth.contentRegister}
             showsVerticalScrollIndicator={false}
           >
-            <Text style={styles.paragraph}>
-              Si no tienes una cuenta creada, la debes solicitar al administrador.
+            <Text style={stylesAuth.paragraphRegister}>
+              {t('registerModal.description')}
             </Text>
           </ScrollView>
 
-          <TouchableOpacity style={styles.button} onPress={onClose}>
-            <Text style={styles.buttonText}>Cerrar</Text>
+          <TouchableOpacity style={stylesAuth.buttonRegister} onPress={onClose}>
+            <Text style={stylesAuth.buttonTextRegister}>{t('registerModal.close')}</Text>
           </TouchableOpacity>
         </View>
       </View>
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  modalContainer: {
-    width: '100%',
-    maxHeight: '80%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 20,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#0B5FA5',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  content: {
-    marginBottom: 20,
-  },
-  paragraph: {
-    fontSize: 14,
-    color: '#374151',
-    marginBottom: 14
-  },
-  button: {
-    backgroundColor: '#118FC3',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});

@@ -7,71 +7,73 @@ import {
     TouchableWithoutFeedback,
     Keyboard,
     Alert,
-    StyleSheet
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { DocumentSelector } from './DocumentSelector';
 import { RHSelector } from './RHSelector';
 import { QuestionInput } from './QuestionInput';
 import { ProgressBar } from './ProgressBar';
-
-const questions = [
-    {
-        id: 1,
-        question: "Selecciona tu tipo de documento de identidad:",
-        type: "selector",
-        selectorType: "document"
-    },
-    {
-        id: 2,
-        question: "¿Cuál es tu número de documento de identidad?",
-        placeholder: "Ejemplo: 12345678",
-        type: "input",
-        keyboardType: "numeric"
-    },
-    {
-        id: 3,
-        question: "Selecciona tu tipo de RH (Factor Rh):",
-        type: "selector",
-        selectorType: "rh"
-    },
-    {
-        id: 4,
-        question: "¿Documento del familiar asociado?",
-        placeholder: "Ejemplo: 12345678",
-        type: "input",
-        keyboardType: "numeric"
-    },
-    {
-        id: 5,
-        question: "¿Cuál es tu fecha de nacimiento?",
-        placeholder: "DD/MM/AAAA",
-        hint: "Formato: 15/08/1990",
-        type: "input",
-        keyboardType: "numeric"
-    },
-    {
-        id: 6,
-        question: "¿Cuál es tu dirección de residencia?",
-        placeholder: "Calle, número, ciudad",
-        hint: "Ejemplo: Calle 123 #45-67, Bogotá",
-        type: "input"
-    },
-    {
-        id: 7,
-        question: "¿Cuál es tu número de teléfono de contacto?",
-        placeholder: "Ejemplo: 3001234567",
-        hint: "Ingresa tu número sin espacios",
-        type: "input",
-        keyboardType: "numeric"
-    }
-];
+import stylesCommon from './Style/Style';
 
 export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
+    const { t } = useTranslation();
     const [step, setStep] = useState(1);
     const [answers, setAnswers] = useState({});
     const [selectedDocument, setSelectedDocument] = useState(null);
     const [selectedRH, setSelectedRH] = useState(null);
     const inputRef = useRef(null);
+
+    const questions = [
+        {
+            id: 1,
+            question: t('questionnaire.documentQuestion'),
+            type: "selector",
+            selectorType: "document"
+        },
+        {
+            id: 2,
+            question: t('questionnaire.documentPlaceholder'),
+            placeholder: t('questionnaire.documentPlaceholder'),
+            type: "input",
+            keyboardType: "numeric"
+        },
+        {
+            id: 3,
+            question: t('questionnaire.rhQuestion'),
+            type: "selector",
+            selectorType: "rh"
+        },
+        {
+            id: 4,
+            question: t('questionnaire.relativeDocumentQuestion'),
+            placeholder: t('questionnaire.documentPlaceholder'),
+            type: "input",
+            keyboardType: "numeric"
+        },
+        {
+            id: 5,
+            question: t('questionnaire.birthDateQuestion'),
+            placeholder: t('questionnaire.birthDatePlaceholder'),
+            hint: t('questionnaire.birthDateHint'),
+            type: "input",
+            keyboardType: "numeric"
+        },
+        {
+            id: 6,
+            question: t('questionnaire.addressQuestion'),
+            placeholder: t('questionnaire.addressPlaceholder'),
+            hint: t('questionnaire.addressHint'),
+            type: "input"
+        },
+        {
+            id: 7,
+            question: t('questionnaire.phoneQuestion'),
+            placeholder: t('questionnaire.phonePlaceholder'),
+            hint: t('questionnaire.phoneHint'),
+            type: "input",
+            keyboardType: "numeric"
+        }
+    ];
 
     const dismissKeyboard = () => {
         Keyboard.dismiss();
@@ -210,36 +212,36 @@ export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
             onRequestClose={onClose}
         >
             <TouchableWithoutFeedback onPress={onClose}>
-                <View style={styles.modalOverlay}>
+                <View style={stylesCommon.questionnaireModalOverlay}>
                     <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-                        <View style={styles.modalContainer}>
-                            <Text style={styles.modalTitle}>Cuestionario</Text>
-                            <Text style={styles.modalSubtitle}>
+                        <View style={stylesCommon.questionnaireModalContainer}>
+                            <Text style={stylesCommon.questionnaireModalTitle}>Cuestionario</Text>
+                            <Text style={stylesCommon.questionnaireQuestion}>
                                 Se debe realizar un cuestionario en el que se pregunten por cosas específicas las cuales solo conozca un usuario
                             </Text>
 
                             <ProgressBar currentStep={step} totalSteps={questions.length} />
 
-                            <Text style={styles.questionText}>
+                            <Text style={stylesCommon.questionnaireQuestion}>
                                 {questions[step - 1].question}
                             </Text>
 
                             {renderQuestionContent()}
 
-                            <View style={styles.modalButtons}>
+                            <View style={stylesCommon.questionnaireButtonsContainer}>
                                 {step > 1 && (
                                     <TouchableOpacity
-                                        style={[styles.modalButton, styles.previousButton]}
+                                        style={[stylesCommon.questionnaireButton, stylesCommon.questionnairePreviousButton]}
                                         onPress={handlePrevious}
                                     >
-                                        <Text style={styles.previousButtonText}>Anterior</Text>
+                                        <Text style={stylesCommon.questionnairePreviousButtonText}>Anterior</Text>
                                     </TouchableOpacity>
                                 )}
                                 <TouchableOpacity
-                                    style={[styles.modalButton, styles.nextButton]}
+                                    style={[stylesCommon.questionnaireButton, stylesCommon.questionnaireNextButton]}
                                     onPress={handleNext}
                                 >
-                                    <Text style={styles.nextButtonText}>
+                                    <Text style={stylesCommon.questionnaireNextButtonText}>
                                         {step === questions.length ? "Enviar" : "Siguiente"}
                                     </Text>
                                 </TouchableOpacity>
@@ -251,71 +253,3 @@ export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
         </Modal>
     );
 };
-
-const styles = StyleSheet.create({
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    modalContainer: {
-        backgroundColor: "#FFF",
-        borderRadius: 15,
-        padding: 20,
-        width: "90%",
-        maxWidth: 400,
-        maxHeight: "80%",
-    },
-    modalTitle: {
-        fontSize: 18,
-        fontWeight: "bold",
-        color: "#1a1a1a",
-        marginBottom: 10,
-        textAlign: "center",
-    },
-    modalSubtitle: {
-        fontSize: 14,
-        color: "#666",
-        textAlign: "center",
-        marginBottom: 20,
-        lineHeight: 20,
-        fontStyle: "italic",
-    },
-    questionText: {
-        fontSize: 16,
-        fontWeight: "600",
-        color: "#1a1a1a",
-        marginBottom: 15,
-    },
-    modalButtons: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        gap: 10,
-        marginTop: 20,
-    },
-    modalButton: {
-        flex: 1,
-        paddingVertical: 12,
-        borderRadius: 8,
-        alignItems: "center",
-    },
-    previousButton: {
-        backgroundColor: "#F5F5F5",
-        borderWidth: 1,
-        borderColor: "#E0E0E0",
-    },
-    previousButtonText: {
-        color: "#666",
-        fontSize: 14,
-        fontWeight: "600",
-    },
-    nextButton: {
-        backgroundColor: "#007AFF",
-    },
-    nextButtonText: {
-        color: "#FFF",
-        fontSize: 14,
-        fontWeight: "600",
-    },
-});

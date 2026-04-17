@@ -163,7 +163,7 @@ export default function MenuScreen() {
               </TouchableOpacity>
 
               <DangerButton
-                title={isLoading ? "Cerrando Sesión..." : "Cerrar Sesión"}
+                title={isLoading ? t('menu.loggingOut') : t('menu.logout')}
                 onPress={handleLogout}
                 setIsLoading={setIsLoading}
               />

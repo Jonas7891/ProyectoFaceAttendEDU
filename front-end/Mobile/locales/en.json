@@ -8,7 +8,8 @@
     "success": "Success",
     "settings": "Settings",
     "profile": "Profile",
-    "search": "Search"
+    "search": "Search",
+    "close": "Close"
   },
   "login": {
     "title": "Login",
@@ -46,7 +47,15 @@
     "updateFacialParams": "Update Facial Parameters",
     "justificationConfig": "Justification Configuration",
     "appSettings": "Application Settings",
-    "facialRecognitionFail": "Facial recognition failure?"
+    "facialRecognitionFail": "Facial recognition failure?",
+    "logout": "Logout",
+    "loggingOut": "Logging out..."
+  },
+  "logout": {
+    "title": "Logout",
+    "message": "Are you sure you want to logout?",
+    "cancel": "Cancel",
+    "confirm": "Yes, logout"
   },
   "updatePhoto": {
     "title": "Photo for Facial Recognition",
@@ -78,7 +87,9 @@
     "updateParamsDescription": "Often facial recognition may fail due to certain changes in a user's face",
     "recommendations": "Recommendations:",
     "cameraQuality": "Camera Quality or Angle",
-    "cameraQualityDescription": "Another reason failures occur in the system is due to lighting, camera quality or the angle at which the device is positioned for scanning."
+    "cameraQualityDescription": "Another reason failures occur in the system is due to lighting, camera quality or the angle at which the device is positioned for scanning.",
+    "backToMenu": "Back",
+    "returningToMenu": "Returning to Menu..."
   },
   "dashboard": {
     "greeting": "Good day",
@@ -117,17 +128,39 @@
     "justifiedDelays": "Justified Delays",
     "noAbsencesRegistered": "No absences registered",
     "noDelaysRegistered": "No delays registered",
-    "back": "Back"
+    "back": "Back",
+    "statusApproved": "Approved",
+    "statusPending": "Pending",
+    "dateLabel": "Date",
+    "timeLabel": "Time",
+    "reasonLabel": "Reason"
   },
   "justify": {
     "title": "Justifications",
     "addAbsence": "Add Absence",
     "addDelay": "Add Delay",
+    "absenceType": "Absence",
+    "delayType": "Delay",
     "selectDate": "Select a Date",
+    "dateLabel": "Date",
+    "timeLabel": "Time",
     "enterReason": "Enter the Reason",
+    "descriptionLabel": "Description of Justification",
     "reasonPlaceholder": "Describe the reason for your absence or delay...",
     "submit": "Submit Justification",
-    "successMessage": "Justification submitted successfully!"
+    "successMessage": "Justification submitted successfully!",
+    "dateFormat": "YYYY-MM-DD",
+    "timeFormat": "HH:MM AM/PM",
+    "descriptionPlaceholder": "Write here the description of the reason...",
+    "attachDocument": "Attach Document",
+    "selectFile": "Select File",
+    "supportedFormats": "Supported formats: PDF, Image (JPG, PNG), Word (DOC, DOCX)",
+    "upload": "Upload",
+    "missingTimeError": "Please enter the delay time",
+    "missingAttachmentError": "Please upload an attachment file"
+  },
+  "menuJustify": {
+    "backToDashboard": "Back to Dashboard"
   },
   "news": {
     "title": "News",
@@ -141,5 +174,101 @@
   },
   "homes": {
     "greeting": "Login"
+  },
+  "registerModal": {
+    "title": "Account Request",
+    "description": "If you don't have an account created, you must request it from the administrator.",
+    "close": "Close"
+  },
+  "termsModal": {
+    "title": "TERMS AND CONDITIONS",
+    "acceptanceTitle": "1. ACCEPTANCE OF THE TERMS",
+    "acceptanceText": "By accessing, registering and using the present mobile application, the user declares to have read, understood and accepted in a free, prior, express and informed manner the present Terms and Conditions, as well as the Personal Data Processing Policy.",
+    "objectTitle": "2. OBJECT OF THE APPLICATION",
+    "objectText": "The application has as its purpose to manage user attendance registration in public or private spaces through facial recognition technology, allowing automated identity validation.",
+    "authorizationTitle": "3. AUTHORIZATION FOR THE TREATMENT OF PERSONAL DATA",
+    "authorizationText": "The user authorizes in a prior, express and informed manner the application responsible for collecting, storing, using, processing and deleting their personal data, in accordance with the Colombian legislation in force.",
+    "sensitiveDataTitle": "4. TREATMENT OF SENSITIVE DATA (BIOMETRICS)",
+    "sensitiveDataText": "The user expressly authorizes the treatment of their biometric data (facial image), which are considered sensitive data, with the following purposes:",
+    "purpose1": "4.1 Validate the user's identity.",
+    "purpose2": "4.2 Register their attendance in authorized places.",
+    "purpose3": "4.3 Prevent impersonations or frauds.",
+    "sensitiveDataNote": "The user recognizes that they are not obligated to authorize the treatment of sensitive data; however, they understand that refusal may prevent the use of the application.",
+    "finalityTitle": "5. FINALITY OF THE DATA TREATMENT",
+    "finalityText": "The personal data collected will be used for:",
+    "finality1": "5.1 Attendance registration and control.",
+    "finality2": "5.2 User identification.",
+    "finality3": "5.3 Security and access control.",
+    "finality4": "5.4 Compliance with legal obligations.",
+    "finality5": "5.5 Service improvement.",
+    "rightsTitle": "6. RIGHTS OF THE DATA OWNER",
+    "rightsText": "The user, as owner of the personal data, has the right to:",
+    "rights1": "6.1 Know, update and rectify their data.",
+    "rights2": "6.2 Request proof of the authorization granted.",
+    "rights3": "6.3 Be informed about the use of their data.",
+    "rights4": "6.4 Revoke the authorization and/or request the deletion of their data.",
+    "rights5": "6.5 Access their personal data free of charge.",
+    "rightsNote": "To exercise these rights, the user may communicate through the channels established by the application.",
+    "storageTitle": "7. STORAGE AND SECURITY OF INFORMATION",
+    "storageText1": "Personal data will be stored for the time necessary to fulfill the purposes described or in accordance with applicable legal provisions.",
+    "storageText2": "The application will implement technical, human and administrative security measures to protect the information against unauthorized access, loss, misuse or fraud.",
+    "transferTitle": "8. DATA TRANSFER AND TRANSMISSION",
+    "transferText": "The user authorizes that their personal data may be shared with third parties in charge of treatment, only when necessary for the operation of the application or by legal requirement, guaranteeing in all cases the protection of the information.",
+    "responsibilitiesTitle": "9. USER RESPONSIBILITIES",
+    "responsibilitiesText": "The user undertakes to:",
+    "responsibilities1": "9.1 Provide truthful and updated information.",
+    "responsibilities2": "9.2 Make proper use of the application.",
+    "responsibilities3": "9.3 Not impersonate third parties.",
+    "responsibilities4": "9.4 Comply with applicable regulations in the use of the service.",
+    "liabilityTitle": "10. LIABILITY LIMITATION",
+    "liabilityText": "The application will not be responsible for:",
+    "liability1": "10.1 Technical failures beyond its control.",
+    "liability2": "10.2 Misuse of the system by the user.",
+    "liability3": "10.3 Unauthorized accesses derived from user negligence.",
+    "modificationsTitle": "11. MODIFICATIONS",
+    "modificationsText": "The application reserves the right to modify at any time the present Terms and Conditions. Modifications will be timely informed to users.",
+    "legislationTitle": "12. APPLICABLE LEGISLATION",
+    "legislationText": "The present Terms and Conditions are governed by the laws of the Republic of Colombia, especially by Law 1581 of 2012 and its regulatory decrees.",
+    "acceptanceFinalTitle": "13. FINAL ACCEPTANCE",
+    "acceptanceFinalText": "The user declares that they have read, understood and accepted the entirety of the present Terms and Conditions, as well as the Personal Data Processing Policy, authorizing the use of their data in accordance with what is established herein.",
+    "close": "Close"
+  },
+  "questionnaire": {
+    "documentQuestion": "Select your identity document type:",
+    "documentPlaceholder": "Example: 12345678",
+    "rhQuestion": "Select your RH (Rh Factor) type:",
+    "relativeDocumentQuestion": "Relative's associated document?",
+    "birthDateQuestion": "What is your date of birth?",
+    "birthDatePlaceholder": "DD/MM/YYYY",
+    "birthDateHint": "Format: 15/08/1990",
+    "addressQuestion": "What is your residential address?",
+    "addressPlaceholder": "Street, number, city",
+    "addressHint": "Example: 123 Main St #45-67, Bogotá",
+    "phoneQuestion": "What is your contact phone number?",
+    "phonePlaceholder": "Example: 3001234567",
+    "phoneHint": "Enter your number without spaces"
+  },
+  "facialUpdate": {
+    "beardChange": "Beard/mustache change",
+    "hairChange": "Hairstyle change",
+    "glasses": "Glasses use",
+    "weightChange": "Significant weight change",
+    "makeup": "Different makeup",
+    "expression": "Different facial expression",
+    "selectOption": "Select an option",
+    "selectOptionMessage": "Please select what change you have had in your face",
+    "updateParams": "Update Parameters",
+    "confirmUpdate": "Are you sure you want to update your facial parameters?",
+    "success": "Success",
+    "paramsUpdated": "Your facial parameters have been updated"
+  },
+  "documentSelector": {
+    "label": "Document type:"
+  },
+  "rhSelector": {
+    "label": "Select your RH type:"
+  },
+  "progressBar": {
+    "question": "Question {{currentStep}} of {{totalSteps}}"
   }
 }
