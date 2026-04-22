@@ -1,19 +1,55 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import stylesAuth from "./Style/Style";
 
-export default function DangerButton({
-  title,
-  onPress = () => { },
-  disabled = false,
+export default function DangerButton({ 
+  title, 
+  disabled = false 
 }) {
+  const navigation = useNavigation();
+  const { t } = useTranslation();
+
+  const handleLogout = async () => {
+
+    Alert.alert(
+      t('logout.title', 'Cerrar sesión'),
+      t('logout.confirmation', '¿Estás seguro de que quieres cerrar sesión?'),
+      [
+        {
+          text: t('logout.cancel', 'Cancelar'),
+          style: 'cancel',
+        },
+        {
+          text: t('logout.confirm', 'Sí, cerrar sesión'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem('userRole');
+              await AsyncStorage.removeItem('userEmail');
+              await AsyncStorage.removeItem('userToken');
+              navigation.replace('Login');
+            } catch (error) {
+              console.error('Error al cerrar sesión:', error);
+              Alert.alert('Error', 'No se pudo cerrar sesión');
+            }
+          },
+        },
+      ],
+      { cancelable: false }
+    );
+  };
+
   return (
     <TouchableOpacity
-      style={[stylesAuth.button, disabled && stylesAuth.buttonDisabled]}
-      onPress={onPress}
+      style={[stylesAuth.dangerButton, disabled && stylesAuth.buttonDisabled]}
+      onPress={handleLogout}
       disabled={disabled}
+      activeOpacity={0.7}
     >
-      <Text style={stylesAuth.text}>{title}</Text>
+      <Text style={stylesAuth.dangerButtonText}>{title}</Text>
     </TouchableOpacity>
   );
 }

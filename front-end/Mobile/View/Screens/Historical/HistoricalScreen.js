@@ -4,52 +4,68 @@ import {
     View,
     SafeAreaView,
     TouchableOpacity,
-    RefreshControl,
     Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomBar from "../../Components/Common/NavigationBar";
 import ScrollViewWrapper from "../../Components/Common/ScrollView";
 import CustomTabs from "../../Components/Common/CustomTabs";
 import styles from "../Style/Style";
+import { saveLanguageForRole } from "../../Components/Common/languageByRole";
+
+// Datos por rol
+const ASISTENCIAS_ADMIN = [
+    { id: 1, nombre: "Ana Martínez", hora: "08:15 AM" },
+    { id: 2, nombre: "Luis Fernández", hora: "08:22 AM" },
+    { id: 3, nombre: "Carmen López", hora: "08:30 AM" },
+    { id: 4, nombre: "Roberto Díaz", hora: "08:45 AM" },
+];
+
+const ASISTENCIAS_ESTUDIANTE = [
+    { id: 1, nombre: "Ana Martínez", hora: "08:15 AM" },
+    { id: 2, nombre: "Luis Fernández", hora: "08:22 AM" },
+];
 
 export default function HistoricalScreen() {
     const navigation = useNavigation();
     const { t, i18n } = useTranslation();
     const [refreshKey, setRefreshKey] = useState(0);
     const [refreshing, setRefreshing] = useState(false);
+    const [userRole, setUserRole] = useState(null);
     const [stats, setStats] = useState({
         totalEmpleados: 0,
         presentesHoy: 0,
         ausentesHoy: 0,
         tardanzasHoy: 0,
-        porcentajeAsistencia: 0
+        porcentajeAsistencia: 0,
     });
 
+    // ─── Inicialización ──────────────────────────────────────────────────────
     useEffect(() => {
-        cargarEstadisticas();
-    }, []);
+        const init = async () => {
+            const role = await AsyncStorage.getItem('userRole');
+            setUserRole(role);
+            cargarEstadisticas();
 
-    useEffect(() => {
-        const handleLanguageChange = () => {
-            setRefreshKey(prev => prev + 1);
+            await restoreLanguageForRole(role);
         };
+        init();
 
+        const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
         i18n.on('languageChanged', handleLanguageChange);
-
-        return () => {
-            i18n.off('languageChanged', handleLanguageChange);
-        };
+        return () => i18n.off('languageChanged', handleLanguageChange);
     }, [i18n]);
 
+    // ─── Datos ───────────────────────────────────────────────────────────────
     const cargarEstadisticas = () => {
         setStats({
             totalEmpleados: 45,
             presentesHoy: 38,
             ausentesHoy: 5,
             tardanzasHoy: 2,
-            porcentajeAsistencia: 84
+            porcentajeAsistencia: 84,
         });
     };
 
@@ -59,50 +75,21 @@ export default function HistoricalScreen() {
         setRefreshing(false);
     };
 
-    const handleSettings = () => {
-        console.log("Abrir configuración");
-        navigation.navigate("Menu")
-    };
+    // ─── Navegación ──────────────────────────────────────────────────────────
+    const handleSettings = () => navigation.navigate("Menu");
+    const handleProfile = () => navigation.navigate("TakePhoto");
+    const handleSearch = () => navigation.navigate("DisplayingAttendance");
 
-    const handleProfile = () => {
-        console.log("Abrir perfil");
-        navigation.navigate("TakePhoto")
-    };
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+    const isAdmin = userRole === 'admin';
+    const asistenciasRecientes = isAdmin ? ASISTENCIAS_ADMIN : ASISTENCIAS_ESTUDIANTE;
 
-    const handleSearch = () => {
-        console.log("Abrir búsqueda");
-        navigation.navigate("DisplayingAttendance")
-    };
-
-    const asistenciasRecientes = [
-        {
-            id: 1,
-            nombre: "Ana Martínez",
-            hora: "08:15 AM"
-        },
-        {
-            id: 2,
-            nombre: "Luis Fernández",
-            hora: "08:22 AM"
-        },
-        {
-            id: 3,
-            nombre: "Carmen López",
-            hora: "08:30 AM"
-        },
-        {
-            id: 4,
-            nombre: "Roberto Díaz",
-            hora: "08:45 AM"
-        }
-    ];
-
+    // ─── Render ──────────────────────────────────────────────────────────────
     return (
         <SafeAreaView style={styles.safeArea}>
             <ScrollViewWrapper>
                 <View style={styles.container}>
-                    <CustomTabs
-                    />
+                    <CustomTabs userRole={userRole} />
 
                     <View style={styles.informacionContainer}>
                         <Text style={styles.informacionText}>
@@ -111,13 +98,12 @@ export default function HistoricalScreen() {
 
                         <View style={styles.recentSection}>
                             {asistenciasRecientes.map((item) => (
-<View key={item.id} style={styles.recentItemHistorical}>
+                                <View key={item.id} style={styles.recentItemHistorical}>
                                     <View style={styles.recentInfo}>
                                         <Text style={styles.recentName}>{item.nombre}</Text>
                                         <Text style={styles.recentTime}>{item.hora}</Text>
                                     </View>
-
-                                    <View style={[styles.statusBadge]}>
+                                    <View style={styles.statusBadge}>
                                         <TouchableOpacity>
                                             <Image
                                                 source={require("../../../assets/images/lupa.png")}
@@ -138,6 +124,6 @@ export default function HistoricalScreen() {
                 onPressProfile={handleProfile}
                 onPressSearch={handleSearch}
             />
-        </SafeAreaView >
+        </SafeAreaView>
     );
 }

@@ -16,12 +16,14 @@ import { useTranslation } from "react-i18next";
 import PrimaryButton from "../../Components/Auth/PrimaryButton";
 import Separador from "../../Components/Common/Separador";
 import styles from "../Style/Style";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveLanguageForRole } from "../../Components/Common/languageByRole";
 
 export default function AddJustification() {
   const navigation = useNavigation();
   const { t, i18n } = useTranslation();
   const [refreshKey, setRefreshKey] = useState(0);
-  
+
   const [justificationType, setJustificationType] = useState("inasistencia");
   const [description, setDescription] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
@@ -30,15 +32,17 @@ export default function AddJustification() {
   const [time, setTime] = useState("");
 
   useEffect(() => {
-    const handleLanguageChange = () => {
-      setRefreshKey(prev => prev + 1);
-    };
+    const init = async () => {
+      const role = await AsyncStorage.getItem('userRole');
+      setUserRole(role);
 
+      await restoreLanguageForRole(role);
+    };
+    init();
+
+    const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
     i18n.on('languageChanged', handleLanguageChange);
-
-    return () => {
-      i18n.off('languageChanged', handleLanguageChange);
-    };
+    return () => i18n.off('languageChanged', handleLanguageChange);
   }, [i18n]);
 
   const handleBack = () => {
@@ -74,9 +78,9 @@ export default function AddJustification() {
 
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+
       Alert.alert(
-        t('common.success'), 
+        t('common.success'),
         t('justify.successMessage'),
         [{ text: "OK", onPress: () => navigation.goBack() }]
       );
@@ -126,7 +130,7 @@ export default function AddJustification() {
                     justificationType === "inasistencia" && styles.activeTypeButtonText,
                   ]}
                 >
-                   {t('justify.absenceType')}
+                  {t('justify.absenceType')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -142,7 +146,7 @@ export default function AddJustification() {
                     justificationType === "retardo" && styles.activeTypeButtonText,
                   ]}
                 >
-                   {t('justify.delayType')}
+                  {t('justify.delayType')}
                 </Text>
               </TouchableOpacity>
             </View>

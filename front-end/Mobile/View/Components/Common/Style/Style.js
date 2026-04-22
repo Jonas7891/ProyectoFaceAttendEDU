@@ -115,6 +115,15 @@ const stylesCommon = StyleSheet.create({
         shadowRadius: 5,
         shadowOffset: { width: 0, height: 2 },
     },
+    navButton: {
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 10,
+        borderRadius: 18,
+    },
+    activeNavButton: {
+        backgroundColor: "#d9f4ff",
+    },
     navIcon: {
         width: 28,
         height: 28,

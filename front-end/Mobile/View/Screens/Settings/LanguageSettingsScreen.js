@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, SafeAreaView, Alert, Image } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveLanguageForRole } from "../../Components/Common/languageByRole";
 import PrimaryButton from '../../Components/Auth/PrimaryButton';
-import i18n from '../../../i18n';
 import styles from '../Style/Style';
 
 export default function LanguageSettingsScreen() {
@@ -15,16 +15,19 @@ export default function LanguageSettingsScreen() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    const handleLanguageChange = () => {
+    const handleLanguageChange = (newLang) => {
+      setSelectedLanguage(newLang); // ✅ sincroniza el selector con el idioma real
       setRefreshKey(prev => prev + 1);
     };
 
     i18n.on('languageChanged', handleLanguageChange);
-
-    return () => {
-      i18n.off('languageChanged', handleLanguageChange);
-    };
+    return () => i18n.off('languageChanged', handleLanguageChange);
   }, [i18n]);
+
+  // ✅ Sincroniza al volver a la pantalla si la pantalla quedó cacheada
+  useEffect(() => {
+    setSelectedLanguage(i18n.language);
+  }, [i18n.language]);
 
   const languages = [
     { code: 'es', name: 'Español', flag: '🇪🇸' },
@@ -37,7 +40,9 @@ export default function LanguageSettingsScreen() {
     setIsLoading(true);
     try {
       await i18n.changeLanguage(selectedLanguage);
-      await AsyncStorage.setItem('appLanguage', selectedLanguage);
+
+      const role = await AsyncStorage.getItem('userRole');
+      await saveLanguageForRole(role);
 
       Alert.alert(t('common.success'), t('settings.languageChanged'), [
         { text: 'OK', onPress: () => navigation.goBack() }
@@ -50,8 +55,17 @@ export default function LanguageSettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.languageSettingsSafeArea}>
+    <SafeAreaView style={styles.languageSettingsSafeArea} key={refreshKey}>
       <View style={styles.languageSettingsContainer}>
+        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.2}>
+          <View style={styles.backIcon}>
+            <Image
+              source={require("../../../assets/images/flecha.png")}
+              style={styles.backIconImage}
+            />
+          </View>
+        </TouchableOpacity>
+
         <Text style={styles.languageSettingsTitle}>{t('settings.language')}</Text>
         <Text style={styles.languageSettingsSubtitle}>{t('settings.selectLanguage')}</Text>
 
@@ -65,12 +79,18 @@ export default function LanguageSettingsScreen() {
             onPress={() => setSelectedLanguage(lang.code)}
           >
             <Text style={styles.languageSettingsOptionText}>{lang.flag} {lang.name}</Text>
-            {selectedLanguage === lang.code && <Text style={styles.languageSettingsCheckmark}>✓</Text>}
+            {selectedLanguage === lang.code && (
+              <Text style={styles.languageSettingsCheckmark}>✓</Text>
+            )}
           </TouchableOpacity>
         ))}
 
-        <PrimaryButton title={t('common.save')} onPress={handleSave} isLoading={isLoading} />
+        <PrimaryButton
+          title={t('common.save')}
+          onPress={handleSave}
+          isLoading={isLoading}
+        />
       </View>
     </SafeAreaView>
-  )
-};
+  );
+}

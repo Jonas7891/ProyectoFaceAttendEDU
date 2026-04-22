@@ -13,6 +13,8 @@ import ScrollViewWrapper from "../../Components/Common/ScrollView";
 import CustomTabs from "../../Components/Common/CustomTabs";
 import Separador from "../../Components/Common/Separador";
 import styles from "../Style/Style";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveLanguageForRole } from "../../Components/Common/languageByRole";
 
 export default function NewsScreen() {
     const navigation = useNavigation();
@@ -20,29 +22,18 @@ export default function NewsScreen() {
     const [refreshKey, setRefreshKey] = useState(0);
 
     useEffect(() => {
-        const handleLanguageChange = () => {
-            setRefreshKey(prev => prev + 1);
-        };
+        const init = async () => {
+            const role = await AsyncStorage.getItem('userRole');
+            setUserRole(role);
 
+            await restoreLanguageForRole(role);
+        };
+        init();
+
+        const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
         i18n.on('languageChanged', handleLanguageChange);
-
-        return () => {
-            i18n.off('languageChanged', handleLanguageChange);
-        };
+        return () => i18n.off('languageChanged', handleLanguageChange);
     }, [i18n]);
-
-    const handleSettings = () => {
-        console.log("Abrir configuración");
-        navigation.navigate("Menu")
-    };
-
-    const handleProfile = () => {
-        console.log("Abrir perfil");
-    };
-
-    const handleSearch = () => {
-        console.log("Abrir búsqueda");
-    };
 
     return (
         <SafeAreaView style={styles.safeArea} key={refreshKey}>
@@ -61,7 +52,6 @@ export default function NewsScreen() {
                         <Text style={{ fontSize: 18, fontWeight: "bold", marginTop: 30 }}>
                             {t('news.title')}
                         </Text>
-
                         <Text style={{ fontSize: 18, fontWeight: "100", marginTop: 15 }}>
                             {t('news.creationDate')}: {t('news.unknownDate')}
                         </Text>
@@ -80,11 +70,7 @@ export default function NewsScreen() {
                     <View style={styles.bottomSpace} />
                 </View>
             </ScrollViewWrapper>
-            <BottomBar
-                onPressSettings={handleSettings}
-                onPressProfile={handleProfile}
-                onPressSearch={handleSearch}
-            />
+            <BottomBar />
         </SafeAreaView>
     );
 }

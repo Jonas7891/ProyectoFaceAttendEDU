@@ -1,25 +1,30 @@
 import { StyleSheet, Platform } from 'react-native';
 
 const stylesAuth = StyleSheet.create({
-    button: {
+    dangerButton: {
         backgroundColor: '#ff0000',
-        paddingVertical: 14,
+        paddingVertical: 12,
+        paddingHorizontal: 24,
         borderRadius: 8,
         alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#ff0000',
-        width: 200,
-        alignSelf: 'center',
-        position: 'absolute',
-        bottom: -80,
+        justifyContent: 'center',
+        marginVertical: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+        marginTop: 70,
     },
-    buttonDisabled: {
-        opacity: 0.6,
-    },
-    text: {
+    dangerButtonText: {
         color: '#FFFFFF',
         fontSize: 16,
-        fontWeight: '600',
+        fontWeight: 'bold',
+        textAlign: 'center',
+    },
+    buttonDisabled: {
+        backgroundColor: '#CCCCCC',
+        opacity: 0.6,
     },
     container: {
         alignSelf: "center",

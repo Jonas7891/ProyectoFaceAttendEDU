@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { 
+import {
     Text,
     View,
     SafeAreaView,
@@ -15,6 +15,8 @@ import { useTranslation } from "react-i18next";
 import PrimaryButton from "../../Components/Auth/PrimaryButton";
 import Separador from "../../Components/Common/Separador";
 import styles from "../Style/Style";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveLanguageForRole } from "../../Components/Common/languageByRole";
 
 export default function ValidJustificationsScreen() {
     const navigation = useNavigation();
@@ -23,15 +25,17 @@ export default function ValidJustificationsScreen() {
     const [activeSection, setActiveSection] = useState("inasistencias");
 
     useEffect(() => {
-        const handleLanguageChange = () => {
-            setRefreshKey(prev => prev + 1);
-        };
+        const init = async () => {
+            const role = await AsyncStorage.getItem('userRole');
+            setUserRole(role);
 
+            await restoreLanguageForRole(role);
+        };
+        init();
+
+        const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
         i18n.on('languageChanged', handleLanguageChange);
-
-        return () => {
-            i18n.off('languageChanged', handleLanguageChange);
-        };
+        return () => i18n.off('languageChanged', handleLanguageChange);
     }, [i18n]);
 
     // Datos de ejemplo para inasistencias justificadas

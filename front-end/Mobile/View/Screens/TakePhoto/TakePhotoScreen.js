@@ -13,6 +13,8 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import styles from "../Style/Style";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveLanguageForRole } from "../../Components/Common/languageByRole";
 
 export default function TakePhotoScreen() {
     const navigation = useNavigation();
@@ -21,15 +23,17 @@ export default function TakePhotoScreen() {
     const [facialParamsRegistered, setFacialParamsRegistered] = useState(false);
 
     useEffect(() => {
-        const handleLanguageChange = () => {
-            setRefreshKey(prev => prev + 1);
-        };
+        const init = async () => {
+            const role = await AsyncStorage.getItem('userRole');
+            setUserRole(role);
 
+            await restoreLanguageForRole(role);
+        };
+        init();
+
+        const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
         i18n.on('languageChanged', handleLanguageChange);
-
-        return () => {
-            i18n.off('languageChanged', handleLanguageChange);
-        };
+        return () => i18n.off('languageChanged', handleLanguageChange);
     }, [i18n]);
 
     const handleFacialParams = () => {

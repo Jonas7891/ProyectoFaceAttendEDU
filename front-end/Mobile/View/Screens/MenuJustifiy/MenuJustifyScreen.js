@@ -15,6 +15,8 @@ import CustomLogo from "../../Components/Auth/logo";
 import { useNavigation } from "@react-navigation/native";
 import Separador from "../../Components/Common/Separador";
 import styles from "../Style/Style";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveLanguageForRole } from "../../Components/Common/languageByRole";
 
 export default function MenuJustifyScreen() {
   const navigation = useNavigation();
@@ -23,15 +25,17 @@ export default function MenuJustifyScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const handleLanguageChange = () => {
-      setRefreshKey(prev => prev + 1);
-    };
+    const init = async () => {
+      const role = await AsyncStorage.getItem('userRole');
+      setUserRole(role);
 
+      await restoreLanguageForRole(role);
+    };
+    init();
+
+    const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
     i18n.on('languageChanged', handleLanguageChange);
-
-    return () => {
-      i18n.off('languageChanged', handleLanguageChange);
-    };
+    return () => i18n.off('languageChanged', handleLanguageChange);
   }, [i18n]);
 
   const handleBack = () => {
@@ -66,7 +70,7 @@ export default function MenuJustifyScreen() {
             <View style={styles.mainContent}>
               <View style={styles.headerContainer}>
                 <Text style={styles.mainTitle}>
-                  {t('justify.title')} {"\n"} 
+                  {t('justify.title')} {"\n"}
                 </Text>
                 <CustomLogo
                   size="small"
