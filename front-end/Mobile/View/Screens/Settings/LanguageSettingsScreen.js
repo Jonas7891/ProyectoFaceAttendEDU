@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, SafeAreaView, Alert } from 'react-native'
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveLanguageForRole } from "../../Components/Common/languageByRole";
 import PrimaryButton from '../../Components/Auth/PrimaryButton';
 import i18n from '../../../i18n';
 import styles from '../Style/Style';
@@ -15,16 +16,19 @@ export default function LanguageSettingsScreen() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    const handleLanguageChange = () => {
+    const handleLanguageChange = (newLang) => {
+      setSelectedLanguage(newLang); // ✅ sincroniza el selector con el idioma real
       setRefreshKey(prev => prev + 1);
     };
 
     i18n.on('languageChanged', handleLanguageChange);
-
-    return () => {
-      i18n.off('languageChanged', handleLanguageChange);
-    };
+    return () => i18n.off('languageChanged', handleLanguageChange);
   }, [i18n]);
+
+  // ✅ Sincroniza al volver a la pantalla si la pantalla quedó cacheada
+  useEffect(() => {
+    setSelectedLanguage(i18n.language);
+  }, [i18n.language]);
 
   const languages = [
     { code: 'es', name: 'Español', flag: '🇪🇸' },
@@ -69,7 +73,11 @@ export default function LanguageSettingsScreen() {
           </TouchableOpacity>
         ))}
 
-        <PrimaryButton title={t('common.save')} onPress={handleSave} isLoading={isLoading} />
+        <PrimaryButton
+          title={t('common.save')}
+          onPress={handleSave}
+          isLoading={isLoading}
+        />
       </View>
     </SafeAreaView>
   )

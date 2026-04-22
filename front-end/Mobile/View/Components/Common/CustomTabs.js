@@ -4,60 +4,77 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTranslation } from 'react-i18next';
 import stylesCommon from './Style/Style';
 
-export default function CustomTabs({ onChange }) {
+const SCREENS = {
+  home: "Dashboard",
+  history: "Historial",
+};
+
+const NEWS_SCREENS = {
+  admin: "Novedades",
+  student: "Novedades",
+};
+
+export default function CustomTabs({ onChange, userRole }) {
   const navigation = useNavigation();
   const route = useRoute();
-  const [selected, setSelected] = useState(0);
   const { t, i18n } = useTranslation();
+  const [selected, setSelected] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [currentUserRole, setCurrentUserRole] = useState(userRole);
 
   useEffect(() => {
     const handleLanguageChange = () => {
       setRefreshKey(prev => prev + 1);
     };
+    loadUserRole();
+  }, [userRole]);
 
     i18n.on('languageChanged', handleLanguageChange);
 
     return () => {
       i18n.off('languageChanged', handleLanguageChange);
     };
+    init();
+
+    const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
+    i18n.on('languageChanged', handleLanguageChange);
+    return () => i18n.off('languageChanged', handleLanguageChange);
   }, [i18n]);
 
+  // ─── Sincronizar tab activo con la ruta actual ────────────────────────────
   const getTabIndex = (routeName) => {
     switch (routeName) {
-      case 'Dashboard':
-      case 'Inicio':
-        return 0;
-      case 'Novedades':
-        return 1;
-      case 'Historial':
-        return 2;
-      default:
-        return 0;
+      case "Dashboard": return 0;
+      case "Novedades": return 1;
+      case "Historial": return 2;
+      default: return 0;
     }
   };
 
   useEffect(() => {
     if (route?.name) {
-      const currentIndex = getTabIndex(route.name);
-      setSelected(currentIndex);
-      if (onChange) onChange(currentIndex);
+      const index = getTabIndex(route.name);
+      setSelected(index);
+      if (onChange) onChange(index);
     }
-  }, [route?.name, onChange]);
+  }, [route?.name]);
 
-  const handleNavigation = (index, screenName) => {
+  // ─── Navegación ──────────────────────────────────────────────────────────
+  const getScreenName = (tabIndex) => {
+    switch (tabIndex) {
+      case 0: return SCREENS.home;
+      case 1: return currentUserRole === 'admin'
+        ? NEWS_SCREENS.admin
+        : NEWS_SCREENS.student;
+      case 2: return SCREENS.history;
+      default: return SCREENS.home;
+    }
+  };
+
+  const handleNavigation = (index) => {
     setSelected(index);
     if (onChange) onChange(index);
-    
-    if (screenName === 'Dashboard' || screenName === 'Inicio') {
-      navigation.navigate({
-        name: screenName,
-        params: {},
-        merge: true,
-      });
-    } else {
-      navigation.navigate(screenName);
-    }
+    navigation.navigate(getScreenName(index));
   };
   
   return (

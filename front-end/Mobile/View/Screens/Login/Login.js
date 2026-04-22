@@ -19,7 +19,9 @@ import { useNavigation } from "@react-navigation/native";
 import RegisterModal from '../../Components/Auth/RegisterModal';
 import TerminosModal from "../../Components/Auth/TerminosModal";
 import ScrollView from "../../Components/Common/ScrollView";
-import styles from "../Style/Style";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import styles from "./Style/Style";
+import { saveLanguageForRole } from "../../Components/Common/languageByRole";
 
 export default function HomesScreen() {
   const [email, setEmail] = useState("");
@@ -33,20 +35,20 @@ export default function HomesScreen() {
   const [isTerminosModalVisible, setIsTerminosModalVisible] = useState(false);
 
   useEffect(() => {
-    const handleLanguageChange = () => {
-      setRefreshKey(prev => prev + 1);
-    };
+    const init = async () => {
+      const role = await AsyncStorage.getItem('userRole');
+      setUserRole(role);
+      cargarEstadisticas();
 
+      await restoreLanguageForRole(role);
+    };
+    init();
+
+    const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
+    
     i18n.on('languageChanged', handleLanguageChange);
-
-    return () => {
-      i18n.off('languageChanged', handleLanguageChange);
-    };
+    return () => i18n.off('languageChanged', handleLanguageChange);
   }, [i18n]);
-
-  const sharedProps = {
-    isLoading
-  }
 
   const handleEmailChange = (text) => {
     setEmail(text);
@@ -73,10 +75,14 @@ export default function HomesScreen() {
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       if (email === "hola@gmail.com" && password === "7891") {
+        await AsyncStorage.setItem('userRole', 'admin');
+        await AsyncStorage.setItem('userEmail', email);
         navigation.navigate("Dashboard");
-        const userData = {
-          name: "Administrador",
-        };
+
+      } else if (email === "chao@gmail.com" && password === "7891") {
+        await AsyncStorage.setItem('userRole', 'student');
+        await AsyncStorage.setItem('userEmail', email);
+        navigation.navigate("Dashboard");
       } else {
         Alert.alert(t('common.error'), t('login.invalidCredentials'));
       }

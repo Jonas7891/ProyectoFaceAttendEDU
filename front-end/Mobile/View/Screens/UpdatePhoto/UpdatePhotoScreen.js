@@ -15,6 +15,8 @@ import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { QuestionInput } from "../../Components/Common/QuestionInput";
 import styles from "../Style/Style";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveLanguageForRole } from "../../Components/Common/languageByRole";
 
 export default function UpdatePhoto() {
     const navigation = useNavigation();
@@ -30,16 +32,17 @@ export default function UpdatePhoto() {
 
     // CORREGIDO: El useEffect estaba mal escrito
     useEffect(() => {
-        const handleLanguageChange = () => {
-            setRefreshKey(prev => prev + 1);
-        };
+        const init = async () => {
+            const role = await AsyncStorage.getItem('userRole');
+            setUserRole(role);
 
+            await restoreLanguageForRole(role);
+        };
+        init();
+
+        const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
         i18n.on('languageChanged', handleLanguageChange);
-
-        // CORREGIDO: La función de limpieza estaba mal escrita
-        return () => {
-            i18n.off('languageChanged', handleLanguageChange);
-        };
+        return () => i18n.off('languageChanged', handleLanguageChange);
     }, [i18n]);
 
     const handleInputChange = (field, value) => {
@@ -60,12 +63,6 @@ export default function UpdatePhoto() {
 
         console.log("Datos del usuario:", formData);
         setAttendanceRegistered(true);
-
-        const timeout = setTimeout(() => {
-            setAttendanceRegistered(false);
-        }, 1500);
-
-        return () => clearTimeout(timeout);
     };
 
     const handleMenu = () => {

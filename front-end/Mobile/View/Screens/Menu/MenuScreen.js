@@ -10,7 +10,8 @@ import {
   ScrollView,
 } from "react-native";
 import { useTranslation } from "react-i18next";
-import PrimaryButton from "../../Components/Auth/PrimaryButton";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveLanguageForRole, restoreLanguageForRole } from "../../Components/Common/languageByRole";
 import DangerButton from "../../Components/Auth/DangerButton";
 import CustomLogo from "../../Components/Auth/logo";
 import { useNavigation } from "@react-navigation/native";
@@ -22,53 +23,57 @@ export default function MenuScreen() {
   const { t, i18n } = useTranslation();
   const [refreshKey, setRefreshKey] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [userRole, setUserRole] = useState(null);
 
+  // ─── Inicialización ────────────────────────────────────────────────────────
   useEffect(() => {
-    const handleLanguageChange = () => {
-      setRefreshKey(prev => prev + 1);
+    const init = async () => {
+      const role = await AsyncStorage.getItem('userRole');
+      setUserRole(role);
+      await restoreLanguageForRole(role);
     };
+    init();
 
+    const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
     i18n.on('languageChanged', handleLanguageChange);
-
-    return () => {
-      i18n.off('languageChanged', handleLanguageChange);
-    };
+    return () => i18n.off('languageChanged', handleLanguageChange);
   }, [i18n]);
 
-  const handleBack = () => {
-    navigation.navigate("Dashboard");
+  // ─── Navegación condicional por rol ────────────────────────────────────────
+  const isAdmin = userRole === 'admin';
+
+  const handleBack = () => navigation.navigate("Dashboard");
+  const handleTakePhoto = () => navigation.navigate("TakePhoto");
+  const handleUpdatePhoto = () => navigation.navigate("UpdatePhoto");
+  const handleFacialFail = () => navigation.navigate("FacialFail");
+  const handleMenuJustify = () => navigation.navigate("MenuJustify");
+  const handleSettings = () => navigation.navigate("LanguageSettings");
+
+  const handleLogout = async () => {
+    await saveLanguageForRole(userRole);
+    await AsyncStorage.removeItem('userRole');
+    navigation.navigate(isAdmin ? "Login" : "Homes");
   };
 
-  const handleTakePhoto = () => {
-    navigation.navigate("TakePhoto");
-  };
+  // ─── Helper para renderizar un ítem de menú ────────────────────────────────
+  const MenuItem = ({ label, onPress }) => (
+    <>
+      <Separador />
+      <TouchableOpacity onPress={onPress}>
+        <View style={{ justifyContent: "flex-start", alignItems: "center", flexDirection: "row" }}>
+          <Text style={styles.sectionTitleMenu}>{label}</Text>
+          <Image
+            source={require("../../../assets/images/flecha.png")}
+            style={styles.arrowImage}
+          />
+        </View>
+      </TouchableOpacity>
+    </>
+  );
 
-  const handleUpdatePhoto = () => {
-    navigation.navigate("UpdatePhoto");
-  }
-
-  const handleFacialFail = () => {
-    navigation.navigate("FacialFail");
-  };
-
-  const handleMenuJustify = () => {
-    navigation.navigate("MenuJustify");
-  };
-
-  const handleSettings = () => {
-    navigation.navigate("LanguageSettings")
-  };
-
-  const sharedProps = {
-    isLoading
-  }
-
-  const handleLogout = () => {
-    navigation.navigate("Homes")
-  };
-
+  // ─── Render ────────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={styles.safeAreaWhite}>
+    <SafeAreaView style={styles.safeAreaWhite} key={refreshKey}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
@@ -86,6 +91,7 @@ export default function MenuScreen() {
                 />
               </View>
             </TouchableOpacity>
+
             <View style={styles.containerSesion}>
               <CustomLogo
                 size="large"
@@ -93,74 +99,24 @@ export default function MenuScreen() {
                 backgroundColor="#000000"
                 marginBottom={15}
               />
+
+              {/* Nombre y rol del usuario */}
               <Text style={styles.userText}>
-                Jonattan Rizo
+                {isAdmin ? "Jonattan Rizo" : "The Jonas"}
               </Text>
 
-              <Separador />
-              <TouchableOpacity onPress={handleTakePhoto}>
-                <View style={{ justifyContent: "left", alignItems: "center", flexDirection: "row" }}>
-                  <Text style={styles.sectionTitleMenu}>
-                    {t('menu.facialParams')}
-                  </Text>
-                  <Image
-                    source={require("../../../assets/images/flecha.png")}
-                    style={styles.arrowImage}
-                  />
-                </View>
-              </TouchableOpacity>
+              {/* Ítems comunes a ambos roles */}
+              <MenuItem label={t('menu.facialParams')} onPress={handleTakePhoto} />
+              <MenuItem label={t('menu.updateFacialParams')} onPress={handleUpdatePhoto} />
 
-              <Separador />
-              <TouchableOpacity onPress={handleUpdatePhoto}>
-                <View style={{ justifyChange: "left", alignItems: "center", flexDirection: "row" }}>
-                  <Text style={styles.sectionTitleMenu}>
-                    {t('menu.updateFacialParams')}
-                  </Text>
-                  <Image
-                    source={require("../../../assets/images/flecha.png")}
-                    style={styles.arrowImage}
-                  />
-                </View>
-              </TouchableOpacity>
+              {/* Solo admin */}
+              {isAdmin && (
+                <MenuItem label={t('menu.justificationConfig')} onPress={handleMenuJustify} />
+              )}
 
-              <Separador />
-              <TouchableOpacity onPress={handleMenuJustify}>
-                <View style={{ justifyContent: "left", alignItems: "center", flexDirection: "row" }}>
-                  <Text style={styles.sectionTitleMenu}>
-                    {t('menu.justificationConfig')}
-                  </Text>
-                  <Image
-                    source={require("../../../assets/images/flecha.png")}
-                    style={styles.arrowImage}
-                  />
-                </View>
-              </TouchableOpacity>
-
-              <Separador />
-              <TouchableOpacity onPress={handleSettings}>
-                <View style={{ justifyContent: "left", alignItems: "center", flexDirection: "row" }}>
-                  <Text style={styles.sectionTitleMenu}>
-                    {t('menu.appSettings')}
-                  </Text>
-                  <Image
-                    source={require("../../../assets/images/flecha.png")}
-                    style={styles.arrowImage}
-                  />
-                </View>
-              </TouchableOpacity>
-
-              <Separador />
-              <TouchableOpacity onPress={handleFacialFail}>
-                <View style={{ justifyContent: "left", alignItems: "center", flexDirection: "row" }}>
-                  <Text style={styles.sectionTitleMenu}>
-                    {t('menu.facialRecognitionFail')}
-                  </Text>
-                  <Image
-                    source={require("../../../assets/images/flecha.png")}
-                    style={styles.arrowImage}
-                  />
-                </View>
-              </TouchableOpacity>
+              {/* Comunes de nuevo */}
+              <MenuItem label={t('menu.appSettings')} onPress={handleSettings} />
+              <MenuItem label={t('menu.facialRecognitionFail')} onPress={handleFacialFail} />
 
               <DangerButton
                 title={isLoading ? t('menu.loggingOut') : t('menu.logout')}

@@ -809,6 +809,14 @@ const styles = StyleSheet.create({
         paddingLeft: 4,
     },
 
+    sectionTitleAdmin: {
+        fontSize: 18,
+        fontWeight: "bold",
+        color: "#333",
+        marginBottom: 6,
+        paddingLeft: 4,
+    },
+
     // Tarjetas de justificaciones
     justificationCard: {
         backgroundColor: "#FFF",
