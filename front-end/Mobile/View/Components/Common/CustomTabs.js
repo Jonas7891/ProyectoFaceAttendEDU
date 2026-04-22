@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, Platform } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTranslation } from 'react-i18next';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import stylesCommon from './Style/Style';
 
 const SCREENS = {
@@ -23,26 +22,17 @@ export default function CustomTabs({ onChange, userRole }) {
   const [refreshKey, setRefreshKey] = useState(0);
   const [currentUserRole, setCurrentUserRole] = useState(userRole);
 
-  // ─── Carga de rol ────────────────────────────────────────────────────────
   useEffect(() => {
-    if (userRole) {
-      setCurrentUserRole(userRole);
-      return;
-    }
-    const loadUserRole = async () => {
-      const role = await AsyncStorage.getItem('userRole');
-      setCurrentUserRole(role);
+    const handleLanguageChange = () => {
+      setRefreshKey(prev => prev + 1);
     };
     loadUserRole();
   }, [userRole]);
 
-  // ─── Cambio de idioma ─────────────────────────────────────────────────────
-  useEffect(() => {
-    const init = async () => {
-      const role = await AsyncStorage.getItem('userRole');
-      setUserRole(role);
+    i18n.on('languageChanged', handleLanguageChange);
 
-      await restoreLanguageForRole(role);
+    return () => {
+      i18n.off('languageChanged', handleLanguageChange);
     };
     init();
 
@@ -86,31 +76,35 @@ export default function CustomTabs({ onChange, userRole }) {
     if (onChange) onChange(index);
     navigation.navigate(getScreenName(index));
   };
-
-  // ─── Render ───────────────────────────────────────────────────────────────
+  
   return (
     <View key={refreshKey} style={stylesCommon.containerCustomTabs}>
-      {[
-        t('tabs.home', { defaultValue: 'Inicio' }),
-        t('tabs.news', { defaultValue: 'Novedades' }),
-        t('tabs.history', { defaultValue: 'Historial' }),
-      ].map((label, index) => (
-        <TouchableOpacity
-          key={index}
-          style={[
-            stylesCommon.buttonCustomTabs,
-            selected === index && stylesCommon.activeButtonCustomTabs,
-          ]}
-          onPress={() => handleNavigation(index)}
-        >
-          <Text style={[
-            stylesCommon.textCustomTabs,
-            selected === index && stylesCommon.activeTextCustomTabs,
-          ]}>
-            {label}
-          </Text>
-        </TouchableOpacity>
-      ))}
+      <TouchableOpacity
+        style={[stylesCommon.buttonCustomTabs, selected === 0 && stylesCommon.activeButtonCustomTabs]}
+        onPress={() => handleNavigation(0, "Dashboard")}
+      >
+        <Text style={[stylesCommon.textCustomTabs, selected === 0 && stylesCommon.activeTextCustomTabs]}>
+          {t('tabs.home', { defaultValue: 'Inicio' })}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[stylesCommon.buttonCustomTabs, selected === 1 && stylesCommon.activeButtonCustomTabs]}
+        onPress={() => handleNavigation(1, "Novedades")}
+      >
+        <Text style={[stylesCommon.textCustomTabs, selected === 1 && stylesCommon.activeTextCustomTabs]}>
+          {t('tabs.news', { defaultValue: 'Novedades' })}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[stylesCommon.buttonCustomTabs, selected === 2 && stylesCommon.activeButtonCustomTabs]}
+        onPress={() => handleNavigation(2, "Historial")}
+      >
+        <Text style={[stylesCommon.textCustomTabs, selected === 2 && stylesCommon.activeTextCustomTabs]}>
+          {t('tabs.history', { defaultValue: 'Historial' })}
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }

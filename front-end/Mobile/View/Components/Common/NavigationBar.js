@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { View, TouchableOpacity, Image } from "react-native";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import stylesCommon from "./Style/Style";
-import i18n from "../../../i18n";
 
 export default function BottomBar({ onPressSettings, onPressProfile, onPressSearch, screenNames = {} }) {
   const navigation = useNavigation();
@@ -48,10 +46,7 @@ export default function BottomBar({ onPressSettings, onPressProfile, onPressSear
     setSelected(getSelectedButton(route?.name));
   }, [route?.name]);
 
-  const getButtonStyle = (key) => [
-    stylesCommon.navButton,
-    selected === key && stylesCommon.activeNavButton,
-  ];
+    <View style={stylesCommon.navBarContainer} >
 
   return (
     <View style={stylesCommon.navBarContainer}>

@@ -270,47 +270,5 @@
   },
   "progressBar": {
     "question": "Pregunta {{currentStep}} de {{totalSteps}}"
-  },
-  "teacher": {
-    "greeting": "Bienvenido profesor",
-    "professorName": "Prof. Rodríguez",
-    "classAttendance": "Asistencia de la clase",
-    "studentsPresent": "estudiantes presentes",
-    "nextClass": "Próxima clase",
-    "quickActions": "Acciones rápidas",
-    "takeAttendance": "Tomar asistencia",
-    "takeAttendanceDesc": "Registro facial de alumnos",
-    "myGroups": "Mis grupos",
-    "attendanceReport": "Reportes",
-    "seeAll": "Ver todos",
-    "present": "Presente",
-    "late": "Tarde",
-    "systemNews": "Novedades del sistema"
-  },
-  "student": {
-    "greeting": "Hola estudiante",
-    "studentName": "Ana Martínez",
-    "myAttendance": "Mi asistencia",
-    "classesAttended": "clases asistidas",
-    "lastRegister": "Último registro",
-    "quickActions": "Mis acciones",
-    "registerFace": "Registrar rostro",
-    "registerFaceDesc": "Marcar asistencia facial",
-    "myAttendanceDesc": "Ver mi historial",
-    "mySchedule": "Mi horario",
-    "facialSetup": "Configurar rostro",
-    "myRecentRecords": "Mis registros recientes",
-    "seeAll": "Ver historial",
-    "present": "Presente",
-    "late": "Tarde",
-    "notifications": "Notificaciones",
-    "faceRecognized": "Rostro reconocido",
-    "attendanceReminder": "Recordatorio de asistencia",
-    "lates": "Retardos",
-    "facialFailures": "Fallas de reconocimiento",
-    "recognitionSuccessRate": "Tasa de éxito",
-    "times": "veces hasta la fecha",
-    "UpdateFace":  "Actualización de Rostro",
-    "UpdateFaceDesc": "Actualización de tus datos biometricos"
   }
 }

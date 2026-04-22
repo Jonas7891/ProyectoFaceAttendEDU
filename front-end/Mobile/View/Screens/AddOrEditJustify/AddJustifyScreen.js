@@ -130,7 +130,7 @@ export default function AddJustification() {
                     justificationType === "inasistencia" && styles.activeTypeButtonText,
                   ]}
                 >
-                  {t('justify.absenceType')}
+                   {t('justify.absenceType')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -146,7 +146,7 @@ export default function AddJustification() {
                     justificationType === "retardo" && styles.activeTypeButtonText,
                   ]}
                 >
-                  {t('justify.delayType')}
+                   {t('justify.delayType')}
                 </Text>
               </TouchableOpacity>
             </View>
