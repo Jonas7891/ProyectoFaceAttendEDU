@@ -10,12 +10,11 @@ import {
   ScrollView,
 } from "react-native";
 import { useTranslation } from "react-i18next";
-import PrimaryButton from "../../Components/Auth/PrimaryButton";
-import DangerButton from "../../Components/Auth/DangerButton";
-import CustomLogo from "../../Components/Auth/logo";
+import DangerButton from "../Components/Auth/DangerButton";
+import CustomLogo from "../Components/Auth/logo";
 import { useNavigation } from "@react-navigation/native";
-import Separador from "../../Components/Common/Separador";
-import styles from "../Style/Style";
+import Separador from "../Components/Common/Separador";
+import styles from "./Style";
 
 export default function MenuScreen() {
   const navigation = useNavigation();
@@ -81,7 +80,7 @@ export default function MenuScreen() {
             <TouchableOpacity onPress={handleBack} activeOpacity={0.2}>
               <View style={styles.backIcon}>
                 <Image
-                  source={require("../../../assets/images/flecha.png")}
+                  source={require("../../assets/images/flecha.png")}
                   style={styles.backIconImage}
                 />
               </View>
@@ -104,7 +103,7 @@ export default function MenuScreen() {
                     {t('menu.facialParams')}
                   </Text>
                   <Image
-                    source={require("../../../assets/images/flecha.png")}
+                    source={require("../../assets/images/flecha.png")}
                     style={styles.arrowImage}
                   />
                 </View>
@@ -117,7 +116,7 @@ export default function MenuScreen() {
                     {t('menu.updateFacialParams')}
                   </Text>
                   <Image
-                    source={require("../../../assets/images/flecha.png")}
+                    source={require("../../assets/images/flecha.png")}
                     style={styles.arrowImage}
                   />
                 </View>
@@ -130,7 +129,7 @@ export default function MenuScreen() {
                     {t('menu.justificationConfig')}
                   </Text>
                   <Image
-                    source={require("../../../assets/images/flecha.png")}
+                    source={require("../../assets/images/flecha.png")}
                     style={styles.arrowImage}
                   />
                 </View>
@@ -143,7 +142,7 @@ export default function MenuScreen() {
                     {t('menu.appSettings')}
                   </Text>
                   <Image
-                    source={require("../../../assets/images/flecha.png")}
+                    source={require("../../assets/images/flecha.png")}
                     style={styles.arrowImage}
                   />
                 </View>
@@ -156,7 +155,7 @@ export default function MenuScreen() {
                     {t('menu.facialRecognitionFail')}
                   </Text>
                   <Image
-                    source={require("../../../assets/images/flecha.png")}
+                    source={require("../../assets/images/flecha.png")}
                     style={styles.arrowImage}
                   />
                 </View>

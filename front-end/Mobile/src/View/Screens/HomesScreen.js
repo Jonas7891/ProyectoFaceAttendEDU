@@ -12,14 +12,14 @@ import {
   TouchableOpacity
 } from "react-native";
 import { useTranslation } from "react-i18next";
-import PrimaryButton from "../../Components/Auth/PrimaryButton";
-import SelectableButton from "../../Components/Auth/SelectableButton";
-import CustomLogo from "../../Components/Auth/logo";
+import PrimaryButton from "../Components/Auth/PrimaryButton";
+import SelectableButton from "../Components/Auth/SelectableButton";
+import CustomLogo from "../Components/Auth/logo";
 import { useNavigation } from "@react-navigation/native";
-import RegisterModal from '../../Components/Auth/RegisterModal';
-import TerminosModal from "../../Components/Auth/TerminosModal";
-import ScrollView from "../../Components/Common/ScrollView";
-import styles from "../Style/Style";
+import RegisterModal from '../Components/Auth/RegisterModal';
+import TerminosModal from "../Components/Auth/TerminosModal";
+import ScrollView from "../Components/Common/ScrollView";
+import styles from "./Style";
 
 export default function HomesScreen() {
   const [email, setEmail] = useState("");

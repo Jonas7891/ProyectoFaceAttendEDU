@@ -12,11 +12,11 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
-import PrimaryButton from "../../Components/Auth/PrimaryButton";
-import { QuestionnaireModal } from "../../Components/Common/QuestionnaireModal";
-import { FacialUpdateModal } from "../../Components/Common/FacialUpdateModal";
-import CustomLogo from "../../Components/Auth/logo";
-import styles from "../Style/Style";
+import PrimaryButton from "../Components/Auth/PrimaryButton";
+import { QuestionnaireModal } from "../Components/Common/QuestionnaireModal";
+import { FacialUpdateModal } from "../Components/Common/FacialUpdateModal";
+import CustomLogo from "../Components/Auth/logo";
+import styles from "./Style";
 
 export default function FacialFail() {
     const navigation = useNavigation();

@@ -10,11 +10,11 @@ import {
   ScrollView,
 } from "react-native";
 import { useTranslation } from "react-i18next";
-import PrimaryButton from "../../Components/Auth/PrimaryButton";
-import CustomLogo from "../../Components/Auth/logo";
+import PrimaryButton from "../Components/Auth/PrimaryButton";
+import CustomLogo from "../Components/Auth/logo";
 import { useNavigation } from "@react-navigation/native";
-import Separador from "../../Components/Common/Separador";
-import styles from "../Style/Style";
+import Separador from "../Components/Common/Separador";
+import styles from "./Style";
 
 export default function MenuJustifyScreen() {
   const navigation = useNavigation();
@@ -84,7 +84,7 @@ export default function MenuJustifyScreen() {
                     {t('consultJustify.mainTitle')}
                   </Text>
                   <Image
-                    source={require("../../../assets/images/flecha.png")}
+                    source={require("../../assets/images/flecha.png")}
                     style={styles.arrowImage}
                   />
                 </View>
@@ -98,7 +98,7 @@ export default function MenuJustifyScreen() {
                     {t('justify.addAbsence')}
                   </Text>
                   <Image
-                    source={require("../../../assets/images/flecha.png")}
+                    source={require("../../assets/images/flecha.png")}
                     style={styles.arrowImage}
                   />
                 </View>

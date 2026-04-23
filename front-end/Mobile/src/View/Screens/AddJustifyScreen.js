@@ -13,9 +13,9 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
-import PrimaryButton from "../../Components/Auth/PrimaryButton";
-import Separador from "../../Components/Common/Separador";
-import styles from "../Style/Style";
+import PrimaryButton from "../Components/Auth/PrimaryButton";
+import Separador from "../Components/Common/Separador";
+import styles from "./Style";
 
 export default function AddJustification() {
   const navigation = useNavigation();

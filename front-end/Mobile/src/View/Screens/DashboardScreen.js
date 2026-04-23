@@ -8,10 +8,10 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
-import BottomBar from "../../Components/Common/NavigationBar";
-import ScrollViewWrapper from "../../Components/Common/ScrollView";
-import CustomTabs from "../../Components/Common/CustomTabs";
-import styles from "../Style/Style";
+import BottomBar from "../Components/Common/NavigationBar";
+import ScrollViewWrapper from "../Components/Common/ScrollView";
+import CustomTabs from "../Components/Common/CustomTabs";
+import styles from "./Style";
 
 export default function DashboardScreen() {
   const navigation = useNavigation();

@@ -9,10 +9,10 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
-import BottomBar from "../../Components/Common/NavigationBar";
-import ScrollViewWrapper from "../../Components/Common/ScrollView";
-import CustomTabs from "../../Components/Common/CustomTabs";
-import styles from "../Style/Style";
+import BottomBar from "../Components/Common/NavigationBar";
+import ScrollViewWrapper from "../Components/Common/ScrollView";
+import CustomTabs from "../Components/Common/CustomTabs";
+import styles from "./Style";
 
 export default function HistoricalScreen() {
     const navigation = useNavigation();
@@ -120,7 +120,7 @@ export default function HistoricalScreen() {
                                     <View style={[styles.statusBadge]}>
                                         <TouchableOpacity>
                                             <Image
-                                                source={require("../../../assets/images/lupa.png")}
+                                                source={require("../../assets/images/lupa.png")}
                                                 style={styles.iconSearch}
                                             />
                                         </TouchableOpacity>

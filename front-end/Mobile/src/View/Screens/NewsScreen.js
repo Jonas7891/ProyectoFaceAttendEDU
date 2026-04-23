@@ -8,11 +8,11 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
-import BottomBar from "../../Components/Common/NavigationBar";
-import ScrollViewWrapper from "../../Components/Common/ScrollView";
-import CustomTabs from "../../Components/Common/CustomTabs";
-import Separador from "../../Components/Common/Separador";
-import styles from "../Style/Style";
+import BottomBar from "../Components/Common/NavigationBar";
+import ScrollViewWrapper from "../Components/Common/ScrollView";
+import CustomTabs from "../Components/Common/CustomTabs";
+import Separador from "../Components/Common/Separador";
+import styles from "./Style";
 
 export default function NewsScreen() {
     const navigation = useNavigation();
@@ -52,7 +52,7 @@ export default function NewsScreen() {
 
                     <View style={{ marginLeft: 25, marginRight: 25 }}>
                         <Image
-                            source={require("../../../assets/images/persona.png")}
+                            source={require("../../assets/images/persona.png")}
                             style={{ width: "100%", height: 200, marginTop: 40, borderRadius: 10 }}
                         />
                     </View>

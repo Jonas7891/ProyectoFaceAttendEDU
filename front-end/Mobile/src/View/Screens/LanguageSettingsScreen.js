@@ -3,8 +3,8 @@ import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Alert } from 'r
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import PrimaryButton from '../../Components/Auth/PrimaryButton';
-import i18n from '../../../i18n';
+import PrimaryButton from '../Components/Auth/PrimaryButton';
+import i18n from '../../utils/i18n';
 
 export default function LanguageSettingsScreen() {
   const { t, i18n } = useTranslation();
