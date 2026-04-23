@@ -230,7 +230,8 @@
     "legislationTitle": "12. LEGISLAÇÃO APLICÁVEL",
     "legislationText": "Os presentes Termos e Condições são regidos pelas leis da República da Colômbia, em especial pela Lei 1581 de 2012 e seus decretos regulamentares.",
     "acceptanceFinalTitle": "13. ACEITAÇÃO FINAL",
-    "acceptanceFinalText": "O usuário declara ter lido, compreendido e aceitado a totalidade dos presentes Termos e Condições, bem como a Política de Tratamento de Dados Pessoais, autorizando o uso de seus dados conforme estabelecido aqui."
+    "acceptanceFinalText": "O usuário declara ter lido, compreendido e aceitado a totalidade dos presentes Termos e Condições, bem como a Política de Tratamento de Dados Pessoais, autorizando o uso de seus dados conforme estabelecido aqui.",
+    "close": "Fechar"
   },
   "questionnaire": {
     "documentQuestion": "Selecione seu tipo de documento de identidade:",
@@ -269,5 +270,68 @@
   },
   "progressBar": {
     "question": "Pergunta {{currentStep}} de {{totalSteps}}"
+  },
+  "teacher": {
+    "greeting": "Bem-vindo professor",
+    "professorName": "Prof. Rodriguez",
+    "classAttendance": "Presença da classe",
+    "studentsPresent": "alunos presentes",
+    "nextClass": "Próxima aula",
+    "quickActions": "Ações rápidas",
+    "takeAttendance": "Tomar presença",
+    "takeAttendanceDesc": "Reconhecimento facial de alunos",
+    "myGroups": "Meus grupos",
+    "attendanceReport": "Relatórios",
+    "seeAll": "Ver todos",
+    "present": "Presente",
+    "late": "Atrasado",
+    "systemNews": "Novidades do sistema"
+  },
+  "student": {
+    "greeting": "Olá aluno",
+    "studentName": "Ana Martinez",
+    "myAttendance": "Minha presença",
+    "classesAttended": "aulas frequentadas",
+    "lastRegister": "Último registro",
+    "quickActions": "Minhas ações",
+    "registerFace": "Registrar rosto",
+    "registerFaceDesc": "Marcar presença facial",
+    "myAttendanceDesc": "Ver meu histórico",
+    "mySchedule": "Meu horário",
+    "facialSetup": "Configurar rosto",
+    "myRecentRecords": "Meus registros recentes",
+    "seeAll": "Ver histórico",
+    "present": "Presente",
+    "late": "Atrasado",
+    "notifications": "Notificações",
+    "faceRecognized": "Rosto reconhecido",
+    "attendanceReminder": "Lembrete de presença",
+    "lates": "Atrasos",
+    "facialFailures": "Falhas de reconhecimento",
+    "recognitionSuccessRate": "Taxa de sucesso",
+    "times": "vezes até o momento",
+    "UpdateFace": "Atualização de Rosto",
+    "UpdateFaceDesc": "Atualize seus dados biométricos"
+  },
+  "admin": {
+    "justificationManagement": "Gestão de Justificativas",
+    "validJustifications": "Justificativas Válidas",
+    "pendingJustifications": "Justificativas Pendentes",
+    "addNewJustification": "Adicionar Nova Justificativa Válida",
+    "requiresDocument": "Requer documento",
+    "noDocumentRequired": "Não requer documento",
+    "approve": "Aprovar",
+    "reject": "Rejeitar",
+    "approved": "Aprovada",
+    "rejected": "Rejeitada",
+    "confirmAction": "Confirmar Ação",
+    "confirmApprove": "Tem certeza que deseja aprovar esta justificativa?",
+    "confirmReject": "Tem certeza que deseja rejeitar esta justificativa?",
+    "justificationApproved": "Justificativa aprovada com sucesso",
+    "justificationRejected": "Justificativa rejeitada",
+    "justificationType": "Tipo de justificativa",
+    "date": "Data",
+    "studentName": "Nome do estudante",
+    "studentId": "ID do estudante"
   }
 }

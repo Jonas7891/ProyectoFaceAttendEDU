@@ -43,7 +43,7 @@ export default function NewsScreen() {
 
                     <View style={{ marginLeft: 25, marginRight: 25 }}>
                         <Image
-                            source={require("../../assets/images/persona.png")}
+                            source={require("../../Assets/Images/persona.png")}
                             style={{ width: "100%", height: 200, marginTop: 40, borderRadius: 10 }}
                         />
                     </View>

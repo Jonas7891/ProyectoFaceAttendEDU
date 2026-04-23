@@ -94,7 +94,7 @@ export default function UpdatePhoto() {
 
                     <View style={styles.imagePhoto}>
                         <Image
-                            source={require("../../assets/images/perfil-del-usuario.png")}
+                            source={require("../../Assets/Images/perfil-del-usuario.png")}
                             style={styles.image}
                             resizeMode="contain"
                         />
@@ -162,7 +162,7 @@ export default function UpdatePhoto() {
                     >
                         <View style={styles.buttonContent}>
                             <Image
-                                source={require("../../assets/images/fotografia.png")}
+                                source={require("../../Assets/Images/fotografia.png")}
                                 style={styles.icon}
                             />
                             <Text style={styles.registerButtonText}>

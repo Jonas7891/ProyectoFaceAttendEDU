@@ -3,7 +3,7 @@ import { View, TouchableOpacity, Image } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useRoute } from "@react-navigation/native";
 import stylesCommon from "./Style/Style";
-import i18n from "../../../utils/i18n";
+import i18n from "../../../Utils/i18n";
 
 export default function BottomBar({ onPressSettings, onPressProfile, onPressSearch, screenNames = {} }) {
   const navigation = useNavigation();
@@ -57,21 +57,21 @@ export default function BottomBar({ onPressSettings, onPressProfile, onPressSear
     <View style={stylesCommon.navBarContainer}>
       <TouchableOpacity onPress={handleMenu} style={getButtonStyle("menu")}>
         <Image
-          source={require("../../../assets/images/configuraciones.png")}
+          source={require("../../../Assets/Images/configuraciones.png")}
           style={stylesCommon.navIcon}
         />
       </TouchableOpacity>
 
       <TouchableOpacity onPress={handleFoto} style={getButtonStyle("profile")}>
         <Image
-          source={require("../../../assets/images/perfil-del-usuario.png")}
+          source={require("../../../Assets/Images/perfil-del-usuario.png")}
           style={stylesCommon.navIconCenter}
         />
       </TouchableOpacity>
 
       <TouchableOpacity onPress={handleBusqueda} style={getButtonStyle("search")}>
         <Image
-          source={require("../../../assets/images/lupa.png")}
+          source={require("../../../Assets/Images/lupa.png")}
           style={stylesCommon.navIcon}
         />
       </TouchableOpacity>

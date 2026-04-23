@@ -38,7 +38,7 @@ const LogoutButton = () => {
       activeOpacity={0.7}
     >
       <Image 
-        source={require('../../../assets/images/cerrar-sesion.png')} 
+        source={require('../../../Assets/Images/cerrar-sesion.png')} 
         style={stylesAuth.logoutIcon}
       />
       <Text style={stylesAuth.logoutText}>{t('menu.logout')}</Text>

@@ -16,6 +16,8 @@ import MenuJustify from './Screens/MenuJustifiy/MenuJustifyScreen';
 import ConsultJustifiy from './Screens/ConsultJustify/ConsultJustifyScreen';
 import AddJustification from './Screens/AddOrEditJustify/AddJustifyScreen';
 import LanguageSettingsScreen from '../View/Screens/Settings/LanguageSettingsScreen';
+import AddValidJustificationScreen from './Screens/AddValidJustification/AddValidJustificationScreen';
+import ValidJustificationsScreen from './Screens/ValidJustifications';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -33,7 +35,7 @@ export default function AppNavigator() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator 
+      <Stack.Navigator
         screenOptions={{
           headerShown: false,
         }}
@@ -56,6 +58,8 @@ export default function AppNavigator() {
             <Stack.Screen name="ConsultJustify" component={ConsultJustifiy} />
             <Stack.Screen name="AddJustify" component={AddJustification} />
             <Stack.Screen name='LanguageSettings' component={LanguageSettingsScreen} />
+            <Stack.Screen name='AddValidJustification' component={AddValidJustificationScreen} />
+            <Stack.Screen name='ValidJustifications' component={ValidJustificationsScreen} />
           </>
         )}
       </Stack.Navigator>

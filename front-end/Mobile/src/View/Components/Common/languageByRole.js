@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import i18n from '../../../utils/i18n';
+import i18n from '../../../Utils/i18n';
 
 const LANGUAGE_KEY = (role) => `language_${role}`;
 

@@ -23,36 +23,193 @@ export default function MenuJustifyScreen() {
   const { t, i18n } = useTranslation();
   const [refreshKey, setRefreshKey] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [userRole, setUserRole] = useState(null);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     const init = async () => {
-      const role = await AsyncStorage.getItem('userRole');
-      setUserRole(role);
+      try {
+        const role = await AsyncStorage.getItem('userRole');
+        setUserRole(role || 'student');
+        await saveLanguageForRole(role || 'student');
 
-      await restoreLanguageForRole(role);
+        // Cargar conteo de pendientes para admin
+        const pendingData = await AsyncStorage.getItem('pendingJustifications');
+        if (pendingData) {
+          const pendings = JSON.parse(pendingData);
+          setPendingCount(pendings.filter(j => j.status === 'pending').length);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        setUserRole('student');
+      }
     };
     init();
 
     const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
     i18n.on('languageChanged', handleLanguageChange);
-    return () => i18n.off('languageChanged', handleLanguageChange);
-  }, [i18n]);
+
+    // Refrescar conteo cuando la pantalla obtiene el foco
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadPendingCount();
+    });
+
+    return () => {
+      i18n.off('languageChanged', handleLanguageChange);
+      unsubscribe();
+    };
+  }, [i18n, navigation]);
+
+  const loadPendingCount = async () => {
+    try {
+      const pendingData = await AsyncStorage.getItem('pendingJustifications');
+      if (pendingData) {
+        const pendings = JSON.parse(pendingData);
+        setPendingCount(pendings.filter(j => j.status === 'pending').length);
+      }
+    } catch (error) {
+      console.error('Error al cargar conteo:', error);
+    }
+  };
 
   const handleBack = () => {
     navigation.goBack();
   };
 
   const handleConsultJustify = () => {
-    navigation.navigate("ConsultJustify")
+    navigation.navigate("ConsultJustify");
   };
 
   const handleAddOrEditJustify = () => {
-    navigation.navigate("AddJustify")
-  }
+    // Redirigir según el rol
+    if (userRole === 'student') {
+      navigation.navigate("AddJustify");
+    } else {
+      navigation.navigate("AddValidJustification");
+    }
+  };
 
-  const sharedProps = {
-    isLoading
-  }
+  const handleValidJustifications = () => {
+    navigation.navigate("ValidJustifications");
+  };
+
+  const handlePendingJustifications = () => {
+    navigation.navigate("PendingJustifications");
+  };
+
+  const renderStudentView = () => (
+    <View style={styles.mainContent}>
+      <View style={styles.headerContainer}>
+        <Text style={styles.mainTitle}>
+          {t('justify.title')} {"\n"}
+        </Text>
+        <CustomLogo
+          size="small"
+          rounded={true}
+          backgroundColor="#000000"
+          marginBottom={35}
+        />
+      </View>
+
+      <Separador />
+
+      <TouchableOpacity onPress={handleConsultJustify}>
+        <View style={styles.menuItem}>
+          <Text style={styles.sectionTitleMenu}>
+            {t('consultJustify.mainTitle')}
+          </Text>
+          <Image
+            source={require("../../Assets/Images/flecha.png")}
+            style={styles.arrowImage}
+          />
+        </View>
+      </TouchableOpacity>
+
+      <Separador />
+
+      <TouchableOpacity onPress={handleAddOrEditJustify}>
+        <View style={styles.menuItem}>
+          <Text style={styles.sectionTitleMenu}>
+            {t('justify.addAbsence')}
+          </Text>
+          <Image
+            source={require("../../Assets/Images/flecha.png")}
+            style={styles.arrowImage}
+          />
+        </View>
+      </TouchableOpacity>
+
+      <Separador />
+    </View>
+  );
+
+  const renderAdminView = () => (
+    <View style={styles.mainContent}>
+      <View style={styles.headerContainer}>
+        <Text style={styles.mainTitle}>
+          {t('admin.justificationManagement')} {"\n"}
+        </Text>
+        <CustomLogo
+          size="small"
+          rounded={true}
+          backgroundColor="#000000"
+          marginBottom={35}
+        />
+      </View>
+
+      <Separador />
+
+      <TouchableOpacity onPress={handleValidJustifications}>
+        <View style={styles.menuItem}>
+          <Text style={styles.sectionTitleMenu}>
+            {t('admin.validJustifications')}
+          </Text>
+          <Image
+            source={require("../../Assets/Images/flecha.png")}
+            style={styles.arrowImage}
+          />
+        </View>
+      </TouchableOpacity>
+
+      <Separador />
+
+      <TouchableOpacity onPress={handlePendingJustifications}>
+        <View style={styles.menuItem}>
+          <View style={styles.menuItemLeft}>
+            <Text style={styles.sectionTitleMenu}>
+              {t('admin.pendingJustifications')}
+            </Text>
+            {pendingCount > 0 && (
+              <View style={styles.badgeContainer}>
+                <Text style={styles.badgeText}>{pendingCount}</Text>
+              </View>
+            )}
+          </View>
+          <Image
+            source={require("../../Assets/Images/flecha.png")}
+            style={styles.arrowImage}
+          />
+        </View>
+      </TouchableOpacity>
+
+      <Separador />
+
+      {/* MISMO BOTÓN QUE ESTUDIANTES PERO CON TEXTO DIFERENTE */}
+      <TouchableOpacity onPress={handleAddOrEditJustify}>
+        <View style={styles.menuItem}>
+          <Text style={styles.sectionTitleMenu}>
+            {t('admin.addNewJustification')}
+          </Text>
+          <Image
+            source={require("../../Assets/Images/flecha.png")}
+            style={styles.arrowImage}
+          />
+        </View>
+      </TouchableOpacity>
+
+      <Separador />
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.safeAreaWhite}>
@@ -66,57 +223,15 @@ export default function MenuJustifyScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.containerMenuJustify}>
-            {/* Contenido principal que se expande y empuja el botón hacia abajo */}
-            <View style={styles.mainContent}>
-              <View style={styles.headerContainer}>
-                <Text style={styles.mainTitle}>
-                  {t('justify.title')} {"\n"}
-                </Text>
-                <CustomLogo
-                  size="small"
-                  rounded={true}
-                  backgroundColor="#000000"
-                  marginBottom={35}
-                />
-              </View>
+            {/* Mostrar vista según el rol */}
+            {userRole === 'student' ? renderStudentView() : renderAdminView()}
 
-              <Separador />
+            {/* Espaciador flexible que empuja el botón hacia abajo */}
+            <View style={styles.spacer} />
 
-              <TouchableOpacity onPress={handleConsultJustify}>
-                <View style={styles.menuItem}>
-                  <Text style={styles.sectionTitleMenu}>
-                    {t('consultJustify.mainTitle')}
-                  </Text>
-                  <Image
-                    source={require("../../assets/images/flecha.png")}
-                    style={styles.arrowImage}
-                  />
-                </View>
-              </TouchableOpacity>
-
-              <Separador />
-
-              <TouchableOpacity onPress={handleAddOrEditJustify}>
-                <View style={styles.menuItem}>
-                  <Text style={styles.sectionTitleMenu}>
-                    {t('justify.addAbsence')}
-                  </Text>
-                  <Image
-                    source={require("../../assets/images/flecha.png")}
-                    style={styles.arrowImage}
-                  />
-                </View>
-              </TouchableOpacity>
-
-              <Separador />
-
-              {/* Espaciador flexible que empuja el botón hacia abajo */}
-              <View style={styles.spacer}/>
-
-              {/* Botón Volver */}
-              <View style={styles.buttonContainer}>
-                <PrimaryButton title={t('consultJustify.back')} onPress={handleBack} />
-              </View>
+            {/* Botón Volver */}
+            <View style={styles.buttonContainer}>
+              <PrimaryButton title={t('consultJustify.back')} onPress={handleBack} />
             </View>
           </View>
         </ScrollView>

@@ -59,14 +59,14 @@ export default function TakePhotoScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#F5F5F5" />
+            <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 style={styles.keyboardView}
                 keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
             >
                 <ScrollView
-                    showsVerticalScrollIndicator={true}
+                    showsVerticalScrollIndicator={false}
                     contentContainerStyle={styles.scrollViewContent}
                     bounces={true}
                     alwaysBounceVertical={true}
@@ -79,7 +79,7 @@ export default function TakePhotoScreen() {
                     }}>
                         <View style={styles.imagePhoto}>
                             <Image
-                                source={require("../../assets/images/perfil-del-usuario.png")}
+                                source={require("../../Assets/Images/perfil-del-usuario.png")}
                                 style={styles.image}
                                 resizeMode="contain"
                             />
@@ -105,7 +105,7 @@ export default function TakePhotoScreen() {
                         >
                             <View style={styles.buttonContent}>
                                 <Image
-                                    source={require("../../assets/images/fotografia.png")}
+                                    source={require("../../Assets/Images/fotografia.png")}
                                     style={styles.icon}
                                 />
                                 <Text style={styles.registerButtonText}>
@@ -124,7 +124,7 @@ export default function TakePhotoScreen() {
                         >
                             <View style={styles.settingsContent}>
                                 <Image
-                                    source={require("../../assets/images/configuraciones.png")}
+                                    source={require("../../Assets/Images/configuraciones.png")}
                                     style={styles.settingsIcon}
                                 />
                             </View>

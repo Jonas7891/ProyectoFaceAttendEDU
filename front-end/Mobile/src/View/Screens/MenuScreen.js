@@ -30,7 +30,6 @@ export default function MenuScreen() {
     const init = async () => {
       const role = await AsyncStorage.getItem('userRole');
       setUserRole(role);
-      await restoreLanguageForRole(role);
     };
     init();
 
@@ -52,7 +51,8 @@ export default function MenuScreen() {
   const handleLogout = async () => {
     await saveLanguageForRole(userRole);
     await AsyncStorage.removeItem('userRole');
-    navigation.navigate(isAdmin ? "Login" : "Homes");
+
+    navigation.navigate("Login");
   };
 
   // ─── Helper para renderizar un ítem de menú ────────────────────────────────
@@ -63,7 +63,7 @@ export default function MenuScreen() {
         <View style={{ justifyContent: "flex-start", alignItems: "center", flexDirection: "row" }}>
           <Text style={styles.sectionTitleMenu}>{label}</Text>
           <Image
-            source={require("../../assets/images/flecha.png")}
+            source={require("../../Assets/Images/flecha.png")}
             style={styles.arrowImage}
           />
         </View>
@@ -86,7 +86,7 @@ export default function MenuScreen() {
             <TouchableOpacity onPress={handleBack} activeOpacity={0.2}>
               <View style={styles.backIcon}>
                 <Image
-                  source={require("../../assets/images/flecha.png")}
+                  source={require("../../Assets/Images/flecha.png")}
                   style={styles.backIconImage}
                 />
               </View>
@@ -109,10 +109,13 @@ export default function MenuScreen() {
               <MenuItem label={t('menu.facialParams')} onPress={handleTakePhoto} />
               <MenuItem label={t('menu.updateFacialParams')} onPress={handleUpdatePhoto} />
 
-              {/* Solo admin */}
-              {isAdmin && (
-                <MenuItem label={t('menu.justificationConfig')} onPress={handleMenuJustify} />
-              )}
+              <MenuItem
+                label={isAdmin
+                  ? t('menu.justificationConfig')
+                  : t('menu.justificationInfo', { defaultValue: 'Información de las Justificaciones' })
+                }
+                onPress={handleMenuJustify}
+              />
 
               {/* Comunes de nuevo */}
               <MenuItem label={t('menu.appSettings')} onPress={handleSettings} />

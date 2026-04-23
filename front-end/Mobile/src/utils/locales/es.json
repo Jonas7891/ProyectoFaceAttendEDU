@@ -9,7 +9,11 @@
     "settings": "Configuración",
     "profile": "Perfil",
     "search": "Búsqueda",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "yes": "Sí",
+    "no": "No",
+    "accept": "Aceptar",
+    "discard": "Descartar"
   },
   "login": {
     "title": "Inicio de Sesión",
@@ -136,7 +140,7 @@
     "reasonLabel": "Motivo"
   },
   "justify": {
-    "title": "Envío de Justificaciones",
+    "title": "Configuración de Justificaciones",
     "addAbsence": "Agregar Justificación",
     "addDelay": "Agregar Retardo",
     "absenceType": "Inasistencia",
@@ -310,7 +314,55 @@
     "facialFailures": "Fallas de reconocimiento",
     "recognitionSuccessRate": "Tasa de éxito",
     "times": "veces hasta la fecha",
-    "UpdateFace":  "Actualización de Rostro",
+    "UpdateFace": "Actualización de Rostro",
     "UpdateFaceDesc": "Actualización de tus datos biometricos"
+  },
+  "admin": {
+    "justificationManagement": "Gestión de Justificaciones",
+    "validJustifications": "Justificaciones Válidas",
+    "pendingJustifications": "Justificaciones Pendientes",
+    "addNewJustification": "Agregar Nueva Justificación Válida",
+    "requiresDocument": "Requiere documento",
+    "noDocumentRequired": "No requiere documento",
+    "approve": "Aprobar",
+    "reject": "Rechazar",
+    "approved": "Aprobada",
+    "rejected": "Rechazada",
+    "confirmAction": "Confirmar Acción",
+    "confirmApprove": "¿Está seguro de aprobar esta justificación?",
+    "confirmReject": "¿Está seguro de rechazar esta justificación?",
+    "justificationApproved": "Justificación aprobada exitosamente",
+    "justificationRejected": "Justificación rechazada",
+    "justificationType": "Tipo de justificación",
+    "date": "Fecha",
+    "studentName": "Nombre del estudiante",
+    "studentId": "ID del estudiante",
+    "category": "Categoría",
+    "categoryHealth": "Salud",
+    "categoryFamily": "Familiar",
+    "categoryLegal": "Legal",
+    "categoryAcademic": "Académica",
+    "categoryOther": "Otro",
+    "typeMedical": "Médica",
+    "typeFamily": "Familiar",
+    "typePersonal": "Personal",
+    "typeAcademic": "Académica",
+    "typeWork": "Laboral",
+    "typeOther": "Otro",
+    "description": "Descripción",
+    "descriptionPlaceholder": "Describa los detalles de esta justificación...",
+    "saveJustification": "Guardar Justificación",
+    "completeAllFields": "Por favor complete todos los campos obligatorios",
+    "justificationCreated": "Justificación creada exitosamente",
+    "errorCreating": "Error al crear la justificación",
+    "confirmDiscard": "¿Está seguro de descartar los cambios?"
+  },
+  "justifications": {
+    "validList": "Justificaciones Válidas",
+    "absences": "Inasistencias",
+    "delays": "Retardos",
+    "items": "justificaciones",
+    "noJustifications": "No hay justificaciones registradas",
+    "noJustificationsDesc": "Las justificaciones válidas aparecerán aquí cuando sean agregadas por el administrador"
   }
 }

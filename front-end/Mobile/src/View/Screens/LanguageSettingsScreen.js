@@ -88,6 +88,7 @@ export default function LanguageSettingsScreen() {
           onPress={handleSave}
           isLoading={isLoading}
         />
+        
         {/* Botón Volver secundario */}
         <TouchableOpacity onPress={handleBack} style={styles.secondaryButton}>
           <Text style={styles.secondaryButtonText}>{t('common.back')}</Text>

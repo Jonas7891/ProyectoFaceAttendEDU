@@ -13,7 +13,7 @@ import BottomBar from "../Components/Common/NavigationBar";
 import ScrollViewWrapper from "../Components/Common/ScrollView";
 import CustomTabs from "../Components/Common/CustomTabs";
 import styles from "./Style";
-import i18n from "../../utils/i18n";
+import i18n from "../../Utils/i18n";
 
 export default function Dashboard() {
   const navigation = useNavigation();

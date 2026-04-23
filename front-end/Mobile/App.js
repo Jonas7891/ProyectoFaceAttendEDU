@@ -2,20 +2,22 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { I18nextProvider } from 'react-i18next';
-import i18n from './utils/i18n';
-import Login from './View/Screens/Login/Login';
-import MenuScreen from './View/Screens/MenuScreen';
-import DashboardScreen from './View/Screens/DashboardScreen';
-import NewsScreen from './View/Screens/NewsScreen';
-import HistoricalScreen from './View/Screens/HistoricalScreen';
-import FacialFail from './View/Screens/FacialFailScreen';
-import UpdatePhoto from './View/Screens/UpdatePhotoScreen';
-import TakePhotoScreen from './View/Screens/TakePhotoScreen';
-import DisplayingAttendance from './View/Screens/DisplayingAttendance';
-import MenuJustifyScreen from './View/Screens/MenuJustifyScreen';
-import ConsultJustify from './View/Screens/ConsultJustifyScreen';
-import AddJustify from './View/Screens/AddJustifyScreen';
-import LanguageSettingsScreen from './View/Screens/LanguageSettingsScreen';
+import i18n from './src/Utils/i18n';
+import Login from './src/View/Screens/Login/Login';
+import MenuScreen from './src/View/Screens/MenuScreen';
+import DashboardScreen from './src/View/Screens/DashboardScreen';
+import NewsScreen from './src/View/Screens/NewsScreen';
+import HistoricalScreen from './src/View/Screens/HistoricalScreen';
+import FacialFail from './src/View/Screens/FacialFailScreen';
+import UpdatePhoto from './src/View/Screens/UpdatePhotoScreen';
+import TakePhotoScreen from './src/View/Screens/TakePhotoScreen';
+import DisplayingAttendance from './src/View/Screens/DisplayingAttendance';
+import MenuJustifyScreen from './src/View/Screens/MenuJustifyScreen';
+import ConsultJustify from './src/View/Screens/ConsultJustifyScreen';
+import AddJustify from './src/View/Screens/AddJustifyScreen';
+import LanguageSettingsScreen from './src/View/Screens/LanguageSettingsScreen';
+import AddValidJustificationScreen from './src/View/Screens/AddValidJustificationScreen';
+import ValidJustificationsScreen from './src/View/Screens/ValidAllJustifications';
 
 const Stack = createStackNavigator();
 
@@ -87,6 +89,16 @@ export default function App() {
           <Stack.Screen
             name="LanguageSettings"
             component={LanguageSettingsScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="AddValidJustification"
+            component={AddValidJustificationScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ValidJustifications"
+            component={ValidJustificationsScreen}
             options={{ headerShown: false }}
           />
         </Stack.Navigator>
