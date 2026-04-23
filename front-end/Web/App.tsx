@@ -1,6 +1,6 @@
 import React from "react";
-import LandingPage from "./src/view/screens/index";
+import AppNavigator from "./src/navegation/AppNavigator";
 
 export default function App() {
-    return <LandingPage />;
+    return <AppNavigator />;
 }
