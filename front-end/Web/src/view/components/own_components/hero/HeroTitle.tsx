@@ -1,8 +1,8 @@
 import React from "react";
 import { Text } from "react-native";
-import { useResponsive } from "@/components/hooks/useResponsive";
-import { getTypography } from "@/components/constants/typography";
-import Colors from "@/components/constants/colors";
+import { useResponsive } from "../../hooks/useResponsive";
+import { getTypography } from "../../constants/typography";
+import Colors from "../../constants/colors";
 
 type Props = {
     title: string;

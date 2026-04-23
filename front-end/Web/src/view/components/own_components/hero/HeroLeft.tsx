@@ -3,7 +3,7 @@ import { Animated } from "react-native";
 import HeroTitle from "./HeroTitle";
 import HeroButtons from "./HeroButtons";
 import HeroStats from "./HeroStats";
-import { useResponsive } from "@/components/hooks/useResponsive";
+import { useResponsive } from "../../hooks/useResponsive";
 
 type Stat = { value: string; label: string };
 

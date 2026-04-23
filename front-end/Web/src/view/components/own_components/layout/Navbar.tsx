@@ -1,7 +1,7 @@
 import React from "react";
 import { View } from "react-native";
-import { useResponsive } from "@/components/hooks/useResponsive";
-import Colors from "@/components/constants/colors";
+import { useResponsive } from "../../hooks/useResponsive";
+import Colors from "../../constants/colors";
 
 type Props = {
     left?: React.ReactNode;

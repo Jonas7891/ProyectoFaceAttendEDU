@@ -1,8 +1,8 @@
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
-import { useResponsive } from "@/components/hooks/useResponsive";
-import { getTypography } from "@/components/constants/typography";
-import Colors from "@/components/constants/colors";
+import { useResponsive } from "../../hooks/useResponsive";
+import { getTypography } from "../../constants/typography";
+import Colors from "../../constants/colors";
 
 type Props = {
     label: string;
@@ -18,7 +18,7 @@ export default function Button({
     const { fs, sp } = useResponsive();
     const T = getTypography(fs);
 
-    const HEIGHT = sp(48); // 🔥 altura fija consistente
+    const HEIGHT = sp(48); // altura fija consistente
 
     return (
         <TouchableOpacity

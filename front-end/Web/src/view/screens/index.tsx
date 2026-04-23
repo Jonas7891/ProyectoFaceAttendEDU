@@ -6,22 +6,25 @@ import {
     Text,
     StyleSheet,
 } from "react-native";
+
 import {
     SafeAreaView,
     SafeAreaProvider,
     useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
-import Navbar from "@/components/own_components/layout/Navbar";
-import HeroLeft from "@/components/own_components/hero/HeroLeft";
-import HeroRight from "@/components/own_components/hero/HeroRight";
-import { useHeroEntrance } from "@/components/hooks/useHeroEntrance";
-import { useResponsive } from "@/components/hooks/useResponsive";
-import { getTypography } from "@/components/constants/typography";
-import BadgePositions, { BadgePositionsMobile } from "@/components/constants/badgePositions";
-import Colors from "@/components/constants/colors";
+import Navbar from "../components/own_components/layout/Navbar";
+import HeroLeft from "../components/own_components/hero/HeroLeft";
+import HeroRight from "../components/own_components/hero/HeroRight";
 
-// ─── Datos ─────────────────────────────────────────────────────
+import { useHeroEntrance } from "../components/hooks/useHeroEntrance";
+import { useResponsive } from "../components/hooks/useResponsive";
+
+import { getTypography } from "../components/constants/typography";
+import BadgePositions, {
+    BadgePositionsMobile,
+} from "../components/constants/badgePositions";
+import Colors from "../components/constants/colors";
 
 const STATS = [
     { value: "99%", label: "Precisión" },
@@ -29,7 +32,7 @@ const STATS = [
     { value: "∞", label: "Estudiantes" },
 ];
 
-// ─── HeroContent (SOLO layout, NO centrado vertical) ───────────
+// ─── HeroContent ───────────────────────────────────────────────
 
 function HeroContent({
                          fadeLeft,
@@ -37,10 +40,8 @@ function HeroContent({
                          fadeRight,
                          slideRight,
                      }: ReturnType<typeof useHeroEntrance>) {
-
     const { sp, isSmall } = useResponsive();
 
-    
     const badgePos = isSmall ? BadgePositionsMobile : BadgePositions;
 
     const BADGES = [
@@ -89,9 +90,15 @@ function AppNavbar() {
     return (
         <Navbar
             left={
-                <View style={{ flexDirection: "row", alignItems: "center", gap: sp(12) }}>
+                <View
+                    style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: sp(12),
+                    }}
+                >
                     <Image
-                        source={require("../assets/images/logoFaceAttend-Minimalista.png")}
+                        source={require("../../assets/images/logoFaceAttend-Minimalista.png")}
                         style={{ width: sp(60), height: sp(60) }}
                     />
                     <Text style={[T.brandName, { color: Colors.text }]}>
@@ -101,7 +108,7 @@ function AppNavbar() {
             }
             right={
                 <Image
-                    source={require("../assets/images/logo(Antiguo)FaceAttend.png")}
+                    source={require("../../assets/images/logo(Antiguo)FaceAttend.png")}
                     style={{ width: sp(50), height: sp(50) }}
                 />
             }
@@ -122,7 +129,7 @@ function Footer() {
                 position: "absolute",
                 bottom: 0,
                 width: "100%",
-                paddingVertical: insets.bottom+8,
+                paddingVertical: insets.bottom + 8,
                 alignItems: "center",
                 borderTopWidth: 1,
                 borderTopColor: Colors.border,
@@ -136,8 +143,9 @@ function Footer() {
     );
 }
 
-export default function LandingPage() {
+// ─── MAIN ──────────────────────────────────────────────────────
 
+export default function LandingPage() {
     const entrance = useHeroEntrance();
     const { sp, isSmall } = useResponsive();
 
@@ -146,7 +154,6 @@ export default function LandingPage() {
     return (
         <SafeAreaProvider>
             <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
-
                 <AppNavbar />
 
                 {isSmall ? (
@@ -163,7 +170,7 @@ export default function LandingPage() {
                         {hero}
                     </ScrollView>
                 ) : (
-                    // DESKTOP (tamaños intermedios)
+                    // DESKTOP
                     <View
                         style={{
                             flex: 1,
@@ -177,7 +184,7 @@ export default function LandingPage() {
                                 width: "100%",
                                 maxWidth: 1280,
                                 flex: 1,
-                                justifyContent: "center", //asegura el centrado interno
+                                justifyContent: "center",
                             }}
                         >
                             {hero}
@@ -186,11 +193,12 @@ export default function LandingPage() {
                 )}
 
                 <Footer />
-
             </SafeAreaView>
         </SafeAreaProvider>
     );
 }
+
+// ─── Styles ────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
     container: {

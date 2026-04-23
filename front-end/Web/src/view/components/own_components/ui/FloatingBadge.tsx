@@ -1,9 +1,9 @@
 import React from "react";
 import { Animated, Text, ViewStyle } from "react-native";
-import { useFloatAnimation } from "@/components/hooks/useFloatAnimation";
-import { useResponsive } from "@/components/hooks/useResponsive";
-import { getTypography } from "@/components/constants/typography";
-import Colors from "@/components/constants/colors";
+import { useFloatAnimation } from "../../hooks/useFloatAnimation";
+import { useResponsive } from "../../hooks/useResponsive";
+import { getTypography } from "../../constants/typography";
+import Colors from "../../constants/colors";
 
 type Props = {
   label: string;

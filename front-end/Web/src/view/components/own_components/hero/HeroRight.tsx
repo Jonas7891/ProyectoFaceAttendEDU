@@ -1,9 +1,9 @@
 import React from "react";
 import { Animated, Image, View } from "react-native";
 import FloatingBadge from "../ui/FloatingBadge";
-import { useResponsive } from "@/components/hooks/useResponsive";
+import { useResponsive } from "../../hooks/useResponsive";
 import { ViewStyle } from "react-native";
-import Colors from "@/components/constants/colors";
+import Colors from "../../constants/colors";
 
 type Badge = {
     label: string;
@@ -54,7 +54,7 @@ export default function HeroRight({ fadeRight, slideRight, badges }: Props) {
 
             {/* Logo central */}
             <Image
-                source={require("../../../assets/images/splash-icon.png")}
+                source={require("../../../../assets/images/splash-icon.png")}
                 style={{ width: logoSize, height: logoSize, zIndex: 1 }}
                 resizeMode="contain"
             />
