@@ -1346,6 +1346,51 @@ const styles = StyleSheet.create({
         color: '#666',
         fontWeight: '600',
     },
+
+    // ========== LANGUAGE SETTINGS SCREEN STYLES ==========
+    languageSettingsSafeArea: {
+        flex: 1,
+        backgroundColor: '#fff'
+    },
+    languageSettingsContainer: {
+        flex: 1,
+        padding: 20
+    },
+    languageSettingsTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        textAlign: 'center'
+    },
+    languageSettingsSubtitle: {
+        fontSize: 16,
+        marginBottom: 30,
+        textAlign: 'center',
+        color: '#666'
+    },
+    languageSettingsOption: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 15,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        marginBottom: 10,
+    },
+    languageSettingsSelectedOption: {
+        borderColor: '#41c0ff',
+        backgroundColor: '#E0F7FA',
+        borderWidth: 2
+    },
+    languageSettingsOptionText: {
+        fontSize: 16
+    },
+    languageSettingsCheckmark: {
+        fontSize: 18,
+        color: '#41c0ff',
+        fontWeight: 'bold'
+    },
 });
 
 export default styles;

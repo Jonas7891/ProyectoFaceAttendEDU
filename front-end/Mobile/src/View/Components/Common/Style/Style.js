@@ -115,6 +115,7 @@ const stylesCommon = StyleSheet.create({
         shadowRadius: 5,
         shadowOffset: { width: 0, height: 2 },
     },
+<<<<<<< HEAD:front-end/Mobile/src/View/Components/Common/Style/Style.js
     navButton: {
         alignItems: "center",
         justifyContent: "center",
@@ -124,6 +125,8 @@ const stylesCommon = StyleSheet.create({
     activeNavButton: {
         backgroundColor: "#d9f4ff",
     },
+=======
+>>>>>>> 7d4b865d2b793bfbdc7a49f7ee0618a2cb82d230:front-end/Mobile/View/Components/Common/Style/Style.js
     navIcon: {
         width: 28,
         height: 28,

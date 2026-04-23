@@ -45,7 +45,11 @@ export default function CustomLogo({
     >
       <Image
         style={stylesAuth.image}
+<<<<<<< HEAD:front-end/Mobile/src/View/Components/Auth/logo.js
         source={source || require("../../../Assets/Images/logoFaceAttend.png")}
+=======
+        source={source || require("../../../assets/images/logoFaceAttend.png")}
+>>>>>>> 7d4b865d2b793bfbdc7a49f7ee0618a2cb82d230:front-end/Mobile/View/Components/Auth/logo.js
         accessibilityLabel="Logo de FaceAttend"
         resizeMode="cover"
       />

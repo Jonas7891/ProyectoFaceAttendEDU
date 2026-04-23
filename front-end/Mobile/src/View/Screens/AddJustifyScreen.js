@@ -24,6 +24,7 @@ export default function AddJustification() {
   const { t, i18n } = useTranslation();
   const [refreshKey, setRefreshKey] = useState(0);
 
+
   const [justificationType, setJustificationType] = useState("inasistencia");
   const [description, setDescription] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
@@ -78,6 +79,7 @@ export default function AddJustification() {
 
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
+
 
       Alert.alert(
         t('common.success'),
