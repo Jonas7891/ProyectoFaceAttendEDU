@@ -1,0 +1,36 @@
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import es from './Locales/es.json';
+import en from './Locales/en.json';
+import fr from './Locales/fr.json';
+import pt from './Locales/pt.json';
+
+const resources = {
+  es: { translation: es },
+  en: { translation: en },
+  fr: { translation: fr },
+  pt: { translation: pt },
+};
+
+i18n.use(initReactI18next).init({
+  resources,
+  lng: 'es',
+  fallbackLng: 'es',
+  interpolation: {
+    escapeValue: false,
+  },
+  react: {
+    useSuspense: false,
+  },
+});
+
+// Cargar idioma guardado
+AsyncStorage.getItem('appLanguage').then(savedLanguage => {
+  if (savedLanguage && savedLanguage !== 'es') {
+    i18n.changeLanguage(savedLanguage);
+  }
+}).catch(error => console.log('Error:', error));
+
+export default i18n;
