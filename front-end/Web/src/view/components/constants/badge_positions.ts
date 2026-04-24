@@ -1,7 +1,7 @@
 import { ViewStyle } from "react-native";
 
 // Posiciones desktop (contenedor ~400x400)
-const Badge_positions: Record<string, ViewStyle> = {
+const BadgePositions: Record<string, ViewStyle> = {
     topLeft:  { position: "absolute", top: "30%",    left: "5%"   },
     topRight: { position: "absolute", top: "10%",    right: "5%"  },
     bottom:   { position: "absolute", bottom: "15%", right: "5%"  },

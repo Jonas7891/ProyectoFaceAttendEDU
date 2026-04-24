@@ -4,7 +4,7 @@
     "slug": "FaceAttend-EDU",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./src/assets/images/icon.png",
+    "icon": "./src/assets/images/logo(antiguo)FaceAttend.png",
     "scheme": "FaceAttend-EDU",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,

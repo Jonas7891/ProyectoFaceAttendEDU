@@ -1,6 +1,6 @@
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
-import { useResponsive } from "../../hooks/useResponsive";
+import { useResponsive } from "../../hooks/use_responsive";
 import { getTypography } from "../../constants/typography";
 import Colors from "../../constants/colors";
 
@@ -39,7 +39,7 @@ export default function Button({
                 style={[
                     T.buttonMD,
                     {
-                        lineHeight: fs(18), // 🔥 centra el texto verticalmente
+                        lineHeight: fs(18), //centra el texto verticalmente
                         color:
                             variant === "primary"
                                 ? "#fff"

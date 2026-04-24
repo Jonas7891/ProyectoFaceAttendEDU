@@ -1,8 +1,8 @@
 import React from "react";
 import { useNavigation } from "@react-navigation/native";
-import SignupPage from "../components/own_components/screens/signup_page/signup_page";
+import SignupPage from "../components/own_components/auth/signup_view";
 
-export default function SignUp() {
+export default function SignupScreen() {
     const navigation = useNavigation<any>();
 
     return (

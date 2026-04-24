@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import { useResponsive } from "../../hooks/useResponsive";
+import { useResponsive } from "../../hooks/use_responsive";
 import Colors from "../../constants/colors";
 
 type Props = {

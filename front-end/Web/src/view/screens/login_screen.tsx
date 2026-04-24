@@ -1,8 +1,8 @@
 import React from "react";
 import { useNavigation } from "@react-navigation/native";
-import LoginPage from "../components/own_components/screens/login_page/login_page";
+import LoginPage from "../components/own_components/auth/login_view";
 
-export default function Login_screen() {
+export default function LoginScreen() {
     const navigation = useNavigation<any>();
 
     return (

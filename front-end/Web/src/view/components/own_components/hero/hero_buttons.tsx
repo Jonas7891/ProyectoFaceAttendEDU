@@ -1,7 +1,7 @@
 import React from "react";
 import { View } from "react-native";
-import Button from "../ui/Button";
-import { useResponsive } from "../../hooks/useResponsive";
+import Button from "../ui/button";
+import { useResponsive } from "../../hooks/use_responsive";
 
 type Props = {
     primary: string;

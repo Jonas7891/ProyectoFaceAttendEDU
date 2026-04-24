@@ -2,36 +2,28 @@ import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 
-import { useResponsive } from "../../../hooks/useResponsive";
-import { getTypography } from "../../../constants/typography";
-import Colors from "../../../constants/colors";
-import Button from "../../ui/Button";
+import { useResponsive } from "../../hooks/use_responsive";
+import { getTypography } from "../../constants/typography";
+import Colors from "../../constants/colors";
+import Button from "../ui/button";
 
-export default function SignupPage({ onRegister, onLogin }: any) {
+export default function LoginPage({ onLogin, onForgotPassword, onRegister }: any) {
     const { fs, sp } = useResponsive();
     const T = getTypography(fs);
 
     const [usuario, setUsuario] = useState("");
-    const [email, setEmail] = useState("");
     const [contrasena, setContrasena] = useState("");
 
     return (
         <SafeAreaProvider>
             <SafeAreaView style={styles.container}>
                 <View style={{ padding: sp(24), gap: sp(16) }}>
-                    <Text style={T.heading1}>Registro</Text>
+                    <Text style={T.heading1}>Inicio Sesión</Text>
 
                     <TextInput
                         placeholder="Usuario"
                         value={usuario}
                         onChangeText={setUsuario}
-                        style={styles.input}
-                    />
-
-                    <TextInput
-                        placeholder="Email"
-                        value={email}
-                        onChangeText={setEmail}
                         style={styles.input}
                     />
 
@@ -43,14 +35,17 @@ export default function SignupPage({ onRegister, onLogin }: any) {
                         style={styles.input}
                     />
 
-                    <Button
-                        label="Registrarse"
-                        onPress={() => onRegister({ usuario, email, contrasena })}
-                    />
-
-                    <TouchableOpacity onPress={onLogin}>
+                    <TouchableOpacity onPress={onForgotPassword}>
                         <Text style={{ color: Colors.primary }}>
-                            ¿Ya tienes cuenta? Inicia sesión
+                            ¿Olvidaste tu contraseña?
+                        </Text>
+                    </TouchableOpacity>
+
+                    <Button label="Ingresar" onPress={() => onLogin(usuario, contrasena)} />
+
+                    <TouchableOpacity onPress={onRegister}>
+                        <Text style={{ color: Colors.primary }}>
+                            Regístrate aquí
                         </Text>
                     </TouchableOpacity>
                 </View>
