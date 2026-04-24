@@ -15,7 +15,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#F5F5F5",
         marginTop: Platform.OS === 'android' ? 25 : 20
     },
-    keyboardView: {
+    keyboardview: {
         flex: 1,
     },
     container: {
@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
     scrollContent: {
         flexGrow: 1,
     },
-    scrollViewContent: {
+    ScrollViewContent: {
         flexGrow: 1,
         paddingBottom: 30,
     },
@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
         height: 90,
     },
 
-    // ========== HOMES SCREEN STYLES ==========
+    // ========== HOMES SCREEN styleS ==========
     contentContainer: {
         flex: 1,
         paddingHorizontal: 15,

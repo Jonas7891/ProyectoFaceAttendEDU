@@ -1,81 +1,50 @@
 import React, { useState, useEffect } from "react";
-import {
-    View,
-    Text,
-    ScrollView,
-    TouchableOpacity,
-    SafeAreaView,
-    Platform,
-    StyleSheet,
-} from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import i18n from "../../Utils/i18n";
+import { restoreLanguageForRole } from "../components/common/languageByRole";
+import { useTheme } from '../components/common/ThemeContext';
+import styles from "./Style";
 
 export default function JustificationsScreen() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const navigation = useNavigation();
+    const { colors, loadThemeForRole } = useTheme();
     const [justifications, setJustifications] = useState([]);
-
-    useEffect(() => {
-        loadJustifications();
-
-        const unsubscribe = navigation.addListener('focus', () => {
-            loadJustifications();
-        });
-
-        return unsubscribe;
-    }, [navigation]);
+    const [refreshKey, setRefreshKey] = useState(0);
+    const [userRole, setUserRole] = useState(null);
 
     useEffect(() => {
         const init = async () => {
             const role = await AsyncStorage.getItem('userRole');
             setUserRole(role);
+            await loadThemeForRole(role);
+            await restoreLanguageForRole(role);
         };
         init();
-
         const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
         i18n.on('languageChanged', handleLanguageChange);
         return () => i18n.off('languageChanged', handleLanguageChange);
     }, [i18n]);
 
+    useEffect(() => {
+        loadJustifications();
+        const unsubscribe = navigation.addListener('focus', loadJustifications);
+        return unsubscribe;
+    }, [navigation]);
+
     const loadJustifications = async () => {
         try {
             const stored = await AsyncStorage.getItem('validJustifications');
             if (stored) {
-                const data = JSON.parse(stored);
-                setJustifications(data);
+                setJustifications(JSON.parse(stored));
             } else {
                 const defaultData = [
-                    {
-                        id: "1",
-                        type: "Médica",
-                        description: "Ausencia por cita médica con especialista",
-                        requiresDocument: true,
-                        category: "Salud",
-                    },
-                    {
-                        id: "2",
-                        type: "Familiar",
-                        description: "Ausencia por fallecimiento de familiar directo",
-                        requiresDocument: true,
-                        category: "Familiar",
-                    },
-                    {
-                        id: "3",
-                        type: "Personal",
-                        description: "Ausencia por trámite legal inaplazable",
-                        requiresDocument: true,
-                        category: "Legal",
-                    },
-                    {
-                        id: "4",
-                        type: "Académica",
-                        description: "Participación en evento académico representando a la institución",
-                        requiresDocument: true,
-                        category: "Académica",
-                    },
+                    { id: "1", type: "Médica", description: "Ausencia por cita médica con especialista", requiresDocument: true, category: "Salud" },
+                    { id: "2", type: "Familiar", description: "Ausencia por fallecimiento de familiar directo", requiresDocument: true, category: "Familiar" },
+                    { id: "3", type: "Personal", description: "Ausencia por trámite legal inaplazable", requiresDocument: true, category: "Legal" },
+                    { id: "4", type: "Académica", description: "Participación en evento académico representando a la institución", requiresDocument: true, category: "Académica" },
                 ];
                 setJustifications(defaultData);
                 await AsyncStorage.setItem('validJustifications', JSON.stringify(defaultData));
@@ -85,113 +54,168 @@ export default function JustificationsScreen() {
         }
     };
 
-    const handleBack = () => {
-        navigation.goBack();
-    };
-
-    // Separar justificaciones por categoría
-    const getJustificationsByCategory = (category) => {
-        return justifications.filter(j => j.category === category);
-    };
-
-    // Obtener categorías únicas
-    const getCategories = () => {
-        return [...new Set(justifications.map(j => j.category))];
-    };
+    const getJustificationsByCategory = (cat) => justifications.filter(j => j.category === cat);
+    const getCategories = () => [...new Set(justifications.map(j => j.category))];
 
     const renderJustificationItem = (item, index) => (
-        <View key={item.id} style={styles.justificationItemCardValidJustifi}>
-            <View style={styles.justificationItemHeaderValidJustifi}>
-                <View style={styles.justificationNumberContainerValidJustifi}>
-                    <Text style={styles.justificationNumberTextValidJustifi}>{index + 1}</Text>
+        <View
+            key={item.id}
+            style={{
+                backgroundColor: colors.card,
+                borderRadius: 12,
+                padding: 16,
+                marginBottom: 10,
+                borderWidth: 1,
+                borderColor: colors.cardBorder,
+                borderLeftWidth: 3,
+                borderLeftColor: colors.primary,
+            }}
+        >
+            {/* Fila superior: número + tipo */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                <View style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 14,
+                    backgroundColor: colors.primary,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: 10,
+                }}>
+                    <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '700' }}>
+                        {index + 1}
+                    </Text>
                 </View>
-                <View style={styles.justificationTypeContainerValidJustifi}>
-                    <Text style={styles.justificationTypeTextValidJustifi}>{item.type}</Text>
-                </View>
+                <Text style={{ color: colors.text, fontSize: 15, fontWeight: '700', flex: 1 }}>
+                    {item.type}
+                </Text>
             </View>
 
-            <Text style={styles.justificationDescriptionTextValidJustifi}>
+            {/* Descripción */}
+            <Text style={{ color: colors.textSecondary, fontSize: 14, lineHeight: 20, marginBottom: 12 }}>
                 {item.description}
             </Text>
 
-            <View style={styles.justificationFooterValidJustifi}>
-                <View style={styles.categoryBadgeValidJustifi}>
-                    <Text style={styles.categoryBadgeTextValidJustifi}>{item.category}</Text>
+            {/* Separador */}
+            <View style={{ height: 1, backgroundColor: colors.separator, marginBottom: 10 }} />
+
+            {/* Footer: badge categoría + requiere doc */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <View style={{
+                    backgroundColor: colors.badgeBackground,
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
+                    borderRadius: 20,
+                }}>
+                    <Text style={{ color: colors.badgeText, fontSize: 12, fontWeight: '600' }}>
+                        {item.category}
+                    </Text>
                 </View>
-                <Text style={styles.documentInfoTextValidJustifi}>
-                    {item.requiresDocument
-                        ? t('admin.requiresDocument')
-                        : t('admin.noDocumentRequired')}
+                <Text style={{ color: colors.textMuted, fontSize: 12 }}>
+                    {item.requiresDocument ? t('admin.requiresDocument') : t('admin.noDocumentRequired')}
                 </Text>
             </View>
         </View>
     );
 
     return (
-        <SafeAreaView style={styles.safeAreaWhiteValidJustifi}>
-            <View style={styles.containerJustificationsScreenValidJustifi}>
-                {/* Header con botón de regreso */}
-                <View style={styles.justificationsHeaderValidJustifi}>
-                    <Text style={styles.justificationsTitleValidJustifi}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+            <View style={{ flex: 1, backgroundColor: colors.background }} marginHorizontal={10}>
+
+                {/* ── Header integrado con el fondo ── */}
+                <View style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    paddingHorizontal: 20,
+                    paddingTop: 16,
+                    paddingBottom: 12,
+                    backgroundColor: colors.background,
+                }}>
+                    <Text style={{ color: colors.text, fontSize: 20, fontWeight: '700' }}>
                         {t("justifications.validList")}
                     </Text>
-                    <Text style={styles.justificationsCountValidJustifi}>
-                        {justifications.length}
-                    </Text>
+
+                    {/* Badge contador — integrado en el header */}
+                    <View style={{
+                        backgroundColor: colors.primary,
+                        width: 32,
+                        height: 32,
+                        borderRadius: 16,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}>
+                        <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '700' }}>
+                            {justifications.length}
+                        </Text>
+                    </View>
                 </View>
+
+                {/* Línea separadora suave bajo el header */}
+                <View style={{ height: 1, backgroundColor: colors.separator, marginHorizontal: 20, marginBottom: 8 }} />
 
                 <ScrollView
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={styles.justificationsScrollContentValidJustifi}
+                    contentContainerstyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
                 >
                     {justifications.length > 0 ? (
                         getCategories().map((category) => {
                             const categoryItems = getJustificationsByCategory(category);
                             return (
-                                <View key={category} style={styles.categorySectionValidJustifi}>
-                                    {/* Título de categoría */}
-                                    <View style={styles.categoryHeaderValidJustifi}>
-                                        <View style={styles.categoryInfoValidJustifi}>
-                                            <Text style={styles.categoryTitleTextValidJustifi}>
-                                                {category}
-                                            </Text>
-                                            <Text style={styles.categoryCountTextValidJustifi}>
-                                                {categoryItems.length} {t('justifications.items')}
-                                            </Text>
-                                        </View>
+                                <View key={category} style={{ marginBottom: 24 }}>
+
+                                    {/* Header de categoría */}
+                                    <View style={{
+                                        backgroundColor: colors.categoryBackground,
+                                        borderRadius: 10,
+                                        paddingHorizontal: 14,
+                                        paddingVertical: 10,
+                                        marginBottom: 10,
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                    }}>
+                                        <Text style={{ color: colors.categoryText, fontSize: 15, fontWeight: '700' }}>
+                                            {category}
+                                        </Text>
+                                        <Text style={{ color: colors.textMuted, fontSize: 12 }}>
+                                            {categoryItems.length} {t('justifications.items')}
+                                        </Text>
                                     </View>
 
-                                    {/* Lista de items de la categoría */}
-                                    <View style={styles.categoryItemsContainerValidJustifi}>
-                                        {categoryItems.map((item, index) =>
-                                            renderJustificationItem(item, index)
-                                        )}
-                                    </View>
-
-                                    {/* Separador entre categorías */}
-                                    <View style={styles.categoryDividerValidJustifi} />
+                                    {/* Items de la categoría */}
+                                    {categoryItems.map((item, index) =>
+                                        renderJustificationItem(item, index)
+                                    )}
                                 </View>
                             );
                         })
                     ) : (
-                        /* Estado vacío */
-                        <View style={styles.emptyStateContainerValidJustifi}>
-                            <Text style={styles.emptyStateIconValidJustifi}></Text>
-                            <Text style={styles.emptyStateTitleValidJustifi}>
+                        <View style={{ alignItems: 'center', marginTop: 60 }}>
+                            <Text style={{ fontSize: 40, marginBottom: 16 }}>📋</Text>
+                            <Text style={{ color: colors.text, fontSize: 16, fontWeight: '600', marginBottom: 8 }}>
                                 {t('justifications.noJustifications')}
                             </Text>
-                            <Text style={styles.emptyStateDescriptionValidJustifi}>
+                            <Text style={{ color: colors.textMuted, fontSize: 14, textAlign: 'center' }}>
                                 {t('justifications.noJustificationsDesc')}
                             </Text>
                         </View>
                     )}
 
-                    {/* Botón Volver */}
+                    {/* Botón volver */}
                     <TouchableOpacity
-                        onPress={handleBack}
-                        style={styles.justificationsBackButtonValidJustifi}
+                        onPress={() => navigation.goBack()}
+                        style={{
+                            backgroundColor: colors.backButtonBackground,
+                            borderRadius: 10,
+                            paddingVertical: 14,
+                            alignItems: 'center',
+                            marginTop: 8,
+                            borderWidth: 1,
+                            borderColor: colors.separator,
+                        }}
                     >
-                        <Text style={styles.justificationsBackButtonTextValidJustifi}>
+                        <Text style={{ color: colors.primary, fontSize: 15, fontWeight: '600' }}>
                             ← {t('common.back')}
                         </Text>
                     </TouchableOpacity>
@@ -200,303 +224,3 @@ export default function JustificationsScreen() {
         </SafeAreaView>
     );
 }
-
-const styles = StyleSheet.create({
-    // ========== ESTILOS PARA JUSTIFICATIONS SCREEN ==========
-
-    safeAreaWhiteValidJustifi: {
-        flex: 1,
-        backgroundColor: '#FFFFFF',
-    },
-
-    containerJustificationsScreenValidJustifi: {
-        flex: 1,
-        backgroundColor: '#FFFFFF',
-    },
-
-    // Header
-    justificationsHeaderValidJustifi: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 20,
-        paddingTop: Platform.OS === 'android' ? 45 : 15,
-        paddingBottom: 15,
-        backgroundColor: '#FFFFFF',
-        borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-
-    backButtonValidJustifi: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#F5F5F5',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    backButtonTextValidJustifi: {
-        fontSize: 20,
-        color: '#4A90E2',
-        fontWeight: '600',
-    },
-
-    justificationsTitleValidJustifi: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#1A1A1A',
-        flex: 1,
-        textAlign: 'center',
-    },
-
-    justificationsCountValidJustifi: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#FFFFFF',
-        backgroundColor: '#4A90E2',
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 12,
-        overflow: 'hidden',
-    },
-
-    // Contenido del scroll
-    justificationsScrollContentValidJustifi: {
-        paddingHorizontal: 20,
-        paddingTop: 20,
-        paddingBottom: 40,
-    },
-
-    // Sección de categoría
-    categorySectionValidJustifi: {
-        marginBottom: 10,
-    },
-
-    categoryHeaderValidJustifi: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#F8F9FA',
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
-    },
-
-    categoryIconContainerValidJustifi: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        backgroundColor: '#FFFFFF',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-
-    categoryIconValidJustifi: {
-        fontSize: 24,
-    },
-
-    categoryInfoValidJustifi: {
-        flex: 1,
-    },
-
-    categoryTitleTextValidJustifi: {
-        fontSize: 17,
-        fontWeight: '700',
-        color: '#1A1A1A',
-        marginBottom: 4,
-    },
-
-    categoryCountTextValidJustifi: {
-        fontSize: 13,
-        color: '#666',
-        fontWeight: '500',
-    },
-
-    categoryArrowValidJustifi: {
-        width: 30,
-        height: 30,
-        borderRadius: 15,
-        backgroundColor: '#FFFFFF',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    categoryArrowTextValidJustifi: {
-        fontSize: 20,
-        color: '#4A90E2',
-        fontWeight: '600',
-    },
-
-    // Contenedor de items
-    categoryItemsContainerValidJustifi: {
-        paddingLeft: 10,
-        marginBottom: 5,
-    },
-
-    // Item de justificación
-    justificationItemCardValidJustifi: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 14,
-        padding: 16,
-        marginBottom: 10,
-        borderLeftWidth: 4,
-        borderLeftColor: '#4A90E2',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 6,
-        elevation: 2,
-    },
-
-    justificationItemHeaderValidJustifi: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-
-    justificationNumberContainerValidJustifi: {
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        backgroundColor: '#E3F2FD',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 10,
-    },
-
-    justificationNumberTextValidJustifi: {
-        fontSize: 14,
-        fontWeight: '700',
-        color: '#4A90E2',
-    },
-
-    justificationTypeContainerValidJustifi: {
-        flex: 1,
-    },
-
-    justificationTypeTextValidJustifi: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: '#1A1A1A',
-    },
-
-    documentRequiredBadgeValidJustifi: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: '#F0F0F0',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    documentRequiredTextValidJustifi: {
-        fontSize: 16,
-    },
-
-    justificationDescriptionTextValidJustifi: {
-        fontSize: 14,
-        color: '#555',
-        lineHeight: 22,
-        marginBottom: 12,
-        paddingLeft: 38,
-    },
-
-    justificationFooterValidJustifi: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingLeft: 38,
-        paddingTop: 10,
-        borderTopWidth: 1,
-        borderTopColor: '#F0F0F0',
-    },
-
-    categoryBadgeValidJustifi: {
-        backgroundColor: '#E8F4FD',
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 12,
-    },
-
-    categoryBadgeTextValidJustifi: {
-        fontSize: 11,
-        fontWeight: '600',
-        color: '#4A90E2',
-    },
-
-    documentInfoTextValidJustifi: {
-        fontSize: 11,
-        color: '#999',
-        fontWeight: '500',
-    },
-
-    // Divider entre categorías
-    categoryDividerValidJustifi: {
-        height: 8,
-        backgroundColor: '#F5F5F5',
-        marginVertical: 10,
-        borderRadius: 4,
-    },
-
-    // Estado vacío
-    emptyStateContainerValidJustifi: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 80,
-        paddingHorizontal: 20,
-    },
-
-    emptyStateIconValidJustifi: {
-        fontSize: 64,
-        marginBottom: 20,
-    },
-
-    emptyStateTitleValidJustifi: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: '#1A1A1A',
-        marginBottom: 8,
-        textAlign: 'center',
-    },
-
-    emptyStateDescriptionValidJustifi: {
-        fontSize: 14,
-        color: '#999',
-        textAlign: 'center',
-        lineHeight: 22,
-    },
-
-    // Botón volver secundario
-    justificationsBackButtonValidJustifi: {
-        backgroundColor: '#F5F5F5',
-        borderRadius: 12,
-        paddingVertical: 16,
-        alignItems: 'center',
-        marginTop: 20,
-        marginBottom: 30,
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
-    },
-
-    justificationsBackButtonTextValidJustifi: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#4A90E2',
-    },
-});

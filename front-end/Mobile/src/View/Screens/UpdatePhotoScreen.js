@@ -13,11 +13,11 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
-import { QuestionInput } from "../Components/Common/QuestionInput";
-import PrimaryButton from "../Components/Auth/PrimaryButton";
+import { QuestionInput } from "../components/common/QuestionInput";
+import PrimaryButton from "../components/auth/PrimaryButton";
 import styles from "./Style";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { saveLanguageForRole } from "../Components/Common/languageByRole";
+import { saveLanguageForRole } from "../components/common/languageByRole";
 
 export default function UpdatePhoto() {
     const navigation = useNavigation();
@@ -76,15 +76,15 @@ export default function UpdatePhoto() {
 
     return (
         <SafeAreaView style={styles.container} key={refreshKey}>
-            <StatusBar barStyle="dark-content" backgroundColor="#F5F5F5" />
+            <StatusBar barstyle="dark-content" backgroundColor="#F5F5F5" />
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.keyboardView}
+                style={styles.keyboardview}
                 keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
             >
                 <ScrollView
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={styles.scrollViewContent}
+                    contentContainerstyle={styles.ScrollViewContent}
                     bounces={true}
                     alwaysBounceVertical={true}
                 >
@@ -94,7 +94,7 @@ export default function UpdatePhoto() {
 
                     <View style={styles.imagePhoto}>
                         <Image
-                            source={require("../../Assets/Images/perfil-del-usuario.png")}
+                            source={require("../../assets/images/perfil-del-usuario.png")}
                             style={styles.image}
                             resizeMode="contain"
                         />
@@ -162,7 +162,7 @@ export default function UpdatePhoto() {
                     >
                         <View style={styles.buttonContent}>
                             <Image
-                                source={require("../../Assets/Images/fotografia.png")}
+                                source={require("../../assets/images/fotografia.png")}
                                 style={styles.icon}
                             />
                             <Text style={styles.registerButtonText}>

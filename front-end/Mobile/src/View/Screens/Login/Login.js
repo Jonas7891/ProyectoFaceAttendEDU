@@ -12,16 +12,17 @@ import {
   TouchableOpacity
 } from "react-native";
 import { useTranslation } from "react-i18next";
-import PrimaryButton from "../../Components/Auth/PrimaryButton";
-import SelectableButton from "../../Components/Auth/SelectableButton";
-import CustomLogo from "../../Components/Auth/logo";
-import { useNavigation } from "@react-navigation/native";
-import RegisterModal from '../../Components/Auth/RegisterModal';
-import TerminosModal from "../../Components/Auth/TerminosModal";
-import ScrollView from "../../Components/Common/ScrollView";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import styles from "./Style/Style";
-import { saveLanguageForRole } from "../../Components/Common/languageByRole";
+import { restoreLanguageForRole } from "../../components/common/languageByRole";
+import { useTheme } from '../../components/common/ThemeContext';
+import PrimaryButton from "../../components/auth/PrimaryButton";
+import SelectableButton from "../../components/auth/SelectableButton";
+import CustomLogo from "../../components/auth/logo";
+import { useNavigation } from "@react-navigation/native";
+import RegisterModal from '../../components/auth/RegisterModal';
+import TerminosModal from "../../components/auth/TerminosModal";
+import ScrollView from "../../components/common/ScrollView";
+import styles from "./style/Style";
 
 export default function HomesScreen() {
   const [email, setEmail] = useState("");
@@ -30,59 +31,49 @@ export default function HomesScreen() {
   const [refreshKey, setRefreshKey] = useState(0);
   const navigation = useNavigation();
   const { t, i18n } = useTranslation();
+  const { colors, loadThemeForRole } = useTheme(); // ✅
 
   const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
   const [isTerminosModalVisible, setIsTerminosModalVisible] = useState(false);
 
+  // ─── login siempre en español ─────────────────────────────────────────────
   useEffect(() => {
-    const init = async () => {
-      const role = await AsyncStorage.getItem('userRole');
-      setUserRole(role);
-      cargarEstadisticas();
-
-      await restoreLanguageForRole(role);
-    };
-    init();
+    i18n.changeLanguage('es'); // ✅ login siempre en español
 
     const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
-    
     i18n.on('languageChanged', handleLanguageChange);
     return () => i18n.off('languageChanged', handleLanguageChange);
   }, [i18n]);
 
-  const handleEmailChange = (text) => {
-    setEmail(text);
-  };
-
-  const handlePasswordChange = (text) => {
-    setPassword(text);
-  };
-
-  const handleLogin = async () => {
+  // ─── login ────────────────────────────────────────────────────────────────
+  const handlelogin = async () => {
     if (!email.trim()) {
       Alert.alert(t('common.error'), t('login.errorEmail'));
       return;
     }
-
     if (!password.trim()) {
       Alert.alert(t('common.error'), t('login.errorPassword'));
       return;
     }
 
     setIsLoading(true);
-
     try {
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       if (email === "hola@gmail.com" && password === "7891") {
         await AsyncStorage.setItem('userRole', 'admin');
         await AsyncStorage.setItem('userEmail', email);
+        await loadThemeForRole('admin');
+        await restoreLanguageForRole('admin');
         navigation.navigate("Dashboard");
 
       } else if (email === "chao@gmail.com" && password === "7891") {
         await AsyncStorage.setItem('userRole', 'student');
         await AsyncStorage.setItem('userEmail', email);
+        await loadThemeForRole('student');
+        await restoreLanguageForRole('student');
         navigation.navigate("Dashboard");
+
       } else {
         Alert.alert(t('common.error'), t('login.invalidCredentials'));
       }
@@ -93,19 +84,21 @@ export default function HomesScreen() {
     }
   };
 
+  // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={styles.safeAreaWhite}>
+    <SafeAreaView style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}>
       <ScrollView>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "position" : "position"}
-          style={styles.keyboardView}
+          style={styles.keyboardview}
           keyboardDismissMode="on-drag"
           keyboardVerticalOffset={80}
           enableOnAndroid={true}
         >
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={styles.container}>
+            <View style={[styles.container, { backgroundColor: colors.backgroundWhite }]}>
               <View style={styles.contentContainer}>
+
                 <View style={styles.logoContainer}>
                   <CustomLogo
                     size="large"
@@ -115,52 +108,60 @@ export default function HomesScreen() {
                   />
                 </View>
 
-                <Text style={styles.textoSesion}>
+                <Text style={[styles.textoSesion, { color: colors.text }]}>
                   {t('login.title')}
                 </Text>
 
+                {/* ── Email ── */}
                 <View style={styles.inputContainer}>
-                  <Text style={styles.inputTitulo}>{t('login.email')}</Text>
+                  <Text style={[styles.inputTitulo, { color: colors.text }]}>
+                    {t('login.email')}
+                  </Text>
                   <TextInput
-                    style={styles.inputEscrito}
-                    onChangeText={handleEmailChange}
+                    style={[styles.inputEscrito, {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.border ?? colors.separator,
+                      color: colors.text,
+                    }]}
+                    onChangeText={setEmail}
                     value={email}
                     placeholder={t('login.emailPlaceholder')}
-                    placeholderTextColor="#999999"
+                    placeholderTextColor={colors.textMuted}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
                     returnKeyType="next"
                     blurOnSubmit={false}
-                    accessibilityLabel="Campo de correo electrónico"
                   />
                 </View>
 
+                {/* ── Contraseña ── */}
                 <View style={styles.inputContainer}>
-                  <Text style={styles.inputTitulo}>{t('login.password')}</Text>
+                  <Text style={[styles.inputTitulo, { color: colors.text }]}>
+                    {t('login.password')}
+                  </Text>
                   <TextInput
-                    style={styles.inputEscrito}
-                    onChangeText={handlePasswordChange}
+                    style={[styles.inputEscrito, {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.border ?? colors.separator,
+                      color: colors.text,
+                    }]}
+                    onChangeText={setPassword}
                     value={password}
                     placeholder={t('login.passwordPlaceholder')}
                     secureTextEntry={true}
                     textContentType="password"
-                    placeholderTextColor="#999999"
+                    placeholderTextColor={colors.textMuted}
                     returnKeyType="done"
-                    accessibilityLabel="Campo de contraseña"
                   />
 
                   <View style={styles.rowContainer}>
-                    <SelectableButton
-                      selectable={true}
-                      initialSelected={false}
-                    />
-
+                    <SelectableButton selectable={true} initialSelected={false} />
                     <TouchableOpacity
                       onPress={() => setIsTerminosModalVisible(true)}
                       activeOpacity={0.7}
                     >
-                      <Text style={styles.terminosText}>
+                      <Text style={[styles.terminosText, { color: colors.primary }]}>
                         {t('login.terms')}
                       </Text>
                     </TouchableOpacity>
@@ -169,7 +170,7 @@ export default function HomesScreen() {
 
                 <PrimaryButton
                   title={isLoading ? t('login.loading') : t('login.title')}
-                  onPress={handleLogin}
+                  onPress={handlelogin}
                 />
               </View>
 
@@ -178,7 +179,7 @@ export default function HomesScreen() {
                 activeOpacity={0.7}
                 style={styles.sesionNoRegistro}
               >
-                <Text style={styles.noRegistro}>
+                <Text style={[styles.noRegistro, { color: colors.textSecondary }]}>
                   {t('login.noAccount')}
                 </Text>
               </TouchableOpacity>
@@ -187,7 +188,6 @@ export default function HomesScreen() {
                 isVisible={isRegisterModalVisible}
                 onClose={() => setIsRegisterModalVisible(false)}
               />
-
               <TerminosModal
                 isVisible={isTerminosModalVisible}
                 onClose={() => setIsTerminosModalVisible(false)}

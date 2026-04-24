@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TouchableOpacity, Text, View } from 'react-native';
-import stylesAuth from './Style/Style';
+import stylesauth from './style/Style';
 
 export default function PrimaryButton({
     title,
@@ -27,23 +27,23 @@ export default function PrimaryButton({
     return (
         <TouchableOpacity
             style={[
-                stylesAuth.containerSelectable,
-                disabled && stylesAuth.containerDisabledSelectable,
+                stylesauth.containerSelectable,
+                disabled && stylesauth.containerDisabledSelectable,
             ]}
             onPress={handlePress}
             disabled={disabled}
             activeOpacity={0.7}
         >
             <View style={[
-                stylesAuth.checkboxSelectable,
-                isChecked && stylesAuth.checkboxCheckedSelectable,
-                disabled && stylesAuth.checkboxDisabledSelectable
+                stylesauth.checkboxSelectable,
+                isChecked && stylesauth.checkboxCheckedSelectable,
+                disabled && stylesauth.checkboxDisabledSelectable
             ]}>
-                {isChecked && <Text style={stylesAuth.checkmarkSelectable}>✓</Text>}
+                {isChecked && <Text style={stylesauth.checkmarkSelectable}>✓</Text>}
             </View>
             <Text style={[
-                stylesAuth.textSelectable,
-                disabled && stylesAuth.textDisabledSelectable
+                stylesauth.textSelectable,
+                disabled && stylesauth.textDisabledSelectable
             ]}>
                 {title}
             </Text>

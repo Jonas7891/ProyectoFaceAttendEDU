@@ -6,27 +6,40 @@ import {
     TextInput,
     TouchableOpacity,
     FlatList,
-    Image
+    Image,
+    Platform,
+    Modal,
 } from "react-native";
 import styles from "./Style";
-import BottomBar from "../Components/Common/NavigationBar";
+import BottomBar from "../components/common/NavigationBar";
+import PrimaryButton from "../components/auth/PrimaryButton";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { saveLanguageForRole } from "../Components/Common/languageByRole";
+import { restoreLanguageForRole } from "../components/common/languageByRole";
+import { useTheme } from '../components/common/ThemeContext';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function DisplayingAttendance() {
     const navigation = useNavigation();
     const { t, i18n } = useTranslation();
+    const { colors, loadThemeForRole } = useTheme();
     const [refreshKey, setRefreshKey] = useState(0);
+    const [userRole, setUserRole] = useState(null);
     const [searchText, setSearchText] = useState("");
-    const [filterType, setFilterType] = useState("nombre");
 
+    // ─── Date picker ─────────────────────────────────────────────────────────
+    const [selectedDate, setSelectedDate] = useState(null);
+    const [showPicker, setShowPicker] = useState(false);
+    const [showIOSModal, setShowIOSModal] = useState(false);
+    const [tempDate, setTempDate] = useState(new Date());
+
+    // ─── Inicialización ──────────────────────────────────────────────────────
     useEffect(() => {
         const init = async () => {
             const role = await AsyncStorage.getItem('userRole');
             setUserRole(role);
-
+            await loadThemeForRole(role);
             await restoreLanguageForRole(role);
         };
         init();
@@ -36,23 +49,7 @@ export default function DisplayingAttendance() {
         return () => i18n.off('languageChanged', handleLanguageChange);
     }, [i18n]);
 
-    const handleSettings = () => {
-        console.log("Abrir configuración");
-    }
-
-    const handleProfile = () => {
-        console.log("Abrir perfil");
-    }
-
-    const handleSearch = () => {
-        console.log("Abrir búsqueda");
-    }
-
-    const handleBack = () => {
-        console.log("Volver atrás");
-        navigation.goBack();
-    }
-
+    // ─── Datos ───────────────────────────────────────────────────────────────
     const asistenciasRecientes = [
         { id: 1, nombre: "Ana Martínez", hora: "08:15 AM", fecha: "2024-03-20" },
         { id: 2, nombre: "Luis Fernández", hora: "08:22 AM", fecha: "2024-03-20" },
@@ -65,78 +62,233 @@ export default function DisplayingAttendance() {
         { id: 9, nombre: "Sofía Torres", hora: "08:50 AM", fecha: "2024-03-19" },
     ];
 
+    // ─── Helpers de fecha ────────────────────────────────────────────────────
+    const formatDate = (date) => {
+        if (!date) return "";
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    };
+
+    const formatDateDisplay = (date) => {
+        if (!date) return "📅  Fecha";
+        return `📅  ${date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}`;
+    };
+
+    // ─── Filtrado combinado — nombre Y fecha simultáneamente ─────────────────
     const filteredData = asistenciasRecientes.filter(item => {
-        if (searchText === "") return true;
-        if (filterType === "nombre") {
-            return item.nombre.toLowerCase().includes(searchText.toLowerCase());
-        } else {
-            return item.fecha.includes(searchText);
-        }
+        const matchNombre = searchText === ""
+            || item.nombre.toLowerCase().includes(searchText.toLowerCase());
+        const matchFecha = !selectedDate
+            || item.fecha === formatDate(selectedDate);
+        return matchNombre && matchFecha;
     });
 
+    // ─── Handlers date picker ────────────────────────────────────────────────
+    const handleOpenPicker = () => {
+        setTempDate(selectedDate ?? new Date());
+        Platform.OS === 'ios' ? setShowIOSModal(true) : setShowPicker(true);
+    };
+
+    const handleAndroidChange = (event, date) => {
+        setShowPicker(false);
+        if (event.type === 'set' && date) setSelectedDate(date);
+    };
+
+    // ─── Render item ─────────────────────────────────────────────────────────
     const renderItem = ({ item }) => (
-        <View style={styles.recentItemHistorical}>
+        <View style={[
+            styles.recentItemHistorical,
+            { backgroundColor: colors.card, borderColor: colors.separator, borderBottomWidth: 1 }
+        ]}>
             <View style={styles.recentInfo}>
-                <Text style={styles.recentName}>{item.nombre}</Text>
-                <Text style={styles.recentTime}>{item.hora}</Text>
-                <Text style={styles.recentTime}>{item.fecha}</Text>
+                <Text style={[styles.recentName, { color: colors.text }]}>{item.nombre}</Text>
+                <Text style={[styles.recentTime, { color: colors.textSecondary }]}>{item.hora}</Text>
+                <Text style={[styles.recentTime, { color: colors.textMuted }]}>{item.fecha}</Text>
             </View>
+
+            <Image
+                source={require("../../assets/images/lupa.png")}
+                style={[styles.iconSearch, { tintColor: colors.primary }]}
+                marginRight={12}
+            />
         </View>
     );
 
+    // ─── Render ──────────────────────────────────────────────────────────────
     return (
-        <SafeAreaView style={styles.safeArea}>
-            <View style={styles.containerAttendance}>
-                <TouchableOpacity onPress={handleBack} activeOpacity={0.2} style={{ marginBottom: 20 }}>
-                    <View style={styles.backIcon}>
-                        <Image
-                            source={require("../../Assets/Images/flecha.png")}
-                            style={styles.backIconImage}
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+            <View style={[styles.containerAttendance, { backgroundColor: colors.background, flex: 1 }]}>
+
+                {/* Header */}
+                <View style={styles.headerContainer}>
+                    <Text style={[styles.mainTitle, { color: colors.text }]}>
+                        {t('attendance.title')}
+                    </Text>
+                </View>
+
+                {/* ── Barra de búsqueda doble — lado a lado ── */}
+                <View style={{ flexDirection: "row", gap: 8, marginBottom: 12, marginLeft: 20, marginRight: 20 }}>
+
+                    {/* Input nombre con lupa */}
+                    <View style={{
+                        flex: 2.5,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        backgroundColor: colors.inputBackground,
+                        borderWidth: 1,
+                        borderColor: searchText ? colors.primary : colors.separator,
+                        borderRadius: 8,
+                        paddingHorizontal: 12,
+                    }}>
+                        <TextInput
+                            style={{
+                                flex: 1,
+                                paddingVertical: 10,
+                                color: colors.text,
+                                fontSize: 14,
+                            }}
+                            placeholder={t('attendance.searchByName')}
+                            placeholderTextColor={colors.textMuted}
+                            value={searchText}
+                            onChangeText={setSearchText}
                         />
+                        {!searchText && (
+                            <Image
+                                source={require("../../assets/images/lupa2.png")}
+                                style={{ width: 16, height: 16, tintColor: colors.textMuted, marginRight: 8 }}
+                            />
+                        )}
                     </View>
-                </TouchableOpacity>
-                {/* Selector de tipo de filtro */}
-                <View style={styles.filterButtonsContainer}>
+
+                    {/* Selector de fecha */}
                     <TouchableOpacity
-                        style={[styles.filterButton, filterType === "nombre" && styles.activeFilter]}
-                        onPress={() => {
-                            setFilterType("nombre");
-                            setSearchText("");
-                        }}>
-                        <Text style={styles.filterButtonText}>{t('attendance.filterByName')}</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.filterButton, filterType === "fecha" && styles.activeFilter]}
-                        onPress={() => {
-                            setFilterType("fecha");
-                            setSearchText("");
-                        }}>
-                        <Text style={styles.filterButtonText}>{t('attendance.filterByDate')}</Text>
+                        onPress={handleOpenPicker}
+                        style={{
+                            flex: 1,
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: colors.inputBackground,
+                            borderWidth: 1,
+                            borderColor: selectedDate ? colors.primary : colors.separator,
+                            borderRadius: 8,
+                            paddingHorizontal: 10,
+                            paddingVertical: 10,
+                        }}
+                    >
+                        <Text style={{
+                            color: selectedDate ? colors.text : colors.textMuted,
+                            fontSize: 13,
+                            flex: 1,
+                        }}
+                            numberOfLines={1}
+                        >
+                            {formatDateDisplay(selectedDate)}
+                        </Text>
+
+                        {/* Botón limpiar fecha */}
+                        {selectedDate && (
+                            <TouchableOpacity
+                                onPress={() => setSelectedDate(null)}
+                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                            >
+                                <Text style={{ color: colors.danger, fontSize: 16, fontWeight: "700", marginLeft: 4 }}>
+                                    ✕
+                                </Text>
+                            </TouchableOpacity>
+                        )}
                     </TouchableOpacity>
                 </View>
 
-                {/* Input de búsqueda */}
-                <TextInput
-                    style={styles.searchInput}
-                    placeholder={filterType === "nombre" ? t('attendance.searchByName') : t('attendance.searchByDate')}
-                    value={searchText}
-                    onChangeText={setSearchText}
-                />
+                {/* Indicador de filtros activos */}
+                {(searchText !== "" || selectedDate) && (
+                    <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8, gap: 6 }}>
+                        <Text style={{ color: colors.textMuted, fontSize: 12 }}>
+                            {filteredData.length} {t('attendance.results', { defaultValue: 'resultado(s)' })}
+                        </Text>
+                        <TouchableOpacity onPress={() => { setSearchText(""); setSelectedDate(null); }}>
+                            <Text style={{ color: colors.primary, fontSize: 12, fontWeight: "600" }}>
+                                {t('attendance.clearFilters', { defaultValue: 'Limpiar filtros' })}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
 
-                {/* Lista de asistencias */}
+                {/* Android picker */}
+                {showPicker && Platform.OS === 'android' && (
+                    <DateTimePicker
+                        value={tempDate}
+                        mode="date"
+                        display="default"
+                        onChange={handleAndroidChange}
+                        maximumDate={new Date()}
+                    />
+                )}
+
+                {/* iOS picker en modal */}
+                <Modal
+                    transparent
+                    visible={showIOSModal}
+                    animationType="slide"
+                    onRequestClose={() => setShowIOSModal(false)}
+                >
+                    <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.4)" }}>
+                        <View style={{
+                            backgroundColor: colors.card,
+                            borderTopLeftRadius: 16,
+                            borderTopRightRadius: 16,
+                            padding: 16,
+                        }}>
+                            <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
+                                <TouchableOpacity onPress={() => setShowIOSModal(false)}>
+                                    <Text style={{ color: colors.danger, fontSize: 16, fontWeight: "600" }}>
+                                        {t('common.cancel')}
+                                    </Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={() => { setSelectedDate(tempDate); setShowIOSModal(false); }}>
+                                    <Text style={{ color: colors.primary, fontSize: 16, fontWeight: "600" }}>
+                                        {t('common.accept')}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                            <DateTimePicker
+                                value={tempDate}
+                                mode="date"
+                                display="spinner"
+                                onChange={(_, date) => date && setTempDate(date)}
+                                maximumDate={new Date()}
+                                style={{ backgroundColor: colors.card }}
+                                textColor={colors.text}
+                            />
+                        </View>
+                    </View>
+                </Modal>
+
                 <FlatList
                     data={filteredData}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderItem}
-                    style={styles.recentSection}
+                    style={{ flex: 1, backgroundColor: colors.background }}
+                    contentContainerstyle={{ paddingBottom: 110 }}
+                    ListEmptyComponent={
+                        <Text style={{ color: colors.textMuted, textAlign: "center", marginTop: 30, fontSize: 14 }}>
+                            {t('attendance.noResults', { defaultValue: 'Sin resultados' })}
+                        </Text>
+                    }
+                    ListFooterComponent={
+                        <View style={{ paddingVertical: 12 }}>
+                            <PrimaryButton
+                                title={t('consultJustify.back')}
+                                onPress={() => navigation.goBack()}
+                            />
+                        </View>
+                    }
                 />
             </View>
-            <BottomBar
-                onPressSettings={handleSettings}
-                onPressProfile={handleProfile}
-                onPressSearch={handleSearch}
-            />
-        </SafeAreaView>
 
+            <BottomBar />
+        </SafeAreaView>
     );
 }

@@ -2,7 +2,7 @@ import React from 'react';
 import { TouchableOpacity, Text, Image, Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
-import stylesAuth from "./Style/Style";
+import stylesauth from "./style/Style";
 
 const LogoutButton = () => {
   const { t } = useTranslation();
@@ -33,15 +33,15 @@ const LogoutButton = () => {
 
   return (
     <TouchableOpacity 
-      style={stylesAuth.logoutButton} 
+      style={stylesauth.logoutButton} 
       onPress={handleLogout}
       activeOpacity={0.7}
     >
       <Image 
-        source={require('../../../Assets/Images/cerrar-sesion.png')} 
-        style={stylesAuth.logoutIcon}
+        source={require('../../../assets/images/cerrar-sesion.png')} 
+        style={stylesauth.logoutIcon}
       />
-      <Text style={stylesAuth.logoutText}>{t('menu.logout')}</Text>
+      <Text style={stylesauth.logoutText}>{t('menu.logout')}</Text>
     </TouchableOpacity>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
     Text,
     View,
@@ -13,24 +13,20 @@ import {
 import { useTranslation } from "react-i18next";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import PrimaryButton from "../Components/Auth/PrimaryButton";
+import PrimaryButton from "../components/auth/PrimaryButton";
+import { useTheme } from "../components/common/ThemeContext"; // 🔥
 import styles from "./Style";
 
 export default function AddValidJustificationScreen() {
     const navigation = useNavigation();
     const { t } = useTranslation();
+    const { colors } = useTheme(); // 🔥
 
     const [type, setType] = useState("");
     const [description, setDescription] = useState("");
     const [category, setCategory] = useState("");
     const [requiresDocument, setRequiresDocument] = useState(true);
-    const [isEditing, setIsEditing] = useState(false);
-    const [editId, setEditId] = useState(null);
 
-    const handleBack = () => {
-        navigation.goBack();
-    };
-    
     const categories = [
         { id: "salud", label: t('admin.categoryHealth') },
         { id: "familiar", label: t('admin.categoryFamily') },
@@ -48,220 +44,196 @@ export default function AddValidJustificationScreen() {
         { id: "otro", label: t('admin.typeOther') },
     ];
 
+    const handleBack = () => navigation.goBack();
+
     const handleSave = async () => {
         if (!type.trim() || !description.trim() || !category.trim()) {
-            Alert.alert(
-                t('common.error'),
-                t('admin.completeAllFields')
-            );
+            Alert.alert(t('common.error'), t('admin.completeAllFields'));
             return;
         }
 
         try {
             const newJustification = {
                 id: Date.now().toString(),
-                type: type,
-                description: description,
-                category: category,
-                requiresDocument: requiresDocument,
+                type,
+                description,
+                category,
+                requiresDocument,
                 createdAt: new Date().toISOString(),
             };
 
-            // Obtener justificaciones existentes
             const stored = await AsyncStorage.getItem('validJustifications');
-            let justifications = [];
-            if (stored) {
-                justifications = JSON.parse(stored);
-            }
+            let justifications = stored ? JSON.parse(stored) : [];
 
-            // Agregar nueva justificación
             justifications.push(newJustification);
 
-            // Guardar en AsyncStorage
             await AsyncStorage.setItem('validJustifications', JSON.stringify(justifications));
 
-            Alert.alert(
-                t('common.success'),
-                t('admin.justificationCreated'),
-                [
-                    {
-                        text: t('common.accept'),
-                        onPress: () => navigation.goBack(),
-                    },
-                ]
-            );
+            Alert.alert(t('common.success'), t('admin.justificationCreated'), [
+                { text: t('common.accept'), onPress: () => navigation.goBack() },
+            ]);
         } catch (error) {
-            console.error('Error al guardar:', error);
-            Alert.alert(
-                t('common.error'),
-                t('admin.errorCreating')
-            );
-        }
-    };
-
-    const handleCancel = () => {
-        if (type.trim() || description.trim() || category.trim()) {
-            Alert.alert(
-                t('common.confirm'),
-                t('admin.confirmDiscard'),
-                [
-                    { text: t('common.cancel'), style: 'cancel' },
-                    {
-                        text: t('common.discard'),
-                        style: 'destructive',
-                        onPress: () => navigation.goBack(),
-                    },
-                ]
-            );
-        } else {
-            navigation.goBack();
+            Alert.alert(t('common.error'), t('admin.errorCreating'));
         }
     };
 
     return (
-        <SafeAreaView style={styles.safeAreaWhite}>
+        <SafeAreaView style={[styles.safeAreaWhite, { backgroundColor: colors.background }]}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.keyboardView}
+                style={styles.keyboardview}
             >
                 <ScrollView
-                    style={styles.scrollView}
-                    contentContainerStyle={styles.scrollViewContent}
+                    style={styles.ScrollView}
+                    contentContainerstyle={styles.ScrollViewContent}
                     showsVerticalScrollIndicator={false}
                 >
                     <View style={styles.containerAddValidJustification}>
-                        {/* Header */}
-                        <View style={styles.headerContainer}>
-                            <Text style={styles.mainTitle}>
-                                {t('justify.title')} {"\n"}
-                            </Text>
+
+                        {/* TITULO */}
+                        <Text style={[styles.mainTitle, { color: colors.text }]}>
+                            {t('justify.title')}
+                        </Text>
+
+                        {/* CATEGORÍA */}
+                        <Text style={[styles.inputLabel, { color: colors.text, marginTop: 30 }]}>
+                            {t('admin.category')} *
+                        </Text>
+
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                            {categories.map((cat) => (
+                                <TouchableOpacity
+                                    key={cat.id}
+                                    style={[
+                                        styles.categoryButton,
+                                        {
+                                            backgroundColor:
+                                                category === cat.label ? colors.primary : colors.card,
+                                            borderColor: colors.border
+                                        }
+                                    ]}
+                                    onPress={() => setCategory(cat.label)}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.categoryButtonText,
+                                            {
+                                                color:
+                                                    category === cat.label ? "#fff" : colors.text
+                                            }
+                                        ]}
+                                    >
+                                        {cat.label}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+
+                        {/* TIPO */}
+                        <Text style={[styles.inputLabel, { color: colors.text, marginTop: 30 }]}>
+                            {t('admin.justificationType')} *
+                        </Text>
+
+                        <View style={styles.typeGrid}>
+                            {types.map((item) => (
+                                <TouchableOpacity
+                                    key={item.id}
+                                    style={[
+                                        styles.typeButton,
+                                        {
+                                            backgroundColor:
+                                                type === item.label ? colors.primary : colors.card,
+                                            borderColor: colors.border
+                                        }
+                                    ]}
+                                    onPress={() => setType(item.label)}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.typeButtonText,
+                                            {
+                                                color:
+                                                    type === item.label ? "#fff" : colors.text
+                                            }
+                                        ]}
+                                    >
+                                        {item.label}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
                         </View>
 
-                        {/* Formulario */}
-                        <View style={styles.formSection}>
-                            {/* Seleccionar Categoría */}
-                            <Text style={styles.inputLabel}>
-                                {t('admin.category')} *
-                            </Text>
-                            <ScrollView
-                                horizontal
-                                showsHorizontalScrollIndicator={false}
-                                style={styles.categoryScroll}
+                        {/* DESCRIPCIÓN */}
+                        <Text style={[styles.inputLabel, { color: colors.text, marginTop: 15 }]}>
+                            {t('admin.description')} *
+                        </Text>
+
+                        <TextInput
+                            style={[
+                                styles.textInput,
+                                styles.textArea,
+                                {
+                                    backgroundColor: colors.inputBackground,
+                                    color: colors.text,
+                                    borderColor: colors.border
+                                }
+                            ]}
+                            placeholder={t('admin.descriptionPlaceholder')}
+                            placeholderTextColor={colors.textMuted}
+                            value={description}
+                            onChangeText={setDescription}
+                            multiline
+                        />
+
+                        {/* TOGGLE */}
+                        <Text style={[styles.inputLabel, { color: colors.text, marginTop: 10 }]}>
+                            {t('admin.requiresDocument')}
+                        </Text>
+
+                        <View style={styles.toggleContainer}>
+                            <TouchableOpacity
+                                style={[
+                                    styles.toggleButton,
+                                    {
+                                        backgroundColor: requiresDocument ? colors.primary : colors.card, marginRight: 5
+                                    }
+                                ]}
+                                onPress={() => setRequiresDocument(true)}
                             >
-                                {categories.map((cat) => (
-                                    <TouchableOpacity
-                                        key={cat.id}
-                                        style={[
-                                            styles.categoryButton,
-                                            category === cat.label && styles.categoryButtonActive,
-                                        ]}
-                                        onPress={() => setCategory(cat.label)}
-                                    >
-                                        <Text
-                                            style={[
-                                                styles.categoryButtonText,
-                                                category === cat.label && styles.categoryButtonTextActive,
-                                            ]}
-                                        >
-                                            {cat.label}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </ScrollView>
+                                <Text style={{ color: requiresDocument ? "#fff" : colors.text }}>
+                                    {t('common.yes')}
+                                </Text>
+                            </TouchableOpacity>
 
-                            {/* Seleccionar Tipo */}
-                            <Text style={styles.inputLabel}>
-                                {t('admin.justificationType')} *
-                            </Text>
-                            <View style={styles.typeGrid}>
-                                {types.map((t) => (
-                                    <TouchableOpacity
-                                        key={t.id}
-                                        style={[
-                                            styles.typeButton,
-                                            type === t.label && styles.typeButtonActive,
-                                        ]}
-                                        onPress={() => setType(t.label)}
-                                    >
-                                        <Text
-                                            style={[
-                                                styles.typeButtonText,
-                                                type === t.label && styles.typeButtonTextActive,
-                                            ]}
-                                        >
-                                            {t.label}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-
-                            {/* Descripción */}
-                            <Text style={styles.inputLabel}>
-                                {t('admin.description')} *
-                            </Text>
-                            <TextInput
-                                style={[styles.textInput, styles.textArea]}
-                                placeholder={t('admin.descriptionPlaceholder')}
-                                placeholderTextColor="#999"
-                                value={description}
-                                onChangeText={setDescription}
-                                multiline
-                                numberOfLines={4}
-                                textAlignVertical="top"
-                            />
-
-                            {/* Requiere Documento */}
-                            <Text style={styles.inputLabel}>
-                                {t('admin.requiresDocument')}
-                            </Text>
-                            <View style={styles.toggleContainer}>
-                                <TouchableOpacity
-                                    style={[
-                                        styles.toggleButton,
-                                        requiresDocument && styles.toggleButtonActive,
-                                    ]}
-                                    onPress={() => setRequiresDocument(true)}
-                                >
-                                    <Text
-                                        style={[
-                                            styles.toggleButtonText,
-                                            requiresDocument && styles.toggleButtonTextActive,
-                                        ]}
-                                    >
-                                        {t('common.yes')}
-                                    </Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={[
-                                        styles.toggleButton,
-                                        !requiresDocument && styles.toggleButtonInactive,
-                                    ]}
-                                    onPress={() => setRequiresDocument(false)}
-                                >
-                                    <Text
-                                        style={[
-                                            styles.toggleButtonText,
-                                            !requiresDocument && styles.toggleButtonTextInactive,
-                                        ]}
-                                    >
-                                        {t('common.no')}
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
+                            <TouchableOpacity
+                                style={[
+                                    styles.toggleButton,
+                                    {
+                                        backgroundColor: !requiresDocument ? colors.primary : colors.card, marginLeft: 5
+                                    }
+                                ]}
+                                onPress={() => setRequiresDocument(false)}
+                            >
+                                <Text style={{ color: !requiresDocument ? "#fff" : colors.text }}>
+                                    {t('common.no')}
+                                </Text>
+                            </TouchableOpacity>
                         </View>
 
-                        {/* Botones de acción */}
+                        {/* BOTONES */}
                         <View style={styles.actionButtonsContainer}>
                             <PrimaryButton
                                 title={t('admin.saveJustification')}
                                 onPress={handleSave}
                             />
-                            
-                            {/* Botón Volver secundario */}
+
                             <TouchableOpacity onPress={handleBack} style={styles.secondaryButton}>
-                                <Text style={styles.secondaryButtonText}>{t('common.back')}</Text>
+                                <Text style={[styles.secondaryButtonText, { color: colors.textSecondary }]}>
+                                    {t('common.back')}
+                                </Text>
                             </TouchableOpacity>
                         </View>
+
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>

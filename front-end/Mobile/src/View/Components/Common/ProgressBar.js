@@ -4,17 +4,19 @@ import {
     Text,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import stylesCommon from './Style/Style';
+import { useTheme } from './ThemeContext';
+import stylescommon from './style/Style';
 
 export const ProgressBar = ({ currentStep, totalSteps }) => {
     const { t } = useTranslation();
+    const { colors } = useTheme();
     const progress = (currentStep / totalSteps) * 100;
-    
+
     return (
-        <View style={stylesCommon.progressContainer}>
-            <Text style={stylesCommon.progressText}>{t('progressBar.question', { currentStep, totalSteps })}</Text>
-            <View style={stylesCommon.progressBar}>
-                <View style={[stylesCommon.progressFill, { width: `${progress}%` }]} />
+        <View style={stylescommon.progressContainer}>
+            <Text style={[stylescommon.progressText, { color: colors.modalTextSecondary }]}>{t('progressBar.question', { currentStep, totalSteps })}</Text>
+            <View style={[stylescommon.progressBar, { backgroundColor: colors.progressBackground }]}>
+                <View style={[stylescommon.progressFill, { width: `${progress}%`, backgroundColor: colors.modalButton }]} />
             </View>
         </View>
     );

@@ -4,8 +4,8 @@
     "slug": "FaceAttend EDU",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./src/Assets/Images/logoFaceAttend.png",
-    "userInterfaceStyle": "light",
+    "icon": "./src/assets/images/logoFaceAttend.png",
+    "userInterfacestyle": "light",
     "newArchEnabled": true,
     "splash": {
       "resizeMode": "contain",
@@ -21,7 +21,8 @@
       "edgeToEdgeEnabled": true
     },
     "plugins": [
-      "expo-localization"
+      "expo-localization",
+      "@react-native-community/datetimepicker"
     ]
   }
 }

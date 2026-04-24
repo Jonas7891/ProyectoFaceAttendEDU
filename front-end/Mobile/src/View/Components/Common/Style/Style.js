@@ -1,6 +1,6 @@
 import { StyleSheet, Platform } from 'react-native';
 
-const stylesCommon = StyleSheet.create({
+const stylescommon = StyleSheet.create({
     containerCustomTabs: {
         flexDirection: "row",
         justifyContent: "center",
@@ -115,7 +115,6 @@ const stylesCommon = StyleSheet.create({
         shadowRadius: 5,
         shadowOffset: { width: 0, height: 2 },
     },
-<<<<<<< HEAD:front-end/Mobile/src/View/Components/Common/Style/Style.js
     navButton: {
         alignItems: "center",
         justifyContent: "center",
@@ -125,8 +124,6 @@ const stylesCommon = StyleSheet.create({
     activeNavButton: {
         backgroundColor: "#d9f4ff",
     },
-=======
->>>>>>> 7d4b865d2b793bfbdc7a49f7ee0618a2cb82d230:front-end/Mobile/View/Components/Common/Style/Style.js
     navIcon: {
         width: 28,
         height: 28,
@@ -137,7 +134,7 @@ const stylesCommon = StyleSheet.create({
         height: 40,
         tintColor: "#000",
     },
-    scrollViewWrapper: {
+    ScrollViewWrapper: {
         flex: 1,
     },
     contentContainerScroll: {
@@ -206,7 +203,7 @@ const stylesCommon = StyleSheet.create({
         fontSize: 12,
         color: "#999",
         marginBottom: 20,
-        fontStyle: "italic",
+        fontstyle: "italic",
     },
     rhSelectorContainer: {
         marginBottom: 20,
@@ -329,7 +326,7 @@ const stylesCommon = StyleSheet.create({
         textAlign: "center",
         marginBottom: 20,
         lineHeight: 20,
-        fontStyle: "italic",
+        fontstyle: "italic",
     },
     facialSelectLabel: {
         fontSize: 14,
@@ -405,4 +402,4 @@ const stylesCommon = StyleSheet.create({
     },
 });
 
-export default stylesCommon;
+export default stylescommon;

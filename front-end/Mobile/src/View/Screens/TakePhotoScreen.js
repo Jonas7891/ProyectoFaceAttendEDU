@@ -12,23 +12,28 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
-import PrimaryButton from "../Components/Auth/PrimaryButton";
-import styles from "./Style";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { saveLanguageForRole } from "../Components/Common/languageByRole";
+import { restoreLanguageForRole } from "../components/common/languageByRole"; // ✅ corregido
+import { useTheme } from "../components/common/ThemeContext";                  // ✅
+import PrimaryButton from "../components/auth/PrimaryButton";
+import styles from "./Style";
 
 export default function TakePhotoScreen() {
     const navigation = useNavigation();
     const { t, i18n } = useTranslation();
-    const [refreshKey, setRefreshKey] = useState(0);
+    const { colors, theme, loadThemeForRole } = useTheme(); // ✅
+
+    const [refreshKey, setRefreshKey]                         = useState(0);
+    const [userRole, setUserRole]                             = useState(null); // ✅ declarado
     const [facialParamsRegistered, setFacialParamsRegistered] = useState(false);
 
+    // ─── Inicialización ──────────────────────────────────────────────────────
     useEffect(() => {
         const init = async () => {
             const role = await AsyncStorage.getItem('userRole');
             setUserRole(role);
-
-            await restoreLanguageForRole(role);
+            await loadThemeForRole(role);        // ✅
+            await restoreLanguageForRole(role);  // ✅
         };
         init();
 
@@ -38,36 +43,28 @@ export default function TakePhotoScreen() {
     }, [i18n]);
 
     const handleFacialParams = () => {
-        // Simulación de ingreso de parámetros faciales
-        console.log("Ingresando parámetros faciales...");
-
         setFacialParamsRegistered(true);
-
-        // El estado hover se mantiene por 2 segundos
-        setTimeout(() => {
-            setFacialParamsRegistered(false);
-        }, 2000);
+        setTimeout(() => setFacialParamsRegistered(false), 2000);
     };
 
-    const handleMenu = () => {
-        navigation.navigate("Menu");
-    };
-
-    const handleBack = () => {
-        navigation.goBack();
-    };
-
+    // ─── Render ──────────────────────────────────────────────────────────────
     return (
-        <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+
+            <StatusBar
+                barStyle={theme === "dark" ? "light-content" : "dark-content"}
+                backgroundColor={colors.background}
+            />
+
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.keyboardView}
+                style={[styles.keyboardView, { backgroundColor: colors.background }]}
                 keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
             >
                 <ScrollView
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={styles.scrollViewContent}
+                    contentContainerStyle={[styles.scrollViewContent, { backgroundColor: colors.background }]}
+                    style={{ backgroundColor: colors.background }}
                     bounces={true}
                     alwaysBounceVertical={true}
                 >
@@ -75,40 +72,45 @@ export default function TakePhotoScreen() {
                         flex: 1,
                         justifyContent: "center",
                         alignItems: "center",
-                        marginTop: 100
+                        marginTop: 100,
+                        backgroundColor: colors.background,
                     }}>
-                        <View style={styles.imagePhoto}>
+                        {/* Imagen */}
+                        <View style={[styles.imagePhoto, { backgroundColor: colors.card }]}>
                             <Image
-                                source={require("../../Assets/Images/perfil-del-usuario.png")}
-                                style={styles.image}
+                                source={require("../../assets/images/perfil-del-usuario.png")}
+                                style={[styles.image, { tintColor: colors.textMuted }]}
                                 resizeMode="contain"
                             />
                         </View>
 
+                        {/* Título */}
                         <View style={styles.header}>
-                            <Text style={styles.headerTitle}>
+                            <Text style={[styles.headerTitle, { color: colors.text }]}>
                                 {t('takePhoto.title')}
                             </Text>
                         </View>
 
-                        <Text style={styles.instructionText}>
+                        {/* Descripción */}
+                        <Text style={[styles.instructionText, { color: colors.textSecondary }]}>
                             {t('takePhoto.instructions')}
                         </Text>
 
+                        {/* Botón registrar */}
                         <TouchableOpacity
                             style={[
                                 styles.registerButton,
-                                facialParamsRegistered && styles.registerButtonSuccess,
+                                { backgroundColor: facialParamsRegistered ? colors.novedadSuccess : colors.primary },
                             ]}
                             onPress={handleFacialParams}
                             activeOpacity={0.8}
                         >
                             <View style={styles.buttonContent}>
                                 <Image
-                                    source={require("../../Assets/Images/fotografia.png")}
-                                    style={styles.icon}
+                                    source={require("../../assets/images/fotografia.png")}
+                                    style={[styles.icon, { tintColor: "#FFFFFF" }]}
                                 />
-                                <Text style={styles.registerButtonText}>
+                                <Text style={[styles.registerButtonText, { color: "#FFFFFF" }]}>
                                     {facialParamsRegistered
                                         ? t('takePhoto.facialParamsRegistered')
                                         : t('takePhoto.registerFacialParams')
@@ -117,24 +119,30 @@ export default function TakePhotoScreen() {
                             </View>
                         </TouchableOpacity>
 
+                        {/* Configuración */}
                         <TouchableOpacity
-                            onPress={handleMenu}
+                            onPress={() => navigation.navigate("Menu")}
                             style={styles.settingsContainer}
                             activeOpacity={0.7}
                         >
-                            <View style={styles.settingsContent}>
+                            <View style={[styles.settingsContent, { backgroundColor: colors.card }]}>
                                 <Image
-                                    source={require("../../Assets/Images/configuraciones.png")}
-                                    style={styles.settingsIcon}
+                                    source={require("../../assets/images/configuraciones.png")}
+                                    style={[styles.settingsIcon, { tintColor: colors.text }]}
                                 />
                             </View>
-                            <Text style={styles.settingsText}>{t('updatePhoto.settings')}</Text>
+                            <Text style={[styles.settingsText, { color: colors.text }]}>
+                                {t('updatePhoto.settings')}
+                            </Text>
                         </TouchableOpacity>
                     </View>
 
                     {/* Botón Volver */}
-                    <View style={styles.buttonContainer} marginTop={50}>
-                        <PrimaryButton title={t('consultJustify.back')} onPress={handleBack} />
+                    <View style={[styles.buttonContainer, { marginTop: 50, marginHorizontal: 20 }]}>
+                        <PrimaryButton
+                            title={t('consultJustify.back')}
+                            onPress={() => navigation.goBack()}
+                        />
                     </View>
 
                     <View style={styles.footer} />

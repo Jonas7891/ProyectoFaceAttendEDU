@@ -4,7 +4,8 @@ import {
     Text,
     TextInput,
 } from 'react-native';
-import stylesCommon from './Style/Style';
+import { useTheme } from './ThemeContext';
+import stylescommon from './style/Style';
 
 export const QuestionInput = forwardRef(({ 
     placeholder, 
@@ -13,13 +14,15 @@ export const QuestionInput = forwardRef(({
     keyboardType = "default",
     hint 
 }, ref) => {
+    const { colors, theme } = useTheme();
+
     return (
         <View>
             <TextInput
                 ref={ref}
-                style={stylesCommon.questionInput}
+                style={[stylescommon.questionInput, { backgroundColor: colors.modalInputBackground, color: colors.modalInputText, borderColor: colors.modalBorder }]}
                 placeholder={placeholder}
-                placeholderTextColor="#999"
+                placeholderTextColor={colors.modalInputPlaceholder}
                 onChangeText={onChangeText}
                 value={value}
                 keyboardType={keyboardType}
@@ -27,7 +30,7 @@ export const QuestionInput = forwardRef(({
                 blurOnSubmit={true}
             />
             {hint && (
-                <Text style={stylesCommon.hintText}>
+                <Text style={[stylescommon.hintText, { color: colors.modalTextSecondary }]}>
                     💡 {hint}
                 </Text>
             )}

@@ -12,11 +12,11 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
-import PrimaryButton from "../Components/Auth/PrimaryButton";
-import Separador from "../Components/Common/Separador";
+import PrimaryButton from "../components/auth/PrimaryButton";
+import Separador from "../components/common/Separador";
 import styles from "./Style";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { saveLanguageForRole } from "../Components/Common/languageByRole";
+import { saveLanguageForRole } from "../components/common/languageByRole";
 
 export default function ValidJustificationsScreen() {
     const navigation = useNavigation();
@@ -93,11 +93,11 @@ export default function ValidJustificationsScreen() {
         <SafeAreaView style={styles.safeAreaWhite}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.keyboardView}
+                style={styles.keyboardview}
             >
                 <ScrollView
-                    style={styles.scrollView}
-                    contentContainerStyle={styles.scrollViewContent}
+                    style={styles.ScrollView}
+                    contentContainerstyle={styles.ScrollViewContent}
                     showsVerticalScrollIndicator={false}
                 >
                     <View style={styles.containerValidJustifications}>

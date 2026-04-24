@@ -9,14 +9,16 @@ import {
     Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from './ThemeContext';
 import { DocumentSelector } from './DocumentSelector';
 import { RHSelector } from './RHSelector';
 import { QuestionInput } from './QuestionInput';
 import { ProgressBar } from './ProgressBar';
-import stylesCommon from './Style/Style';
+import stylescommon from './style/Style';
 
 export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
     const { t } = useTranslation();
+    const { colors } = useTheme();
     const [step, setStep] = useState(1);
     const [answers, setAnswers] = useState({});
     const [selectedDocument, setSelectedDocument] = useState(null);
@@ -212,36 +214,36 @@ export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
             onRequestClose={onClose}
         >
             <TouchableWithoutFeedback onPress={onClose}>
-                <View style={stylesCommon.questionnaireModalOverlay}>
+                <View style={[stylescommon.questionnaireModalOverlay, { backgroundColor: colors.modalOverlay }]}>
                     <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-                        <View style={stylesCommon.questionnaireModalContainer}>
-                            <Text style={stylesCommon.questionnaireModalTitle}>Cuestionario</Text>
-                            <Text style={stylesCommon.questionnaireQuestion}>
+                        <View style={[stylescommon.questionnaireModalContainer, { backgroundColor: colors.modalBackground }]}>
+                            <Text style={[stylescommon.questionnaireModalTitle, { color: colors.modalText }]}>Cuestionario</Text>
+                            <Text style={[stylescommon.questionnaireQuestion, { color: colors.modalTextSecondary }]}>
                                 Se debe realizar un cuestionario en el que se pregunten por cosas específicas las cuales solo conozca un usuario
                             </Text>
 
                             <ProgressBar currentStep={step} totalSteps={questions.length} />
 
-                            <Text style={stylesCommon.questionnaireQuestion}>
+                            <Text style={[stylescommon.questionnaireQuestion, { color: colors.modalText }]}>
                                 {questions[step - 1].question}
                             </Text>
 
                             {renderQuestionContent()}
 
-                            <View style={stylesCommon.questionnaireButtonsContainer}>
+                            <View style={stylescommon.questionnaireButtonsContainer}>
                                 {step > 1 && (
                                     <TouchableOpacity
-                                        style={[stylesCommon.questionnaireButton, stylesCommon.questionnairePreviousButton]}
+                                        style={[stylescommon.questionnaireButton, stylescommon.questionnairePreviousButton, { backgroundColor: colors.modalButtonSecondary, borderColor: colors.modalBorder }]}
                                         onPress={handlePrevious}
                                     >
-                                        <Text style={stylesCommon.questionnairePreviousButtonText}>Anterior</Text>
+                                        <Text style={[stylescommon.questionnairePreviousButtonText, { color: colors.modalButtonSecondaryText }]}>Anterior</Text>
                                     </TouchableOpacity>
                                 )}
                                 <TouchableOpacity
-                                    style={[stylesCommon.questionnaireButton, stylesCommon.questionnaireNextButton]}
+                                    style={[stylescommon.questionnaireButton, stylescommon.questionnaireNextButton, { backgroundColor: colors.modalButton }]}
                                     onPress={handleNext}
                                 >
-                                    <Text style={stylesCommon.questionnaireNextButtonText}>
+                                    <Text style={[stylescommon.questionnaireNextButtonText, { color: colors.modalButtonText }]}>
                                         {step === questions.length ? "Enviar" : "Siguiente"}
                                     </Text>
                                 </TouchableOpacity>

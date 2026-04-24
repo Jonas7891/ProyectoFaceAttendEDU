@@ -5,7 +5,7 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from "react-native";
-import stylesCommon from "./Style/Style";
+import stylescommon from "./style/Style";
 
 export default function ScrollViews({
   children,
@@ -15,13 +15,13 @@ export default function ScrollViews({
   onRefresh,
   loading = false,
   bottomSpace = 80,
-  contentContainerStyle = {},
+  contentContainerstyle = {},
   style = {},
   keyboardShouldPersistTaps = "handled"
 }) {
   if (loading) {
     return (
-      <View style={[stylesCommon.loadingContainer, contentContainerStyle]}>
+      <View style={[stylescommon.loadingContainer, contentContainerstyle]}>
         <ActivityIndicator color="#4CAF50" />
       </View>
     );
@@ -38,10 +38,10 @@ export default function ScrollViews({
 
   return (
     <ScrollView
-      style={[stylesCommon.scrollViewWrapper]}
-      contentContainerStyle={[
-        stylesCommon.contentContainerScroll,
-        contentContainerStyle,
+      style={[stylescommon.ScrollViewWrapper]}
+      contentContainerstyle={[
+        stylescommon.contentContainerScroll,
+        contentContainerstyle,
         { paddingBottom: bottomSpace }
       ]}
       showsVerticalScrollIndicator={showVerticalScroll}

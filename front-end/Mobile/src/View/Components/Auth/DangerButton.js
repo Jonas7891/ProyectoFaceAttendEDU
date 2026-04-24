@@ -3,7 +3,7 @@ import { TouchableOpacity, Text, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import stylesAuth from "./Style/Style";
+import stylesauth from "./style/Style";
 
 export default function DangerButton({ 
   title, 
@@ -30,7 +30,7 @@ export default function DangerButton({
               await AsyncStorage.removeItem('userRole');
               await AsyncStorage.removeItem('userEmail');
               await AsyncStorage.removeItem('userToken');
-              navigation.replace('Login');
+              navigation.replace('login');
             } catch (error) {
               console.error('Error al cerrar sesión:', error);
               Alert.alert('Error', 'No se pudo cerrar sesión');
@@ -44,12 +44,12 @@ export default function DangerButton({
 
   return (
     <TouchableOpacity
-      style={[stylesAuth.dangerButton, disabled && stylesAuth.buttonDisabled]}
+      style={[stylesauth.dangerButton, disabled && stylesauth.buttonDisabled]}
       onPress={handleLogout}
       disabled={disabled}
       activeOpacity={0.7}
     >
-      <Text style={stylesAuth.dangerButtonText}>{title}</Text>
+      <Text style={stylesauth.dangerButtonText}>{title}</Text>
     </TouchableOpacity>
   );
 }

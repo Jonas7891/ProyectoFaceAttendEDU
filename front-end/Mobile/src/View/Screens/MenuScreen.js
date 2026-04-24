@@ -11,25 +11,32 @@ import {
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { saveLanguageForRole, restoreLanguageForRole } from "../Components/Common/languageByRole";
-import DangerButton from "../Components/Auth/DangerButton";
-import CustomLogo from "../Components/Auth/logo";
+import { saveLanguageForRole, restoreLanguageForRole } from "../components/common/languageByRole";
+import { useTheme } from '../components/common/ThemeContext';
+import DangerButton from "../components/auth/DangerButton";
+import CustomLogo from "../components/auth/logo";
 import { useNavigation } from "@react-navigation/native";
-import Separador from "../Components/Common/Separador";
 import styles from "./Style";
 
 export default function MenuScreen() {
   const navigation = useNavigation();
   const { t, i18n } = useTranslation();
+  const { colors, loadThemeForRole, toggleTheme } = useTheme();
+
   const [refreshKey, setRefreshKey] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [userRole, setUserRole] = useState(null);
 
-  // ─── Inicialización ────────────────────────────────────────────────────────
+  // 🔹 Inicialización
   useEffect(() => {
     const init = async () => {
       const role = await AsyncStorage.getItem('userRole');
       setUserRole(role);
+
+      if (role) {
+        await loadThemeForRole(role);
+        await restoreLanguageForRole(role);
+      }
     };
     init();
 
@@ -38,7 +45,6 @@ export default function MenuScreen() {
     return () => i18n.off('languageChanged', handleLanguageChange);
   }, [i18n]);
 
-  // ─── Navegación condicional por rol ────────────────────────────────────────
   const isAdmin = userRole === 'admin';
 
   const handleBack = () => navigation.navigate("Dashboard");
@@ -51,43 +57,46 @@ export default function MenuScreen() {
   const handleLogout = async () => {
     await saveLanguageForRole(userRole);
     await AsyncStorage.removeItem('userRole');
-
-    navigation.navigate("Login");
+    navigation.navigate("Home");
   };
 
-  // ─── Helper para renderizar un ítem de menú ────────────────────────────────
+  // 🔹 Item reutilizable
   const MenuItem = ({ label, onPress }) => (
     <>
-      <Separador />
+      <View style={{ height: 1, backgroundColor: colors.separator, marginVertical: 10 }} />
       <TouchableOpacity onPress={onPress}>
-        <View style={{ justifyContent: "flex-start", alignItems: "center", flexDirection: "row" }}>
-          <Text style={styles.sectionTitleMenu}>{label}</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <Text style={[styles.sectionTitleMenu, { color: colors.text }]}>
+            {label}
+          </Text>
           <Image
-            source={require("../../Assets/Images/flecha.png")}
-            style={styles.arrowImage}
+            source={require("../../assets/images/flecha.png")}
+            style={[styles.arrowImage, { tintColor: colors.text }]}
           />
         </View>
       </TouchableOpacity>
     </>
   );
 
-  // ─── Render ────────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={styles.safeAreaWhite} key={refreshKey}>
+    <SafeAreaView
+      style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}
+      key={refreshKey}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardView}
+        style={styles.keyboardview}
       >
         <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollViewContent}
+          style={styles.ScrollView}
+          contentContainerstyle={styles.ScrollViewContent}
         >
-          <View style={styles.container}>
+          <View style={styles.container} marginHorizontal={10}>
             <TouchableOpacity onPress={handleBack} activeOpacity={0.2}>
               <View style={styles.backIcon}>
                 <Image
-                  source={require("../../Assets/Images/flecha.png")}
-                  style={styles.backIconImage}
+                  source={require("../../assets/images/flecha.png")}
+                  style={[styles.backIconImage, { tintColor: colors.text }]}
                 />
               </View>
             </TouchableOpacity>
@@ -100,15 +109,18 @@ export default function MenuScreen() {
                 marginBottom={15}
               />
 
-              {/* Nombre y rol del usuario */}
-              <Text style={styles.userText}>
+              <Text style={[styles.userText, { color: colors.text }]}>
                 {isAdmin ? "Jonattan Rizo" : "The Jonas"}
               </Text>
 
-              {/* Ítems comunes a ambos roles */}
-              <MenuItem label={t('menu.facialParams')} onPress={handleTakePhoto} />
-              <MenuItem label={t('menu.updateFacialParams')} onPress={handleUpdatePhoto} />
+              {!isAdmin && (
+                <MenuItem label={t('menu.facialParams')} onPress={handleTakePhoto} />
+              )}
+              {!isAdmin && (
+                <MenuItem label={t('menu.updateFacialParams')} onPress={handleUpdatePhoto} />
+              )}
 
+              {/* Ambos roles */}
               <MenuItem
                 label={isAdmin
                   ? t('menu.justificationConfig')
@@ -116,8 +128,6 @@ export default function MenuScreen() {
                 }
                 onPress={handleMenuJustify}
               />
-
-              {/* Comunes de nuevo */}
               <MenuItem label={t('menu.appSettings')} onPress={handleSettings} />
               <MenuItem label={t('menu.facialRecognitionFail')} onPress={handleFacialFail} />
 

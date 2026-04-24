@@ -8,7 +8,8 @@ import {
     Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import stylesCommon from './Style/Style';
+import { useTheme } from './ThemeContext';
+import stylescommon from './style/Style';
 
 const facialChanges = [
     { id: "beard", label: "facialUpdate.beardChange" },
@@ -21,6 +22,7 @@ const facialChanges = [
 
 export const FacialUpdateModal = ({ visible, onClose, onSuccess }) => {
     const { t } = useTranslation();
+    const { colors } = useTheme();
     const [selectedChange, setSelectedChange] = useState(null);
 
     const handleUpdate = () => {
@@ -55,44 +57,45 @@ export const FacialUpdateModal = ({ visible, onClose, onSuccess }) => {
             onRequestClose={onClose}
         >
             <TouchableWithoutFeedback onPress={onClose}>
-                <View style={stylesCommon.facialModalOverlay}>
+                <View style={[stylescommon.facialModalOverlay, { backgroundColor: colors.modalOverlay }]}>
                     <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-                        <View style={stylesCommon.facialModalContainer}>
-                            <Text style={stylesCommon.facialModalTitle}>{t('facialUpdate.updateParams')}</Text>
-                            <Text style={stylesCommon.facialModalSubtitle}>
+                        <View style={[stylescommon.facialModalContainer, { backgroundColor: colors.modalBackground }]}>
+                            <Text style={[stylescommon.facialModalTitle, { color: colors.modalText }]}>{t('facialUpdate.updateParams')}</Text>
+                            <Text style={[stylescommon.facialModalSubtitle, { color: colors.modalTextSecondary }]}>
                                 {t('facialFail.updateParamsDescription')}
                             </Text>
 
-                            <Text style={stylesCommon.facialSelectLabel}>{t('facialUpdate.selectOption')}:</Text>
+                            <Text style={[stylescommon.facialSelectLabel, { color: colors.modalText }]}>{t('facialUpdate.selectOption')}:</Text>
 
                             {facialChanges.map((change) => (
                                 <TouchableOpacity
                                     key={change.id}
                                     style={[
-                                        stylesCommon.facialChangeOption,
-                                        selectedChange === change.id && stylesCommon.facialChangeOptionSelected
+                                        stylescommon.facialChangeOption,
+                                        selectedChange === change.id && stylescommon.facialChangeOptionSelected,
+                                        { backgroundColor: selectedChange === change.id ? colors.modalOptionSelected : colors.modalBackground, borderColor: selectedChange === change.id ? colors.modalOptionBorder : colors.modalBorder }
                                     ]}
                                     onPress={() => setSelectedChange(change.id)}
                                 >
-                                    <View style={stylesCommon.facialRadioCircle}>
-                                        {selectedChange === change.id && <View style={stylesCommon.facialRadioSelected} />}
+                                    <View style={[stylescommon.facialRadioCircle, { borderColor: selectedChange === change.id ? colors.modalRadioSelected : colors.modalRadioBorder }]}>
+                                        {selectedChange === change.id && <View style={[stylescommon.facialRadioSelected, { backgroundColor: colors.modalRadioSelected }]} />}
                                     </View>
-                                    <Text style={stylesCommon.facialChangeLabel}>{t(change.label)}</Text>
+                                    <Text style={[stylescommon.facialChangeLabel, { color: colors.modalText }]}>{t(change.label)}</Text>
                                 </TouchableOpacity>
                             ))}
 
-                            <View style={stylesCommon.facialModalButtons}>
+                            <View style={stylescommon.facialModalButtons}>
                                 <TouchableOpacity
-                                    style={[stylesCommon.facialModalButton, stylesCommon.facialCancelModalButton]}
+                                    style={[stylescommon.facialModalButton, stylescommon.facialCancelModalButton, { backgroundColor: colors.modalButtonSecondary, borderColor: colors.modalBorder }]}
                                     onPress={onClose}
                                 >
-                                    <Text style={stylesCommon.facialCancelModalButtonText}>{t('common.cancel')}</Text>
+                                    <Text style={[stylescommon.facialCancelModalButtonText, { color: colors.modalButtonSecondaryText }]}>{t('common.cancel')}</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
-                                    style={[stylesCommon.facialModalButton, stylesCommon.facialConfirmModalButton]}
+                                    style={[stylescommon.facialModalButton, stylescommon.facialConfirmModalButton, { backgroundColor: colors.modalButton }]}
                                     onPress={handleUpdate}
                                 >
-                                    <Text style={stylesCommon.facialConfirmModalButtonText}>{t('facialUpdate.updateParams')}</Text>
+                                    <Text style={[stylescommon.facialConfirmModalButtonText, { color: colors.modalButtonText }]}>{t('facialUpdate.updateParams')}</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>

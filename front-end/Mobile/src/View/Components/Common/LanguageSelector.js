@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Modal } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import stylesCommon from './Style/Style';
+import stylescommon from './style/Style';
 
 const languages = [
   { code: 'es', name: '🇪🇸 Español' },
@@ -23,23 +23,23 @@ const LanguageSelector = ({ isVisible, onClose }) => {
 
   return (
     <Modal visible={isVisible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={stylesCommon.languageOverlay}>
-        <View style={stylesCommon.languageModal}>
-          <Text style={stylesCommon.languageTitle}>{t('settings.selectLanguage')}</Text>
+      <View style={stylescommon.languageOverlay}>
+        <View style={stylescommon.languageModal}>
+          <Text style={stylescommon.languageTitle}>{t('settings.selectLanguage')}</Text>
           {languages.map((lang) => (
             <TouchableOpacity
               key={lang.code}
               style={[
-                stylesCommon.languageOption,
-                selectedLanguage === lang.code && stylesCommon.languageSelectedOption,
+                stylescommon.languageOption,
+                selectedLanguage === lang.code && stylescommon.languageSelectedOption,
               ]}
               onPress={() => handleLanguageChange(lang.code)}
             >
-              <Text style={stylesCommon.languageOptionText}>{lang.name}</Text>
+              <Text style={stylescommon.languageOptionText}>{lang.name}</Text>
             </TouchableOpacity>
           ))}
-          <TouchableOpacity style={stylesCommon.languageCloseButton} onPress={onClose}>
-            <Text style={stylesCommon.languageCloseText}>{t('common.cancel')}</Text>
+          <TouchableOpacity style={stylescommon.languageCloseButton} onPress={onClose}>
+            <Text style={stylescommon.languageCloseText}>{t('common.cancel')}</Text>
           </TouchableOpacity>
         </View>
       </View>

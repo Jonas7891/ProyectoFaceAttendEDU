@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import { View, TouchableOpacity, Image } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useRoute } from "@react-navigation/native";
-import stylesCommon from "./Style/Style";
-import i18n from "../../../Utils/i18n";
+import { useTheme } from '../common/ThemeContext';
+import stylescommon from "./style/Style";
 
 export default function BottomBar({ onPressSettings, onPressProfile, onPressSearch, screenNames = {} }) {
   const navigation = useNavigation();
   const route = useRoute();
+  const { colors, loadThemeForRole, toggleTheme } = useTheme();
+
   const [selected, setSelected] = useState(null);
   const [userRole, setUserRole] = useState(null);
 
@@ -15,20 +17,26 @@ export default function BottomBar({ onPressSettings, onPressProfile, onPressSear
     const loadUserRole = async () => {
       const role = await AsyncStorage.getItem('userRole');
       setUserRole(role);
+
+      if (role) {
+        await loadThemeForRole(role);
+        await restoreLanguageForRole(role);
+      }
+
     };
     loadUserRole();
   }, []);
 
-  const defaultScreens = {
+  const defaultscreens = {
     menu: "Menu",
     profile: "UpdatePhoto",
     search: "Busqueda",
   };
 
   const {
-    menu: menuScreen = defaultScreens.menu,
-    profile: profileScreen = defaultScreens.profile,
-    search: searchScreen = defaultScreens.search,
+    menu: menuScreen = defaultscreens.menu,
+    profile: profileScreen = defaultscreens.profile,
+    search: searchScreen = defaultscreens.search,
   } = screenNames;
 
   const handleMenu = () => onPressSettings ? onPressSettings() : navigation.navigate(menuScreen);
@@ -48,33 +56,55 @@ export default function BottomBar({ onPressSettings, onPressProfile, onPressSear
     setSelected(getSelectedButton(route?.name));
   }, [route?.name]);
 
-  const getButtonStyle = (key) => [
-    stylesCommon.navButton,
-    selected === key && stylesCommon.activeNavButton,
+  const getButtonstyle = (key) => [
+    stylescommon.navButton,
+    {
+      backgroundColor: selected === key ? colors.tabActive : 'transparent',
+      borderColor: colors.border
+    }
   ];
 
   return (
-    <View style={stylesCommon.navBarContainer}>
-      <TouchableOpacity onPress={handleMenu} style={getButtonStyle("menu")}>
+    <View
+      style={[
+        stylescommon.navBarContainer,
+        {
+          backgroundColor: colors.navBar,
+          borderTopColor: colors.border
+        }
+      ]}
+    >
+
+      <TouchableOpacity onPress={handleMenu} style={getButtonstyle("menu")}>
         <Image
-          source={require("../../../Assets/Images/configuraciones.png")}
-          style={stylesCommon.navIcon}
+          source={require("../../../assets/images/configuraciones.png")}
+          style={[
+            stylescommon.navIcon,
+            { tintColor: selected === "menu" ? colors.primary : colors.textSecondary }
+          ]}
         />
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={handleFoto} style={getButtonStyle("profile")}>
+      <TouchableOpacity onPress={handleFoto} style={getButtonstyle("profile")}>
         <Image
-          source={require("../../../Assets/Images/perfil-del-usuario.png")}
-          style={stylesCommon.navIconCenter}
+          source={require("../../../assets/images/perfil-del-usuario.png")}
+          style={[
+            stylescommon.navIconCenter,
+            { tintColor: selected === "profile" ? colors.primary : colors.textSecondary }
+          ]}
         />
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={handleBusqueda} style={getButtonStyle("search")}>
+      <TouchableOpacity onPress={handleBusqueda} style={getButtonstyle("search")}>
         <Image
-          source={require("../../../Assets/Images/lupa.png")}
-          style={stylesCommon.navIcon}
+          source={require("../../../assets/images/lupa.png")}
+          style={[
+            stylescommon.navIcon,
+            { tintColor: selected === "search" ? colors.primary : colors.textSecondary }
+          ]}
         />
       </TouchableOpacity>
+
     </View>
   );
 }

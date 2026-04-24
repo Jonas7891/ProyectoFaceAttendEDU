@@ -4,7 +4,6 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: "#F5F5F5",
-        marginTop: 10
     },
     safeAreaWhite: {
         flex: 1,
@@ -13,14 +12,13 @@ const styles = StyleSheet.create({
     safeAreaFacialFail: {
         flex: 1,
         backgroundColor: "#F5F5F5",
-        marginTop: Platform.OS === 'android' ? 25 : 20
+        marginTop: Platform.OS === 'android' ? 25 : 0
     },
-    keyboardView: {
+    keyboardview: {
         flex: 1,
     },
     container: {
         flex: 1,
-        marginHorizontal: 12,
         paddingTop: 15,
     },
     containerDefault: {
@@ -30,7 +28,7 @@ const styles = StyleSheet.create({
     scrollContent: {
         flexGrow: 1,
     },
-    scrollViewContent: {
+    ScrollViewContent: {
         flexGrow: 1,
         paddingBottom: 30,
     },
@@ -38,7 +36,7 @@ const styles = StyleSheet.create({
         height: 90,
     },
 
-    // ========== DASHBOARD STYLES ==========
+    // ========== DASHBOARD styles ==========
     header: {
         flexDirection: "row",
         justifyContent: "space-between",
@@ -347,7 +345,7 @@ const styles = StyleSheet.create({
         color: "#999999",
     },
 
-    // ========== HOMES SCREEN STYLES ==========
+    // ========== HOMES SCREEN styleS ==========
     contentContainer: {
         flex: 1,
         paddingHorizontal: 15,
@@ -416,8 +414,8 @@ const styles = StyleSheet.create({
         textDecorationLine: 'underline',
     },
 
-    // ========== MENU SCREEN STYLES ==========
-    scrollView: {
+    // ========== MENU SCREEN styleS ==========
+    ScrollView: {
         flex: 1,
     },
     containerMenu: {
@@ -464,7 +462,7 @@ const styles = StyleSheet.create({
         opacity: 0.5,
     },
 
-    // ========== FACIAL FAIL SCREEN STYLES ==========
+    // ========== FACIAL FAIL SCREEN styleS ==========
     headerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -503,7 +501,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: "#666",
         lineHeight: 20,
-        fontStyle: "italic",
+        fontstyle: "italic",
     },
     separator: {
         borderTopWidth: 1,
@@ -540,7 +538,7 @@ const styles = StyleSheet.create({
         marginHorizontal: 10,
     },
 
-    // ========== UPDATE PHOTO SCREEN STYLES ==========
+    // ========== UPDATE PHOTO SCREEN styleS ==========
     imagePhoto: {
         width: 150,
         height: 150,
@@ -634,7 +632,7 @@ const styles = StyleSheet.create({
         height: 40,
     },
 
-    // ========== HISTORICAL SCREEN STYLES ==========
+    // ========== HISTORICAL SCREEN styleS ==========
     informacionContainer: {
         marginTop: 20,
         marginLeft: 10,
@@ -656,7 +654,7 @@ const styles = StyleSheet.create({
         tintColor: "#000",
     },
 
-    // ========== DISPLAYING ATTENDANCE SCREEN STYLES ==========
+    // ========== DISPLAYING ATTENDANCE SCREEN styleS ==========
     filterButtonsContainer: {
         flexDirection: "row",
         justifyContent: "space-around",
@@ -691,7 +689,7 @@ const styles = StyleSheet.create({
         marginHorizontal: 10,
     },
 
-    // ========== MENU JUSTIFY SCREEN STYLES ==========
+    // ========== MENU JUSTIFY SCREEN styleS ==========
     containerMenuJustify: {
         flex: 1,
         paddingHorizontal: 20,
@@ -947,7 +945,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         borderWidth: 1,
         borderColor: "#4A90E2",
-        borderStyle: "dashed",
+        borderstyle: "dashed",
         marginBottom: 10,
     },
 
@@ -1022,7 +1020,7 @@ const styles = StyleSheet.create({
         fontWeight: "500",
     },
 
-    // ========== LANGUAGE SETTINGS SCREEN STYLES ==========
+    // ========== LANGUAGE SETTINGS SCREEN styleS ==========
     languageSettingsSafeArea: {
         flex: 1,
         backgroundColor: '#fff'
@@ -1126,7 +1124,7 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '600',
         color: '#7F8C8D',
-        fontStyle: 'italic',
+        fontstyle: 'italic',
     },
 
     // Estilos para items de justificaciones pendientes
@@ -1291,10 +1289,8 @@ const styles = StyleSheet.create({
     // Toggle para requiere documento
     toggleContainer: {
         flexDirection: 'row',
-        backgroundColor: '#F5F5F5',
         borderRadius: 12,
         padding: 4,
-        marginBottom: 10,
     },
 
     toggleButton: {
@@ -1347,7 +1343,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
 
-    // ========== LANGUAGE SETTINGS SCREEN STYLES ==========
+    // ========== LANGUAGE SETTINGS SCREEN styleS ==========
     languageSettingsSafeArea: {
         flex: 1,
         backgroundColor: '#fff'
@@ -1390,6 +1386,301 @@ const styles = StyleSheet.create({
         fontSize: 18,
         color: '#41c0ff',
         fontWeight: 'bold'
+    },
+    safeAreaWhiteValidJustifi: {
+        flex: 1,
+        backgroundColor: '#FFFFFF',
+    },
+
+    containerJustificationsScreenValidJustifi: {
+        flex: 1,
+        backgroundColor: '#FFFFFF',
+    },
+
+    // Header
+    justificationsHeaderValidJustifi: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingTop: Platform.OS === 'android' ? 45 : 15,
+        paddingBottom: 15,
+        backgroundColor: '#FFFFFF',
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+
+    backButtonValidJustifi: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#F5F5F5',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    backButtonTextValidJustifi: {
+        fontSize: 20,
+        color: '#4A90E2',
+        fontWeight: '600',
+    },
+
+    justificationsTitleValidJustifi: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#1A1A1A',
+        flex: 1,
+        textAlign: 'center',
+    },
+
+    justificationsCountValidJustifi: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#FFFFFF',
+        backgroundColor: '#4A90E2',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 12,
+        overflow: 'hidden',
+    },
+
+    // Contenido del scroll
+    justificationsScrollContentValidJustifi: {
+        paddingHorizontal: 20,
+        paddingTop: 20,
+        paddingBottom: 40,
+    },
+
+    // Sección de categoría
+    categorySectionValidJustifi: {
+        marginBottom: 10,
+    },
+
+    categoryHeaderValidJustifi: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F8F9FA',
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 1,
+    },
+
+    categoryIconContainerValidJustifi: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: '#FFFFFF',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+
+    categoryIconValidJustifi: {
+        fontSize: 24,
+    },
+
+    categoryInfoValidJustifi: {
+        flex: 1,
+    },
+
+    categoryTitleTextValidJustifi: {
+        fontSize: 17,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        marginBottom: 4,
+    },
+
+    categoryCountTextValidJustifi: {
+        fontSize: 13,
+        color: '#666',
+        fontWeight: '500',
+    },
+
+    categoryArrowValidJustifi: {
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        backgroundColor: '#FFFFFF',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    categoryArrowTextValidJustifi: {
+        fontSize: 20,
+        color: '#4A90E2',
+        fontWeight: '600',
+    },
+
+    // Contenedor de items
+    categoryItemsContainerValidJustifi: {
+        paddingLeft: 10,
+        marginBottom: 5,
+    },
+
+    // Item de justificación
+    justificationItemCardValidJustifi: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 14,
+        padding: 16,
+        marginBottom: 10,
+        borderLeftWidth: 4,
+        borderLeftColor: '#4A90E2',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 6,
+        elevation: 2,
+    },
+
+    justificationItemHeaderValidJustifi: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+
+    justificationNumberContainerValidJustifi: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: '#E3F2FD',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 10,
+    },
+
+    justificationNumberTextValidJustifi: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#4A90E2',
+    },
+
+    justificationTypeContainerValidJustifi: {
+        flex: 1,
+    },
+
+    justificationTypeTextValidJustifi: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#1A1A1A',
+    },
+
+    documentRequiredBadgeValidJustifi: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#F0F0F0',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    documentRequiredTextValidJustifi: {
+        fontSize: 16,
+    },
+
+    justificationDescriptionTextValidJustifi: {
+        fontSize: 14,
+        color: '#555',
+        lineHeight: 22,
+        marginBottom: 12,
+        paddingLeft: 38,
+    },
+
+    justificationFooterValidJustifi: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingLeft: 38,
+        paddingTop: 10,
+        borderTopWidth: 1,
+        borderTopColor: '#F0F0F0',
+    },
+
+    categoryBadgeValidJustifi: {
+        backgroundColor: '#E8F4FD',
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+
+    categoryBadgeTextValidJustifi: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: '#4A90E2',
+    },
+
+    documentInfoTextValidJustifi: {
+        fontSize: 11,
+        color: '#999',
+        fontWeight: '500',
+    },
+
+    // Divider entre categorías
+    categoryDividerValidJustifi: {
+        height: 8,
+        backgroundColor: '#F5F5F5',
+        marginVertical: 10,
+        borderRadius: 4,
+    },
+
+    // Estado vacío
+    emptyStateContainerValidJustifi: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 80,
+        paddingHorizontal: 20,
+    },
+
+    emptyStateIconValidJustifi: {
+        fontSize: 64,
+        marginBottom: 20,
+    },
+
+    emptyStateTitleValidJustifi: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        marginBottom: 8,
+        textAlign: 'center',
+    },
+
+    emptyStateDescriptionValidJustifi: {
+        fontSize: 14,
+        color: '#999',
+        textAlign: 'center',
+        lineHeight: 22,
+    },
+
+    // Botón volver secundario
+    justificationsBackButtonValidJustifi: {
+        backgroundColor: '#F5F5F5',
+        borderRadius: 12,
+        paddingVertical: 16,
+        alignItems: 'center',
+        marginTop: 20,
+        marginBottom: 30,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+    },
+
+    justificationsBackButtonTextValidJustifi: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#4A90E2',
     },
 });
 
