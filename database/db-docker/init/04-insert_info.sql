@@ -19,7 +19,6 @@ CREATE OR REPLACE PROCEDURE insert_info()
 LANGUAGE plpgsql AS $$
 BEGIN
     CALL insert_school();
-    CALL insert_language();
     CALL insert_person();
     CALL insert_role();
     CALL insert_user();
@@ -54,22 +53,6 @@ BEGIN
     (3, 'Liceo Moderno',             '900345678-3', 'Avenida 3 #12-15, Cali',          '3123456789', 'info@liceomoderno.edu.co',      TRUE, NOW()),
     (4, 'Colegio Los Andes',         '900456789-4', 'Calle 25 #7-10, Barranquilla',    '3134567890', 'info@losandes.edu.co',          TRUE, NOW()),
     (5, 'Escuela Nueva Esperanza',   '900567890-5', 'Carrera 8 #20-5, Bucaramanga',    '3145678901', 'info@nuevaesperanza.edu.co',    TRUE, NOW())
-    ON CONFLICT DO NOTHING;
-END;
-$$;
-
-
--- ==================== LANGUAGE ====================
-
-CREATE OR REPLACE PROCEDURE insert_language()
-LANGUAGE plpgsql AS $$
-BEGIN
-    INSERT INTO language (id_language, language_name) VALUES
-    (1, 'Español'),
-    (2, 'English'),
-    (3, 'Français'),
-    (4, 'Português'),
-    (5, 'Deutsch')
     ON CONFLICT DO NOTHING;
 END;
 $$;
@@ -145,17 +128,14 @@ CREATE OR REPLACE PROCEDURE insert_user()
 LANGUAGE plpgsql AS $$
 DECLARE
     p      RECORD;
-    langId INT;
 BEGIN
     FOR p IN SELECT id_person FROM person ORDER BY id_person LOOP
-        langId := FLOOR(RANDOM() * 5 + 1)::INT;
 
-        INSERT INTO "user" (id_user, id_person, id_language, username, password,
+        INSERT INTO "user" (id_user, id_person, username, password,
                             status, created_at, last_login)
         VALUES (
             p.id_person,
             p.id_person,
-            langId,
             'user_' || p.id_person,
             md5('pass_' || p.id_person || FLOOR(RANDOM() * 9000 + 1000)::TEXT),
             TRUE,

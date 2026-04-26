@@ -66,23 +66,16 @@ BEGIN
         description TEXT         NULL
     );
 
-    CREATE TABLE language (
-        id_language   SERIAL       PRIMARY KEY,
-        language_name VARCHAR(100) NOT NULL
-    );
-
     CREATE TABLE "user" (
         id_user     SERIAL       PRIMARY KEY,
         id_person   INTEGER      NOT NULL UNIQUE,
-        id_language INTEGER      NULL,
         username    VARCHAR(100) NOT NULL UNIQUE,
         password    VARCHAR(255) NOT NULL,
         status      BOOLEAN      NOT NULL DEFAULT TRUE,
         created_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
         updated_at  TIMESTAMP    NULL,
         last_login  TIMESTAMP    NULL,
-        CONSTRAINT fk_user_person   FOREIGN KEY (id_person)   REFERENCES person (id_person),
-        CONSTRAINT fk_user_language FOREIGN KEY (id_language) REFERENCES language (id_language)
+        CONSTRAINT fk_user_person   FOREIGN KEY (id_person)   REFERENCES person (id_person)
     );
 
     CREATE TABLE module (

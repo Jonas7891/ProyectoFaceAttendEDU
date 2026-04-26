@@ -41,7 +41,6 @@ Table Role {
 Table User {
   id_user     int      [pk, unique, not null]
   id_person   int      [not null, unique]
-  id_language int      [null]
   username    varchar  [not null, unique]
   password    varchar  [not null]
   status      boolean  [not null, default: true]
@@ -321,11 +320,6 @@ Ref: User.id_user < Justification.reviewed_by
 //    CONFIGURATION
 //
 
-Table Language {
-  id_language   int     [pk, unique, not null]
-  language_name varchar [not null]
-}
-
 Table Facial_Embedding {
   id_embedding  int      [pk, unique, not null]
   id_person     int      [not null]
@@ -340,8 +334,6 @@ Table Facial_Embedding {
 }
 
 //    RELATIONS
-
-Ref: Language.id_language < User.id_language
 
 Ref: Person.id_person < Facial_Embedding.id_person
 
@@ -446,7 +438,6 @@ TableGroup Attendance [color: #e67e22] {
 }
 
 TableGroup Configuration [color: #9b59b6] {
-  Language
   Facial_Embedding
 }
 
