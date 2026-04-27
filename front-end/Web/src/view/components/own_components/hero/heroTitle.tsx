@@ -1,6 +1,6 @@
 import React from "react";
 import { Text } from "react-native";
-import { useResponsive } from "../../hooks/use_responsive";
+import { useResponsive } from "../../hooks/useResponsive";
 import { getTypography } from "../../constants/typography";
 import Colors from "../../constants/colors";
 

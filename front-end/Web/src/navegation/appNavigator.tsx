@@ -2,9 +2,9 @@ import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import LandingPage from "../view/screens/landing_screen";
-import LoginScreen from "../view/screens/login_screen";
-import SignupScreen from "../view/screens/signup_screen";
+import LandingPage from "../view/screens/landingScreen";
+import LoginScreen from "../view/screens/loginScreen";
+import SignupScreen from "../view/screens/signupScreen";
 
 const Stack = createNativeStackNavigator();
 

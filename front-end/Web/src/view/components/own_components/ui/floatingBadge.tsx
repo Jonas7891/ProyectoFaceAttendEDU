@@ -1,7 +1,7 @@
 import React from "react";
 import { Animated, Text, ViewStyle } from "react-native";
-import { useFloatAnimation } from "../../hooks/use_float_animation";
-import { useResponsive } from "../../hooks/use_responsive";
+import { useFloatAnimation } from "../../hooks/useFloatAnimation";
+import { useResponsive } from "../../hooks/useResponsive";
 import { getTypography } from "../../constants/typography";
 import Colors from "../../constants/colors";
 

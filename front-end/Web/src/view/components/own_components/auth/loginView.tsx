@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 
-import { useResponsive } from "../../hooks/use_responsive";
+import { useResponsive } from "../../hooks/useResponsive";
 import { getTypography } from "../../constants/typography";
 import Colors from "../../constants/colors";
 import Button from "../ui/button";

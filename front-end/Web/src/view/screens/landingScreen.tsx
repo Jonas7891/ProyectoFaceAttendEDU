@@ -13,17 +13,17 @@ import {
     useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
-import Navbar from "../components/own_components/layout/nav_bar";
-import HeroLeft from "../components/own_components/hero/hero_left";
-import HeroRight from "../components/own_components/hero/hero_right";
+import Navbar from "../components/own_components/layout/navBar";
+import HeroLeft from "../components/own_components/hero/heroLeft";
+import HeroRight from "../components/own_components/hero/heroRight";
 
-import { useHeroEntrance } from "../components/hooks/use_hero_entrance";
-import { useResponsive } from "../components/hooks/use_responsive";
+import { useHeroEntrance } from "../components/hooks/useHeroEntrance";
+import { useResponsive } from "../components/hooks/useResponsive";
 
 import { getTypography } from "../components/constants/typography";
 import BadgePositions, {
     BadgePositionsMobile,
-} from "../components/constants/badge_positions";
+} from "../components/constants/badgePositions";
 import Colors from "../components/constants/colors";
 
 const STATS = [

@@ -1,9 +1,9 @@
 import React from "react";
 import { Animated } from "react-native";
-import HeroTitle from "./hero_title";
-import HeroButtons from "./hero_buttons";
-import HeroStats from "./hero_stats";
-import { useResponsive } from "../../hooks/use_responsive";
+import HeroTitle from "./heroTitle";
+import HeroButtons from "./heroButtons";
+import HeroStats from "./heroStats";
+import { useResponsive } from "../../hooks/useResponsive";
 
 type Stat = { value: string; label: string };
 
