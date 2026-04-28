@@ -13,7 +13,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class Period {
     private Integer id;
-    private School idSchool;
+    private School school;
     private String name;
     private LocalDate startDate;
     private LocalDate endDate;

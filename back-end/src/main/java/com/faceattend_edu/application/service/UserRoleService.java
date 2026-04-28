@@ -9,6 +9,10 @@ public interface UserRoleService {
 
     UserRoleResponse findById(Integer id);
 
+    UserRoleResponse findByUser(Integer id);
+
+    UserRoleResponse findByRole(Integer id);
+
     List<UserRoleResponse> findAll();
 
     UserRoleResponse save(UserRoleRequest request);

@@ -1,6 +1,6 @@
 package com.faceattend_edu.application.impl;
 
-import com.faceattend_edu.application.mapper.ScheduleMapper;
+import com.faceattend_edu.application.mapper.ScheduleServiceMapper;
 import com.faceattend_edu.application.service.ScheduleService;
 import com.faceattend_edu.domain.dto.request.ScheduleRequest;
 import com.faceattend_edu.domain.dto.response.ScheduleResponse;
@@ -17,7 +17,7 @@ import java.util.List;
 public class ScheduleServiceImpl implements ScheduleService {
 
     private final ScheduleRepositoryPort repository;
-    private final ScheduleMapper mapper;
+    private final ScheduleServiceMapper mapper;
 
     @Override
     public ScheduleResponse findById(Integer id) {

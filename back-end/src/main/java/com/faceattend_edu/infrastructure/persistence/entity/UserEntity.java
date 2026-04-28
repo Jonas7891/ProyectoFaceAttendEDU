@@ -6,6 +6,8 @@ import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -17,13 +19,9 @@ public class UserEntity {
     @Column(name = "id_user", nullable = false)
     private Integer id;
 
-    @OneToOne(fetch = FetchType.EAGER, optional = false)
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_person", nullable = false)
-    private PersonEntity idPerson;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "id_language")
-    private LanguageEntity idLanguage;
+    private PersonEntity person;
 
     @Column(name = "username", nullable = false, length = 100)
     private String username;
@@ -45,5 +43,6 @@ public class UserEntity {
     @Column(name = "last_login")
     private Instant lastLogin;
 
-
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserRoleEntity> roles = new ArrayList<>();
 }

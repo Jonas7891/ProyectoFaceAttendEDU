@@ -11,6 +11,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Classroom {
     private Integer id;
-    private School idSchool;
+    private School school;
     private String classroomName;
 }

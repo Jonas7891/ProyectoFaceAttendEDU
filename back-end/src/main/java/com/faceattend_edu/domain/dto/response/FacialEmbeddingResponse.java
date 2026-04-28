@@ -7,7 +7,7 @@ import java.util.List;
 
 public record FacialEmbeddingResponse(
         Integer id,
-        Person idPerson,
+        Person person,
         List<Float> embedding,
         String modelVersion,
         Boolean isActive,

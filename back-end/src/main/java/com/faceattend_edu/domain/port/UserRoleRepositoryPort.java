@@ -10,7 +10,13 @@ public interface UserRoleRepositoryPort {
 
     Optional<UserRole> findById(Integer id);
 
+    Optional<UserRole> findByUserId(Integer id);
+
+    Optional<UserRole> findByRoleId(Integer id);
+
     List<UserRole> findAll();
 
     void deleteById(Integer id);
+
+    void assignRole(UserRole userRole);
 }

@@ -11,7 +11,7 @@ import java.util.List;
 
 public record FacialEmbeddingRequest(
         @NotNull(message = "La persona es requerida")
-        Person idPerson,
+        Person person,
 
         @NotEmpty(message = "El embedding no puede estar vacío")
         List<Float> embedding,

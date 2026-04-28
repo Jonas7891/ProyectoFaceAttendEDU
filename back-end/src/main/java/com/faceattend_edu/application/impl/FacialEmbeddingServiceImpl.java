@@ -1,6 +1,6 @@
 package com.faceattend_edu.application.impl;
 
-import com.faceattend_edu.application.mapper.FacialEmbeddingMapper;
+import com.faceattend_edu.application.mapper.FacialEmbeddingServiceMapper;
 import com.faceattend_edu.application.service.FacialEmbeddingService;
 import com.faceattend_edu.domain.dto.request.FacialEmbeddingRequest;
 import com.faceattend_edu.domain.dto.response.FacialEmbeddingResponse;
@@ -17,7 +17,7 @@ import java.util.List;
 public class FacialEmbeddingServiceImpl implements FacialEmbeddingService {
 
     private final FacialEmbeddingRepositoryPort repository;
-    private final FacialEmbeddingMapper mapper;
+    private final FacialEmbeddingServiceMapper mapper;
 
     @Override
     public FacialEmbeddingResponse findById(Integer id) {
@@ -53,7 +53,7 @@ public class FacialEmbeddingServiceImpl implements FacialEmbeddingService {
 
     @Override
     public void deleteById(Integer id) {
-        if (!repository.findById(id).isPresent()) {
+        if (repository.findById(id).isEmpty()) {
             throw new NotFoundException("FacialEmbedding", id);
         }
         repository.deleteById(id);

@@ -11,7 +11,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Course {
     private Integer id;
-    private School idSchool;
+    private School school;
     private String courseName;
     private String courseCode;
 }

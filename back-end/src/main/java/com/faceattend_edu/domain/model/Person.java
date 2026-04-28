@@ -13,7 +13,7 @@ import java.time.Instant;
 @AllArgsConstructor
 public class Person {
     private Integer id;
-    private School idSchool;
+    private School school;
     private String name;
     private String lastName;
     private String email;

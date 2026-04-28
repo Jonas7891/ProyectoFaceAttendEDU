@@ -1,6 +1,6 @@
 package com.faceattend_edu.application.impl;
 
-import com.faceattend_edu.application.mapper.PersonMapper;
+import com.faceattend_edu.application.mapper.PersonServiceMapper;
 import com.faceattend_edu.application.service.PersonService;
 import com.faceattend_edu.domain.dto.request.PersonRequest;
 import com.faceattend_edu.domain.dto.response.PersonResponse;
@@ -17,7 +17,7 @@ import java.util.List;
 public class PersonServiceImpl implements PersonService {
 
     private final PersonRepositoryPort repository;
-    private final PersonMapper mapper;
+    private final PersonServiceMapper mapper;
 
     @Override
     public PersonResponse findById(Integer id) {

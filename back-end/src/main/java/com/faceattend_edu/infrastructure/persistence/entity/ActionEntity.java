@@ -5,6 +5,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Getter
 @Setter
 @Entity
@@ -28,5 +31,8 @@ public class ActionEntity {
     @Column(name = "enabled", nullable = false)
     private Boolean enabled;
 
+    //
 
+    @ManyToMany(mappedBy = "actions")
+    private Set<ViewEntity> views = new HashSet<>();
 }

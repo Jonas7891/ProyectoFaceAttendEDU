@@ -14,9 +14,9 @@ import java.time.LocalTime;
 @AllArgsConstructor
 public class Attendance {
     private Integer id;
-    private Person idStudent;
-    private Schedule idSchedule;
-    private IotDevice idDevice;
+    private Person student;
+    private Schedule schedule;
+    private IotDevice iotDevice;
     private LocalDate date;
     private LocalTime time;
     private Object status;

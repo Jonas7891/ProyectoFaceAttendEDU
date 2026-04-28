@@ -16,21 +16,21 @@ public class ScheduleEntity {
     @Column(name = "id_schedule", nullable = false)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_period", nullable = false)
-    private PeriodEntity idPeriod;
+    private PeriodEntity period;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_course", nullable = false)
-    private CourseEntity idCourse;
+    private CourseEntity course;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_teacher", nullable = false)
-    private PersonEntity idTeacher;
+    private PersonEntity teacher;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_classroom", nullable = false)
-    private ClassroomEntity idClassroom;
+    private ClassroomEntity classroom;
 
     @Column(name = "day", columnDefinition = "days_enum not null")
     private Object day;

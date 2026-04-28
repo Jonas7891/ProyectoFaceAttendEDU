@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -15,4 +17,6 @@ public class View {
     private String route;
     private String title;
     private Boolean isPublic;
+
+    private List<Action> actions;
 }

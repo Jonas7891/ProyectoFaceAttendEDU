@@ -7,8 +7,8 @@ import java.time.Instant;
 
 public record UserRoleResponse(
         Integer id,
-        User idUser,
-        Role idRole,
+        User user,
+        Role role,
         Instant assignedDate,
         Instant expiryDate
 ) {

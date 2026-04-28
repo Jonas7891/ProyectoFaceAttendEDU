@@ -4,6 +4,11 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 @Getter
 @Setter
 @Entity
@@ -20,5 +25,16 @@ public class RoleEntity {
     @Column(name = "description", length = Integer.MAX_VALUE)
     private String description;
 
+    //
 
+    @OneToMany(mappedBy = "role")
+    private List<UserRoleEntity> users = new ArrayList<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "role_module",
+            joinColumns = @JoinColumn(name = "id_role"),
+            inverseJoinColumns = @JoinColumn(name = "id_module")
+    )
+    private Set<ModuleEntity> modules = new HashSet<>();
 }

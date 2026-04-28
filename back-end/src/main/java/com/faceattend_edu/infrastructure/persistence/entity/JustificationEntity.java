@@ -17,9 +17,9 @@ public class JustificationEntity {
     @Column(name = "id_justification", nullable = false)
     private Integer id;
 
-    @OneToOne(fetch = FetchType.EAGER, optional = false)
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_attendance", nullable = false)
-    private AttendanceEntity idAttendance;
+    private AttendanceEntity attendance;
 
     @Column(name = "justification", nullable = false, length = Integer.MAX_VALUE)
     private String justification;
@@ -32,7 +32,7 @@ public class JustificationEntity {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reviewed_by")
     private UserEntity reviewedBy;
 

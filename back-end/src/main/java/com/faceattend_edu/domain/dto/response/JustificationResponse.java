@@ -7,7 +7,7 @@ import java.time.Instant;
 
 public record JustificationResponse(
         Integer id,
-        Attendance idAttendance,
+        Attendance attendance,
         String justification,
         Object approval,
         Instant createdAt,

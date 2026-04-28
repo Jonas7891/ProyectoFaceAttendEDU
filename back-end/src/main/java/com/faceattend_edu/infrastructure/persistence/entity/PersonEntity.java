@@ -17,9 +17,9 @@ public class PersonEntity {
     @Column(name = "id_person", nullable = false)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_school", nullable = false)
-    private SchoolEntity idSchool;
+    private SchoolEntity school;
 
     @Column(name = "name", nullable = false)
     private String name;

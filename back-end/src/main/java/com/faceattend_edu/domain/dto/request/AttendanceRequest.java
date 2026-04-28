@@ -10,13 +10,13 @@ import java.time.LocalTime;
 
 public record AttendanceRequest(
         @NotNull(message = "El estudiante es requerido")
-        Person idStudent,
+        Person student,
 
         @NotNull(message = "El horario es requerido")
-        Schedule idSchedule,
+        Schedule schedule,
 
         @NotNull(message = "El dispositivo IoT es requerido")
-        IotDevice idDevice,
+        IotDevice iotDevice,
 
         @NotNull(message = "La fecha es requerida")
         LocalDate date,

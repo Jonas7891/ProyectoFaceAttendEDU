@@ -14,9 +14,9 @@ public class CourseEntity {
     @Column(name = "id_course", nullable = false)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_school", nullable = false)
-    private SchoolEntity idSchool;
+    private SchoolEntity school;
 
     @Column(name = "course_name", nullable = false)
     private String courseName;

@@ -5,6 +5,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Getter
 @Setter
 @Entity
@@ -28,5 +31,16 @@ public class ViewEntity {
     @Column(name = "is_public", nullable = false)
     private Boolean isPublic;
 
+    //
 
+    @ManyToMany(mappedBy = "views")
+    private Set<ModuleEntity> modules = new HashSet<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "view_action",
+            joinColumns = @JoinColumn(name = "id_view"),
+            inverseJoinColumns = @JoinColumn(name = "id_action")
+    )
+    private Set<ActionEntity> actions = new HashSet<>();
 }

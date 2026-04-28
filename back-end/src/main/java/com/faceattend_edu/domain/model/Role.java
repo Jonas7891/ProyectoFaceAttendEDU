@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -13,4 +15,7 @@ public class Role {
     private Integer id;
     private String name;
     private String description;
+    private List<Module> modules;
+
+    private List<UserRole> roles;
 }

@@ -13,7 +13,7 @@ import java.time.Instant;
 @AllArgsConstructor
 public class Log {
     private Integer id;
-    private User idUser;
+    private User user;
     private String action;
     private String tableName;
     private String affectedRecord;

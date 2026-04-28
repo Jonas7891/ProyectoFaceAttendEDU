@@ -12,9 +12,13 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserRole {
-    private Integer id;
-    private User idUser;
-    private Role idRole;
+
+    private User user;
+    private Role role;
     private Instant assignedDate;
     private Instant expiryDate;
+
+    public boolean isActive() {
+        return expiryDate == null || expiryDate.isAfter(Instant.now());
+    }
 }

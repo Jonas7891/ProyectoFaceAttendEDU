@@ -17,9 +17,9 @@ public class IotDeviceEntity {
     @Column(name = "id_device", nullable = false)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_classroom", nullable = false)
-    private ClassroomEntity idClassroom;
+    private ClassroomEntity classroom;
 
     @Column(name = "device_name", nullable = false)
     private String deviceName;

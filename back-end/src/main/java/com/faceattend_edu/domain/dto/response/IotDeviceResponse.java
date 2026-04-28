@@ -6,7 +6,7 @@ import java.time.Instant;
 
 public record IotDeviceResponse(
         Integer id,
-        Classroom idClassroom,
+        Classroom classroom,
         String deviceName,
         String macAddress,
         String ipAddress,

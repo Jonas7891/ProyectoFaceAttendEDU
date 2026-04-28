@@ -1,6 +1,6 @@
 package com.faceattend_edu.application.impl;
 
-import com.faceattend_edu.application.mapper.UserRoleMapper;
+import com.faceattend_edu.application.mapper.UserRoleServiceMapper;
 import com.faceattend_edu.application.service.UserRoleService;
 import com.faceattend_edu.domain.dto.request.UserRoleRequest;
 import com.faceattend_edu.domain.dto.response.UserRoleResponse;
@@ -9,6 +9,7 @@ import com.faceattend_edu.domain.model.UserRole;
 import com.faceattend_edu.domain.port.UserRoleRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -17,7 +18,7 @@ import java.util.List;
 public class UserRoleServiceImpl implements UserRoleService {
 
     private final UserRoleRepositoryPort repository;
-    private final UserRoleMapper mapper;
+    private final UserRoleServiceMapper mapper;
 
     @Override
     public UserRoleResponse findById(Integer id) {
@@ -27,6 +28,23 @@ public class UserRoleServiceImpl implements UserRoleService {
     }
 
     @Override
+    public UserRoleResponse findByUser(Integer id) {
+        UserRole userRole = repository.findByUserId(id)
+                .orElseThrow(() -> new NotFoundException("UserRole", id));
+
+        return mapper.toResponse(userRole);
+    }
+
+    @Override
+    public UserRoleResponse findByRole(Integer id) {
+        UserRole userRole = repository.findByRoleId(id)
+                .orElseThrow(() -> new NotFoundException("UserRole", id));
+
+        return mapper.toResponse(userRole);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<UserRoleResponse> findAll() {
         return repository.findAll()
                 .stream()
@@ -46,7 +64,7 @@ public class UserRoleServiceImpl implements UserRoleService {
         repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("UserRole", id));
         UserRole updated = mapper.toDomain(request);
-        updated.setId(id);
+        //updated.setId(id);
         UserRole saved = repository.save(updated);
         return mapper.toResponse(saved);
     }

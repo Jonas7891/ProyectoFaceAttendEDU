@@ -1,6 +1,6 @@
 package com.faceattend_edu.application.impl;
 
-import com.faceattend_edu.application.mapper.LogMapper;
+import com.faceattend_edu.application.mapper.LogServiceMapper;
 import com.faceattend_edu.application.service.LogService;
 import com.faceattend_edu.domain.dto.request.LogRequest;
 import com.faceattend_edu.domain.dto.response.LogResponse;
@@ -17,7 +17,7 @@ import java.util.List;
 public class LogServiceImpl implements LogService {
 
     private final LogRepositoryPort repository;
-    private final LogMapper mapper;
+    private final LogServiceMapper mapper;
 
     @Override
     public LogResponse findById(Integer id) {

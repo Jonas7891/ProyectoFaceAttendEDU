@@ -1,6 +1,6 @@
 package com.faceattend_edu.application.impl;
 
-import com.faceattend_edu.application.mapper.RoleMapper;
+import com.faceattend_edu.application.mapper.RoleServiceMapper;
 import com.faceattend_edu.application.service.RoleService;
 import com.faceattend_edu.domain.dto.request.RoleRequest;
 import com.faceattend_edu.domain.dto.response.RoleResponse;
@@ -9,6 +9,7 @@ import com.faceattend_edu.domain.model.Role;
 import com.faceattend_edu.domain.port.RoleRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -17,7 +18,7 @@ import java.util.List;
 public class RoleServiceImpl implements RoleService {
 
     private final RoleRepositoryPort repository;
-    private final RoleMapper mapper;
+    private final RoleServiceMapper mapper;
 
     @Override
     public RoleResponse findById(Integer id) {
@@ -27,6 +28,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<RoleResponse> findAll() {
         return repository.findAll()
                 .stream()

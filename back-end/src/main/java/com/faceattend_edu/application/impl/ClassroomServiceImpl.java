@@ -1,6 +1,6 @@
 package com.faceattend_edu.application.impl;
 
-import com.faceattend_edu.application.mapper.ClassroomMapper;
+import com.faceattend_edu.application.mapper.ClassroomServiceMapper;
 import com.faceattend_edu.application.service.ClassroomService;
 import com.faceattend_edu.domain.dto.request.ClassroomRequest;
 import com.faceattend_edu.domain.dto.response.ClassroomResponse;
@@ -17,7 +17,7 @@ import java.util.List;
 public class ClassroomServiceImpl implements ClassroomService {
 
     private final ClassroomRepositoryPort repository;
-    private final ClassroomMapper mapper;
+    private final ClassroomServiceMapper mapper;
 
     @Override
     public ClassroomResponse findById(Integer id) {
@@ -53,7 +53,7 @@ public class ClassroomServiceImpl implements ClassroomService {
 
     @Override
     public void deleteById(Integer id) {
-        if (!repository.findById(id).isPresent()) {
+        if (repository.findById(id).isEmpty()) {
             throw new NotFoundException("Classroom", id);
         }
         repository.deleteById(id);

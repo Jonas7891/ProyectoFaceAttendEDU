@@ -1,6 +1,6 @@
 package com.faceattend_edu.application.impl;
 
-import com.faceattend_edu.application.mapper.ActionMapper;
+import com.faceattend_edu.application.mapper.ActionServiceMapper;
 import com.faceattend_edu.application.service.ActionService;
 import com.faceattend_edu.domain.dto.request.ActionRequest;
 import com.faceattend_edu.domain.dto.response.ActionResponse;
@@ -17,7 +17,7 @@ import java.util.List;
 public class ActionServiceImpl implements ActionService {
 
     private final ActionRepositoryPort repository;
-    private final ActionMapper mapper;
+    private final ActionServiceMapper mapper;
 
     @Override
     public ActionResponse findById(Integer id) {
@@ -54,7 +54,7 @@ public class ActionServiceImpl implements ActionService {
 
     @Override
     public void deleteById(Integer id) {
-        if (!repository.findById(id).isPresent()) {
+        if (repository.findById(id).isEmpty()) {
             throw new NotFoundException("Action", id);
         }
         repository.deleteById(id);

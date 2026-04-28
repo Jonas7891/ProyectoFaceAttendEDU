@@ -1,6 +1,6 @@
 package com.faceattend_edu.application.impl;
 
-import com.faceattend_edu.application.mapper.EnrollmentMapper;
+import com.faceattend_edu.application.mapper.EnrollmentServiceMapper;
 import com.faceattend_edu.application.service.EnrollmentService;
 import com.faceattend_edu.domain.dto.request.EnrollmentRequest;
 import com.faceattend_edu.domain.dto.response.EnrollmentResponse;
@@ -17,7 +17,7 @@ import java.util.List;
 public class EnrollmentServiceImpl implements EnrollmentService {
 
     private final EnrollmentRepositoryPort repository;
-    private final EnrollmentMapper mapper;
+    private final EnrollmentServiceMapper mapper;
 
     @Override
     public EnrollmentResponse findById(Integer id) {
@@ -53,7 +53,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
 
     @Override
     public void deleteById(Integer id) {
-        if (!repository.findById(id).isPresent()) {
+        if (repository.findById(id).isEmpty()) {
             throw new NotFoundException("Enrollment", id);
         }
         repository.deleteById(id);

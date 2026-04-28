@@ -15,10 +15,10 @@ import java.io.Serializable;
 public class UserRoleEntityId implements Serializable {
     private static final long serialVersionUID = -2465848025649666670L;
     @Column(name = "id_user", nullable = false)
-    private Integer idUser;
+    private Integer user;
 
     @Column(name = "id_role", nullable = false)
-    private Integer idRole;
+    private Integer role;
 
 
 }

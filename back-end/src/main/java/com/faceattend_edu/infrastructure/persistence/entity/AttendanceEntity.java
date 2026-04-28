@@ -17,17 +17,17 @@ public class AttendanceEntity {
     @Column(name = "id_attendance", nullable = false)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_student", nullable = false)
-    private PersonEntity idStudent;
+    private PersonEntity student;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_schedule", nullable = false)
-    private ScheduleEntity idSchedule;
+    private ScheduleEntity schedule;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_device", nullable = false)
-    private IotDeviceEntity idDevice;
+    private IotDeviceEntity iotDevice;
 
     @Column(name = "date", nullable = false)
     private LocalDate date;
