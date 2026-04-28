@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigation } from "@react-navigation/native";
 import {
     View,
     ScrollView,
@@ -40,6 +41,7 @@ function HeroContent({
                          fadeRight,
                          slideRight,
                      }: ReturnType<typeof useHeroEntrance>) {
+    const navigation = useNavigation<any>();
     const { sp, isSmall } = useResponsive();
 
     const badgePos = isSmall ? BadgePositionsMobile : BadgePositions;
@@ -70,6 +72,8 @@ function HeroContent({
                 primary="Registrarse"
                 secondary="Iniciar sesión"
                 stats={STATS}
+                onPrimary={() => navigation.navigate("FaceAttendEDU-Register")}
+                onSecondary={() => navigation.navigate("FaceAttendEDU-Login")}
             />
 
             <HeroRight

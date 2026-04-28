@@ -7,15 +7,16 @@ export default function LoginScreen() {
 
     return (
         <LoginPage
-            onLogin={(usuario , contrasena) => {
-                console.log(usuario, contrasena);
-                // navigation.replace("Home");
+            onLogin={(usuario: string, contrasena: string) => {
+                console.log("Login:", usuario, contrasena);
+                // Navegar al dashboard tras el login exitoso
+                navigation.replace("FaceAttendEDU-Dashboard");
             }}
             onForgotPassword={() => {
                 console.log("Forgot password");
             }}
             onRegister={() => {
-                navigation.navigate("Register");
+                navigation.navigate("FaceAttendEDU-Register");
             }}
         />
     );
