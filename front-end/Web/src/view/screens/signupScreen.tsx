@@ -1,3 +1,6 @@
+// ============================================================
+//  FaceAttend EDU — Signup Screen
+// ============================================================
 import React from "react";
 import { useNavigation } from "@react-navigation/native";
 import SignupPage from "../components/own_components/auth/signupView";
@@ -7,12 +10,12 @@ export default function SignupScreen() {
 
     return (
         <SignupPage
-            onRegister={(data: any) => {
-                console.log(data);
-                navigation.replace("Home");
+            onRegister={(data) => {
+                console.log("Register:", data);
+                navigation.replace("FaceAttendEDU-Dashboard");
             }}
             onLogin={() => {
-                navigation.navigate("Login");
+                navigation.navigate("FaceAttendEDU-Login");
             }}
         />
     );

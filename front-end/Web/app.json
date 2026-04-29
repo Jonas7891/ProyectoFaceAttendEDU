@@ -23,7 +23,7 @@
     },
     "web": {
       "output": "single",
-      "favicon": "./src/assets/images/favicon.png"
+      "favicon": "./src/assets/images/logo(antiguo)FaceAttend.png"
     },
     "plugins": [
       [
