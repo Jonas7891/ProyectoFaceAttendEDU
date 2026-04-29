@@ -12,7 +12,7 @@
     "search": "Pesquisa"
   },
   "login": {
-    "title": "Login",
+    "title": "login",
     "email": "Email",
     "password": "Senha",
     "emailPlaceholder": "exemplo@email.com",
@@ -173,7 +173,7 @@
     "noHistory": "Sem histórico de presença"
   },
   "homes": {
-    "greeting": "Login"
+    "greeting": "login"
   },
   "registerModal": {
     "title": "Solicitação de Conta",

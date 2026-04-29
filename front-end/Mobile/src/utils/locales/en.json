@@ -12,7 +12,7 @@
     "close": "Close"
   },
   "login": {
-    "title": "Login",
+    "title": "login",
     "email": "Email",
     "password": "Password",
     "emailPlaceholder": "example@email.com",
@@ -173,7 +173,7 @@
     "noHistory": "No attendance history"
   },
   "homes": {
-    "greeting": "Login"
+    "greeting": "login"
   },
   "registerModal": {
     "title": "Account Request",
@@ -186,7 +186,7 @@
     "acceptanceText": "By accessing, registering and using the present mobile application, the user declares to have read, understood and accepted in a free, prior, express and informed manner the present Terms and Conditions, as well as the Personal Data Processing Policy.",
     "objectTitle": "2. OBJECT OF THE APPLICATION",
     "objectText": "The application has as its purpose to manage user attendance registration in public or private spaces through facial recognition technology, allowing automated identity validation.",
-    "authorizationTitle": "3. AUTHORIZATION FOR THE TREATMENT OF PERSONAL DATA",
+    "authorizationTitle": "3. authORIZATION FOR THE TREATMENT OF PERSONAL DATA",
     "authorizationText": "The user authorizes in a prior, express and informed manner the application responsible for collecting, storing, using, processing and deleting their personal data, in accordance with the Colombian legislation in force.",
     "sensitiveDataTitle": "4. TREATMENT OF SENSITIVE DATA (BIOMETRICS)",
     "sensitiveDataText": "The user expressly authorizes the treatment of their biometric data (facial image), which are considered sensitive data, with the following purposes:",

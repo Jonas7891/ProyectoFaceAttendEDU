@@ -2,10 +2,10 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import es from './Locales/es.json';
-import en from './Locales/en.json';
-import fr from './Locales/fr.json';
-import pt from './Locales/pt.json';
+import es from './locales/es.json';
+import en from './locales/en.json';
+import fr from './locales/fr.json';
+import pt from './locales/pt.json';
 
 const resources = {
   es: { translation: es },

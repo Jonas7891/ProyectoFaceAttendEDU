@@ -35,10 +35,10 @@
     "history": "Historial"
   },
   "attendance": {
-    "filterByName": "Filtrar por Nombre",
-    "filterByDate": "Filtrar por Fecha",
     "searchByName": "Buscar por nombre...",
-    "searchByDate": "Buscar por fecha (YYYY-MM-DD)..."
+    "searchByDate": "Buscar por fecha (YYYY-MM-DD)...",
+    "title": "Asistencias Registradas",
+    "noResults": "Sin resultados"
   },
   "settings": {
     "language": "Idioma",
