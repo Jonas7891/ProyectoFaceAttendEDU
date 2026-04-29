@@ -1,6 +1,6 @@
 package com.faceattend_edu.application.impl;
 
-import com.faceattend_edu.application.mapper.ViewMapper;
+import com.faceattend_edu.application.mapper.ViewServiceMapper;
 import com.faceattend_edu.application.service.ViewService;
 import com.faceattend_edu.domain.dto.request.ViewRequest;
 import com.faceattend_edu.domain.dto.response.ViewResponse;
@@ -9,6 +9,7 @@ import com.faceattend_edu.domain.model.View;
 import com.faceattend_edu.domain.port.ViewRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -17,7 +18,7 @@ import java.util.List;
 public class ViewServiceImpl implements ViewService {
 
     private final ViewRepositoryPort repository;
-    private final ViewMapper mapper;
+    private final ViewServiceMapper mapper;
 
     @Override
     public ViewResponse findById(Integer id) {
@@ -27,6 +28,7 @@ public class ViewServiceImpl implements ViewService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ViewResponse> findAll() {
         return repository.findAll()
                 .stream()

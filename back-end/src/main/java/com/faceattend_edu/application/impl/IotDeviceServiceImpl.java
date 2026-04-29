@@ -1,6 +1,6 @@
 package com.faceattend_edu.application.impl;
 
-import com.faceattend_edu.application.mapper.IotDeviceMapper;
+import com.faceattend_edu.application.mapper.IotDeviceServiceMapper;
 import com.faceattend_edu.application.service.IotDeviceService;
 import com.faceattend_edu.domain.dto.request.IotDeviceRequest;
 import com.faceattend_edu.domain.dto.response.IotDeviceResponse;
@@ -17,7 +17,7 @@ import java.util.List;
 public class IotDeviceServiceImpl implements IotDeviceService {
 
     private final IotDeviceRepositoryPort repository;
-    private final IotDeviceMapper mapper;
+    private final IotDeviceServiceMapper mapper;
 
     @Override
     public IotDeviceResponse findById(Integer id) {

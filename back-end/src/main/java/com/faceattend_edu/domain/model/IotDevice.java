@@ -13,7 +13,7 @@ import java.time.Instant;
 @AllArgsConstructor
 public class IotDevice {
     private Integer id;
-    private Classroom idClassroom;
+    private Classroom classroom;
     private String deviceName;
     private String macAddress;
     private String ipAddress;

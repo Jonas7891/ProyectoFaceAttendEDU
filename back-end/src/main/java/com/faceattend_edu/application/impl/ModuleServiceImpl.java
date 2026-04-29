@@ -1,6 +1,6 @@
 package com.faceattend_edu.application.impl;
 
-import com.faceattend_edu.application.mapper.ModuleMapper;
+import com.faceattend_edu.application.mapper.ModuleServiceMapper;
 import com.faceattend_edu.application.service.ModuleService;
 import com.faceattend_edu.domain.dto.request.ModuleRequest;
 import com.faceattend_edu.domain.dto.response.ModuleResponse;
@@ -9,6 +9,7 @@ import com.faceattend_edu.domain.model.Module;
 import com.faceattend_edu.domain.port.ModuleRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -17,7 +18,7 @@ import java.util.List;
 public class ModuleServiceImpl implements ModuleService {
 
     private final ModuleRepositoryPort repository;
-    private final ModuleMapper mapper;
+    private final ModuleServiceMapper mapper;
 
     @Override
     public ModuleResponse findById(Integer id) {
@@ -27,6 +28,7 @@ public class ModuleServiceImpl implements ModuleService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ModuleResponse> findAll() {
         return repository.findAll()
                 .stream()

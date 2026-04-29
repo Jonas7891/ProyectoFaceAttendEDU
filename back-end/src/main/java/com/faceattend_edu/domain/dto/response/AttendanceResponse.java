@@ -9,9 +9,9 @@ import java.time.LocalTime;
 
 public record AttendanceResponse(
         Integer id,
-        Person idStudent,
-        Schedule idSchedule,
-        IotDevice idDevice,
+        Person student,
+        Schedule schedule,
+        IotDevice iotDevice,
         LocalDate date,
         LocalTime time,
         Object status

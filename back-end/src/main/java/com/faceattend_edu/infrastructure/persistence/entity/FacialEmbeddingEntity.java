@@ -18,9 +18,9 @@ public class FacialEmbeddingEntity {
     @Column(name = "id_embedding", nullable = false)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_person", nullable = false)
-    private PersonEntity idPerson;
+    private PersonEntity person;
 
     @Column(name = "embedding", nullable = false)
     private List<Float> embedding;

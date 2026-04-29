@@ -13,10 +13,10 @@ import java.time.LocalTime;
 @AllArgsConstructor
 public class Schedule {
     private Integer id;
-    private Period idPeriod;
-    private Course idCourse;
-    private Person idTeacher;
-    private Classroom idClassroom;
+    private Period period;
+    private Course course;
+    private Person teacher;
+    private Classroom classroom;
     private Object day;
     private LocalTime startTime;
     private LocalTime endTime;

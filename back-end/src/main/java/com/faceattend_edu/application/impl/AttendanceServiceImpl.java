@@ -1,6 +1,6 @@
 package com.faceattend_edu.application.impl;
 
-import com.faceattend_edu.application.mapper.AttendanceMapper;
+import com.faceattend_edu.application.mapper.AttendanceServiceMapper;
 import com.faceattend_edu.application.service.AttendanceService;
 import com.faceattend_edu.domain.dto.request.AttendanceRequest;
 import com.faceattend_edu.domain.dto.response.AttendanceResponse;
@@ -17,7 +17,7 @@ import java.util.List;
 public class AttendanceServiceImpl implements AttendanceService {
 
     private final AttendanceRepositoryPort repository;
-    private final AttendanceMapper mapper;
+    private final AttendanceServiceMapper mapper;
 
     @Override
     public AttendanceResponse findById(Integer id) {
@@ -53,7 +53,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     public void deleteById(Integer id) {
-        if (!repository.findById(id).isPresent()) {
+        if (repository.findById(id).isEmpty()) {
             throw new NotFoundException("Attendance", id);
         }
         repository.deleteById(id);

@@ -1,6 +1,6 @@
 package com.faceattend_edu.application.impl;
 
-import com.faceattend_edu.application.mapper.PersonMapper;
+import com.faceattend_edu.application.mapper.PersonServiceMapper;
 import com.faceattend_edu.application.service.PersonService;
 import com.faceattend_edu.domain.dto.request.PersonRequest;
 import com.faceattend_edu.domain.dto.response.PersonResponse;
@@ -9,6 +9,7 @@ import com.faceattend_edu.domain.model.Person;
 import com.faceattend_edu.domain.port.PersonRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -17,7 +18,7 @@ import java.util.List;
 public class PersonServiceImpl implements PersonService {
 
     private final PersonRepositoryPort repository;
-    private final PersonMapper mapper;
+    private final PersonServiceMapper mapper;
 
     @Override
     public PersonResponse findById(Integer id) {
@@ -27,6 +28,7 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PersonResponse> findAll() {
         return repository.findAll()
                 .stream()

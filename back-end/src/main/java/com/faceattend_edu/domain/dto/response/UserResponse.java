@@ -1,14 +1,14 @@
 package com.faceattend_edu.domain.dto.response;
 
-import com.faceattend_edu.domain.model.Language;
 import com.faceattend_edu.domain.model.Person;
+import com.faceattend_edu.domain.model.Role;
 
 import java.time.Instant;
+import java.util.List;
 
 public record UserResponse(
         Integer id,
-        Person idPerson,
-        Language idLanguage,
+        Person person,
         String username,
         String password,
         Boolean status,

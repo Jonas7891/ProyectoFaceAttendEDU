@@ -1,6 +1,6 @@
 package com.faceattend_edu.application.impl;
 
-import com.faceattend_edu.application.mapper.JustificationMapper;
+import com.faceattend_edu.application.mapper.JustificationServiceMapper;
 import com.faceattend_edu.application.service.JustificationService;
 import com.faceattend_edu.domain.dto.request.JustificationRequest;
 import com.faceattend_edu.domain.dto.response.JustificationResponse;
@@ -17,7 +17,7 @@ import java.util.List;
 public class JustificationServiceImpl implements JustificationService {
 
     private final JustificationRepositoryPort repository;
-    private final JustificationMapper mapper;
+    private final JustificationServiceMapper mapper;
 
     @Override
     public JustificationResponse findById(Integer id) {

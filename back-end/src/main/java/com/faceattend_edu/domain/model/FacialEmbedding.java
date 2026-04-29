@@ -14,7 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 public class FacialEmbedding {
     private Integer id;
-    private Person idPerson;
+    private Person person;
     private List<Float> embedding;
     private String modelVersion;
     private Boolean isActive;

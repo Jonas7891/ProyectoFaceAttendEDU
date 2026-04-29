@@ -1,10 +1,15 @@
 package com.faceattend_edu.domain.dto.response;
 
+import com.faceattend_edu.domain.model.Action;
+
+import java.util.List;
+
 public record ViewResponse(
         Integer id,
         String name,
         String route,
         String title,
-        Boolean isPublic
+        Boolean isPublic,
+        List<Action> actions
 ) {
 }

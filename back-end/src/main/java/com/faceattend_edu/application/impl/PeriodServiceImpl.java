@@ -1,6 +1,6 @@
 package com.faceattend_edu.application.impl;
 
-import com.faceattend_edu.application.mapper.PeriodMapper;
+import com.faceattend_edu.application.mapper.PeriodServiceMapper;
 import com.faceattend_edu.application.service.PeriodService;
 import com.faceattend_edu.domain.dto.request.PeriodRequest;
 import com.faceattend_edu.domain.dto.response.PeriodResponse;
@@ -17,7 +17,7 @@ import java.util.List;
 public class PeriodServiceImpl implements PeriodService {
 
     private final PeriodRepositoryPort repository;
-    private final PeriodMapper mapper;
+    private final PeriodServiceMapper mapper;
 
     @Override
     public PeriodResponse findById(Integer id) {

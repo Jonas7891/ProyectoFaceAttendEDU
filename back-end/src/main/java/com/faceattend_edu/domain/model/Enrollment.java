@@ -13,9 +13,9 @@ import java.time.Instant;
 @AllArgsConstructor
 public class Enrollment {
     private Integer id;
-    private Person idStudent;
-    private Course idCourse;
-    private Period idPeriod;
+    private Person student;
+    private Course course;
+    private Period period;
     private Instant enrollmentDate;
     private Object status;
 }

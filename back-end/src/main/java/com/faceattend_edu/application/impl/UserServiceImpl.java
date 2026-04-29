@@ -1,6 +1,6 @@
 package com.faceattend_edu.application.impl;
 
-import com.faceattend_edu.application.mapper.UserMapper;
+import com.faceattend_edu.application.mapper.UserServiceMapper;
 import com.faceattend_edu.application.service.UserService;
 import com.faceattend_edu.domain.dto.request.UserRequest;
 import com.faceattend_edu.domain.dto.response.UserResponse;
@@ -9,6 +9,7 @@ import com.faceattend_edu.domain.model.User;
 import com.faceattend_edu.domain.port.UserRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -17,7 +18,7 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private final UserRepositoryPort repository;
-    private final UserMapper mapper;
+    private final UserServiceMapper mapper;
 
     @Override
     public UserResponse findById(Integer id) {
@@ -27,6 +28,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserResponse> findAll() {
         return repository.findAll()
                 .stream()

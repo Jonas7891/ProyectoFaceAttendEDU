@@ -10,16 +10,16 @@ import java.time.LocalTime;
 
 public record ScheduleRequest(
         @NotNull(message = "El período es requerido")
-        Period idPeriod,
+        Period period,
 
         @NotNull(message = "El curso es requerido")
-        Course idCourse,
+        Course course,
 
         @NotNull(message = "El profesor es requerido")
-        Person idTeacher,
+        Person teacher,
 
         @NotNull(message = "El aula es requerida")
-        Classroom idClassroom,
+        Classroom classroom,
 
         @NotNull(message = "El día es requerido")
         Object day,

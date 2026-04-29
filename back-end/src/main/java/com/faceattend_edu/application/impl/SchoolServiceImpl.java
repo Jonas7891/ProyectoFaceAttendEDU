@@ -1,6 +1,6 @@
 package com.faceattend_edu.application.impl;
 
-import com.faceattend_edu.application.mapper.SchoolMapper;
+import com.faceattend_edu.application.mapper.SchoolServiceMapper;
 import com.faceattend_edu.application.service.SchoolService;
 import com.faceattend_edu.domain.dto.request.SchoolRequest;
 import com.faceattend_edu.domain.dto.response.SchoolResponse;
@@ -17,7 +17,7 @@ import java.util.List;
 public class SchoolServiceImpl implements SchoolService {
 
     private final SchoolRepositoryPort repository;
-    private final SchoolMapper mapper;
+    private final SchoolServiceMapper mapper;
 
     @Override
     public SchoolResponse findById(Integer id) {

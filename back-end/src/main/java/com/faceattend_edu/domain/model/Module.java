@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -15,4 +17,6 @@ public class Module {
     private String description;
     private String icon;
     private Integer order;
+
+    private List<View> views;
 }

@@ -1,6 +1,6 @@
 package com.faceattend_edu.application.impl;
 
-import com.faceattend_edu.application.mapper.CourseMapper;
+import com.faceattend_edu.application.mapper.CourseServiceMapper;
 import com.faceattend_edu.application.service.CourseService;
 import com.faceattend_edu.domain.dto.request.CourseRequest;
 import com.faceattend_edu.domain.dto.response.CourseResponse;
@@ -17,7 +17,7 @@ import java.util.List;
 public class CourseServiceImpl implements CourseService {
 
     private final CourseRepositoryPort repository;
-    private final CourseMapper mapper;
+    private final CourseServiceMapper mapper;
 
     @Override
     public CourseResponse findById(Integer id) {
@@ -53,7 +53,7 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public void deleteById(Integer id) {
-        if (!repository.findById(id).isPresent()) {
+        if (repository.findById(id).isEmpty()) {
             throw new NotFoundException("Course", id);
         }
         repository.deleteById(id);

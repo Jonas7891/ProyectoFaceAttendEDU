@@ -13,7 +13,7 @@ import java.time.Instant;
 @AllArgsConstructor
 public class Justification {
     private Integer id;
-    private Attendance idAttendance;
+    private Attendance attendance;
     private String justification;
     private Object approval;
     private Instant createdAt;

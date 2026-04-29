@@ -10,7 +10,7 @@ import java.time.Instant;
 
 public record JustificationRequest(
         @NotNull(message = "La asistencia es requerida")
-        Attendance idAttendance,
+        Attendance attendance,
 
         @NotBlank(message = "La justificación es requerida")
         @Size(min = 10, max = 1000, message = "La justificación debe tener entre 10 y 1000 caracteres")

@@ -17,17 +17,17 @@ public class EnrollmentEntity {
     @Column(name = "id_enrollment", nullable = false)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_student", nullable = false)
-    private PersonEntity idStudent;
+    private PersonEntity student;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_course", nullable = false)
-    private CourseEntity idCourse;
+    private CourseEntity course;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_period", nullable = false)
-    private PeriodEntity idPeriod;
+    private PeriodEntity period;
 
     @ColumnDefault("now()")
     @Column(name = "enrollment_date", nullable = false)

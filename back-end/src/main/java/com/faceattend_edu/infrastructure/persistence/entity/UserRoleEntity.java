@@ -13,17 +13,17 @@ import java.time.Instant;
 @Table(name = "user_role")
 public class UserRoleEntity {
     @EmbeddedId
-    private UserRoleEntityId id;
+    private UserRoleEntityId id = new UserRoleEntityId();
 
-    @MapsId("idUser")
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @MapsId("user")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_user", nullable = false)
-    private UserEntity idUser;
+    private UserEntity user;
 
-    @MapsId("idRole")
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @MapsId("role")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_role", nullable = false)
-    private RoleEntity idRole;
+    private RoleEntity role;
 
     @ColumnDefault("now()")
     @Column(name = "assigned_date", nullable = false)
@@ -32,5 +32,10 @@ public class UserRoleEntity {
     @Column(name = "expiry_date")
     private Instant expiryDate;
 
-
+    @PrePersist
+    public void prePersist() {
+        if (assignedDate == null) {
+            assignedDate = Instant.now();
+        }
+    }
 }

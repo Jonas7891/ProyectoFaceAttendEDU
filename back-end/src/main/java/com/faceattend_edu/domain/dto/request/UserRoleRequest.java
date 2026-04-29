@@ -8,10 +8,10 @@ import java.time.Instant;
 
 public record UserRoleRequest(
         @NotNull(message = "El usuario es requerido")
-        User idUser,
+        Integer userId,
 
         @NotNull(message = "El rol es requerido")
-        Role idRole,
+        Integer roleId,
 
         @NotNull(message = "La fecha de asignación es requerida")
         Instant assignedDate,
