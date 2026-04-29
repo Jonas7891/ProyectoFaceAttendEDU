@@ -14,6 +14,7 @@ import {
 import { useTranslation } from "react-i18next";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { restoreLanguageForRole } from "../../components/common/languageByRole";
+import { useLanguageRefresh } from '../../../utils/useLanguageRefresh';
 import { useTheme } from '../../components/common/ThemeContext';
 import PrimaryButton from "../../components/auth/PrimaryButton";
 import SelectableButton from "../../components/auth/SelectableButton";
@@ -28,22 +29,13 @@ export default function HomesScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
+ const refreshKey = useLanguageRefresh();
   const navigation = useNavigation();
   const { t, i18n } = useTranslation();
-  const { colors, loadThemeForRole } = useTheme(); // ✅
+  const { colors, loadThemeForRole } = useTheme();
 
   const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
   const [isTerminosModalVisible, setIsTerminosModalVisible] = useState(false);
-
-  // ─── login siempre en español ─────────────────────────────────────────────
-  useEffect(() => {
-    i18n.changeLanguage('es'); // ✅ login siempre en español
-
-    const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
-    i18n.on('languageChanged', handleLanguageChange);
-    return () => i18n.off('languageChanged', handleLanguageChange);
-  }, [i18n]);
 
   // ─── login ────────────────────────────────────────────────────────────────
   const handlelogin = async () => {
@@ -86,7 +78,7 @@ export default function HomesScreen() {
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}>
+    <SafeAreaView style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]} key={refreshKey}>
       <ScrollView>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "position" : "position"}

@@ -15,29 +15,52 @@ import Separador from "../components/common/Separador";
 import styles from "./Style";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from "../components/common/ThemeContext";
-import { restoreLanguageForRole } from "../components/common/languageByRole";
+import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
+import { saveLanguageForRole } from '../components/common/languageByRole';
 
 export default function NewsScreen() {
     const navigation = useNavigation();
     const { t, i18n } = useTranslation();
     const { colors, theme, loadThemeForRole } = useTheme();
 
-    const [refreshKey, setRefreshKey] = useState(0);
+    const refreshKey = useLanguageRefresh();
     const [userRole, setUserRole] = useState(null);
+    const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
+    const [updateKey, setUpdateKey] = useState(0); // ← AGREGADO: Estado faltante
 
+    // ✅ Listener de idioma y inicialización - SIN dependencia [i18n]
     useEffect(() => {
         const init = async () => {
-            const role = await AsyncStorage.getItem('userRole');
-            setUserRole(role);
-            await restoreLanguageForRole(role);
-            await loadThemeForRole(role);
+            try {
+                const role = await AsyncStorage.getItem('userRole');
+                setUserRole(role);
+                if (role) {
+                    await loadThemeForRole(role);
+                }
+            } catch (error) {
+                console.error('Error inicializando NewsScreen:', error);
+            }
         };
         init();
 
-        const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
-        i18n.on('languageChanged', handleLanguageChange);
-        return () => i18n.off('languageChanged', handleLanguageChange);
-    }, [i18n]);
+        // Listener de cambio de idioma
+        const handleLanguageChanged = (lng) => {
+            console.log('🔄 NewsScreen: Idioma cambiado a', lng);
+            setCurrentLanguage(lng);
+            setUpdateKey(prev => prev + 1); // Ahora sí existe
+        };
+
+        // Establecer idioma inicial
+        setCurrentLanguage(i18n.language);
+
+        // Registrar listener
+        i18n.on('languageChanged', handleLanguageChanged);
+
+        // Cleanup
+        return () => {
+            i18n.off('languageChanged', handleLanguageChanged);
+        };
+    }, []); // ← Array vacío
 
     return (
         <SafeAreaView
@@ -45,7 +68,7 @@ export default function NewsScreen() {
                 styles.safeArea,
                 { backgroundColor: colors.background }
             ]}
-            key={refreshKey}
+            key={`${refreshKey}-${updateKey}`}
         >
             <ScrollViewWrapper>
                 <View style={styles.container} marginHorizontal={10}>

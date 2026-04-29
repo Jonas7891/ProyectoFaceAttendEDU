@@ -17,13 +17,19 @@ import { QuestionInput } from "../components/common/QuestionInput";
 import PrimaryButton from "../components/auth/PrimaryButton";
 import styles from "./Style";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { saveLanguageForRole } from "../components/common/languageByRole";
+import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
+import { saveLanguageForRole } from '../components/common/languageByRole';
+import LanguageSelector from '../components/common/LanguageSelector';
 
 export default function UpdatePhoto() {
     const navigation = useNavigation();
     const { t, i18n } = useTranslation();
-    const [refreshKey, setRefreshKey] = useState(0);
+    const refreshKey = useLanguageRefresh();
     const [attendanceRegistered, setAttendanceRegistered] = useState(false);
+    const [selectedLanguage, setSelectedLanguage] = useState(i18n.language);
+    const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
+    const [updateKey, setUpdateKey] = useState(0);
+    const handleLanguageChange = (newLang) => setSelectedLanguage(newLang);
 
     const [formData, setFormData] = useState({
         nombreCompleto: "",
@@ -36,15 +42,22 @@ export default function UpdatePhoto() {
         const init = async () => {
             const role = await AsyncStorage.getItem('userRole');
             setUserRole(role);
-
-            await restoreLanguageForRole(role);
+            await loadThemeForRole(role);
         };
         init();
 
-        const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
-        i18n.on('languageChanged', handleLanguageChange);
-        return () => i18n.off('languageChanged', handleLanguageChange);
-    }, [i18n]);
+        const handleLanguageChanged = (lng) => {
+            setCurrentLanguage(lng);
+            setUpdateKey(prev => prev + 1);
+        };
+
+        setCurrentLanguage(i18n.language);
+        i18n.on('languageChanged', handleLanguageChanged);
+
+        return () => {
+            i18n.off('languageChanged', handleLanguageChanged);
+        };
+    }, []);
 
     const handleInputChange = (field, value) => {
         setFormData(prevState => ({
@@ -75,7 +88,7 @@ export default function UpdatePhoto() {
     };
 
     return (
-        <SafeAreaView style={styles.container} key={refreshKey}>
+        <SafeAreaView style={styles.container} key={`${refreshKey}-${updateKey}`}>
             <StatusBar barstyle="dark-content" backgroundColor="#F5F5F5" />
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}

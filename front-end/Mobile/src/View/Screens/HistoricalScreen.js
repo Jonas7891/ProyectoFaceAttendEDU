@@ -13,7 +13,7 @@ import BottomBar from "../components/common/NavigationBar";
 import ScrollViewWrapper from "../components/common/ScrollView";
 import CustomTabs from "../components/common/CustomTabs";
 import { useTheme } from "../components/common/ThemeContext";
-import { restoreLanguageForRole } from "../components/common/languageByRole";
+import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import styles from "./Style";
 
 const ASISTENCIAS_ADMIN = [
@@ -31,24 +31,46 @@ const ASISTENCIAS_ESTUDIANTE = [
 export default function HistoricalScreen() {
     const navigation = useNavigation();
     const { t, i18n } = useTranslation();
-    const { colors, theme } = useTheme();
+    const { colors, theme, loadThemeForRole } = useTheme(); // ← Agregar loadThemeForRole
 
-    const [refreshKey, setRefreshKey] = useState(0);
-    const [refreshing, setRefreshing] = useState(false);
+    const refreshKey = useLanguageRefresh();
     const [userRole, setUserRole] = useState(null);
+    const [currentLanguage, setCurrentLanguage] = useState(i18n.language); // ← Agregar estado
+    const [updateKey, setUpdateKey] = useState(0); // ← Agregar estado
 
+    // ✅ Inicialización y listener de idioma - SIN dependencia [i18n]
     useEffect(() => {
         const init = async () => {
-            const role = await AsyncStorage.getItem('userRole');
-            setUserRole(role);
-            await restoreLanguageForRole(role);
+            try {
+                const role = await AsyncStorage.getItem('userRole');
+                setUserRole(role);
+                if (role) {
+                    await loadThemeForRole(role);
+                }
+            } catch (error) {
+                console.error('Error inicializando HistoricalScreen:', error);
+            }
         };
         init();
 
-        const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
-        i18n.on('languageChanged', handleLanguageChange);
-        return () => i18n.off('languageChanged', handleLanguageChange);
-    }, [i18n]);
+        // Listener de cambio de idioma
+        const handleLanguageChanged = (lng) => {
+            console.log('🔄 HistoricalScreen: Idioma cambiado a', lng);
+            setCurrentLanguage(lng);
+            setUpdateKey(prev => prev + 1);
+        };
+
+        // Establecer idioma inicial
+        setCurrentLanguage(i18n.language);
+
+        // Registrar listener
+        i18n.on('languageChanged', handleLanguageChanged);
+
+        // Cleanup
+        return () => {
+            i18n.off('languageChanged', handleLanguageChanged);
+        };
+    }, []); // ← Array vacío
 
     const isAdmin = userRole === 'admin';
     const asistenciasRecientes = isAdmin ? ASISTENCIAS_ADMIN : ASISTENCIAS_ESTUDIANTE;
@@ -60,6 +82,7 @@ export default function HistoricalScreen() {
     return (
         <SafeAreaView
             style={[styles.safeArea, { backgroundColor: colors.background }]}
+            key={`${refreshKey}-${updateKey}`}
         >
             <ScrollViewWrapper>
                 <View style={styles.container} marginHorizontal={5}>
@@ -79,7 +102,10 @@ export default function HistoricalScreen() {
                             {t('dashboard.recentAttendance')}
                         </Text>
 
-                        <View style={[styles.recentSection, theme === 'dark' && { backgroundColor: colors.separator }]} >
+                        <View style={[
+                            styles.recentSection,
+                            theme === 'dark' && { backgroundColor: colors.separator }
+                        ]}>
                             {asistenciasRecientes.map((item) => (
                                 <View
                                     key={item.id}

@@ -16,17 +16,23 @@ import PrimaryButton from "../components/auth/PrimaryButton";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { restoreLanguageForRole } from "../components/common/languageByRole";
+import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import { useTheme } from '../components/common/ThemeContext';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { saveLanguageForRole } from '../components/common/languageByRole';
+import LanguageSelector from '../components/common/LanguageSelector';
 
 export default function DisplayingAttendance() {
     const navigation = useNavigation();
     const { t, i18n } = useTranslation();
     const { colors, loadThemeForRole } = useTheme();
-    const [refreshKey, setRefreshKey] = useState(0);
+    const refreshKey = useLanguageRefresh();
     const [userRole, setUserRole] = useState(null);
     const [searchText, setSearchText] = useState("");
+    const [selectedLanguage, setSelectedLanguage] = useState(i18n.language);
+    const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
+    const [updateKey, setUpdateKey] = useState(0);
+    const handleLanguageChange = (newLang) => setSelectedLanguage(newLang);
 
     // ─── Date picker ─────────────────────────────────────────────────────────
     const [selectedDate, setSelectedDate] = useState(null);
@@ -40,14 +46,21 @@ export default function DisplayingAttendance() {
             const role = await AsyncStorage.getItem('userRole');
             setUserRole(role);
             await loadThemeForRole(role);
-            await restoreLanguageForRole(role);
         };
         init();
 
-        const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
-        i18n.on('languageChanged', handleLanguageChange);
-        return () => i18n.off('languageChanged', handleLanguageChange);
-    }, [i18n]);
+        const handleLanguageChanged = (lng) => {
+            setCurrentLanguage(lng);
+            setUpdateKey(prev => prev + 1);
+        };
+
+        setCurrentLanguage(i18n.language);
+        i18n.on('languageChanged', handleLanguageChanged);
+
+        return () => {
+            i18n.off('languageChanged', handleLanguageChanged);
+        };
+    }, []);
 
     // ─── Datos ───────────────────────────────────────────────────────────────
     const asistenciasRecientes = [
@@ -118,7 +131,7 @@ export default function DisplayingAttendance() {
 
     // ─── Render ──────────────────────────────────────────────────────────────
     return (
-        <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} key={`${refreshKey}-${updateKey}`}>
             <View style={[styles.containerAttendance, { backgroundColor: colors.background, flex: 1 }]}>
 
                 {/* Header */}

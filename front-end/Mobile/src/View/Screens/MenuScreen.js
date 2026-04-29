@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Text,
   View,
@@ -11,39 +11,92 @@ import {
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { saveLanguageForRole, restoreLanguageForRole } from "../components/common/languageByRole";
+import { saveLanguageForRole } from "../components/common/languageByRole";
+import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import { useTheme } from '../components/common/ThemeContext';
 import DangerButton from "../components/auth/DangerButton";
 import CustomLogo from "../components/auth/logo";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import styles from "./Style";
 
 export default function MenuScreen() {
   const navigation = useNavigation();
   const { t, i18n } = useTranslation();
-  const { colors, loadThemeForRole, toggleTheme } = useTheme();
+  const { colors, loadThemeForRole } = useTheme();
+  const refreshKey = useLanguageRefresh();
 
-  const [refreshKey, setRefreshKey] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
+  const [updateKey, setUpdateKey] = useState(0);
 
-  // 🔹 Inicialización
+  useEffect(() => {
+    const handleLanguageChanged = (lng) => {
+      console.log('🔄 MenuScreen: Idioma cambiado a', lng);
+      setCurrentLanguage(lng);
+      setUpdateKey(prev => prev + 1);
+    };
+
+    setCurrentLanguage(i18n.language);
+
+    i18n.on('languageChanged', handleLanguageChanged);
+    
+    return () => {
+      i18n.off('languageChanged', handleLanguageChanged);
+    };
+  }, []);
+
+  // Al recuperar el foco, sincronizar idioma y tema
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+      
+      const reloadData = async () => {
+        try {
+          const role = await AsyncStorage.getItem('userRole');
+          if (!isActive) return;
+          
+          setUserRole(role);
+
+          const savedLang = await AsyncStorage.getItem('appLanguage');
+          if (savedLang && savedLang !== i18n.language && isActive) {
+            console.log('🔄 Sincronizando idioma al volver:', savedLang);
+            await i18n.changeLanguage(savedLang);
+          }
+
+          if (role && isActive) {
+            await loadThemeForRole(role);
+          }
+
+          if (isActive) {
+            setUpdateKey(prev => prev + 1);
+          }
+        } catch (error) {
+          console.error('Error en reloadData:', error);
+        }
+      };
+
+      reloadData();
+      
+      return () => {
+        isActive = false;
+      };
+    }, [])
+  );
+
+  // Inicialización única
   useEffect(() => {
     const init = async () => {
-      const role = await AsyncStorage.getItem('userRole');
-      setUserRole(role);
-
-      if (role) {
-        await loadThemeForRole(role);
-        await restoreLanguageForRole(role);
+      try {
+        const role = await AsyncStorage.getItem('userRole');
+        setUserRole(role);
+        if (role) await loadThemeForRole(role);
+      } catch (error) {
+        console.error('Error en init:', error);
       }
     };
     init();
-
-    const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
-    i18n.on('languageChanged', handleLanguageChange);
-    return () => i18n.off('languageChanged', handleLanguageChange);
-  }, [i18n]);
+  }, []);
 
   const isAdmin = userRole === 'admin';
 
@@ -55,12 +108,20 @@ export default function MenuScreen() {
   const handleSettings = () => navigation.navigate("LanguageSettings");
 
   const handleLogout = async () => {
-    await saveLanguageForRole(userRole);
-    await AsyncStorage.removeItem('userRole');
-    navigation.navigate("Home");
+    setIsLoading(true);
+    try {
+      if (userRole) {
+        await saveLanguageForRole(userRole, i18n.language);
+      }
+      await AsyncStorage.removeItem('userRole');
+      navigation.navigate("Home");
+    } catch (error) {
+      console.error('Error en logout:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // 🔹 Item reutilizable
   const MenuItem = ({ label, onPress }) => (
     <>
       <View style={{ height: 1, backgroundColor: colors.separator, marginVertical: 10 }} />
@@ -81,7 +142,7 @@ export default function MenuScreen() {
   return (
     <SafeAreaView
       style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}
-      key={refreshKey}
+      key={`${refreshKey}-${updateKey}`}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -120,7 +181,6 @@ export default function MenuScreen() {
                 <MenuItem label={t('menu.updateFacialParams')} onPress={handleUpdatePhoto} />
               )}
 
-              {/* Ambos roles */}
               <MenuItem
                 label={isAdmin
                   ? t('menu.justificationConfig')

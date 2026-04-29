@@ -18,15 +18,31 @@ import styles from "./Style";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { saveLanguageForRole } from "../components/common/languageByRole";
 import { useTheme } from "../components/common/ThemeContext";
+import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
+import LanguageSelector from '../components/common/LanguageSelector';
 
 export default function MenuJustifyScreen() {
   const navigation = useNavigation();
   const { t, i18n } = useTranslation();
   const { colors, theme } = useTheme();
 
-  const [refreshKey, setRefreshKey] = useState(0);
+  const refreshKey = useLanguageRefresh();
   const [userRole, setUserRole] = useState(null);
   const [pendingCount, setPendingCount] = useState(0);
+  const [selectedLanguage, setSelectedLanguage] = useState(i18n.language);
+  const handleLanguageChange = (newLang) => setSelectedLanguage(newLang);
+
+  useEffect(() => {
+    const handleLanguageChange = (lng) => {
+      console.log('🔄 Idioma cambiado a:', lng);
+    };
+
+    i18n.on('languageChanged', handleLanguageChange);
+
+    return () => {
+      i18n.off('languageChanged', handleLanguageChange);
+    };
+  }, []);
 
   useEffect(() => {
     const init = async () => {
@@ -45,17 +61,12 @@ export default function MenuJustifyScreen() {
       }
     };
     init();
+  }, []);
 
-    const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
-    i18n.on('languageChanged', handleLanguageChange);
-
+  useEffect(() => {
     const unsubscribe = navigation.addListener('focus', loadPendingCount);
-
-    return () => {
-      i18n.off('languageChanged', handleLanguageChange);
-      unsubscribe();
-    };
-  }, [i18n, navigation]);
+    return () => unsubscribe();
+  }, [navigation]);
 
   const loadPendingCount = async () => {
     try {

@@ -3,8 +3,10 @@ import { View, Text, ScrollView, TouchableOpacity, SafeAreaView } from "react-na
 import { useTranslation } from "react-i18next";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { restoreLanguageForRole } from "../components/common/languageByRole";
+import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import { useTheme } from '../components/common/ThemeContext';
+import { saveLanguageForRole } from '../components/common/languageByRole';
+import LanguageSelector from '../components/common/LanguageSelector';
 import styles from "./Style";
 
 export default function JustificationsScreen() {
@@ -12,21 +14,33 @@ export default function JustificationsScreen() {
     const navigation = useNavigation();
     const { colors, loadThemeForRole } = useTheme();
     const [justifications, setJustifications] = useState([]);
-    const [refreshKey, setRefreshKey] = useState(0);
+    const refreshKey = useLanguageRefresh();
     const [userRole, setUserRole] = useState(null);
+    const [selectedLanguage, setSelectedLanguage] = useState(i18n.language);
+    const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
+    const [updateKey, setUpdateKey] = useState(0);
+    const handleLanguageChange = (newLang) => setSelectedLanguage(newLang);
 
     useEffect(() => {
         const init = async () => {
             const role = await AsyncStorage.getItem('userRole');
             setUserRole(role);
             await loadThemeForRole(role);
-            await restoreLanguageForRole(role);
         };
         init();
-        const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
-        i18n.on('languageChanged', handleLanguageChange);
-        return () => i18n.off('languageChanged', handleLanguageChange);
-    }, [i18n]);
+
+        const handleLanguageChanged = (lng) => {
+            setCurrentLanguage(lng);
+            setUpdateKey(prev => prev + 1);
+        };
+
+        setCurrentLanguage(i18n.language);
+        i18n.on('languageChanged', handleLanguageChanged);
+
+        return () => {
+            i18n.off('languageChanged', handleLanguageChanged);
+        };
+    }, []);
 
     useEffect(() => {
         loadJustifications();
@@ -119,7 +133,7 @@ export default function JustificationsScreen() {
     );
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} key={`${refreshKey}-${updateKey}`}>
             <View style={{ flex: 1, backgroundColor: colors.background }} marginHorizontal={10}>
 
                 {/* ── Header integrado con el fondo ── */}

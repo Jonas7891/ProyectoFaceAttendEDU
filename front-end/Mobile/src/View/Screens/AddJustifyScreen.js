@@ -17,34 +17,41 @@ import PrimaryButton from "../components/auth/PrimaryButton";
 import Separador from "../components/common/Separador";
 import styles from "./Style";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveLanguageForRole } from '../components/common/LanguageSelector';
 
 import { useTheme } from "../components/common/ThemeContext";
-import { restoreLanguageForRole } from "../components/common/languageByRole";
+import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 
 export default function AddJustification() {
   const navigation = useNavigation();
   const { t, i18n } = useTranslation();
   const { colors, theme } = useTheme();
 
-  const [refreshKey, setRefreshKey] = useState(0);
+  const refreshKey = useLanguageRefresh();
   const [justificationType, setJustificationType] = useState("inasistencia");
   const [description, setDescription] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
+  const [selectedLanguage, setSelectedLanguage] = useState(i18n.language);
+  const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
+  const [updateKey, setUpdateKey] = useState(0);
+  const handleLanguageChange = (newLang) => setSelectedLanguage(newLang);
 
   useEffect(() => {
-    const init = async () => {
-      const role = await AsyncStorage.getItem('userRole');
-      await restoreLanguageForRole(role);
+    const handleLanguageChanged = (lng) => {
+      setCurrentLanguage(lng);
+      setUpdateKey(prev => prev + 1);
     };
-    init();
 
-    const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
-    i18n.on('languageChanged', handleLanguageChange);
-    return () => i18n.off('languageChanged', handleLanguageChange);
-  }, [i18n]);
+    setCurrentLanguage(i18n.language);
+    i18n.on('languageChanged', handleLanguageChanged);
+
+    return () => {
+      i18n.off('languageChanged', handleLanguageChanged);
+    };
+  }, []);
 
   const handleBack = () => navigation.goBack();
 
@@ -84,6 +91,7 @@ export default function AddJustification() {
   return (
     <SafeAreaView
       style={[styles.safeAreaWhite, { backgroundColor: colors.background }]}
+      key={`${refreshKey}-${updateKey}`}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}

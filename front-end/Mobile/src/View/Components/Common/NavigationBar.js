@@ -20,7 +20,6 @@ export default function BottomBar({ onPressSettings, onPressProfile, onPressSear
 
       if (role) {
         await loadThemeForRole(role);
-        await restoreLanguageForRole(role);
       }
 
     };

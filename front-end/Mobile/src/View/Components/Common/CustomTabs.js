@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useLanguageRefresh } from '../../../utils/useLanguageRefresh';
 import { useTheme } from '../common/ThemeContext';
 import stylescommon from './style/Style';
 
@@ -21,9 +22,11 @@ export default function CustomTabs({ onChange, userRole }) {
   const route = useRoute();
   const { t, i18n } = useTranslation();
   const { colors, theme, loadThemeForRole } = useTheme();
+  const [selectedLanguage, setSelectedLanguage] = useState(i18n.language);
+  const handleLanguageChange = (newLang) => setSelectedLanguage(newLang);
 
   const [selected, setSelected] = useState(0);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const refreshKey = useLanguageRefresh();
   const [currentUserRole, setCurrentUserRole] = useState(userRole);
 
   useEffect(() => {
@@ -39,7 +42,6 @@ export default function CustomTabs({ onChange, userRole }) {
   }, [userRole]);
 
   useEffect(() => {
-    const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
     i18n.on('languageChanged', handleLanguageChange);
     return () => i18n.off('languageChanged', handleLanguageChange);
   }, [i18n]);

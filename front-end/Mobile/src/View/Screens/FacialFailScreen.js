@@ -13,23 +13,27 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { restoreLanguageForRole } from "../components/common/languageByRole";
+import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import { useTheme } from '../components/common/ThemeContext';
 import PrimaryButton from "../components/auth/PrimaryButton";
 import { QuestionnaireModal } from "../components/common/QuestionnaireModal";
 import { FacialUpdateModal } from "../components/common/FacialUpdateModal";
 import CustomLogo from "../components/auth/logo";
+import { saveLanguageForRole } from '../components/common/languageByRole';
+import LanguageSelector from '../components/common/LanguageSelector';
 import styles from "./Style";
 
 export default function FacialFail() {
     const navigation = useNavigation();
     const { t, i18n } = useTranslation();
     const { colors, loadThemeForRole } = useTheme();
-    const [refreshKey, setRefreshKey] = useState(0);
+    const refreshKey = useLanguageRefresh();
     const [userRole, setUserRole] = useState(null);
     const [showQuestionnaire, setShowQuestionnaire] = useState(false);
     const [showFacialUpdate, setShowFacialUpdate] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [updateKey, setUpdateKey] = useState(0);
+    const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
 
     // ─── Inicialización ──────────────────────────────────────────────────────
     useEffect(() => {
@@ -37,20 +41,27 @@ export default function FacialFail() {
             const role = await AsyncStorage.getItem('userRole');
             setUserRole(role);
             await loadThemeForRole(role);
-            await restoreLanguageForRole(role);
         };
         init();
 
-        const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
-        i18n.on('languageChanged', handleLanguageChange);
-        return () => i18n.off('languageChanged', handleLanguageChange);
-    }, [i18n]);
+        const handleLanguageChanged = (lng) => {
+            setCurrentLanguage(lng);
+            setUpdateKey(prev => prev + 1);
+        };
 
-    const handleBack = () => navigation.goBack(); // ✅ quitado setIsLoading innecesario
+        setCurrentLanguage(i18n.language);
+        i18n.on('languageChanged', handleLanguageChanged);
+
+        return () => {
+            i18n.off('languageChanged', handleLanguageChanged);
+        };
+    }, []);
+
+    const handleBack = () => navigation.goBack();
 
     // ─── Render ──────────────────────────────────────────────────────────────
     return (
-        <SafeAreaView style={[styles.safeAreaFacialFail, { backgroundColor: colors.background }]}>
+        <SafeAreaView style={[styles.safeAreaFacialFail, { backgroundColor: colors.background }]} key={`${refreshKey}-${updateKey}`}>
             <ScrollView contentContainerstyle={styles.scrollContent}>
                 <KeyboardAvoidingView
                     behavior={Platform.OS === "ios" ? "padding" : "height"}

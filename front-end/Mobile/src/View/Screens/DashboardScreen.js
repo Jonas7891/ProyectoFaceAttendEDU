@@ -3,19 +3,25 @@ import { Text, View, SafeAreaView, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { restoreLanguageForRole } from "../components/common/languageByRole";
+import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import { useTheme } from '../components/common/ThemeContext';
 import BottomBar from "../components/common/NavigationBar";
 import ScrollViewWrapper from "../components/common/ScrollView";
 import CustomTabs from "../components/common/CustomTabs";
 import styles from "./Style";
+import { saveLanguageForRole } from '../components/common/languageByRole';
+import LanguageSelector from '../components/common/LanguageSelector';
 
 export default function Dashboard() {
   const navigation = useNavigation();
   const { t, i18n } = useTranslation();
   const { colors, loadThemeForRole, toggleTheme, theme } = useTheme();
-  const [refreshKey, setRefreshKey] = useState(0);
+  const refreshKey = useLanguageRefresh();
   const [userRole, setUserRole] = useState(null);
+  const [selectedLanguage, setSelectedLanguage] = useState(i18n.language);
+  const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
+  const [updateKey, setUpdateKey] = useState(0);
+  const handleLanguageChange = (newLang) => setSelectedLanguage(newLang);
 
   const [adminStats, setAdminStats] = useState({ totalEmpleados: 45, presentesHoy: 38, ausentesHoy: 5, tardanzasHoy: 2, porcentajeAsistencia: 84 });
   const [studentStats, setStudentStats] = useState({ miAsistencia: 94, totalClases: 32, clasesAsistidas: 30, faltas: 2, reconocimientosExitosos: 28, retardos: 3, fallasReconocimiento: 2, porcentajeRetardos: 9, porcentajeFallas: 7, tasaExitoReconocimiento: 93 });
@@ -25,16 +31,21 @@ export default function Dashboard() {
       const role = await AsyncStorage.getItem('userRole');
       setUserRole(role);
       await loadThemeForRole(role);
-      await restoreLanguageForRole(role);
-      if (role === 'admin') cargarEstadisticasAdmin();
-      else cargarEstadisticasEstudiante();
     };
     init();
 
-    const handleLanguageChange = () => setRefreshKey(prev => prev + 1);
-    i18n.on('languageChanged', handleLanguageChange);
-    return () => i18n.off('languageChanged', handleLanguageChange);
-  }, [i18n]);
+    const handleLanguageChanged = (lng) => {
+      setCurrentLanguage(lng);
+      setUpdateKey(prev => prev + 1);
+    };
+
+    setCurrentLanguage(i18n.language);
+    i18n.on('languageChanged', handleLanguageChanged);
+
+    return () => {
+      i18n.off('languageChanged', handleLanguageChanged);
+    };
+  }, []);
 
   const cargarEstadisticasAdmin = () => setAdminStats({ totalEmpleados: 45, presentesHoy: 38, ausentesHoy: 5, tardanzasHoy: 2, porcentajeAsistencia: 84 });
   const cargarEstadisticasEstudiante = () => setStudentStats({ miAsistencia: 94, totalClases: 32, clasesAsistidas: 30, faltas: 2, reconocimientosExitosos: 28, retardos: 3, fallasReconocimiento: 2, porcentajeRetardos: 9, porcentajeFallas: 7, tasaExitoReconocimiento: 93 });
@@ -81,7 +92,7 @@ export default function Dashboard() {
   const attendanceLabel = isAdmin ? t('dashboard.attendance') : t('student.myAttendance');
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} key={`${refreshKey}-${updateKey}`}>
       <ScrollViewWrapper>
         <View style={styles.container} marginHorizontal={15}>
           <CustomTabs userRole={userRole} />
