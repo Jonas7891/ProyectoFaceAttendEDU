@@ -44,7 +44,7 @@ export default function CustomLogo({
       ]}
     >
       <Image
-        style={stylesauth.image}
+        style={stylesAuth.image}
         source={source || require("../../../assets/images/logoFaceAttend.png")}
         accessibilityLabel="Logo de FaceAttend"
         resizeMode="cover"

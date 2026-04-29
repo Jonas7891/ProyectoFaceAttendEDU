@@ -3,7 +3,7 @@ import { TouchableOpacity, Text, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import stylesauth from "./style/Style";
+import stylesAuth from "./style/Style";
 
 export default function DangerButton({ 
   title, 
@@ -44,12 +44,12 @@ export default function DangerButton({
 
   return (
     <TouchableOpacity
-      style={[stylesauth.dangerButton, disabled && stylesauth.buttonDisabled]}
+      style={[stylesAuth.dangerButton, disabled && stylesAuth.buttonDisabled]}
       onPress={handleLogout}
       disabled={disabled}
       activeOpacity={0.7}
     >
-      <Text style={stylesauth.dangerButtonText}>{title}</Text>
+      <Text style={stylesAuth.dangerButtonText}>{title}</Text>
     </TouchableOpacity>
   );
 }

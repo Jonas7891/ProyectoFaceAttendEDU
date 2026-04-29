@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TouchableOpacity, Text, View } from 'react-native';
-import stylesauth from './style/Style';
+import stylesAuth from './Style/Style';
 
 export default function PrimaryButton({
     title,

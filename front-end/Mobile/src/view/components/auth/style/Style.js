@@ -1,6 +1,6 @@
 import { StyleSheet, Platform } from 'react-native';
 
-const stylesauth = StyleSheet.create({
+const stylesAuth = StyleSheet.create({
     dangerButton: {
         backgroundColor: '#ff0000',
         paddingVertical: 12,
@@ -205,4 +205,4 @@ const stylesauth = StyleSheet.create({
     },
 });
 
-export default stylesauth;
+export default stylesAuth;
