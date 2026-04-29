@@ -6,17 +6,22 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserRoleRepositoryPort {
-    UserRole save(UserRole userRole);
 
-    Optional<UserRole> findById(Integer id);
+    Optional<UserRole> findByIdUserAndIdRole(Integer userId, Integer roleId);
 
-    Optional<UserRole> findByUserId(Integer id);
+    List<UserRole> findByIdUser(Integer userId);
 
-    Optional<UserRole> findByRoleId(Integer id);
+    List<UserRole> findByIdRole(Integer roleId);
+
+    List<UserRole> findActiveRolesByUserId(Integer userId);
 
     List<UserRole> findAll();
 
-    void deleteById(Integer id);
+    UserRole save(UserRole userRole);
 
-    void assignRole(UserRole userRole);
+    void deleteByIdUserAndIdRole(Integer userId, Integer roleId);
+
+    void deleteByIdUser(Integer userId);
+
+    boolean existsByIdUserAndIdRole(Integer userId, Integer roleId);
 }

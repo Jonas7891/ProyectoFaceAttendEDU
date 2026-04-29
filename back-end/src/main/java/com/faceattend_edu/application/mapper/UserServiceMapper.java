@@ -36,12 +36,6 @@ public class UserServiceMapper {
     }
 
     public UserResponse toResponse(User user) {
-        List<UserRoleResponse> roleResponses = user.getRoles() != null
-                ? user.getRoles().stream()
-                .map(userRoleMapper::toResponse)
-                .collect(Collectors.toList())
-                : new ArrayList<>();
-
         return new UserResponse(
                 user.getId(),
                 user.getPerson(),
@@ -50,8 +44,7 @@ public class UserServiceMapper {
                 user.getStatus(),
                 user.getCreatedAt(),
                 user.getUpdatedAt(),
-                user.getLastLogin(),
-                roleResponses
+                user.getLastLogin()
         );
     }
 }

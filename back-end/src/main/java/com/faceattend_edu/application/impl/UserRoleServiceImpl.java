@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 
 @AllArgsConstructor
@@ -21,26 +22,38 @@ public class UserRoleServiceImpl implements UserRoleService {
     private final UserRoleServiceMapper mapper;
 
     @Override
-    public UserRoleResponse findById(Integer id) {
-        UserRole userRole = repository.findById(id)
-                .orElseThrow(() -> new NotFoundException("UserRole", id));
+    @Transactional(readOnly = true)
+    public UserRoleResponse findByIdUserAndIdRole(Integer userId, Integer roleId) {
+        UserRole userRole = repository.findByIdUserAndIdRole(userId, roleId)
+                .orElseThrow(() -> new NotFoundException("UserRole", "userId/roleId", userId + "/" + roleId));
         return mapper.toResponse(userRole);
     }
 
     @Override
-    public UserRoleResponse findByUser(Integer id) {
-        UserRole userRole = repository.findByUserId(id)
-                .orElseThrow(() -> new NotFoundException("UserRole", id));
-
-        return mapper.toResponse(userRole);
+    @Transactional(readOnly = true)
+    public List<UserRoleResponse> findByIdUser(Integer userId) {
+        return repository.findByIdUser(userId)
+                .stream()
+                .map(mapper::toResponse)
+                .toList();
     }
 
     @Override
-    public UserRoleResponse findByRole(Integer id) {
-        UserRole userRole = repository.findByRoleId(id)
-                .orElseThrow(() -> new NotFoundException("UserRole", id));
+    @Transactional(readOnly = true)
+    public List<UserRoleResponse> findByIdRole(Integer roleId) {
+        return repository.findByIdRole(roleId)
+                .stream()
+                .map(mapper::toResponse)
+                .toList();
+    }
 
-        return mapper.toResponse(userRole);
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserRoleResponse> findActiveRolesByUserId(Integer userId) {
+        return repository.findActiveRolesByUserId(userId)
+                .stream()
+                .map(mapper::toResponse)
+                .toList();
     }
 
     @Override
@@ -53,27 +66,55 @@ public class UserRoleServiceImpl implements UserRoleService {
     }
 
     @Override
+    @Transactional
     public UserRoleResponse save(UserRoleRequest request) {
+        // Verificar si ya existe la relación
+        if (repository.existsByIdUserAndIdRole(request.userId(), request.roleId())) {
+            throw new IllegalArgumentException(
+                    String.format("El usuario %d ya tiene asignado el rol %d", request.userId(), request.roleId())
+            );
+        }
+
         UserRole userRole = mapper.toDomain(request);
+        userRole.setAssignedDate(Instant.now());
+
         UserRole saved = repository.save(userRole);
         return mapper.toResponse(saved);
     }
 
     @Override
-    public UserRoleResponse update(Integer id, UserRoleRequest request) {
-        repository.findById(id)
-                .orElseThrow(() -> new NotFoundException("UserRole", id));
-        UserRole updated = mapper.toDomain(request);
-        //updated.setId(id);
-        UserRole saved = repository.save(updated);
-        return mapper.toResponse(saved);
+    @Transactional
+    public UserRoleResponse updateExpiryDate(Integer userId, Integer roleId, Instant expiryDate) {
+        UserRole userRole = repository.findByIdUserAndIdRole(userId, roleId)
+                .orElseThrow(() -> new NotFoundException("UserRole", "userId/roleId", userId + "/" + roleId));
+
+        userRole.setExpiryDate(expiryDate);
+        UserRole updated = repository.save(userRole);
+        return mapper.toResponse(updated);
     }
 
     @Override
-    public void deleteById(Integer id) {
-        if (repository.findById(id).isEmpty()) {
-            throw new NotFoundException("UserRole", id);
+    @Transactional
+    public void deleteByIdUserAndIdRole(Integer userId, Integer roleId) {
+        if (repository.findByIdUserAndIdRole(userId, roleId).isEmpty()) {
+            throw new NotFoundException("UserRole", "userId/roleId", userId + "/" + roleId);
         }
-        repository.deleteById(id);
+        repository.deleteByIdUserAndIdRole(userId, roleId);
+    }
+
+    @Override
+    @Transactional
+    public void deleteByIdUser(Integer userId) {
+        List<UserRole> userRoles = repository.findByIdUser(userId);
+        if (userRoles.isEmpty()) {
+            throw new NotFoundException("UserRole", "userId", String.valueOf(userId));
+        }
+        repository.deleteByIdUser(userId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean userHasRole(Integer userId, Integer roleId) {
+        return repository.existsByIdUserAndIdRole(userId, roleId);
     }
 }

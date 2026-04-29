@@ -4,6 +4,7 @@ import com.faceattend_edu.domain.dto.request.RoleRequest;
 import com.faceattend_edu.domain.dto.response.RoleResponse;
 import com.faceattend_edu.domain.model.Role;
 import com.faceattend_edu.infrastructure.persistence.entity.RoleEntity;
+import com.faceattend_edu.infrastructure.persistence.mapper.qualifier.RoleEntityToRoleDomain;
 import org.mapstruct.Mapper;
 import org.springframework.stereotype.Component;
 
@@ -14,5 +15,6 @@ public interface RoleRepositoryMapper {
 
     RoleEntity toEntity(Role role);
 
+    @RoleEntityToRoleDomain
     Role toDomain(RoleEntity entity);
 }

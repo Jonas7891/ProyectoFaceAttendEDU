@@ -5,25 +5,32 @@ import com.faceattend_edu.domain.dto.response.UserRoleResponse;
 import com.faceattend_edu.domain.model.UserRole;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
+
 @Component
 public class UserRoleServiceMapper {
 
     public UserRole toDomain(UserRoleRequest request) {
         return new UserRole(
-                request.user(),
-                request.role(),
-                request.assignedDate(),
+                request.userId(),
+                request.roleId(),
+                null,  // Se cargarán desde la BD
+                null,  // Se cargarán desde la BD
+                Instant.now(),
                 request.expiryDate()
         );
     }
 
-    public UserRoleResponse toResponse(UserRole userRole) {
+    public UserRoleResponse toResponse(UserRole domain) {
+        boolean isActive = domain.getExpiryDate() == null ||
+                domain.getExpiryDate().isAfter(Instant.now());
+
         return new UserRoleResponse(
-                null,
-                userRole.getUser(),
-                userRole.getRole(),
-                userRole.getAssignedDate(),
-                userRole.getExpiryDate()
+                domain.getUserId(),
+                domain.getRoleId(),
+                //domain.getRole() != null ? domain.getRole().getName() : "UNKNOWN",
+                domain.getAssignedDate(),
+                domain.getExpiryDate()
         );
     }
 }

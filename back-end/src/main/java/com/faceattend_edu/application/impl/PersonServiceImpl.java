@@ -9,6 +9,7 @@ import com.faceattend_edu.domain.model.Person;
 import com.faceattend_edu.domain.port.PersonRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,6 +28,7 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PersonResponse> findAll() {
         return repository.findAll()
                 .stream()

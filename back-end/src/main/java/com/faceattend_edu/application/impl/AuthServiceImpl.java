@@ -5,6 +5,7 @@ import com.faceattend_edu.domain.port.UserRepositoryPort;
 import com.faceattend_edu.infrastructure.security.JwtService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -21,6 +22,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public String login(String email, String password) {
 
         var user = userRepositoryPort.findByEmail(email)

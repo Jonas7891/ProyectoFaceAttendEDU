@@ -9,6 +9,7 @@ import com.faceattend_edu.infrastructure.persistence.mapper.UserRepositoryMapper
 import com.faceattend_edu.infrastructure.persistence.repository.UserJpaRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;

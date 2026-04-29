@@ -14,7 +14,6 @@ public record UserResponse(
         Boolean status,
         Instant createdAt,
         Instant updatedAt,
-        Instant lastLogin,
-        List<UserRoleResponse> roles
+        Instant lastLogin
 ) {
 }

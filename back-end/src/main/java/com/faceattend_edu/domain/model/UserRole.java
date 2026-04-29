@@ -13,6 +13,9 @@ import java.time.Instant;
 @AllArgsConstructor
 public class UserRole {
 
+    private Integer userId;
+    private Integer roleId;
+
     private User user;
     private Role role;
     private Instant assignedDate;

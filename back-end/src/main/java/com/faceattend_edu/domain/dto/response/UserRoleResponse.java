@@ -6,9 +6,8 @@ import com.faceattend_edu.domain.model.User;
 import java.time.Instant;
 
 public record UserRoleResponse(
-        Integer id,
-        User user,
-        Role role,
+        Integer userId,
+        Integer roleId,
         Instant assignedDate,
         Instant expiryDate
 ) {
