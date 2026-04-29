@@ -1,15 +1,10 @@
 // ============================================================
 //  FaceAttend EDU — Shared UI Components (React Native)
-//  Todos los componentes base están aquí para fácil reutilización
 // ============================================================
-import React, { useState } from "react";
-import {
-    View, Text, TouchableOpacity, TextInput,
-    StyleSheet, ScrollView, ViewStyle, TextStyle,
-} from "react-native";
+import React from "react";
+import { View, Text, TouchableOpacity, ViewStyle, TextStyle } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import Colors from "../../constants/colors";
-import { useResponsive } from "../../hooks/useResponsive";
-import { getTypography } from "../../constants/typography";
 
 // ── Avatar ──────────────────────────────────────────────────
 export function Avatar({ name = "?", size = 36, color = Colors.primary }: {
@@ -19,12 +14,9 @@ export function Avatar({ name = "?", size = 36, color = Colors.primary }: {
     return (
         <View style={{
             width: size, height: size, borderRadius: size / 2,
-            backgroundColor: color,
-            alignItems: "center", justifyContent: "center",
+            backgroundColor: color, alignItems: "center", justifyContent: "center",
         }}>
-            <Text style={{ color: "#fff", fontSize: size * 0.36, fontWeight: "600" }}>
-                {initials}
-            </Text>
+            <Text style={{ color: "#fff", fontSize: size * 0.36, fontWeight: "600" }}>{initials}</Text>
         </View>
     );
 }
@@ -32,11 +24,11 @@ export function Avatar({ name = "?", size = 36, color = Colors.primary }: {
 // ── Badge ────────────────────────────────────────────────────
 type BadgeVariant = "default" | "success" | "warning" | "danger" | "primary";
 const BADGE_VARIANTS: Record<BadgeVariant, { bg: string; color: string }> = {
-    default: { bg: Colors.border,           color: Colors.muted },
-    success: { bg: "#D1FAE5",               color: "#065F46" },
-    warning: { bg: "#FEF3C7",               color: "#92400E" },
-    danger:  { bg: "#FEE2E2",               color: "#991B1B" },
-    primary: { bg: Colors.primaryLight,     color: Colors.primary },
+    default: { bg: Colors.border,       color: Colors.muted   },
+    success: { bg: "#D1FAE5",           color: "#065F46"      },
+    warning: { bg: "#FEF3C7",           color: "#92400E"      },
+    danger:  { bg: "#FEE2E2",           color: "#991B1B"      },
+    primary: { bg: Colors.primaryLight, color: Colors.primary },
 };
 export function Badge({ children, variant = "default" }: { children: string; variant?: BadgeVariant }) {
     const v = BADGE_VARIANTS[variant];
@@ -55,8 +47,7 @@ export function Card({ children, style, padding = 20 }: {
         <View style={[{
             backgroundColor: Colors.surface,
             borderWidth: 1, borderColor: Colors.border,
-            borderRadius: 10,
-            padding,
+            borderRadius: 10, padding,
         }, style]}>
             {children}
         </View>
@@ -64,21 +55,35 @@ export function Card({ children, style, padding = 20 }: {
 }
 
 // ── StatCard ─────────────────────────────────────────────────
-export function StatCard({ label, value, change, changeLabel, color = Colors.primary }: {
-    label: string; value: string | number; change?: number; changeLabel?: string; color?: string;
+export function StatCard({ label, value, change, changeLabel, color = Colors.primary, icon }: {
+    label: string; value: string | number; change?: number;
+    changeLabel?: string; color?: string; icon?: React.ReactNode;
 }) {
     const isPositive = (change ?? 0) > 0;
     return (
         <Card style={{ flex: 1 }}>
-            <Text style={{ fontSize: 11, fontWeight: "600", color: Colors.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
-                {label}
-            </Text>
-            <Text style={{ fontSize: 26, fontWeight: "800", color: Colors.text }}>{value}</Text>
-            {change !== undefined && (
-                <Text style={{ fontSize: 11, marginTop: 6, color: isPositive ? "#059669" : "#EF4444" }}>
-                    {isPositive ? "▲" : "▼"} {Math.abs(change)}% {changeLabel}
-                </Text>
-            )}
+            <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" }}>
+                <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 11, fontWeight: "600", color: Colors.muted, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 8 }}>
+                        {label}
+                    </Text>
+                    <Text style={{ fontSize: 26, fontWeight: "700", color: Colors.text, lineHeight: 30 }}>{value}</Text>
+                    {change !== undefined && (
+                        <Text style={{ fontSize: 12, marginTop: 6, color: isPositive ? "#059669" : "#EF4444" }}>
+                            {isPositive ? "▲" : "▼"} {Math.abs(change)}% {changeLabel}
+                        </Text>
+                    )}
+                </View>
+                {icon && (
+                    <View style={{
+                        width: 44, height: 44, borderRadius: 10,
+                        backgroundColor: color + "18",
+                        alignItems: "center", justifyContent: "center",
+                    }}>
+                        {icon}
+                    </View>
+                )}
+            </View>
         </Card>
     );
 }
@@ -93,12 +98,12 @@ export function PageHeader({ title, subtitle, actions }: {
                 <Text style={{ fontSize: 22, fontWeight: "700", color: Colors.text }}>{title}</Text>
                 {subtitle && <Text style={{ fontSize: 13, color: Colors.muted, marginTop: 4 }}>{subtitle}</Text>}
             </View>
-            {actions && <View style={{ flexDirection: "row", gap: 8 }}>{actions}</View>}
+            {actions && <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>{actions}</View>}
         </View>
     );
 }
 
-// ── Button ───────────────────────────────────────────────────
+// ── UIButton ─────────────────────────────────────────────────
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 type ButtonSize = "sm" | "md" | "lg";
 export function UIButton({ children, variant = "primary", size = "md", onPress, disabled, style }: {
@@ -111,33 +116,29 @@ export function UIButton({ children, variant = "primary", size = "md", onPress, 
         ghost:     "transparent",
         danger:    "#FEE2E2",
     };
-    const textColorMap: Record<ButtonVariant, string> = {
+    const colorMap: Record<ButtonVariant, string> = {
         primary:   "#fff",
         secondary: Colors.primary,
         ghost:     Colors.muted,
         danger:    "#EF4444",
     };
-    const heightMap: Record<ButtonSize, number> = { sm: 30, md: 36, lg: 42 };
-    const fontSizeMap: Record<ButtonSize, number> = { sm: 12, md: 13, lg: 14 };
-    const paddingMap: Record<ButtonSize, number> = { sm: 12, md: 16, lg: 20 };
+    const h: Record<ButtonSize, number> = { sm: 30, md: 36, lg: 42 };
+    const fs: Record<ButtonSize, number> = { sm: 12, md: 13, lg: 14 };
+    const px: Record<ButtonSize, number> = { sm: 12, md: 16, lg: 20 };
 
     return (
         <TouchableOpacity
             onPress={disabled ? undefined : onPress}
             style={[{
-                height: heightMap[size],
-                paddingHorizontal: paddingMap[size],
-                backgroundColor: bgMap[variant],
-                borderRadius: 6,
-                alignItems: "center",
-                justifyContent: "center",
+                height: h[size], paddingHorizontal: px[size],
+                backgroundColor: bgMap[variant], borderRadius: 6,
+                alignItems: "center", justifyContent: "center",
                 opacity: disabled ? 0.5 : 1,
                 borderWidth: variant === "ghost" ? 1 : 0,
-                borderColor: Colors.border,
-                flexDirection: "row",
+                borderColor: Colors.border, flexDirection: "row", gap: 6,
             }, style]}
         >
-            <Text style={{ color: textColorMap[variant], fontSize: fontSizeMap[size], fontWeight: "600" }}>
+            <Text style={{ color: colorMap[variant], fontSize: fs[size], fontWeight: "500" } as TextStyle}>
                 {children}
             </Text>
         </TouchableOpacity>
@@ -162,11 +163,14 @@ export function Divider({ style }: { style?: ViewStyle }) {
 }
 
 // ── EmptyState ───────────────────────────────────────────────
-export function EmptyState({ title, description }: { title: string; description?: string }) {
+export function EmptyState({ title, description, icon }: {
+    title: string; description?: string; icon?: React.ReactNode;
+}) {
     return (
         <View style={{ alignItems: "center", padding: 48 }}>
+            {icon && <View style={{ marginBottom: 12 }}>{icon}</View>}
             <Text style={{ fontSize: 15, fontWeight: "600", color: Colors.text, marginBottom: 4 }}>{title}</Text>
-            {description && <Text style={{ fontSize: 13, color: Colors.muted }}>{description}</Text>}
+            {description && <Text style={{ fontSize: 13, color: Colors.muted, textAlign: "center" }}>{description}</Text>}
         </View>
     );
 }
@@ -184,8 +188,7 @@ export function ToggleRow({ label, description, value, onToggle }: {
             <TouchableOpacity onPress={onToggle} style={{
                 width: 44, height: 24, borderRadius: 12,
                 backgroundColor: value ? Colors.primary : Colors.border,
-                justifyContent: "center",
-                paddingHorizontal: 3,
+                justifyContent: "center", paddingHorizontal: 3,
             }}>
                 <View style={{
                     width: 18, height: 18, borderRadius: 9, backgroundColor: "#fff",

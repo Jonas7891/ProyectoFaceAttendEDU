@@ -8,11 +8,9 @@
     "scheme": "FaceAttend-EDU",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-
     "ios": {
       "supportsTablet": true
     },
-
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -23,12 +21,10 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
-
     "web": {
-      "output": "static",
+      "output": "single",
       "favicon": "./src/assets/images/favicon.png"
     },
-
     "plugins": [
       [
         "expo-splash-screen",
@@ -41,9 +37,9 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
-
     "experiments": {
       "reactCompiler": true
     }
