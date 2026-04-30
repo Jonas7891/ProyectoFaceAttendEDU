@@ -40,7 +40,7 @@ export default function MenuScreen() {
     setCurrentLanguage(i18n.language);
 
     i18n.on('languageChanged', handleLanguageChanged);
-    
+
     return () => {
       i18n.off('languageChanged', handleLanguageChanged);
     };
@@ -50,12 +50,12 @@ export default function MenuScreen() {
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
-      
+
       const reloadData = async () => {
         try {
           const role = await AsyncStorage.getItem('userRole');
           if (!isActive) return;
-          
+
           setUserRole(role);
 
           const savedLang = await AsyncStorage.getItem('appLanguage');
@@ -77,7 +77,7 @@ export default function MenuScreen() {
       };
 
       reloadData();
-      
+
       return () => {
         isActive = false;
       };
@@ -108,17 +108,16 @@ export default function MenuScreen() {
   const handleSettings = () => navigation.navigate("LanguageSettings");
 
   const handleLogout = async () => {
-    setIsLoading(true);
     try {
-      if (userRole) {
-        await saveLanguageForRole(userRole, i18n.language);
-      }
-      await AsyncStorage.removeItem('userRole');
-      navigation.navigate("Home");
-    } catch (error) {
-      console.error('Error en logout:', error);
-    } finally {
-      setIsLoading(false);
+      await AsyncStorage.multiRemove([
+        'userRole',
+        'userEmail',
+        'authToken',
+      ]);
+
+      onLogout();
+    } catch (e) {
+      console.error('Error en logout:', e);
     }
   };
 

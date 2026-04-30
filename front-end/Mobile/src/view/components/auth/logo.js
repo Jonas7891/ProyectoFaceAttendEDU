@@ -1,6 +1,6 @@
 import React from 'react';
 import { Image, View } from "react-native";
-import stylesauth from "./style/Style";
+import styleAuth from "./style/Style";
 
 export default function CustomLogo({
   source,
@@ -33,7 +33,7 @@ export default function CustomLogo({
   return (
     <View
       style={[
-        stylesauth.container,
+        styleAuth.container,
         {
           width: dimensions.width,
           height: dimensions.height,
@@ -44,7 +44,7 @@ export default function CustomLogo({
       ]}
     >
       <Image
-        style={stylesAuth.image}
+        style={styleAuth.image}
         source={source || require("../../../assets/images/logoFaceAttend.png")}
         accessibilityLabel="Logo de FaceAttend"
         resizeMode="cover"

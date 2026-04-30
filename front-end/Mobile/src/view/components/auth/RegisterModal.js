@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../common/ThemeContext';
-import stylesauth from "./style/Style";
+import styleAuth from "./style/Style";
 
 export default function RegisterModal({ isVisible, onClose }) {
   const { t } = useTranslation();
@@ -21,21 +21,21 @@ export default function RegisterModal({ isVisible, onClose }) {
       transparent={true}
       onRequestClose={onClose}
     >
-      <View style={[stylesauth.overlayRegister, { backgroundColor: colors.modalOverlay }]}>
-        <View style={[stylesauth.modalContainerRegister, { backgroundColor: colors.modalBackground }]}>
-          <Text style={[stylesauth.titleRegister, { color: colors.modalText }]}>{t('registerModal.title')}</Text>
+      <View style={[styleAuth.overlayRegister, { backgroundColor: colors.modalOverlay }]}>
+        <View style={[styleAuth.modalContainerRegister, { backgroundColor: colors.modalBackground }]}>
+          <Text style={[styleAuth.titleRegister, { color: colors.modalText }]}>{t('registerModal.title')}</Text>
 
           <ScrollView
-            style={stylesauth.contentRegister}
+            style={styleAuth.contentRegister}
             showsVerticalScrollIndicator={false}
           >
-            <Text style={[stylesauth.paragraphRegister, { color: colors.modalTextSecondary }]}>
+            <Text style={[styleAuth.paragraphRegister, { color: colors.modalTextSecondary }]}>
               {t('registerModal.description')}
             </Text>
           </ScrollView>
 
-          <TouchableOpacity style={[stylesauth.buttonRegister, { backgroundColor: colors.modalButton }]} onPress={onClose}>
-            <Text style={[stylesauth.buttonTextRegister, { color: colors.modalButtonText }]}>{t('registerModal.close')}</Text>
+          <TouchableOpacity style={[styleAuth.buttonRegister, { backgroundColor: colors.modalButton }]} onPress={onClose}>
+            <Text style={[styleAuth.buttonTextRegister, { color: colors.modalButtonText }]}>{t('registerModal.close')}</Text>
           </TouchableOpacity>
         </View>
       </View>

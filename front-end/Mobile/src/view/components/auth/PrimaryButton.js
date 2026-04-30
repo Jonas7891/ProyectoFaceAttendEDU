@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text } from 'react-native';
-import stylesauth from "./style/Style";
+import styleAuth from "./style/Style";
 
 export default function PrimaryButton({
   title,
@@ -9,11 +9,11 @@ export default function PrimaryButton({
 }) {
   return (
     <TouchableOpacity
-      style={[stylesauth.buttonPrimary, disabled && stylesauth.buttonDisabledPrimary]}
+      style={[styleAuth.buttonPrimary, disabled && styleAuth.buttonDisabledPrimary]}
       onPress={onPress}
       disabled={disabled}
     >
-      <Text style={stylesauth.textPrimaryButton}>{title}</Text>
+      <Text style={styleAuth.textPrimaryButton}>{title}</Text>
     </TouchableOpacity>
   );
 }
