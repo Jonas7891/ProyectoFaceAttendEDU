@@ -37,7 +37,6 @@ export default function HomesScreen() {
   const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
   const [isTerminosModalVisible, setIsTerminosModalVisible] = useState(false);
 
-  // ─── login ────────────────────────────────────────────────────────────────
   const handlelogin = async () => {
     if (!email.trim()) {
       Alert.alert(t('common.error'), t('login.errorEmail'));
@@ -76,7 +75,6 @@ export default function HomesScreen() {
     }
   };
 
-  // ─── Render ───────────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]} key={refreshKey}>
       <ScrollView>
@@ -104,7 +102,6 @@ export default function HomesScreen() {
                   {t('login.title')}
                 </Text>
 
-                {/* ── Email ── */}
                 <View style={styles.inputContainer}>
                   <Text style={[styles.inputTitulo, { color: colors.text }]}>
                     {t('login.email')}
@@ -127,7 +124,6 @@ export default function HomesScreen() {
                   />
                 </View>
 
-                {/* ── Contraseña ── */}
                 <View style={styles.inputContainer}>
                   <Text style={[styles.inputTitulo, { color: colors.text }]}>
                     {t('login.password')}

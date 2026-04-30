@@ -35,7 +35,6 @@ export default function FacialFail() {
     const [updateKey, setUpdateKey] = useState(0);
     const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
 
-    // ─── Inicialización ──────────────────────────────────────────────────────
     useEffect(() => {
         const init = async () => {
             const role = await AsyncStorage.getItem('userRole');
@@ -59,7 +58,6 @@ export default function FacialFail() {
 
     const handleBack = () => navigation.goBack();
 
-    // ─── Render ──────────────────────────────────────────────────────────────
     return (
         <SafeAreaView style={[styles.safeAreaFacialFail, { backgroundColor: colors.background }]} key={`${refreshKey}-${updateKey}`}>
             <ScrollView contentContainerstyle={styles.scrollContent}>
@@ -71,7 +69,6 @@ export default function FacialFail() {
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                         <View style={styles.container} marginHorizontal={10}>
 
-                            {/* Header */}
                             <View style={styles.headerContainer}>
                                 <Text style={[styles.mainTitle, { color: colors.text }]}>
                                     {t('facialFail.title')}
@@ -84,12 +81,10 @@ export default function FacialFail() {
                                 />
                             </View>
 
-                            {/* Subtítulo */}
                             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
                                 {t('facialFail.subtitle')}
                             </Text>
 
-                            {/* Opción 1 — Cuestionario */}
                             <TouchableOpacity
                                 style={[
                                     styles.optionCard,
@@ -110,7 +105,6 @@ export default function FacialFail() {
                                 </Text>
                             </TouchableOpacity>
 
-                            {/* Opción 2 — Actualizar parámetros */}
                             <TouchableOpacity
                                 style={[
                                     styles.optionCard,
@@ -131,10 +125,8 @@ export default function FacialFail() {
                                 </Text>
                             </TouchableOpacity>
 
-                            {/* Separador */}
                             <View style={[styles.separator, { backgroundColor: colors.separator }]} />
 
-                            {/* Recomendaciones */}
                             <Text style={[styles.recommendationsTitle, { color: colors.text }]}>
                                 {t('facialFail.recommendations')}
                             </Text>
@@ -148,7 +140,6 @@ export default function FacialFail() {
                                 </Text>
                             </View>
 
-                            {/* Botón Volver */}
                             <View style={[styles.buttonContainer, { marginTop: 30 }]}>
                                 <PrimaryButton
                                     title={t('consultJustify.back')}

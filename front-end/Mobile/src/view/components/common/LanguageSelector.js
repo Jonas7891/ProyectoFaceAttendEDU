@@ -20,22 +20,17 @@ const LanguageSelector = ({ isVisible, onClose }) => {
     try {
       setSelectedLanguage(languageCode);
 
-      // 1. Cambiar el idioma en i18n
       await i18n.changeLanguage(languageCode);
 
-      // 2. Obtener el rol actual
       const role = await AsyncStorage.getItem('userRole');
 
-      // 3. Guardar idioma para el rol (igual que en LanguageSettingsScreen)
       if (role) {
         await saveLanguageForRole(role, languageCode);
         console.log(`✅ Idioma guardado desde LanguageSelector: ${role} → ${languageCode}`);
       } else {
-        // Si no hay rol, al menos guardar en appLanguage
         await AsyncStorage.setItem('appLanguage', languageCode);
       }
 
-      // 4. Cerrar el modal
       onClose();
     } catch (error) {
       console.error('❌ Error cambiando idioma:', error);

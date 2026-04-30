@@ -8,15 +8,14 @@ import Login from './src/view/screens/login/Login';
 import MenuScreen from './src/view/screens/MenuScreen';
 import DashboardScreen from './src/view/screens/DashboardScreen';
 import NewsScreen from './src/view/screens/NewsScreen';
-import HistoricalScreen from './src/view/screens/HistoricalScreen';
 import FacialFail from './src/view/screens/FacialFailScreen';
 import UpdatePhoto from './src/view/screens/UpdatePhotoScreen';
-import TakePhotoScreen from './src/view/screens/TakePhotoScreen';
 import DisplayingAttendance from './src/view/screens/DisplayingAttendance';
 import MenuJustifyScreen from './src/view/screens/MenuJustifyScreen';
 import ConsultJustify from './src/view/screens/ConsultJustifyScreen';
 import AddJustify from './src/view/screens/AddJustifyScreen';
 import LanguageSettingsScreen from './src/view/screens/LanguageSettingsScreen';
+import ProfileScreen from './src/view/screens/ProfileScreen';
 
 const Stack = createStackNavigator();
 
@@ -47,11 +46,6 @@ export default function App() {
               options={{ headerShown: false }}
             />
             <Stack.Screen
-              name="Historial"
-              component={HistoricalScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
               name="FacialFail"
               component={FacialFail}
               options={{ headerShown: false }}
@@ -59,11 +53,6 @@ export default function App() {
             <Stack.Screen
               name="UpdatePhoto"
               component={UpdatePhoto}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="TakePhoto"
-              component={TakePhotoScreen}
               options={{ headerShown: false }}
             />
             <Stack.Screen
@@ -89,6 +78,11 @@ export default function App() {
             <Stack.Screen
               name="LanguageSettings"
               component={LanguageSettingsScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Profile"
+              component={ProfileScreen}
               options={{ headerShown: false }}
             />
           </Stack.Navigator>

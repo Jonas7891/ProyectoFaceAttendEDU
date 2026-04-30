@@ -26,9 +26,8 @@ export default function NewsScreen() {
     const refreshKey = useLanguageRefresh();
     const [userRole, setUserRole] = useState(null);
     const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
-    const [updateKey, setUpdateKey] = useState(0); // ← AGREGADO: Estado faltante
+    const [updateKey, setUpdateKey] = useState(0);
 
-    // ✅ Listener de idioma y inicialización - SIN dependencia [i18n]
     useEffect(() => {
         const init = async () => {
             try {
@@ -43,24 +42,20 @@ export default function NewsScreen() {
         };
         init();
 
-        // Listener de cambio de idioma
         const handleLanguageChanged = (lng) => {
             console.log('🔄 NewsScreen: Idioma cambiado a', lng);
             setCurrentLanguage(lng);
-            setUpdateKey(prev => prev + 1); // Ahora sí existe
+            setUpdateKey(prev => prev + 1);
         };
 
-        // Establecer idioma inicial
         setCurrentLanguage(i18n.language);
 
-        // Registrar listener
         i18n.on('languageChanged', handleLanguageChanged);
 
-        // Cleanup
         return () => {
             i18n.off('languageChanged', handleLanguageChanged);
         };
-    }, []); // ← Array vacío
+    }, []);
 
     return (
         <SafeAreaView
@@ -75,7 +70,6 @@ export default function NewsScreen() {
 
                     <CustomTabs userRole={userRole} />
 
-                    {/* Imagen */}
                     <View style={{ marginLeft: 25, marginRight: 25 }}>
                         <Image
                             source={require("../../assets/images/persona.png")}
@@ -88,7 +82,6 @@ export default function NewsScreen() {
                         />
                     </View>
 
-                    {/* Título */}
                     <View>
                         <Text
                             style={{
@@ -113,12 +106,10 @@ export default function NewsScreen() {
                         </Text>
                     </View>
 
-                    {/* Separador */}
                     <View style={{ marginTop: 15 }}>
                         <Separador />
                     </View>
 
-                    {/* Contenido */}
                     <View style={{ marginHorizontal: Platform.OS === 'android' ? 10 : 0 }}>
                         <Text
                             style={{

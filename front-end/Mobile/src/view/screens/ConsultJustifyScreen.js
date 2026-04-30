@@ -43,7 +43,6 @@ export default function ValidJustificationsScreen() {
         };
     }, []);
 
-    // Datos de ejemplo para inasistencias justificadas
     const inasistenciasData = [
         { id: 1, fecha: "2024-03-15", motivo: "Incapacidad médica", estado: t('consultJustify.statusApproved') },
         { id: 2, fecha: "2024-03-10", motivo: "Emergencia familiar", estado: t('consultJustify.statusApproved') },
@@ -51,7 +50,6 @@ export default function ValidJustificationsScreen() {
         { id: 4, fecha: "2024-02-28", motivo: "Problemas de transporte", estado: t('consultJustify.statusApproved') },
     ];
 
-    // Datos de ejemplo para retardos justificados
     const retardosData = [
         { id: 1, fecha: "2024-03-18", hora: "08:35 AM", motivo: "Tránsito pesado", estado: t('consultJustify.statusApproved') },
         { id: 2, fecha: "2024-03-12", hora: "08:45 AM", motivo: "Cita médica", estado: t('consultJustify.statusApproved') },
@@ -106,18 +104,15 @@ export default function ValidJustificationsScreen() {
                     showsVerticalScrollIndicator={false}
                 >
                     <View style={styles.containerValidJustifications}>
-                        {/* Título principal */}
                         <Text style={styles.mainTitleValidJustifications}>
                             {t('consultJustify.mainTitle')}
                         </Text>
 
-                        {/* Subtítulo */}
                         <Text style={styles.subTitleValidJustifications}>
                             {t('consultJustify.subtitle')}
                         </Text>
 
                         <Separador />
-                        {/* Selector de sección */}
                         <View style={styles.sectionSelector}>
                             <TouchableOpacity
                                 style={[
@@ -153,7 +148,6 @@ export default function ValidJustificationsScreen() {
                             </TouchableOpacity>
                         </View>
 
-                        {/* Lista de inasistencias */}
                         {activeSection === "inasistencias" && (
                             <View style={styles.listContainer}>
                                 <Text style={styles.sectionTitle}>{t('consultJustify.justifiedAbsences')}</Text>
@@ -172,7 +166,6 @@ export default function ValidJustificationsScreen() {
                             </View>
                         )}
 
-                        {/* Lista de retardos */}
                         {activeSection === "retardos" && (
                             <View style={styles.listContainer}>
                                 <Text style={styles.sectionTitle}>{t('consultJustify.justifiedDelays')}</Text>
@@ -191,7 +184,6 @@ export default function ValidJustificationsScreen() {
                             </View>
                         )}
 
-                        {/* Botón Volver */}
                         <View style={styles.buttonContainer}>
                             <PrimaryButton title={t('consultJustify.back')} onPress={handleBack} />
                         </View>

@@ -31,7 +31,6 @@ export const lightColors = {
     categoryText: '#333333',
     backButtonBackground: '#F5F5F5',
     danger: '#ff0000',
-    // Colores para modales
     modalBackground: '#FFFFFF',
     modalText: '#1a1a1a',
     modalTextSecondary: '#666666',
@@ -104,7 +103,6 @@ const ThemeContext = createContext(null);
 export function ThemeProvider({ children }) {
     const [theme, setTheme] = useState('light');
 
-    // ✅ colors memoizado — se recalcula solo cuando theme cambia
     const colors = useMemo(
         () => (theme === 'dark' ? darkColors : lightColors),
         [theme]
@@ -136,7 +134,6 @@ export function ThemeProvider({ children }) {
     const setThemeForRole = useCallback(async (role, newTheme) => {
         if (!role || !newTheme) return;
         try {
-            // ✅ Guardar ANTES de actualizar estado para evitar condiciones de carrera
             await saveThemeForRole(role, newTheme);
             setTheme(newTheme);
         } catch (e) {
