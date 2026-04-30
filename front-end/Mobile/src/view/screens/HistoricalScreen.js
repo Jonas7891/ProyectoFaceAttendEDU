@@ -31,14 +31,13 @@ const ASISTENCIAS_ESTUDIANTE = [
 export default function HistoricalScreen() {
     const navigation = useNavigation();
     const { t, i18n } = useTranslation();
-    const { colors, theme, loadThemeForRole } = useTheme(); // ← Agregar loadThemeForRole
+    const { colors, theme, loadThemeForRole } = useTheme();
 
     const refreshKey = useLanguageRefresh();
     const [userRole, setUserRole] = useState(null);
-    const [currentLanguage, setCurrentLanguage] = useState(i18n.language); // ← Agregar estado
-    const [updateKey, setUpdateKey] = useState(0); // ← Agregar estado
+    const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
+    const [updateKey, setUpdateKey] = useState(0);
 
-    // ✅ Inicialización y listener de idioma - SIN dependencia [i18n]
     useEffect(() => {
         const init = async () => {
             try {
@@ -53,24 +52,20 @@ export default function HistoricalScreen() {
         };
         init();
 
-        // Listener de cambio de idioma
         const handleLanguageChanged = (lng) => {
             console.log('🔄 HistoricalScreen: Idioma cambiado a', lng);
             setCurrentLanguage(lng);
             setUpdateKey(prev => prev + 1);
         };
 
-        // Establecer idioma inicial
         setCurrentLanguage(i18n.language);
 
-        // Registrar listener
         i18n.on('languageChanged', handleLanguageChanged);
 
-        // Cleanup
         return () => {
             i18n.off('languageChanged', handleLanguageChanged);
         };
-    }, []); // ← Array vacío
+    }, []);
 
     const isAdmin = userRole === 'admin';
     const asistenciasRecientes = isAdmin ? ASISTENCIAS_ADMIN : ASISTENCIAS_ESTUDIANTE;

@@ -37,7 +37,6 @@ export default function UpdatePhoto() {
         telefono: ""
     });
 
-    // CORREGIDO: El useEffect estaba mal escrito
     useEffect(() => {
         const init = async () => {
             const role = await AsyncStorage.getItem('userRole');
@@ -191,7 +190,6 @@ export default function UpdatePhoto() {
                         <Text>{"\n"}{"\n"}</Text>
                     </View>
 
-                    {/* Botón Volver */}
                     <View style={styles.buttonContainer}>
                         <PrimaryButton title={t('consultJustify.back')} onPress={handleBack} />
                     </View>

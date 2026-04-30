@@ -7,7 +7,6 @@ export const useLanguageRefresh = () => {
 
     useEffect(() => {
         const handleLanguageChanged = (lng) => {
-            console.log('🔄 useLanguageRefresh: Idioma cambiado a', lng);
             setRefreshKey(prev => prev + 1);
         };
 

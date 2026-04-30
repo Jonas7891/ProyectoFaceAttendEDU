@@ -2007,6 +2007,237 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#4A90E2',
     },
+
+    // ========== VALID ALL JUSTIFICATIONS SCREEN STYLES ==========
+    validAllJustificationsSafeArea: {
+        flex: 1,
+    },
+
+    validAllJustificationsContainer: {
+        flex: 1,
+    },
+
+    validAllJustificationsHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingTop: 16,
+        paddingBottom: 12,
+    },
+
+    validAllJustificationsTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+    },
+
+    validAllJustificationsBadge: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    validAllJustificationsBadgeText: {
+        color: '#FFFFFF',
+        fontSize: 14,
+        fontWeight: '700',
+    },
+
+    validAllJustificationsSeparator: {
+        height: 1,
+        marginHorizontal: 20,
+        marginBottom: 8,
+    },
+
+    validAllJustificationsScrollView: {
+        flexGrow: 1,
+    },
+
+    validAllJustificationsScrollContent: {
+        paddingHorizontal: 20,
+        paddingBottom: 40,
+    },
+
+    validAllJustificationsCategorySection: {
+        marginBottom: 24,
+    },
+
+    validAllJustificationsCategoryHeader: {
+        borderRadius: 10,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        marginBottom: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+
+    validAllJustificationsCategoryTitle: {
+        fontSize: 15,
+        fontWeight: '700',
+    },
+
+    validAllJustificationsCategoryCount: {
+        fontSize: 12,
+    },
+
+    validAllJustificationsItemCard: {
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderLeftWidth: 3,
+    },
+
+    validAllJustificationsItemHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+
+    validAllJustificationsItemNumber: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 10,
+    },
+
+    validAllJustificationsItemNumberText: {
+        color: '#FFFFFF',
+        fontSize: 13,
+        fontWeight: '700',
+    },
+
+    validAllJustificationsItemType: {
+        fontSize: 15,
+        fontWeight: '700',
+        flex: 1,
+    },
+
+    validAllJustificationsItemDescription: {
+        fontSize: 14,
+        lineHeight: 20,
+        marginBottom: 12,
+    },
+
+    validAllJustificationsItemSeparator: {
+        height: 1,
+        marginBottom: 10,
+    },
+
+    validAllJustificationsItemFooter: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+
+    validAllJustificationsItemBadge: {
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 20,
+    },
+
+    validAllJustificationsItemBadgeText: {
+        fontSize: 12,
+        fontWeight: '600',
+    },
+
+    validAllJustificationsItemDocText: {
+        fontSize: 12,
+    },
+
+    validAllJustificationsEmptyState: {
+        alignItems: 'center',
+        marginTop: 60,
+    },
+
+    validAllJustificationsEmptyIcon: {
+        fontSize: 40,
+        marginBottom: 16,
+    },
+
+    validAllJustificationsEmptyTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 8,
+    },
+
+    validAllJustificationsEmptyDescription: {
+        fontSize: 14,
+        textAlign: 'center',
+    },
+
+    validAllJustificationsBackButton: {
+        borderRadius: 10,
+        paddingVertical: 14,
+        alignItems: 'center',
+        marginTop: 8,
+        borderWidth: 1,
+    },
+
+    // Estilos para ProfileScreen
+    profileHeaderSectionProfile: {
+        alignItems: 'center',
+        marginTop: 20,
+        marginBottom: 20,
+    },
+    userNameProfile: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 8,
+    },
+    roleBadgeProfile: {
+        paddingHorizontal: 15,
+        paddingVertical: 5,
+        borderRadius: 20,
+    },
+    roleBadgeTextProfile: {
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    infoFieldContainerProfile: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 10,
+        borderWidth: 1,
+    },
+    infoFieldLabelProfile: {
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    infoFieldValueProfile: {
+        fontSize: 14,
+        fontWeight: '400',
+    },
+    profileSettingsButtonProfile: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 10,
+        borderWidth: 1,
+    },
+    profileSettingsTitleProfile: {
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    profileSettingsSubtitleProfile: {
+        fontSize: 13,
+        marginTop: 2,
+    },
+    sectionTitleMenuProfile: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
 });
 
 export default styles;

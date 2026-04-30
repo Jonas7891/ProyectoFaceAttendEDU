@@ -17,6 +17,7 @@ import MenuJustifyScreen from './src/view/screens/MenuJustifyScreen';
 import ConsultJustify from './src/view/screens/ConsultJustifyScreen';
 import AddJustify from './src/view/screens/AddJustifyScreen';
 import LanguageSettingsScreen from './src/view/screens/LanguageSettingsScreen';
+import ProfileScreen from './src/view/screens/ProfileScreen';
 
 const Stack = createStackNavigator();
 
@@ -89,6 +90,11 @@ export default function App() {
             <Stack.Screen
               name="LanguageSettings"
               component={LanguageSettingsScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Profile"
+              component={ProfileScreen}
               options={{ headerShown: false }}
             />
           </Stack.Navigator>

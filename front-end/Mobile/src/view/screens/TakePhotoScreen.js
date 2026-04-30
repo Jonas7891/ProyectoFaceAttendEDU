@@ -33,7 +33,6 @@ export default function TakePhotoScreen() {
     const [updateKey, setUpdateKey] = useState(0);
     const handleLanguageChange = (newLang) => setSelectedLanguage(newLang);
 
-    // ─── Inicialización ──────────────────────────────────────────────────────
     useEffect(() => {
         const init = async () => {
             const role = await AsyncStorage.getItem('userRole');
@@ -60,7 +59,6 @@ export default function TakePhotoScreen() {
         setTimeout(() => setFacialParamsRegistered(false), 2000);
     };
 
-    // ─── Render ──────────────────────────────────────────────────────────────
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} key={`${refreshKey}-${updateKey}`}>
 
@@ -88,7 +86,6 @@ export default function TakePhotoScreen() {
                         marginTop: 100,
                         backgroundColor: colors.background,
                     }}>
-                        {/* Imagen */}
                         <View style={[styles.imagePhoto, { backgroundColor: colors.card }]}>
                             <Image
                                 source={require("../../assets/images/perfil-del-usuario.png")}
@@ -97,19 +94,16 @@ export default function TakePhotoScreen() {
                             />
                         </View>
 
-                        {/* Título */}
                         <View style={styles.header}>
                             <Text style={[styles.headerTitle, { color: colors.text }]}>
                                 {t('takePhoto.title')}
                             </Text>
                         </View>
 
-                        {/* Descripción */}
                         <Text style={[styles.instructionText, { color: colors.textSecondary }]}>
                             {t('takePhoto.instructions')}
                         </Text>
 
-                        {/* Botón registrar */}
                         <TouchableOpacity
                             style={[
                                 styles.registerButton,
@@ -132,7 +126,6 @@ export default function TakePhotoScreen() {
                             </View>
                         </TouchableOpacity>
 
-                        {/* Configuración */}
                         <TouchableOpacity
                             onPress={() => navigation.navigate("Menu")}
                             style={styles.settingsContainer}
@@ -149,8 +142,7 @@ export default function TakePhotoScreen() {
                             </Text>
                         </TouchableOpacity>
                     </View>
-
-                    {/* Botón Volver */}
+                    
                     <View style={[styles.buttonContainer, { marginTop: 50, marginHorizontal: 20 }]}>
                         <PrimaryButton
                             title={t('consultJustify.back')}

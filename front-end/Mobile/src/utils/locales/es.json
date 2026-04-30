@@ -44,7 +44,11 @@
     "language": "Idioma",
     "selectLanguage": "Selecciona el idioma de tu preferencia",
     "languageChanged": "Idioma cambiado correctamente",
-    "errorChangingLanguage": "No se pudo cambiar el idioma"
+    "errorChangingLanguage": "No se pudo cambiar el idioma",
+    "theme": "Tema",
+    "lightTheme": "Claro",
+    "darkTheme": "Oscuro",
+    "changeTheme": "Cambiar Tema"
   },
   "menu": {
     "facialParams": "Ingresar Parámetros Faciales",
@@ -364,5 +368,16 @@
     "items": "justificaciones",
     "noJustifications": "No hay justificaciones registradas",
     "noJustificationsDesc": "Las justificaciones válidas aparecerán aquí cuando sean agregadas por el administrador"
+  },
+  "profile": {
+    "personalInfo": "Información Personal",
+    "email": "Correo Electrónico",
+    "employeeId": "ID de Empleado",
+    "department": "Departamento",
+    "joinDate": "Fecha de Ingreso",
+    "quickSettings": "Configuración Rápida",
+    "logout": "Cerrar Sesión",
+    "logoutConfirm": "¿Estás seguro de que deseas cerrar sesión?",
+    "school": "Colegio"
   }
 }

@@ -34,13 +34,11 @@ export default function DisplayingAttendance() {
     const [updateKey, setUpdateKey] = useState(0);
     const handleLanguageChange = (newLang) => setSelectedLanguage(newLang);
 
-    // ─── Date picker ─────────────────────────────────────────────────────────
     const [selectedDate, setSelectedDate] = useState(null);
     const [showPicker, setShowPicker] = useState(false);
     const [showIOSModal, setShowIOSModal] = useState(false);
     const [tempDate, setTempDate] = useState(new Date());
 
-    // ─── Inicialización ──────────────────────────────────────────────────────
     useEffect(() => {
         const init = async () => {
             const role = await AsyncStorage.getItem('userRole');
@@ -62,7 +60,6 @@ export default function DisplayingAttendance() {
         };
     }, []);
 
-    // ─── Datos ───────────────────────────────────────────────────────────────
     const asistenciasRecientes = [
         { id: 1, nombre: "Ana Martínez", hora: "08:15 AM", fecha: "2024-03-20" },
         { id: 2, nombre: "Luis Fernández", hora: "08:22 AM", fecha: "2024-03-20" },
@@ -75,7 +72,6 @@ export default function DisplayingAttendance() {
         { id: 9, nombre: "Sofía Torres", hora: "08:50 AM", fecha: "2024-03-19" },
     ];
 
-    // ─── Helpers de fecha ────────────────────────────────────────────────────
     const formatDate = (date) => {
         if (!date) return "";
         const y = date.getFullYear();
@@ -89,7 +85,6 @@ export default function DisplayingAttendance() {
         return `📅  ${date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}`;
     };
 
-    // ─── Filtrado combinado — nombre Y fecha simultáneamente ─────────────────
     const filteredData = asistenciasRecientes.filter(item => {
         const matchNombre = searchText === ""
             || item.nombre.toLowerCase().includes(searchText.toLowerCase());
@@ -98,7 +93,6 @@ export default function DisplayingAttendance() {
         return matchNombre && matchFecha;
     });
 
-    // ─── Handlers date picker ────────────────────────────────────────────────
     const handleOpenPicker = () => {
         setTempDate(selectedDate ?? new Date());
         Platform.OS === 'ios' ? setShowIOSModal(true) : setShowPicker(true);
@@ -109,7 +103,6 @@ export default function DisplayingAttendance() {
         if (event.type === 'set' && date) setSelectedDate(date);
     };
 
-    // ─── Render item ─────────────────────────────────────────────────────────
     const renderItem = ({ item }) => (
         <View style={[
             styles.recentItemHistorical,
@@ -129,22 +122,18 @@ export default function DisplayingAttendance() {
         </View>
     );
 
-    // ─── Render ──────────────────────────────────────────────────────────────
     return (
         <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} key={`${refreshKey}-${updateKey}`}>
             <View style={[styles.containerAttendance, { backgroundColor: colors.background, flex: 1 }]}>
 
-                {/* Header */}
                 <View style={styles.headerContainer}>
                     <Text style={[styles.mainTitle, { color: colors.text }]}>
                         {t('attendance.title')}
                     </Text>
                 </View>
 
-                {/* ── Barra de búsqueda doble — lado a lado ── */}
                 <View style={{ flexDirection: "row", gap: 8, marginBottom: 12, marginLeft: 20, marginRight: 20 }}>
 
-                    {/* Input nombre con lupa */}
                     <View style={{
                         flex: 2.5,
                         flexDirection: "row",
@@ -175,7 +164,6 @@ export default function DisplayingAttendance() {
                         )}
                     </View>
 
-                    {/* Selector de fecha */}
                     <TouchableOpacity
                         onPress={handleOpenPicker}
                         style={{
@@ -201,7 +189,6 @@ export default function DisplayingAttendance() {
                             {formatDateDisplay(selectedDate)}
                         </Text>
 
-                        {/* Botón limpiar fecha */}
                         {selectedDate && (
                             <TouchableOpacity
                                 onPress={() => setSelectedDate(null)}
@@ -215,7 +202,6 @@ export default function DisplayingAttendance() {
                     </TouchableOpacity>
                 </View>
 
-                {/* Indicador de filtros activos */}
                 {(searchText !== "" || selectedDate) && (
                     <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8, gap: 6 }}>
                         <Text style={{ color: colors.textMuted, fontSize: 12 }}>
@@ -229,7 +215,6 @@ export default function DisplayingAttendance() {
                     </View>
                 )}
 
-                {/* Android picker */}
                 {showPicker && Platform.OS === 'android' && (
                     <DateTimePicker
                         value={tempDate}
@@ -240,7 +225,6 @@ export default function DisplayingAttendance() {
                     />
                 )}
 
-                {/* iOS picker en modal */}
                 <Modal
                     transparent
                     visible={showIOSModal}

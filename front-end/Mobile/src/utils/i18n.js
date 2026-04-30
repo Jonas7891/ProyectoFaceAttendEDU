@@ -26,7 +26,6 @@ i18n.use(initReactI18next).init({
   },
 });
 
-// Cargar idioma guardado
 AsyncStorage.getItem('appLanguage').then(savedLanguage => {
   if (savedLanguage && savedLanguage !== 'es') {
     i18n.changeLanguage(savedLanguage);

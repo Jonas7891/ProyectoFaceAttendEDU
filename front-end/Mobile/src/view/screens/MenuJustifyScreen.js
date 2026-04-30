@@ -87,7 +87,6 @@ export default function MenuJustifyScreen() {
   const handleValidJustifications = () => navigation.navigate("ValidJustifications");
   const handlePendingJustifications = () => navigation.navigate("PendingJustifications");
 
-  // 🔹 ITEM reutilizable con tema
   const MenuItem = ({ label, onPress, showBadge = false }) => (
     <>
       <Separador />
