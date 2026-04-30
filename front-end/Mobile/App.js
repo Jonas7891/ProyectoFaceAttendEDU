@@ -13,9 +13,11 @@ import UpdatePhoto from './src/view/screens/UpdatePhotoScreen';
 import DisplayingAttendance from './src/view/screens/DisplayingAttendance';
 import MenuJustifyScreen from './src/view/screens/MenuJustifyScreen';
 import ConsultJustify from './src/view/screens/ConsultJustifyScreen';
-import AddJustify from './src/view/screens/AddJustifyScreen';
+import AddJustification from './src/view/screens/AddJustifyScreen';
 import LanguageSettingsScreen from './src/view/screens/LanguageSettingsScreen';
 import ProfileScreen from './src/view/screens/ProfileScreen';
+import AddValidJustificationScreen from './src/view/screens/AddValidJustificationScreen';
+import ValidJustificationsScreen from './src/view/screens/ConsultJustifyScreen';
 
 const Stack = createStackNavigator();
 
@@ -71,8 +73,18 @@ export default function App() {
               options={{ headerShown: false }}
             />
             <Stack.Screen
-              name="AddJustify"
-              component={AddJustify}
+              name="AddJustification"
+              component={AddJustification}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="AddValidJustification"
+              component={AddValidJustificationScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ValidJustifications"
+              component={ValidJustificationsScreen}
               options={{ headerShown: false }}
             />
             <Stack.Screen

@@ -11,24 +11,28 @@ import UpdatePhoto from '../view/screens/UpdatePhotoScreen';
 import DisplayingAttendance from '../view/screens/DisplayingAttendance';
 import MenuJustify from '../view/screens/MenuJustifyScreen';
 import ConsultJustify from '../view/screens/ConsultJustifyScreen';
-import AddJustification from '../view/screens/AddJustifyScreen';
+import AddJustifyScreen from '../view/screens/AddJustifyScreen';
 import LanguageSettingsScreen from '../view/screens/LanguageSettingsScreen';
-import AddValidJustificationScreen from '../view/screen/AddValidJustificationScreen';
-import ValidJustificationsScreen from '../view/screens/ValidJustifications';
+import AddValidJustificationScreen from '../view/screens/AddValidJustificationScreen';
+import ValidJustificationsScreen from '../view/screens/ValidJustificationsScreen';
+import PendingJustificationsScreen from '../view/screens/PendingJustificationsScreen';
 import ProfileScreen from '../view/screens/ProfileScreen';
 
 const Stack = createStackNavigator();
 
 export default function AppNavigator() {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const role = await AsyncStorage.getItem('userRole');
         setIsAuthenticated(!!role);
+        setUserRole(role);
       } catch (e) {
         setIsAuthenticated(false);
+        setUserRole(null);
       }
     };
 
@@ -39,6 +43,7 @@ export default function AppNavigator() {
     try {
       await AsyncStorage.setItem('userRole', role);
       setIsAuthenticated(true);
+      setUserRole(role);
     } catch (e) {
       console.error('Error guardando sesión:', e);
     }
@@ -48,6 +53,7 @@ export default function AppNavigator() {
     try {
       await AsyncStorage.removeItem('userRole');
       setIsAuthenticated(false);
+      setUserRole(null);
     } catch (e) {
       console.error('Error en logout:', e);
     }
@@ -77,10 +83,10 @@ export default function AppNavigator() {
                 <DashboardScreen
                   {...props}
                   onLogout={handleLogout}
+                  userRole={userRole}
                 />
               )}
             </Stack.Screen>
-
             <Stack.Screen name="Menu" component={MenuScreen} />
             <Stack.Screen name="Novedades" component={NewsScreen} />
             <Stack.Screen name="FacialFail" component={FacialFail} />
@@ -88,14 +94,14 @@ export default function AppNavigator() {
             <Stack.Screen name="DisplayingAttendance" component={DisplayingAttendance} />
             <Stack.Screen name="MenuJustify" component={MenuJustify} />
             <Stack.Screen name="ConsultJustify" component={ConsultJustify} />
-            <Stack.Screen name="AddJustify" component={AddJustification} />
-            <Stack.Screen name="LanguageSettings" component={LanguageSettingsScreen} />
+            <Stack.Screen name="AddJustify" component={AddJustifyScreen} />
             <Stack.Screen name="AddValidJustification" component={AddValidJustificationScreen} />
             <Stack.Screen name="ValidJustifications" component={ValidJustificationsScreen} />
+            <Stack.Screen name="PendingJustifications" component={PendingJustificationsScreen} />
+            <Stack.Screen name="LanguageSettings" component={LanguageSettingsScreen} />
             <Stack.Screen name="Profile" component={ProfileScreen} />
           </>
         )}
-
       </Stack.Navigator>
     </NavigationContainer>
   );
