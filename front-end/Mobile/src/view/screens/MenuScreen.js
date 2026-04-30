@@ -46,7 +46,6 @@ export default function MenuScreen() {
     };
   }, []);
 
-  // Al recuperar el foco, sincronizar idioma y tema
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
@@ -84,7 +83,6 @@ export default function MenuScreen() {
     }, [])
   );
 
-  // Inicialización única
   useEffect(() => {
     const init = async () => {
       try {
@@ -98,6 +96,25 @@ export default function MenuScreen() {
     init();
   }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      const parent = navigation.getParent();
+      if (parent) {
+        parent.setOptions({
+          gestureEnabled: false,
+        });
+      }
+      
+      return () => {
+        if (parent) {
+          parent.setOptions({
+            gestureEnabled: true,
+          });
+        }
+      };
+    }, [navigation])
+  );
+
   const isAdmin = userRole === 'admin';
 
   const handleBack = () => navigation.navigate("Dashboard");
@@ -109,15 +126,24 @@ export default function MenuScreen() {
 
   const handleLogout = async () => {
     try {
+      setIsLoading(true);
+      
       await AsyncStorage.multiRemove([
         'userRole',
         'userEmail',
         'authToken',
+        'appLanguage',
       ]);
-
-      onLogout();
+      
+      await i18n.changeLanguage('es');
+    
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
     } catch (e) {
       console.error('Error en logout:', e);
+      setIsLoading(false);
     }
   };
 

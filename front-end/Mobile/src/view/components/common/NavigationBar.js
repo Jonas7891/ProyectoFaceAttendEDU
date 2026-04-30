@@ -28,25 +28,25 @@ export default function BottomBar({ onPressSettings, onPressProfile, onPressSear
 
   const defaultscreens = {
     menu: "Menu",
-    profile: "UpdatePhoto",
-    search: "Busqueda",
+    photo: "UpdatePhoto",
+    profile: "Profile",
   };
 
   const {
     menu: menuScreen = defaultscreens.menu,
+    photo: photoScreen = defaultscreens.photo,
     profile: profileScreen = defaultscreens.profile,
-    search: searchScreen = defaultscreens.search,
   } = screenNames;
 
   const handleMenu = () => onPressSettings ? onPressSettings() : navigation.navigate(menuScreen);
-  const handleFoto = () => onPressProfile ? onPressProfile() : navigation.navigate(profileScreen);
-  const handleBusqueda = () => onPressSearch ? onPressSearch() : navigation.navigate(searchScreen);
+  const handleFoto = () => onPressProfile ? onPressProfile() : navigation.navigate(photoScreen);
+  const handleBusqueda = () => onPressSearch ? onPressSearch() : navigation.navigate(profileScreen);
 
   const getSelectedButton = (routeName) => {
     switch (routeName) {
       case "Menu": return "menu";
-      case "UpdatePhoto": return "profile";
-      case "Busqueda": return "search";
+      case "UpdatePhoto": return "photo";
+      case "Profile": return "profile";
       default: return null;
     }
   };
@@ -96,11 +96,8 @@ export default function BottomBar({ onPressSettings, onPressProfile, onPressSear
 
       <TouchableOpacity onPress={handleBusqueda} style={getButtonstyle("search")}>
         <Image
-          source={require("../../../assets/images/lupa.png")}
-          style={[
-            stylescommon.navIcon,
-            { tintColor: selected === "search" ? colors.primary : colors.textSecondary }
-          ]}
+          source={require("../../../assets/images/avatar.png")}
+          style={[ stylescommon.navIcon, { tintColor: selected === "search" ? colors.primary : colors.textSecondary, width: 35, height: 35, }]}
         />
       </TouchableOpacity>
 

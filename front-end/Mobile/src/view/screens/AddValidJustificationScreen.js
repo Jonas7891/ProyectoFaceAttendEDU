@@ -14,13 +14,13 @@ import { useTranslation } from "react-i18next";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import PrimaryButton from "../components/auth/PrimaryButton";
-import { useTheme } from "../components/common/ThemeContext"; // 🔥
+import { useTheme } from "../components/common/ThemeContext";
 import styles from "./Style";
 
 export default function AddValidJustificationScreen() {
     const navigation = useNavigation();
     const { t } = useTranslation();
-    const { colors } = useTheme(); // 🔥
+    const { colors } = useTheme();
 
     const [type, setType] = useState("");
     const [description, setDescription] = useState("");
@@ -90,12 +90,10 @@ export default function AddValidJustificationScreen() {
                 >
                     <View style={styles.containerAddValidJustification}>
 
-                        {/* TITULO */}
                         <Text style={[styles.mainTitle, { color: colors.text }]}>
                             {t('justify.title')}
                         </Text>
 
-                        {/* CATEGORÍA */}
                         <Text style={[styles.inputLabel, { color: colors.text, marginTop: 30 }]}>
                             {t('admin.category')} *
                         </Text>
@@ -129,7 +127,6 @@ export default function AddValidJustificationScreen() {
                             ))}
                         </ScrollView>
 
-                        {/* TIPO */}
                         <Text style={[styles.inputLabel, { color: colors.text, marginTop: 30 }]}>
                             {t('admin.justificationType')} *
                         </Text>
@@ -163,7 +160,6 @@ export default function AddValidJustificationScreen() {
                             ))}
                         </View>
 
-                        {/* DESCRIPCIÓN */}
                         <Text style={[styles.inputLabel, { color: colors.text, marginTop: 15 }]}>
                             {t('admin.description')} *
                         </Text>
@@ -185,7 +181,6 @@ export default function AddValidJustificationScreen() {
                             multiline
                         />
 
-                        {/* TOGGLE */}
                         <Text style={[styles.inputLabel, { color: colors.text, marginTop: 10 }]}>
                             {t('admin.requiresDocument')}
                         </Text>
@@ -220,7 +215,6 @@ export default function AddValidJustificationScreen() {
                             </TouchableOpacity>
                         </View>
 
-                        {/* BOTONES */}
                         <View style={styles.actionButtonsContainer}>
                             <PrimaryButton
                                 title={t('admin.saveJustification')}

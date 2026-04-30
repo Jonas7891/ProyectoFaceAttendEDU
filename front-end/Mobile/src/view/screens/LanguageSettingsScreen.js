@@ -30,10 +30,8 @@ export default function LanguageSettingsScreen() {
     { code: 'dark', label: t('settings.darkTheme', { defaultValue: 'Tema Oscuro' }), icon: '🌙' },
   ];
 
-  // ✅ CORREGIDO: Sin dependencia problemática
   useEffect(() => {
     const handleLanguageChange = (newLang) => {
-      console.log('Idioma cambiado a:', newLang);
       setSelectedLanguage(newLang);
       setComponentKey(prev => prev + 1);
     };
@@ -45,14 +43,12 @@ export default function LanguageSettingsScreen() {
     return () => {
       i18n.off('languageChanged', handleLanguageChange);
     };
-  }, []); // ← Array vacío = solo se ejecuta al montar
+  }, []);
 
-  // Sincronizar tema
   useEffect(() => {
     setSelectedTheme(theme);
   }, [theme]);
 
-  // Cargar tema al enfocar
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
@@ -85,27 +81,15 @@ export default function LanguageSettingsScreen() {
         return;
       }
 
-      console.log('💾 Guardando configuración:', {
-        role,
-        selectedLanguage,
-        selectedTheme,
-        currentLanguage: i18n.language
-      });
-
-      // 1. Cambiar idioma si es diferente
       if (i18n.language !== selectedLanguage) {
         await i18n.changeLanguage(selectedLanguage);
-        console.log('🔄 Idioma cambiado a:', selectedLanguage);
       }
 
-      // 2. Guardar preferencias
       await saveLanguageForRole(role, selectedLanguage);
       await setThemeForRole(role, selectedTheme);
 
-      // 3. Pequeña pausa para procesar listeners
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      // 4. Mostrar alerta y navegar
       Alert.alert(
         t('common.success'),
         t('settings.languageChanged'),
@@ -131,7 +115,6 @@ export default function LanguageSettingsScreen() {
         contentContainerStyle={styles.languageSettingsContainer}
         style={{ marginHorizontal: 15 }}
       >
-        {/* Sección de idioma */}
         <Text style={[styles.languageSettingsTitle, { color: colors.text, marginTop: 30 }]}>
           {t('settings.language')}
         </Text>
@@ -158,7 +141,6 @@ export default function LanguageSettingsScreen() {
           </TouchableOpacity>
         ))}
 
-        {/* Sección de tema */}
         <Text style={[styles.languageSettingsTitle, { marginTop: 28, color: colors.text }]}>
           {t('settings.theme', { defaultValue: 'Apariencia' })}
         </Text>
@@ -185,7 +167,6 @@ export default function LanguageSettingsScreen() {
           </TouchableOpacity>
         ))}
 
-        {/* Botones */}
         <PrimaryButton
           title={t('common.save')}
           onPress={handleSave}

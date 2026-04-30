@@ -74,58 +74,51 @@ export default function JustificationsScreen() {
     const renderJustificationItem = (item, index) => (
         <View
             key={item.id}
-            style={{
-                backgroundColor: colors.card,
-                borderRadius: 12,
-                padding: 16,
-                marginBottom: 10,
-                borderWidth: 1,
-                borderColor: colors.cardBorder,
-                borderLeftWidth: 3,
-                borderLeftColor: colors.primary,
-            }}
+            style={[
+                styles.validAllJustificationsItemCard,
+                { backgroundColor: colors.card, borderColor: colors.cardBorder }
+            ]}
         >
-            {/* Fila superior: número + tipo */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-                <View style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 14,
-                    backgroundColor: colors.primary,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginRight: 10,
-                }}>
-                    <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '700' }}>
+            <View style={styles.validAllJustificationsItemHeader}>
+                <View style={[
+                    styles.validAllJustificationsItemNumber,
+                    { backgroundColor: colors.primary }
+                ]}>
+                    <Text style={styles.validAllJustificationsItemNumberText}>
                         {index + 1}
                     </Text>
                 </View>
-                <Text style={{ color: colors.text, fontSize: 15, fontWeight: '700', flex: 1 }}>
+                <Text style={[
+                    styles.validAllJustificationsItemType,
+                    { color: colors.text }
+                ]}>
                     {item.type}
                 </Text>
             </View>
 
-            {/* Descripción */}
-            <Text style={{ color: colors.textSecondary, fontSize: 14, lineHeight: 20, marginBottom: 12 }}>
-                {item.description}
-            </Text>
 
-            {/* Separador */}
-            <View style={{ height: 1, backgroundColor: colors.separator, marginBottom: 10 }} />
+            <View style={[
+                styles.validAllJustificationsItemSeparator,
+                { backgroundColor: colors.separator }
+            ]} />
 
-            {/* Footer: badge categoría + requiere doc */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <View style={{
-                    backgroundColor: colors.badgeBackground,
-                    paddingHorizontal: 10,
-                    paddingVertical: 4,
-                    borderRadius: 20,
-                }}>
-                    <Text style={{ color: colors.badgeText, fontSize: 12, fontWeight: '600' }}>
+
+            <View style={styles.validAllJustificationsItemFooter}>
+                <View style={[
+                    styles.validAllJustificationsItemBadge,
+                    { backgroundColor: colors.badgeBackground }
+                ]}>
+                    <Text style={[
+                        styles.validAllJustificationsItemBadgeText,
+                        { color: colors.badgeText }
+                    ]}>
                         {item.category}
                     </Text>
                 </View>
-                <Text style={{ color: colors.textMuted, fontSize: 12 }}>
+                <Text style={[
+                    styles.validAllJustificationsItemDocText,
+                    { color: colors.textMuted }
+                ]}>
                     {item.requiresDocument ? t('admin.requiresDocument') : t('admin.noDocumentRequired')}
                 </Text>
             </View>
@@ -133,71 +126,69 @@ export default function JustificationsScreen() {
     );
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} key={`${refreshKey}-${updateKey}`}>
-            <View style={{ flex: 1, backgroundColor: colors.background }} marginHorizontal={10}>
+        <SafeAreaView style={[
+            styles.validAllJustificationsSafeArea,
+            { backgroundColor: colors.background }
+        ]} key={`${refreshKey}-${updateKey}`}>
+            <View style={[
+                styles.validAllJustificationsContainer,
+                { backgroundColor: colors.background }
+            ]} marginHorizontal={10}>
 
-                {/* ── Header integrado con el fondo ── */}
-                <View style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    paddingHorizontal: 20,
-                    paddingTop: 16,
-                    paddingBottom: 12,
-                    backgroundColor: colors.background,
-                }}>
-                    <Text style={{ color: colors.text, fontSize: 20, fontWeight: '700' }}>
+                <View style={[
+                    styles.validAllJustificationsHeader,
+                    { backgroundColor: colors.background }
+                ]}>
+                    <Text style={[
+                        styles.validAllJustificationsTitle,
+                        { color: colors.text }
+                    ]}>
                         {t("justifications.validList")}
                     </Text>
 
-                    {/* Badge contador — integrado en el header */}
-                    <View style={{
-                        backgroundColor: colors.primary,
-                        width: 32,
-                        height: 32,
-                        borderRadius: 16,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    }}>
-                        <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '700' }}>
+                    <View style={[
+                        styles.validAllJustificationsBadge,
+                        { backgroundColor: colors.primary }
+                    ]}>
+                        <Text style={styles.validAllJustificationsBadgeText}>
                             {justifications.length}
                         </Text>
                     </View>
                 </View>
 
-                {/* Línea separadora suave bajo el header */}
-                <View style={{ height: 1, backgroundColor: colors.separator, marginHorizontal: 20, marginBottom: 8 }} />
+                <View style={[
+                    styles.validAllJustificationsSeparator,
+                    { backgroundColor: colors.separator }
+                ]} />
 
                 <ScrollView
                     showsVerticalScrollIndicator={false}
-                    contentContainerstyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
+                    contentContainerStyle={styles.validAllJustificationsScrollContent}
                 >
                     {justifications.length > 0 ? (
                         getCategories().map((category) => {
                             const categoryItems = getJustificationsByCategory(category);
                             return (
-                                <View key={category} style={{ marginBottom: 24 }}>
+                                <View key={category} style={styles.validAllJustificationsCategorySection}>
 
-                                    {/* Header de categoría */}
-                                    <View style={{
-                                        backgroundColor: colors.categoryBackground,
-                                        borderRadius: 10,
-                                        paddingHorizontal: 14,
-                                        paddingVertical: 10,
-                                        marginBottom: 10,
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                    }}>
-                                        <Text style={{ color: colors.categoryText, fontSize: 15, fontWeight: '700' }}>
+                                    <View style={[
+                                        styles.validAllJustificationsCategoryHeader,
+                                        { backgroundColor: colors.categoryBackground }
+                                    ]}>
+                                        <Text style={[
+                                            styles.validAllJustificationsCategoryTitle,
+                                            { color: colors.categoryText }
+                                        ]}>
                                             {category}
                                         </Text>
-                                        <Text style={{ color: colors.textMuted, fontSize: 12 }}>
+                                        <Text style={[
+                                            styles.validAllJustificationsCategoryCount,
+                                            { color: colors.textMuted }
+                                        ]}>
                                             {categoryItems.length} {t('justifications.items')}
                                         </Text>
                                     </View>
 
-                                    {/* Items de la categoría */}
                                     {categoryItems.map((item, index) =>
                                         renderJustificationItem(item, index)
                                     )}
@@ -205,29 +196,29 @@ export default function JustificationsScreen() {
                             );
                         })
                     ) : (
-                        <View style={{ alignItems: 'center', marginTop: 60 }}>
-                            <Text style={{ fontSize: 40, marginBottom: 16 }}>📋</Text>
-                            <Text style={{ color: colors.text, fontSize: 16, fontWeight: '600', marginBottom: 8 }}>
+                        <View style={styles.validAllJustificationsEmptyState}>
+                            <Text style={styles.validAllJustificationsEmptyIcon}>📋</Text>
+                            <Text style={[
+                                styles.validAllJustificationsEmptyTitle,
+                                { color: colors.text }
+                            ]}>
                                 {t('justifications.noJustifications')}
                             </Text>
-                            <Text style={{ color: colors.textMuted, fontSize: 14, textAlign: 'center' }}>
+                            <Text style={[
+                                styles.validAllJustificationsEmptyDescription,
+                                { color: colors.textMuted }
+                            ]}>
                                 {t('justifications.noJustificationsDesc')}
                             </Text>
                         </View>
                     )}
 
-                    {/* Botón volver */}
                     <TouchableOpacity
                         onPress={() => navigation.goBack()}
-                        style={{
-                            backgroundColor: colors.backButtonBackground,
-                            borderRadius: 10,
-                            paddingVertical: 14,
-                            alignItems: 'center',
-                            marginTop: 8,
-                            borderWidth: 1,
-                            borderColor: colors.separator,
-                        }}
+                        style={[
+                            styles.validAllJustificationsBackButton,
+                            { backgroundColor: colors.backButtonBackground, borderColor: colors.separator }
+                        ]}
                     >
                         <Text style={{ color: colors.primary, fontSize: 15, fontWeight: '600' }}>
                             ← {t('common.back')}

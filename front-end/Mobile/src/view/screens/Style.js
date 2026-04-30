@@ -345,6 +345,191 @@ const styles = StyleSheet.create({
         color: "#999999",
     },
 
+    // ========= UPDATE PHOTO SCREEN styles ==========
+    imagePhoto: {
+        width: 150,
+        height: 150,
+        marginBottom: 20,
+        alignSelf: 'center',
+        overflow: 'hidden',
+    },
+    image: {
+        width: '100%',
+        height: '100%',
+    },
+    headerTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#1A1A2E',
+        textAlign: 'center',
+        alignSelf: 'center',
+    },
+    instructionText: {
+        marginHorizontal: 20,
+        textAlign: 'center',
+        marginTop: 10,
+        marginBottom: 10,
+        fontSize: 14,
+        color: '#666',
+        lineHeight: 20,
+    },
+    formTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#1A1A2E',
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    registerButton: {
+        backgroundColor: '#4CAF50',
+        marginHorizontal: 20,
+        marginVertical: 15,
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+        borderRadius: 12,
+        shadowColor: '#4CAF50',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 5,
+        alignSelf: 'center',
+    },
+    registerButtonSuccess: {
+        backgroundColor: '#2E7D32',
+    },
+    buttonContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    registerButtonText: {
+        color: '#FFFFFF',
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginLeft: 12,
+    },
+    icon: {
+        width: 24,
+        height: 24,
+        tintColor: "#FFFFFF",
+    },
+    settingsContainer: {
+        marginTop: 10,
+        alignSelf: "center",
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        borderRadius: 12,
+    },
+    settingsContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    settingsIcon: {
+        width: 40,
+        height: 40,
+        tintColor: "black"
+    },
+    settingsText: {
+        color: 'black',
+        fontSize: 20,
+        fontWeight: '600',
+    },
+    footer: {
+        height: 40,
+    },
+    safeAreaUpdatePhoto: {
+        flex: 1,
+    },
+    keyboardAvoidingViewUpdatePhoto: {
+        flex: 1,
+    },
+    scrollViewContentUpdatePhoto: {
+        paddingBottom: 40,
+    },
+    mainContainerUpdatePhoto: {
+        paddingHorizontal: 20,
+    },
+    imageContainerUpdatePhoto: {
+        alignItems: "center",
+        marginTop: 20,
+    },
+    profileImageUpdatePhoto: {
+        width: 120,
+        height: 120,
+    },
+    titleUpdatePhoto: {
+        fontSize: 22,
+        fontWeight: "bold",
+        textAlign: "center",
+        marginTop: 10,
+    },
+    instructionTextUpdatePhoto: {
+        textAlign: "center",
+        marginVertical: 15,
+    },
+    formCardUpdatePhoto: {
+        borderRadius: 15,
+        padding: 20,
+        borderWidth: 0,
+    },
+    formCardDarkUpdatePhoto: {
+        borderWidth: 1,
+    },
+    formTitleUpdatePhoto: {
+        fontSize: 18,
+        fontWeight: "bold",
+        marginBottom: 15,
+    },
+    inputFieldContainerUpdatePhoto: {
+        marginBottom: 15,
+    },
+    inputLabelUpdatePhoto: {
+        marginBottom: 5,
+        fontSize: 14,
+        fontWeight: "500",
+    },
+    questionInputUpdatePhoto: {
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+    },
+    registerButtonUpdatePhoto: {
+        padding: 15,
+        borderRadius: 12,
+        marginTop: 20,
+        alignItems: "center",
+        flexDirection: "row",
+        justifyContent: "center",
+    },
+    registerButtonSuccessUpdatePhoto: {
+        backgroundColor: "#2da351",
+    },
+    registerButtonTextUpdatePhoto: {
+        color: "#fff",
+        fontWeight: "bold",
+        fontSize: 16,
+    },
+    registerButtonIconUpdatePhoto: {
+        width: 22,
+        height: 22,
+        tintColor: "#fff",
+        marginRight: 8,
+    },
+    backButtonContainerUpdatePhoto: {
+        marginTop: 20,
+    },
+    spacerUpdatePhoto: {
+        height: 10,
+    },
+    smallSpacerUpdatePhoto: {
+        height: 5,
+    },
+    largeSpacerUpdatePhoto: {
+        height: 20,
+    },
+
     // ========== HOMES SCREEN styleS ==========
     contentContainer: {
         flex: 1,
@@ -2006,6 +2191,237 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         color: '#4A90E2',
+    },
+
+    // ========== VALID ALL JUSTIFICATIONS SCREEN STYLES ==========
+    validAllJustificationsSafeArea: {
+        flex: 1,
+    },
+
+    validAllJustificationsContainer: {
+        flex: 1,
+    },
+
+    validAllJustificationsHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingTop: 16,
+        paddingBottom: 12,
+    },
+
+    validAllJustificationsTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+    },
+
+    validAllJustificationsBadge: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    validAllJustificationsBadgeText: {
+        color: '#FFFFFF',
+        fontSize: 14,
+        fontWeight: '700',
+    },
+
+    validAllJustificationsSeparator: {
+        height: 1,
+        marginHorizontal: 20,
+        marginBottom: 8,
+    },
+
+    validAllJustificationsScrollView: {
+        flexGrow: 1,
+    },
+
+    validAllJustificationsScrollContent: {
+        paddingHorizontal: 20,
+        paddingBottom: 40,
+    },
+
+    validAllJustificationsCategorySection: {
+        marginBottom: 24,
+    },
+
+    validAllJustificationsCategoryHeader: {
+        borderRadius: 10,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        marginBottom: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+
+    validAllJustificationsCategoryTitle: {
+        fontSize: 15,
+        fontWeight: '700',
+    },
+
+    validAllJustificationsCategoryCount: {
+        fontSize: 12,
+    },
+
+    validAllJustificationsItemCard: {
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderLeftWidth: 3,
+    },
+
+    validAllJustificationsItemHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+
+    validAllJustificationsItemNumber: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 10,
+    },
+
+    validAllJustificationsItemNumberText: {
+        color: '#FFFFFF',
+        fontSize: 13,
+        fontWeight: '700',
+    },
+
+    validAllJustificationsItemType: {
+        fontSize: 15,
+        fontWeight: '700',
+        flex: 1,
+    },
+
+    validAllJustificationsItemDescription: {
+        fontSize: 14,
+        lineHeight: 20,
+        marginBottom: 12,
+    },
+
+    validAllJustificationsItemSeparator: {
+        height: 1,
+        marginBottom: 10,
+    },
+
+    validAllJustificationsItemFooter: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+
+    validAllJustificationsItemBadge: {
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 20,
+    },
+
+    validAllJustificationsItemBadgeText: {
+        fontSize: 12,
+        fontWeight: '600',
+    },
+
+    validAllJustificationsItemDocText: {
+        fontSize: 12,
+    },
+
+    validAllJustificationsEmptyState: {
+        alignItems: 'center',
+        marginTop: 60,
+    },
+
+    validAllJustificationsEmptyIcon: {
+        fontSize: 40,
+        marginBottom: 16,
+    },
+
+    validAllJustificationsEmptyTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 8,
+    },
+
+    validAllJustificationsEmptyDescription: {
+        fontSize: 14,
+        textAlign: 'center',
+    },
+
+    validAllJustificationsBackButton: {
+        borderRadius: 10,
+        paddingVertical: 14,
+        alignItems: 'center',
+        marginTop: 8,
+        borderWidth: 1,
+    },
+
+    // Estilos para ProfileScreen
+    profileHeaderSectionProfile: {
+        alignItems: 'center',
+        marginTop: 20,
+        marginBottom: 20,
+    },
+    userNameProfile: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 8,
+    },
+    roleBadgeProfile: {
+        paddingHorizontal: 15,
+        paddingVertical: 5,
+        borderRadius: 20,
+    },
+    roleBadgeTextProfile: {
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    infoFieldContainerProfile: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 10,
+        borderWidth: 1,
+    },
+    infoFieldLabelProfile: {
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    infoFieldValueProfile: {
+        fontSize: 14,
+        fontWeight: '400',
+    },
+    profileSettingsButtonProfile: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 10,
+        borderWidth: 1,
+    },
+    profileSettingsTitleProfile: {
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    profileSettingsSubtitleProfile: {
+        fontSize: 13,
+        marginTop: 2,
+    },
+    sectionTitleMenuProfile: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
     },
 });
 

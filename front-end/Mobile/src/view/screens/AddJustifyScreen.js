@@ -104,7 +104,7 @@ export default function AddJustification() {
         >
           <View style={styles.containerAddJustification}>
 
-            {/* TITULO */}
+
             <Text style={[styles.mainTitleAddJustification, { color: colors.text }]}>
               {t('justify.title')}
             </Text>
@@ -115,7 +115,6 @@ export default function AddJustification() {
 
             <Separador />
 
-            {/* TIPO */}
             <Text style={[styles.inputLabel, { color: colors.text }]}>
               {t('justify.selectDate')}
             </Text>
@@ -155,7 +154,6 @@ export default function AddJustification() {
               ))}
             </View>
 
-            {/* INPUT FECHA */}
             <Text style={[styles.inputLabel, { color: colors.text }]}>
               {t('justify.dateLabel')}
             </Text>
@@ -175,7 +173,6 @@ export default function AddJustification() {
               onChangeText={setDate}
             />
 
-            {/* INPUT HORA */}
             {justificationType === "retardo" && (
               <>
                 <Text style={[styles.inputLabel, { color: colors.text }]}>
@@ -199,7 +196,6 @@ export default function AddJustification() {
               </>
             )}
 
-            {/* DESCRIPCIÓN */}
             <Text style={[styles.inputLabel, { color: colors.text }]}>
               {t('justify.descriptionLabel')}
             </Text>
@@ -221,7 +217,7 @@ export default function AddJustification() {
               multiline
             />
 
-            {/* SUBIR */}
+
             <Text style={[styles.inputLabel, { color: colors.text }]}>
               {t('justify.attachDocument')}
             </Text>
@@ -243,7 +239,6 @@ export default function AddJustification() {
 
             <View style={styles.spacer} />
 
-            {/* BOTÓN */}
             <View style={styles.buttonContainer}>
               <PrimaryButton
                 title={t('justify.upload')}
@@ -252,7 +247,6 @@ export default function AddJustification() {
               />
             </View>
 
-            {/* VOLVER */}
             <TouchableOpacity onPress={handleBack} style={styles.secondaryButton}>
               <Text style={[styles.secondaryButtonText, { color: colors.textSecondary }]}>
                 {t('common.back')}

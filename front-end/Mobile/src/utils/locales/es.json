@@ -44,7 +44,11 @@
     "language": "Idioma",
     "selectLanguage": "Selecciona el idioma de tu preferencia",
     "languageChanged": "Idioma cambiado correctamente",
-    "errorChangingLanguage": "No se pudo cambiar el idioma"
+    "errorChangingLanguage": "No se pudo cambiar el idioma",
+    "theme": "Tema",
+    "lightTheme": "Claro",
+    "darkTheme": "Oscuro",
+    "changeTheme": "Cambiar Tema"
   },
   "menu": {
     "facialParams": "Ingresar Parámetros Faciales",
@@ -71,8 +75,8 @@
     "documentPlaceholder": "Ejemplo: 12345678",
     "phoneNumber": "Número de Teléfono",
     "phonePlaceholder": "Ejemplo: 3001234567",
-    "registerAttendance": "Registrar Asistencia",
-    "attendanceRegistered": "✓ Asistencia Registrada",
+    "registerAttendance": "Actualizar Parametros",
+    "attendanceRegistered": "✓ Parametros Actualizados",
     "completeFields": "Por favor, complete todos los campos",
     "settings": "Ajustes"
   },
@@ -102,8 +106,8 @@
     "employeesPresent": "de",
     "employeesAttending": "profesores presentes",
     "quickActions": "Acciones Rápidas",
-    "registerAttendance": "Registrar Asistencia",
-    "registerAttendanceDesc": "Registro facial de profesores",
+    "registerAttendance": "Actualizar Parametros",
+    "registerAttendanceDesc": "Actualización de parámetros faciales",
     "employeeManagement": "Gestión de Profesores",
     "employeeManagementDesc": "Agregar, editar o eliminar profesores",
     "reports": "Reportes",
@@ -261,7 +265,7 @@
     "expression": "Expresión facial diferente",
     "selectOption": "Selecciona una opción",
     "selectOptionMessage": "Por favor selecciona qué cambio has tenido en tu rostro",
-    "updateParams": "Actualizar Parámetros",
+    "updateParams": "Actualizar",
     "confirmUpdate": "¿Estás seguro de que deseas actualizar tus parámetros faciales?",
     "success": "Éxito",
     "paramsUpdated": "Tus parámetros faciales han sido actualizados"
@@ -364,5 +368,16 @@
     "items": "justificaciones",
     "noJustifications": "No hay justificaciones registradas",
     "noJustificationsDesc": "Las justificaciones válidas aparecerán aquí cuando sean agregadas por el administrador"
+  },
+  "profile": {
+    "personalInfo": "Información Personal",
+    "email": "Correo Electrónico",
+    "employeeId": "ID de Empleado",
+    "department": "Departamento",
+    "joinDate": "Fecha de Ingreso",
+    "quickSettings": "Configuración Rápida",
+    "logout": "Cerrar Sesión",
+    "logoutConfirm": "¿Estás seguro de que deseas cerrar sesión?",
+    "school": "Colegio"
   }
 }
