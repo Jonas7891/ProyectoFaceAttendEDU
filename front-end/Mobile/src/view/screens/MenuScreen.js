@@ -136,7 +136,7 @@ export default function MenuScreen() {
       ]);
       
       await i18n.changeLanguage('es');
-      
+    
       navigation.reset({
         index: 0,
         routes: [{ name: 'Login' }],

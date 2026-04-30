@@ -10,6 +10,7 @@ import stylescommon from './style/Style';
 const screens = {
   home: "Dashboard",
   history: "Historial",
+  DisplayingAttendance: "DisplayingAttendance"
 };
 
 const NEWS_screens = {
@@ -50,7 +51,7 @@ export default function CustomTabs({ onChange, userRole }) {
     switch (routeName) {
       case "Dashboard": return 0;
       case "Novedades": return 1;
-      case "Historial": return 2;
+      case "DisplayingAttendance": return 2;
       default: return 0;
     }
   };
@@ -69,7 +70,7 @@ export default function CustomTabs({ onChange, userRole }) {
       case 1: return currentUserRole === 'admin'
         ? NEWS_screens.admin
         : NEWS_screens.student;
-      case 2: return screens.history;
+      case 2: return screens.DisplayingAttendance;
       default: return screens.home;
     }
   };
@@ -148,7 +149,7 @@ export default function CustomTabs({ onChange, userRole }) {
       {[
         t('tabs.home', { defaultValue: 'Inicio' }),
         t('tabs.news', { defaultValue: 'Novedades' }),
-        t('tabs.history', { defaultValue: 'Historial' }),
+        t('tabs.DisplayingAttendance', { defaultValue: 'Asistencias' }),
       ].map((label, index) => (
         <TouchableOpacity
           key={index}

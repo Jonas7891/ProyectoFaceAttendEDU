@@ -16,8 +16,7 @@ import { useTheme } from '../components/common/ThemeContext';
 import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import { saveLanguageForRole } from '../components/common/languageByRole';
 import BottomBar from "../components/common/NavigationBar";
-import CustomLogo from "../components/auth/logo";
-import DangerButton from "../components/auth/DangerButton";
+import PrimaryButton from "../components/auth/PrimaryButton";
 import LanguageSelector from '../components/common/LanguageSelector';
 import styles from "./Style";
 
@@ -32,6 +31,7 @@ export default function ProfileScreen() {
     const [updateKey, setUpdateKey] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [showLanguageModal, setShowLanguageModal] = useState(false);
+    const handleBack = () => navigation.goBack();
     const [userInfo, setUserInfo] = useState({
         name: '',
         email: '',
@@ -132,10 +132,6 @@ export default function ProfileScreen() {
     const InfoField = ({ label, value, icon }) => (
         <View style={[
             styles.infoFieldContainerProfile,
-            {
-                backgroundColor: colors.card,
-                borderColor: colors.border,
-            }
         ]}>
             <Text style={[styles.infoFieldLabelProfile, { color: colors.textSecondary }]}>
                 {icon && <Text>{icon}  </Text>}
@@ -151,11 +147,12 @@ export default function ProfileScreen() {
         <SafeAreaView
             style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}
             key={`${refreshKey}-${updateKey}`}
+            
         >
             <ScrollView contentContainerStyle={styles.ScrollViewContent}>
-                <View style={styles.container} marginHorizontal={15}>
+                <View style={styles.container} marginHorizontal={15} >
 
-                    <View style={styles.profileHeaderSectionProfile}>
+                    <View style={[styles.profileHeaderSectionProfile, { marginTop: Platform.OS === 'ios' ? 30 : 40 }]}>
                         <Text style={[styles.userNameProfile, { color: colors.text }]}>
                             {userInfo.name}
                         </Text>
@@ -207,7 +204,7 @@ export default function ProfileScreen() {
                         <TouchableOpacity
                             style={[
                                 styles.profileSettingsButtonProfile,
-                                { backgroundColor: colors.card, borderColor: colors.border }
+                                { backgroundColor: colors.card }
                             ]}
                             onPress={toggleTheme}
                         >
@@ -223,30 +220,24 @@ export default function ProfileScreen() {
                                     </Text>
                                 </View>
                             </View>
-                            <Text style={{ fontSize: 14, color: colors.text, textDecorationLine: 'underline'}}>
+                            <Text style={{ fontSize: 14, color: colors.text, textDecorationLine: 'underline' }}>
                                 {t('settings.changeTheme')}
                             </Text>
                         </TouchableOpacity>
                     </View>
 
                     <View style={{
-                        marginTop: Platform.OS === 'ios' ? 30 : 30,
-
+                        marginTop: Platform.OS === 'ios' ? 50 : 80,
                     }}>
-                        <DangerButton
-                            title={isLoading ? t('menu.loggingOut') : t('menu.logout')}
-                            onPress={handleLogout}
-                            setIsLoading={setIsLoading}
-                        />
+                        <View style={styles.buttonContainer} marginTop={60}>
+                            <PrimaryButton
+                                title={t('consultJustify.back')}
+                                onPress={handleBack}
+                            />
+                        </View>
                     </View>
                 </View>
             </ScrollView>
-
-            <BottomBar
-                onPressSettings={handleSettings}
-                onPressProfile={handleProfile}
-                onPressSearch={handleSearch}
-            />
         </SafeAreaView>
     );
 }

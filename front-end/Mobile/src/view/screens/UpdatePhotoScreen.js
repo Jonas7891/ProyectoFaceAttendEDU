@@ -1,3 +1,4 @@
+// UpdatePhotoScreen.js
 import React, { useState, useEffect } from "react";
 import {
     Text,
@@ -5,7 +6,6 @@ import {
     SafeAreaView,
     TouchableOpacity,
     ScrollView,
-    StatusBar,
     Image,
     KeyboardAvoidingView,
     Platform,
@@ -15,21 +15,19 @@ import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { QuestionInput } from "../components/common/QuestionInput";
 import PrimaryButton from "../components/auth/PrimaryButton";
-import styles from "./Style";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
-import { saveLanguageForRole } from '../components/common/languageByRole';
-import LanguageSelector from '../components/common/LanguageSelector';
+import { useTheme } from "../components/common/ThemeContext";
+import styles from "./Style";
 
 export default function UpdatePhoto() {
     const navigation = useNavigation();
     const { t, i18n } = useTranslation();
     const refreshKey = useLanguageRefresh();
+    const { colors, theme, loadThemeForRole } = useTheme();
+
     const [attendanceRegistered, setAttendanceRegistered] = useState(false);
-    const [selectedLanguage, setSelectedLanguage] = useState(i18n.language);
-    const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
     const [updateKey, setUpdateKey] = useState(0);
-    const handleLanguageChange = (newLang) => setSelectedLanguage(newLang);
 
     const [formData, setFormData] = useState({
         nombreCompleto: "",
@@ -40,17 +38,16 @@ export default function UpdatePhoto() {
     useEffect(() => {
         const init = async () => {
             const role = await AsyncStorage.getItem('userRole');
-            setUserRole(role);
-            await loadThemeForRole(role);
+            if (role) {
+                await loadThemeForRole(role);
+            }
         };
         init();
 
-        const handleLanguageChanged = (lng) => {
-            setCurrentLanguage(lng);
+        const handleLanguageChanged = () => {
             setUpdateKey(prev => prev + 1);
         };
 
-        setCurrentLanguage(i18n.language);
         i18n.on('languageChanged', handleLanguageChanged);
 
         return () => {
@@ -59,8 +56,8 @@ export default function UpdatePhoto() {
     }, []);
 
     const handleInputChange = (field, value) => {
-        setFormData(prevState => ({
-            ...prevState,
+        setFormData(prev => ({
+            ...prev,
             [field]: value
         }));
     };
@@ -68,133 +65,187 @@ export default function UpdatePhoto() {
     const handleRegisterAttendance = () => {
         if (!formData.nombreCompleto || !formData.documento || !formData.telefono) {
             Alert.alert(
-                t('updatePhoto.error', { defaultValue: 'Error' }),
-                t('updatePhoto.completeFields', { defaultValue: 'Por favor, complete todos los campos' })
+                t('updatePhoto.error'),
+                t('updatePhoto.completeFields')
             );
             return;
         }
 
-        console.log("Datos del usuario:", formData);
         setAttendanceRegistered(true);
     };
 
-    const handleMenu = () => {
-        navigation.navigate("Menu");
-    };
+    const handleBack = () => navigation.goBack();
 
-    const handleBack = () => {
-        navigation.goBack();
+    const dynamicStyles = {
+        safeAreaUpdatePhoto: {
+            flex: 1,
+            backgroundColor: colors.background,
+        },
+        profileImageUpdatePhoto: {
+            width: 120,
+            height: 120,
+            tintColor: colors.text,
+        },
+        titleUpdatePhoto: {
+            fontSize: 22,
+            fontWeight: "bold",
+            textAlign: "center",
+            color: colors.text,
+            marginTop: 10,
+        },
+        instructionTextUpdatePhoto: {
+            textAlign: "center",
+            color: colors.textMuted,
+            marginVertical: 15,
+        },
+        formCardUpdatePhoto: {
+            backgroundColor: colors.card,
+            borderRadius: 15,
+            padding: 20,
+            borderWidth: theme === 'dark' ? 1 : 0,
+            borderColor: colors.cardBorder,
+        },
+        formTitleUpdatePhoto: {
+            fontSize: 18,
+            fontWeight: "bold",
+            color: colors.text,
+            marginBottom: 15,
+        },
+        inputLabelUpdatePhoto: {
+            color: colors.text,
+            marginBottom: 5,
+            fontSize: 14,
+            fontWeight: "500",
+        },
+        questionInputUpdatePhoto: {
+            backgroundColor: colors.inputBackground,
+            color: colors.text,
+            borderColor: colors.border || colors.separator,
+            borderWidth: 1,
+            borderRadius: 8,
+            paddingHorizontal: 12,
+            paddingVertical: 10,
+        },
+        registerButtonUpdatePhoto: {
+            backgroundColor: attendanceRegistered ? "#2da351" : colors.primary,
+            padding: 15,
+            borderRadius: 12,
+            marginTop: 20,
+            alignItems: "center",
+            flexDirection: "row",
+            justifyContent: "center",
+        },
     };
 
     return (
-        <SafeAreaView style={styles.container} key={`${refreshKey}-${updateKey}`}>
-            <StatusBar barstyle="dark-content" backgroundColor="#F5F5F5" />
+        <SafeAreaView style={[styles.safeAreaUpdatePhoto, dynamicStyles.safeAreaUpdatePhoto]} key={`${refreshKey}-${updateKey}`}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.keyboardview}
-                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+                style={styles.keyboardAvoidingViewUpdatePhoto}
             >
                 <ScrollView
                     showsVerticalScrollIndicator={false}
-                    contentContainerstyle={styles.ScrollViewContent}
-                    bounces={true}
-                    alwaysBounceVertical={true}
+                    contentContainerStyle={styles.scrollViewContentUpdatePhoto}
                 >
-                    <View>
-                        <Text>{"\n"}</Text>
-                    </View>
+                    <View style={styles.mainContainerUpdatePhoto}>
+                        {/* Imagen de perfil */}
+                        <View style={styles.imageContainerUpdatePhoto}>
+                            <Image
+                                source={require("../../assets/images/perfil-del-usuario.png")}
+                                style={[styles.profileImageUpdatePhoto, dynamicStyles.profileImageUpdatePhoto]}
+                                resizeMode="contain"
+                            />
+                        </View>
 
-                    <View style={styles.imagePhoto}>
-                        <Image
-                            source={require("../../assets/images/perfil-del-usuario.png")}
-                            style={styles.image}
-                            resizeMode="contain"
-                        />
-                    </View>
-
-                    <View style={styles.header}>
-                        <Text style={styles.headerTitle}>
-                            {t('updatePhoto.title', { defaultValue: 'Actualizar Foto' })}
-                        </Text>
-                    </View>
-
-                    <Text style={styles.instructionText}>
-                        {t('updatePhoto.instructions', { defaultValue: 'Complete los siguientes datos para actualizar su foto' })}
-                    </Text>
-
-                    <View style={styles.formSection}>
-                        <Text style={styles.formTitle}>
-                            {t('updatePhoto.personalInfo', { defaultValue: 'Información Personal' })}
+                        {/* Títulos */}
+                        <Text style={[styles.titleUpdatePhoto, dynamicStyles.titleUpdatePhoto]}>
+                            {t('updatePhoto.title')}
                         </Text>
 
-                        <View style={styles.inputContainer}>
-                            <Text style={styles.inputLabel}>
-                                {t('updatePhoto.fullName', { defaultValue: 'Nombre Completo' })}
+                        <Text style={[styles.instructionTextUpdatePhoto, dynamicStyles.instructionTextUpdatePhoto]}>
+                            {t('updatePhoto.instructions')}
+                        </Text>
+
+                        {/* Formulario */}
+                        <View style={[styles.formCardUpdatePhoto, dynamicStyles.formCardUpdatePhoto]}>
+                            <Text style={[styles.formTitleUpdatePhoto, dynamicStyles.formTitleUpdatePhoto]}>
+                                {t('updatePhoto.personalInfo')}
                             </Text>
-                            <QuestionInput
-                                placeholder={t('updatePhoto.fullNamePlaceholder', { defaultValue: 'Ej: Juan Pérez' })}
-                                value={formData.nombreCompleto}
-                                onChangeText={(value) => handleInputChange("nombreCompleto", value)}
-                                keyboardType="default"
-                            />
+
+                            {/* Campo: Nombre Completo */}
+                            <View style={styles.inputFieldContainerUpdatePhoto}>
+                                <Text style={[styles.inputLabelUpdatePhoto, dynamicStyles.inputLabelUpdatePhoto]}>
+                                    {t('updatePhoto.fullName')}
+                                </Text>
+                                <QuestionInput
+                                    placeholder={t('updatePhoto.fullNamePlaceholder')}
+                                    value={formData.nombreCompleto}
+                                    onChangeText={(value) => handleInputChange("nombreCompleto", value)}
+                                    keyboardType="default"
+                                    style={dynamicStyles.questionInputUpdatePhoto}
+                                    placeholderTextColor={colors.textMuted}
+                                />
+                            </View>
+
+                            {/* Campo: Número de Documento */}
+                            <View style={styles.inputFieldContainerUpdatePhoto}>
+                                <Text style={[styles.inputLabelUpdatePhoto, dynamicStyles.inputLabelUpdatePhoto]}>
+                                    {t('updatePhoto.documentNumber')}
+                                </Text>
+                                <QuestionInput
+                                    placeholder={t('updatePhoto.documentPlaceholder')}
+                                    value={formData.documento}
+                                    onChangeText={(value) => handleInputChange("documento", value)}
+                                    keyboardType="numeric"
+                                    style={dynamicStyles.questionInputUpdatePhoto}
+                                    placeholderTextColor={colors.textMuted}
+                                />
+                            </View>
+
+                            {/* Campo: Número de Teléfono */}
+                            <View style={styles.inputFieldContainerUpdatePhoto}>
+                                <Text style={[styles.inputLabelUpdatePhoto, dynamicStyles.inputLabelUpdatePhoto]}>
+                                    {t('updatePhoto.phoneNumber')}
+                                </Text>
+                                <QuestionInput
+                                    placeholder={t('updatePhoto.phonePlaceholder')}
+                                    value={formData.telefono}
+                                    onChangeText={(value) => handleInputChange("telefono", value)}
+                                    keyboardType="phone-pad"
+                                    style={dynamicStyles.questionInputUpdatePhoto}
+                                    placeholderTextColor={colors.textMuted}
+                                />
+                            </View>
                         </View>
 
-                        <View style={styles.inputContainer}>
-                            <Text style={styles.inputLabel}>
-                                {t('updatePhoto.documentNumber', { defaultValue: 'Número de Documento' })}
-                            </Text>
-                            <QuestionInput
-                                placeholder={t('updatePhoto.documentPlaceholder', { defaultValue: 'Ej: 12345678' })}
-                                value={formData.documento}
-                                onChangeText={(value) => handleInputChange("documento", value)}
-                                keyboardType="numeric"
-                            />
-                        </View>
-
-                        <View style={styles.inputContainer}>
-                            <Text style={styles.inputLabel}>
-                                {t('updatePhoto.phoneNumber', { defaultValue: 'Número de Teléfono' })}
-                            </Text>
-                            <QuestionInput
-                                placeholder={t('updatePhoto.phonePlaceholder', { defaultValue: 'Ej: 3001234567' })}
-                                value={formData.telefono}
-                                onChangeText={(value) => handleInputChange("telefono", value)}
-                                keyboardType="phone-pad"
-                            />
-                        </View>
-                    </View>
-
-                    <TouchableOpacity
-                        style={[
-                            styles.registerButton,
-                            attendanceRegistered && styles.registerButtonSuccess,
-                        ]}
-                        onPress={handleRegisterAttendance}
-                        activeOpacity={0.8}
-                    >
-                        <View style={styles.buttonContent}>
+                        {/* Botón de registro */}
+                        <TouchableOpacity
+                            style={[
+                                styles.registerButtonUpdatePhoto,
+                                dynamicStyles.registerButtonUpdatePhoto,
+                                attendanceRegistered && styles.registerButtonSuccessUpdatePhoto,
+                            ]}
+                            onPress={handleRegisterAttendance}
+                        >
                             <Image
                                 source={require("../../assets/images/fotografia.png")}
-                                style={styles.icon}
+                                style={styles.registerButtonIconUpdatePhoto}
                             />
-                            <Text style={styles.registerButtonText}>
+                            <Text style={styles.registerButtonTextUpdatePhoto}>
                                 {attendanceRegistered
-                                    ? t('updatePhoto.attendanceRegistered', { defaultValue: '¡Registro Exitoso!' })
-                                    : t('updatePhoto.registerAttendance', { defaultValue: 'Registrar Asistencia' })
-                                }
+                                    ? t('updatePhoto.attendanceRegistered')
+                                    : t('updatePhoto.registerAttendance')}
                             </Text>
+                        </TouchableOpacity>
+
+                        {/* Botón de volver */}
+                        <View style={styles.backButtonContainerUpdatePhoto}>
+                            <PrimaryButton
+                                title={t('consultJustify.back')}
+                                onPress={handleBack}
+                            />
                         </View>
-                    </TouchableOpacity>
-
-                    <View>
-                        <Text>{"\n"}{"\n"}</Text>
                     </View>
-
-                    <View style={styles.buttonContainer}>
-                        <PrimaryButton title={t('consultJustify.back')} onPress={handleBack} />
-                    </View>
-
-                    <View style={styles.footer} />
                 </ScrollView>
             </KeyboardAvoidingView>
         </SafeAreaView>

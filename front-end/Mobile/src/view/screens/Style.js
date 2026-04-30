@@ -345,6 +345,191 @@ const styles = StyleSheet.create({
         color: "#999999",
     },
 
+    // ========= UPDATE PHOTO SCREEN styles ==========
+    imagePhoto: {
+        width: 150,
+        height: 150,
+        marginBottom: 20,
+        alignSelf: 'center',
+        overflow: 'hidden',
+    },
+    image: {
+        width: '100%',
+        height: '100%',
+    },
+    headerTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#1A1A2E',
+        textAlign: 'center',
+        alignSelf: 'center',
+    },
+    instructionText: {
+        marginHorizontal: 20,
+        textAlign: 'center',
+        marginTop: 10,
+        marginBottom: 10,
+        fontSize: 14,
+        color: '#666',
+        lineHeight: 20,
+    },
+    formTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#1A1A2E',
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    registerButton: {
+        backgroundColor: '#4CAF50',
+        marginHorizontal: 20,
+        marginVertical: 15,
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+        borderRadius: 12,
+        shadowColor: '#4CAF50',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 5,
+        alignSelf: 'center',
+    },
+    registerButtonSuccess: {
+        backgroundColor: '#2E7D32',
+    },
+    buttonContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    registerButtonText: {
+        color: '#FFFFFF',
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginLeft: 12,
+    },
+    icon: {
+        width: 24,
+        height: 24,
+        tintColor: "#FFFFFF",
+    },
+    settingsContainer: {
+        marginTop: 10,
+        alignSelf: "center",
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        borderRadius: 12,
+    },
+    settingsContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    settingsIcon: {
+        width: 40,
+        height: 40,
+        tintColor: "black"
+    },
+    settingsText: {
+        color: 'black',
+        fontSize: 20,
+        fontWeight: '600',
+    },
+    footer: {
+        height: 40,
+    },
+    safeAreaUpdatePhoto: {
+        flex: 1,
+    },
+    keyboardAvoidingViewUpdatePhoto: {
+        flex: 1,
+    },
+    scrollViewContentUpdatePhoto: {
+        paddingBottom: 40,
+    },
+    mainContainerUpdatePhoto: {
+        paddingHorizontal: 20,
+    },
+    imageContainerUpdatePhoto: {
+        alignItems: "center",
+        marginTop: 20,
+    },
+    profileImageUpdatePhoto: {
+        width: 120,
+        height: 120,
+    },
+    titleUpdatePhoto: {
+        fontSize: 22,
+        fontWeight: "bold",
+        textAlign: "center",
+        marginTop: 10,
+    },
+    instructionTextUpdatePhoto: {
+        textAlign: "center",
+        marginVertical: 15,
+    },
+    formCardUpdatePhoto: {
+        borderRadius: 15,
+        padding: 20,
+        borderWidth: 0,
+    },
+    formCardDarkUpdatePhoto: {
+        borderWidth: 1,
+    },
+    formTitleUpdatePhoto: {
+        fontSize: 18,
+        fontWeight: "bold",
+        marginBottom: 15,
+    },
+    inputFieldContainerUpdatePhoto: {
+        marginBottom: 15,
+    },
+    inputLabelUpdatePhoto: {
+        marginBottom: 5,
+        fontSize: 14,
+        fontWeight: "500",
+    },
+    questionInputUpdatePhoto: {
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+    },
+    registerButtonUpdatePhoto: {
+        padding: 15,
+        borderRadius: 12,
+        marginTop: 20,
+        alignItems: "center",
+        flexDirection: "row",
+        justifyContent: "center",
+    },
+    registerButtonSuccessUpdatePhoto: {
+        backgroundColor: "#2da351",
+    },
+    registerButtonTextUpdatePhoto: {
+        color: "#fff",
+        fontWeight: "bold",
+        fontSize: 16,
+    },
+    registerButtonIconUpdatePhoto: {
+        width: 22,
+        height: 22,
+        tintColor: "#fff",
+        marginRight: 8,
+    },
+    backButtonContainerUpdatePhoto: {
+        marginTop: 20,
+    },
+    spacerUpdatePhoto: {
+        height: 10,
+    },
+    smallSpacerUpdatePhoto: {
+        height: 5,
+    },
+    largeSpacerUpdatePhoto: {
+        height: 20,
+    },
+
     // ========== HOMES SCREEN styleS ==========
     contentContainer: {
         flex: 1,

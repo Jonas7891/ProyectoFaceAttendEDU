@@ -13,6 +13,7 @@ import {
 import styles from "./Style";
 import BottomBar from "../components/common/NavigationBar";
 import PrimaryButton from "../components/auth/PrimaryButton";
+import CustomTabs from "../components/common/CustomTabs";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -25,7 +26,7 @@ import LanguageSelector from '../components/common/LanguageSelector';
 export default function DisplayingAttendance() {
     const navigation = useNavigation();
     const { t, i18n } = useTranslation();
-    const { colors, loadThemeForRole } = useTheme();
+    const { colors, loadThemeForRole, theme } = useTheme();
     const refreshKey = useLanguageRefresh();
     const [userRole, setUserRole] = useState(null);
     const [searchText, setSearchText] = useState("");
@@ -124,9 +125,12 @@ export default function DisplayingAttendance() {
 
     return (
         <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} key={`${refreshKey}-${updateKey}`}>
-            <View style={[styles.containerAttendance, { backgroundColor: colors.background, flex: 1 }]}>
+            <View style={[styles.containerAttendance, { backgroundColor: colors.background, flex: 1}]}>
 
-                <View style={styles.headerContainer}>
+                {/* CustomTabs agregado en la parte superior */}
+                <CustomTabs userRole={userRole} />
+
+                <View style={[styles.headerContainer, { marginTop: Platform.OS === 'ios' ? 30 : 25 }]}>
                     <Text style={[styles.mainTitle, { color: colors.text }]}>
                         {t('attendance.title')}
                     </Text>
@@ -203,7 +207,7 @@ export default function DisplayingAttendance() {
                 </View>
 
                 {(searchText !== "" || selectedDate) && (
-                    <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8, gap: 6 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8, marginHorizontal: 20, gap: 6 }}>
                         <Text style={{ color: colors.textMuted, fontSize: 12 }}>
                             {filteredData.length} {t('attendance.results', { defaultValue: 'resultado(s)' })}
                         </Text>
@@ -268,19 +272,18 @@ export default function DisplayingAttendance() {
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderItem}
                     style={{ flex: 1, backgroundColor: colors.background }}
-                    contentContainerstyle={{ paddingBottom: 110 }}
+                    contentContainerStyle={{ paddingBottom: 30 }}
                     ListEmptyComponent={
                         <Text style={{ color: colors.textMuted, textAlign: "center", marginTop: 30, fontSize: 14 }}>
                             {t('attendance.noResults', { defaultValue: 'Sin resultados' })}
                         </Text>
                     }
                     ListFooterComponent={
-                        <View style={{ paddingVertical: 12 }}>
-                            <PrimaryButton
-                                title={t('consultJustify.back')}
-                                onPress={() => navigation.goBack()}
-                            />
-                        </View>
+                        <View style={{
+                            paddingBottom: Platform.OS === 'ios' ? 50 : 70,
+                            marginBottom: 10,
+                            marginHorizontal: 20,
+                        }} />
                     }
                 />
             </View>
