@@ -15,7 +15,7 @@ import { saveLanguageForRole } from "../components/common/languageByRole";
 import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import { useTheme } from '../components/common/ThemeContext';
 import DangerButton from "../components/auth/DangerButton";
-import CustomLogo from "../components/auth/logo";
+import CustomLogo from "../components/common/logo";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import styles from "./Style";
 

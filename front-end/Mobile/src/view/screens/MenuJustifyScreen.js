@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import PrimaryButton from "../components/auth/PrimaryButton";
-import CustomLogo from "../components/auth/logo";
+import CustomLogo from "../components/common/logo";
 import { useNavigation } from "@react-navigation/native";
 import Separador from "../components/common/Separador";
 import styles from "./Style";

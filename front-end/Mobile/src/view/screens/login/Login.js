@@ -17,11 +17,11 @@ import { restoreLanguageForRole } from "../../components/common/languageByRole";
 import { useLanguageRefresh } from '../../../utils/useLanguageRefresh';
 import { useTheme } from '../../components/common/ThemeContext';
 import PrimaryButton from "../../components/auth/PrimaryButton";
-import SelectableButton from "../../components/auth/SelectableButton";
-import CustomLogo from "../../components/auth/logo";
+import SelectableButton from "../../components/common/SelectableButton";
+import CustomLogo from "../../components/common/logo";
 import { useNavigation } from "@react-navigation/native";
 import RegisterModal from '../../components/auth/RegisterModal';
-import TerminosModal from "../../components/auth/TerminosModal";
+import TerminosModal from "../../components/common/TerminosModal";
 import ScrollView from "../../components/common/ScrollView";
 import styles from "./style/Style";
 

@@ -18,7 +18,7 @@ import { useTheme } from '../components/common/ThemeContext';
 import PrimaryButton from "../components/auth/PrimaryButton";
 import { QuestionnaireModal } from "../components/common/QuestionnaireModal";
 import { FacialUpdateModal } from "../components/common/FacialUpdateModal";
-import CustomLogo from "../components/auth/logo";
+import CustomLogo from "../components/common/logo";
 import { saveLanguageForRole } from '../components/common/languageByRole';
 import LanguageSelector from '../components/common/LanguageSelector';
 import styles from "./Style";
