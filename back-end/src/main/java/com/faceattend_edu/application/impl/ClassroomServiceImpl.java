@@ -11,6 +11,7 @@ import com.faceattend_edu.domain.port.ClassroomRepositoryPort;
 import com.faceattend_edu.domain.port.SchoolRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -24,6 +25,7 @@ public class ClassroomServiceImpl implements ClassroomService {
     private final SchoolRepositoryPort schoolRepositoryPort;
 
     @Override
+    @Transactional(readOnly = true)
     public ClassroomResponse findById(Integer id) {
         Classroom classroom = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Classroom", id));
@@ -31,6 +33,7 @@ public class ClassroomServiceImpl implements ClassroomService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ClassroomResponse> findAll() {
         return repository.findAll()
                 .stream()
@@ -39,6 +42,7 @@ public class ClassroomServiceImpl implements ClassroomService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ClassroomResponse save(ClassroomRequest request) {
         School school = schoolRepositoryPort.findById(request.schoolId())
                 .orElseThrow(() -> new NotFoundException("School", request.schoolId()));
@@ -49,6 +53,7 @@ public class ClassroomServiceImpl implements ClassroomService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ClassroomResponse update(Integer id, ClassroomRequest request) {
         Classroom existing = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Classroom", id));
@@ -62,6 +67,7 @@ public class ClassroomServiceImpl implements ClassroomService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void deleteById(Integer id) {
         if (repository.findById(id).isEmpty()) {
             throw new NotFoundException("Classroom", id);

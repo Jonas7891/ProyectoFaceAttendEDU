@@ -11,6 +11,7 @@ import com.faceattend_edu.domain.port.CourseRepositoryPort;
 import com.faceattend_edu.domain.port.SchoolRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -24,6 +25,7 @@ public class CourseServiceImpl implements CourseService {
     private final SchoolRepositoryPort schoolRepositoryPort;
 
     @Override
+    @Transactional(readOnly = true)
     public CourseResponse findById(Integer id) {
         Course course = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Course", id));
@@ -31,6 +33,7 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CourseResponse> findAll() {
         return repository.findAll()
                 .stream()
@@ -39,6 +42,7 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CourseResponse save(CourseRequest request) {
         School school = schoolRepositoryPort.findById(request.schoolId())
                 .orElseThrow(() -> new NotFoundException("School", request.schoolId()));
@@ -49,6 +53,7 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CourseResponse update(Integer id, CourseRequest request) {
         Course existing = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Course", id));
@@ -62,6 +67,7 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void deleteById(Integer id) {
         if (repository.findById(id).isEmpty()) {
             throw new NotFoundException("Course", id);

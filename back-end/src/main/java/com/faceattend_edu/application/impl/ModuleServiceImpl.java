@@ -25,6 +25,7 @@ public class ModuleServiceImpl implements ModuleService {
     private final ViewRepositoryPort viewRepositoryPort;
 
     @Override
+    @Transactional(readOnly = true)
     public ModuleResponse findById(Integer id) {
         Module module = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Module", id));
@@ -41,6 +42,7 @@ public class ModuleServiceImpl implements ModuleService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ModuleResponse save(ModuleRequest request) {
         List<View> views = viewRepositoryPort.findAllById(request.viewIds());
 
@@ -50,6 +52,7 @@ public class ModuleServiceImpl implements ModuleService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ModuleResponse update(Integer id, ModuleRequest request) {
         repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Module", id));
@@ -62,6 +65,7 @@ public class ModuleServiceImpl implements ModuleService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void deleteById(Integer id) {
         if (repository.findById(id).isEmpty()) {
             throw new NotFoundException("Module", id);

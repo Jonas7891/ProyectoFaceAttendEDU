@@ -11,6 +11,7 @@ import com.faceattend_edu.domain.port.PeriodRepositoryPort;
 import com.faceattend_edu.domain.port.SchoolRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -24,6 +25,7 @@ public class PeriodServiceImpl implements PeriodService {
     private final SchoolRepositoryPort schoolRepositoryPort;
 
     @Override
+    @Transactional(readOnly = true)
     public PeriodResponse findById(Integer id) {
         Period period = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Period", id));
@@ -31,6 +33,7 @@ public class PeriodServiceImpl implements PeriodService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PeriodResponse> findAll() {
         return repository.findAll()
                 .stream()
@@ -39,6 +42,7 @@ public class PeriodServiceImpl implements PeriodService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PeriodResponse save(PeriodRequest request) {
         School school = schoolRepositoryPort.findById(request.schoolId())
                 .orElseThrow(() -> new NotFoundException("School", request.schoolId()));
@@ -49,6 +53,7 @@ public class PeriodServiceImpl implements PeriodService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PeriodResponse update(Integer id, PeriodRequest request) {
         repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Period", id));
@@ -62,6 +67,7 @@ public class PeriodServiceImpl implements PeriodService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void deleteById(Integer id) {
         if (repository.findById(id).isEmpty()) {
             throw new NotFoundException("Period", id);

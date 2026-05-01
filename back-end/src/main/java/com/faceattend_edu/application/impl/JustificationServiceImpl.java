@@ -14,6 +14,7 @@ import com.faceattend_edu.domain.port.JustificationRepositoryPort;
 import com.faceattend_edu.domain.port.UserRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -28,6 +29,7 @@ public class JustificationServiceImpl implements JustificationService {
     private final UserRepositoryPort userRepositoryPort;
 
     @Override
+    @Transactional(readOnly = true)
     public JustificationResponse findById(Integer id) {
         Justification justification = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Justification", id));
@@ -35,6 +37,7 @@ public class JustificationServiceImpl implements JustificationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<JustificationResponse> findAll() {
         return repository.findAll()
                 .stream()
@@ -43,6 +46,7 @@ public class JustificationServiceImpl implements JustificationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public JustificationResponse save(JustificationRequest request) {
         Attendance attendance = attendanceRepositoryPort.findById(request.attendanceId())
                 .orElseThrow(() -> new NotFoundException("Attendance", request.attendanceId()));
@@ -55,6 +59,7 @@ public class JustificationServiceImpl implements JustificationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public JustificationResponse update(Integer id, JustificationRequest request) {
         repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Justification", id));
@@ -70,6 +75,7 @@ public class JustificationServiceImpl implements JustificationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void deleteById(Integer id) {
         if (repository.findById(id).isEmpty()) {
             throw new NotFoundException("Justification", id);

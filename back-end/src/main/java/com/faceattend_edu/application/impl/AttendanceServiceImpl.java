@@ -15,6 +15,7 @@ import com.faceattend_edu.domain.port.PersonRepositoryPort;
 import com.faceattend_edu.domain.port.ScheduleRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -30,6 +31,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     private final IotDeviceRepositoryPort iotDeviceRepositoryPort;
 
     @Override
+    @Transactional(readOnly = true)
     public AttendanceResponse findById(Integer id) {
         Attendance attendance = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Attendance", id));
@@ -37,6 +39,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<AttendanceResponse> findAll() {
         return repository.findAll()
                 .stream()
@@ -45,6 +48,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public AttendanceResponse save(AttendanceRequest request) {
         Person student = personRepositoryPort.findById(request.studentId())
                 .orElseThrow(() -> new NotFoundException("Person", request.studentId()));
@@ -59,6 +63,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public AttendanceResponse update(Integer id, AttendanceRequest request) {
         Attendance existing = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Attendance", id));
@@ -76,6 +81,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void deleteById(Integer id) {
         if (repository.findById(id).isEmpty()) {
             throw new NotFoundException("Attendance", id);

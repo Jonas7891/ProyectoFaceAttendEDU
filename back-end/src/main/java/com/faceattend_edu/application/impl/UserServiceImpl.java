@@ -25,6 +25,7 @@ public class UserServiceImpl implements UserService {
     private final PersonRepositoryPort personRepositoryPort;;
 
     @Override
+    @Transactional(readOnly = true)
     public UserResponse findById(Integer id) {
         User user = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User", id));
@@ -41,6 +42,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserResponse save(UserRequest request) {
         Person person = personRepositoryPort.findById(request.personId())
                 .orElseThrow(() -> new NotFoundException("Person", request.personId()));
@@ -51,6 +53,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserResponse update(Integer id, UserRequest request) {
         repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User", id));
@@ -64,6 +67,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void deleteById(Integer id) {
         if (repository.findById(id).isEmpty()) {
             throw new NotFoundException("User", id);

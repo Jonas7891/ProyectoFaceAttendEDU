@@ -11,6 +11,7 @@ import com.faceattend_edu.domain.port.FacialEmbeddingRepositoryPort;
 import com.faceattend_edu.domain.port.PersonRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -24,6 +25,7 @@ public class FacialEmbeddingServiceImpl implements FacialEmbeddingService {
     private final PersonRepositoryPort personRepositoryPort;
 
     @Override
+    @Transactional(readOnly = true)
     public FacialEmbeddingResponse findById(Integer id) {
         FacialEmbedding facialEmbedding = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("FacialEmbedding", id));
@@ -31,6 +33,7 @@ public class FacialEmbeddingServiceImpl implements FacialEmbeddingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FacialEmbeddingResponse> findAll() {
         return repository.findAll()
                 .stream()
@@ -39,6 +42,7 @@ public class FacialEmbeddingServiceImpl implements FacialEmbeddingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public FacialEmbeddingResponse save(FacialEmbeddingRequest request) {
         Person person = personRepositoryPort.findById(request.personId())
                 .orElseThrow(() -> new NotFoundException("Person", request.personId()));
@@ -49,6 +53,7 @@ public class FacialEmbeddingServiceImpl implements FacialEmbeddingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public FacialEmbeddingResponse update(Integer id, FacialEmbeddingRequest request) {
         FacialEmbedding existing = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("FacialEmbedding", id));
@@ -62,6 +67,7 @@ public class FacialEmbeddingServiceImpl implements FacialEmbeddingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void deleteById(Integer id) {
         if (repository.findById(id).isEmpty()) {
             throw new NotFoundException("FacialEmbedding", id);

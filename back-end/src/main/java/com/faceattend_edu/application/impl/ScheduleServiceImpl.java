@@ -9,6 +9,7 @@ import com.faceattend_edu.domain.model.*;
 import com.faceattend_edu.domain.port.*;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -25,6 +26,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     private final ClassroomRepositoryPort classroomRepositoryPort;
 
     @Override
+    @Transactional(readOnly = true)
     public ScheduleResponse findById(Integer id) {
         Schedule schedule = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Schedule", id));
@@ -32,6 +34,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ScheduleResponse> findAll() {
         return repository.findAll()
                 .stream()
@@ -40,6 +43,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ScheduleResponse save(ScheduleRequest request) {
         Period period = periodRepositoryPort.findById(request.periodId())
                 .orElseThrow(() -> new NotFoundException("Period", request.periodId()));
@@ -56,6 +60,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ScheduleResponse update(Integer id, ScheduleRequest request) {
         repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Schedule", id));
@@ -75,6 +80,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void deleteById(Integer id) {
         if (repository.findById(id).isEmpty()) {
             throw new NotFoundException("Schedule", id);

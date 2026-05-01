@@ -12,6 +12,7 @@ import com.faceattend_edu.domain.port.ClassroomRepositoryPort;
 import com.faceattend_edu.domain.port.IotDeviceRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -25,6 +26,7 @@ public class IotDeviceServiceImpl implements IotDeviceService {
     private final ClassroomRepositoryPort classroomRepositoryPort;
 
     @Override
+    @Transactional(readOnly = true)
     public IotDeviceResponse findById(Integer id) {
         IotDevice iotDevice = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("IotDevice", id));
@@ -32,6 +34,7 @@ public class IotDeviceServiceImpl implements IotDeviceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<IotDeviceResponse> findAll() {
         return repository.findAll()
                 .stream()
@@ -40,6 +43,7 @@ public class IotDeviceServiceImpl implements IotDeviceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public IotDeviceResponse save(IotDeviceRequest request) {
         Classroom classroom = classroomRepositoryPort.findById(request.classroomId())
                 .orElseThrow(() -> new NotFoundException("Classroom", request.classroomId()));
@@ -50,6 +54,7 @@ public class IotDeviceServiceImpl implements IotDeviceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public IotDeviceResponse update(Integer id, IotDeviceRequest request) {
         repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("IotDevice", id));
@@ -63,6 +68,7 @@ public class IotDeviceServiceImpl implements IotDeviceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void deleteById(Integer id) {
         if (repository.findById(id).isEmpty()) {
             throw new NotFoundException("IotDevice", id);

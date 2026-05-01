@@ -25,6 +25,7 @@ public class ViewServiceImpl implements ViewService {
     private final ActionRepositoryPort actionRepositoryPort;
 
     @Override
+    @Transactional(readOnly = true)
     public ViewResponse findById(Integer id) {
         View view = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("View", id));
@@ -41,6 +42,7 @@ public class ViewServiceImpl implements ViewService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ViewResponse save(ViewRequest request) {
         List<Action> actions = actionRepositoryPort.findAllById(request.actionIds());
 
@@ -50,6 +52,7 @@ public class ViewServiceImpl implements ViewService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ViewResponse update(Integer id, ViewRequest request) {
         repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("View", id));
@@ -62,6 +65,7 @@ public class ViewServiceImpl implements ViewService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void deleteById(Integer id) {
         if (repository.findById(id).isEmpty()) {
             throw new NotFoundException("View", id);

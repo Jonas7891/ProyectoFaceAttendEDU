@@ -27,6 +27,7 @@ public class PersonServiceImpl implements PersonService {
     private final SchoolRepositoryPort schoolRepositoryPort;
 
     @Override
+    @Transactional(readOnly = true)
     public PersonResponse findById(Integer id) {
         Person person = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Person", id));
@@ -43,6 +44,7 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PersonResponse save(PersonRequest request) {
         School school = schoolRepositoryPort.findById(request.schoolId())
                 .orElseThrow(() -> new NotFoundException("School", request.schoolId()));
@@ -53,6 +55,7 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PersonResponse update(Integer id, PersonRequest request) {
         repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Person", id));
@@ -66,6 +69,7 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void deleteById(Integer id) {
         if (repository.findById(id).isEmpty()) {
             throw new NotFoundException("Person", id);

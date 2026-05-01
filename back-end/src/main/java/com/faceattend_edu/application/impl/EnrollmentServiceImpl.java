@@ -15,6 +15,7 @@ import com.faceattend_edu.domain.port.PeriodRepositoryPort;
 import com.faceattend_edu.domain.port.PersonRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -30,6 +31,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     private final PeriodRepositoryPort periodRepositoryPort;
 
     @Override
+    @Transactional(readOnly = true)
     public EnrollmentResponse findById(Integer id) {
         Enrollment enrollment = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Enrollment", id));
@@ -37,6 +39,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EnrollmentResponse> findAll() {
         return repository.findAll()
                 .stream()
@@ -45,6 +48,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public EnrollmentResponse save(EnrollmentRequest request) {
         Person student = personRepositoryPort.findById(request.studentId())
                 .orElseThrow(() -> new NotFoundException("Student", request.studentId()));
@@ -59,6 +63,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public EnrollmentResponse update(Integer id, EnrollmentRequest request) {
         Enrollment existing = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Enrollment", id));
@@ -76,6 +81,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void deleteById(Integer id) {
         if (repository.findById(id).isEmpty()) {
             throw new NotFoundException("Enrollment", id);

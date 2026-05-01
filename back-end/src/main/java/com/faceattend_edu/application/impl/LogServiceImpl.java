@@ -14,6 +14,7 @@ import com.faceattend_edu.domain.port.LogRepositoryPort;
 import com.faceattend_edu.domain.port.UserRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,6 +28,7 @@ public class LogServiceImpl implements LogService {
     private final UserRepositoryPort userRepositoryPort;
 
     @Override
+    @Transactional(readOnly = true)
     public LogResponse findById(Integer id) {
         Log log = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Log", id));
@@ -34,6 +36,7 @@ public class LogServiceImpl implements LogService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<LogResponse> findAll() {
         return repository.findAll()
                 .stream()
@@ -42,6 +45,7 @@ public class LogServiceImpl implements LogService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public LogResponse save(LogRequest request) {
         User user = userRepositoryPort.findById(request.userId())
                 .orElseThrow(() -> new NotFoundException("User", request.userId()));
@@ -52,6 +56,7 @@ public class LogServiceImpl implements LogService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public LogResponse update(Integer id, LogRequest request) {
         repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Log", id));
@@ -65,6 +70,7 @@ public class LogServiceImpl implements LogService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void deleteById(Integer id) {
         if (repository.findById(id).isEmpty()) {
             throw new NotFoundException("Log", id);
