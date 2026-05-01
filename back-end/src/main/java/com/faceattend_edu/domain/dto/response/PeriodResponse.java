@@ -6,7 +6,7 @@ import java.time.LocalDate;
 
 public record PeriodResponse(
         Integer id,
-        School school,
+        SchoolResponse school,
         String name,
         LocalDate startDate,
         LocalDate endDate,

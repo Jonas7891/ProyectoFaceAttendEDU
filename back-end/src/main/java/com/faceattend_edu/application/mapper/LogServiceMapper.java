@@ -3,15 +3,21 @@ package com.faceattend_edu.application.mapper;
 import com.faceattend_edu.domain.dto.request.LogRequest;
 import com.faceattend_edu.domain.dto.response.LogResponse;
 import com.faceattend_edu.domain.model.Log;
+import com.faceattend_edu.domain.model.User;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@AllArgsConstructor
 public class LogServiceMapper {
 
-    public Log toDomain(LogRequest request) {
+    private final UserServiceMapper userServiceMapper;
+
+    public Log toDomain(LogRequest request,
+                        User user) {
         return new Log(
                 null,
-                request.user(),
+                user,
                 request.action(),
                 request.tableName(),
                 request.affectedRecord(),
@@ -23,7 +29,7 @@ public class LogServiceMapper {
     public LogResponse toResponse(Log log) {
         return new LogResponse(
                 log.getId(),
-                log.getUser(),
+                userServiceMapper.toResponse(log.getUser()),
                 log.getAction(),
                 log.getTableName(),
                 log.getAffectedRecord(),

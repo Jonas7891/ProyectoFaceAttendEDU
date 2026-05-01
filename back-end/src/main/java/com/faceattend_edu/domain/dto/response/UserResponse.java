@@ -8,7 +8,7 @@ import java.util.List;
 
 public record UserResponse(
         Integer id,
-        Person person,
+        PersonResponse person,
         String username,
         String password,
         Boolean status,

@@ -5,7 +5,9 @@ import com.faceattend_edu.application.service.UserService;
 import com.faceattend_edu.domain.dto.request.UserRequest;
 import com.faceattend_edu.domain.dto.response.UserResponse;
 import com.faceattend_edu.domain.exception.NotFoundException;
+import com.faceattend_edu.domain.model.Person;
 import com.faceattend_edu.domain.model.User;
+import com.faceattend_edu.domain.port.PersonRepositoryPort;
 import com.faceattend_edu.domain.port.UserRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,8 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepositoryPort repository;
     private final UserServiceMapper mapper;
+
+    private final PersonRepositoryPort personRepositoryPort;;
 
     @Override
     public UserResponse findById(Integer id) {
@@ -38,7 +42,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse save(UserRequest request) {
-        User user = mapper.toDomain(request);
+        Person person = personRepositoryPort.findById(request.personId())
+                .orElseThrow(() -> new NotFoundException("Person", request.personId()));
+
+        User user = mapper.toDomain(request, person);
         User saved = repository.save(user);
         return mapper.toResponse(saved);
     }
@@ -47,7 +54,10 @@ public class UserServiceImpl implements UserService {
     public UserResponse update(Integer id, UserRequest request) {
         repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User", id));
-        User updated = mapper.toDomain(request);
+        Person person = personRepositoryPort.findById(request.personId())
+                .orElseThrow(() -> new NotFoundException("Person", request.personId()));
+
+        User updated = mapper.toDomain(request, person);
         updated.setId(id);
         User saved = repository.save(updated);
         return mapper.toResponse(saved);

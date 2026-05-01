@@ -10,7 +10,7 @@ import java.time.Instant;
 
 public record JustificationRequest(
         @NotNull(message = "La asistencia es requerida")
-        Attendance attendance,
+        Integer attendanceId,
 
         @NotBlank(message = "La justificación es requerida")
         @Size(min = 10, max = 1000, message = "La justificación debe tener entre 10 y 1000 caracteres")
@@ -22,7 +22,7 @@ public record JustificationRequest(
         @NotNull(message = "La fecha de creación es requerida")
         Instant createdAt,
 
-        User reviewedBy,
+        Integer reviewedBy,
 
         Instant reviewedAt
 ) {

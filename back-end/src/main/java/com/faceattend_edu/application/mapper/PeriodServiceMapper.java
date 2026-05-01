@@ -3,15 +3,21 @@ package com.faceattend_edu.application.mapper;
 import com.faceattend_edu.domain.dto.request.PeriodRequest;
 import com.faceattend_edu.domain.dto.response.PeriodResponse;
 import com.faceattend_edu.domain.model.Period;
+import com.faceattend_edu.domain.model.School;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@AllArgsConstructor
 public class PeriodServiceMapper {
 
-    public Period toDomain(PeriodRequest request) {
+    private final SchoolServiceMapper schoolServiceMapper;
+
+    public Period toDomain(PeriodRequest request,
+                           School school) {
         return new Period(
                 null,
-                request.school(),
+                school,
                 request.name(),
                 request.startDate(),
                 request.endDate(),
@@ -22,7 +28,7 @@ public class PeriodServiceMapper {
     public PeriodResponse toResponse(Period period) {
         return new PeriodResponse(
                 period.getId(),
-                period.getSchool(),
+                schoolServiceMapper.toResponse(period.getSchool()),
                 period.getName(),
                 period.getStartDate(),
                 period.getEndDate(),

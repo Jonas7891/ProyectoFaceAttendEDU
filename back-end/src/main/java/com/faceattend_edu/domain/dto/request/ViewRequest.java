@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.util.List;
+
 public record ViewRequest(
         @NotBlank(message = "El nombre es requerido")
         @Size(min = 1, max = 100, message = "El nombre debe tener entre 1 y 100 caracteres")
@@ -18,6 +20,9 @@ public record ViewRequest(
         String title,
 
         @NotNull(message = "El estado público es requerido")
-        Boolean isPublic
+        Boolean isPublic,
+
+        @NotNull(message = "Los IDs de acciones son requeridos")
+        List<Integer> actionIds
 ) {
 }

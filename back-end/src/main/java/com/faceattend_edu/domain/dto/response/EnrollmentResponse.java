@@ -8,9 +8,9 @@ import java.time.Instant;
 
 public record EnrollmentResponse(
         Integer id,
-        Person student,
-        Course course,
-        Period period,
+        PersonResponse student,
+        CourseResponse course,
+        PeriodResponse period,
         Instant enrollmentDate,
         Object status
 ) {

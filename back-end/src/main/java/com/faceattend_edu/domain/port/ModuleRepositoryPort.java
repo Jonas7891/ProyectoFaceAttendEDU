@@ -12,6 +12,8 @@ public interface ModuleRepositoryPort {
 
     List<Module> findAll();
 
+    List<Module> findAllById(List<Integer> ids);
+
     void deleteById(Integer id);
 
     boolean existsByName(String name);

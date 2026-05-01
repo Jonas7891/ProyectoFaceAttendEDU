@@ -5,8 +5,8 @@ import com.faceattend_edu.application.service.ScheduleService;
 import com.faceattend_edu.domain.dto.request.ScheduleRequest;
 import com.faceattend_edu.domain.dto.response.ScheduleResponse;
 import com.faceattend_edu.domain.exception.NotFoundException;
-import com.faceattend_edu.domain.model.Schedule;
-import com.faceattend_edu.domain.port.ScheduleRepositoryPort;
+import com.faceattend_edu.domain.model.*;
+import com.faceattend_edu.domain.port.*;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +18,11 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     private final ScheduleRepositoryPort repository;
     private final ScheduleServiceMapper mapper;
+
+    private final PeriodRepositoryPort periodRepositoryPort;
+    private final CourseRepositoryPort courseRepositoryPort;
+    private final PersonRepositoryPort personRepositoryPort;
+    private final ClassroomRepositoryPort classroomRepositoryPort;
 
     @Override
     public ScheduleResponse findById(Integer id) {
@@ -36,7 +41,16 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     public ScheduleResponse save(ScheduleRequest request) {
-        Schedule schedule = mapper.toDomain(request);
+        Period period = periodRepositoryPort.findById(request.periodId())
+                .orElseThrow(() -> new NotFoundException("Period", request.periodId()));
+        Course course = courseRepositoryPort.findById(request.courseId())
+                .orElseThrow(() -> new NotFoundException("Course", request.courseId()));
+        Person teacher = personRepositoryPort.findById(request.teacherId())
+                .orElseThrow(() -> new NotFoundException("Teacher", request.teacherId()));
+        Classroom classroom = classroomRepositoryPort.findById(request.classroomId())
+                .orElseThrow(() -> new NotFoundException("Classroom", request.classroomId()));
+
+        Schedule schedule = mapper.toDomain(request, period, course, teacher, classroom);
         Schedule saved = repository.save(schedule);
         return mapper.toResponse(saved);
     }
@@ -45,7 +59,16 @@ public class ScheduleServiceImpl implements ScheduleService {
     public ScheduleResponse update(Integer id, ScheduleRequest request) {
         repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Schedule", id));
-        Schedule updated = mapper.toDomain(request);
+        Period period = periodRepositoryPort.findById(request.periodId())
+                .orElseThrow(() -> new NotFoundException("Period", request.periodId()));
+        Course course = courseRepositoryPort.findById(request.courseId())
+                .orElseThrow(() -> new NotFoundException("Course", request.courseId()));
+        Person teacher = personRepositoryPort.findById(request.teacherId())
+                .orElseThrow(() -> new NotFoundException("Teacher", request.teacherId()));
+        Classroom classroom = classroomRepositoryPort.findById(request.classroomId())
+                .orElseThrow(() -> new NotFoundException("Classroom", request.classroomId()));
+
+        Schedule updated = mapper.toDomain(request, period, course, teacher, classroom);
         updated.setId(id);
         Schedule saved = repository.save(updated);
         return mapper.toResponse(saved);

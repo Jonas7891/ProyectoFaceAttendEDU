@@ -4,7 +4,7 @@ import com.faceattend_edu.domain.model.School;
 
 public record ClassroomResponse(
         Integer id,
-        School school,
+        SchoolResponse school,
         String classroomName
 ) {
 }

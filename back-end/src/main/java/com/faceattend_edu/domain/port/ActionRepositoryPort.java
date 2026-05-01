@@ -12,6 +12,8 @@ public interface ActionRepositoryPort {
 
     List<Action> findAll();
 
+    List<Action> findAllById(List<Integer> ids);
+
     void deleteById(Integer id);
 
     boolean existsByName(String name);

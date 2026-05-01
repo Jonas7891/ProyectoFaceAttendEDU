@@ -6,7 +6,9 @@ import com.faceattend_edu.domain.dto.request.ModuleRequest;
 import com.faceattend_edu.domain.dto.response.ModuleResponse;
 import com.faceattend_edu.domain.exception.NotFoundException;
 import com.faceattend_edu.domain.model.Module;
+import com.faceattend_edu.domain.model.View;
 import com.faceattend_edu.domain.port.ModuleRepositoryPort;
+import com.faceattend_edu.domain.port.ViewRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,8 @@ public class ModuleServiceImpl implements ModuleService {
 
     private final ModuleRepositoryPort repository;
     private final ModuleServiceMapper mapper;
+
+    private final ViewRepositoryPort viewRepositoryPort;
 
     @Override
     public ModuleResponse findById(Integer id) {
@@ -38,7 +42,9 @@ public class ModuleServiceImpl implements ModuleService {
 
     @Override
     public ModuleResponse save(ModuleRequest request) {
-        Module module = mapper.toDomain(request);
+        List<View> views = viewRepositoryPort.findAllById(request.viewIds());
+
+        Module module = mapper.toDomain(request, views);
         Module saved = repository.save(module);
         return mapper.toResponse(saved);
     }
@@ -47,7 +53,9 @@ public class ModuleServiceImpl implements ModuleService {
     public ModuleResponse update(Integer id, ModuleRequest request) {
         repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Module", id));
-        Module updated = mapper.toDomain(request);
+        List<View> views = viewRepositoryPort.findAllById(request.viewIds());
+
+        Module updated = mapper.toDomain(request, views);
         updated.setId(id);
         Module saved = repository.save(updated);
         return mapper.toResponse(saved);

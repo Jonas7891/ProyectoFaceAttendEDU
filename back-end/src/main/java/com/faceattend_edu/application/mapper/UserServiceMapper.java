@@ -3,8 +3,10 @@ package com.faceattend_edu.application.mapper;
 import com.faceattend_edu.domain.dto.request.UserRequest;
 import com.faceattend_edu.domain.dto.response.UserResponse;
 import com.faceattend_edu.domain.dto.response.UserRoleResponse;
+import com.faceattend_edu.domain.model.Person;
 import com.faceattend_edu.domain.model.User;
 import com.faceattend_edu.infrastructure.persistence.adapter.RoleRepositoryAdapter;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -13,18 +15,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
+@AllArgsConstructor
 public class UserServiceMapper {
 
-    @Autowired
-    private RoleRepositoryAdapter roleRepository;
+    private final PersonServiceMapper personServiceMapper;
 
-    @Autowired
-    private UserRoleServiceMapper userRoleMapper;
-
-    public User toDomain(UserRequest request) {
+    public User toDomain(UserRequest request,
+                         Person person) {
         return new User(
                 null,
-                request.person(),
+                person,
                 request.username(),
                 request.password(),
                 request.status(),
@@ -38,7 +38,7 @@ public class UserServiceMapper {
     public UserResponse toResponse(User user) {
         return new UserResponse(
                 user.getId(),
-                user.getPerson(),
+                personServiceMapper.toResponse(user.getPerson()),
                 user.getUsername(),
                 user.getPassword(),
                 user.getStatus(),

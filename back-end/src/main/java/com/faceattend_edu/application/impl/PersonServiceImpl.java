@@ -6,7 +6,11 @@ import com.faceattend_edu.domain.dto.request.PersonRequest;
 import com.faceattend_edu.domain.dto.response.PersonResponse;
 import com.faceattend_edu.domain.exception.NotFoundException;
 import com.faceattend_edu.domain.model.Person;
+import com.faceattend_edu.domain.model.School;
 import com.faceattend_edu.domain.port.PersonRepositoryPort;
+import com.faceattend_edu.domain.port.ScheduleRepositoryPort;
+import com.faceattend_edu.domain.port.SchoolRepositoryPort;
+import com.faceattend_edu.domain.port.UserRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +23,8 @@ public class PersonServiceImpl implements PersonService {
 
     private final PersonRepositoryPort repository;
     private final PersonServiceMapper mapper;
+
+    private final SchoolRepositoryPort schoolRepositoryPort;
 
     @Override
     public PersonResponse findById(Integer id) {
@@ -38,7 +44,10 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     public PersonResponse save(PersonRequest request) {
-        Person person = mapper.toDomain(request);
+        School school = schoolRepositoryPort.findById(request.schoolId())
+                .orElseThrow(() -> new NotFoundException("School", request.schoolId()));
+
+        Person person = mapper.toDomain(request, school);
         Person saved = repository.save(person);
         return mapper.toResponse(saved);
     }
@@ -47,7 +56,10 @@ public class PersonServiceImpl implements PersonService {
     public PersonResponse update(Integer id, PersonRequest request) {
         repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Person", id));
-        Person updated = mapper.toDomain(request);
+        School school = schoolRepositoryPort.findById(request.schoolId())
+                .orElseThrow(() -> new NotFoundException("School", request.schoolId()));
+
+        Person updated = mapper.toDomain(request, school);
         updated.setId(id);
         Person saved = repository.save(updated);
         return mapper.toResponse(saved);

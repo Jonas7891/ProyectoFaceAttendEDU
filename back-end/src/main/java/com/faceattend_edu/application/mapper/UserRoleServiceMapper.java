@@ -22,13 +22,9 @@ public class UserRoleServiceMapper {
     }
 
     public UserRoleResponse toResponse(UserRole domain) {
-        boolean isActive = domain.getExpiryDate() == null ||
-                domain.getExpiryDate().isAfter(Instant.now());
-
         return new UserRoleResponse(
                 domain.getUserId(),
                 domain.getRoleId(),
-                //domain.getRole() != null ? domain.getRole().getName() : "UNKNOWN",
                 domain.getAssignedDate(),
                 domain.getExpiryDate()
         );

@@ -6,7 +6,9 @@ import com.faceattend_edu.domain.dto.request.ClassroomRequest;
 import com.faceattend_edu.domain.dto.response.ClassroomResponse;
 import com.faceattend_edu.domain.exception.NotFoundException;
 import com.faceattend_edu.domain.model.Classroom;
+import com.faceattend_edu.domain.model.School;
 import com.faceattend_edu.domain.port.ClassroomRepositoryPort;
+import com.faceattend_edu.domain.port.SchoolRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,8 @@ public class ClassroomServiceImpl implements ClassroomService {
 
     private final ClassroomRepositoryPort repository;
     private final ClassroomServiceMapper mapper;
+
+    private final SchoolRepositoryPort schoolRepositoryPort;
 
     @Override
     public ClassroomResponse findById(Integer id) {
@@ -36,7 +40,10 @@ public class ClassroomServiceImpl implements ClassroomService {
 
     @Override
     public ClassroomResponse save(ClassroomRequest request) {
-        Classroom classroom = mapper.toDomain(request);
+        School school = schoolRepositoryPort.findById(request.schoolId())
+                .orElseThrow(() -> new NotFoundException("School", request.schoolId()));
+
+        Classroom classroom = mapper.toDomain(request, school);
         Classroom saved = repository.save(classroom);
         return mapper.toResponse(saved);
     }
@@ -45,7 +52,10 @@ public class ClassroomServiceImpl implements ClassroomService {
     public ClassroomResponse update(Integer id, ClassroomRequest request) {
         Classroom existing = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Classroom", id));
-        Classroom updated = mapper.toDomain(request);
+        School school = schoolRepositoryPort.findById(request.schoolId())
+                .orElseThrow(() -> new NotFoundException("School", request.schoolId()));
+
+        Classroom updated = mapper.toDomain(request, school);
         updated.setId(id);
         Classroom saved = repository.save(updated);
         return mapper.toResponse(saved);

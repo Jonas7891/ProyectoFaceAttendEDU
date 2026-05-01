@@ -9,13 +9,13 @@ import java.time.Instant;
 
 public record EnrollmentRequest(
         @NotNull(message = "El estudiante es requerido")
-        Person student,
+        Integer studentId,
 
         @NotNull(message = "El curso es requerido")
-        Course course,
+        Integer courseId,
 
         @NotNull(message = "El período es requerido")
-        Period period,
+        Integer periodId,
 
         @NotNull(message = "La fecha de matrícula es requerida")
         Instant enrollmentDate,

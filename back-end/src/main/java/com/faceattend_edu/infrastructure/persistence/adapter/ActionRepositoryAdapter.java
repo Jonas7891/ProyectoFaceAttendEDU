@@ -39,6 +39,14 @@ public class ActionRepositoryAdapter implements ActionRepositoryPort {
     }
 
     @Override
+    public List<Action> findAllById(List<Integer> ids) {
+        return jpaRepository.findAllById(ids)
+                .stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
     public void deleteById(Integer id) {
         jpaRepository.deleteById(id);
     }

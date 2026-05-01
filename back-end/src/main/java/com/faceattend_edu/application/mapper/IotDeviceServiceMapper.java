@@ -2,16 +2,22 @@ package com.faceattend_edu.application.mapper;
 
 import com.faceattend_edu.domain.dto.request.IotDeviceRequest;
 import com.faceattend_edu.domain.dto.response.IotDeviceResponse;
+import com.faceattend_edu.domain.model.Classroom;
 import com.faceattend_edu.domain.model.IotDevice;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@AllArgsConstructor
 public class IotDeviceServiceMapper {
 
-    public IotDevice toDomain(IotDeviceRequest request) {
+    private final ClassroomServiceMapper classroomServiceMapper;
+
+    public IotDevice toDomain(IotDeviceRequest request,
+                              Classroom classroom) {
         return new IotDevice(
                 null,
-                request.classroom(),
+                classroom,
                 request.deviceName(),
                 request.macAddress(),
                 request.ipAddress(),
@@ -24,7 +30,7 @@ public class IotDeviceServiceMapper {
     public IotDeviceResponse toResponse(IotDevice iotDevice) {
         return new IotDeviceResponse(
                 iotDevice.getId(),
-                iotDevice.getClassroom(),
+                classroomServiceMapper.toResponse(iotDevice.getClassroom()),
                 iotDevice.getDeviceName(),
                 iotDevice.getMacAddress(),
                 iotDevice.getIpAddress(),

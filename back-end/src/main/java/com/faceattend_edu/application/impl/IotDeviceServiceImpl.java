@@ -5,7 +5,10 @@ import com.faceattend_edu.application.service.IotDeviceService;
 import com.faceattend_edu.domain.dto.request.IotDeviceRequest;
 import com.faceattend_edu.domain.dto.response.IotDeviceResponse;
 import com.faceattend_edu.domain.exception.NotFoundException;
+import com.faceattend_edu.domain.model.Classroom;
 import com.faceattend_edu.domain.model.IotDevice;
+import com.faceattend_edu.domain.model.Person;
+import com.faceattend_edu.domain.port.ClassroomRepositoryPort;
 import com.faceattend_edu.domain.port.IotDeviceRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,6 +21,8 @@ public class IotDeviceServiceImpl implements IotDeviceService {
 
     private final IotDeviceRepositoryPort repository;
     private final IotDeviceServiceMapper mapper;
+
+    private final ClassroomRepositoryPort classroomRepositoryPort;
 
     @Override
     public IotDeviceResponse findById(Integer id) {
@@ -36,7 +41,10 @@ public class IotDeviceServiceImpl implements IotDeviceService {
 
     @Override
     public IotDeviceResponse save(IotDeviceRequest request) {
-        IotDevice iotDevice = mapper.toDomain(request);
+        Classroom classroom = classroomRepositoryPort.findById(request.classroomId())
+                .orElseThrow(() -> new NotFoundException("Classroom", request.classroomId()));
+
+        IotDevice iotDevice = mapper.toDomain(request, classroom);
         IotDevice saved = repository.save(iotDevice);
         return mapper.toResponse(saved);
     }
@@ -45,7 +53,10 @@ public class IotDeviceServiceImpl implements IotDeviceService {
     public IotDeviceResponse update(Integer id, IotDeviceRequest request) {
         repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("IotDevice", id));
-        IotDevice updated = mapper.toDomain(request);
+        Classroom classroom = classroomRepositoryPort.findById(request.classroomId())
+                .orElseThrow(() -> new NotFoundException("Classroom", request.classroomId()));
+
+        IotDevice updated = mapper.toDomain(request, classroom);
         updated.setId(id);
         IotDevice saved = repository.save(updated);
         return mapper.toResponse(saved);

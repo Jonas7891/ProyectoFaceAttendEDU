@@ -6,7 +6,7 @@ import java.time.Instant;
 
 public record PersonResponse(
         Integer id,
-        School school,
+        SchoolResponse school,
         String name,
         String lastName,
         String email,

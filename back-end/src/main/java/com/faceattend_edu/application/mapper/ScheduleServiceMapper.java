@@ -2,19 +2,30 @@ package com.faceattend_edu.application.mapper;
 
 import com.faceattend_edu.domain.dto.request.ScheduleRequest;
 import com.faceattend_edu.domain.dto.response.ScheduleResponse;
-import com.faceattend_edu.domain.model.Schedule;
+import com.faceattend_edu.domain.model.*;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@AllArgsConstructor
 public class ScheduleServiceMapper {
 
-    public Schedule toDomain(ScheduleRequest request) {
+    private final PeriodServiceMapper periodServiceMapper;
+    private final CourseServiceMapper courseServiceMapper;
+    private final PersonServiceMapper teacherServiceMapper;
+    private final ClassroomServiceMapper classroomServiceMapper;
+
+    public Schedule toDomain(ScheduleRequest request,
+                             Period period,
+                             Course course,
+                             Person teacher,
+                             Classroom classroom) {
         return new Schedule(
                 null,
-                request.period(),
-                request.course(),
-                request.teacher(),
-                request.classroom(),
+                period,
+                course,
+                teacher,
+                classroom,
                 request.day(),
                 request.startTime(),
                 request.endTime()
@@ -24,10 +35,10 @@ public class ScheduleServiceMapper {
     public ScheduleResponse toResponse(Schedule schedule) {
         return new ScheduleResponse(
                 schedule.getId(),
-                schedule.getPeriod(),
-                schedule.getCourse(),
-                schedule.getTeacher(),
-                schedule.getClassroom(),
+                periodServiceMapper.toResponse(schedule.getPeriod()),
+                courseServiceMapper.toResponse(schedule.getCourse()),
+                teacherServiceMapper.toResponse(schedule.getTeacher()),
+                classroomServiceMapper.toResponse(schedule.getClassroom()),
                 schedule.getDay(),
                 schedule.getStartTime(),
                 schedule.getEndTime()

@@ -6,7 +6,9 @@ import com.faceattend_edu.domain.dto.request.CourseRequest;
 import com.faceattend_edu.domain.dto.response.CourseResponse;
 import com.faceattend_edu.domain.exception.NotFoundException;
 import com.faceattend_edu.domain.model.Course;
+import com.faceattend_edu.domain.model.School;
 import com.faceattend_edu.domain.port.CourseRepositoryPort;
+import com.faceattend_edu.domain.port.SchoolRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,8 @@ public class CourseServiceImpl implements CourseService {
 
     private final CourseRepositoryPort repository;
     private final CourseServiceMapper mapper;
+
+    private final SchoolRepositoryPort schoolRepositoryPort;
 
     @Override
     public CourseResponse findById(Integer id) {
@@ -36,7 +40,10 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public CourseResponse save(CourseRequest request) {
-        Course course = mapper.toDomain(request);
+        School school = schoolRepositoryPort.findById(request.schoolId())
+                .orElseThrow(() -> new NotFoundException("School", request.schoolId()));
+
+        Course course = mapper.toDomain(request, school);
         Course saved = repository.save(course);
         return mapper.toResponse(saved);
     }
@@ -45,7 +52,10 @@ public class CourseServiceImpl implements CourseService {
     public CourseResponse update(Integer id, CourseRequest request) {
         Course existing = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Course", id));
-        Course updated = mapper.toDomain(request);
+        School school = schoolRepositoryPort.findById(request.schoolId())
+                .orElseThrow(() -> new NotFoundException("School", request.schoolId()));
+
+        Course updated = mapper.toDomain(request, school);
         updated.setId(id);
         Course saved = repository.save(updated);
         return mapper.toResponse(saved);

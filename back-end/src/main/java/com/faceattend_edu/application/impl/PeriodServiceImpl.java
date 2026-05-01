@@ -6,7 +6,9 @@ import com.faceattend_edu.domain.dto.request.PeriodRequest;
 import com.faceattend_edu.domain.dto.response.PeriodResponse;
 import com.faceattend_edu.domain.exception.NotFoundException;
 import com.faceattend_edu.domain.model.Period;
+import com.faceattend_edu.domain.model.School;
 import com.faceattend_edu.domain.port.PeriodRepositoryPort;
+import com.faceattend_edu.domain.port.SchoolRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,8 @@ public class PeriodServiceImpl implements PeriodService {
 
     private final PeriodRepositoryPort repository;
     private final PeriodServiceMapper mapper;
+
+    private final SchoolRepositoryPort schoolRepositoryPort;
 
     @Override
     public PeriodResponse findById(Integer id) {
@@ -36,7 +40,10 @@ public class PeriodServiceImpl implements PeriodService {
 
     @Override
     public PeriodResponse save(PeriodRequest request) {
-        Period period = mapper.toDomain(request);
+        School school = schoolRepositoryPort.findById(request.schoolId())
+                .orElseThrow(() -> new NotFoundException("School", request.schoolId()));
+
+        Period period = mapper.toDomain(request, school);
         Period saved = repository.save(period);
         return mapper.toResponse(saved);
     }
@@ -45,7 +52,10 @@ public class PeriodServiceImpl implements PeriodService {
     public PeriodResponse update(Integer id, PeriodRequest request) {
         repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Period", id));
-        Period updated = mapper.toDomain(request);
+        School school = schoolRepositoryPort.findById(request.schoolId())
+                .orElseThrow(() -> new NotFoundException("School", request.schoolId()));
+
+        Period updated = mapper.toDomain(request, school);
         updated.setId(id);
         Period saved = repository.save(updated);
         return mapper.toResponse(saved);

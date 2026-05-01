@@ -10,6 +10,6 @@ public record ModuleResponse(
         String description,
         String icon,
         Integer order,
-        List<View> views
+        List<ViewResponse> views
 ) {
 }

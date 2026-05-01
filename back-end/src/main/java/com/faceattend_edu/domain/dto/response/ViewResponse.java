@@ -10,6 +10,6 @@ public record ViewResponse(
         String route,
         String title,
         Boolean isPublic,
-        List<Action> actions
+        List<ActionResponse> actions
 ) {
 }

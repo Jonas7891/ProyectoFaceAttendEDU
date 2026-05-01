@@ -10,7 +10,7 @@ import java.time.Instant;
 
 public record UserRequest(
         @NotNull(message = "La persona es requerida")
-        Person person,
+        Integer personId,
 
         @NotBlank(message = "El nombre de usuario es requerido")
         @Size(min = 3, max = 50, message = "El nombre de usuario debe tener entre 3 y 50 caracteres")

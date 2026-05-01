@@ -9,7 +9,7 @@ import java.time.LocalDate;
 
 public record PeriodRequest(
         @NotNull(message = "La escuela es requerida")
-        School school,
+        Integer schoolId,
 
         @NotBlank(message = "El nombre es requerido")
         @Size(min = 1, max = 100, message = "El nombre debe tener entre 1 y 100 caracteres")

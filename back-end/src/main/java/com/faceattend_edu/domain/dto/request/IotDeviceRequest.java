@@ -10,7 +10,7 @@ import java.time.Instant;
 
 public record IotDeviceRequest(
         @NotNull(message = "El aula es requerida")
-        Classroom classroom,
+        Integer classroomId,
 
         @NotBlank(message = "El nombre del dispositivo es requerido")
         @Size(min = 1, max = 100, message = "El nombre debe tener entre 1 y 100 caracteres")

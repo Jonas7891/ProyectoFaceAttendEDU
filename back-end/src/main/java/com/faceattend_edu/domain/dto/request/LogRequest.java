@@ -9,7 +9,7 @@ import java.time.Instant;
 
 public record LogRequest(
         @NotNull(message = "El usuario es requerido")
-        User user,
+        Integer userId,
 
         @NotBlank(message = "La acción es requerida")
         @Size(min = 1, max = 50, message = "La acción debe tener entre 1 y 50 caracteres")
@@ -28,4 +28,7 @@ public record LogRequest(
         @NotNull(message = "La fecha es requerida")
         Instant date
 ) {
+    public Integer att() {
+        return null;
+    }
 }

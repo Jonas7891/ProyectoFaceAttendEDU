@@ -9,10 +9,10 @@ import java.time.LocalTime;
 
 public record ScheduleResponse(
         Integer id,
-        Period period,
-        Course course,
-        Person teacher,
-        Classroom Classroom,
+        PeriodResponse period,
+        CourseResponse course,
+        PersonResponse teacher,
+        ClassroomResponse Classroom,
         Object day,
         LocalTime startTime,
         LocalTime endTime

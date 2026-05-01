@@ -2,20 +2,29 @@ package com.faceattend_edu.application.mapper;
 
 import com.faceattend_edu.domain.dto.request.JustificationRequest;
 import com.faceattend_edu.domain.dto.response.JustificationResponse;
+import com.faceattend_edu.domain.model.Attendance;
 import com.faceattend_edu.domain.model.Justification;
+import com.faceattend_edu.domain.model.User;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@AllArgsConstructor
 public class JustificationServiceMapper {
 
-    public Justification toDomain(JustificationRequest request) {
+    private final AttendanceServiceMapper attendanceServiceMapper;
+    private final UserServiceMapper userServiceMapper;
+
+    public Justification toDomain(JustificationRequest request,
+                                  Attendance attendance,
+                                  User reviewedBy) {
         return new Justification(
                 null,
-                request.attendance(),
+                attendance,
                 request.justification(),
                 request.approval(),
                 request.createdAt(),
-                request.reviewedBy(),
+                reviewedBy,
                 request.reviewedAt()
         );
     }
@@ -23,11 +32,11 @@ public class JustificationServiceMapper {
     public JustificationResponse toResponse(Justification justification) {
         return new JustificationResponse(
                 justification.getId(),
-                justification.getAttendance(),
+                attendanceServiceMapper.toResponse(justification.getAttendance()),
                 justification.getJustification(),
                 justification.getApproval(),
                 justification.getCreatedAt(),
-                justification.getReviewedBy(),
+                userServiceMapper.toResponse(justification.getReviewedBy()),
                 justification.getReviewedAt()
         );
     }

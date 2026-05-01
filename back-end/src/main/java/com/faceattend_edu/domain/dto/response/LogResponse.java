@@ -6,7 +6,7 @@ import java.time.Instant;
 
 public record LogResponse(
         Integer id,
-        User user,
+        UserResponse user,
         String action,
         String tableName,
         String affectedRecord,
