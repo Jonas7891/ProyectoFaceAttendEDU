@@ -148,10 +148,10 @@ export default function ProfileScreen() {
             style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}
             key={`${refreshKey}-${updateKey}`}            
         >
-            <ScrollView contentContainerStyle={styles.ScrollViewContent}>
+            <ScrollView contentContainerStyle={ styles.ScrollViewContent }>
                 <View style={styles.container} marginHorizontal={15} >
 
-                    <View style={[styles.profileHeaderSectionProfile, { marginTop: Platform.OS === 'ios' ? 30 : 40 }]}>
+                    <View style={[styles.profileHeaderSectionProfile, { marginTop: Platform.OS === 'ios' ? 45 : 70 }]}>
                         <Text style={[styles.userNameProfile, { color: colors.text }]}>
                             {userInfo.name}
                         </Text>

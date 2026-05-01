@@ -118,7 +118,6 @@ export default function MenuScreen() {
   const isAdmin = userRole === 'admin';
 
   const handleBack = () => navigation.navigate("Dashboard");
-  const handleTakePhoto = () => navigation.navigate("TakePhoto");
   const handleUpdatePhoto = () => navigation.navigate("UpdatePhoto");
   const handleFacialFail = () => navigation.navigate("FacialFail");
   const handleMenuJustify = () => navigation.navigate("MenuJustify");
@@ -199,9 +198,6 @@ export default function MenuScreen() {
                 {isAdmin ? "Jonattan Rizo" : "The Jonas"}
               </Text>
 
-              {!isAdmin && (
-                <MenuItem label={t('menu.facialParams')} onPress={handleTakePhoto} />
-              )}
               {!isAdmin && (
                 <MenuItem label={t('menu.updateFacialParams')} onPress={handleUpdatePhoto} />
               )}

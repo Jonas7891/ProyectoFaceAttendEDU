@@ -1783,6 +1783,161 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 10,
     },
+    secondaryButton: {
+        alignItems: "center",
+        paddingVertical: 12,
+        marginTop: 10,
+        marginBottom: 30,
+        borderColor: "#E0E0E0",
+        borderWidth: 1,
+        borderRadius: 12,
+    },
+    // Externos
+    containerAddJustification: {
+        flex: 1,
+        marginTop: 25,
+        paddingHorizontal: 20,
+        paddingVertical: 20,
+        paddingTop: Platform.OS === "android" ? 50 : 10,
+    },
+
+    mainTitleAddJustification: {
+        fontSize: 24,
+        fontWeight: "bold",
+        color: "#1A1A1A",
+        textAlign: "center",
+        marginTop: 20,
+        marginBottom: 10,
+    },
+
+    subTitleAddJustification: {
+        fontSize: 18,
+        fontWeight: "600",
+        color: "#333",
+        textAlign: "center",
+        marginBottom: 15,
+    },
+
+    descriptionText: {
+        fontSize: 14,
+        color: "#666",
+        textAlign: "center",
+        marginBottom: 20,
+        lineHeight: 20,
+    },
+
+    // Selector de tipo
+    typeSelector: {
+        flexDirection: "row",
+        gap: 12,
+        marginBottom: 5,
+    },
+
+    typeButton: {
+        flex: 1,
+        backgroundColor: "#F5F5F5",
+        paddingVertical: 12,
+        borderRadius: 12,
+        alignItems: "center",
+        borderWidth: 1,
+        borderColor: "#E0E0E0",
+    },
+
+    activeTypeButton: {
+        backgroundColor: "#4A90E2",
+        borderColor: "#4A90E2",
+    },
+
+    typeButtonText: {
+        fontSize: 15,
+        fontWeight: "600",
+        color: "#666",
+    },
+
+    activeTypeButtonText: {
+        color: "#FFF",
+    },
+
+    // Botón de subir archivo
+    uploadButton: {
+        backgroundColor: "#E3F2FD",
+        paddingVertical: 14,
+        borderRadius: 12,
+        alignItems: "center",
+        borderWidth: 1,
+        borderColor: "#4A90E2",
+        borderstyle: "dashed",
+        marginBottom: 10,
+    },
+
+    uploadButtonText: {
+        fontSize: 15,
+        fontWeight: "600",
+        color: "#4A90E2",
+    },
+
+    // Información del archivo
+    fileInfoContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        backgroundColor: "#F0F8FF",
+        padding: 12,
+        borderRadius: 10,
+        marginTop: 5,
+        marginBottom: 10,
+    },
+
+    fileInfo: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+    },
+
+    fileName: {
+        fontSize: 13,
+        color: "#333",
+        flex: 1,
+    },
+
+    fileSize: {
+        fontSize: 11,
+        color: "#666",
+    },
+
+    removeFileButton: {
+        backgroundColor: "#FFE5E5",
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+
+    removeFileText: {
+        fontSize: 14,
+        color: "#FF4444",
+        fontWeight: "bold",
+    },
+
+    supportedFormats: {
+        fontSize: 11,
+        color: "#999",
+        marginTop: 8,
+        textAlign: "center",
+    },
+
+    secondaryButton: {
+        alignItems: "center",
+        paddingVertical: 12,
+        marginTop: 10,
+        marginBottom: 20,
+        borderColor: "#c8c8c8",
+        borderWidth: 0.2,
+        borderRadius: 12,
+        borderBlockColor: "#c8c8c8",
+    },
 });
 
 export default styles;
