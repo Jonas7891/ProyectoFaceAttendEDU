@@ -15,7 +15,6 @@ import AddJustifyScreen from '../view/screens/AddJustifyScreen';
 import LanguageSettingsScreen from '../view/screens/LanguageSettingsScreen';
 import AddValidJustificationScreen from '../view/screens/AddValidJustificationScreen';
 import ValidJustificationsScreen from '../view/screens/ValidJustificationsScreen';
-import PendingJustificationsScreen from '../view/screens/PendingJustificationsScreen';
 import ProfileScreen from '../view/screens/ProfileScreen';
 
 const Stack = createStackNavigator();
@@ -94,10 +93,9 @@ export default function AppNavigator() {
             <Stack.Screen name="DisplayingAttendance" component={DisplayingAttendance} />
             <Stack.Screen name="MenuJustify" component={MenuJustify} />
             <Stack.Screen name="ConsultJustify" component={ConsultJustify} />
-            <Stack.Screen name="AddJustify" component={AddJustifyScreen} />
+            <Stack.Screen name="AddJustification" component={AddJustifyScreen} />
             <Stack.Screen name="AddValidJustification" component={AddValidJustificationScreen} />
             <Stack.Screen name="ValidJustifications" component={ValidJustificationsScreen} />
-            <Stack.Screen name="PendingJustifications" component={PendingJustificationsScreen} />
             <Stack.Screen name="LanguageSettings" component={LanguageSettingsScreen} />
             <Stack.Screen name="Profile" component={ProfileScreen} />
           </>

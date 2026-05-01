@@ -107,7 +107,7 @@ export default function AddValidJustificationScreen() {
                                         {
                                             backgroundColor:
                                                 category === cat.label ? colors.primary : colors.card,
-                                            borderColor: colors.border
+                                            // sin borde
                                         }
                                     ]}
                                     onPress={() => setCategory(cat.label)}
@@ -140,7 +140,7 @@ export default function AddValidJustificationScreen() {
                                         {
                                             backgroundColor:
                                                 type === item.label ? colors.primary : colors.card,
-                                            borderColor: colors.border
+                                            // sin borde
                                         }
                                     ]}
                                     onPress={() => setType(item.label)}
@@ -171,7 +171,6 @@ export default function AddValidJustificationScreen() {
                                 {
                                     backgroundColor: colors.inputBackground,
                                     color: colors.text,
-                                    borderColor: colors.border
                                 }
                             ]}
                             placeholder={t('admin.descriptionPlaceholder')}
@@ -185,12 +184,13 @@ export default function AddValidJustificationScreen() {
                             {t('admin.requiresDocument')}
                         </Text>
 
-                        <View style={styles.toggleContainer}>
+                        <View style={[styles.toggleContainer, { backgroundColor: colors.inputBackground }]}>
                             <TouchableOpacity
                                 style={[
                                     styles.toggleButton,
                                     {
-                                        backgroundColor: requiresDocument ? colors.primary : colors.card, marginRight: 5
+                                        backgroundColor: requiresDocument ? colors.primary : colors.card,
+                                        marginRight: 5
                                     }
                                 ]}
                                 onPress={() => setRequiresDocument(true)}
@@ -204,7 +204,8 @@ export default function AddValidJustificationScreen() {
                                 style={[
                                     styles.toggleButton,
                                     {
-                                        backgroundColor: !requiresDocument ? colors.primary : colors.card, marginLeft: 5
+                                        backgroundColor: !requiresDocument ? colors.primary : colors.card,
+                                        marginLeft: 5
                                     }
                                 ]}
                                 onPress={() => setRequiresDocument(false)}

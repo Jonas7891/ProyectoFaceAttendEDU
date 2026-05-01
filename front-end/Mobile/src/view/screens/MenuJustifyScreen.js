@@ -81,12 +81,11 @@ export default function MenuJustifyScreen() {
   const handleConsultJustify = () => navigation.navigate("ConsultJustify");
 
   const handleAddOrEditJustify = () => {
-    const screenName = userRole === 'student' ? "AddJustify" : "AddValidJustification";
+    const screenName = userRole === 'student' ? "AddJustification" : "AddValidJustification";
     navigation.navigate(screenName);
   };
 
   const handleValidJustifications = () => navigation.navigate("ValidJustifications");
-  const handlePendingJustifications = () => navigation.navigate("PendingJustifications");
 
   const MenuItem = ({ label, onPress, showBadge = false }) => (
     <>
@@ -172,7 +171,7 @@ export default function MenuJustifyScreen() {
 
                 <MenuItem
                   label={t('admin.pendingJustifications')}
-                  onPress={handlePendingJustifications}
+                  // onPress={ }
                   showBadge
                 />
 
