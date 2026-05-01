@@ -132,11 +132,6 @@ export default function ProfileScreen() {
     const InfoField = ({ label, value, icon }) => (
         <View style={[
             styles.infoFieldContainerProfile,
-            {
-                borderWidth: theme === 'light' ? 1 : 0,
-                borderColor: theme === 'light' ? '#e0e0e0' : 'transparent',
-                backgroundColor: theme === 'dark' ? colors.card : 'transparent',
-            },
         ]}>
             <Text style={[styles.infoFieldLabelProfile, { color: colors.textSecondary }]}>
                 {icon && <Text>{icon}  </Text>}
@@ -151,8 +146,7 @@ export default function ProfileScreen() {
     return (
         <SafeAreaView
             style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}
-            key={`${refreshKey}-${updateKey}`}
-
+            key={`${refreshKey}-${updateKey}`}            
         >
             <ScrollView contentContainerStyle={styles.ScrollViewContent}>
                 <View style={styles.container} marginHorizontal={15} >
@@ -209,11 +203,7 @@ export default function ProfileScreen() {
                         <TouchableOpacity
                             style={[
                                 styles.profileSettingsButtonProfile,
-                                {
-                                    backgroundColor: colors.card,
-                                    borderWidth: theme === 'light' ? 1 : 0,
-                                    borderColor: theme === 'light' ? '#e0e0e0' : 'transparent',
-                                },
+                                { backgroundColor: colors.card }
                             ]}
                             onPress={toggleTheme}
                         >

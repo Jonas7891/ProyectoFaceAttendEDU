@@ -1724,7 +1724,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
     },
 
-    // ========== PERFIL SCREEN STYLES ==========
+    // Estilos para ProfileScreen
     profileHeaderSectionProfile: {
         alignItems: 'center',
         marginTop: 20,
@@ -1744,7 +1744,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '600',
     },
-    // INFORMACIÓN PERSONAL: ahora sin bordes fijos, se aplican inline según el tema
     infoFieldContainerProfile: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -1752,6 +1751,7 @@ const styles = StyleSheet.create({
         padding: 15,
         borderRadius: 10,
         marginBottom: 10,
+        borderWidth: 1,
     },
     infoFieldLabelProfile: {
         fontSize: 14,
@@ -1761,7 +1761,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '400',
     },
-    // BOTÓN DE CONFIGURACIÓN RÁPIDA: sin bordes fijos
     profileSettingsButtonProfile: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -1769,6 +1768,7 @@ const styles = StyleSheet.create({
         padding: 15,
         borderRadius: 10,
         marginBottom: 10,
+        borderWidth: 1,
     },
     profileSettingsTitleProfile: {
         fontSize: 16,
@@ -1782,15 +1782,6 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 10,
-    },
-    secondaryButton: {
-        alignItems: "center",
-        paddingVertical: 12,
-        marginTop: 10,
-        marginBottom: 30,
-        borderColor: "#E0E0E0",
-        borderWidth: 1,
-        borderRadius: 12,
     },
 });
 

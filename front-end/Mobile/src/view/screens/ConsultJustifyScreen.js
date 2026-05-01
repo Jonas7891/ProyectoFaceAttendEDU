@@ -95,17 +95,16 @@ export default function ValidJustificationsScreen() {
                     showsVerticalScrollIndicator={false}
                 >
                     <View style={styles.containerValidJustifications}>
-                        <Text style={[styles.mainTitleValidJustifications, { color: colors.text }]}>
+                        <Text style={styles.mainTitleValidJustifications}>
                             {t('consultJustify.mainTitle')}
                         </Text>
-                        <Text style={[styles.subTitleValidJustifications, { color: colors.textSecondary }]}>
+
+                        <Text style={styles.subTitleValidJustifications}>
                             {t('consultJustify.subtitle')}
                         </Text>
 
                         <Separador />
-
-                        {/* Selector de pestañas */}
-                        <View style={[styles.sectionSelector, { backgroundColor: colors.card }]}>
+                        <View style={styles.sectionSelector}>
                             <TouchableOpacity
                                 style={[
                                     styles.sectionTab,
@@ -138,7 +137,6 @@ export default function ValidJustificationsScreen() {
                             </TouchableOpacity>
                         </View>
 
-                        {/* Contenido dinámico */}
                         {activeSection === "inasistencias" && (
                             <View style={styles.listContainer}>
                                 <Text style={[styles.sectionTitle, { color: colors.text }]}>

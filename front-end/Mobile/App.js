@@ -16,8 +16,6 @@ import ConsultJustify from './src/view/screens/ConsultJustifyScreen';
 import AddJustification from './src/view/screens/AddJustifyScreen';
 import LanguageSettingsScreen from './src/view/screens/LanguageSettingsScreen';
 import ProfileScreen from './src/view/screens/ProfileScreen';
-import AddValidJustificationScreen from './src/view/screens/AddValidJustificationScreen';
-import ValidAllJustifications from './src/view/screens/ConsultJustifyScreen';
 
 const Stack = createStackNavigator();
 
