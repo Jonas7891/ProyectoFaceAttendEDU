@@ -15,7 +15,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../components/common/ThemeContext';
 import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import { saveLanguageForRole } from '../components/common/languageByRole';
-import BottomBar from "../components/common/NavigationBar";
 import PrimaryButton from "../components/auth/PrimaryButton";
 import LanguageSelector from '../components/common/LanguageSelector';
 import styles from "./Style";
@@ -113,7 +112,7 @@ export default function ProfileScreen() {
                                 await saveLanguageForRole(userRole, i18n.language);
                             }
                             await AsyncStorage.removeItem('userRole');
-                            navigation.navigate("login");
+                            navigation.navigate("HomesScreen");
                         } catch (error) {
                             console.error('Error en logout:', error);
                         } finally {
