@@ -113,7 +113,7 @@ export default function LanguageSettingsScreen() {
     >
       <ScrollView
         contentContainerStyle={styles.languageSettingsContainer}
-        style={{ marginHorizontal: 15 }}
+        style={{ marginHorizontal: 5 }}
       >
         <Text style={[styles.languageSettingsTitle, { color: colors.text, marginTop: 30 }]}>
           {t('settings.language')}
@@ -128,7 +128,10 @@ export default function LanguageSettingsScreen() {
             style={[
               styles.languageSettingsOption,
               { backgroundColor: colors.card, borderColor: colors.border },
-              selectedLanguage === lang.code && { borderColor: colors.primary },
+              selectedLanguage === lang.code && {
+                borderColor: colors.primary,
+                backgroundColor: colors.primary + '20',
+              },
             ]}
             onPress={() => setSelectedLanguage(lang.code)}
           >
@@ -154,7 +157,10 @@ export default function LanguageSettingsScreen() {
             style={[
               styles.languageSettingsOption,
               { backgroundColor: colors.card, borderColor: colors.border },
-              selectedTheme === th.code && { borderColor: colors.primary },
+              selectedTheme === th.code && {
+                borderColor: colors.primary,
+                backgroundColor: colors.primary + '20',
+              },
             ]}
             onPress={() => setSelectedTheme(th.code)}
           >

@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import PrimaryButton from "../components/auth/PrimaryButton";
-import CustomLogo from "../components/auth/logo";
+import CustomLogo from "../components/common/logo";
 import { useNavigation } from "@react-navigation/native";
 import Separador from "../components/common/Separador";
 import styles from "./Style";
@@ -33,10 +33,6 @@ export default function MenuJustifyScreen() {
   const handleLanguageChange = (newLang) => setSelectedLanguage(newLang);
 
   useEffect(() => {
-    const handleLanguageChange = (lng) => {
-      console.log('🔄 Idioma cambiado a:', lng);
-    };
-
     i18n.on('languageChanged', handleLanguageChange);
 
     return () => {
@@ -65,7 +61,7 @@ export default function MenuJustifyScreen() {
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', loadPendingCount);
-    return () => unsubscribe();
+    return unsubscribe;
   }, [navigation]);
 
   const loadPendingCount = async () => {
@@ -75,30 +71,34 @@ export default function MenuJustifyScreen() {
         const pendings = JSON.parse(pendingData);
         setPendingCount(pendings.filter(j => j.status === 'pending').length);
       }
-    } catch { }
+    } catch (error) {
+      console.error('Error loading pending count:', error);
+    }
   };
 
   const handleBack = () => navigation.goBack();
 
   const handleConsultJustify = () => navigation.navigate("ConsultJustify");
+
   const handleAddOrEditJustify = () => {
-    navigation.navigate(userRole === 'student' ? "AddJustify" : "AddValidJustification");
+    const screenName = userRole === 'student' ? "AddJustification" : "AddValidJustification";
+    navigation.navigate(screenName);
   };
+
   const handleValidJustifications = () => navigation.navigate("ValidJustifications");
-  const handlePendingJustifications = () => navigation.navigate("PendingJustifications");
 
   const MenuItem = ({ label, onPress, showBadge = false }) => (
     <>
       <Separador />
-      <TouchableOpacity onPress={onPress}>
+      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
         <View style={styles.menuItem}>
-          <View style={styles.menuItemLeft}>
-            <Text style={[styles.sectionTitleMenu, { color: colors.text }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+            <Text style={[styles.sectionTitleMenu, { color: colors.text, flex: 1 }]}>
               {label}
             </Text>
 
             {showBadge && pendingCount > 0 && (
-              <View style={[styles.badgeContainer, { backgroundColor: colors.primary }]}>
+              <View style={[styles.badgeContainer, { backgroundColor: colors.primary, marginLeft: 10 }]}>
                 <Text style={[styles.badgeText, { color: "#fff" }]}>
                   {pendingCount}
                 </Text>
@@ -118,7 +118,7 @@ export default function MenuJustifyScreen() {
   const Header = ({ title }) => (
     <View style={styles.headerContainer}>
       <Text style={[styles.mainTitle, { color: colors.text }]}>
-        {title} {"\n"}
+        {title}
       </Text>
 
       <CustomLogo
@@ -141,7 +141,7 @@ export default function MenuJustifyScreen() {
       >
         <ScrollView
           style={styles.ScrollView}
-          contentContainerstyle={styles.ScrollViewContent}
+          contentContainerStyle={styles.ScrollViewContent}
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.containerMenuJustify}>
@@ -171,7 +171,7 @@ export default function MenuJustifyScreen() {
 
                 <MenuItem
                   label={t('admin.pendingJustifications')}
-                  onPress={handlePendingJustifications}
+                  // onPress={ }
                   showBadge
                 />
 

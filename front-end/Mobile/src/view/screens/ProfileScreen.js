@@ -15,7 +15,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../components/common/ThemeContext';
 import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import { saveLanguageForRole } from '../components/common/languageByRole';
-import BottomBar from "../components/common/NavigationBar";
 import PrimaryButton from "../components/auth/PrimaryButton";
 import LanguageSelector from '../components/common/LanguageSelector';
 import styles from "./Style";
@@ -113,7 +112,7 @@ export default function ProfileScreen() {
                                 await saveLanguageForRole(userRole, i18n.language);
                             }
                             await AsyncStorage.removeItem('userRole');
-                            navigation.navigate("login");
+                            navigation.navigate("HomesScreen");
                         } catch (error) {
                             console.error('Error en logout:', error);
                         } finally {
@@ -146,13 +145,12 @@ export default function ProfileScreen() {
     return (
         <SafeAreaView
             style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}
-            key={`${refreshKey}-${updateKey}`}
-            
+            key={`${refreshKey}-${updateKey}`}            
         >
-            <ScrollView contentContainerStyle={styles.ScrollViewContent}>
+            <ScrollView contentContainerStyle={ styles.ScrollViewContent }>
                 <View style={styles.container} marginHorizontal={15} >
 
-                    <View style={[styles.profileHeaderSectionProfile, { marginTop: Platform.OS === 'ios' ? 30 : 40 }]}>
+                    <View style={[styles.profileHeaderSectionProfile, { marginTop: Platform.OS === 'ios' ? 45 : 70 }]}>
                         <Text style={[styles.userNameProfile, { color: colors.text }]}>
                             {userInfo.name}
                         </Text>
