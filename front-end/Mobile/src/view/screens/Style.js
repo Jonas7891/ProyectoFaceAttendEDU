@@ -723,100 +723,6 @@ const styles = StyleSheet.create({
         marginHorizontal: 10,
     },
 
-    // ========== UPDATE PHOTO SCREEN styleS ==========
-    imagePhoto: {
-        width: 150,
-        height: 150,
-        marginBottom: 20,
-        alignSelf: 'center',
-        overflow: 'hidden',
-    },
-    image: {
-        width: '100%',
-        height: '100%',
-    },
-    headerTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#1A1A2E',
-        textAlign: 'center',
-        alignSelf: 'center',
-    },
-    instructionText: {
-        marginHorizontal: 20,
-        textAlign: 'center',
-        marginTop: 10,
-        marginBottom: 10,
-        fontSize: 14,
-        color: '#666',
-        lineHeight: 20,
-    },
-    formTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#1A1A2E',
-        marginBottom: 20,
-        textAlign: 'center',
-    },
-    registerButton: {
-        backgroundColor: '#4CAF50',
-        marginHorizontal: 20,
-        marginVertical: 15,
-        paddingVertical: 14,
-        paddingHorizontal: 24,
-        borderRadius: 12,
-        shadowColor: '#4CAF50',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 5,
-        alignSelf: 'center',
-    },
-    registerButtonSuccess: {
-        backgroundColor: '#2E7D32',
-    },
-    buttonContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    registerButtonText: {
-        color: '#FFFFFF',
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginLeft: 12,
-    },
-    icon: {
-        width: 24,
-        height: 24,
-        tintColor: "#FFFFFF",
-    },
-    settingsContainer: {
-        marginTop: 10,
-        alignSelf: "center",
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        borderRadius: 12,
-    },
-    settingsContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    settingsIcon: {
-        width: 40,
-        height: 40,
-        tintColor: "black"
-    },
-    settingsText: {
-        color: 'black',
-        fontSize: 20,
-        fontWeight: '600',
-    },
-    footer: {
-        height: 40,
-    },
-
     // ========== HISTORICAL SCREEN styleS ==========
     informacionContainer: {
         marginTop: 20,
@@ -968,14 +874,7 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
 
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: "bold",
-        color: "#333",
-        marginBottom: 15,
-        paddingLeft: 4,
-    },
-
+    // Usamos el mismo sectionTitle que ya existe, pero necesitamos también sectionTitleAdmin
     sectionTitleAdmin: {
         fontSize: 18,
         fontWeight: "bold",
@@ -1024,18 +923,6 @@ const styles = StyleSheet.create({
         fontWeight: "500",
     },
 
-    statusBadge: {
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 20,
-    },
-
-    statusText: {
-        fontSize: 12,
-        fontWeight: "600",
-        color: "#FFF",
-    },
-
     cardReason: {
         fontSize: 14,
         color: "#444",
@@ -1056,153 +943,164 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
 
-    // ========== ESTILOS PARA AGREGAR JUSTIFICACIÓN ==========
-    containerAddJustification: {
+    // ========== ESTILOS PARA AGREGAR JUSTIFICACIÓN (ADMIN) ==========
+    containerAddValidJustification: {
         flex: 1,
-        marginTop: 25,
         paddingHorizontal: 20,
-        paddingVertical: 20,
-        paddingTop: Platform.OS === "android" ? 50 : 10,
+        paddingTop: Platform.OS === 'android' ? 40 : 10,
     },
 
-    mainTitleAddJustification: {
-        fontSize: 24,
-        fontWeight: "bold",
-        color: "#1A1A1A",
-        textAlign: "center",
-        marginTop: 20,
-        marginBottom: 10,
+    formSection: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
     },
 
-    subTitleAddJustification: {
-        fontSize: 18,
-        fontWeight: "600",
-        color: "#333",
-        textAlign: "center",
-        marginBottom: 15,
-    },
-
-    descriptionText: {
-        fontSize: 14,
-        color: "#666",
-        textAlign: "center",
+    // Selector de categoría horizontal
+    categoryScroll: {
         marginBottom: 20,
-        lineHeight: 20,
     },
 
-    // Selector de tipo
-    typeSelector: {
-        flexDirection: "row",
-        gap: 12,
-        marginBottom: 5,
+    categoryButton: {
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 20,
+        marginRight: 8,
+        // borderWidth y borderColor se aplican inline según el tema
     },
 
-    typeButton: {
-        flex: 1,
-        backgroundColor: "#F5F5F5",
-        paddingVertical: 12,
-        borderRadius: 12,
-        alignItems: "center",
-        borderWidth: 1,
-        borderColor: "#E0E0E0",
+    categoryButtonActive: {
+        backgroundColor: '#4A90E2',
+        borderColor: '#4A90E2',
     },
 
-    activeTypeButton: {
-        backgroundColor: "#4A90E2",
-        borderColor: "#4A90E2",
+    categoryButtonText: {
+        fontSize: 14,
+        color: '#666',
+        fontWeight: '500',
     },
 
-    typeButtonText: {
-        fontSize: 15,
-        fontWeight: "600",
-        color: "#666",
+    categoryButtonTextActive: {
+        color: '#FFFFFF',
     },
 
-    activeTypeButtonText: {
-        color: "#FFF",
-    },
-
-    // Botón de subir archivo
-    uploadButton: {
-        backgroundColor: "#E3F2FD",
-        paddingVertical: 14,
-        borderRadius: 12,
-        alignItems: "center",
-        borderWidth: 1,
-        borderColor: "#4A90E2",
-        borderstyle: "dashed",
-        marginBottom: 10,
-    },
-
-    uploadButtonText: {
-        fontSize: 15,
-        fontWeight: "600",
-        color: "#4A90E2",
-    },
-
-    // Información del archivo
-    fileInfoContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        backgroundColor: "#F0F8FF",
-        padding: 12,
-        borderRadius: 10,
-        marginTop: 5,
-        marginBottom: 10,
-    },
-
-    fileInfo: {
-        flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
+    // Grid de tipos
+    typeGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        marginBottom: 20,
         gap: 8,
     },
 
-    fileName: {
-        fontSize: 13,
-        color: "#333",
-        flex: 1,
+    typeButton: {
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 10,
+        minWidth: '30%',
+        alignItems: 'center',
+        // borderWidth se aplica inline dinámicamente
     },
 
-    fileSize: {
-        fontSize: 11,
-        color: "#666",
+    typeButtonActive: {
+        backgroundColor: '#4A90E2',
+        borderColor: '#4A90E2',
     },
 
-    removeFileButton: {
-        backgroundColor: "#FFE5E5",
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    removeFileText: {
+    typeButtonText: {
         fontSize: 14,
-        color: "#FF4444",
-        fontWeight: "bold",
+        color: '#666',
+        fontWeight: '500',
     },
 
-    supportedFormats: {
-        fontSize: 11,
-        color: "#999",
-        marginTop: 8,
-        textAlign: "center",
+    typeButtonTextActive: {
+        color: '#FFFFFF',
     },
 
-    secondaryButton: {
-        alignItems: "center",
+    // Inputs
+    inputLabel: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#1A1A1A',
+        marginBottom: 10,
+        marginTop: 5,
+    },
+
+    textInput: {
+        backgroundColor: '#F8F9FA',
+        borderRadius: 12,
+        paddingHorizontal: 16,
         paddingVertical: 12,
-        marginTop: 10,
+        fontSize: 15,
+        color: '#333',
         marginBottom: 20,
     },
 
-    secondaryButtonText: {
+    textArea: {
+        minHeight: 120,
+        textAlignVertical: 'top',
+    },
+
+    toggleContainer: {
+        flexDirection: 'row',
+        backgroundColor: '#F5F5F5',
+        borderRadius: 12,
+        padding: 4,
+        marginBottom: 10,
+    },
+
+    toggleButton: {
+        flex: 1,
+        paddingVertical: 12,
+        alignItems: 'center',
+        borderRadius: 10,
+    },
+
+    toggleButtonActive: {
+        backgroundColor: '#4A90E2',
+    },
+
+    toggleButtonInactive: {
+        backgroundColor: '#E74C3C',
+    },
+
+    toggleButtonText: {
         fontSize: 15,
-        color: "#4A90E2",
-        fontWeight: "500",
+        fontWeight: '600',
+        color: '#666',
+    },
+
+    toggleButtonTextActive: {
+        color: '#FFFFFF',
+    },
+
+    toggleButtonTextInactive: {
+        color: '#FFFFFF',
+    },
+
+    // Botones de acción
+    actionButtonsContainer: {
+        marginTop: 30,
+        marginBottom: 30,
+        gap: 12,
+    },
+
+    cancelButton: {
+        alignItems: 'center',
+        paddingVertical: 14,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+    },
+
+    cancelButtonText: {
+        fontSize: 16,
+        color: '#666',
+        fontWeight: '600',
     },
 
     // ========== LANGUAGE SETTINGS SCREEN STYLES ==========
@@ -1231,7 +1129,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: 15,
-        borderWidth: 1,
         borderColor: '#ddd',
         borderRadius: 8,
         marginBottom: 10,
@@ -1277,10 +1174,7 @@ const styles = StyleSheet.create({
         borderLeftWidth: 4,
         borderLeftColor: '#3498DB',
         shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 1,
-        },
+        shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
         shadowRadius: 2,
         elevation: 1,
@@ -1321,10 +1215,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#E0E0E0',
         shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 1,
-        },
+        shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
         shadowRadius: 3,
         elevation: 2,
@@ -1364,539 +1255,8 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginTop: 10,
     },
-    containerAddValidJustification: {
-        flex: 1,
-        paddingHorizontal: 20,
-        paddingTop: Platform.OS === 'android' ? 40 : 10,
-    },
 
-    formSection: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        padding: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
-    },
-
-    // Selector de categoría horizontal
-    categoryScroll: {
-        marginBottom: 20,
-    },
-
-    categoryButton: {
-        backgroundColor: '#F5F5F5',
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 20,
-        marginRight: 8,
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
-    },
-
-    categoryButtonActive: {
-        backgroundColor: '#4A90E2',
-        borderColor: '#4A90E2',
-    },
-
-    categoryButtonText: {
-        fontSize: 14,
-        color: '#666',
-        fontWeight: '500',
-    },
-
-    categoryButtonTextActive: {
-        color: '#FFFFFF',
-    },
-
-    // Grid de tipos
-    typeGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        marginBottom: 20,
-        gap: 8,
-    },
-
-    typeButton: {
-        backgroundColor: '#F5F5F5',
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
-        minWidth: '30%',
-        alignItems: 'center',
-    },
-
-    typeButtonActive: {
-        backgroundColor: '#4A90E2',
-        borderColor: '#4A90E2',
-    },
-
-    typeButtonText: {
-        fontSize: 14,
-        color: '#666',
-        fontWeight: '500',
-    },
-
-    typeButtonTextActive: {
-        color: '#FFFFFF',
-    },
-
-    // Input de texto
-    inputLabel: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#1A1A1A',
-        marginBottom: 10,
-        marginTop: 5,
-    },
-
-    textInput: {
-        backgroundColor: '#F8F9FA',
-        borderRadius: 12,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        fontSize: 15,
-        color: '#333',
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
-        marginBottom: 20,
-    },
-
-    textArea: {
-        minHeight: 120,
-        textAlignVertical: 'top',
-    },
-
-    // Toggle para requiere documento
-    toggleContainer: {
-        flexDirection: 'row',
-        backgroundColor: '#F5F5F5',
-        borderRadius: 12,
-        padding: 4,
-        marginBottom: 10,
-    },
-
-    toggleButton: {
-        flex: 1,
-        paddingVertical: 12,
-        alignItems: 'center',
-        borderRadius: 10,
-    },
-
-    toggleButtonActive: {
-        backgroundColor: '#4A90E2',
-    },
-
-    toggleButtonInactive: {
-        backgroundColor: '#E74C3C',
-    },
-
-    toggleButtonText: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#666',
-    },
-
-    toggleButtonTextActive: {
-        color: '#FFFFFF',
-    },
-
-    toggleButtonTextInactive: {
-        color: '#FFFFFF',
-    },
-
-    // Botones de acción
-    actionButtonsContainer: {
-        marginTop: 30,
-        marginBottom: 30,
-        gap: 12,
-    },
-
-    cancelButton: {
-        alignItems: 'center',
-        paddingVertical: 14,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
-    },
-
-    cancelButtonText: {
-        fontSize: 16,
-        color: '#666',
-        fontWeight: '600',
-    },
-
-    // ========== LANGUAGE SETTINGS SCREEN STYLES ==========
-    languageSettingsSafeArea: {
-        flex: 1,
-        backgroundColor: '#fff'
-    },
-    languageSettingsContainer: {
-        flex: 1,
-        padding: 20
-    },
-    languageSettingsTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 10,
-        textAlign: 'center'
-    },
-    languageSettingsSubtitle: {
-        fontSize: 16,
-        marginBottom: 30,
-        textAlign: 'center',
-        color: '#666'
-    },
-    languageSettingsOption: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 15,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        marginBottom: 10,
-    },
-    languageSettingsSelectedOption: {
-        borderColor: '#41c0ff',
-        backgroundColor: '#E0F7FA',
-        borderWidth: 2
-    },
-    languageSettingsOptionText: {
-        fontSize: 16
-    },
-    languageSettingsCheckmark: {
-        fontSize: 18,
-        color: '#41c0ff',
-        fontWeight: 'bold'
-    },
-
-    // Badge para justificaciones pendientes
-    badgeContainer: {
-        backgroundColor: '#E74C3C',
-        borderRadius: 12,
-        minWidth: 24,
-        height: 24,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 10,
-        paddingHorizontal: 6,
-    },
-
-    badgeText: {
-        color: '#FFFFFF',
-        fontSize: 12,
-        fontWeight: 'bold',
-    },
-
-    // Estilos para items de justificaciones válidas
-    justificationItem: {
-        backgroundColor: '#F8F9FA',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 12,
-        borderLeftWidth: 4,
-        borderLeftColor: '#3498DB',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 1,
-        },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
-    },
-
-    justificationHeader: {
-        marginBottom: 8,
-    },
-
-    justificationType: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: '#2C3E50',
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-    },
-
-    justificationDescription: {
-        fontSize: 14,
-        color: '#546E7A',
-        marginBottom: 10,
-        lineHeight: 20,
-    },
-
-    justificationRequirement: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#7F8C8D',
-        fontstyle: 'italic',
-    },
-
-    // Estilos para items de justificaciones pendientes
-    pendingItem: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 12,
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 1,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-        elevation: 2,
-    },
-
-    pendingHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-
-    // Loading indicator
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    loadingText: {
-        marginTop: 10,
-        fontSize: 16,
-        color: '#7F8C8D',
-    },
-
-    // Empty state
-    emptyStateContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingVertical: 40,
-    },
-
-    emptyStateText: {
-        fontSize: 16,
-        color: '#95A5A6',
-        textAlign: 'center',
-        marginTop: 10,
-    },
-    containerAddValidJustification: {
-        flex: 1,
-        paddingHorizontal: 20,
-        paddingTop: Platform.OS === 'android' ? 40 : 10,
-    },
-
-    formSection: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        padding: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
-    },
-
-    // Selector de categoría horizontal
-    categoryScroll: {
-        marginBottom: 20,
-    },
-
-    categoryButton: {
-        backgroundColor: '#F5F5F5',
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 20,
-        marginRight: 8,
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
-    },
-
-    categoryButtonActive: {
-        backgroundColor: '#4A90E2',
-        borderColor: '#4A90E2',
-    },
-
-    categoryButtonText: {
-        fontSize: 14,
-        color: '#666',
-        fontWeight: '500',
-    },
-
-    categoryButtonTextActive: {
-        color: '#FFFFFF',
-    },
-
-    // Grid de tipos
-    typeGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        marginBottom: 20,
-        gap: 8,
-    },
-
-    typeButton: {
-        backgroundColor: '#F5F5F5',
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
-        minWidth: '30%',
-        alignItems: 'center',
-    },
-
-    typeButtonActive: {
-        backgroundColor: '#4A90E2',
-        borderColor: '#4A90E2',
-    },
-
-    typeButtonText: {
-        fontSize: 14,
-        color: '#666',
-        fontWeight: '500',
-    },
-
-    typeButtonTextActive: {
-        color: '#FFFFFF',
-    },
-
-    // Input de texto
-    inputLabel: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#1A1A1A',
-        marginBottom: 10,
-        marginTop: 5,
-    },
-
-    textInput: {
-        backgroundColor: '#F8F9FA',
-        borderRadius: 12,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        fontSize: 15,
-        color: '#333',
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
-        marginBottom: 20,
-    },
-
-    textArea: {
-        minHeight: 120,
-        textAlignVertical: 'top',
-    },
-
-    // Toggle para requiere documento
-    toggleContainer: {
-        flexDirection: 'row',
-        borderRadius: 12,
-        padding: 4,
-    },
-
-    toggleButton: {
-        flex: 1,
-        paddingVertical: 12,
-        alignItems: 'center',
-        borderRadius: 10,
-    },
-
-    toggleButtonActive: {
-        backgroundColor: '#4A90E2',
-    },
-
-    toggleButtonInactive: {
-        backgroundColor: '#E74C3C',
-    },
-
-    toggleButtonText: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#666',
-    },
-
-    toggleButtonTextActive: {
-        color: '#FFFFFF',
-    },
-
-    toggleButtonTextInactive: {
-        color: '#FFFFFF',
-    },
-
-    // Botones de acción
-    actionButtonsContainer: {
-        marginTop: 30,
-        marginBottom: 30,
-        gap: 12,
-    },
-
-    cancelButton: {
-        alignItems: 'center',
-        paddingVertical: 14,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
-    },
-
-    cancelButtonText: {
-        fontSize: 16,
-        color: '#666',
-        fontWeight: '600',
-    },
-
-    // ========== LANGUAGE SETTINGS SCREEN styleS ==========
-    languageSettingsSafeArea: {
-        flex: 1,
-        backgroundColor: '#fff'
-    },
-    languageSettingsContainer: {
-        flex: 1,
-        padding: 20
-    },
-    languageSettingsTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 10,
-        textAlign: 'center'
-    },
-    languageSettingsSubtitle: {
-        fontSize: 16,
-        marginBottom: 30,
-        textAlign: 'center',
-        color: '#666'
-    },
-    languageSettingsOption: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 15,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        marginBottom: 10,
-    },
-    languageSettingsSelectedOption: {
-        borderColor: '#41c0ff',
-        backgroundColor: '#E0F7FA',
-        borderWidth: 2
-    },
-    languageSettingsOptionText: {
-        fontSize: 16
-    },
-    languageSettingsCheckmark: {
-        fontSize: 18,
-        color: '#41c0ff',
-        fontWeight: 'bold'
-    },
+    // ========== VALID JUSTIFICATIONS SCREEN STYLES (ESPECÍFICOS) ==========
     safeAreaWhiteValidJustifi: {
         flex: 1,
         backgroundColor: '#FFFFFF',
@@ -2264,7 +1624,7 @@ const styles = StyleSheet.create({
         fontWeight: '700',
     },
 
-    validAllJustificationsCategoryCount: {
+    validAllJustificationsCategoryCount: {  
         fontSize: 12,
     },
 
@@ -2422,6 +1782,161 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 10,
+    },
+    secondaryButton: {
+        alignItems: "center",
+        paddingVertical: 12,
+        marginTop: 10,
+        marginBottom: 30,
+        borderColor: "#E0E0E0",
+        borderWidth: 1,
+        borderRadius: 12,
+    },
+    // Externos
+    containerAddJustification: {
+        flex: 1,
+        marginTop: 25,
+        paddingHorizontal: 20,
+        paddingVertical: 20,
+        paddingTop: Platform.OS === "android" ? 50 : 10,
+    },
+
+    mainTitleAddJustification: {
+        fontSize: 24,
+        fontWeight: "bold",
+        color: "#1A1A1A",
+        textAlign: "center",
+        marginTop: 20,
+        marginBottom: 10,
+    },
+
+    subTitleAddJustification: {
+        fontSize: 18,
+        fontWeight: "600",
+        color: "#333",
+        textAlign: "center",
+        marginBottom: 15,
+    },
+
+    descriptionText: {
+        fontSize: 14,
+        color: "#666",
+        textAlign: "center",
+        marginBottom: 20,
+        lineHeight: 20,
+    },
+
+    // Selector de tipo
+    typeSelector: {
+        flexDirection: "row",
+        gap: 12,
+        marginBottom: 5,
+    },
+
+    typeButton: {
+        flex: 1,
+        backgroundColor: "#F5F5F5",
+        paddingVertical: 12,
+        borderRadius: 12,
+        alignItems: "center",
+        borderWidth: 1,
+        borderColor: "#E0E0E0",
+    },
+
+    activeTypeButton: {
+        backgroundColor: "#4A90E2",
+        borderColor: "#4A90E2",
+    },
+
+    typeButtonText: {
+        fontSize: 15,
+        fontWeight: "600",
+        color: "#666",
+    },
+
+    activeTypeButtonText: {
+        color: "#FFF",
+    },
+
+    // Botón de subir archivo
+    uploadButton: {
+        backgroundColor: "#E3F2FD",
+        paddingVertical: 14,
+        borderRadius: 12,
+        alignItems: "center",
+        borderWidth: 1,
+        borderColor: "#4A90E2",
+        borderstyle: "dashed",
+        marginBottom: 10,
+    },
+
+    uploadButtonText: {
+        fontSize: 15,
+        fontWeight: "600",
+        color: "#4A90E2",
+    },
+
+    // Información del archivo
+    fileInfoContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        backgroundColor: "#F0F8FF",
+        padding: 12,
+        borderRadius: 10,
+        marginTop: 5,
+        marginBottom: 10,
+    },
+
+    fileInfo: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+    },
+
+    fileName: {
+        fontSize: 13,
+        color: "#333",
+        flex: 1,
+    },
+
+    fileSize: {
+        fontSize: 11,
+        color: "#666",
+    },
+
+    removeFileButton: {
+        backgroundColor: "#FFE5E5",
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+
+    removeFileText: {
+        fontSize: 14,
+        color: "#FF4444",
+        fontWeight: "bold",
+    },
+
+    supportedFormats: {
+        fontSize: 11,
+        color: "#999",
+        marginTop: 8,
+        textAlign: "center",
+    },
+
+    secondaryButton: {
+        alignItems: "center",
+        paddingVertical: 12,
+        marginTop: 10,
+        marginBottom: 20,
+        borderColor: "#c8c8c8",
+        borderWidth: 0.2,
+        borderRadius: 12,
+        borderBlockColor: "#c8c8c8",
     },
 });
 

@@ -127,13 +127,14 @@ export default function UpdatePhoto() {
             paddingVertical: 10,
         },
         registerButtonUpdatePhoto: {
-            backgroundColor: attendanceRegistered ? "#2da351" : colors.primary,
-            padding: 15,
-            borderRadius: 12,
+            backgroundColor: "#2da351",
+            padding: 12,
+            borderRadius: 10,
             marginTop: 20,
             alignItems: "center",
             flexDirection: "row",
             justifyContent: "center",
+            marginHorizontal: "auto",
         },
     };
 
@@ -216,27 +217,27 @@ export default function UpdatePhoto() {
                                     placeholderTextColor={colors.textMuted}
                                 />
                             </View>
-                        </View>
 
-                        {/* Botón de registro */}
-                        <TouchableOpacity
-                            style={[
-                                styles.registerButtonUpdatePhoto,
-                                dynamicStyles.registerButtonUpdatePhoto,
-                                attendanceRegistered && styles.registerButtonSuccessUpdatePhoto,
-                            ]}
-                            onPress={handleRegisterAttendance}
-                        >
-                            <Image
-                                source={require("../../assets/images/fotografia.png")}
-                                style={styles.registerButtonIconUpdatePhoto}
-                            />
-                            <Text style={styles.registerButtonTextUpdatePhoto}>
-                                {attendanceRegistered
-                                    ? t('updatePhoto.attendanceRegistered')
-                                    : t('updatePhoto.registerAttendance')}
-                            </Text>
-                        </TouchableOpacity>
+                            {/* Botón de registro */}
+                            <TouchableOpacity
+                                style={[
+                                    styles.registerButtonUpdatePhoto,
+                                    dynamicStyles.registerButtonUpdatePhoto,
+                                    attendanceRegistered && styles.registerButtonSuccessUpdatePhoto,
+                                ]}
+                                onPress={handleRegisterAttendance}
+                            >
+                                <Image
+                                    source={require("../../assets/images/fotografia.png")}
+                                    style={styles.registerButtonIconUpdatePhoto}
+                                />
+                                <Text style={styles.registerButtonTextUpdatePhoto}>
+                                    {attendanceRegistered
+                                        ? t('updatePhoto.attendanceRegistered')
+                                        : t('updatePhoto.registerAttendance')}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
 
                         {/* Botón de volver */}
                         <View style={styles.backButtonContainerUpdatePhoto}>

@@ -8,7 +8,7 @@ import { useTheme } from '../common/ThemeContext';
 import stylescommon from './style/Style';
 
 const screens = {
-  home: "Dashboard",
+  home: "DashboardScreen", // Cambiado de "Dashboard" a "DashboardScreen"
   history: "Historial",
   DisplayingAttendance: "DisplayingAttendance"
 };
@@ -18,7 +18,7 @@ const NEWS_screens = {
   student: "Novedades",
 };
 
-export default function CustomTabs({ onChange, userRole }) {
+export default function CustomTabs({ onChange, userRole, onLogout }) {
   const navigation = useNavigation();
   const route = useRoute();
   const { t, i18n } = useTranslation();
@@ -49,10 +49,15 @@ export default function CustomTabs({ onChange, userRole }) {
 
   const getTabIndex = (routeName) => {
     switch (routeName) {
-      case "Dashboard": return 0;
-      case "Novedades": return 1;
-      case "DisplayingAttendance": return 2;
-      default: return 0;
+      case "DashboardScreen": // Cambiado de "Dashboard" a "DashboardScreen"
+      case "Dashboard": // Por si acaso
+        return 0;
+      case "Novedades":
+        return 1;
+      case "DisplayingAttendance":
+        return 2;
+      default:
+        return 0;
     }
   };
 
@@ -68,8 +73,8 @@ export default function CustomTabs({ onChange, userRole }) {
     switch (tabIndex) {
       case 0: return screens.home;
       case 1: return currentUserRole === 'admin'
-        ? NEWS_screens.admin
-        : NEWS_screens.student;
+          ? NEWS_screens.admin
+          : NEWS_screens.student;
       case 2: return screens.DisplayingAttendance;
       default: return screens.home;
     }
@@ -87,8 +92,8 @@ export default function CustomTabs({ onChange, userRole }) {
         stylescommon.buttonCustomTabs,
         {
           backgroundColor: selected === index
-            ? colors.customtabs
-            : colors.tabInactive,
+              ? colors.customtabs
+              : colors.tabInactive,
           borderRadius: 20,
           marginHorizontal: 5,
         }
@@ -99,8 +104,10 @@ export default function CustomTabs({ onChange, userRole }) {
       stylescommon.buttonCustomTabs,
       {
         backgroundColor: selected === index
-          ? colors.primary
-          : 'transparent',
+            ? colors.primary
+            : 'transparent',
+        borderRadius: 20,
+        marginHorizontal: 5,
       }
     ];
   };
@@ -126,41 +133,39 @@ export default function CustomTabs({ onChange, userRole }) {
   };
 
   return (
-    <View
-      key={refreshKey}
-      style={[
-        stylescommon.containerCustomTabs,
-        {
-          flexDirection: 'row',
-
-          backgroundColor:
-            theme === 'dark'
-              ? colors.navBar
-              : 'transparent',
-
-          borderWidth: 0,
-          elevation: 0,
-          shadowOpacity: 0,
-          padding: theme === 'dark' ? 5 : 0,
-          borderRadius: 25
-        }
-      ]}
-    >
-      {[
-        t('tabs.home', { defaultValue: 'Inicio' }),
-        t('tabs.news', { defaultValue: 'Novedades' }),
-        t('tabs.DisplayingAttendance', { defaultValue: 'Asistencias' }),
-      ].map((label, index) => (
-        <TouchableOpacity
-          key={index}
-          style={getButtonstyle(index)}
-          onPress={() => handleNavigation(index)}
-        >
-          <Text style={getTextstyle(index)}>
-            {label}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
+      <View
+          key={refreshKey}
+          style={[
+            stylescommon.containerCustomTabs,
+            {
+              flexDirection: 'row',
+              backgroundColor:
+                  theme === 'dark'
+                      ? colors.navBar
+                      : 'transparent',
+              borderWidth: 0,
+              elevation: 0,
+              shadowOpacity: 0,
+              padding: theme === 'dark' ? 5 : 0,
+              borderRadius: 25
+            }
+          ]}
+      >
+        {[
+          t('tabs.home', { defaultValue: 'Inicio' }),
+          t('tabs.news', { defaultValue: 'Novedades' }),
+          t('tabs.DisplayingAttendance', { defaultValue: 'Asistencias' }),
+        ].map((label, index) => (
+            <TouchableOpacity
+                key={index}
+                style={getButtonstyle(index)}
+                onPress={() => handleNavigation(index)}
+            >
+              <Text style={getTextstyle(index)}>
+                {label}
+              </Text>
+            </TouchableOpacity>
+        ))}
+      </View>
   );
 }

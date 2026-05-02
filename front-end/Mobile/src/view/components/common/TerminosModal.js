@@ -7,7 +7,7 @@ import {
     TouchableOpacity,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useTheme } from '../common/ThemeContext';
+import { useTheme } from './ThemeContext';
 import styleAuth from "./style/Style";
 
 export default function TerminosModal({ isVisible, onClose }) {
