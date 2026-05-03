@@ -18,6 +18,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import PrimaryButton from "../components/auth/PrimaryButton";
 import {useTheme} from "../components/common/ThemeContext";
 import styles from "./Style";
+import {useAddValidJustificationViewModel} from "../../viewmodels/useAddValidJustificationViewModel";
 
 // ─── Selector desplegable reutilizable ─────────────────────────────────────────
 function DropdownSelector({label, placeholder, value, options, onSelect, colors}) {
@@ -210,119 +211,25 @@ export default function AddValidJustificationScreen() {
     const {t} = useTranslation();
     const {colors} = useTheme();
 
-    const [type, setType] = useState("");
-    const [description, setDescription] = useState("");
-    const [category, setCategory] = useState("");
-    const [requiresDocument, setRequiresDocument] = useState(true);
+    const {
+        // Estados
+        type, setType,
+        description, setDescription,
+        category, setCategory,
+        requiresDocument, setRequiresDocument,
+        isSaving,
+        updateKey,
 
-    // ── Categorías con ícono y descripción ────────────────────────────────────
-    const categories = [
-        {
-            id: "salud",
-            label: t("admin.categoryHealth"),
-            icon: "🏥",
-            description: t("admin.categoryHealthDesc") ?? "Incapacidades y citas médicas",
-        },
-        {
-            id: "familiar",
-            label: t("admin.categoryFamily"),
-            icon: "👨‍👩‍👧",
-            description: t("admin.categoryFamilyDesc") ?? "Situaciones de carácter familiar",
-        },
-        {
-            id: "legal",
-            label: t("admin.categoryLegal"),
-            icon: "⚖️",
-            description: t("admin.categoryLegalDesc") ?? "Diligencias judiciales o legales",
-        },
-        {
-            id: "academica",
-            label: t("admin.categoryAcademic"),
-            icon: "🎓",
-            description: t("admin.categoryAcademicDesc") ?? "Actividades académicas externas",
-        },
-        {
-            id: "otro",
-            label: t("admin.categoryOther"),
-            icon: "📋",
-            description: t("admin.categoryOtherDesc") ?? "Otros motivos justificados",
-        },
-    ];
+        // Datos
+        categories,
+        types,
+        selectedCategory,
+        selectedType,
 
-    // ── Tipos con ícono y descripción ─────────────────────────────────────────
-    const types = [
-        {
-            id: "medica",
-            label: t("admin.typeMedical"),
-            icon: "💊",
-            description: t("admin.typeMedicalDesc") ?? "Consulta, cirugía o incapacidad",
-        },
-        {
-            id: "familiar",
-            label: t("admin.typeFamily"),
-            icon: "🏠",
-            description: t("admin.typeFamilyDesc") ?? "Fallecimiento o calamidad familiar",
-        },
-        {
-            id: "personal",
-            label: t("admin.typePersonal"),
-            icon: "👤",
-            description: t("admin.typePersonalDesc") ?? "Asunto personal de fuerza mayor",
-        },
-        {
-            id: "academica",
-            label: t("admin.typeAcademic"),
-            icon: "📚",
-            description: t("admin.typeAcademicDesc") ?? "Evento, congreso o representación",
-        },
-        {
-            id: "laboral",
-            label: t("admin.typeWork"),
-            icon: "💼",
-            description: t("admin.typeWorkDesc") ?? "Comisión o actividad laboral",
-        },
-        {
-            id: "otro",
-            label: t("admin.typeOther"),
-            icon: "📝",
-            description: t("admin.typeOtherDesc") ?? "Otro tipo de justificación",
-        },
-    ];
-
-    const handleBack = () => navigation.goBack();
-
-    const handleSave = async () => {
-        if (!type.trim() || !description.trim() || !category.trim()) {
-            Alert.alert(t("common.error"), t("admin.completeAllFields"));
-            return;
-        }
-
-        try {
-            const newJustification = {
-                id: Date.now().toString(),
-                type,
-                description,
-                category,
-                requiresDocument,
-                createdAt: new Date().toISOString(),
-            };
-
-            const stored = await AsyncStorage.getItem("validJustifications");
-            const justifications = stored ? JSON.parse(stored) : [];
-            justifications.push(newJustification);
-            await AsyncStorage.setItem("validJustifications", JSON.stringify(justifications));
-
-            Alert.alert(t("common.success"), t("admin.justificationCreated"), [
-                {text: t("common.accept"), onPress: () => navigation.goBack()},
-            ]);
-        } catch (error) {
-            Alert.alert(t("common.error"), t("admin.errorCreating"));
-        }
-    };
-
-    // ── Resumen de lo seleccionado ─────────────────────────────────────────────
-    const selectedCategory = categories.find((c) => c.label === category);
-    const selectedType = types.find((tp) => tp.label === type);
+        // Acciones
+        handleBack,
+        handleSave,
+    } = useAddValidJustificationViewModel();
 
     return (
         <SafeAreaView style={[styles.safeAreaWhite, {backgroundColor: colors.background}]}>

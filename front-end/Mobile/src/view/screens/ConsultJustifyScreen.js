@@ -15,7 +15,7 @@ import Separador from '../components/common/Separador';
 import styles from './Style';
 import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import { useTheme } from '../components/common/ThemeContext';
-import { useValidJustificationsViewModel } from '../../viewmodels/useValidJustificationsViewModel';
+import { useValidJustificationsViewModel } from '../../viewmodels/useConsultJustifyViewModel';
 
 export default function ValidJustificationsScreen() {
     const { t } = useTranslation();

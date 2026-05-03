@@ -1,10 +1,25 @@
-// viewmodels/useDisplayingAttendanceViewModel.js
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useTheme } from '../view/components/common/ThemeContext';
+import { useState, useEffect } from "react";
+import { Platform } from "react-native";
+import { useTranslation } from "react-i18next";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useLanguageRefresh } from "../utils/useLanguageRefresh";
+import { useTheme } from "../view/components/common/ThemeContext";
 
-// Datos mock (podrían importarse de otro archivo)
+// CONSTANTES
+export const STATUS_CONFIG = {
+    presente: { color: "#22C55E", bg: "#DCFCE7", darkBg: "#14532D", label: "attendance.present" },
+    tarde:   { color: "#F59E0B", bg: "#FEF3C7", darkBg: "#451A03", label: "attendance.late" },
+    ausente: { color: "#EF4444", bg: "#FEE2E2", darkBg: "#450A0A", label: "attendance.absent" },
+    justificado: { color: "#8B5CF6", bg: "#EDE9FE", darkBg: "#2E1065", label: "attendance.justified" },
+};
+
+export const APPROVAL_CONFIG = {
+    Pending:  { color: "#F59E0B", label: "attendance.pending" },
+    Approved: { color: "#22C55E", label: "attendance.approved" },
+    Rejected: { color: "#EF4444", label: "attendance.rejected" },
+};
+
+// DATOS MOCK (copiar igual que antes, omitidos por brevedad)
 const MOCK_TEACHERS = [
     {
         id: 1,
@@ -135,129 +150,104 @@ const MOCK_MY_ATTENDANCE = [
     },
 ];
 
-// Helpers (formateo de fecha)
-function formatDateKey(date) {
-    if (!date) return '';
+// HELPERS
+export function formatDateKey(date) {
+    if (!date) return "";
     const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
     return `${y}-${m}-${d}`;
 }
 
-export function useDisplayingAttendanceViewModel() {
+export function formatDateDisplay(date, t) {
+    if (!date) return t("attendance.filterByDate", { defaultValue: "Filtrar fecha" });
+    return date.toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+// VIEW MODEL
+export function useAttendanceViewModel() {
     const { t, i18n } = useTranslation();
-    const { loadThemeForRole, theme } = useTheme();
-    const isDark = theme === 'dark';
+    const { colors, loadThemeForRole, theme } = useTheme();
+    const refreshKey = useLanguageRefresh();
+    const isDark = theme === "dark";
 
     const [userRole, setUserRole] = useState(null);
-    const [searchText, setSearchText] = useState('');
+    const [searchText, setSearchText] = useState("");
+    const [updateKey, setUpdateKey] = useState(0);
     const [selectedDate, setSelectedDate] = useState(null);
     const [showPicker, setShowPicker] = useState(false);
     const [showIOSModal, setShowIOSModal] = useState(false);
     const [tempDate, setTempDate] = useState(new Date());
     const [detailItem, setDetailItem] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
-    const [updateKey, setUpdateKey] = useState(0);
 
-    // Inicialización: rol, tema, y listener de idioma
     useEffect(() => {
         const init = async () => {
-            const role = await AsyncStorage.getItem('userRole');
+            const role = await AsyncStorage.getItem("userRole");
             setUserRole(role);
-            if (role) await loadThemeForRole(role);
+            await loadThemeForRole(role);
         };
         init();
-
         const onLangChange = () => setUpdateKey(p => p + 1);
-        i18n.on('languageChanged', onLangChange);
-        return () => i18n.off('languageChanged', onLangChange);
-    }, [loadThemeForRole, i18n]);
+        i18n.on("languageChanged", onLangChange);
+        return () => i18n.off("languageChanged", onLangChange);
+    }, []);
 
-    const isAdmin = userRole === 'admin';
+    const isAdmin = userRole === "admin";
 
-    // Filtros
-    const filteredTeachers = useMemo(() => {
-        return MOCK_TEACHERS.filter(item =>
-            (!searchText || item.nombre.toLowerCase().includes(searchText.toLowerCase())) &&
-            (!selectedDate || item.fecha === formatDateKey(selectedDate))
-        );
-    }, [searchText, selectedDate]);
+    const filteredTeachers = MOCK_TEACHERS.filter(item =>
+        (!searchText || item.nombre.toLowerCase().includes(searchText.toLowerCase())) &&
+        (!selectedDate || item.fecha === formatDateKey(selectedDate))
+    );
 
-    const filteredMyAttendance = useMemo(() => {
-        return MOCK_MY_ATTENDANCE.filter(item =>
-            (!selectedDate || item.fecha === formatDateKey(selectedDate))
-        );
-    }, [selectedDate]);
+    const filteredMyAttendance = MOCK_MY_ATTENDANCE.filter(item =>
+        (!selectedDate || item.fecha === formatDateKey(selectedDate))
+    );
 
     const activeData = isAdmin ? filteredTeachers : filteredMyAttendance;
 
-    // Acciones de detalle
-    const openDetail = useCallback((item) => {
+    const openDetail = (item) => {
         setDetailItem(item);
         setShowDetailModal(true);
-    }, []);
-
-    const closeDetail = useCallback(() => {
+    };
+    const closeDetail = () => {
         setShowDetailModal(false);
         setDetailItem(null);
-    }, []);
+    };
 
-    // Picker de fecha
-    const handleOpenPicker = useCallback(() => {
-        setTempDate(selectedDate || new Date());
-        if (Platform.OS === 'ios') {
-            setShowIOSModal(true);
-        } else {
-            setShowPicker(true);
-        }
-    }, [selectedDate]);
+    const handleOpenPicker = () => {
+        setTempDate(selectedDate ?? new Date());
+        Platform.OS === "ios" ? setShowIOSModal(true) : setShowPicker(true);
+    };
 
-    const handleAndroidChange = useCallback((event, date) => {
+    const handleAndroidChange = (event, date) => {
         setShowPicker(false);
-        if (event.type === 'set' && date) {
-            setSelectedDate(date);
-        }
-    }, []);
+        if (event.type === "set" && date) setSelectedDate(date);
+    };
 
-    const handleClearDate = useCallback(() => setSelectedDate(null), []);
-
-    // Confirmación de fecha en iOS
-    const confirmIOSDate = useCallback(() => {
-        setSelectedDate(tempDate);
-        setShowIOSModal(false);
-    }, [tempDate]);
-
-    const cancelIOSDate = useCallback(() => setShowIOSModal(false), []);
-
+    // RETORNAMOS t también
     return {
-        // estado
-        userRole,
+        t,               // <--- AGREGADO
         isAdmin,
+        isDark,
+        colors,
+        refreshKey,
+        updateKey,
         searchText,
         setSearchText,
         selectedDate,
-        tempDate,
+        setSelectedDate,
         showPicker,
-        setShowPicker,
         showIOSModal,
-        showDetailModal,
-        detailItem,
-        updateKey,
-        isDark,
-
-        // datos
+        setShowIOSModal,
+        tempDate,
+        setTempDate,
         activeData,
-        filteredTeachers,
-        filteredMyAttendance,
-
-        // acciones
+        detailItem,
+        showDetailModal,
         openDetail,
         closeDetail,
         handleOpenPicker,
         handleAndroidChange,
-        handleClearDate,
-        confirmIOSDate,
-        cancelIOSDate,
-        setTempDate,
     };
 }
