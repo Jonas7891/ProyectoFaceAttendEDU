@@ -7,7 +7,7 @@ import { restoreLanguageForRole } from "../view/components/common/languageByRole
 import { useTheme } from "../view/components/common/ThemeContext";
 import { login } from "../services/AuthService";        // tu servicio de login
 import { saveToken } from "../storage/TokenStorage";   // tu storage de token
-import { getHighestRole } from "../services/constants/getHighestRole";
+import { getHighestRole } from "../utils/getHighestRole";
 import LoginRequest from "../model/LoginRequest";     // tu modelo de request
 import AuthResponse from "../model/AuthResponse";     // tu modelo de response
 

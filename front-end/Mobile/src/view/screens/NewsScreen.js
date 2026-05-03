@@ -1,61 +1,27 @@
-import React, { useState, useEffect } from "react";
+import React from 'react';
 import {
     Text,
     View,
     SafeAreaView,
     Image,
     Platform,
-} from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { useTranslation } from "react-i18next";
-import BottomBar from "../components/common/NavigationBar";
-import ScrollViewWrapper from "../components/common/ScrollView";
-import CustomTabs from "../components/common/CustomTabs";
-import Separador from "../components/common/Separador";
-import styles from "./Style";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useTheme } from "../components/common/ThemeContext";
+} from 'react-native';
+import { useTranslation } from 'react-i18next';
+import BottomBar from '../components/common/NavigationBar';
+import ScrollViewWrapper from '../components/common/ScrollView';
+import CustomTabs from '../components/common/CustomTabs';
+import Separador from '../components/common/Separador';
+import styles from './Style';
+import { useTheme } from '../components/common/ThemeContext';
 import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
-import { saveLanguageForRole } from '../components/common/languageByRole';
+import { useNewsViewModel } from '../../viewmodels/useNewsViewModel';
 
 export default function NewsScreen() {
-    const navigation = useNavigation();
-    const { t, i18n } = useTranslation();
-    const { colors, theme, loadThemeForRole } = useTheme();
-
+    const { t } = useTranslation();
+    const { colors, theme } = useTheme();
     const refreshKey = useLanguageRefresh();
-    const [userRole, setUserRole] = useState(null);
-    const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
-    const [updateKey, setUpdateKey] = useState(0);
 
-    useEffect(() => {
-        const init = async () => {
-            try {
-                const role = await AsyncStorage.getItem('userRole');
-                setUserRole(role);
-                if (role) {
-                    await loadThemeForRole(role);
-                }
-            } catch (error) {
-                console.error('Error inicializando NewsScreen:', error);
-            }
-        };
-        init();
-
-        const handleLanguageChanged = (lng) => {
-            console.log('🔄 NewsScreen: Idioma cambiado a', lng);
-            setCurrentLanguage(lng);
-            setUpdateKey(prev => prev + 1);
-        };
-
-        setCurrentLanguage(i18n.language);
-
-        i18n.on('languageChanged', handleLanguageChanged);
-
-        return () => {
-            i18n.off('languageChanged', handleLanguageChanged);
-        };
-    }, []);
+    const { userRole, updateKey } = useNewsViewModel();
 
     return (
         <SafeAreaView
@@ -67,14 +33,13 @@ export default function NewsScreen() {
         >
             <ScrollViewWrapper>
                 <View style={styles.container} marginHorizontal={10}>
-
                     <CustomTabs userRole={userRole} />
 
                     <View style={{ marginLeft: 25, marginRight: 25 }}>
                         <Image
-                            source={require("../../assets/images/persona.png")}
+                            source={require('../../assets/images/persona.png')}
                             style={{
-                                width: "100%",
+                                width: '100%',
                                 height: 200,
                                 marginTop: 40,
                                 borderRadius: 10
@@ -86,7 +51,7 @@ export default function NewsScreen() {
                         <Text
                             style={{
                                 fontSize: 18,
-                                fontWeight: "bold",
+                                fontWeight: 'bold',
                                 marginTop: 30,
                                 color: theme === 'dark' ? colors.primary : '#000000'
                             }}
@@ -97,7 +62,7 @@ export default function NewsScreen() {
                         <Text
                             style={{
                                 fontSize: 18,
-                                fontWeight: "300",
+                                fontWeight: '300',
                                 marginTop: 15,
                                 color: colors.textSecondary
                             }}
@@ -115,7 +80,7 @@ export default function NewsScreen() {
                             style={{
                                 fontSize: 15,
                                 marginTop: 15,
-                                textAlign: "justify",
+                                textAlign: 'justify',
                                 color: colors.text
                             }}
                         >

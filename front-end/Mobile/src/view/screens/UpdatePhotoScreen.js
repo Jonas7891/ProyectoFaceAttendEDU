@@ -1,5 +1,4 @@
-// UpdatePhotoScreen.js
-import React, { useState, useEffect } from "react";
+import React from 'react';
 import {
     Text,
     View,
@@ -9,73 +8,30 @@ import {
     Image,
     KeyboardAvoidingView,
     Platform,
-    Alert,
-} from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { useTranslation } from "react-i18next";
-import { QuestionInput } from "../components/common/QuestionInput";
-import PrimaryButton from "../components/auth/PrimaryButton";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+} from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { QuestionInput } from '../components/common/QuestionInput';
+import PrimaryButton from '../components/auth/PrimaryButton';
 import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
-import { useTheme } from "../components/common/ThemeContext";
-import styles from "./Style";
+import { useTheme } from '../components/common/ThemeContext';
+import styles from './Style';
+import { useUpdatePhotoViewModel } from '../../viewmodels/useUpdatePhotoViewModel';
 
 export default function UpdatePhoto() {
-    const navigation = useNavigation();
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
     const refreshKey = useLanguageRefresh();
-    const { colors, theme, loadThemeForRole } = useTheme();
+    const { colors, theme } = useTheme();
 
-    const [attendanceRegistered, setAttendanceRegistered] = useState(false);
-    const [updateKey, setUpdateKey] = useState(0);
+    const {
+        attendanceRegistered,
+        updateKey,
+        formData,
+        handleInputChange,
+        handleRegisterAttendance,
+        handleBack,
+    } = useUpdatePhotoViewModel();
 
-    const [formData, setFormData] = useState({
-        nombreCompleto: "",
-        documento: "",
-        telefono: ""
-    });
-
-    useEffect(() => {
-        const init = async () => {
-            const role = await AsyncStorage.getItem('userRole');
-            if (role) {
-                await loadThemeForRole(role);
-            }
-        };
-        init();
-
-        const handleLanguageChanged = () => {
-            setUpdateKey(prev => prev + 1);
-        };
-
-        i18n.on('languageChanged', handleLanguageChanged);
-
-        return () => {
-            i18n.off('languageChanged', handleLanguageChanged);
-        };
-    }, []);
-
-    const handleInputChange = (field, value) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value
-        }));
-    };
-
-    const handleRegisterAttendance = () => {
-        if (!formData.nombreCompleto || !formData.documento || !formData.telefono) {
-            Alert.alert(
-                t('updatePhoto.error'),
-                t('updatePhoto.completeFields')
-            );
-            return;
-        }
-
-        setAttendanceRegistered(true);
-    };
-
-    const handleBack = () => navigation.goBack();
-
+    // Estilos dinámicos (solo dependen de colors/theme)
     const dynamicStyles = {
         safeAreaUpdatePhoto: {
             flex: 1,
@@ -88,13 +44,13 @@ export default function UpdatePhoto() {
         },
         titleUpdatePhoto: {
             fontSize: 22,
-            fontWeight: "bold",
-            textAlign: "center",
+            fontWeight: 'bold',
+            textAlign: 'center',
             color: colors.text,
             marginTop: 10,
         },
         instructionTextUpdatePhoto: {
-            textAlign: "center",
+            textAlign: 'center',
             color: colors.textMuted,
             marginVertical: 15,
         },
@@ -107,7 +63,7 @@ export default function UpdatePhoto() {
         },
         formTitleUpdatePhoto: {
             fontSize: 18,
-            fontWeight: "bold",
+            fontWeight: 'bold',
             color: colors.text,
             marginBottom: 15,
         },
@@ -115,7 +71,7 @@ export default function UpdatePhoto() {
             color: colors.text,
             marginBottom: 5,
             fontSize: 14,
-            fontWeight: "500",
+            fontWeight: '500',
         },
         questionInputUpdatePhoto: {
             backgroundColor: colors.inputBackground,
@@ -127,21 +83,24 @@ export default function UpdatePhoto() {
             paddingVertical: 10,
         },
         registerButtonUpdatePhoto: {
-            backgroundColor: "#2da351",
+            backgroundColor: '#2da351',
             padding: 12,
             borderRadius: 10,
             marginTop: 20,
-            alignItems: "center",
-            flexDirection: "row",
-            justifyContent: "center",
-            marginHorizontal: "auto",
+            alignItems: 'center',
+            flexDirection: 'row',
+            justifyContent: 'center',
+            marginHorizontal: 'auto',
         },
     };
 
     return (
-        <SafeAreaView style={[styles.safeAreaUpdatePhoto, dynamicStyles.safeAreaUpdatePhoto]} key={`${refreshKey}-${updateKey}`}>
+        <SafeAreaView
+            style={[styles.safeAreaUpdatePhoto, dynamicStyles.safeAreaUpdatePhoto]}
+            key={`${refreshKey}-${updateKey}`}
+        >
             <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.keyboardAvoidingViewUpdatePhoto}
             >
                 <ScrollView
@@ -152,7 +111,7 @@ export default function UpdatePhoto() {
                         {/* Imagen de perfil */}
                         <View style={styles.imageContainerUpdatePhoto}>
                             <Image
-                                source={require("../../assets/images/perfil-del-usuario.png")}
+                                source={require('../../assets/images/perfil-del-usuario.png')}
                                 style={[styles.profileImageUpdatePhoto, dynamicStyles.profileImageUpdatePhoto]}
                                 resizeMode="contain"
                             />
@@ -162,7 +121,6 @@ export default function UpdatePhoto() {
                         <Text style={[styles.titleUpdatePhoto, dynamicStyles.titleUpdatePhoto]}>
                             {t('updatePhoto.title')}
                         </Text>
-
                         <Text style={[styles.instructionTextUpdatePhoto, dynamicStyles.instructionTextUpdatePhoto]}>
                             {t('updatePhoto.instructions')}
                         </Text>
@@ -173,7 +131,6 @@ export default function UpdatePhoto() {
                                 {t('updatePhoto.personalInfo')}
                             </Text>
 
-                            {/* Campo: Nombre Completo */}
                             <View style={styles.inputFieldContainerUpdatePhoto}>
                                 <Text style={[styles.inputLabelUpdatePhoto, dynamicStyles.inputLabelUpdatePhoto]}>
                                     {t('updatePhoto.fullName')}
@@ -181,14 +138,13 @@ export default function UpdatePhoto() {
                                 <QuestionInput
                                     placeholder={t('updatePhoto.fullNamePlaceholder')}
                                     value={formData.nombreCompleto}
-                                    onChangeText={(value) => handleInputChange("nombreCompleto", value)}
+                                    onChangeText={(value) => handleInputChange('nombreCompleto', value)}
                                     keyboardType="default"
                                     style={dynamicStyles.questionInputUpdatePhoto}
                                     placeholderTextColor={colors.textMuted}
                                 />
                             </View>
 
-                            {/* Campo: Número de Documento */}
                             <View style={styles.inputFieldContainerUpdatePhoto}>
                                 <Text style={[styles.inputLabelUpdatePhoto, dynamicStyles.inputLabelUpdatePhoto]}>
                                     {t('updatePhoto.documentNumber')}
@@ -196,14 +152,13 @@ export default function UpdatePhoto() {
                                 <QuestionInput
                                     placeholder={t('updatePhoto.documentPlaceholder')}
                                     value={formData.documento}
-                                    onChangeText={(value) => handleInputChange("documento", value)}
+                                    onChangeText={(value) => handleInputChange('documento', value)}
                                     keyboardType="numeric"
                                     style={dynamicStyles.questionInputUpdatePhoto}
                                     placeholderTextColor={colors.textMuted}
                                 />
                             </View>
 
-                            {/* Campo: Número de Teléfono */}
                             <View style={styles.inputFieldContainerUpdatePhoto}>
                                 <Text style={[styles.inputLabelUpdatePhoto, dynamicStyles.inputLabelUpdatePhoto]}>
                                     {t('updatePhoto.phoneNumber')}
@@ -211,14 +166,13 @@ export default function UpdatePhoto() {
                                 <QuestionInput
                                     placeholder={t('updatePhoto.phonePlaceholder')}
                                     value={formData.telefono}
-                                    onChangeText={(value) => handleInputChange("telefono", value)}
+                                    onChangeText={(value) => handleInputChange('telefono', value)}
                                     keyboardType="phone-pad"
                                     style={dynamicStyles.questionInputUpdatePhoto}
                                     placeholderTextColor={colors.textMuted}
                                 />
                             </View>
 
-                            {/* Botón de registro */}
                             <TouchableOpacity
                                 style={[
                                     styles.registerButtonUpdatePhoto,
@@ -228,7 +182,7 @@ export default function UpdatePhoto() {
                                 onPress={handleRegisterAttendance}
                             >
                                 <Image
-                                    source={require("../../assets/images/fotografia.png")}
+                                    source={require('../../assets/images/fotografia.png')}
                                     style={styles.registerButtonIconUpdatePhoto}
                                 />
                                 <Text style={styles.registerButtonTextUpdatePhoto}>
@@ -239,7 +193,6 @@ export default function UpdatePhoto() {
                             </TouchableOpacity>
                         </View>
 
-                        {/* Botón de volver */}
                         <View style={styles.backButtonContainerUpdatePhoto}>
                             <PrimaryButton
                                 title={t('consultJustify.back')}

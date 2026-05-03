@@ -1,4 +1,4 @@
-import {ROLES_HIERARCHY, DEFAULT_ROLE} from "./rolesHierarchy";
+import {ROLES_HIERARCHY, DEFAULT_ROLE} from "../services/constants/rolesHierarchy";
 
 export const getHighestRole = (roles) => {
     // Si no hay roles o es vacío, devolvemos el rol por defecto

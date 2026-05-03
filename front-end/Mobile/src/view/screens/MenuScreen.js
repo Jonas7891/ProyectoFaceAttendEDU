@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useCallback} from "react";
+import React from "react";
 import {
     Text,
     View,
@@ -9,128 +9,44 @@ import {
     Image,
     ScrollView,
 } from "react-native";
-import {useTranslation} from "react-i18next";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {saveLanguageForRole} from "../components/common/languageByRole";
-import {useLanguageRefresh} from '../../utils/useLanguageRefresh';
-import {useTheme} from '../components/common/ThemeContext';
+import { useTranslation } from "react-i18next";
+import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
+import { useTheme } from '../components/common/ThemeContext';
 import DangerButton from "../components/auth/DangerButton";
 import CustomLogo from "../components/common/logo";
-import {useNavigation, useFocusEffect} from "@react-navigation/native";
 import styles from "./Style";
+import { useMenuViewModel } from '../../viewmodels/useMenuViewModel';
 
 export default function MenuScreen({ onLogout }) {
-    const navigation = useNavigation();
-    const {t, i18n} = useTranslation();
-    const {colors, loadThemeForRole} = useTheme();
     const refreshKey = useLanguageRefresh();
+    const { t } = useTranslation();
+    const { colors } = useTheme(); // seguimos usando colors del contexto
 
-    const [isLoading, setIsLoading] = useState(false);
-    const [userRole, setUserRole] = useState(null);
-    const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
-    const [updateKey, setUpdateKey] = useState(0);
+    const {
+        isLoading,
+        isAdmin,
+        updateKey,
+        handleLogout,
+        navigateTo,
+    } = useMenuViewModel({ onLogout });
 
-    useEffect(() => {
-        const handleLanguageChanged = (lng) => {
-            console.log('🔄 MenuScreen: Idioma cambiado a', lng);
-            setCurrentLanguage(lng);
-            setUpdateKey(prev => prev + 1);
-        };
+    const handleBack = () => navigateTo("DashboardScreen");
+    const handleUpdatePhoto = () => navigateTo("UpdatePhoto");
+    const handleFacialFail = () => navigateTo("FacialFail");
+    const handleMenuJustify = () => navigateTo("MenuJustify");
+    const handleSettings = () => navigateTo("LanguageSettings");
 
-        setCurrentLanguage(i18n.language);
-        i18n.on('languageChanged', handleLanguageChanged);
-
-        return () => {
-            i18n.off('languageChanged', handleLanguageChanged);
-        };
-    }, []);
-
-    useFocusEffect(
-        useCallback(() => {
-            let isActive = true;
-
-            const reloadData = async () => {
-                try {
-                    const role = await AsyncStorage.getItem('userRole');
-                    if (!isActive) return;
-
-                    setUserRole(role);
-
-                    const savedLang = await AsyncStorage.getItem('appLanguage');
-                    if (savedLang && savedLang !== i18n.language && isActive) {
-                        console.log('🔄 Sincronizando idioma al volver:', savedLang);
-                        await i18n.changeLanguage(savedLang);
-                    }
-
-                    if (role && isActive) {
-                        await loadThemeForRole(role);
-                    }
-
-                    if (isActive) {
-                        setUpdateKey(prev => prev + 1);
-                    }
-                } catch (error) {
-                    console.error('Error en reloadData:', error);
-                }
-            };
-
-            reloadData();
-
-            return () => {
-                isActive = false;
-            };
-        }, [])
-    );
-
-    useEffect(() => {
-        const init = async () => {
-            try {
-                const role = await AsyncStorage.getItem('userRole');
-                setUserRole(role);
-                if (role) await loadThemeForRole(role);
-            } catch (error) {
-                console.error('Error en init:', error);
-            }
-        };
-        init();
-    }, []);
-
-    const isAdmin = userRole === 'Administrador';
-
-    const handleBack = () => navigation.navigate("DashboardScreen");
-    const handleUpdatePhoto = () => navigation.navigate("UpdatePhoto");
-    const handleFacialFail = () => navigation.navigate("FacialFail");
-    const handleMenuJustify = () => navigation.navigate("MenuJustify");
-    const handleSettings = () => navigation.navigate("LanguageSettings");
-
-    const handleLogout = async () => {
-        try {
-            setIsLoading(true);
-
-            await AsyncStorage.clear();
-            await i18n.changeLanguage('es');
-
-            if (onLogout) {
-                await onLogout();
-            }
-
-        } catch (e) {
-            console.error('Error en logout:', e);
-            setIsLoading(false);
-        }
-    };
-
-    const MenuItem = ({label, onPress}) => (
+    const MenuItem = ({ label, onPress }) => (
         <>
-            <View style={{height: 1, backgroundColor: colors.separator, marginVertical: 10}}/>
+            <View style={{ height: 1, backgroundColor: colors.separator, marginVertical: 10 }} />
             <TouchableOpacity onPress={onPress}>
-                <View style={{flexDirection: "row", alignItems: "center", justifyContent: "space-between"}}>
-                    <Text style={[styles.sectionTitleMenu, {color: colors.text}]}>
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                    <Text style={[styles.sectionTitleMenu, { color: colors.text }]}>
                         {label}
                     </Text>
                     <Image
                         source={require("../../assets/images/flecha.png")}
-                        style={[styles.arrowImage, {tintColor: colors.text}]}
+                        style={[styles.arrowImage, { tintColor: colors.text }]}
                     />
                 </View>
             </TouchableOpacity>
@@ -139,7 +55,7 @@ export default function MenuScreen({ onLogout }) {
 
     return (
         <SafeAreaView
-            style={[styles.safeAreaWhite, {backgroundColor: colors.backgroundWhite}]}
+            style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}
             key={`${refreshKey}-${updateKey}`}
         >
             <KeyboardAvoidingView
@@ -155,7 +71,7 @@ export default function MenuScreen({ onLogout }) {
                             <View style={styles.backIcon}>
                                 <Image
                                     source={require("../../assets/images/flecha.png")}
-                                    style={[styles.backIconImage, {tintColor: colors.text}]}
+                                    style={[styles.backIconImage, { tintColor: colors.text }]}
                                 />
                             </View>
                         </TouchableOpacity>
@@ -168,29 +84,39 @@ export default function MenuScreen({ onLogout }) {
                                 marginBottom={15}
                             />
 
-                            <Text style={[styles.userText, {color: colors.text}]}>
+                            <Text style={[styles.userText, { color: colors.text }]}>
                                 {isAdmin ? "Jonattan Rizo" : "The Jonas"}
                             </Text>
 
                             {!isAdmin && (
-                                <MenuItem label={t('menu.updateFacialParams')} onPress={handleUpdatePhoto}/>
+                                <MenuItem
+                                    label={t('menu.updateFacialParams')}
+                                    onPress={handleUpdatePhoto}
+                                />
                             )}
 
                             <MenuItem
-                                label={isAdmin
-                                    ? t('menu.justificationConfig')
-                                    : t('menu.justificationInfo', {defaultValue: 'Información de las Justificaciones'})
+                                label={
+                                    isAdmin
+                                        ? t('menu.justificationConfig')
+                                        : t('menu.justificationInfo', {
+                                            defaultValue: 'Información de las Justificaciones',
+                                        })
                                 }
                                 onPress={handleMenuJustify}
                             />
-                            <MenuItem label={t('menu.appSettings')} onPress={handleSettings}/>
-                            <MenuItem label={t('menu.facialRecognitionFail')} onPress={handleFacialFail}/>
+                            <MenuItem label={t('menu.appSettings')} onPress={handleSettings} />
+                            <MenuItem
+                                label={t('menu.facialRecognitionFail')}
+                                onPress={handleFacialFail}
+                            />
 
+                            {/* DangerButton adaptado: solo recibe isLoading y onPress;
+                                eliminamos setIsLoading y onLogout porque el ViewModel ya los maneja */}
                             <DangerButton
                                 title={isLoading ? t('menu.loggingOut') : t('menu.logout')}
                                 onPress={handleLogout}
-                                setIsLoading={setIsLoading}
-                                onLogout={onLogout}
+                                isLoading={isLoading}
                             />
                         </View>
                     </View>
