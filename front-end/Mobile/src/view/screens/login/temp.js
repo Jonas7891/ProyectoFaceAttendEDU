@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
     Text,
     View,
@@ -6,41 +6,83 @@ import {
     SafeAreaView,
     KeyboardAvoidingView,
     Platform,
+    Alert,
     TouchableWithoutFeedback,
     Keyboard,
     TouchableOpacity
 } from "react-native";
 import { useTranslation } from "react-i18next";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { restoreLanguageForRole } from "../../components/common/languageByRole";
 import { useLanguageRefresh } from '../../../utils/useLanguageRefresh';
 import { useTheme } from '../../components/common/ThemeContext';
 import PrimaryButton from "../../components/auth/PrimaryButton";
 import SelectableButton from "../../components/common/SelectableButton";
 import CustomLogo from "../../components/common/logo";
+import { useNavigation } from "@react-navigation/native";
 import RegisterModal from '../../components/auth/RegisterModal';
 import TerminosModal from "../../components/common/TerminosModal";
 import ScrollView from "../../components/common/ScrollView";
 import styles from "./style/Style";
-import { useLoginViewModel } from '../../../viewmodels/useLoginViewModel';
 
 export default function HomesScreen({ onLogin }) {
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
     const refreshKey = useLanguageRefresh();
-    const { t } = useTranslation();
-    const { colors } = useTheme();
+    const navigation = useNavigation();
+    const { t, i18n } = useTranslation();
+    const { colors, loadThemeForRole } = useTheme();
 
-    // Modales locales (no pertenecen a la lógica de login)
-    const [isRegisterModalVisible, setIsRegisterModalVisible] = React.useState(false);
-    const [isTerminosModalVisible, setIsTerminosModalVisible] = React.useState(false);
+    const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
+    const [isTerminosModalVisible, setIsTerminosModalVisible] = useState(false);
 
-    // ViewModel => toda la lógica de login aquí
-    const {
-        email,
-        password,
-        isLoading,
-        error,
-        setEmail,
-        setPassword,
-        submit
-    } = useLoginViewModel({ onLogin });
+    const handlelogin = async () => {
+        if (!email.trim()) {
+            Alert.alert(t('common.error'), t('login.errorEmail'));
+            return;
+        }
+        if (!password.trim()) {
+            Alert.alert(t('common.error'), t('login.errorPassword'));
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            await new Promise((resolve) => setTimeout(resolve, 1500));
+
+            if (email === "hola@gmail.com" && password === "7891") {
+                await AsyncStorage.setItem('userRole', 'Administrador');
+                await AsyncStorage.setItem('userEmail', email);
+                await AsyncStorage.setItem('authToken', 'admin-token-123');
+                await loadThemeForRole('Administrador');
+                await restoreLanguageForRole('Administrador');
+
+                if (onLogin) {
+                    onLogin('Administrador', 'admin-token-123');
+                }
+
+            } else if (email === "chao@gmail.com" && password === "7891") {
+                await AsyncStorage.setItem('userRole', 'Estudiante');
+                await AsyncStorage.setItem('userEmail', email);
+                await AsyncStorage.setItem('authToken', 'student-token-123');
+                await loadThemeForRole('Estudiante');
+                await restoreLanguageForRole('Estudiante');
+
+                if (onLogin) {
+                    onLogin('Estudiante', 'student-token-123');
+                }
+
+            } else {
+                Alert.alert(t('common.error'), t('login.invalidCredentials'));
+            }
+        } catch (error) {
+            console.error('Error en login:', error);
+            Alert.alert(t('common.error'), t('login.loginError'));
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <SafeAreaView style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]} key={refreshKey}>
@@ -111,7 +153,6 @@ export default function HomesScreen({ onLogin }) {
                                     />
 
                                     <View style={styles.rowContainer}>
-                                        {/* El botón "recordar" podría manejarse en el ViewModel */}
                                         <SelectableButton selectable={true} initialSelected={false} />
                                         <TouchableOpacity
                                             onPress={() => setIsTerminosModalVisible(true)}
@@ -124,11 +165,9 @@ export default function HomesScreen({ onLogin }) {
                                     </View>
                                 </View>
 
-                                {/* Botón de login */}
                                 <PrimaryButton
                                     title={isLoading ? t('login.loading') : t('login.title')}
-                                    onPress={submit}
-                                    disabled={isLoading}
+                                    onPress={handlelogin}
                                 />
                             </View>
 
@@ -142,7 +181,6 @@ export default function HomesScreen({ onLogin }) {
                                 </Text>
                             </TouchableOpacity>
 
-                            {/* Modales (sin relación con MVVM del login) */}
                             <RegisterModal
                                 isVisible={isRegisterModalVisible}
                                 onClose={() => setIsRegisterModalVisible(false)}

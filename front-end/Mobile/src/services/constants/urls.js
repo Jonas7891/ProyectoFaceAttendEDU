@@ -1,4 +1,4 @@
-const urlBase="../services/endpoints/";
+const urlBase="http://192.168.1.2:8080/";
 
 export const schools="api/schools"
 export const persons="api/persons"

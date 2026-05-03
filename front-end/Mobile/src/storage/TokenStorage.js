@@ -7,23 +7,23 @@ const TOKEN_KEY = "auth_token";
  * @param {string} token
  * @param {number|null} expiresIn segundos hasta que expire (opcional)
  */
-export const saveToken = async (token, expiresIn = null) => {
-  if (!token || typeof token !== "string") {
-    console.warn("Token inválido");
-    return;
-  }
+export const saveToken = async (token) => {
+  // Guardar token junto con la fecha de expiración extraída del JWT
+  let expiresAt = null;
+  try {
+    const decoded = jwtDecode(token);
+    if (decoded.exp) {
+      expiresAt = decoded.exp * 1000; // a milisegundos
+    }
+  } catch (e) {}
 
   const data = {
     token,
     savedAt: Date.now(),
-    expiresIn, // en segundos
+    expiresAt, // opcional si usas la expiración del propio token
   };
 
-  try {
-    await AsyncStorage.setItem(TOKEN_KEY, JSON.stringify(data));
-  } catch (error) {
-    console.error("Error guardando token:", error);
-  }
+  await AsyncStorage.setItem(TOKEN_KEY, JSON.stringify(data));
 };
 
 /**

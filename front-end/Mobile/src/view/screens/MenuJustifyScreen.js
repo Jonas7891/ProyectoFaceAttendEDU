@@ -44,8 +44,8 @@ export default function MenuJustifyScreen() {
     const init = async () => {
       try {
         const role = await AsyncStorage.getItem('userRole');
-        setUserRole(role || 'student');
-        await saveLanguageForRole(role || 'student');
+        setUserRole(role || 'Estudiante');
+        await saveLanguageForRole(role || 'Estudiante');
 
         const pendingData = await AsyncStorage.getItem('pendingJustifications');
         if (pendingData) {
@@ -53,7 +53,7 @@ export default function MenuJustifyScreen() {
           setPendingCount(pendings.filter(j => j.status === 'pending').length);
         }
       } catch {
-        setUserRole('student');
+        setUserRole('Estudiante');
       }
     };
     init();
@@ -81,7 +81,7 @@ export default function MenuJustifyScreen() {
   const handleConsultJustify = () => navigation.navigate("ConsultJustify");
 
   const handleAddOrEditJustify = () => {
-    const screenName = userRole === 'student' ? "AddJustification" : "AddValidJustification";
+    const screenName = userRole === 'Estudiante' ? "AddJustification" : "AddValidJustification";
     navigation.navigate(screenName);
   };
 
@@ -146,7 +146,7 @@ export default function MenuJustifyScreen() {
         >
           <View style={styles.containerMenuJustify}>
 
-            {userRole === 'student' ? (
+            {userRole === 'Estudiante' ? (
               <View style={styles.mainContent}>
                 <Header title={t('justify.title')} />
 

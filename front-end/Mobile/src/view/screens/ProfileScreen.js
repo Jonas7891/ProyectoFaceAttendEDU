@@ -79,7 +79,7 @@ export default function ProfileScreen() {
                     const role = await AsyncStorage.getItem('userRole');
                     setUserRole(role);
 
-                    if (role === 'admin') {
+                    if (role === 'Administrador') {
                         setUserInfo(mockUserData.admin);
                     } else {
                         setUserInfo(mockUserData.student);
@@ -157,11 +157,11 @@ export default function ProfileScreen() {
 
                         <View style={[
                             styles.roleBadgeProfile,
-                            { backgroundColor: userRole === 'admin' ? colors.primary + '20' : colors.success + '20' }
+                            { backgroundColor: userRole === 'Administrador' ? colors.primary + '20' : colors.success + '20' }
                         ]}>
                             <Text style={[
                                 styles.roleBadgeTextProfile,
-                                { color: userRole === 'admin' ? colors.primary : colors.primary }
+                                { color: userRole === 'Administrador' ? colors.primary : colors.primary }
                             ]}>
                                 {userInfo.role}
                             </Text>

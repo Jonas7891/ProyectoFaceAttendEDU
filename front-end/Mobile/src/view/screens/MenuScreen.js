@@ -95,7 +95,7 @@ export default function MenuScreen({ onLogout }) {
         init();
     }, []);
 
-    const isAdmin = userRole === 'admin';
+    const isAdmin = userRole === 'Administrador';
 
     const handleBack = () => navigation.navigate("DashboardScreen");
     const handleUpdatePhoto = () => navigation.navigate("UpdatePhoto");

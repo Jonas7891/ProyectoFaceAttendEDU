@@ -161,7 +161,7 @@ export default function Dashboard({onLogout, userRole: propUserRole}) {
         },
     ];
 
-    const isAdmin = userRole === 'admin';
+    const isAdmin = userRole === 'Administrador';
     const currentLocale = i18n.language === 'en' ? 'en-US' : i18n.language === 'pt' ? 'pt-BR' : i18n.language === 'fr' ? 'fr-FR' : 'es-ES';
     const formattedDate = new Date().toLocaleDateString(currentLocale, {
         weekday: 'long',
