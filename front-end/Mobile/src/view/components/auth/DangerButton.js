@@ -5,11 +5,7 @@ import {useNavigation} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
 import styleAuth from "./style/Style";
 
-export default function DangerButton({
-                                         title,
-                                         disabled = false,
-                                         onLogout // Recibir onLogout como prop
-                                     }) {
+export default function DangerButton({title, disabled = false, onLogout}) { // Recibir onLogout como prop
     const navigation = useNavigation();
     const {t} = useTranslation();
 
@@ -41,7 +37,7 @@ export default function DangerButton({
                                 console.warn('onLogout no está disponible en DangerButton');
                                 navigation.reset({
                                     index: 0,
-                                    routes: [{name: 'Login'}],
+                                    routes: [{name: 'HomesScreen'}],
                                 });
                             }
                         } catch (error) {
