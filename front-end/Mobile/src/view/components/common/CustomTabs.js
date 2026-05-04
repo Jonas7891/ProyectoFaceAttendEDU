@@ -72,7 +72,7 @@ export default function CustomTabs({ onChange, userRole, onLogout }) {
   const getScreenName = (tabIndex) => {
     switch (tabIndex) {
       case 0: return screens.home;
-      case 1: return currentUserRole === 'admin'
+      case 1: return currentUserRole === 'Administrador'
           ? NEWS_screens.admin
           : NEWS_screens.student;
       case 2: return screens.DisplayingAttendance;

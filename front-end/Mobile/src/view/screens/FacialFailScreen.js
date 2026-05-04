@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from 'react';
 import {
     Text,
     View,
@@ -9,66 +9,48 @@ import {
     Platform,
     TouchableWithoutFeedback,
     Keyboard,
-} from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { useTranslation } from "react-i18next";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+} from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import { useTheme } from '../components/common/ThemeContext';
-import PrimaryButton from "../components/auth/PrimaryButton";
-import { QuestionnaireModal } from "../components/common/QuestionnaireModal";
-import { FacialUpdateModal } from "../components/common/FacialUpdateModal";
-import CustomLogo from "../components/common/logo";
-import { saveLanguageForRole } from '../components/common/languageByRole';
-import LanguageSelector from '../components/common/LanguageSelector';
-import styles from "./Style";
+import PrimaryButton from '../components/auth/PrimaryButton';
+import { QuestionnaireModal } from '../components/common/QuestionnaireModal';
+import { FacialUpdateModal } from '../components/common/FacialUpdateModal';
+import CustomLogo from '../components/common/logo';
+import styles from './Style';
+import { useFacialFailViewModel } from '../../viewmodels/useFacialFailScreenViewModel';
 
 export default function FacialFail() {
-    const navigation = useNavigation();
-    const { t, i18n } = useTranslation();
-    const { colors, loadThemeForRole } = useTheme();
+    const { t } = useTranslation();
+    const { colors } = useTheme();
     const refreshKey = useLanguageRefresh();
-    const [userRole, setUserRole] = useState(null);
-    const [showQuestionnaire, setShowQuestionnaire] = useState(false);
-    const [showFacialUpdate, setShowFacialUpdate] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const [updateKey, setUpdateKey] = useState(0);
-    const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
 
-    useEffect(() => {
-        const init = async () => {
-            const role = await AsyncStorage.getItem('userRole');
-            setUserRole(role);
-            await loadThemeForRole(role);
-        };
-        init();
-
-        const handleLanguageChanged = (lng) => {
-            setCurrentLanguage(lng);
-            setUpdateKey(prev => prev + 1);
-        };
-
-        setCurrentLanguage(i18n.language);
-        i18n.on('languageChanged', handleLanguageChanged);
-
-        return () => {
-            i18n.off('languageChanged', handleLanguageChanged);
-        };
-    }, []);
-
-    const handleBack = () => navigation.goBack();
+    const {
+        updateKey,
+        showQuestionnaire,
+        showFacialUpdate,
+        handleBack,
+        openQuestionnaire,
+        closeQuestionnaire,
+        openFacialUpdate,
+        closeFacialUpdate,
+        handleQuestionnaireSuccess,
+        handleFacialUpdateSuccess,
+    } = useFacialFailViewModel();
 
     return (
-        <SafeAreaView style={[styles.safeAreaFacialFail, { backgroundColor: colors.background }]} key={`${refreshKey}-${updateKey}`}>
-            <ScrollView contentContainerstyle={styles.scrollContent}>
+        <SafeAreaView
+            style={[styles.safeAreaFacialFail, { backgroundColor: colors.background }]}
+            key={`${refreshKey}-${updateKey}`}
+        >
+            <ScrollView contentContainerStyle={styles.scrollContent}>
                 <KeyboardAvoidingView
-                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                     style={styles.keyboardview}
-                    keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+                    keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
                 >
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                         <View style={styles.container} marginHorizontal={10}>
-
                             <View style={styles.headerContainer}>
                                 <Text style={[styles.mainTitle, { color: colors.text }]}>
                                     {t('facialFail.title')}
@@ -85,6 +67,7 @@ export default function FacialFail() {
                                 {t('facialFail.subtitle')}
                             </Text>
 
+                            {/* Tarjeta de Cuestionario */}
                             <TouchableOpacity
                                 style={[
                                     styles.optionCard,
@@ -92,9 +75,9 @@ export default function FacialFail() {
                                         backgroundColor: colors.card,
                                         borderColor: colors.cardBorder,
                                         borderWidth: 1,
-                                    }
+                                    },
                                 ]}
-                                onPress={() => setShowQuestionnaire(true)}
+                                onPress={openQuestionnaire}
                                 activeOpacity={0.7}
                             >
                                 <Text style={[styles.optionTitle, { color: colors.text }]}>
@@ -105,6 +88,7 @@ export default function FacialFail() {
                                 </Text>
                             </TouchableOpacity>
 
+                            {/* Tarjeta de Actualización Facial */}
                             <TouchableOpacity
                                 style={[
                                     styles.optionCard,
@@ -112,9 +96,9 @@ export default function FacialFail() {
                                         backgroundColor: colors.card,
                                         borderColor: colors.cardBorder,
                                         borderWidth: 1,
-                                    }
+                                    },
                                 ]}
-                                onPress={() => setShowFacialUpdate(true)}
+                                onPress={openFacialUpdate}
                                 activeOpacity={0.7}
                             >
                                 <Text style={[styles.optionTitle, { color: colors.text }]}>
@@ -151,16 +135,17 @@ export default function FacialFail() {
                 </KeyboardAvoidingView>
             </ScrollView>
 
+            {/* Modales */}
             <QuestionnaireModal
                 visible={showQuestionnaire}
-                onClose={() => setShowQuestionnaire(false)}
-                onSuccess={() => console.log("Cuestionario completado")}
+                onClose={closeQuestionnaire}
+                onSuccess={handleQuestionnaireSuccess}
             />
 
             <FacialUpdateModal
                 visible={showFacialUpdate}
-                onClose={() => setShowFacialUpdate(false)}
-                onSuccess={() => console.log("Parámetros actualizados")}
+                onClose={closeFacialUpdate}
+                onSuccess={handleFacialUpdateSuccess}
             />
         </SafeAreaView>
     );

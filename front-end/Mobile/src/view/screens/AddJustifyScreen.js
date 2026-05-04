@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from 'react';
 import {
   Text,
   View,
@@ -6,256 +6,196 @@ import {
   KeyboardAvoidingView,
   TouchableOpacity,
   Platform,
-  Image,
   ScrollView,
   TextInput,
-  Alert,
-} from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { useTranslation } from "react-i18next";
-import PrimaryButton from "../components/auth/PrimaryButton";
-import Separador from "../components/common/Separador";
-import styles from "./Style";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { saveLanguageForRole } from '../components/common/LanguageSelector';
-
-import { useTheme } from "../components/common/ThemeContext";
+} from 'react-native';
+import { useTranslation } from 'react-i18next';
+import PrimaryButton from '../components/auth/PrimaryButton';
+import Separador from '../components/common/Separador';
+import styles from './Style';
+import { useTheme } from '../components/common/ThemeContext';
 import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
+import { useAddJustificationViewModel } from '../../viewmodels/useAddJustifyViewModel';
 
 export default function AddJustification() {
-  const navigation = useNavigation();
-  const { t, i18n } = useTranslation();
-  const { colors, theme } = useTheme();
-
+  const { t } = useTranslation();
+  const { colors } = useTheme();
   const refreshKey = useLanguageRefresh();
-  const [justificationType, setJustificationType] = useState("inasistencia");
-  const [description, setDescription] = useState("");
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [selectedLanguage, setSelectedLanguage] = useState(i18n.language);
-  const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
-  const [updateKey, setUpdateKey] = useState(0);
-  const handleLanguageChange = (newLang) => setSelectedLanguage(newLang);
 
-  useEffect(() => {
-    const handleLanguageChanged = (lng) => {
-      setCurrentLanguage(lng);
-      setUpdateKey(prev => prev + 1);
-    };
-
-    setCurrentLanguage(i18n.language);
-    i18n.on('languageChanged', handleLanguageChanged);
-
-    return () => {
-      i18n.off('languageChanged', handleLanguageChanged);
-    };
-  }, []);
-
-  const handleBack = () => navigation.goBack();
-
-  const handleSubmit = async () => {
-    if (!description.trim()) {
-      Alert.alert(t('common.error'), t('justify.enterReason'));
-      return;
-    }
-
-    if (!date) {
-      Alert.alert(t('common.error'), t('justify.selectDate'));
-      return;
-    }
-
-    if (justificationType === "retardo" && !time) {
-      Alert.alert(t('common.error'), t('justify.missingTimeError'));
-      return;
-    }
-
-    if (!selectedFile) {
-      Alert.alert(t('common.error'), t('justify.missingAttachmentError'));
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      Alert.alert(t('common.success'), t('justify.successMessage'), [
-        { text: "OK", onPress: () => navigation.goBack() }
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // ViewModel
+  const {
+    justificationType,
+    setJustificationType,
+    description,
+    setDescription,
+    date,
+    setDate,
+    time,
+    setTime,
+    isLoading,
+    updateKey,
+    handleBack,
+    handleSubmit,
+  } = useAddJustificationViewModel();
 
   return (
-    <SafeAreaView
-      style={[styles.safeAreaWhite, { backgroundColor: colors.background }]}
-      key={`${refreshKey}-${updateKey}`}
-    >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardview}
+      <SafeAreaView
+          style={[styles.safeAreaWhite, { backgroundColor: colors.background }]}
+          key={`${refreshKey}-${updateKey}`}
       >
-        <ScrollView
-          style={styles.ScrollView}
-          contentContainerstyle={styles.ScrollViewContent}
-          showsVerticalScrollIndicator={false}
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.keyboardview}
         >
-          <View style={styles.containerAddJustification}>
+          <ScrollView
+              style={styles.ScrollView}
+              contentContainerStyle={styles.ScrollViewContent}
+              showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.containerAddJustification}>
+              <Text style={[styles.mainTitleAddJustification, { color: colors.text }]}>
+                {t('justify.title')}
+              </Text>
 
+              <Text style={[styles.descriptionText, { color: colors.textSecondary }]}>
+                {t('justify.addAbsence')}
+              </Text>
 
-            <Text style={[styles.mainTitleAddJustification, { color: colors.text }]}>
-              {t('justify.title')}
-            </Text>
+              <Separador />
 
-            <Text style={[styles.descriptionText, { color: colors.textSecondary }]}>
-              {t('justify.addAbsence')}
-            </Text>
+              <Text style={[styles.inputLabel, { color: colors.text }]}>
+                {t('justify.selectDate')}
+              </Text>
 
-            <Separador />
+              <View style={styles.typeSelector}>
+                {['inasistencia', 'retardo'].map(type => (
+                    <TouchableOpacity
+                        key={type}
+                        style={[
+                          styles.typeButton,
+                          {
+                            backgroundColor:
+                                justificationType === type ? colors.primary : colors.card,
+                            borderColor: colors.border,
+                          },
+                        ]}
+                        onPress={() => setJustificationType(type)}
+                    >
+                      <Text
+                          style={[
+                            styles.typeButtonText,
+                            {
+                              color: justificationType === type ? '#fff' : colors.text,
+                            },
+                          ]}
+                      >
+                        {type === 'inasistencia'
+                            ? t('justify.absenceType')
+                            : t('justify.delayType')}
+                      </Text>
+                    </TouchableOpacity>
+                ))}
+              </View>
 
-            <Text style={[styles.inputLabel, { color: colors.text }]}>
-              {t('justify.selectDate')}
-            </Text>
-
-            <View style={styles.typeSelector}>
-              {["inasistencia", "retardo"].map(type => (
-                <TouchableOpacity
-                  key={type}
-                  style={[
-                    styles.typeButton,
-                    {
-                      backgroundColor:
-                        justificationType === type
-                          ? colors.primary
-                          : colors.card,
-                      borderColor: colors.border
-                    }
-                  ]}
-                  onPress={() => setJustificationType(type)}
-                >
-                  <Text
-                    style={[
-                      styles.typeButtonText,
-                      {
-                        color:
-                          justificationType === type
-                            ? "#fff"
-                            : colors.text
-                      }
-                    ]}
-                  >
-                    {type === "inasistencia"
-                      ? t('justify.absenceType')
-                      : t('justify.delayType')}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <Text style={[styles.inputLabel, { color: colors.text }]}>
-              {t('justify.dateLabel')}
-            </Text>
-
-            <TextInput
-              style={[
-                styles.textInput,
-                {
-                  backgroundColor: colors.inputBackground,
-                  color: colors.text,
-                  borderColor: colors.border
-                }
-              ]}
-              placeholder={t('justify.dateFormat')}
-              placeholderTextColor={colors.textMuted}
-              value={date}
-              onChangeText={setDate}
-            />
-
-            {justificationType === "retardo" && (
-              <>
-                <Text style={[styles.inputLabel, { color: colors.text }]}>
-                  {t('justify.timeLabel')}
-                </Text>
-
-                <TextInput
+              <Text style={[styles.inputLabel, { color: colors.text }]}>
+                {t('justify.dateLabel')}
+              </Text>
+              <TextInput
                   style={[
                     styles.textInput,
                     {
                       backgroundColor: colors.inputBackground,
                       color: colors.text,
-                      borderColor: colors.border
-                    }
+                      borderColor: colors.border,
+                    },
                   ]}
-                  placeholder={t('justify.timeFormat')}
+                  placeholder={t('justify.dateFormat')}
                   placeholderTextColor={colors.textMuted}
-                  value={time}
-                  onChangeText={setTime}
-                />
-              </>
-            )}
-
-            <Text style={[styles.inputLabel, { color: colors.text }]}>
-              {t('justify.descriptionLabel')}
-            </Text>
-
-            <TextInput
-              style={[
-                styles.textInput,
-                styles.textArea,
-                {
-                  backgroundColor: colors.inputBackground,
-                  color: colors.text,
-                  borderColor: colors.border
-                }
-              ]}
-              placeholder={t('justify.descriptionPlaceholder')}
-              placeholderTextColor={colors.textMuted}
-              value={description}
-              onChangeText={setDescription}
-              multiline
-            />
-
-
-            <Text style={[styles.inputLabel, { color: colors.text }]}>
-              {t('justify.attachDocument')}
-            </Text>
-
-            <TouchableOpacity
-              style={[
-                styles.uploadButton,
-                { backgroundColor: colors.primary }
-              ]}
-            >
-              <Text style={[styles.uploadButtonText, { color: "#fff" }]}>
-                {t('justify.selectFile')}
-              </Text>
-            </TouchableOpacity>
-
-            <Text style={[styles.supportedFormats, { color: colors.textMuted }]}>
-              {t('justify.supportedFormats')}
-            </Text>
-
-            <View style={styles.spacer} />
-
-            <View style={styles.buttonContainer}>
-              <PrimaryButton
-                title={t('justify.upload')}
-                onPress={handleSubmit}
-                isLoading={isLoading}
+                  value={date}
+                  onChangeText={setDate}
               />
-            </View>
 
-            <TouchableOpacity onPress={handleBack} style={styles.secondaryButton}>
-              <Text style={[styles.secondaryButtonText, { color: colors.textSecondary }]}>
-                {t('common.back')}
+              {justificationType === 'retardo' && (
+                  <>
+                    <Text style={[styles.inputLabel, { color: colors.text }]}>
+                      {t('justify.timeLabel')}
+                    </Text>
+                    <TextInput
+                        style={[
+                          styles.textInput,
+                          {
+                            backgroundColor: colors.inputBackground,
+                            color: colors.text,
+                            borderColor: colors.border,
+                          },
+                        ]}
+                        placeholder={t('justify.timeFormat')}
+                        placeholderTextColor={colors.textMuted}
+                        value={time}
+                        onChangeText={setTime}
+                    />
+                  </>
+              )}
+
+              <Text style={[styles.inputLabel, { color: colors.text }]}>
+                {t('justify.descriptionLabel')}
               </Text>
-            </TouchableOpacity>
+              <TextInput
+                  style={[
+                    styles.textInput,
+                    styles.textArea,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      color: colors.text,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                  placeholder={t('justify.descriptionPlaceholder')}
+                  placeholderTextColor={colors.textMuted}
+                  value={description}
+                  onChangeText={setDescription}
+                  multiline
+              />
 
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+              <Text style={[styles.inputLabel, { color: colors.text }]}>
+                {t('justify.attachDocument')}
+              </Text>
+
+              {/* Botón de adjuntar archivo (mock) */}
+              <TouchableOpacity
+                  style={[styles.uploadButton, { backgroundColor: colors.primary }]}
+                  onPress={() => {
+                    // Aquí en un futuro podrías abrir el selector de archivos
+                    // y setear selectedFile. Por ahora queda como demostración.
+                  }}
+              >
+                <Text style={[styles.uploadButtonText, { color: '#fff' }]}>
+                  {t('justify.selectFile')}
+                </Text>
+              </TouchableOpacity>
+
+              <Text style={[styles.supportedFormats, { color: colors.textMuted }]}>
+                {t('justify.supportedFormats')}
+              </Text>
+
+              <View style={styles.spacer} />
+
+              <View style={styles.buttonContainer}>
+                <PrimaryButton
+                    title={t('justify.upload')}
+                    onPress={handleSubmit}
+                    isLoading={isLoading}
+                />
+              </View>
+
+              <TouchableOpacity onPress={handleBack} style={styles.secondaryButton}>
+                <Text style={[styles.secondaryButtonText, { color: colors.textSecondary }]}>
+                  {t('common.back')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
   );
 }
