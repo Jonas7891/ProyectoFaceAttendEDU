@@ -53,11 +53,13 @@ export function useLoginViewModel({ onLogin }) {
             const loginRequest = new LoginRequest(email, password);
 
             // Llamada al servicio
-            const responseData = await login(loginRequest.toApi());
+            const responseData = /*await*/ login(loginRequest.toApi());
             const authResponse = AuthResponse.fromApi(responseData);  // { token, user }
 
+            console.log(authResponse);
             // Guardar token con expiración si viene
             await saveToken(authResponse.token, authResponse.user?.expiresIn);
+            console.log("rolesss: ", authResponse.user);
 
             // Guardar rol (ajusta según la estructura de tu user)
             const role = getHighestRole(authResponse.user.roles);

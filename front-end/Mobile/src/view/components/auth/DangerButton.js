@@ -41,7 +41,7 @@ export default function DangerButton({
                                 console.warn('onLogout no está disponible en DangerButton');
                                 navigation.reset({
                                     index: 0,
-                                    routes: [{name: 'Login'}],
+                                    routes: [{name: 'HomesScreen'}],
                                 });
                             }
                         } catch (error) {
