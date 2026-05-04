@@ -56,16 +56,15 @@ export function useLoginViewModel({ onLogin }) {
             const responseData = /*await*/ login(loginRequest.toApi());
             const authResponse = AuthResponse.fromApi(responseData);  // { token, user }
 
-            console.log(authResponse);
             // Guardar token con expiración si viene
             await saveToken(authResponse.token, authResponse.user?.expiresIn);
-            console.log("rolesss: ", authResponse.user);
 
             // Guardar rol (ajusta según la estructura de tu user)
             const role = getHighestRole(authResponse.user.roles);
             console.log("Roles: ", authResponse.user.roles);
             console.log('Rol seleccionado:', role);
             await AsyncStorage.setItem("userRole", role);
+            console.log("Rol almacenado: ", role);
             await AsyncStorage.setItem("userEmail", email);
 
             // Aplicar tema e idioma según el rol
