@@ -111,12 +111,11 @@ export default function MenuScreen({ onLogout }) {
                                 onPress={handleFacialFail}
                             />
 
-                            {/* DangerButton adaptado: solo recibe isLoading y onPress;
-                                eliminamos setIsLoading y onLogout porque el ViewModel ya los maneja */}
+                            {/* DangerButton adaptado: recibe onLogout del ViewModel */}
                             <DangerButton
                                 title={isLoading ? t('menu.loggingOut') : t('menu.logout')}
-                                onPress={handleLogout}
-                                isLoading={isLoading}
+                                onLogout={handleLogout}
+                                disabled={isLoading}
                             />
                         </View>
                     </View>
