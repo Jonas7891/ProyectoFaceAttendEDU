@@ -1,20 +1,17 @@
-// viewmodels/useProfileViewModel.js
-import { useState, useEffect, useCallback } from 'react';
-import { Alert } from 'react-native';
-import { useTranslation } from 'react-i18next';
+import {useState, useEffect, useCallback} from 'react';
+import {useTranslation} from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { saveLanguageForRole } from '../view/components/common/languageByRole';
-import { useTheme } from '../view/components/common/ThemeContext';
-import { getUserByEmail } from "../services/UserService";        // tu servicio de usuario
-import { getToken } from "../storage/TokenStorage";   // tu storage de token
-import UserResponse from "../model/AuthResponse";     // tu modelo de response
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
+import {saveLanguageForRole} from '../view/components/common/languageByRole';
+import {useTheme} from '../view/components/common/ThemeContext';
+import {getUserByEmail} from "../services/UserService";
+import {getToken} from "../storage/TokenStorage";
+import UserResponse from "../model/AuthResponse";
 
 export function useProfileViewModel() {
-
     const navigation = useNavigation();
-    const { t, i18n } = useTranslation();
-    const { theme, toggleTheme, loadThemeForRole } = useTheme();
+    const {t, i18n} = useTranslation();
+    const {theme, toggleTheme, loadThemeForRole} = useTheme();
 
     const [userRole, setUserRole] = useState(null);
     const [updateKey, setUpdateKey] = useState(0);
@@ -41,10 +38,11 @@ export function useProfileViewModel() {
             const loadUserData = async () => {
                 try {
                     const email = await AsyncStorage.getItem('userEmail');
-                    setUserInfo(getUserByEmail(email));
+                    const user = getUserByEmail(email);
+                    setUserInfo(user);
 
-                    if (getUserByEmail(email).role) {
-                        await loadThemeForRole(getUserByEmail(email).role);
+                    if (user && user.role) {
+                        await loadThemeForRole(user.role);
                     }
                 } catch (error) {
                     console.error('Error cargando datos de usuario:', error);
@@ -56,33 +54,22 @@ export function useProfileViewModel() {
 
     const handleBack = useCallback(() => navigation.goBack(), [navigation]);
 
-    const handleLogout = useCallback(() => {
-        Alert.alert(
-            t('profile.logout'),
-            t('profile.logoutConfirm'),
-            [
-                { text: t('common.cancel'), style: 'cancel' },
-                {
-                    text: t('common.accept'),
-                    style: 'destructive',
-                    onPress: async () => {
-                        setIsLoading(true);
-                        try {
-                            if (userRole) {
-                                await saveLanguageForRole(userRole, i18n.language);
-                            }
-                            await AsyncStorage.removeItem('userRole');
-                            navigation.navigate('HomesScreen');
-                        } catch (error) {
-                            console.error('Error en logout:', error);
-                        } finally {
-                            setIsLoading(false);
-                        }
-                    },
-                },
-            ]
-        );
-    }, [userRole, i18n.language, navigation, t]);
+    // Acción real de cerrar sesión (sin confirmación)
+    const performLogout = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            if (userRole) {
+                await saveLanguageForRole(userRole, i18n.language);
+            }
+            await AsyncStorage.removeItem('userRole');
+            navigation.navigate('HomesScreen');
+        } catch (error) {
+            console.error('Error en logout:', error);
+            throw error; // La pantalla mostrará el error con CustomAlert
+        } finally {
+            setIsLoading(false);
+        }
+    }, [userRole, i18n.language, navigation]);
 
     return {
         userRole,
@@ -90,7 +77,7 @@ export function useProfileViewModel() {
         updateKey,
         isLoading,
         handleBack,
-        handleLogout,
+        performLogout,      // La pantalla debe confirmar antes de llamar a esto
         toggleTheme,
     };
 }

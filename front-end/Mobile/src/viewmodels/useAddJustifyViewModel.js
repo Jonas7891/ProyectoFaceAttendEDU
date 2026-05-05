@@ -1,12 +1,10 @@
-// viewmodels/useAddJustificationViewModel.js
-import { useState, useEffect } from 'react';
-import { Alert } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useNavigation } from '@react-navigation/native';
+import {useState, useEffect} from 'react';
+import {useTranslation} from 'react-i18next';
+import {useNavigation} from '@react-navigation/native';
 
 export function useAddJustificationViewModel() {
     const navigation = useNavigation();
-    const { t, i18n } = useTranslation();
+    const {t, i18n} = useTranslation();
 
     // Estados del formulario
     const [justificationType, setJustificationType] = useState('inasistencia');
@@ -16,40 +14,64 @@ export function useAddJustificationViewModel() {
     const [date, setDate] = useState('');
     const [time, setTime] = useState('');
 
-    // Estados de idioma (para forzar re-render cuando cambia)
+    const [alertData, setAlertData] = useState({
+        message: null,
+        type: 'warning',
+        timestamp: 0,
+    });
+
+    // Idioma: forzar actualizaciones
     const [updateKey, setUpdateKey] = useState(0);
 
     useEffect(() => {
         const handleLanguageChanged = (lng) => {
             setUpdateKey(prev => prev + 1);
         };
-
         i18n.on('languageChanged', handleLanguageChanged);
         return () => {
             i18n.off('languageChanged', handleLanguageChanged);
         };
     }, [i18n]);
 
+    // Limpiar alerta
+    const clearAlert = () => setAlertData({message: null, type: 'warning', timestamp: 0});
+
     // Navegación hacia atrás
     const handleBack = () => navigation.goBack();
 
-    // Envío del formulario (mock)
+    // Envío del formulario
     const handleSubmit = async () => {
         // Validaciones
         if (!description.trim()) {
-            Alert.alert(t('common.error'), t('justify.enterReason'));
+            setAlertData({
+                message: t('justify.enterReason'),
+                type: 'warning',
+                timestamp: Date.now(),
+            });
             return;
         }
         if (!date) {
-            Alert.alert(t('common.error'), t('justify.selectDate'));
+            setAlertData({
+                message: t('justify.selectDate'),
+                type: 'warning',
+                timestamp: Date.now(),
+            });
             return;
         }
         if (justificationType === 'retardo' && !time) {
-            Alert.alert(t('common.error'), t('justify.missingTimeError'));
+            setAlertData({
+                message: t('justify.missingTimeError'),
+                type: 'warning',
+                timestamp: Date.now(),
+            });
             return;
         }
         if (!selectedFile) {
-            Alert.alert(t('common.error'), t('justify.missingAttachmentError'));
+            setAlertData({
+                message: t('justify.missingAttachmentError'),
+                type: 'warning',
+                timestamp: Date.now(),
+            });
             return;
         }
 
@@ -57,18 +79,24 @@ export function useAddJustificationViewModel() {
         try {
             // Simulación de envío
             await new Promise(resolve => setTimeout(resolve, 1500));
-            Alert.alert(t('common.success'), t('justify.successMessage'), [
-                { text: 'OK', onPress: () => navigation.goBack() }
-            ]);
+            setAlertData({
+                message: t('justify.successMessage'),
+                type: 'success',
+                timestamp: Date.now(),
+                // La pantalla detectará el tipo 'success' y cerrará después
+            });
         } catch (error) {
-            Alert.alert(t('common.error'), t('justify.submitError'));
+            setAlertData({
+                message: t('justify.submitError'),
+                type: 'error',
+                timestamp: Date.now(),
+            });
         } finally {
             setIsLoading(false);
         }
     };
 
     return {
-        // Estados del formulario
         justificationType,
         setJustificationType,
         description,
@@ -80,10 +108,11 @@ export function useAddJustificationViewModel() {
         time,
         setTime,
         isLoading,
-        updateKey, // para refrescar la vista cuando cambie el idioma
-
-        // Acciones
+        updateKey,
         handleBack,
         handleSubmit,
+        // Manejo de alertas
+        alertData,
+        clearAlert,
     };
 }
