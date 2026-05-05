@@ -109,6 +109,7 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
         { id: 2, title: t('dashboard.employeeManagement'), description: t('dashboard.employeeManagementDesc'), color: '#2196F3', screen: 'GestionEmpleados' },
         { id: 3, title: t('dashboard.reports'), description: t('dashboard.reportsDesc'), color: '#FF9800', screen: 'Reportes' },
         { id: 4, title: t('dashboard.facialConfig'), description: t('dashboard.facialConfigDesc'), color: '#9C27B0', screen: 'ConfiguracionFacial' },
+        { id: 5, title: t('dashboard.manageUsers', 'Gestión Usuarios'), description: t('dashboard.manageUsersDesc', 'Agregar, editar y eliminar estudiantes y profesores'), color: '#E91E63', screen: 'ManageUsersScreen' },
     ];
 
     const menuAccionesEstudiante = [

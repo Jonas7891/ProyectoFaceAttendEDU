@@ -15,6 +15,7 @@ import LanguageSettingsScreen from '../view/screens/LanguageSettingsScreen';
 import AddValidJustificationScreen from '../view/screens/AddValidJustificationScreen';
 import ValidJustificationsScreen from '../view/screens/ConsultJustifyScreen';
 import ProfileScreen from '../view/screens/ProfileScreen';
+import ManageUsersScreen from '../view/screens/ManageUsersScreen';
 
 const Stack = createStackNavigator();
 
@@ -133,6 +134,15 @@ export default function App() {
                         <Stack.Screen name="AddValidJustification" component={AddValidJustificationScreen}/>
                         <Stack.Screen name="ValidJustifications" component={ValidJustificationsScreen}/>
                         <Stack.Screen name="Profile" component={ProfileScreen}/>
+                        <Stack.Screen name="ManageUsersScreen">
+                            {props => (
+                                <ManageUsersScreen
+                                    {...props}
+                                    userRole={userRole}
+                                    onLogout={handleLogout}
+                                />
+                            )}
+                        </Stack.Screen>
                     </>
                 )}
             </Stack.Navigator>
