@@ -72,9 +72,9 @@ export default function ProfileScreen() {
                             {t('profile.personalInfo')}
                         </Text>
                         <InfoField label={t('profile.email')} value={userInfo.email} />
-                        <InfoField label={t('profile.employeeId')} value={userInfo.employeeId} />
+                        <InfoField label={t('profile.employeeId')} value={userInfo.identification} />
                         <InfoField label={t('profile.joinDate')} value={userInfo.joinDate} />
-                        <InfoField label={t('profile.school')} value={userInfo.colegio} />
+                        <InfoField label={t('profile.school')} value={userInfo.school} />
                     </View>
 
                     <View style={{ marginTop: 25 }}>

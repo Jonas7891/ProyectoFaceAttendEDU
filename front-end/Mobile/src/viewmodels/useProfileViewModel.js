@@ -6,27 +6,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { saveLanguageForRole } from '../view/components/common/languageByRole';
 import { useTheme } from '../view/components/common/ThemeContext';
-
-const mockUserData = {
-    admin: {
-        name: 'Jonattan Rizo',
-        email: 'admin@empresa.com',
-        role: 'Administrador',
-        joinDate: '15/01/2024',
-        employeeId: 'ADM-001',
-        colegio: 'Instituto Tecnico Superior Neiva',
-    },
-    student: {
-        name: 'The Jonas',
-        email: 'estudiante@empresa.com',
-        role: 'Estudiante',
-        joinDate: '20/03/2024',
-        employeeId: 'EST-042',
-        colegio: 'Instituto Tecnico Superior Neiva',
-    },
-};
+import { getUserByEmail } from "../services/UserService";        // tu servicio de usuario
+import { getToken } from "../storage/TokenStorage";   // tu storage de token
+import UserResponse from "../model/AuthResponse";     // tu modelo de response
 
 export function useProfileViewModel() {
+
     const navigation = useNavigation();
     const { t, i18n } = useTranslation();
     const { theme, toggleTheme, loadThemeForRole } = useTheme();
@@ -55,15 +40,11 @@ export function useProfileViewModel() {
         useCallback(() => {
             const loadUserData = async () => {
                 try {
-                    const role = await AsyncStorage.getItem('userRole');
-                    setUserRole(role);
-                    if (role === 'Administrador') {
-                        setUserInfo(mockUserData.admin);
-                    } else {
-                        setUserInfo(mockUserData.student);
-                    }
-                    if (role) {
-                        await loadThemeForRole(role);
+                    const email = await AsyncStorage.getItem('userEmail');
+                    setUserInfo(getUserByEmail(email));
+
+                    if (getUserByEmail(email).role) {
+                        await loadThemeForRole(getUserByEmail(email).role);
                     }
                 } catch (error) {
                     console.error('Error cargando datos de usuario:', error);
