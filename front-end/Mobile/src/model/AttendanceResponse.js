@@ -1,4 +1,4 @@
-export default class AuthResponse {
+export default class AttendanceResponse {
     constructor(studentName, courseName, iotDeviceName, date, time, status) {
         this.studentName = studentName;
         this.courseName = courseName;
@@ -9,7 +9,7 @@ export default class AuthResponse {
     }
 
     static fromApi(data) {
-        return new AuthResponse(
+        return new AttendanceResponse(
             data.studentName,
             data.courseName,
             data.iotDeviceName,
