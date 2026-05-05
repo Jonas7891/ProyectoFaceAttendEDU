@@ -12,6 +12,7 @@ import AuthResponse from "../model/AuthResponse";
 export function useLoginViewModel({ onLogin }) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [terms, setTerms] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -30,6 +31,12 @@ export function useLoginViewModel({ onLogin }) {
         if (!email.trim() || !password.trim()) {
             setErrorWithTimestamp(
                 t("login.invalidCredentials", { defaultValue: "Credenciales incorrectas" })
+            );
+            return false;
+        }
+        if (!terms) {
+            setErrorWithTimestamp(
+                t("Acepta los términos y condiciones", { defaultValue: "Debes aceptar los términos y condiciones" })
             );
             return false;
         }
@@ -93,11 +100,13 @@ export function useLoginViewModel({ onLogin }) {
     return {
         email,
         password,
+        terms,
         isLoading,
         error,
         errorTimestamp,
         setEmail,
         setPassword,
+        setTerms,
         submit,
         clearError,
     };

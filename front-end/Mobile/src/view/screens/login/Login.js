@@ -41,11 +41,13 @@ export default function HomesScreen({onLogin}) {
     const {
         email,
         password,
+        terms,
         isLoading,
         error,
         errorTimestamp,
         setEmail,
         setPassword,
+        setTerms,
         submit,
     } = useLoginViewModel({ onLogin });
 
@@ -129,9 +131,12 @@ export default function HomesScreen({onLogin}) {
                                         />
 
                                         <View style={styles.rowContainer}>
-                                            <SelectableButton selectable={true} initialSelected={false}/>
+                                            <SelectableButton
+                                                checked={terms}
+                                                onCheckChange={setTerms}
+                                            />
                                             <TouchableOpacity
-                                                onPress={() => setIsTerminosModalVisible(true)}
+                                                onPress={() => {setIsTerminosModalVisible(true);}}
                                                 activeOpacity={0.7}
                                             >
                                                 <Text style={[styles.terminosText, {color: colors.primary}]}>
