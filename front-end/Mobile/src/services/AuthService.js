@@ -15,8 +15,6 @@ export const login = (data) =>
 import { auths } from "./constants/auths";
 
 export const login = (data) => {
-    console.log("Correo: ", data.email);
-    console.log("Contraseña: ", data.password);
 
     const auth = auths[data.email];
 

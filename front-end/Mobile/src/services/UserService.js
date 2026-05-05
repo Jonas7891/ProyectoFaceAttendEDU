@@ -3,7 +3,7 @@ import { GET, POST, PUT, DELETE } from "./constants/httpMethod";
 import { loginUrl } from "./constants/urls";
 
 /*
-export const login = (data) =>
+export const getUserByEmail = (data) =>
     request({
         method: POST,
         url: loginUrl,
