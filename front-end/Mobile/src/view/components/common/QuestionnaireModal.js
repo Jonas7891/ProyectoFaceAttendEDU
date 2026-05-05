@@ -6,7 +6,6 @@ import {
     TouchableOpacity,
     TouchableWithoutFeedback,
     Keyboard,
-    Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from './ThemeContext';
@@ -15,6 +14,8 @@ import { RHSelector } from './RHSelector';
 import { QuestionInput } from './QuestionInput';
 import { ProgressBar } from './ProgressBar';
 import stylescommon from './style/Style';
+import CustomAlert from './CustomAlert';
+import { useCustomAlert } from './useCustomAlert';
 
 export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
     const { t } = useTranslation();
@@ -24,6 +25,8 @@ export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
     const [selectedDocument, setSelectedDocument] = useState(null);
     const [selectedRH, setSelectedRH] = useState(null);
     const inputRef = useRef(null);
+
+    const { alertConfig, hideAlert, showWarning, showAlert } = useCustomAlert();
 
     const questions = [
         {
@@ -84,62 +87,67 @@ export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
         }
     };
 
-    const validateCurrentStep = () => {
-        const currentQuestion = questions[step - 1];
-
-        if (currentQuestion.type === "selector") {
-            if (currentQuestion.selectorType === "document") {
-                if (!selectedDocument) {
-                    Alert.alert("Campo requerido", "Por favor selecciona tu tipo de documento");
-                    return false;
-                }
-            } else if (currentQuestion.selectorType === "rh") {
-                if (!selectedRH) {
-                    Alert.alert("Campo requerido", "Por favor selecciona tu tipo de RH");
-                    return false;
-                }
-            }
-        } else {
-            if (!answers[currentQuestion.id]) {
-                Alert.alert("Campo requerido", "Por favor responde la pregunta antes de continuar");
-                return false;
-            }
-        }
-        return true;
-    };
-
     const handleNext = () => {
         dismissKeyboard();
 
-        if (!validateCurrentStep()) {
-            return;
+        const currentQuestion = questions[step - 1];
+
+        // Validación con alertas personalizadas
+        if (currentQuestion.type === "selector") {
+            if (currentQuestion.selectorType === "document" && !selectedDocument) {
+                showWarning(
+                    t('common.requiredField', { defaultValue: 'Campo requerido' }),
+                    t('questionnaire.selectDocument', { defaultValue: 'Por favor selecciona tu tipo de documento' }),
+                    [{ text: 'OK', onPress: hideAlert }]
+                );
+                return;
+            }
+            if (currentQuestion.selectorType === "rh" && !selectedRH) {
+                showWarning(
+                    t('common.requiredField', { defaultValue: 'Campo requerido' }),
+                    t('questionnaire.selectRH', { defaultValue: 'Por favor selecciona tu tipo de RH' }),
+                    [{ text: 'OK', onPress: hideAlert }]
+                );
+                return;
+            }
+        } else {
+            if (!answers[currentQuestion.id]) {
+                showWarning(
+                    t('common.requiredField', { defaultValue: 'Campo requerido' }),
+                    t('questionnaire.answerRequired', { defaultValue: 'Por favor responde la pregunta antes de continuar' }),
+                    [{ text: 'OK', onPress: hideAlert }]
+                );
+                return;
+            }
         }
 
         if (step < questions.length) {
             setStep(step + 1);
         } else {
-            const documentoInfo = answers.documento?.label || "No seleccionado";
-            const numeroDocumento = answers[2] || "No proporcionado";
-            const rhInfo = answers.tipoRH?.label || "No seleccionado";
-            const familiarDocumento = answers[4] || "No proporcionado";
+            const documentoInfo = answers.documento?.label || t('common.notSelected', { defaultValue: 'No seleccionado' });
+            const numeroDocumento = answers[2] || t('common.notProvided', { defaultValue: 'No proporcionado' });
+            const rhInfo = answers.tipoRH?.label || t('common.notSelected', { defaultValue: 'No seleccionado' });
+            const familiarDocumento = answers[4] || t('common.notProvided', { defaultValue: 'No proporcionado' });
 
-            Alert.alert(
-                "Cuestionario Completado",
-                `Documento: ${documentoInfo}\nNúmero: ${numeroDocumento}\nTipo RH: ${rhInfo}\nDocumento Familiar: ${familiarDocumento}\n\nTus respuestas han sido enviadas. En breve recibirás asistencia.`,
-                [
+            showAlert({
+                title: t('questionnaire.completed', { defaultValue: 'Cuestionario Completado' }),
+                message: `${t('questionnaire.document')}: ${documentoInfo}\n${t('questionnaire.number')}: ${numeroDocumento}\n${t('questionnaire.rhType')}: ${rhInfo}\n${t('questionnaire.relativeDocument')}: ${familiarDocumento}\n\n${t('questionnaire.successMessage', { defaultValue: 'Tus respuestas han sido enviadas. En breve recibirás asistencia.' })}`,
+                type: 'success',
+                buttons: [
                     {
-                        text: "Aceptar",
+                        text: t('common.accept', { defaultValue: 'Aceptar' }),
                         onPress: () => {
+                            hideAlert();
                             onSuccess();
                             onClose();
                             setStep(1);
                             setAnswers({});
                             setSelectedDocument(null);
                             setSelectedRH(null);
-                        }
-                    }
-                ]
-            );
+                        },
+                    },
+                ],
+            });
         }
     };
 
@@ -179,14 +187,14 @@ export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
         if (currentQuestion.type === "selector") {
             if (currentQuestion.selectorType === "document") {
                 return (
-                    <DocumentSelector 
+                    <DocumentSelector
                         selectedDocument={selectedDocument}
                         onSelect={handleDocumentSelect}
                     />
                 );
             } else if (currentQuestion.selectorType === "rh") {
                 return (
-                    <RHSelector 
+                    <RHSelector
                         selectedRH={selectedRH}
                         onSelect={handleRHSelect}
                     />
@@ -207,51 +215,68 @@ export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
     };
 
     return (
-        <Modal
-            visible={visible}
-            animationType="slide"
-            transparent={true}
-            onRequestClose={onClose}
-        >
-            <TouchableWithoutFeedback onPress={onClose}>
-                <View style={[stylescommon.questionnaireModalOverlay, { backgroundColor: colors.modalOverlay }]}>
-                    <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-                        <View style={[stylescommon.questionnaireModalContainer, { backgroundColor: colors.modalBackground }]}>
-                            <Text style={[stylescommon.questionnaireModalTitle, { color: colors.modalText }]}>Cuestionario</Text>
-                            <Text style={[stylescommon.questionnaireQuestion, { color: colors.modalTextSecondary }]}>
-                                Se debe realizar un cuestionario en el que se pregunten por cosas específicas las cuales solo conozca un usuario
-                            </Text>
+        <>
+            <Modal
+                visible={visible}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={onClose}
+            >
+                <TouchableWithoutFeedback onPress={onClose}>
+                    <View style={[stylescommon.questionnaireModalOverlay, { backgroundColor: colors.modalOverlay }]}>
+                        <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                            <View style={[stylescommon.questionnaireModalContainer, { backgroundColor: colors.modalBackground }]}>
+                                <Text style={[stylescommon.questionnaireModalTitle, { color: colors.modalText }]}>
+                                    {t('questionnaire.title', { defaultValue: 'Cuestionario' })}
+                                </Text>
+                                <Text style={[stylescommon.questionnaireQuestion, { color: colors.modalTextSecondary }]}>
+                                    {t('questionnaire.description', { defaultValue: 'Se debe realizar un cuestionario en el que se pregunten por cosas específicas las cuales solo conozca un usuario' })}
+                                </Text>
 
-                            <ProgressBar currentStep={step} totalSteps={questions.length} />
+                                <ProgressBar currentStep={step} totalSteps={questions.length} />
 
-                            <Text style={[stylescommon.questionnaireQuestion, { color: colors.modalText }]}>
-                                {questions[step - 1].question}
-                            </Text>
+                                <Text style={[stylescommon.questionnaireQuestion, { color: colors.modalText }]}>
+                                    {questions[step - 1].question}
+                                </Text>
 
-                            {renderQuestionContent()}
+                                {renderQuestionContent()}
 
-                            <View style={stylescommon.questionnaireButtonsContainer}>
-                                {step > 1 && (
+                                <View style={stylescommon.questionnaireButtonsContainer}>
+                                    {step > 1 && (
+                                        <TouchableOpacity
+                                            style={[stylescommon.questionnaireButton, stylescommon.questionnairePreviousButton, { backgroundColor: colors.modalButtonSecondary, borderColor: colors.modalBorder }]}
+                                            onPress={handlePrevious}
+                                        >
+                                            <Text style={[stylescommon.questionnairePreviousButtonText, { color: colors.modalButtonSecondaryText }]}>
+                                                {t('common.previous', { defaultValue: 'Anterior' })}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    )}
                                     <TouchableOpacity
-                                        style={[stylescommon.questionnaireButton, stylescommon.questionnairePreviousButton, { backgroundColor: colors.modalButtonSecondary, borderColor: colors.modalBorder }]}
-                                        onPress={handlePrevious}
+                                        style={[stylescommon.questionnaireButton, stylescommon.questionnaireNextButton, { backgroundColor: colors.modalButton }]}
+                                        onPress={handleNext}
                                     >
-                                        <Text style={[stylescommon.questionnairePreviousButtonText, { color: colors.modalButtonSecondaryText }]}>Anterior</Text>
+                                        <Text style={[stylescommon.questionnaireNextButtonText, { color: colors.modalButtonText }]}>
+                                            {step === questions.length
+                                                ? t('common.send', { defaultValue: 'Enviar' })
+                                                : t('common.next', { defaultValue: 'Siguiente' })}
+                                        </Text>
                                     </TouchableOpacity>
-                                )}
-                                <TouchableOpacity
-                                    style={[stylescommon.questionnaireButton, stylescommon.questionnaireNextButton, { backgroundColor: colors.modalButton }]}
-                                    onPress={handleNext}
-                                >
-                                    <Text style={[stylescommon.questionnaireNextButtonText, { color: colors.modalButtonText }]}>
-                                        {step === questions.length ? "Enviar" : "Siguiente"}
-                                    </Text>
-                                </TouchableOpacity>
+                                </View>
                             </View>
-                        </View>
-                    </TouchableWithoutFeedback>
-                </View>
-            </TouchableWithoutFeedback>
-        </Modal>
+                        </TouchableWithoutFeedback>
+                    </View>
+                </TouchableWithoutFeedback>
+            </Modal>
+
+            <CustomAlert
+                visible={alertConfig.visible}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                buttons={alertConfig.buttons}
+                type={alertConfig.type}
+                onClose={hideAlert}
+            />
+        </>
     );
 };

@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, { useState, useEffect } from "react";
 import {
     Text,
     View,
@@ -7,21 +7,22 @@ import {
     TextInput,
     ScrollView,
     Platform,
-    Alert,
     KeyboardAvoidingView,
     Modal,
     FlatList,
 } from "react-native";
-import {useTranslation} from "react-i18next";
-import {useNavigation} from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
+import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import PrimaryButton from "../components/auth/PrimaryButton";
-import {useTheme} from "../components/common/ThemeContext";
+import { useTheme } from "../components/common/ThemeContext";
 import styles from "./Style";
-import {useAddValidJustificationViewModel} from "../../viewmodels/useAddValidJustificationViewModel";
+import { useAddValidJustificationViewModel } from "../../viewmodels/useAddValidJustificationViewModel";
+import CustomAlert from "../components/common/CustomAlert";
+import { useCustomAlert } from "../components/common/useCustomAlert";
 
-// ─── Selector desplegable reutilizable ─────────────────────────────────────────
-function DropdownSelector({label, placeholder, value, options, onSelect, colors}) {
+// ─── Selector desplegable reutilizable (sin cambios) ─────────────────────────────
+function DropdownSelector({ label, placeholder, value, options, onSelect, colors }) {
     const [visible, setVisible] = useState(false);
 
     return (
@@ -52,7 +53,7 @@ function DropdownSelector({label, placeholder, value, options, onSelect, colors}
                 >
                     {value || placeholder}
                 </Text>
-                <Text style={{fontSize: 18, color: colors.primary}}>›</Text>
+                <Text style={{ fontSize: 18, color: colors.primary }}>›</Text>
             </TouchableOpacity>
 
             {/* Modal bottom-sheet */}
@@ -66,7 +67,7 @@ function DropdownSelector({label, placeholder, value, options, onSelect, colors}
                 <TouchableOpacity
                     activeOpacity={1}
                     onPress={() => setVisible(false)}
-                    style={{flex: 1, backgroundColor: "rgba(0,0,0,0.45)"}}
+                    style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)" }}
                 />
 
                 {/* Panel inferior */}
@@ -123,7 +124,7 @@ function DropdownSelector({label, placeholder, value, options, onSelect, colors}
                                 }}
                             />
                         )}
-                        renderItem={({item}) => {
+                        renderItem={({ item }) => {
                             const isSelected = value === item.label;
                             return (
                                 <TouchableOpacity
@@ -156,11 +157,11 @@ function DropdownSelector({label, placeholder, value, options, onSelect, colors}
                                             marginRight: 14,
                                         }}
                                     >
-                                        <Text style={{fontSize: 18}}>{item.icon}</Text>
+                                        <Text style={{ fontSize: 18 }}>{item.icon}</Text>
                                     </View>
 
                                     {/* Texto */}
-                                    <View style={{flex: 1}}>
+                                    <View style={{ flex: 1 }}>
                                         <Text
                                             style={{
                                                 fontSize: 15,
@@ -208,8 +209,17 @@ function DropdownSelector({label, placeholder, value, options, onSelect, colors}
 // ─── Pantalla principal ─────────────────────────────────────────────────────────
 export default function AddValidJustificationScreen() {
     const navigation = useNavigation();
-    const {t} = useTranslation();
-    const {colors} = useTheme();
+    const { t } = useTranslation();
+    const { colors } = useTheme();
+
+    // Hook de alerta personalizada
+    const {
+        alertConfig,
+        hideAlert,
+        showError,
+        showWarning,
+        showConfirm,
+    } = useCustomAlert();
 
     const {
         // Estados
@@ -229,214 +239,321 @@ export default function AddValidJustificationScreen() {
         // Acciones
         handleBack,
         handleSave,
+
+        // Manejo de errores (asumimos que el ViewModel expone 'error' y 'clearError')
+        error,
+        clearError,
     } = useAddValidJustificationViewModel();
 
+    // Mostrar errores automáticamente desde el ViewModel
+    useEffect(() => {
+        if (error) {
+            showError(
+                t("common.error", { defaultValue: "Error" }),
+                error,
+                hideAlert
+            );
+        }
+    }, [error]);
+
+    // Validación + confirmación antes de guardar
+    const handleSaveWithValidation = () => {
+        // Limpiar errores previos del ViewModel
+        clearError?.();
+
+        // Validar campos obligatorios
+        if (!category || !type) {
+            showWarning(
+                t("validation.title", { defaultValue: "Campos incompletos" }),
+                t("validation.selectCategoryAndType", {
+                    defaultValue: "Debes seleccionar categoría y tipo.",
+                }),
+                [{ text: "OK", onPress: hideAlert }]
+            );
+            return;
+        }
+        if (!description.trim()) {
+            showWarning(
+                t("validation.title", { defaultValue: "Descripción requerida" }),
+                t("validation.descriptionRequired", {
+                    defaultValue: "Ingresa una descripción para la justificación.",
+                }),
+                [{ text: "OK", onPress: hideAlert }]
+            );
+            return;
+        }
+
+        // Confirmación antes de guardar
+        showConfirm(
+            t("justify.confirmTitle", { defaultValue: "Guardar justificación" }),
+            t("justify.confirmMessage", {
+                defaultValue: "¿Deseas guardar esta justificación?",
+            }),
+            () => {
+                // Confirmado: ejecutar guardado
+                handleSave();
+            },
+            () => {
+                // Cancelado
+                console.log("Guardado cancelado por el usuario");
+            }
+        );
+    };
+
     return (
-        <SafeAreaView style={[styles.safeAreaWhite, {backgroundColor: colors.background}]}>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.keyboardview}
+        <>
+            <SafeAreaView
+                style={[styles.safeAreaWhite, { backgroundColor: colors.background }]}
             >
-                <ScrollView
-                    style={styles.ScrollView}
-                    contentContainerStyle={styles.ScrollViewContent}
-                    showsVerticalScrollIndicator={false}
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    style={styles.keyboardview}
                 >
-                    <View style={styles.containerAddValidJustification}>
+                    <ScrollView
+                        style={styles.ScrollView}
+                        contentContainerStyle={styles.ScrollViewContent}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        <View style={styles.containerAddValidJustification}>
+                            {/* ── Encabezado ───────────────────────────────────────── */}
+                            <Text style={[styles.mainTitle, { color: colors.text }]}>
+                                {t("justify.title")}
+                            </Text>
 
-                        {/* ── Encabezado ───────────────────────────────────────── */}
-                        <Text style={[styles.mainTitle, {color: colors.text}]}>
-                            {t("justify.title")}
-                        </Text>
+                            {/* ── Tarjeta de resumen (aparece cuando ambos están seleccionados) ── */}
+                            {selectedCategory && selectedType && (
+                                <View
+                                    style={{
+                                        backgroundColor: colors.primary + "12",
+                                        borderRadius: 14,
+                                        padding: 16,
+                                        marginTop: 16,
+                                        marginBottom: 8,
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        gap: 12,
+                                        borderWidth: 1,
+                                        borderColor: colors.primary + "30",
+                                    }}
+                                >
+                                    <Text style={{ fontSize: 32 }}>{selectedType.icon}</Text>
+                                    <View style={{ flex: 1 }}>
+                                        <Text
+                                            style={{
+                                                fontSize: 13,
+                                                color: colors.textMuted,
+                                                marginBottom: 2,
+                                            }}
+                                        >
+                                            {selectedCategory.icon} {selectedCategory.label}
+                                        </Text>
+                                        <Text
+                                            style={{
+                                                fontSize: 15,
+                                                fontWeight: "700",
+                                                color: colors.primary,
+                                            }}
+                                        >
+                                            {selectedType.label}
+                                        </Text>
+                                    </View>
+                                </View>
+                            )}
 
-                        {/* ── Tarjeta de resumen (aparece cuando ambos están seleccionados) ── */}
-                        {selectedCategory && selectedType && (
+                            {/* ── Selector de categoría ────────────────────────────── */}
+                            <Text
+                                style={[
+                                    styles.inputLabel,
+                                    { color: colors.text, marginTop: 24 },
+                                ]}
+                            >
+                                {t("admin.category")} *
+                            </Text>
+                            <DropdownSelector
+                                label={t("admin.category")}
+                                placeholder={
+                                    t("admin.selectCategory") ??
+                                    "Selecciona una categoría..."
+                                }
+                                value={category}
+                                options={categories}
+                                onSelect={setCategory}
+                                colors={colors}
+                            />
+
+                            {/* ── Selector de tipo ─────────────────────────────────── */}
+                            <Text
+                                style={[
+                                    styles.inputLabel,
+                                    { color: colors.text, marginTop: 20 },
+                                ]}
+                            >
+                                {t("admin.justificationType")} *
+                            </Text>
+                            <DropdownSelector
+                                label={t("admin.justificationType")}
+                                placeholder={
+                                    t("admin.selectType") ?? "Selecciona un tipo..."
+                                }
+                                value={type}
+                                options={types}
+                                onSelect={setType}
+                                colors={colors}
+                            />
+
+                            {/* ── Descripción ──────────────────────────────────────── */}
+                            <Text
+                                style={[
+                                    styles.inputLabel,
+                                    { color: colors.text, marginTop: 20 },
+                                ]}
+                            >
+                                {t("admin.description")} *
+                            </Text>
+                            <TextInput
+                                style={[
+                                    styles.textInput,
+                                    styles.textArea,
+                                    {
+                                        backgroundColor: colors.inputBackground,
+                                        color: colors.text,
+                                        borderColor: description
+                                            ? colors.primary
+                                            : colors.border ?? "#E0E0E0",
+                                        borderWidth: 1.5,
+                                    },
+                                ]}
+                                placeholder={t("admin.descriptionPlaceholder")}
+                                placeholderTextColor={colors.textMuted}
+                                value={description}
+                                onChangeText={setDescription}
+                                multiline
+                            />
+
+                            {/* ── Toggle ¿Requiere documento? ──────────────────────── */}
+                            <Text
+                                style={[
+                                    styles.inputLabel,
+                                    { color: colors.text, marginTop: 4 },
+                                ]}
+                            >
+                                {t("admin.requiresDocument")}
+                            </Text>
+
                             <View
                                 style={{
-                                    backgroundColor: colors.primary + "12",
-                                    borderRadius: 14,
-                                    padding: 16,
-                                    marginTop: 16,
+                                    flexDirection: "row",
+                                    gap: 10,
                                     marginBottom: 8,
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    gap: 12,
-                                    borderWidth: 1,
-                                    borderColor: colors.primary + "30",
                                 }}
                             >
-                                <Text style={{fontSize: 32}}>{selectedType.icon}</Text>
-                                <View style={{flex: 1}}>
+                                {/* Opción SÍ */}
+                                <TouchableOpacity
+                                    activeOpacity={0.8}
+                                    onPress={() => setRequiresDocument(true)}
+                                    style={{
+                                        flex: 1,
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: 8,
+                                        paddingVertical: 14,
+                                        borderRadius: 12,
+                                        borderWidth: 1.5,
+                                        borderColor: requiresDocument
+                                            ? colors.primary
+                                            : colors.border ?? "#E0E0E0",
+                                        backgroundColor: requiresDocument
+                                            ? colors.primary
+                                            : colors.inputBackground,
+                                    }}
+                                >
                                     <Text
                                         style={{
-                                            fontSize: 13,
-                                            color: colors.textMuted,
-                                            marginBottom: 2,
+                                            fontSize: 14,
+                                            fontWeight: "600",
+                                            color: requiresDocument
+                                                ? "#fff"
+                                                : colors.text,
                                         }}
                                     >
-                                        {selectedCategory.icon}{"  "}{selectedCategory.label}
+                                        {t("common.yes")}
                                     </Text>
+                                </TouchableOpacity>
+
+                                {/* Opción NO */}
+                                <TouchableOpacity
+                                    activeOpacity={0.8}
+                                    onPress={() => setRequiresDocument(false)}
+                                    style={{
+                                        flex: 1,
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: 8,
+                                        paddingVertical: 14,
+                                        borderRadius: 12,
+                                        borderWidth: 1.5,
+                                        borderColor: !requiresDocument
+                                            ? colors.primary
+                                            : colors.border ?? "#E0E0E0",
+                                        backgroundColor: !requiresDocument
+                                            ? colors.primary
+                                            : colors.inputBackground,
+                                    }}
+                                >
                                     <Text
                                         style={{
-                                            fontSize: 15,
-                                            fontWeight: "700",
-                                            color: colors.primary,
+                                            fontSize: 14,
+                                            fontWeight: "600",
+                                            color: !requiresDocument
+                                                ? "#fff"
+                                                : colors.text,
                                         }}
                                     >
-                                        {selectedType.label}
+                                        {t("common.no")}
                                     </Text>
-                                </View>
+                                </TouchableOpacity>
                             </View>
-                        )}
 
-                        {/* ── Selector de categoría ────────────────────────────── */}
-                        <Text style={[styles.inputLabel, {color: colors.text, marginTop: 24}]}>
-                            {t("admin.category")} *
-                        </Text>
-                        <DropdownSelector
-                            label={t("admin.category")}
-                            placeholder={t("admin.selectCategory") ?? "Selecciona una categoría..."}
-                            value={category}
-                            options={categories}
-                            onSelect={setCategory}
-                            colors={colors}
-                        />
-
-                        {/* ── Selector de tipo ─────────────────────────────────── */}
-                        <Text style={[styles.inputLabel, {color: colors.text, marginTop: 20}]}>
-                            {t("admin.justificationType")} *
-                        </Text>
-                        <DropdownSelector
-                            label={t("admin.justificationType")}
-                            placeholder={t("admin.selectType") ?? "Selecciona un tipo..."}
-                            value={type}
-                            options={types}
-                            onSelect={setType}
-                            colors={colors}
-                        />
-
-                        {/* ── Descripción ──────────────────────────────────────── */}
-                        <Text style={[styles.inputLabel, {color: colors.text, marginTop: 20}]}>
-                            {t("admin.description")} *
-                        </Text>
-                        <TextInput
-                            style={[
-                                styles.textInput,
-                                styles.textArea,
-                                {
-                                    backgroundColor: colors.inputBackground,
-                                    color: colors.text,
-                                    borderColor: description
-                                        ? colors.primary
-                                        : colors.border ?? "#E0E0E0",
-                                    borderWidth: 1.5,
-                                },
-                            ]}
-                            placeholder={t("admin.descriptionPlaceholder")}
-                            placeholderTextColor={colors.textMuted}
-                            value={description}
-                            onChangeText={setDescription}
-                            multiline
-                        />
-
-                        {/* ── Toggle ¿Requiere documento? ──────────────────────── */}
-                        <Text style={[styles.inputLabel, {color: colors.text, marginTop: 4}]}>
-                            {t("admin.requiresDocument")}
-                        </Text>
-
-                        <View
-                            style={{
-                                flexDirection: "row",
-                                gap: 10,
-                                marginBottom: 8,
-                            }}
-                        >
-                            {/* Opción SÍ */}
-                            <TouchableOpacity
-                                activeOpacity={0.8}
-                                onPress={() => setRequiresDocument(true)}
-                                style={{
-                                    flex: 1,
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    gap: 8,
-                                    paddingVertical: 14,
-                                    borderRadius: 12,
-                                    borderWidth: 1.5,
-                                    borderColor: requiresDocument
-                                        ? colors.primary
-                                        : colors.border ?? "#E0E0E0",
-                                    backgroundColor: requiresDocument
-                                        ? colors.primary
-                                        : colors.inputBackground,
-                                }}
-                            >
-                                <Text
-                                    style={{
-                                        fontSize: 14,
-                                        fontWeight: "600",
-                                        color: requiresDocument ? "#fff" : colors.text,
-                                    }}
+                            {/* ── Botones de acción ────────────────────────────────── */}
+                            <View style={styles.actionButtonsContainer}>
+                                <PrimaryButton
+                                    title={
+                                        isSaving
+                                            ? t("common.saving")
+                                            : t("admin.saveJustification")
+                                    }
+                                    onPress={handleSaveWithValidation}
+                                    disabled={isSaving}
+                                />
+                                <TouchableOpacity
+                                    onPress={handleBack}
+                                    style={styles.secondaryButton}
                                 >
-                                    {t("common.yes")}
-                                </Text>
-                            </TouchableOpacity>
-
-                            {/* Opción NO */}
-                            <TouchableOpacity
-                                activeOpacity={0.8}
-                                onPress={() => setRequiresDocument(false)}
-                                style={{
-                                    flex: 1,
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    gap: 8,
-                                    paddingVertical: 14,
-                                    borderRadius: 12,
-                                    borderWidth: 1.5,
-                                    borderColor: !requiresDocument
-                                        ? colors.primary
-                                        : colors.border ?? "#E0E0E0",
-                                    backgroundColor: !requiresDocument
-                                        ? colors.primary
-                                        : colors.inputBackground,
-                                }}
-                            >
-                                <Text
-                                    style={{
-                                        fontSize: 14,
-                                        fontWeight: "600",
-                                        color: !requiresDocument ? "#fff" : colors.text,
-                                    }}
-                                >
-                                    {t("common.no")}
-                                </Text>
-                            </TouchableOpacity>
+                                    <Text
+                                        style={[
+                                            styles.secondaryButtonText,
+                                            { color: colors.textSecondary },
+                                        ]}
+                                    >
+                                        {t("common.back")}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
+                    </ScrollView>
+                </KeyboardAvoidingView>
+            </SafeAreaView>
 
-                        {/* ── Botones de acción ────────────────────────────────── */}
-                        <View style={styles.actionButtonsContainer}>
-                            <PrimaryButton
-                                title={t("admin.saveJustification")}
-                                onPress={handleSave}
-                            />
-                            <TouchableOpacity onPress={handleBack} style={styles.secondaryButton}>
-                                <Text
-                                    style={[
-                                        styles.secondaryButtonText,
-                                        {color: colors.textSecondary},
-                                    ]}
-                                >
-                                    {t("common.back")}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-
-                    </View>
-                </ScrollView>
-            </KeyboardAvoidingView>
-        </SafeAreaView>
+            <CustomAlert
+                visible={alertConfig.visible}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                buttons={alertConfig.buttons}
+                type={alertConfig.type}
+                onClose={hideAlert}
+            />
+        </>
     );
 }

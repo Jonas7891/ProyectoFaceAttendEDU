@@ -6,7 +6,6 @@ import {
     TouchableOpacity,
     StyleSheet,
     Dimensions,
-    Animated,
 } from "react-native";
 
 const {width} = Dimensions.get("window");
@@ -17,27 +16,26 @@ export default function CustomAlert({
                                         message,
                                         buttons = [],
                                         onClose,
-                                        type = "default", // 'default', 'success', 'error', 'warning', 'confirm'
+                                        type = "default",
                                     }) {
-    // Colores según el tipo de alerta
+    // Paleta azulada y armónica
     const getColors = () => {
         switch (type) {
             case "success":
-                return {background: "#4CAF50", text: "#FFFFFF"};
+                return {background: "#2E86AB", text: "#FFFFFF"};
             case "error":
-                return {background: "#F44336", text: "#FFFFFF"};
+                return {background: "#D64545", text: "#FFFFFF"};
             case "warning":
-                return {background: "#FF9800", text: "#FFFFFF"};
+                return {background: "#1E88E5", text: "#FFFFFF"};
             case "confirm":
-                return {background: "#2196F3", text: "#FFFFFF"};
+                return {background: "#1565C0", text: "#FFFFFF"};
             default:
-                return {background: "#FFFFFF", text: "#333333"};
+                return {background: "#FFFFFF", text: "#1A237E"};
         }
     };
 
     const colors = getColors();
 
-    // Si no se pasan botones, crear uno por defecto
     const alertButtons =
         buttons.length > 0
             ? buttons
@@ -45,26 +43,25 @@ export default function CustomAlert({
                 {
                     text: "OK",
                     onPress: onClose,
-                    style: "default", // 'default', 'cancel', 'destructive'
+                    style: "default",
                 },
             ];
 
-    // Estilo del botón según su tipo
     const getButtonStyle = (style) => {
         switch (style) {
             case "cancel":
                 return {
-                    backgroundColor: "#E0E0E0",
-                    textColor: "#333333",
+                    backgroundColor: "#E8EAF6",
+                    textColor: "#3949AB",
                 };
             case "destructive":
                 return {
-                    backgroundColor: "#F44336",
+                    backgroundColor: "#EF5350",
                     textColor: "#FFFFFF",
                 };
             default:
                 return {
-                    backgroundColor: type !== "default" ? colors.background : "#007AFF",
+                    backgroundColor: type !== "default" ? colors.background : "#2196F3",
                     textColor: type !== "default" ? colors.text : "#FFFFFF",
                 };
         }
@@ -79,26 +76,22 @@ export default function CustomAlert({
         >
             <View style={styles.overlay}>
                 <View style={styles.alertContainer}>
-                    {/* Header con color según tipo */}
                     {type !== "default" && (
                         <View style={[styles.header, {backgroundColor: colors.background}]}>
                             <Text style={[styles.headerText, {color: colors.text}]}>
-                                {getHeaderIcon(type)} {title}
+                                {title}
                             </Text>
                         </View>
                     )}
 
-                    {/* Título para tipo default */}
                     {type === "default" && title && (
                         <Text style={styles.defaultTitle}>{title}</Text>
                     )}
 
-                    {/* Mensaje */}
                     <View style={styles.messageContainer}>
                         <Text style={styles.message}>{message}</Text>
                     </View>
 
-                    {/* Botones */}
                     <View style={styles.buttonContainer}>
                         {alertButtons.map((button, index) => {
                             const buttonStyle = getButtonStyle(button.style);
@@ -134,86 +127,83 @@ export default function CustomAlert({
     );
 }
 
-// Iconos según el tipo (puedes usar emojis o importar iconos)
-const getHeaderIcon = (type) => {
-    switch (type) {
-        case "success":
-            return "✓";
-        case "error":
-            return "✕";
-        case "warning":
-            return "⚠";
-        case "confirm":
-            return "?";
-        default:
-            return "";
-    }
-};
-
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        backgroundColor: "rgba(0, 0, 0, 0.4)",
         justifyContent: "center",
         alignItems: "center",
+        paddingHorizontal: 20,
     },
     alertContainer: {
-        width: width * 0.85,
+        width: width * 0.88,
         backgroundColor: "#FFFFFF",
-        borderRadius: 14,
-        overflow: "hidden",
+        borderRadius: 20,
+        paddingTop: 28,
+        paddingBottom: 24,
         shadowColor: "#000",
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5,
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 8,
     },
     header: {
-        paddingVertical: 15,
-        paddingHorizontal: 20,
+        paddingVertical: 18,
+        paddingHorizontal: 24,
         alignItems: "center",
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        marginTop: -28,
+        marginBottom: 8,
     },
     headerText: {
-        fontSize: 18,
-        fontWeight: "bold",
+        fontSize: 19,
+        fontWeight: "700",
+        letterSpacing: 0.3,
     },
     defaultTitle: {
-        fontSize: 17,
+        fontSize: 18,
         fontWeight: "600",
-        color: "#333333",
+        color: "#1A237E",
         textAlign: "center",
-        paddingTop: 20,
-        paddingHorizontal: 20,
+        paddingTop: 8,
+        paddingHorizontal: 24,
+        marginBottom: 10,
     },
     messageContainer: {
-        paddingVertical: 15,
-        paddingHorizontal: 20,
+        paddingVertical: 20,
+        paddingHorizontal: 24,
     },
     message: {
-        fontSize: 15,
-        color: "#666666",
-        textAlign: "center",
-        lineHeight: 20,
+        fontSize: 16,
+        color: "#37474F",
+        textAlign: "justify",
+        lineHeight: 22,
     },
     buttonContainer: {
         flexDirection: "row",
         borderTopWidth: 1,
         borderTopColor: "#E0E0E0",
+        marginTop: 4,
     },
     button: {
         flex: 1,
-        paddingVertical: 12,
+        paddingVertical: 14,
         alignItems: "center",
         justifyContent: "center",
+        borderRadius: 12,
+        marginHorizontal: 6,
+        marginTop: 8,
+        marginBottom: 4,
     },
     buttonFlex: {
         flex: 1,
     },
     buttonText: {
-        fontSize: 17,
+        fontSize: 16,
         fontWeight: "600",
     },
     cancelButtonText: {
-        fontWeight: "400",
+        fontWeight: "500",
     },
 });

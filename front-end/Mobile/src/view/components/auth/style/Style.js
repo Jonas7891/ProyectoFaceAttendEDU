@@ -26,26 +26,6 @@ const styleAuth = StyleSheet.create({
         backgroundColor: '#CCCCCC',
         opacity: 0.6,
     },
-    logoutButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 10,
-        paddingHorizontal: 15,
-        borderRadius: 8,
-        backgroundColor: '#f0f0f0',
-    },
-    logoutIcon: {
-        width: 20,
-        height: 20,
-        marginRight: 8,
-        tintColor: '#ff0000',
-    },
-    logoutText: {
-        color: '#ff0000',
-        fontSize: 14,
-        fontWeight: '600',
-    },
     buttonPrimary: {
         backgroundColor: '#1081D2',
         paddingVertical: 14,

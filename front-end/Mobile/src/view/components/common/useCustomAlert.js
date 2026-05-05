@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import {useState, useCallback} from "react";
 
 export const useCustomAlert = () => {
     const [alertConfig, setAlertConfig] = useState({
@@ -9,7 +9,7 @@ export const useCustomAlert = () => {
         type: "default",
     });
 
-    const showAlert = useCallback(({ title, message, buttons, type = "default" }) => {
+    const showAlert = useCallback(({title, message, buttons, type = "default"}) => {
         setAlertConfig({
             visible: true,
             title,
@@ -20,7 +20,7 @@ export const useCustomAlert = () => {
     }, []);
 
     const hideAlert = useCallback(() => {
-        setAlertConfig(prev => ({ ...prev, visible: false }));
+        setAlertConfig(prev => ({...prev, visible: false}));
     }, []);
 
     // Funciones de conveniencia para alertas comunes
@@ -29,7 +29,12 @@ export const useCustomAlert = () => {
             title,
             message,
             type: "success",
-            buttons: [{ text: "OK", onPress: () => { hideAlert(); onPress && onPress(); } }],
+            buttons: [{
+                text: "OK", onPress: () => {
+                    hideAlert();
+                    onPress && onPress();
+                }
+            }],
         });
     }, [showAlert, hideAlert]);
 
@@ -38,7 +43,12 @@ export const useCustomAlert = () => {
             title,
             message,
             type: "error",
-            buttons: [{ text: "OK", onPress: () => { hideAlert(); onPress && onPress(); } }],
+            buttons: [{
+                text: "OK", onPress: () => {
+                    hideAlert();
+                    onPress && onPress();
+                }
+            }],
         });
     }, [showAlert, hideAlert]);
 
@@ -47,7 +57,7 @@ export const useCustomAlert = () => {
             title,
             message,
             type: "warning",
-            buttons: buttons || [{ text: "OK", onPress: hideAlert }],
+            buttons: buttons || [{text: "OK", onPress: hideAlert}],
         });
     }, [showAlert, hideAlert]);
 
@@ -60,11 +70,17 @@ export const useCustomAlert = () => {
                 {
                     text: "Cancelar",
                     style: "cancel",
-                    onPress: () => { hideAlert(); onCancel && onCancel(); },
+                    onPress: () => {
+                        hideAlert();
+                        onCancel && onCancel();
+                    },
                 },
                 {
                     text: "Confirmar",
-                    onPress: () => { hideAlert(); onConfirm && onConfirm(); },
+                    onPress: () => {
+                        hideAlert();
+                        onConfirm && onConfirm();
+                    },
                 },
             ],
         });

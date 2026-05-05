@@ -1,6 +1,4 @@
-// viewmodels/useAddValidJustificationViewModel.js
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -16,7 +14,7 @@ export function useAddValidJustificationViewModel() {
     const [requiresDocument, setRequiresDocument] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Key para refrescar la vista cuando cambia el idioma
+    // Key para refrescar la vista al cambiar idioma
     const [updateKey, setUpdateKey] = useState(0);
 
     useEffect(() => {
@@ -27,7 +25,16 @@ export function useAddValidJustificationViewModel() {
         return () => i18n.off('languageChanged', handleLanguageChanged);
     }, [i18n]);
 
-    // Listas de categorías y tipos (se recalculan al cambiar idioma)
+    // ---- NUEVO: estado de alerta centralizado ----
+    const [alertData, setAlertData] = useState({
+        message: null,
+        type: 'warning',   // 'warning', 'success', 'error'
+        timestamp: 0,
+    });
+
+    const clearAlert = () => setAlertData({ message: null, type: 'warning', timestamp: 0 });
+
+    // Listas de categorías y tipos
     const categories = useMemo(() => [
         {
             id: 'salud',
@@ -103,8 +110,13 @@ export function useAddValidJustificationViewModel() {
     const handleBack = useCallback(() => navigation.goBack(), [navigation]);
 
     const handleSave = useCallback(async () => {
+        // Validación de campos obligatorios
         if (!type.trim() || !description.trim() || !category.trim()) {
-            Alert.alert(t('common.error'), t('admin.completeAllFields'));
+            setAlertData({
+                message: t('admin.completeAllFields'),
+                type: 'warning',
+                timestamp: Date.now(),
+            });
             return;
         }
 
@@ -124,15 +136,23 @@ export function useAddValidJustificationViewModel() {
             justifications.push(newJustification);
             await AsyncStorage.setItem('validJustifications', JSON.stringify(justifications));
 
-            Alert.alert(t('common.success'), t('admin.justificationCreated'), [
-                { text: t('common.accept'), onPress: () => navigation.goBack() },
-            ]);
+            // Éxito
+            setAlertData({
+                message: t('admin.justificationCreated'),
+                type: 'success',
+                timestamp: Date.now(),
+            });
         } catch (error) {
-            Alert.alert(t('common.error'), t('admin.errorCreating'));
+            // Error al guardar
+            setAlertData({
+                message: t('admin.errorCreating'),
+                type: 'error',
+                timestamp: Date.now(),
+            });
         } finally {
             setIsSaving(false);
         }
-    }, [type, description, category, requiresDocument, t, navigation]);
+    }, [type, description, category, requiresDocument, t]);
 
     // Objetos seleccionados para el resumen
     const selectedCategory = useMemo(
@@ -145,22 +165,22 @@ export function useAddValidJustificationViewModel() {
     );
 
     return {
-        // Estados
+        // Estados del formulario
         type, setType,
         description, setDescription,
         category, setCategory,
         requiresDocument, setRequiresDocument,
         isSaving,
         updateKey,
-
         // Datos
         categories,
         types,
         selectedCategory,
         selectedType,
-
         // Acciones
         handleBack,
         handleSave,
+        alertData,
+        clearAlert,
     };
 }

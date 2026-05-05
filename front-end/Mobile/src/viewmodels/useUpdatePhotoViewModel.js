@@ -1,6 +1,4 @@
-// viewmodels/useUpdatePhotoViewModel.js
 import { useState, useEffect, useCallback } from 'react';
-import { Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -18,6 +16,14 @@ export function useUpdatePhotoViewModel() {
         documento: '',
         telefono: '',
     });
+
+    // ---- NUEVO: estado de alerta ----
+    const [alertData, setAlertData] = useState({
+        message: null,
+        type: 'warning',
+        timestamp: 0,
+    });
+    const clearAlert = () => setAlertData({ message: null, type: 'warning', timestamp: 0 });
 
     // Inicialización y listener de idioma
     useEffect(() => {
@@ -40,7 +46,11 @@ export function useUpdatePhotoViewModel() {
 
     const handleRegisterAttendance = useCallback(() => {
         if (!formData.nombreCompleto || !formData.documento || !formData.telefono) {
-            Alert.alert(t('updatePhoto.error'), t('updatePhoto.completeFields'));
+            setAlertData({
+                message: t('updatePhoto.completeFields'),
+                type: 'warning',
+                timestamp: Date.now(),
+            });
             return;
         }
         setAttendanceRegistered(true);
@@ -55,5 +65,8 @@ export function useUpdatePhotoViewModel() {
         handleInputChange,
         handleRegisterAttendance,
         handleBack,
+        // Alertas
+        alertData,
+        clearAlert,
     };
 }
