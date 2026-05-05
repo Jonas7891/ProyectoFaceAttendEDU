@@ -113,8 +113,8 @@ export default function MenuScreen({ onLogout }) {
 
                             <DangerButton
                                 title={isLoading ? t('menu.loggingOut') : t('menu.logout')}
-                                onLogout={handleLogout}
-                                disabled={isLoading}
+                                onPress={handleLogout}
+                                isLoading={isLoading}
                             />
                         </View>
                     </View>
