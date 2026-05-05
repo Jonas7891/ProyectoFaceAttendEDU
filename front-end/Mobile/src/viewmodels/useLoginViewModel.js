@@ -53,7 +53,7 @@ export function useLoginViewModel({ onLogin }) {
             const loginRequest = new LoginRequest(email, password);
 
             // Llamada al servicio
-            const responseData = await login(loginRequest.toApi());
+            const responseData = /*await*/ login(loginRequest.toApi());
             const authResponse = AuthResponse.fromApi(responseData);  // { token, user }
 
             // Guardar token con expiración si viene
@@ -64,6 +64,7 @@ export function useLoginViewModel({ onLogin }) {
             console.log("Roles: ", authResponse.user.roles);
             console.log('Rol seleccionado:', role);
             await AsyncStorage.setItem("userRole", role);
+            console.log("Rol almacenado: ", role);
             await AsyncStorage.setItem("userEmail", email);
 
             // Aplicar tema e idioma según el rol

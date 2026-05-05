@@ -20,7 +20,7 @@ import { useMenuViewModel } from '../../viewmodels/useMenuViewModel';
 export default function MenuScreen({ onLogout }) {
     const refreshKey = useLanguageRefresh();
     const { t } = useTranslation();
-    const { colors } = useTheme();
+    const { colors } = useTheme(); // seguimos usando colors del contexto
 
     const {
         isLoading,
@@ -111,6 +111,7 @@ export default function MenuScreen({ onLogout }) {
                                 onPress={handleFacialFail}
                             />
 
+                            {/* DangerButton adaptado: recibe onLogout del ViewModel */}
                             <DangerButton
                                 title={isLoading ? t('menu.loggingOut') : t('menu.logout')}
                                 onLogout={handleLogout}
