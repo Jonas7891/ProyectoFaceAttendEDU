@@ -100,7 +100,6 @@ function TeacherDetailModal({item, visible, onClose, colors, t, isDark}) {
                                 {item.materia} · {item.codigo_curso}
                             </Text>
                         </View>
-                        <StatusBadge estado={item.estado} t={t} isDark={isDark}/>
                     </View>
 
                     {/* Asistencia */}
@@ -203,7 +202,6 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
                                 {item.codigo_curso}
                             </Text>
                         </View>
-                        <StatusBadge estado={item.estado} t={t} isDark={isDark}/>
                     </View>
 
                     {/* Registro */}

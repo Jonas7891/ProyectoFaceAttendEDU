@@ -1,10 +1,9 @@
 // viewmodels/useMenuViewModel.js
 import { useState, useEffect, useCallback } from 'react';
-import { Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../view/components/common/ThemeContext';
-import { getHighestRole } from '../utils/getHighestRole'; // tu función de jerarquía
+import { getHighestRole } from '../utils/getHighestRole';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 export function useMenuViewModel({ onLogout }) {
@@ -14,14 +13,12 @@ export function useMenuViewModel({ onLogout }) {
 
     const [isLoading, setIsLoading] = useState(false);
     const [userRole, setUserRole] = useState(null);
-    const [updateKey, setUpdateKey] = useState(0); // para forzar re-render cuando cambie el rol/idioma
+    const [updateKey, setUpdateKey] = useState(0);
 
-    // Carga el rol del usuario y aplica tema/idioma
     const loadUserData = useCallback(async () => {
         try {
             let roleData = await AsyncStorage.getItem('userRole');
 
-            // Si por alguna razón guardaste un array de roles (como JSON), aplica jerarquía
             let finalRole = null;
             if (roleData) {
                 try {
@@ -32,7 +29,6 @@ export function useMenuViewModel({ onLogout }) {
                         finalRole = roleData;
                     }
                 } catch {
-                    // Es un string simple
                     finalRole = roleData;
                 }
             }
@@ -43,7 +39,6 @@ export function useMenuViewModel({ onLogout }) {
                 await loadThemeForRole(finalRole);
             }
 
-            // Sincroniza idioma guardado
             const savedLang = await AsyncStorage.getItem('appLanguage');
             if (savedLang && savedLang !== i18n.language) {
                 await i18n.changeLanguage(savedLang);
@@ -55,19 +50,16 @@ export function useMenuViewModel({ onLogout }) {
         }
     }, [loadThemeForRole, i18n]);
 
-    // Carga inicial
     useEffect(() => {
         loadUserData();
     }, [loadUserData]);
 
-    // Recarga cuando la pantalla gana el foco
     useFocusEffect(
         useCallback(() => {
             loadUserData();
         }, [loadUserData])
     );
 
-    // Logout
     const handleLogout = async () => {
         setIsLoading(true);
         try {
@@ -79,16 +71,14 @@ export function useMenuViewModel({ onLogout }) {
             }
         } catch (error) {
             console.error('Error en logout:', error);
-            Alert.alert(t('common.error'), t('menu.logoutError'));
+            throw error;
         } finally {
             setIsLoading(false);
         }
     };
 
-    // Helpers de navegación
     const navigateTo = (screen) => navigation.navigate(screen);
 
-    // Determina si es admin (ajusta el string según tu jerarquía exacta)
     const isAdmin = userRole === 'Administrador';
 
     return {
@@ -99,6 +89,6 @@ export function useMenuViewModel({ onLogout }) {
         handleLogout,
         navigateTo,
         loadUserData,
-        colors, // opcional: la vista puede seguir usando useTheme si quiere
+        colors,
     };
 }
