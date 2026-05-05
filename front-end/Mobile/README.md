@@ -39,7 +39,7 @@ npm install
 Iniciar servidor de desarrollo (Metro / Expo):
 
 ```bash
-npm run start
+npm expo start
 ```
 
 Abrir en Android o iOS:
