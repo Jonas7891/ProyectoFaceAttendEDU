@@ -64,6 +64,9 @@ export function useLoginViewModel({ onLogin }) {
             const loginRequest = new LoginRequest(email, password);
             const responseData = /*await*/ login(loginRequest.toApi());
 
+            console.log("Información a enviar: ", loginRequest)
+            console.log(responseData)
+
             const authResponse = AuthResponse.fromApi(responseData);
 
             if (!authResponse || !authResponse.token) {
@@ -73,7 +76,7 @@ export function useLoginViewModel({ onLogin }) {
             await saveToken(authResponse.token, authResponse.user?.expiresIn);
 
             const role = getHighestRole(authResponse.user?.roles ?? []);
-            console.log("Roles:", authResponse.user?.roles);
+            console.log("Información traida:", authResponse.user);
             console.log("Rol seleccionado:", role);
 
             await AsyncStorage.setItem("userRole", role);

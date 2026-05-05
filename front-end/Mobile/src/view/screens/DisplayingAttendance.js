@@ -405,7 +405,7 @@ function MyAttendanceCard({item, colors, t, isDark, onInfo}) {
                     }}
                 >
                     <Image
-                        source={require("../../assets/images/lupa2.png")}
+                        source={require("../../assets/images/lupa.png")}
                         style={{ width: 18, height: 18, tintColor: cfg.color }}
                     />
                 </TouchableOpacity>
@@ -494,7 +494,7 @@ export default function DisplayingAttendance() {
                                     <Text style={{ color: colors.danger, fontSize: 16, fontWeight: "700" }}>✕</Text>
                                 </TouchableOpacity>
                             ) : (
-                                <Image source={require("../../assets/images/lupa2.png")} style={{ width: 16, height: 16, tintColor: colors.textMuted }} />
+                                <Image source={require("../../assets/images/lupa.png")} style={{ width: 16, height: 16, tintColor: colors.textMuted }} />
                             )}
                         </View>
                     )}
