@@ -1,8 +1,3 @@
-// ============================================================
-//  FaceAttend EDU — Landing Screen
-//  Hero original tuyo + sección de features (bloque primario)
-//  + footer. Scroll en móvil, centrado en desktop.
-// ============================================================
 import React from "react";
 import { useNavigation } from "@react-navigation/native";
 import {
