@@ -20,6 +20,7 @@ import LanguageSettingsScreen from './src/view/screens/LanguageSettingsScreen';
 import ProfileScreen from './src/view/screens/ProfileScreen';
 import JustificationsScreen from './src/view/screens/ValidAllJustifications';
 import AddValidJustificationScreen from './src/view/screens/AddValidJustificationScreen';
+import ManageUsersScreen from "./src/view/screens/ManageUsersScreen";
 
 const Stack = createStackNavigator();
 
@@ -136,6 +137,7 @@ export default function App() {
                                 <Stack.Screen name="AddValidJustification" component={AddValidJustificationScreen}/>
                                 <Stack.Screen name="LanguageSettings" component={LanguageSettingsScreen}/>
                                 <Stack.Screen name="Profile" component={ProfileScreen}/>
+                                <Stack.Screen name="ManageUsersScreen" component={ManageUsersScreen}/>
                             </>
                         )}
                     </Stack.Navigator>
