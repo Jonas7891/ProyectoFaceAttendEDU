@@ -1,35 +1,17 @@
-// viewmodels/useProfileViewModel.js
-import { useState, useEffect, useCallback } from 'react';
-import { Alert } from 'react-native';
-import { useTranslation } from 'react-i18next';
+import {useState, useEffect, useCallback} from 'react';
+import {useTranslation} from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { saveLanguageForRole } from '../view/components/common/languageByRole';
-import { useTheme } from '../view/components/common/ThemeContext';
-
-const mockUserData = {
-    admin: {
-        name: 'Jonattan Rizo',
-        email: 'admin@empresa.com',
-        role: 'Administrador',
-        joinDate: '15/01/2024',
-        employeeId: 'ADM-001',
-        colegio: 'Instituto Tecnico Superior Neiva',
-    },
-    student: {
-        name: 'The Jonas',
-        email: 'estudiante@empresa.com',
-        role: 'Estudiante',
-        joinDate: '20/03/2024',
-        employeeId: 'EST-042',
-        colegio: 'Instituto Tecnico Superior Neiva',
-    },
-};
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
+import {saveLanguageForRole} from '../view/components/common/languageByRole';
+import {useTheme} from '../view/components/common/ThemeContext';
+import {getUserByEmail} from "../services/UserService";
+import {getToken} from "../storage/TokenStorage";
+import UserResponse from "../model/AuthResponse";
 
 export function useProfileViewModel() {
     const navigation = useNavigation();
-    const { t, i18n } = useTranslation();
-    const { theme, toggleTheme, loadThemeForRole } = useTheme();
+    const {t, i18n} = useTranslation();
+    const {theme, toggleTheme, loadThemeForRole} = useTheme();
 
     const [userRole, setUserRole] = useState(null);
     const [updateKey, setUpdateKey] = useState(0);
@@ -55,15 +37,12 @@ export function useProfileViewModel() {
         useCallback(() => {
             const loadUserData = async () => {
                 try {
-                    const role = await AsyncStorage.getItem('userRole');
-                    setUserRole(role);
-                    if (role === 'Administrador') {
-                        setUserInfo(mockUserData.admin);
-                    } else {
-                        setUserInfo(mockUserData.student);
-                    }
-                    if (role) {
-                        await loadThemeForRole(role);
+                    const email = await AsyncStorage.getItem('userEmail');
+                    const user = getUserByEmail(email);
+                    setUserInfo(user);
+
+                    if (user && user.role) {
+                        await loadThemeForRole(user.role);
                     }
                 } catch (error) {
                     console.error('Error cargando datos de usuario:', error);
@@ -75,33 +54,22 @@ export function useProfileViewModel() {
 
     const handleBack = useCallback(() => navigation.goBack(), [navigation]);
 
-    const handleLogout = useCallback(() => {
-        Alert.alert(
-            t('profile.logout'),
-            t('profile.logoutConfirm'),
-            [
-                { text: t('common.cancel'), style: 'cancel' },
-                {
-                    text: t('common.accept'),
-                    style: 'destructive',
-                    onPress: async () => {
-                        setIsLoading(true);
-                        try {
-                            if (userRole) {
-                                await saveLanguageForRole(userRole, i18n.language);
-                            }
-                            await AsyncStorage.removeItem('userRole');
-                            navigation.navigate('HomesScreen');
-                        } catch (error) {
-                            console.error('Error en logout:', error);
-                        } finally {
-                            setIsLoading(false);
-                        }
-                    },
-                },
-            ]
-        );
-    }, [userRole, i18n.language, navigation, t]);
+    // Acción real de cerrar sesión (sin confirmación)
+    const performLogout = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            if (userRole) {
+                await saveLanguageForRole(userRole, i18n.language);
+            }
+            await AsyncStorage.removeItem('userRole');
+            navigation.navigate('HomesScreen');
+        } catch (error) {
+            console.error('Error en logout:', error);
+            throw error; // La pantalla mostrará el error con CustomAlert
+        } finally {
+            setIsLoading(false);
+        }
+    }, [userRole, i18n.language, navigation]);
 
     return {
         userRole,
@@ -109,7 +77,7 @@ export function useProfileViewModel() {
         updateKey,
         isLoading,
         handleBack,
-        handleLogout,
+        performLogout,      // La pantalla debe confirmar antes de llamar a esto
         toggleTheme,
     };
 }

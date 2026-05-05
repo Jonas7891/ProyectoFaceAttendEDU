@@ -1,76 +1,86 @@
-// viewmodels/useLoginViewModel.js
 import { useState } from "react";
-import { Alert } from "react-native";
 import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { restoreLanguageForRole } from "../view/components/common/languageByRole";
 import { useTheme } from "../view/components/common/ThemeContext";
-import { login } from "../services/AuthService";        // tu servicio de login
-import { saveToken } from "../storage/TokenStorage";   // tu storage de token
+import { login } from "../services/AuthService";
+import { saveToken } from "../storage/TokenStorage";
 import { getHighestRole } from "../utils/getHighestRole";
-import LoginRequest from "../model/LoginRequest";     // tu modelo de request
-import AuthResponse from "../model/AuthResponse";     // tu modelo de response
+import LoginRequest from "../model/LoginRequest";
+import AuthResponse from "../model/AuthResponse";
 
 export function useLoginViewModel({ onLogin }) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [terms, setTerms] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
+
+    // ✅ Nuevo estado para forzar la reactividad
+    const [errorTimestamp, setErrorTimestamp] = useState(0);
 
     const { t } = useTranslation();
     const { loadThemeForRole } = useTheme();
 
-    // Validación simple
+    const setErrorWithTimestamp = (message) => {
+        setError(message);
+        setErrorTimestamp(Date.now());
+    };
+
     const validate = () => {
-        if (!email.trim()) {
-            setError(t("login.errorEmail"));
+        if (!email.trim() || !password.trim()) {
+            setErrorWithTimestamp(
+                t("login.invalidCredentials", { defaultValue: "Credenciales incorrectas" })
+            );
             return false;
         }
-        if (!password.trim()) {
-            setError(t("login.errorPassword"));
+        if (!terms) {
+            setErrorWithTimestamp(
+                t("Acepta los términos y condiciones", { defaultValue: "Debes aceptar los términos y condiciones" })
+            );
             return false;
         }
         setError(null);
         return true;
     };
 
-    // Manejo de errores de red/API
     const handleError = (err) => {
         console.error("Login error:", err);
-        Alert.alert(t("common.error"), t("login.loginError"));
-        setError(t("login.loginError"));
+        setErrorWithTimestamp(
+            t("login.invalidCredentials", { defaultValue: "Credenciales incorrectas" })
+        );
     };
 
-    // Acción principal de login
     const submit = async () => {
+        // Limpiar error y timestamp
+        setError(null);
+        setErrorTimestamp(0);
+
         if (!validate()) return;
 
         setIsLoading(true);
-        setError(null);
 
         try {
-            // Crear el request
             const loginRequest = new LoginRequest(email, password);
+            const responseData = /*await*/ login(loginRequest.toApi());
 
-            // Llamada al servicio
-            const responseData = await login(loginRequest.toApi());
-            const authResponse = AuthResponse.fromApi(responseData);  // { token, user }
+            const authResponse = AuthResponse.fromApi(responseData);
 
-            // Guardar token con expiración si viene
+            if (!authResponse || !authResponse.token) {
+                throw new Error("Token no recibido en la respuesta");
+            }
+
             await saveToken(authResponse.token, authResponse.user?.expiresIn);
 
-            // Guardar rol (ajusta según la estructura de tu user)
-            const role = getHighestRole(authResponse.user.roles);
-            console.log("Roles: ", authResponse.user.roles);
-            console.log('Rol seleccionado:', role);
+            const role = getHighestRole(authResponse.user?.roles ?? []);
+            console.log("Rol seleccionado:", role);
+
             await AsyncStorage.setItem("userRole", role);
             await AsyncStorage.setItem("userEmail", email);
 
-            // Aplicar tema e idioma según el rol
             await loadThemeForRole(role);
             await restoreLanguageForRole(role);
 
-            // Notificar al flujo padre que el login fue exitoso
             if (onLogin) {
                 onLogin(role, authResponse.token);
             }
@@ -81,20 +91,22 @@ export function useLoginViewModel({ onLogin }) {
         }
     };
 
-    // Limpiar error
-    const clearError = () => setError(null);
+    const clearError = () => {
+        setError(null);
+        setErrorTimestamp(0);
+    };
 
     return {
-        // Estado
         email,
         password,
+        terms,
         isLoading,
         error,
-        // Setters
+        errorTimestamp,
         setEmail,
         setPassword,
-        // Acciones
+        setTerms,
         submit,
-        clearError
+        clearError,
     };
 }

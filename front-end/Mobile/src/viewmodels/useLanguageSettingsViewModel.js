@@ -1,6 +1,4 @@
-// viewmodels/useLanguageSettingsViewModel.js
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -16,6 +14,15 @@ export function useLanguageSettingsViewModel() {
     const [selectedTheme, setSelectedTheme] = useState(theme);
     const [isLoading, setIsLoading] = useState(false);
     const [componentKey, setComponentKey] = useState(0);
+
+    // ---- NUEVO: estado de alerta centralizado ----
+    const [alertData, setAlertData] = useState({
+        message: null,
+        type: 'warning',   // 'warning', 'success', 'error'
+        timestamp: 0,
+    });
+
+    const clearAlert = () => setAlertData({ message: null, type: 'warning', timestamp: 0 });
 
     // Listas de idiomas y temas
     const languages = useMemo(() => [
@@ -71,7 +78,11 @@ export function useLanguageSettingsViewModel() {
         try {
             const role = await AsyncStorage.getItem('userRole');
             if (!role) {
-                Alert.alert(t('common.error'), t('settings.noRoleError', { defaultValue: 'No se pudo determinar el rol del usuario' }));
+                setAlertData({
+                    message: t('settings.noRoleError', { defaultValue: 'No se pudo determinar el rol del usuario' }),
+                    type: 'error',
+                    timestamp: Date.now(),
+                });
                 setIsLoading(false);
                 return;
             }
@@ -83,18 +94,25 @@ export function useLanguageSettingsViewModel() {
             await saveLanguageForRole(role, selectedLanguage);
             await setThemeForRole(role, selectedTheme);
 
+            // Pequeña pausa para dar feedback visual
             await new Promise(resolve => setTimeout(resolve, 100));
 
-            Alert.alert(t('common.success'), t('settings.languageChanged'), [
-                { text: 'OK', onPress: () => navigation.goBack() }
-            ]);
+            setAlertData({
+                message: t('settings.languageChanged', { defaultValue: 'Idioma y tema guardados correctamente' }),
+                type: 'success',
+                timestamp: Date.now(),
+            });
         } catch (error) {
             console.error('Error guardando:', error);
-            Alert.alert(t('common.error'), t('settings.errorChangingLanguage'));
+            setAlertData({
+                message: t('settings.errorChangingLanguage', { defaultValue: 'No se pudo cambiar el idioma/tema' }),
+                type: 'error',
+                timestamp: Date.now(),
+            });
         } finally {
             setIsLoading(false);
         }
-    }, [selectedLanguage, selectedTheme, i18n, t, navigation, saveLanguageForRole, setThemeForRole]);
+    }, [selectedLanguage, selectedTheme, i18n, t, saveLanguageForRole, setThemeForRole]);
 
     const handleBack = useCallback(() => navigation.goBack(), [navigation]);
 
@@ -109,5 +127,8 @@ export function useLanguageSettingsViewModel() {
         themes,
         handleSave,
         handleBack,
+        // Manejo de alertas
+        alertData,
+        clearAlert,
     };
 }
