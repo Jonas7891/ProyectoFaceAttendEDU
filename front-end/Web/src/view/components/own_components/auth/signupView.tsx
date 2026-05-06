@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
     View, Text, TextInput, TouchableOpacity,
     ScrollView, Image, KeyboardAvoidingView, Platform,
@@ -8,17 +8,26 @@ import { Feather } from "@expo/vector-icons";
 import { useResponsive } from "../../hooks/useResponsive";
 import Colors from "../../constants/colors";
 import Button from "../ui/button";
+import { useSignupViewModel } from "../../../../viewmodels/useSignupViewModel";
 
 function Field({
-                   label, placeholder, onChangeText,
+                   label, placeholder, onChangeText, value = "",
                    secureTextEntry = false, icon, rightIcon, onRightIcon,
                }: {
     label: string; placeholder: string;
     onChangeText: (v: string) => void;
+    value?: string;
     secureTextEntry?: boolean;
     icon?: any; rightIcon?: any; onRightIcon?: () => void;
 }) {
     const [focused, setFocused] = useState(false);
+
+    const inputStyle: any = {
+        flex: 1,
+        fontSize: 15,
+        color: Colors.text,
+        outlineStyle: "none",
+    };
 
     return (
         <View style={{ gap: 6 }}>
@@ -37,17 +46,14 @@ function Field({
                 <TextInput
                     placeholder={placeholder}
                     placeholderTextColor={Colors.muted}
+                    value={value}
                     onChangeText={onChangeText}
                     secureTextEntry={secureTextEntry}
                     onFocus={() => setFocused(true)}
                     onBlur={() => setFocused(false)}
                     autoCapitalize="none"
                     autoCorrect={false}
-                    style={{
-                        flex: 1, fontSize: 15, color: Colors.text,
-                        // @ts-ignore
-                        outlineStyle: "none",
-                    }}
+                    style={inputStyle}
                 />
                 {rightIcon && (
                     <TouchableOpacity onPress={onRightIcon} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
@@ -59,40 +65,35 @@ function Field({
     );
 }
 
-export default function SignupPage({ onRegister, onLogin }: {
-    onRegister: (data: { usuario: string; email: string; contrasena: string }) => void;
+export default function SignupPage({ onSignupSuccess, onLogin }: {
+    onSignupSuccess?: (role: string, token: string) => void;
     onLogin?: () => void;
 }) {
     const { isSmall } = useResponsive();
-
-    const usuarioRef    = useRef("");
-    const emailRef      = useRef("");
-    const contrasenaRef = useRef("");
     const [showPass, setShowPass] = useState(false);
-    const [loading,  setLoading]  = useState(false);
-    const [error,    setError]    = useState("");
 
-    function handleRegister() {
-        if (!usuarioRef.current || !emailRef.current || !contrasenaRef.current) {
-            setError("Completa todos los campos");
-            return;
-        }
-        setError("");
-        setLoading(true);
-        setTimeout(() => {
-            setLoading(false);
-            onRegister({ usuario: usuarioRef.current, email: emailRef.current, contrasena: contrasenaRef.current });
-        }, 900);
-    }
+    const {
+        username,
+        email,
+        password,
+        isLoading,
+        error,
+        setUsername,
+        setEmail,
+        setPassword,
+        submit: handleRegister,
+    } = useSignupViewModel({
+        onSignup: onSignupSuccess,
+    });
 
     const fields = (
         <View style={{ gap: 18 }}>
             <Field label="Usuario" placeholder="Tu nombre de usuario"
-                   onChangeText={v => { usuarioRef.current = v; }} icon="user" />
+                   onChangeText={setUsername} value={username} icon="user" />
             <Field label="Correo electrónico" placeholder="correo@universidad.edu"
-                   onChangeText={v => { emailRef.current = v; }} icon="mail" />
+                   onChangeText={setEmail} value={email} icon="mail" />
             <Field label="Contraseña" placeholder="Crea una contraseña"
-                   onChangeText={v => { contrasenaRef.current = v; }}
+                   onChangeText={setPassword} value={password}
                    secureTextEntry={!showPass} icon="lock"
                    rightIcon={showPass ? "eye-off" : "eye"}
                    onRightIcon={() => setShowPass(v => !v)} />
@@ -107,7 +108,7 @@ export default function SignupPage({ onRegister, onLogin }: {
                 </View>
             )}
             <View style={{ marginTop: 28 }}>
-                <Button label={loading ? "Registrando…" : "Registrarse"} onPress={handleRegister} />
+                <Button label={isLoading ? "Registrando…" : "Registrarse"} onPress={handleRegister} />
             </View>
             <View style={{ flexDirection: "row", justifyContent: "center", gap: 4, marginTop: 20 }}>
                 <Text style={{ fontSize: 14, color: Colors.muted }}>¿Ya tienes cuenta?</Text>
