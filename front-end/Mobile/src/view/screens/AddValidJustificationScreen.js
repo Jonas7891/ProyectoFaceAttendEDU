@@ -316,7 +316,7 @@ export default function AddValidJustificationScreen() {
                     >
                         <View style={styles.containerAddValidJustification}>
                             {/* ── Encabezado ───────────────────────────────────────── */}
-                            <Text style={[styles.mainTitle, { color: colors.text }]}>
+                            <Text style={[styles.mainTitle, { color: colors.text, marginTop: Platform.OS === "ios" ? 0 : 15 }]}>
                                 {t("justify.title")}
                             </Text>
 

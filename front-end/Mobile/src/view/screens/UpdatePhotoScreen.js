@@ -107,7 +107,7 @@ export default function UpdatePhoto() {
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={styles.scrollViewContentUpdatePhoto}
                 >
-                    <View style={styles.mainContainerUpdatePhoto}>
+                    <View style={[styles.mainContainerUpdatePhoto, { marginTop: Platform.OS === "ios" ? 0 : 50 }]}>
                         {/* Imagen de perfil */}
                         <View style={styles.imageContainerUpdatePhoto}>
                             <Image
