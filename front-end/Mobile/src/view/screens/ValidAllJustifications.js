@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView } from "react-native";
+import {View, Text, ScrollView, TouchableOpacity, SafeAreaView, Platform} from "react-native";
 import { useTranslation } from "react-i18next";
 import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import { useTheme } from '../components/common/ThemeContext';
@@ -56,7 +56,7 @@ export default function JustificationsScreen() {
             style={[styles.validAllJustificationsSafeArea, { backgroundColor: colors.background }]}
             key={`${refreshKey}-${updateKey}`}
         >
-            <View style={[styles.validAllJustificationsContainer, { backgroundColor: colors.background }]} marginHorizontal={10}>
+            <View style={[styles.validAllJustificationsContainer, { backgroundColor: colors.background,  marginTop: Platform.OS === "ios" ? 0 : 50} ]} marginHorizontal={10}>
                 <View style={[styles.validAllJustificationsHeader, { backgroundColor: colors.background }]}>
                     <Text style={[styles.validAllJustificationsTitle, { color: colors.text }]}>
                         {t("justifications.validList")}
