@@ -8,12 +8,14 @@ import SignupPage from "../components/own_components/auth/signupView";
 export default function SignupScreen() {
     const navigation = useNavigation<any>();
 
+    const handleSignupSuccess = (role: string, token: string) => {
+        console.log(`Registro exitoso - Rol: ${role}`);
+        navigation.replace("FaceAttendEDU-Dashboard");
+    };
+
     return (
         <SignupPage
-            onRegister={(data) => {
-                console.log("Register:", data);
-                navigation.replace("FaceAttendEDU-Dashboard");
-            }}
+            onSignupSuccess={handleSignupSuccess}
             onLogin={() => {
                 navigation.navigate("FaceAttendEDU-Login");
             }}

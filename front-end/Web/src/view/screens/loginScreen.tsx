@@ -5,13 +5,14 @@ import LoginPage from "../components/own_components/auth/loginView";
 export default function LoginScreen() {
     const navigation = useNavigation<any>();
 
+    const handleLoginSuccess = (role: string, token: string) => {
+        console.log(`Login exitoso - Rol: ${role}`);
+        navigation.replace("FaceAttendEDU-Dashboard");
+    };
+
     return (
         <LoginPage
-            onLogin={(usuario: string, contrasena: string) => {
-                console.log("Login:", usuario, contrasena);
-                // Navegar al dashboard tras el login exitoso
-                navigation.replace("FaceAttendEDU-Dashboard");
-            }}
+            onLoginSuccess={handleLoginSuccess}
             onForgotPassword={() => {
                 console.log("Forgot password");
             }}
