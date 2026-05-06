@@ -1,7 +1,3 @@
-// ============================================================
-//  FaceAttend EDU — Dashboard Screen (React Native)
-//  Sidebar en desktop · Bottom tabs en móvil (con Feather icons)
-// ============================================================
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";

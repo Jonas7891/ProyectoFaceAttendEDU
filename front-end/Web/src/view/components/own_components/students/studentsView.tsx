@@ -1,7 +1,3 @@
-// ============================================================
-//  FaceAttend EDU — Students View (React Native)
-//  Layout tabla/lista con modal de detalle — sin emojis
-// ============================================================
 import React, { useState, useMemo } from "react";
 import { View, Text, ScrollView, TextInput, TouchableOpacity, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";
