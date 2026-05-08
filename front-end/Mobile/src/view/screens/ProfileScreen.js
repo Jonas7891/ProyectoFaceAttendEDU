@@ -101,7 +101,7 @@ export default function ProfileScreen() {
                         </TouchableOpacity>
                     </View>
 
-                    <View style={{ marginTop: Platform.OS === 'ios' ? 50 : 80 }}>
+                    <View style={{ marginTop: Platform.OS === 'ios' ? 50 : 10 }}>
                         <View style={styles.buttonContainer} marginTop={60}>
                             <PrimaryButton
                                 title={t('consultJustify.back')}

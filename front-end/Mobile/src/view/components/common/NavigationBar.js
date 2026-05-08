@@ -79,7 +79,7 @@ export default function BottomBar({ onPressSettings, onPressProfile, onPressSear
           source={require("../../../assets/images/configuraciones.png")}
           style={[
             stylescommon.navIcon,
-            { tintColor: selected === "menu" ? colors.primary : colors.textSecondary }
+            { tintColor: selected === "menu" ? colors.primary : colors.textSecondaryButtons }
           ]}
         />
       </TouchableOpacity>
@@ -89,7 +89,7 @@ export default function BottomBar({ onPressSettings, onPressProfile, onPressSear
           source={require("../../../assets/images/perfil-del-usuario.png")}
           style={[
             stylescommon.navIconCenter,
-            { tintColor: selected === "profile" ? colors.primary : colors.textSecondary }
+            { tintColor: selected === "profile" ? colors.primary : colors.textSecondaryButtons }
           ]}
         />
       </TouchableOpacity>
@@ -97,7 +97,7 @@ export default function BottomBar({ onPressSettings, onPressProfile, onPressSear
       <TouchableOpacity onPress={handleBusqueda} style={getButtonstyle("search")}>
         <Image
           source={require("../../../assets/images/avatar.png")}
-          style={[ stylescommon.navIcon, { tintColor: selected === "search" ? colors.primary : colors.textSecondary, width: 35, height: 35, }]}
+          style={[ stylescommon.navIcon, { tintColor: selected === "search" ? colors.primary : colors.textSecondaryButtons, width: 35, height: 35, }]}
         />
       </TouchableOpacity>
 
