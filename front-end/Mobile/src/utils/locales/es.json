@@ -191,7 +191,7 @@
   },
   "registerModal": {
     "title": "Solicitud de Cuenta Personal",
-    "description": "Si no tienes una cuenta creada, la debes solicitar al administrador.",
+    "description": "Si no tienes una cuenta creada, la debes crear en el aplicativo web.",
     "close": "Cerrar"
   },
   "termsModal": {
