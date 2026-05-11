@@ -4,11 +4,11 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLanguageRefresh } from '../../../utils/useLanguageRefresh';
-import { useTheme } from '../common/ThemeContext';
+import { useTheme } from './ThemeContext';
 import stylescommon from './style/Style';
 
 const screens = {
-  home: "DashboardScreen", // Cambiado de "Dashboard" a "DashboardScreen"
+  home: "DashboardScreen",
   history: "Historial",
   DisplayingAttendance: "DisplayingAttendance"
 };
@@ -49,8 +49,7 @@ export default function CustomTabs({ onChange, userRole, onLogout }) {
 
   const getTabIndex = (routeName) => {
     switch (routeName) {
-      case "DashboardScreen": // Cambiado de "Dashboard" a "DashboardScreen"
-      case "Dashboard": // Por si acaso
+      case "DashboardScreen":
         return 0;
       case "Novedades":
         return 1;

@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react";
 import { View, TouchableOpacity, Image } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { useTheme } from '../common/ThemeContext';
+import { useTheme } from './ThemeContext';
 import stylescommon from "./style/Style";
 
 export default function BottomBar({ onPressSettings, onPressProfile, onPressSearch, screenNames = {} }) {
   const navigation = useNavigation();
   const route = useRoute();
-  const { colors, loadThemeForRole, toggleTheme } = useTheme();
+  const { colors, theme, loadThemeForRole } = useTheme();
 
   const [selected, setSelected] = useState(null);
   const [userRole, setUserRole] = useState(null);
@@ -17,11 +17,7 @@ export default function BottomBar({ onPressSettings, onPressProfile, onPressSear
     const loadUserRole = async () => {
       const role = await AsyncStorage.getItem('userRole');
       setUserRole(role);
-
-      if (role) {
-        await loadThemeForRole(role);
-      }
-
+      if (role) await loadThemeForRole(role);
     };
     loadUserRole();
   }, []);
@@ -55,52 +51,63 @@ export default function BottomBar({ onPressSettings, onPressProfile, onPressSear
     setSelected(getSelectedButton(route?.name));
   }, [route?.name]);
 
-  const getButtonstyle = (key) => [
+  // ✅ FIX BORDE: sin borderWidth ni borderColor en el botón,
+  // solo el backgroundColor activo/inactivo sin bordes extra.
+  const getButtonStyle = (key) => [
     stylescommon.navButton,
     {
       backgroundColor: selected === key ? colors.tabActive : 'transparent',
-      borderColor: colors.border
+      // Se elimina borderColor que en modo oscuro podía
+      // generar bordes visibles no deseados.
+      borderWidth: 0,
     }
   ];
 
+  // REGLA: oscuro → íconos blancos, claro → íconos negros
+  // El color activo siempre usa colors.primary (azul) en ambos temas.
+  const getIconTint = (key) => {
+    if (selected === key) return colors.primary;
+    return theme === 'dark' ? '#FFFFFF' : '#000000';
+  };
+
   return (
-    <View
-      style={[
-        stylescommon.navBarContainer,
-        {
-          backgroundColor: colors.navBar,
-          borderTopColor: colors.border
-        }
-      ]}
-    >
-
-      <TouchableOpacity onPress={handleMenu} style={getButtonstyle("menu")}>
-        <Image
-          source={require("../../../assets/images/configuraciones.png")}
+      <View
           style={[
-            stylescommon.navIcon,
-            { tintColor: selected === "menu" ? colors.primary : colors.textSecondaryButtons }
+            stylescommon.navBarContainer,
+            {
+              backgroundColor: colors.navBar,
+              // ✅ FIX BORDE: se fuerza borderTopWidth a 0.
+              // colors.border en oscuro puede tener un valor visible
+              // que genera la línea/borde superior no deseada.
+              borderTopWidth: 0,
+              elevation: 0,
+              shadowOpacity: 0,
+            }
           ]}
-        />
-      </TouchableOpacity>
+      >
+        <TouchableOpacity onPress={handleMenu} style={getButtonStyle("menu")}>
+          <Image
+              source={require("../../../assets/images/configuraciones.png")}
+              style={[stylescommon.navIcon, { tintColor: getIconTint("menu") }]}
+          />
+        </TouchableOpacity>
 
-      <TouchableOpacity onPress={handleFoto} style={getButtonstyle("profile")}>
-        <Image
-          source={require("../../../assets/images/perfil-del-usuario.png")}
-          style={[
-            stylescommon.navIconCenter,
-            { tintColor: selected === "profile" ? colors.primary : colors.textSecondaryButtons }
-          ]}
-        />
-      </TouchableOpacity>
+        <TouchableOpacity onPress={handleFoto} style={getButtonStyle("profile")}>
+          <Image
+              source={require("../../../assets/images/perfil-del-usuario.png")}
+              style={[stylescommon.navIconCenter, { tintColor: getIconTint("profile") }]}
+          />
+        </TouchableOpacity>
 
-      <TouchableOpacity onPress={handleBusqueda} style={getButtonstyle("search")}>
-        <Image
-          source={require("../../../assets/images/avatar.png")}
-          style={[ stylescommon.navIcon, { tintColor: selected === "search" ? colors.primary : colors.textSecondaryButtons, width: 35, height: 35, }]}
-        />
-      </TouchableOpacity>
-
-    </View>
+        <TouchableOpacity onPress={handleBusqueda} style={getButtonStyle("search")}>
+          <Image
+              source={require("../../../assets/images/avatar.png")}
+              style={[
+                stylescommon.navIcon,
+                { tintColor: getIconTint("search"), width: 35, height: 35 }
+              ]}
+          />
+        </TouchableOpacity>
+      </View>
   );
 }
