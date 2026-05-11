@@ -1,7 +1,3 @@
-// ============================================================
-//  FaceAttend EDU — Settings View (React Native)
-//  Nav lateral de secciones + contenido — sin emojis
-// ============================================================
 import React, { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
 import Slider from "@react-native-community/slider";
