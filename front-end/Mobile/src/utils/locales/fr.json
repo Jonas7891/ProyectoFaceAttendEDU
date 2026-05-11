@@ -13,7 +13,12 @@
     "yes": "Sim",
     "no": "Não",
     "accept": "Aceitar",
-    "discard": "Descartar"
+    "discard": "Descartar",
+    "delete": "Supprimer",
+    "add": "Ajouter",
+    "name": "Nom",
+    "email": "Email",
+    "phone": "Téléphone"
   },
   "login": {
     "title": "Início de Sessão",
@@ -392,5 +397,25 @@
     "logout": "Sair",
     "logoutConfirm": "Tem certeza de que deseja sair?",
     "school": "Escola"
+  },
+  "manageUsers": {
+    "title": "Gestion des Utilisateurs",
+    "students": "Étudiants",
+    "teachers": "Professeurs",
+    "addStudent": "Ajouter un étudiant",
+    "noRecords": "Aucun enregistrement",
+    "searchStudent": "Rechercher un étudiant",
+    "enterStudentName": "Entrez le nom de l'étudiant",
+    "enterNameToSearch": "Entrez un nom pour rechercher",
+    "editStudentInfo": "Modifier les Informations de l'Étudiant",
+    "newRecord": "Nouvel enregistrement",
+    "grade": "Classe",
+    "subject": "Matière",
+    "validation": "Validation",
+    "nameRequired": "Le nom est obligatoire",
+    "confirm": "Confirmer",
+    "deleteQuestion": "Supprimer l'enregistrement ?",
+    "accessDenied": "Accès refusé",
+    "onlyAdmins": "Seuls les administrateurs peuvent accéder à cet écran."
   }
 }

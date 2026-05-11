@@ -13,7 +13,12 @@
     "yes": "Yes",
     "no": "No",
     "accept": "Accept",
-    "discard": "Discard"
+    "discard": "Discard",
+    "delete": "Delete",
+    "add": "Add",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone"
   },
   "login": {
     "title": "Login",
@@ -392,5 +397,25 @@
     "logout": "Logout",
     "logoutConfirm": "Are you sure you want to logout?",
     "school": "School"
+  },
+  "manageUsers": {
+    "title": "User Management",
+    "students": "Students",
+    "teachers": "Teachers",
+    "addStudent": "Add Student",
+    "noRecords": "No records",
+    "searchStudent": "Search Student",
+    "enterStudentName": "Enter student name",
+    "enterNameToSearch": "Enter a name to search",
+    "editStudentInfo": "Edit Student Information",
+    "newRecord": "New Record",
+    "grade": "Grade",
+    "subject": "Subject",
+    "validation": "Validation",
+    "nameRequired": "Name is required",
+    "confirm": "Confirm",
+    "deleteQuestion": "Delete record?",
+    "accessDenied": "Access denied",
+    "onlyAdmins": "Only administrators can access this screen."
   }
 }

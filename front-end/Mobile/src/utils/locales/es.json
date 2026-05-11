@@ -13,7 +13,13 @@
     "yes": "Sí",
     "no": "No",
     "accept": "Aceptar",
-    "discard": "Descartar"
+    "discard": "Descartar",
+    "delete": "Eliminar",
+    "add": "Agregar",
+    "name": "Nombre",
+    "email": "Email",
+    "phone": "Teléfono",
+    "edit": "Editar"
   },
   "login": {
     "title": "Inicio de Sesión",
@@ -392,5 +398,25 @@
     "logout": "Cerrar Sesión",
     "logoutConfirm": "¿Estás seguro de que deseas cerrar sesión?",
     "school": "Colegio"
+  },
+  "manageUsers": {
+    "title": "Gestión de Usuarios",
+    "students": "Estudiantes",
+    "teachers": "Profesores",
+    "addStudent": "Agregar estudiante",
+    "noRecords": "Sin registros",
+    "searchStudent": "Buscar estudiante",
+    "enterStudentName": "Ingrese nombre del estudiante",
+    "enterNameToSearch": "Sin datos que buscar",
+    "editStudentInfo": "Editar Información del Estudiante",
+    "newRecord": "Nuevo registro",
+    "grade": "Grado",
+    "subject": "Materia",
+    "validation": "Validación",
+    "nameRequired": "El nombre es obligatorio",
+    "confirm": "Confirmar",
+    "deleteQuestion": "¿Eliminar registro?",
+    "accessDenied": "Acceso denegado",
+    "onlyAdmins": "Solo administradores pueden acceder a esta pantalla."
   }
 }

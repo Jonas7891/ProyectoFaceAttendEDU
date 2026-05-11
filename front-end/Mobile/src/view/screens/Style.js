@@ -1,4 +1,4 @@
-import { StyleSheet, Platform } from 'react-native';
+import {StyleSheet, Platform} from 'react-native';
 
 const styles = StyleSheet.create({
     safeArea: {
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         alignItems: "center",
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
         padding: 15,
         marginBottom: 20,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         alignItems: "center",
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
         padding: 12,
         marginBottom: 8,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
+        shadowOffset: {width: 0, height: 1},
         shadowOpacity: 0.05,
         shadowRadius: 2,
         elevation: 2,
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
         padding: 12,
         marginBottom: 15,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
+        shadowOffset: {width: 0, height: 1},
         shadowOpacity: 0.05,
         shadowRadius: 2,
         elevation: 2,
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
         padding: 12,
         marginBottom: 8,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
+        shadowOffset: {width: 0, height: 1},
         shadowOpacity: 0.05,
         shadowRadius: 2,
         elevation: 2,
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 24,
         borderRadius: 12,
         shadowColor: '#4CAF50',
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: {width: 0, height: 4},
         shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 5,
@@ -640,7 +640,7 @@ const styles = StyleSheet.create({
         height: '80%',
     },
     arrowImage: {
-        transform: [{ rotate: '180deg' }],
+        transform: [{rotate: '180deg'}],
         width: 26,
         height: 26,
         marginLeft: "auto",
@@ -798,7 +798,8 @@ const styles = StyleSheet.create({
     },
 
     buttonContainer: {
-        paddingBottom: Platform.OS === 'ios' ? 10 : 20,
+        marginBottom: Platform.OS === 'ios' ? 60 : 130,
+        marginHorizontal: 20
     },
 
     menuItem: {
@@ -852,7 +853,7 @@ const styles = StyleSheet.create({
     activeSectionTab: {
         backgroundColor: "#4A90E2",
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 2,
@@ -890,7 +891,7 @@ const styles = StyleSheet.create({
         padding: 16,
         marginBottom: 12,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.05,
         shadowRadius: 8,
         elevation: 3,
@@ -955,7 +956,7 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         padding: 20,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.05,
         shadowRadius: 8,
         elevation: 2,
@@ -1003,7 +1004,6 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         minWidth: '30%',
         alignItems: 'center',
-        // borderWidth se aplica inline dinámicamente
     },
 
     typeButtonActive: {
@@ -1097,6 +1097,13 @@ const styles = StyleSheet.create({
         borderColor: '#E0E0E0',
     },
 
+    cancelButtonManage: {
+        padding: 10,
+        borderWidth: 1,
+        borderRadius: 6,
+        alignItems: 'center'
+    },
+
     cancelButtonText: {
         fontSize: 16,
         color: '#666',
@@ -1174,7 +1181,7 @@ const styles = StyleSheet.create({
         borderLeftWidth: 4,
         borderLeftColor: '#3498DB',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
+        shadowOffset: {width: 0, height: 1},
         shadowOpacity: 0.05,
         shadowRadius: 2,
         elevation: 1,
@@ -1215,7 +1222,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#E0E0E0',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
+        shadowOffset: {width: 0, height: 1},
         shadowOpacity: 0.1,
         shadowRadius: 3,
         elevation: 2,
@@ -1279,7 +1286,7 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#F0F0F0',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.05,
         shadowRadius: 4,
         elevation: 3,
@@ -1339,7 +1346,7 @@ const styles = StyleSheet.create({
         padding: 16,
         marginBottom: 12,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
+        shadowOffset: {width: 0, height: 1},
         shadowOpacity: 0.05,
         shadowRadius: 2,
         elevation: 1,
@@ -1354,7 +1361,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginRight: 12,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 2,
@@ -1411,7 +1418,7 @@ const styles = StyleSheet.create({
         borderLeftWidth: 4,
         borderLeftColor: '#4A90E2',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.06,
         shadowRadius: 6,
         elevation: 2,
@@ -1624,7 +1631,7 @@ const styles = StyleSheet.create({
         fontWeight: '700',
     },
 
-    validAllJustificationsCategoryCount: {  
+    validAllJustificationsCategoryCount: {
         fontSize: 12,
     },
 
@@ -1833,25 +1840,9 @@ const styles = StyleSheet.create({
         marginBottom: 5,
     },
 
-    typeButton: {
-        flex: 1,
-        backgroundColor: "#F5F5F5",
-        paddingVertical: 12,
-        borderRadius: 12,
-        alignItems: "center",
-        borderWidth: 1,
-        borderColor: "#E0E0E0",
-    },
-
     activeTypeButton: {
         backgroundColor: "#4A90E2",
         borderColor: "#4A90E2",
-    },
-
-    typeButtonText: {
-        fontSize: 15,
-        fontWeight: "600",
-        color: "#666",
     },
 
     activeTypeButtonText: {
@@ -1928,15 +1919,44 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
 
-    secondaryButton: {
-        alignItems: "center",
-        paddingVertical: 12,
-        marginTop: 10,
-        marginBottom: 20,
-        borderColor: "#c8c8c8",
-        borderWidth: 0.2,
-        borderRadius: 12,
-        borderBlockColor: "#c8c8c8",
+    // --- ManageUsersScreen specific styles (moved) ---
+    headerManage: {
+        padding: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: Platform.OS === 'android' ? 25 : 5
+    },
+    titleManage: {
+        fontSize: 20,
+        fontWeight: '700',
+        textAlign: 'center',
+    },
+    title: {fontSize: 20, fontWeight: '700'},
+    tabs: {flexDirection: 'row', paddingHorizontal: 16, marginLeft: 10,},
+    tabButton: {flex: 1, paddingVertical: 12, alignItems: 'center'},
+    actionsRow: {padding: 16},
+    list: {paddingHorizontal: 16, paddingBottom: 40},
+    item: {flexDirection: 'row', padding: 12, borderRadius: 8, marginBottom: 10, alignItems: 'center'},
+    itemInfo: {flex: 1},
+    itemName: {fontSize: 16, fontWeight: '600'},
+    itemMeta: {fontSize: 12, marginTop: 4},
+    itemActions: {flexDirection: 'row'},
+    actionButton: {marginLeft: 12},
+    actionText: {fontSize: 14},
+    empty: {padding: 30, alignItems: 'center'},
+
+    modalWrapper: {flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.4)'},
+    modal: {width: '90%', borderRadius: 8, padding: 16},
+    modalTitle: {fontSize: 18, fontWeight: '700', marginBottom: 12},
+    input: {borderWidth: 0.2, borderRadius: 6, padding: 10, marginBottom: 10},
+    modalActions: {alignItems: 'center', marginTop: 5, width: '100%', textAlign: "center"},
+    searchItem: {
+        flexDirection: 'row',
+        padding: 10,
+        borderWidth: 1,
+        borderRadius: 6,
+        marginBottom: 8,
+        alignItems: 'center'
     },
 });
 

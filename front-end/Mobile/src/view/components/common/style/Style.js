@@ -8,6 +8,7 @@ const stylescommon = StyleSheet.create({
     image: {
         width: "100%",
         height: "100%",
+        color: "black",
     },
     containerCustomTabs: {
         flexDirection: "row",
@@ -122,6 +123,7 @@ const stylescommon = StyleSheet.create({
         shadowOpacity: 0.2,
         shadowRadius: 5,
         shadowOffset: { width: 0, height: 2 },
+        marginBottom: Platform.OS === 'android' ? 25 : 0
     },
     navButton: {
         alignItems: "center",
