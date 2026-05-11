@@ -3,7 +3,8 @@
 //  Nav lateral de secciones + contenido — sin emojis
 // ============================================================
 import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Slider } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
+import Slider from "@react-native-community/slider";
 import { Feather } from "@expo/vector-icons";
 import { Card, PageHeader, UIButton, ToggleRow, Divider } from "../ui/UI";
 import Colors from "../../constants/colors";
