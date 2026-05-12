@@ -1958,6 +1958,124 @@ const styles = StyleSheet.create({
         marginBottom: 8,
         alignItems: 'center'
     },
+    // ========== PROFILE styles ==========
+    avatarCircleProfile: {
+        width: 72,
+        height: 72,
+        borderRadius: 36,
+        alignItems: 'center',
+        justifyContent: 'center',
+        alignSelf: 'center',
+        marginBottom: 10,
+    },
+    avatarInitialsProfile: {
+        fontSize: 26,
+        fontWeight: '700',
+        letterSpacing: 1,
+    },
+
+    courseCardProfile: {
+        borderRadius: 10,
+        padding: 12,
+        marginBottom: 8,
+    },
+    courseNameProfile: {
+        fontSize: 14,
+        fontWeight: '600',
+        marginBottom: 2,
+    },
+    courseCodeProfile: {
+        fontSize: 12,
+        marginBottom: 4,
+    },
+    courseStatusProfile: {
+        fontSize: 11,
+        fontWeight: '600',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
+
+    statsCardProfile: {
+        borderRadius: 12,
+        padding: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 16,
+        marginBottom: 8,
+    },
+    statsCircleContainer: {
+        alignItems: 'center',
+        minWidth: 64,
+    },
+    statsPctText: {
+        fontSize: 28,
+        fontWeight: '800',
+    },
+    statsLabel: {
+        fontSize: 11,
+        marginTop: 2,
+    },
+    statsBreakdown: {
+        flex: 1,
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 10,
+    },
+    statItemProfile: {
+        alignItems: 'center',
+        minWidth: 56,
+    },
+    statValueProfile: {
+        fontSize: 18,
+        fontWeight: '700',
+    },
+    statLabelProfile: {
+        fontSize: 10,
+        marginTop: 2,
+        textAlign: 'center',
+    },
+
+    justCardProfile: {
+        borderRadius: 10,
+        padding: 12,
+        marginBottom: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    justDateProfile: {
+        fontSize: 11,
+        marginBottom: 3,
+    },
+    justTextProfile: {
+        fontSize: 13,
+    },
+    justBadgeProfile: {
+        borderRadius: 8,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        alignSelf: 'flex-start',
+    },
+
+    // Tarjeta de dispositivo IoT
+    deviceCardProfile: {
+        borderRadius: 10,
+        padding: 12,
+        marginBottom: 8,
+    },
+    deviceNameProfile: {
+        fontSize: 14,
+        fontWeight: '600',
+        marginBottom: 4,
+    },
+    deviceDetailProfile: {
+        fontSize: 12,
+        marginBottom: 4,
+    },
+    deviceStatusProfile: {
+        fontSize: 12,
+        fontWeight: '600',
+    },
 });
 
 export default styles;
