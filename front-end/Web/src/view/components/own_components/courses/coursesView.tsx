@@ -1,7 +1,3 @@
-// ============================================================
-//  FaceAttend EDU — Courses View (React Native)
-//  Grid de cards fiel al original — sin emojis
-// ============================================================
 import React, { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";

@@ -1,7 +1,3 @@
-// ============================================================
-//  FaceAttend EDU — Dashboard View (React Native)
-//  Layout fiel al faceattend-edu: grid de stats, gráficas, actividad
-// ============================================================
 import React from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";

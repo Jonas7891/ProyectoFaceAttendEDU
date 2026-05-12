@@ -1,7 +1,3 @@
-// ============================================================
-//  FaceAttend EDU — Reports View (React Native)
-//  Layout 2-col en desktop, con Feather icons — sin emojis
-// ============================================================
 import React, { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
