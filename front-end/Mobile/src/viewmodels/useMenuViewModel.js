@@ -1,10 +1,10 @@
-// viewmodels/useMenuViewModel.js
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../view/components/common/ThemeContext';
 import { getHighestRole } from '../utils/getHighestRole';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { getCurrentUserRole, getCurrentUser } from "../services/UserService";
 
 export function useMenuViewModel({ onLogout }) {
     const navigation = useNavigation();
@@ -17,7 +17,7 @@ export function useMenuViewModel({ onLogout }) {
 
     const loadUserData = useCallback(async () => {
         try {
-            let roleData = await AsyncStorage.getItem('userRole');
+            let roleData = await getCurrentUserRole();
 
             let finalRole = null;
             if (roleData) {

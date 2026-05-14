@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../view/components/common/ThemeContext';
+import {getCurrentUserRole} from "../services/UserService";
 
 export function useUpdatePhotoViewModel() {
     const navigation = useNavigation();
@@ -28,7 +28,7 @@ export function useUpdatePhotoViewModel() {
     // Inicialización y listener de idioma
     useEffect(() => {
         const init = async () => {
-            const role = await AsyncStorage.getItem('userRole');
+            const role = await getCurrentUserRole();
             if (role) {
                 await loadThemeForRole(role);
             }

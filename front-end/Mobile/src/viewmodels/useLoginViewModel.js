@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { restoreLanguageForRole } from "../view/components/common/languageByRole";
 import { useTheme } from "../view/components/common/ThemeContext";
 import { login } from "../services/AuthService";
@@ -64,15 +63,13 @@ export function useLoginViewModel({ onLogin }) {
             const loginRequest = new LoginRequest(email, password);
             const responseData = login(loginRequest.toApi());
 
-            console.log("Login response:", responseData);
-
             const authResponse = AuthResponse.fromApi(responseData);
 
             if (!authResponse || !authResponse.token) {
                 throw new Error("Token no recibido en la respuesta");
             }
 
-            // Guardar el token
+            // Solo guardamos el token, los datos se extraen de él
             const saved = await saveToken(authResponse.token);
 
             if (!saved) {
@@ -83,8 +80,7 @@ export function useLoginViewModel({ onLogin }) {
             const userData = authResponse.user;
             const role = getHighestRole(userData?.roles ?? []);
 
-            console.log("Rol seleccionado:", role);
-            console.log("Email del token:", userData?.email);
+            console.log("✅ Login exitoso - Rol:", role);
 
             // Aplicar tema y lenguaje según el rol
             await loadThemeForRole(role);
@@ -94,7 +90,7 @@ export function useLoginViewModel({ onLogin }) {
                 onLogin(role, authResponse.token);
             }
         } catch (err) {
-            console.error("Error en submit:", err);
+            console.error("Error en login:", err);
             handleError(err);
             await removeToken();
         } finally {

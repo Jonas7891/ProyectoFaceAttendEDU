@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { Platform } from "react-native";
 import { useTranslation } from "react-i18next";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLanguageRefresh } from "../utils/useLanguageRefresh";
 import { useTheme } from "../view/components/common/ThemeContext";
+import { getCurrentUserRole } from "../services/UserService";
 
 // CONSTANTES
 export const STATUS_CONFIG = {
@@ -183,14 +183,30 @@ export function useAttendanceViewModel() {
 
     useEffect(() => {
         const init = async () => {
-            const role = await AsyncStorage.getItem("userRole");
-            setUserRole(role);
-            await loadThemeForRole(role);
+            try {
+                // Obtener el rol desde el token (fuente única de verdad)
+                const role = await getCurrentUserRole();
+                setUserRole(role);
+
+                if (role) {
+                    await loadThemeForRole(role);
+                }
+            } catch (error) {
+                console.error("Error cargando datos del usuario:", error);
+            } finally {
+                setLoading(false);
+            }
         };
+
         init();
+
+        // Escuchar cambios de idioma
         const onLangChange = () => setUpdateKey(p => p + 1);
         i18n.on("languageChanged", onLangChange);
-        return () => i18n.off("languageChanged", onLangChange);
+
+        return () => {
+            i18n.off("languageChanged", onLangChange);
+        };
     }, []);
 
     const isAdmin = userRole === "admin";
