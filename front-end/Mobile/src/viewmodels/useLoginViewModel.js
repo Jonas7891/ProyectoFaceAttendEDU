@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { restoreLanguageForRole } from "../view/components/common/languageByRole";
 import { useTheme } from "../view/components/common/ThemeContext";
 import { login } from "../services/AuthService";
-import { saveToken } from "../storage/TokenStorage";
+import { getToken, saveToken, removeToken } from "../storage/TokenStorage";
 import { getHighestRole } from "../utils/getHighestRole";
 import LoginRequest from "../model/LoginRequest";
 import AuthResponse from "../model/AuthResponse";
@@ -62,7 +62,9 @@ export function useLoginViewModel({ onLogin }) {
 
         try {
             const loginRequest = new LoginRequest(email, password);
-            const responseData = /*await*/ login(loginRequest.toApi());
+            const responseData = login(loginRequest.toApi());
+
+            console.log("Login response:", responseData);
 
             const authResponse = AuthResponse.fromApi(responseData);
 
@@ -70,14 +72,21 @@ export function useLoginViewModel({ onLogin }) {
                 throw new Error("Token no recibido en la respuesta");
             }
 
-            await saveToken(authResponse.token, authResponse.user?.expiresIn);
+            // Guardar el token
+            const saved = await saveToken(authResponse.token);
 
-            const role = getHighestRole(authResponse.user?.roles ?? []);
+            if (!saved) {
+                throw new Error("No se pudo guardar el token");
+            }
+
+            // Obtener datos del token JWT (fuente única de verdad)
+            const userData = authResponse.user;
+            const role = getHighestRole(userData?.roles ?? []);
+
             console.log("Rol seleccionado:", role);
+            console.log("Email del token:", userData?.email);
 
-            await AsyncStorage.setItem("userRole", role);
-            await AsyncStorage.setItem("userEmail", email);
-
+            // Aplicar tema y lenguaje según el rol
             await loadThemeForRole(role);
             await restoreLanguageForRole(role);
 
@@ -85,7 +94,9 @@ export function useLoginViewModel({ onLogin }) {
                 onLogin(role, authResponse.token);
             }
         } catch (err) {
+            console.error("Error en submit:", err);
             handleError(err);
+            await removeToken();
         } finally {
             setIsLoading(false);
         }
