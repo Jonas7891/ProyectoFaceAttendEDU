@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../view/components/common/ThemeContext';
 import { getHighestRole } from '../utils/getHighestRole';
+import { removeToken } from '../storage/TokenStorage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { getCurrentUserRole, getCurrentUser } from "../services/UserService";
 
@@ -63,8 +64,10 @@ export function useMenuViewModel({ onLogout }) {
     const handleLogout = async () => {
         setIsLoading(true);
         try {
-            await AsyncStorage.clear();
-            await i18n.changeLanguage('es'); // idioma por defecto
+            // Sólo eliminar datos de sesión; conservar tema e idioma
+            await AsyncStorage.removeItem('userRole');
+            await AsyncStorage.removeItem('userEmail');
+            await removeToken();
 
             if (onLogout) {
                 await onLogout();
