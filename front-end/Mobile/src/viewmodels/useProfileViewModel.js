@@ -5,8 +5,7 @@ import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {saveLanguageForRole} from '../view/components/common/languageByRole';
 import {useTheme} from '../view/components/common/ThemeContext';
 import {getUserByEmail} from "../services/UserService";
-import {getToken} from "../storage/TokenStorage";
-import UserResponse from "../model/AuthResponse";
+import { getCurrentUser } from "../services/UserService";
 
 export function useProfileViewModel() {
     const navigation = useNavigation();
@@ -37,7 +36,8 @@ export function useProfileViewModel() {
         useCallback(() => {
             const loadUserData = async () => {
                 try {
-                    const email = await AsyncStorage.getItem('userEmail');
+                    const userInfo = await getCurrentUser();
+                    const email = userInfo?.email;
                     const user = getUserByEmail(email);
                     setUserInfo(user);
 

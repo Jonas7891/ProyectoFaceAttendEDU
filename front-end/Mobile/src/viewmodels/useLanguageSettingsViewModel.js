@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { saveLanguageForRole } from '../view/components/common/languageByRole';
 import { useTheme } from '../view/components/common/ThemeContext';
+import { getCurrentUserRole, getCurrentUser } from "../services/UserService";
 
 export function useLanguageSettingsViewModel() {
     const { t, i18n } = useTranslation();
@@ -59,7 +59,7 @@ export function useLanguageSettingsViewModel() {
             let isActive = true;
             const syncTheme = async () => {
                 try {
-                    const role = await AsyncStorage.getItem('userRole');
+                    const role = await getCurrentUserRole();
                     if (role && isActive) {
                         await loadThemeForRole(role);
                     }
@@ -76,7 +76,7 @@ export function useLanguageSettingsViewModel() {
     const handleSave = useCallback(async () => {
         setIsLoading(true);
         try {
-            const role = await AsyncStorage.getItem('userRole');
+            const role = await getCurrentUserRole();
             if (!role) {
                 setAlertData({
                     message: t('settings.noRoleError', { defaultValue: 'No se pudo determinar el rol del usuario' }),

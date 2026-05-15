@@ -1,9 +1,8 @@
-// viewmodels/useFacialFailViewModel.js
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../view/components/common/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
+import { getCurrentUserRole } from "../services/UserService";
 
 export function useFacialFailViewModel() {
     const navigation = useNavigation();
@@ -19,7 +18,7 @@ export function useFacialFailViewModel() {
     useEffect(() => {
         const init = async () => {
             try {
-                const role = await AsyncStorage.getItem('userRole');
+                const role = await getCurrentUserRole();
                 setUserRole(role);
                 if (role) await loadThemeForRole(role);
             } catch (error) {

@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import styleAuth from './style/Style';
 import { useCustomAlert } from '../common/useCustomAlert';
 import CustomAlert from '../common/CustomAlert';
+import { removeToken } from "../../../storage/TokenStorage";
 
 export default function DangerButton({ title, disabled = false, onLogout }) {
     const navigation = useNavigation();
@@ -15,10 +16,13 @@ export default function DangerButton({ title, disabled = false, onLogout }) {
     const handleLogout = async () => {
         try {
             // Limpiar almacenamiento
+            /*
             await AsyncStorage.removeItem('userRole');
             await AsyncStorage.removeItem('userEmail');
             await AsyncStorage.removeItem('userToken');
             await AsyncStorage.removeItem('authToken');
+            */
+            await removeToken();
 
             // Ejecutar callback (que ya incluye la confirmación desde la pantalla)
             if (onLogout) {

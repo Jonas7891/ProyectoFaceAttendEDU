@@ -1,4 +1,4 @@
-import { jwtDecode } from "jwt-decode";
+import {decodeToken} from "../utils/decodeToken";
 
 export default class AuthResponse {
   constructor(token, user) {
@@ -8,22 +8,7 @@ export default class AuthResponse {
 
   static fromApi(data) {
     const token = data.token;
-    let user = { roles: [] };
-
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        // El token contiene "roles" como array
-        user = {
-          // Puedes mapear más campos si quieres (sub, userId, etc.)
-          roles: decoded.roles || [],
-          email: decoded.sub || "",
-          userId: decoded.userId,
-        };
-      } catch (e) {
-        console.warn("Error decodificando token", e);
-      }
-    }
+    const user = decodeToken(token);
 
     return new AuthResponse(token, user);
   }

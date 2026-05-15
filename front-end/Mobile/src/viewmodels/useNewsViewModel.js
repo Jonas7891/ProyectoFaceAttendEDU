@@ -1,8 +1,7 @@
-// viewmodels/useNewsViewModel.js
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../view/components/common/ThemeContext';
+import {getCurrentUserRole} from "../services/UserService";
 
 export function useNewsViewModel() {
     const { i18n } = useTranslation();
@@ -14,7 +13,7 @@ export function useNewsViewModel() {
     useEffect(() => {
         const init = async () => {
             try {
-                const role = await AsyncStorage.getItem('userRole');
+                const role = await getCurrentUserRole();
                 setUserRole(role);
                 if (role) {
                     await loadThemeForRole(role);

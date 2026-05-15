@@ -1,9 +1,9 @@
-// viewmodels/useMenuJustifyViewModel.js
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { saveLanguageForRole } from '../view/components/common/languageByRole';
+import { getCurrentUserRole, getCurrentUser } from "../services/UserService";
 
 export function useMenuJustifyViewModel() {
     const navigation = useNavigation();
@@ -17,7 +17,7 @@ export function useMenuJustifyViewModel() {
     useEffect(() => {
         const init = async () => {
             try {
-                const role = await AsyncStorage.getItem('userRole');
+                const role = await getCurrentUserRole();
                 const finalRole = role || 'Estudiante';
                 setUserRole(finalRole);
                 await saveLanguageForRole(finalRole);
