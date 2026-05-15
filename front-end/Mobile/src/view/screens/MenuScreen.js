@@ -67,6 +67,7 @@ export default function MenuScreen({ onLogout }) {
     const handleFacialFail = () => navigateTo("FacialFail");
     const handleMenuJustify = () => navigateTo("MenuJustify");
     const handleSettings = () => navigateTo("LanguageSettings");
+    const handleSchool = () => navigateTo("SchoolConfigurationScreen");
 
     const MenuItem = ({ label, onPress }) => (
         <>
@@ -138,10 +139,17 @@ export default function MenuScreen({ onLogout }) {
                                     }
                                     onPress={handleMenuJustify}
                                 />
+
                                 <MenuItem label={t('menu.appSettings')} onPress={handleSettings} />
+
                                 <MenuItem
                                     label={t('menu.facialRecognitionFail')}
                                     onPress={handleFacialFail}
+                                />
+
+                                <MenuItem
+                                    label={"Configuración de Colegio"}
+                                    onPress={handleSchool}
                                 />
 
                                 {/* Pasamos handleLogout (que ya tiene la confirmación) como onLogout */}

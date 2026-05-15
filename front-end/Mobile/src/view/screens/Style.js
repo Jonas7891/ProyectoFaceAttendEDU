@@ -2799,6 +2799,797 @@ const styles = StyleSheet.create({
     filterChipTextWarningActiveReport: {
         color: '#E65100',
     },
+
+    // ========== SCHOOL CONFIGURATION SCREEN STYLES ==========
+
+    // --- Contenedor principal ---
+    safeAreaSchoolConfig: {
+        flex: 1,
+        backgroundColor: '#F5F5F5',
+    },
+
+    containerSchoolConfig: {
+        flex: 1,
+        paddingTop: Platform.OS === 'android' ? 20 : 10,
+    },
+
+    scrollContentSchoolConfig: {
+        paddingBottom: 40,
+    },
+
+    // --- Encabezado ---
+    headerSchoolConfig: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingTop: Platform.OS === 'android' ? 45 : 15,
+        paddingBottom: 16,
+        backgroundColor: '#FFFFFF',
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.06,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+
+    headerBackButtonSchoolConfig: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#F5F5F5',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    headerBackTextSchoolConfig: {
+        fontSize: 20,
+        color: '#4A90E2',
+        fontWeight: '600',
+    },
+
+    headerTitleSchoolConfig: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        flex: 1,
+        textAlign: 'center',
+    },
+
+    headerIconButtonSchoolConfig: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#E8F5E9',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    headerIconSchoolConfig: {
+        fontSize: 18,
+    },
+
+    // --- Contenedor principal de contenido ---
+    mainContentSchoolConfig: {
+        paddingHorizontal: 20,
+        paddingTop: 20,
+    },
+
+    // --- Tarjeta de información del colegio ---
+    schoolInfoCardSchoolConfig: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 20,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
+        elevation: 3,
+        borderWidth: 1,
+        borderColor: '#F0F0F0',
+    },
+
+    schoolLogoContainerSchoolConfig: {
+        width: 100,
+        height: 100,
+        borderRadius: 16,
+        backgroundColor: '#F0F8FF',
+        justifyContent: 'center',
+        alignItems: 'center',
+        alignSelf: 'center',
+        marginBottom: 16,
+        borderWidth: 2,
+        borderColor: '#E3F2FD',
+    },
+
+    schoolLogoSchoolConfig: {
+        fontSize: 48,
+    },
+
+    schoolNameSchoolConfig: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        textAlign: 'center',
+        marginBottom: 6,
+    },
+
+    schoolCodeSchoolConfig: {
+        fontSize: 12,
+        color: '#666666',
+        textAlign: 'center',
+        marginBottom: 12,
+        fontWeight: '500',
+        backgroundColor: '#F5F5F5',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
+        alignSelf: 'center',
+    },
+
+    schoolStatusBadgeSchoolConfig: {
+        fontSize: 12,
+        fontWeight: '600',
+        textAlign: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8,
+        backgroundColor: '#E8F5E9',
+        color: '#2E7D32',
+        alignSelf: 'center',
+        overflow: 'hidden',
+    },
+
+    // --- Separador ---
+    dividerSchoolConfig: {
+        height: 1,
+        backgroundColor: '#E0E0E0',
+        marginVertical: 16,
+    },
+
+    // --- Información rápida (fila de 3 columnas) ---
+    quickInfoRowSchoolConfig: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginTop: 14,
+        paddingTop: 14,
+        borderTopWidth: 1,
+        borderTopColor: '#F0F0F0',
+    },
+
+    quickInfoItemSchoolConfig: {
+        alignItems: 'center',
+        flex: 1,
+    },
+
+    quickInfoIconSchoolConfig: {
+        fontSize: 24,
+        marginBottom: 6,
+        color: '#4A90E2',
+    },
+
+    quickInfoValueSchoolConfig: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        marginBottom: 2,
+    },
+
+    quickInfoLabelSchoolConfig: {
+        fontSize: 11,
+        color: '#888888',
+        textAlign: 'center',
+    },
+
+    // --- Tabs de secciones ---
+    sectionTabsSchoolConfig: {
+        flexDirection: 'row',
+        backgroundColor: '#F0F0F0',
+        borderRadius: 12,
+        padding: 4,
+        marginBottom: 20,
+    },
+
+    sectionTabSchoolConfig: {
+        flex: 1,
+        paddingVertical: 12,
+        alignItems: 'center',
+        borderRadius: 10,
+    },
+
+    sectionTabActiveSchoolConfig: {
+        backgroundColor: '#FFFFFF',
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+
+    sectionTabTextSchoolConfig: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#999999',
+    },
+
+    sectionTabTextActiveSchoolConfig: {
+        color: '#1A1A1A',
+    },
+
+    // --- Secciones de formulario ---
+    formSectionSchoolConfig: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 14,
+        padding: 16,
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 1},
+        shadowOpacity: 0.05,
+        shadowRadius: 3,
+        elevation: 2,
+    },
+
+    formSectionTitleSchoolConfig: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        marginBottom: 14,
+        paddingBottom: 12,
+        borderBottomWidth: 2,
+        borderBottomColor: '#E3F2FD',
+    },
+
+    formSectionIconSchoolConfig: {
+        fontSize: 16,
+        marginRight: 8,
+        color: '#4A90E2',
+    },
+
+    // --- Campos de entrada ---
+    formGroupSchoolConfig: {
+        marginBottom: 16,
+    },
+
+    formGroupLastSchoolConfig: {
+        marginBottom: 0,
+    },
+
+    inputLabelSchoolConfig: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#1A1A1A',
+        marginBottom: 8,
+    },
+
+    inputLabelRequiredSchoolConfig: {
+        color: '#F44336',
+        marginLeft: 4,
+    },
+
+    inputFieldSchoolConfig: {
+        backgroundColor: '#F8F9FA',
+        borderRadius: 12,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        fontSize: 14,
+        color: '#333333',
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+    },
+
+    inputFieldFocusedSchoolConfig: {
+        borderColor: '#4A90E2',
+        backgroundColor: '#F0F8FF',
+    },
+
+    inputFieldErrorSchoolConfig: {
+        borderColor: '#F44336',
+        backgroundColor: '#FFEBEE',
+    },
+
+    inputFieldDisabledSchoolConfig: {
+        backgroundColor: '#F5F5F5',
+        color: '#CCCCCC',
+    },
+
+    textAreaSchoolConfig: {
+        minHeight: 100,
+        textAlignVertical: 'top',
+        paddingTop: 12,
+    },
+
+    inputErrorMessageSchoolConfig: {
+        fontSize: 12,
+        color: '#F44336',
+        marginTop: 6,
+        fontWeight: '500',
+    },
+
+    inputSuccessMessageSchoolConfig: {
+        fontSize: 12,
+        color: '#2E7D32',
+        marginTop: 6,
+        fontWeight: '500',
+    },
+
+    inputHelperTextSchoolConfig: {
+        fontSize: 11,
+        color: '#888888',
+        marginTop: 6,
+        fontStyle: 'italic',
+    },
+
+    // --- Select / Picker ---
+    pickerContainerSchoolConfig: {
+        backgroundColor: '#F8F9FA',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        overflow: 'hidden',
+    },
+
+    pickerLabelSchoolConfig: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#1A1A1A',
+        marginBottom: 8,
+    },
+
+    // --- Toggle / Switch ---
+    toggleRowSchoolConfig: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: '#F8F9FA',
+        borderRadius: 12,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+    },
+
+    toggleLabelContainerSchoolConfig: {
+        flex: 1,
+    },
+
+    toggleLabelSchoolConfig: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#1A1A1A',
+        marginBottom: 2,
+    },
+
+    toggleDescriptionSchoolConfig: {
+        fontSize: 12,
+        color: '#888888',
+    },
+
+    // --- Tarjetas de información dentro del formulario ---
+    infoCardSchoolConfig: {
+        backgroundColor: '#F0F8FF',
+        borderLeftWidth: 4,
+        borderLeftColor: '#4A90E2',
+        borderRadius: 10,
+        padding: 12,
+        marginBottom: 14,
+    },
+
+    infoCardTitleSchoolConfig: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        marginBottom: 4,
+    },
+
+    infoCardTextSchoolConfig: {
+        fontSize: 12,
+        color: '#555555',
+        lineHeight: 18,
+    },
+
+    infoCardIconSchoolConfig: {
+        fontSize: 14,
+        color: '#4A90E2',
+        marginRight: 6,
+    },
+
+    // --- Grid de opciones (2 columnas) ---
+    optionsGridSchoolConfig: {
+        flexDirection: 'row',
+        gap: 10,
+        marginBottom: 16,
+    },
+
+    optionButtonSchoolConfig: {
+        flex: 1,
+        paddingVertical: 12,
+        paddingHorizontal: 10,
+        borderRadius: 10,
+        borderWidth: 2,
+        borderColor: '#E0E0E0',
+        backgroundColor: '#FFFFFF',
+        alignItems: 'center',
+        gap: 6,
+    },
+
+    optionButtonActiveSchoolConfig: {
+        borderColor: '#4A90E2',
+        backgroundColor: '#E3F2FD',
+    },
+
+    optionButtonIconSchoolConfig: {
+        fontSize: 24,
+    },
+
+    optionButtonTextSchoolConfig: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#666666',
+    },
+
+    optionButtonTextActiveSchoolConfig: {
+        color: '#4A90E2',
+    },
+
+    // --- Botones de acción ---
+    actionButtonsContainerSchoolConfig: {
+        marginTop: 24,
+        marginBottom: 30,
+        gap: 12,
+    },
+
+    saveButtonSchoolConfig: {
+        backgroundColor: '#4A90E2',
+        borderRadius: 12,
+        paddingVertical: 15,
+        alignItems: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 8,
+        shadowColor: '#4A90E2',
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 5,
+    },
+
+    saveButtonTextSchoolConfig: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#FFFFFF',
+    },
+
+    saveButtonIconSchoolConfig: {
+        fontSize: 18,
+        color: '#FFFFFF',
+    },
+
+    saveButtonDisabledSchoolConfig: {
+        backgroundColor: '#CCCCCC',
+        shadowOpacity: 0,
+        elevation: 0,
+    },
+
+    cancelButtonSchoolConfig: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        paddingVertical: 14,
+        alignItems: 'center',
+        borderWidth: 1.5,
+        borderColor: '#E0E0E0',
+    },
+
+    cancelButtonTextSchoolConfig: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#666666',
+    },
+
+    discardButtonSchoolConfig: {
+        backgroundColor: '#FFEBEE',
+        borderRadius: 12,
+        paddingVertical: 12,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#FFCDD2',
+    },
+
+    discardButtonTextSchoolConfig: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#C62828',
+    },
+
+    // --- Indicador de cambios no guardados ---
+    unsavedChangesIndicatorSchoolConfig: {
+        backgroundColor: '#FFF3E0',
+        borderRadius: 12,
+        padding: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+        borderLeftWidth: 4,
+        borderLeftColor: '#FF9800',
+    },
+
+    unsavedChangesIconSchoolConfig: {
+        fontSize: 18,
+        color: '#FF9800',
+        marginRight: 10,
+    },
+
+    unsavedChangesTextSchoolConfig: {
+        fontSize: 13,
+        color: '#E65100',
+        fontWeight: '500',
+        flex: 1,
+    },
+
+    // --- Indicador de éxito ---
+    successIndicatorSchoolConfig: {
+        backgroundColor: '#E8F5E9',
+        borderRadius: 12,
+        padding: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+        borderLeftWidth: 4,
+        borderLeftColor: '#2E7D32',
+    },
+
+    successIndicatorIconSchoolConfig: {
+        fontSize: 18,
+        color: '#2E7D32',
+        marginRight: 10,
+    },
+
+    successIndicatorTextSchoolConfig: {
+        fontSize: 13,
+        color: '#1B5E20',
+        fontWeight: '500',
+        flex: 1,
+    },
+
+    // --- Modal de confirmación ---
+    modalOverlaySchoolConfig: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    modalSheetSchoolConfig: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 20,
+        padding: 24,
+        width: '85%',
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 10},
+        shadowOpacity: 0.25,
+        shadowRadius: 15,
+        elevation: 8,
+    },
+
+    modalTitleSchoolConfig: {
+        fontSize: 19,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        marginBottom: 8,
+        textAlign: 'center',
+    },
+
+    modalSubtitleSchoolConfig: {
+        fontSize: 14,
+        color: '#666666',
+        textAlign: 'center',
+        marginBottom: 20,
+        lineHeight: 20,
+    },
+
+    modalMessageSchoolConfig: {
+        fontSize: 13,
+        color: '#555555',
+        textAlign: 'center',
+        marginBottom: 24,
+        lineHeight: 20,
+        backgroundColor: '#F8F9FA',
+        borderRadius: 10,
+        padding: 12,
+    },
+
+    modalActionsSchoolConfig: {
+        gap: 10,
+    },
+
+    modalConfirmButtonSchoolConfig: {
+        backgroundColor: '#4A90E2',
+        borderRadius: 12,
+        paddingVertical: 14,
+        alignItems: 'center',
+    },
+
+    modalConfirmButtonTextSchoolConfig: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#FFFFFF',
+    },
+
+    modalCancelButtonSchoolConfig: {
+        backgroundColor: '#F5F5F5',
+        borderRadius: 12,
+        paddingVertical: 13,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+    },
+
+    modalCancelButtonTextSchoolConfig: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#666666',
+    },
+
+    // --- Estado de carga ---
+    loadingOverlaySchoolConfig: {
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        borderRadius: 12,
+        paddingVertical: 16,
+        paddingHorizontal: 20,
+        alignItems: 'center',
+        gap: 8,
+    },
+
+    loadingTextSchoolConfig: {
+        fontSize: 14,
+        color: '#FFFFFF',
+        fontWeight: '500',
+    },
+
+    // --- Tarjeta de configuración avanzada (oculta por defecto) ---
+    advancedSettingsCardSchoolConfig: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        overflow: 'hidden',
+        marginBottom: 16,
+    },
+
+    advancedSettingsHeaderSchoolConfig: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        backgroundColor: '#F8F9FA',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+    },
+
+    advancedSettingsTitleSchoolConfig: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#1A1A1A',
+    },
+
+    advancedSettingsToggleSchoolConfig: {
+        fontSize: 20,
+        color: '#4A90E2',
+    },
+
+    advancedSettingsContentSchoolConfig: {
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+    },
+
+    // --- Fila de información (clave-valor) ---
+    infoRowSchoolConfig: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
+    },
+
+    infoRowLastSchoolConfig: {
+        borderBottomWidth: 0,
+    },
+
+    infoKeySchoolConfig: {
+        fontSize: 13,
+        color: '#888888',
+        fontWeight: '500',
+    },
+
+    infoValueSchoolConfig: {
+        fontSize: 13,
+        color: '#1A1A1A',
+        fontWeight: '600',
+    },
+
+    // --- Badges de estado ---
+    statusBadgeActiveSchoolConfig: {
+        backgroundColor: '#E8F5E9',
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 8,
+        alignSelf: 'flex-start',
+    },
+
+    statusBadgeInactiveSchoolConfig: {
+        backgroundColor: '#F5F5F5',
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 8,
+        alignSelf: 'flex-start',
+    },
+
+    statusBadgeTextActiveSchoolConfig: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: '#2E7D32',
+    },
+
+    statusBadgeTextInactiveSchoolConfig: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: '#999999',
+    },
+
+    // --- Botón flotante de ayuda ---
+    helpButtonSchoolConfig: {
+        position: 'absolute',
+        bottom: 30,
+        right: 20,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: '#4A90E2',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#4A90E2',
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+        elevation: 6,
+    },
+
+    helpButtonIconSchoolConfig: {
+        fontSize: 24,
+        color: '#FFFFFF',
+    },
+
+    // --- Validación visual de campos ---
+    fieldWithValidationSchoolConfig: {
+        marginBottom: 12,
+    },
+
+    fieldValidatedSchoolConfig: {
+        backgroundColor: '#F0F8FF',
+        borderColor: '#4CAF50',
+    },
+
+    validationCheckmarkSchoolConfig: {
+        position: 'absolute',
+        right: 12,
+        top: '50%',
+        marginTop: -10,
+        fontSize: 18,
+        color: '#4CAF50',
+    },
+
+    validationErrorIconSchoolConfig: {
+        position: 'absolute',
+        right: 12,
+        top: '50%',
+        marginTop: -10,
+        fontSize: 18,
+        color: '#F44336',
+    },
 });
 
 export default styles;
