@@ -78,7 +78,7 @@ export default function MenuScreen({ onLogout }) {
                         {label}
                     </Text>
                     <Image
-                        source={require("../../assets/images/flecha.png")}
+                        source={require("../../assets/images/flecha-volver.png")}
                         style={[styles.arrowImage, { tintColor: colors.text }]}
                     />
                 </View>
@@ -104,7 +104,7 @@ export default function MenuScreen({ onLogout }) {
                             <TouchableOpacity onPress={handleBack} activeOpacity={0.2}>
                                 <View style={styles.backIcon}>
                                     <Image
-                                        source={require("../../assets/images/flecha.png")}
+                                        source={require("../../assets/images/flecha-volver.png")}
                                         style={[styles.backIconImage, { tintColor: colors.text }]}
                                     />
                                 </View>
