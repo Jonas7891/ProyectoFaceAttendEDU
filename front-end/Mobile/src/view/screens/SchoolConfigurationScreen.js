@@ -674,7 +674,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                             style={{ width: 16, height: 16, resizeMode: 'contain' }}
                                         />
                                     </TouchableOpacity>
-                                </View
+                                </View>
                             </View>
                         )}
 
