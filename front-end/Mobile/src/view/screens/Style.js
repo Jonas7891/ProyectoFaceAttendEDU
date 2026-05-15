@@ -3131,6 +3131,35 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
 
+    countryPickerSchoolConfig: {
+        justifyContent: 'center',
+        minHeight: 52,
+    },
+
+    countryPickerTextSchoolConfig: {
+        fontSize: 14,
+        color: '#333333',
+    },
+
+    countryOptionSchoolConfig: {
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+        paddingVertical: 14,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+
+    countryOptionTextSchoolConfig: {
+        fontSize: 15,
+        color: '#1A1A1A',
+    },
+
+    countryDialCodeSchoolConfig: {
+        fontSize: 14,
+        color: '#666666',
+    },
+
     pickerLabelSchoolConfig: {
         fontSize: 14,
         fontWeight: '600',
