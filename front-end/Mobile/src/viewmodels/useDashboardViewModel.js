@@ -1,10 +1,10 @@
-// viewmodels/useDashboardViewModel.js
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../view/components/common/ThemeContext';
 import { getHighestRole } from '../utils/getHighestRole';
 import { useFocusEffect } from '@react-navigation/native';
+import { getCurrentUserRole, getCurrentUser } from "../services/UserService";
 
 export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {}) {
     const { t, i18n } = useTranslation();
@@ -40,7 +40,7 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
         try {
             let role = propUserRole;
             if (!role) {
-                role = await AsyncStorage.getItem('userRole');
+                role = await getCurrentUserRole();
                 // Aplicar jerarquía si fuera necesario (si guardaste un array JSON)
                 if (role) {
                     try {
