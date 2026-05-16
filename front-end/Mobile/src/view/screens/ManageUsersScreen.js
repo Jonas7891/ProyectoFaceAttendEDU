@@ -7,10 +7,11 @@ import {
     TouchableOpacity,
     Modal,
     TextInput,
-    Alert,
 } from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
+import { useCustomAlert } from '../components/common/useCustomAlert';
+import CustomAlert from '../components/common/CustomAlert';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import BottomBar from '../components/common/NavigationBar';
 import styles from "./Style";
@@ -19,6 +20,7 @@ import {useManageUsersViewModel} from '../../viewmodels/useManageUsersViewModel'
 export default function ManageUsersScreen({navigation, userRole, onLogout}) {
     const {t} = useTranslation();
     const {colors, theme, toggleTheme} = useTheme();
+    const { alertConfig, hideAlert, showError, showConfirm } = useCustomAlert();
 
     const {
         allStudents,
@@ -50,13 +52,13 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
 
     useEffect(() => {
         if (userRole && userRole !== 'Administrador') {
-            Alert.alert(
+            showError(
                 t('manageUsers.accessDenied'),
                 t('manageUsers.onlyAdmins')
             );
             navigation.goBack();
         }
-    }, [userRole, navigation]);
+    }, [userRole, navigation, showError]);
 
     const openAdd = () => {
         setEditing(null);
@@ -76,7 +78,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
 
     const handleSave = () => {
         if (!form.nombre) {
-            Alert.alert(t('manageUsers.validation'), t('manageUsers.nameRequired'));
+            showError(t('manageUsers.validation'), t('manageUsers.nameRequired'));
             return;
         }
         if (modalMode === 'edit') {
@@ -91,19 +93,12 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
     };
 
     const confirmDelete = (id) => {
-        Alert.alert(
+        showConfirm(
             t('manageUsers.confirm'),
             t('manageUsers.deleteQuestion'),
-            [
-                {text: t('common.cancel'), style: 'cancel'},
-                {
-                    text: t('common.delete'),
-                    style: 'destructive',
-                    onPress: () => {
-                        tab === 'students' ? deleteStudent(id) : deleteTeacher(id);
-                    },
-                },
-            ]
+            () => {
+                tab === 'students' ? deleteStudent(id) : deleteTeacher(id);
+            }
         );
     };
 
@@ -360,6 +355,15 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
             </View>
 
             <BottomBar/>
+            
+            <CustomAlert
+                visible={alertConfig.visible}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                buttons={alertConfig.buttons}
+                onClose={hideAlert}
+                type={alertConfig.type}
+            />
         </SafeAreaView>
     );
 }

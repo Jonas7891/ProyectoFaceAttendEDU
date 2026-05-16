@@ -8,13 +8,14 @@ import {
     TouchableOpacity,
     Modal,
     ActivityIndicator,
-    Switch,
     Platform,
     KeyboardAvoidingView,
     Keyboard,
     Alert,
     Image,
 } from 'react-native';
+import { useCustomAlert } from '../components/common/useCustomAlert';
+import CustomAlert from '../components/common/CustomAlert';
 import styles from './Style';
 
 // ─────────────────────────────────────────────
@@ -414,7 +415,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                         style={styles.headerBackButtonSchoolConfig}
                         onPress={() => {
                             if (hasChanges) {
-                                Alert.alert(
+                                showConfirm(
                                     'Cambios sin guardar',
                                     '¿Descartar los cambios realizados?',
                                     [

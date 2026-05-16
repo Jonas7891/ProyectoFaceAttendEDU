@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import {
     Text,
     View,
@@ -11,56 +11,35 @@ import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import {useLanguageRefresh} from '../../utils/useLanguageRefresh';
 import PrimaryButton from '../components/auth/PrimaryButton';
+import PasswordUpdateModal from '../components/common/PasswordUpdateModal';
+import ProfileUpdateModal from '../components/common/ProfileUpdateModal';
 import styles from './Style';
 import {useProfileViewModel} from '../../viewmodels/useProfileViewModel';
 
-// ─────────────────────────────────────────────
-//  Sub-componentes internos
-// ─────────────────────────────────────────────
-
-/** Campo de información genérico */
-const InfoField = ({label, value, icon, colors}) => (
-    <View style={styles.infoFieldContainerProfile}>
-        <Text style={[styles.infoFieldLabelProfile, {color: colors.textSecondary}]}>
-            {icon ? `${icon}  ` : ''}{label}
-        </Text>
-        <Text style={[styles.infoFieldValueProfile, {color: colors.text}]}>
-            {value ?? '—'}
-        </Text>
+/** Fila de información clave → valor */
+const InfoField = ({label, value, colors}) => (
+    <View style={[styles.infoFieldContainerProfile, {
+        backgroundColor: colors.card,
+        borderColor: colors.border ?? colors.textSecondary + '30',
+        shadowColor: colors.text,
+    }]}>
+        <Text style={[styles.infoFieldLabelProfile, {color: colors.textSecondary}]}>{label}</Text>
+        <Text style={[styles.infoFieldValueProfile, {color: colors.text}]}>{value ?? '—'}</Text>
     </View>
 );
 
-/** Tarjeta de curso (matriculado o asignado) */
-const CourseCard = ({course, colors}) => (
-    <View
-        style={[
-            styles.courseCardProfile,
-            {backgroundColor: colors.card, borderLeftColor: colors.primary, borderLeftWidth: 3},
-        ]}
-    >
-        <Text style={[styles.courseNameProfile, {color: colors.text}]}>
-            {course.course_name}
-        </Text>
-        <Text style={[styles.courseCodeProfile, {color: colors.textSecondary}]}>
-            {course.course_code}
-        </Text>
-        {course.status && (
-            <Text
-                style={[
-                    styles.courseStatusProfile,
-                    {
-                        color:
-                            course.status === 'Active'
-                                ? colors.success
-                                : course.status === 'Withdrawn'
-                                    ? colors.error
-                                    : colors.textSecondary,
-                    },
-                ]}
-            >
-                {course.status}
-            </Text>
-        )}
+/** Encabezado de sección con acento de color y badge opcional */
+const SectionTitle = ({title, colors, badge, badgeLabel}) => (
+    <View style={styles.sectionTitleContainer}>
+        <View style={[styles.sectionTitleAccentProfile, {backgroundColor: colors.primary}]} />
+        <Text style={[styles.sectionTitleMenuProfile, {color: colors.text}]}>{title}</Text>
+        {badge !== undefined && badge > 0 ? (
+            <View style={[styles.sectionBadge, {backgroundColor: colors.primary + '20'}]}>
+                <Text style={[styles.sectionBadgeText, {color: colors.primary}]}>
+                    {badge}{badgeLabel ? ` ${badgeLabel}` : ''}
+                </Text>
+            </View>
+        ) : null}
     </View>
 );
 
@@ -72,13 +51,13 @@ const StatItem = ({label, value, color}) => (
 );
 
 // ─────────────────────────────────────────────
-//  Pantalla principal
+//  PANTALLA PRINCIPAL
 // ─────────────────────────────────────────────
 
 export default function ProfileScreen() {
-    const {t} = useTranslation();
+    const {t}           = useTranslation();
     const {colors, theme} = useTheme();
-    const refreshKey = useLanguageRefresh();
+    const refreshKey    = useLanguageRefresh();
 
     const {
         userRole,
@@ -94,62 +73,75 @@ export default function ProfileScreen() {
         iotDevices,
     } = useProfileViewModel();
 
-    const isAdmin = userRole === 'Administrador';
     const isStudent = userRole === 'Estudiante';
+    const isTeacher = userRole === 'Profesor';
+    const isAdmin   = userRole === 'Administrador';
+    const isDark    = theme === 'dark';
+
+    const initials = userInfo?.name
+        ?.split(' ')
+        .slice(0, 2)
+        .map((w) => w[0])
+        .join('')
+        .toUpperCase() ?? '??';
+
+    const avatarColor = isAdmin
+        ? colors.primary
+        : isTeacher
+            ? (colors.warning ?? '#FF9800')
+            : colors.success;
 
     return (
         <SafeAreaView
             style={[styles.safeAreaWhite, {backgroundColor: colors.backgroundWhite}]}
             key={`${refreshKey}-${updateKey}`}
         >
-            <ScrollView contentContainerStyle={styles.ScrollViewContent}>
-                <View style={styles.container} marginHorizontal={15}>
+            <ScrollView
+                contentContainerStyle={styles.ScrollViewContent}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+            >
+                <View style={[styles.container, {paddingHorizontal: 16}]}>
 
-                    {/* ── Cabecera de perfil ── */}
-                    <View
-                        style={[
-                            styles.profileHeaderSectionProfile,
-                            {marginTop: Platform.OS === 'ios' ? 45 : 70},
-                        ]}
-                    >
-                        {/* Avatar con iniciales */}
-                        <View
-                            style={[
-                                styles.avatarCircleProfile,
-                                {backgroundColor: isAdmin ? colors.primary + '25' : colors.success + '25'},
-                            ]}
-                        >
-                            <Text
-                                style={[styles.avatarInitialsProfile, {color: isAdmin ? colors.primary : colors.success}]}>
-                                {userInfo.name
-                                    ?.split(' ')
-                                    .slice(0, 2)
-                                    .map((w) => w[0])
-                                    .join('')
-                                    .toUpperCase() ?? '??'}
-                            </Text>
+                    {/* ══ HEADER / AVATAR ══ */}
+                    <View style={[
+                        styles.profileHeaderSectionProfile,
+                        {marginTop: Platform.OS === 'ios' ? 8 : 30},
+                    ]}>
+                        <View style={[styles.schoolInfoCardSchoolConfig, {marginTop: Platform.OS === 'ios' ? 10 : 25}]}>
+                            <View style={styles.schoolLogoContainerSchoolConfig}>
+                                <Text style={styles.schoolLogoSchoolConfig}>logo</Text>
+                            </View>
                         </View>
-
                         <Text style={[styles.userNameProfile, {color: colors.text}]}>
-                            {userInfo.name}
+                            {userInfo?.name ?? t('profile.noName', 'Sin nombre')}
                         </Text>
 
-                        <View
-                            style={[
-                                styles.roleBadgeProfile,
-                                {backgroundColor: isAdmin ? colors.primary + '20' : colors.success + '20'},
-                            ]}
-                        >
-                            <Text
-                                style={[styles.roleBadgeTextProfile, {color: isAdmin ? colors.primary : colors.success}]}
-                            >
-                                {userInfo.role}
+                        <View style={[styles.roleBadgeProfile, {
+                            backgroundColor: avatarColor + '15',
+                            borderColor: isDark ? '#FFFFFF' : avatarColor + '40',
+                        }]}>
+                            <View style={[styles.roleBadgeDotProfile, {backgroundColor: avatarColor}]} />
+                            <Text style={[styles.roleBadgeTextProfile, {color: isDark ? '#FFFFFF' : avatarColor}]}>
+                                {userInfo?.role ?? t('profile.noRole', 'Sin rol')}
                             </Text>
                         </View>
                     </View>
 
-                    {/* ── Información personal ── */}
-                    <SectionTitle title={t('profile.personalInfo')} colors={colors}/>
+                    {/* ══ INFORMACIÓN PERSONAL ══
+                        BD: person.name | person.email | person.phone
+                            user.username | user.created_at (joinDate)
+                            school.name
+                    */}
+                    <SectionTitle
+                        title={t('profile.personalInfo', 'Información personal')}
+                        colors={colors}
+                    />
+                    <InfoField label={t('profile.email',      'Correo electrónico')} value={userInfo?.email}          colors={colors} />
+                    <InfoField label={t('profile.phone',      'Teléfono')}           value={userInfo?.phone}          colors={colors} />
+                    <InfoField label={t('profile.employeeId', 'Identificación')}     value={userInfo?.identification} colors={colors} />
+                    <InfoField label={t('profile.joinDate',   'Fecha de ingreso')}   value={userInfo?.joinDate}       colors={colors} />
+                    <InfoField label={t('profile.school',     'Colegio')}            value={userInfo?.school}         colors={colors} />
 
                     <InfoField label={t('profile.email')} value={userInfo.email} colors={colors}/>
                     <InfoField label={t('profile.employeeId')} value={userInfo.identification}
@@ -160,79 +152,196 @@ export default function ProfileScreen() {
                     {/* ── Cursos matriculados — Estudiante ── */}
                     {isStudent && courses?.length > 0 && (
                         <>
-                            <SectionTitle title={t('profile.enrolledCourses', 'Cursos matriculados')} colors={colors}/>
-                            {courses.map((c) => (
-                                <CourseCard key={c.id_enrollment ?? c.id_course} course={c} colors={colors}/>
-                            ))}
+                            {/* Cursos matriculados — BD: enrollment + course */}
+                            {courses.length > 0 && (
+                                <>
+                                    <SectionTitle
+                                        title={t('profile.enrolledCourses', 'Cursos matriculados')}
+                                        colors={colors}
+                                        badge={courses.length}
+                                    />
+                                    {courses.map((course) => (
+                                        <CourseCard
+                                            key={course.id_enrollment ?? course.id_course ?? course.course_code}
+                                            course={course}
+                                            colors={colors}
+                                        />
+                                    ))}
+                                </>
+                            )}
+
+                            {/* Estadísticas de asistencia — BD: attendance */}
+                            {attendanceStats && (
+                                <>
+                                    <SectionTitle
+                                        title={t('profile.attendanceStats', 'Estadísticas de asistencia')}
+                                        colors={colors}
+                                    />
+                                    <AttendanceStatsCard stats={attendanceStats} colors={colors} t={t} />
+                                </>
+                            )}
+
+                            {/* Justificaciones — BD: justification */}
+                            {justifications.length > 0 && (
+                                <>
+                                    <SectionTitle
+                                        title={t('profile.pendingJustifications', 'Justificaciones')}
+                                        colors={colors}
+                                        badge={justifications.filter((j) => j?.approval === 'Pending').length}
+                                    />
+                                    {justifications.map((item) => (
+                                        <JustificationCard
+                                            key={item.id_justification ?? item.id}
+                                            item={item}
+                                            colors={colors}
+                                            t={t}
+                                        />
+                                    ))}
+                                </>
+                            )}
                         </>
                     )}
 
-                    {/* ── Estadísticas de asistencia — Estudiante ── */}
-                    {isStudent && attendanceStats && (
+                    {/* ══ SECCIÓN PROFESOR ══ */}
+                    {isTeacher && (
                         <>
-                            <SectionTitle title={t('profile.attendanceStats', 'Estadísticas de asistencia')}
-                                          colors={colors}/>
-                            <AttendanceStatsCard stats={attendanceStats} colors={colors}/>
+                            {/* Horario — BD: schedule + course + classroom */}
+                            {teacherSchedules.length > 0 && (
+                                <>
+                                    <SectionTitle
+                                        title={t('profile.teacherSchedule', 'Mi horario')}
+                                        colors={colors}
+                                        badge={teacherSchedules.length}
+                                        badgeLabel={t('profile.classes', 'clases')}
+                                    />
+                                    {teacherSchedules.map((sch) => (
+                                        <TeacherScheduleCard
+                                            key={sch.id_schedule}
+                                            schedule={sch}
+                                            colors={colors}
+                                        />
+                                    ))}
+                                </>
+                            )}
+
+                            {/* Asistencia por curso — BD: attendance agregada por schedule/course */}
+                            {teacherCourseStats.length > 0 && (
+                                <>
+                                    <SectionTitle
+                                        title={t('profile.courseAttendance', 'Asistencia por curso')}
+                                        colors={colors}
+                                    />
+                                    {teacherCourseStats.map((stat) => (
+                                        <TeacherCourseStatCard
+                                            key={stat.id_course ?? stat.course_code}
+                                            courseStat={stat}
+                                            colors={colors}
+                                            t={t}
+                                        />
+                                    ))}
+                                </>
+                            )}
                         </>
                     )}
 
-                    {/* ── Justificaciones pendientes — Estudiante ── */}
-                    {isStudent && justifications?.length > 0 && (
+                    {/* ══ SECCIÓN ADMINISTRADOR ══ */}
+                    {isAdmin && (
                         <>
-                            <SectionTitle
-                                title={t('profile.pendingJustifications', 'Justificaciones')}
-                                colors={colors}
-                                badge={justifications.filter((j) => j.approval === 'Pending').length}
-                            />
-                            {justifications.map((j) => (
-                                <JustificationCard key={j.id_justification} item={j} colors={colors}/>
-                            ))}
+                            {/* Información del colegio y período activo — BD: school + period */}
+                            {schoolInfo && (
+                                <>
+                                    <SectionTitle
+                                        title={t('profile.schoolInfo', 'Información del colegio')}
+                                        colors={colors}
+                                    />
+                                    <SchoolInfoCard schoolInfo={schoolInfo} colors={colors} t={t} />
+                                </>
+                            )}
+
+                            {/* Dispositivos IoT — BD: iot_device + classroom */}
+                            {iotDevices.length > 0 && (
+                                <>
+                                    <SectionTitle
+                                        title={t('profile.iotDevices', 'Dispositivos IoT')}
+                                        colors={colors}
+                                        badge={iotDevices.filter((d) => d?.status === 'Active').length}
+                                        badgeLabel={t('profile.active', 'activos')}
+                                    />
+                                    {iotDevices.map((device) => (
+                                        <DeviceCard
+                                            key={device.id_device ?? device.id}
+                                            device={device}
+                                            colors={colors}
+                                        />
+                                    ))}
+                                </>
+                            )}
                         </>
                     )}
 
-                    {/* ── Dispositivos IoT — solo Administrador ── */}
-                    {isAdmin && iotDevices?.length > 0 && (
-                        <>
-                            <SectionTitle
-                                title={t('profile.iotDevices', 'Dispositivos IoT')}
-                                colors={colors}
-                                badge={iotDevices.filter((d) => d.status === 'Active').length}
-                                badgeLabel="activos"
-                            />
-                            {iotDevices.map((d) => (
-                                <DeviceCard key={d.id_device} device={d} colors={colors}/>
-                            ))}
-                        </>
-                    )}
-
-                    {/* ── Configuración rápida ── */}
+                    {/* ══ CONFIGURACIÓN RÁPIDA ══ */}
                     <View style={{marginTop: 25}}>
-                        <SectionTitle title={t('profile.quickSettings')} colors={colors}/>
+                        <SectionTitle
+                            title={t('profile.quickSettings', 'Configuración rápida')}
+                            colors={colors}
+                        />
+
+                        {/* Toggle de tema */}
                         <TouchableOpacity
-                            style={[styles.profileSettingsButtonProfile, {backgroundColor: colors.card}]}
+                            style={[styles.profileSettingsButtonProfile, {
+                                backgroundColor: colors.card,
+                                borderColor:     colors.border ?? colors.textSecondary + '20',
+                                shadowColor:     colors.text,
+                            }]}
                             onPress={toggleTheme}
+                            activeOpacity={0.75}
                         >
-                            <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                                <View>
-                                    <Text style={[styles.profileSettingsTitleProfile, {color: colors.text}]}>
-                                        {t('settings.theme')}
-                                    </Text>
-                                    <Text
-                                        style={[styles.profileSettingsSubtitleProfile, {color: colors.textSecondary}]}>
-                                        {theme === 'dark' ? t('settings.darkTheme') : t('settings.lightTheme')}
-                                    </Text>
-                                </View>
+                            <View style={{flex: 1, marginLeft: 12}}>
+                                <Text style={[styles.profileSettingsTitleProfile, {color: colors.text}]}>
+                                    {t('settings.theme', 'Tema')}
+                                </Text>
+                                <Text style={[styles.profileSettingsSubtitleProfile, {color: colors.textSecondary}]}>
+                                    {isDark
+                                        ? t('settings.darkTheme', 'Tema oscuro activo')
+                                        : t('settings.lightTheme', 'Tema claro activo')}
+                                </Text>
                             </View>
-                            <Text style={{fontSize: 14, color: colors.text, textDecorationLine: 'underline'}}>
-                                {t('settings.changeTheme')}
-                            </Text>
+                            <View style={[styles.settingsChevronProfile, {
+                                backgroundColor: colors.primary + '15',
+                            }]}>
+                                <Text style={{fontSize: 13, color: colors.primary, fontWeight: '700'}}>
+                                    {t('settings.changeTheme', 'Cambiar')}
+                                </Text>
+                            </View>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.profileSettingsButtonProfile, {
+                                backgroundColor: colors.card,
+                                borderColor:     colors.border ?? colors.textSecondary + '20',
+                                shadowColor:     colors.text,
+                            }]}
+                            activeOpacity={0.75}
+                        >
+                            <ProfileUpdateModal userInfo={userInfo} />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.profileSettingsButtonProfile, {
+                                backgroundColor: colors.card,
+                                borderColor:     colors.border ?? colors.textSecondary + '20',
+                                shadowColor:     colors.text,
+                            }]}
+                            activeOpacity={0.75}
+                        >
+                            <PasswordUpdateModal />
                         </TouchableOpacity>
                     </View>
 
-                    {/* ── Botón volver ── */}
-                    <View style={{marginTop: Platform.OS === 'ios' ? 20 : 10}}>
-                        <View style={styles.buttonContainer} marginTop={5}>
-                            <PrimaryButton title={t('consultJustify.back')} onPress={handleBack}/>
+                    {/* ══ BOTÓN VOLVER ══ */}
+                    <View style={{marginTop: Platform.OS === 'ios' ? 5 : 0}}>
+                        <View style={styles.buttonContainer}>
+                            <PrimaryButton title={t('consultJustify.back', 'Volver')} onPress={handleBack} />
                         </View>
                     </View>
 
