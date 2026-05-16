@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import styles from "../view/screens/Style";
 import {StatusBar, Text, TouchableOpacity, View} from "react-native";
+import {useCustomAlert} from "../view/components/common/useCustomAlert";
 
 // ===========================================================================
 // CONSTANTES DE TOPE
@@ -22,6 +23,7 @@ export function useAttendanceReportViewModel() {
     const ABSENCE_LIMIT = 3;
     const LATENESS_LIMIT = 6;
 
+    const { alertConfig, hideAlert, showSuccess, showConfirm } = useCustomAlert();
     const [activeRole, setActiveRole] = useState('student');
     const [activeType, setActiveType] = useState('absence');
     const [activeFilter, setActiveFilter] = useState('all');
@@ -113,9 +115,13 @@ export function useAttendanceReportViewModel() {
     return {
         ABSENCE_LIMIT,
         LATENESS_LIMIT,
+        alertConfig,
+        hideAlert,
         activeRole,
         activeType,
+        setActiveType,
         activeFilter,
+        setActiveFilter,
         searchText,
         setSearchText,
         isLoading,

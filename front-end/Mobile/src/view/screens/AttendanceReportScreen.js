@@ -13,8 +13,8 @@ import {
 } from 'react-native';
 import { useCustomAlert } from '../components/common/useCustomAlert';
 import CustomAlert from '../components/common/CustomAlert';
-
 import styles from './Style';
+import {useAttendanceReportViewModel} from "../../viewmodels/useAttendanceReportViewModel";
 
 // ===========================================================================
 // CONSTANTES DE TOPE
@@ -129,88 +129,28 @@ function PersonCard({ person, onGenerateReport }) {
 // PANTALLA PRINCIPAL
 // ===========================================================================
 export default function AttendanceReportScreen({ navigation }) {
-    const { alertConfig, hideAlert, showSuccess, showConfirm } = useCustomAlert();
-
-    const [activeRole, setActiveRole] = useState('student');
-    const [activeType, setActiveType] = useState('absence');
-    const [activeFilter, setActiveFilter] = useState('all');
-    const [searchText, setSearchText] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [modalVisible, setModalVisible] = useState(false);
-    const [selectedPerson, setSelectedPerson] = useState(null);
-
-    const rawData = activeRole === 'student' ? MOCK_STUDENTS : MOCK_TEACHERS;
-
-    const filteredData = useMemo(() => {
-        let data = rawData.filter(p => {
-            if (activeType === 'absence' && p.absences <= ABSENCE_LIMIT) return false;
-            if (activeType === 'lateness' && p.lateness <= LATENESS_LIMIT) return false;
-            const level = getAlertLevel(p);
-            if (activeFilter === 'critical' && level !== 'critical') return false;
-            if (activeFilter === 'warning' && level !== 'warning') return false;
-            return true;
-        });
-        if (searchText.trim()) {
-            const q = searchText.toLowerCase();
-            data = data.filter(p =>
-                p.name.toLowerCase().includes(q) ||
-                p.code.toLowerCase().includes(q) ||
-                p.course.toLowerCase().includes(q),
-            );
-        }
-        return data;
-    }, [rawData, activeType, activeFilter, searchText]);
-
-    const summary = useMemo(() => {
-        const over = rawData.filter(p =>
-            activeType === 'absence' ? p.absences > ABSENCE_LIMIT : p.lateness > LATENESS_LIMIT,
-        );
-        return {
-            critical: over.filter(p => getAlertLevel(p) === 'critical').length,
-            warning: over.filter(p => getAlertLevel(p) === 'warning').length,
-            ok: rawData.length - over.length,
-        };
-    }, [rawData, activeType]);
-
-    const handleGenerateIndividual = useCallback((person) => {
-        setSelectedPerson(person);
-        setModalVisible(true);
-    }, []);
-
-    const handleConfirmReport = useCallback(() => {
-        setModalVisible(false);
-        setIsLoading(true);
-        setTimeout(() => {
-            setIsLoading(false);
-            showSuccess(
-                'Reporte generado',
-                'El reporte de ' + selectedPerson?.name + ' fue enviado correctamente.'
-            );
-        }, 1800);
-    }, [selectedPerson, showSuccess]);
-
-    const handleGenerateAll = useCallback(() => {
-        if (filteredData.length === 0) return;
-        const roleLabel = activeRole === 'student' ? 'estudiante(s)' : 'docente(s)';
-        const typeLabel = activeType === 'absence' ? 'inasistencias' : 'retardos';
-        showConfirm(
-            'Generar reporte general',
-            'Se generará un reporte para ' + filteredData.length + ' ' + roleLabel + ' con ' + typeLabel + ' superiores al tope. ¿Continuar?',
-            () => {
-                setIsLoading(true);
-                setTimeout(() => {
-                    setIsLoading(false);
-                    showSuccess('Reportes enviados ✓', filteredData.length + ' reporte(s) generados exitosamente.');
-                }, 2000);
-            }
-        );
-    }, [filteredData, activeRole, activeType, showConfirm, showSuccess]);
-
-    const handleRoleChange = useCallback((role) => {
-        setActiveRole(role);
-        setSearchText('');
-        setActiveFilter('all');
-    }, []);
+    const {
+        ABSENCE_LIMIT,
+        LATENESS_LIMIT,
+        alertConfig,
+        hideAlert,
+        activeRole,
+        activeType,
+        setActiveType,
+        activeFilter,
+        setActiveFilter,
+        searchText,
+        setSearchText,
+        isLoading,
+        selectedPerson,
+        modalVisible,
+        summary,
+        filteredData,
+        handleGenerateIndividual,
+        handleConfirmReport,
+        handleGenerateAll,
+        handleRoleChange
+    } = useAttendanceReportViewModel();
 
     return (
         <SafeAreaView style={styles.safeAreaReport}>
