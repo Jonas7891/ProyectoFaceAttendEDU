@@ -496,6 +496,135 @@ const stylescommon = StyleSheet.create({
     containerDisabledSelectable: {
         opacity: 0.6,
     },
+    // ── Modal ──────────────────────────────────────────────
+    modalWrapper: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.68)',
+    },
+    // ScrollView interno centra el card verticalmente
+    modalScrollContent: {
+        flexGrow: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+    },
+
+    passwordModalCard: {
+        width: '100%',
+        maxWidth: 400,
+        borderRadius: 20,
+        paddingHorizontal: 20,
+        paddingTop: 26,
+        paddingBottom: 20,
+        borderWidth: 0.5,
+        // iOS
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.10,
+        shadowRadius: 16,
+        // Android
+        elevation: 12,
+    },
+
+    passwordModalIconWrap: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        alignItems: 'center',
+        justifyContent: 'center',
+        alignSelf: 'center',
+        marginBottom: 12,
+    },
+    passwordModalTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        marginBottom: 5,
+        textAlign: 'center',
+    },
+    passwordModalDescription: {
+        fontSize: 13,
+        marginBottom: 16,
+        lineHeight: 19,
+        textAlign: 'center',
+    },
+    passwordModalDivider: {
+        height: 0.5,
+        marginBottom: 18,
+        opacity: 0.4,
+    },
+
+    // Inputs sin labels — más compactos
+    passwordModalInput: {
+        width: '100%',
+        borderWidth: 0.5,
+        borderRadius: 10,
+        paddingHorizontal: 14,
+        paddingVertical: 11,
+        fontSize: 14,
+        textAlign: 'left',
+        marginBottom: 10,
+    },
+
+    passwordModalErrorRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 7,
+        borderWidth: 0.5,
+        borderRadius: 8,
+        paddingHorizontal: 11,
+        paddingVertical: 8,
+        marginBottom: 14,
+        marginTop: 2,
+    },
+    passwordModalError: {
+        flex: 1,
+        fontSize: 13,
+    },
+
+    passwordModalButtons: {
+        width: '100%',
+        marginTop: 4,
+        alignItems: 'center',
+    },
+    passwordModalCancelButton: {
+        marginTop: 8,
+        paddingVertical: 10,
+        alignItems: 'center',
+        width: '100%',
+    },
+    passwordModalCancelText: {
+        fontSize: 14,
+        fontWeight: '500',
+    },
+
+    // ── Trigger button ──────────────────────────────────────
+    passwordSettingsButton: {
+        marginTop: 5,
+        marginBottom: 5,
+        paddingHorizontal: 15,
+        borderRadius: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 11,
+    },
+    passwordSettingsIconCircle: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+    },
+    passwordSettingsTitle: {
+        fontSize: 15,
+        fontWeight: '500',
+        marginBottom: 2,
+    },
+    passwordSettingsSubtitle: {
+        fontSize: 12,
+        lineHeight: 17,
+    },
 });
 
 export default stylescommon;
