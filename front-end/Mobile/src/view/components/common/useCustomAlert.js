@@ -1,6 +1,8 @@
 import {useState, useCallback} from "react";
+import { useAlertsConfig } from "../../../utils/AlertsConfigContext";
 
 export const useCustomAlert = () => {
+    const { isAlertEnabled } = useAlertsConfig();
     const [alertConfig, setAlertConfig] = useState({
         visible: false,
         title: "",
@@ -10,6 +12,10 @@ export const useCustomAlert = () => {
     });
 
     const showAlert = useCallback(({title, message, buttons, type = "default"}) => {
+        // Verificar si este tipo de alerta está habilitado
+        if (!isAlertEnabled(type)) {
+            return;
+        }
         setAlertConfig({
             visible: true,
             title,
@@ -17,7 +23,7 @@ export const useCustomAlert = () => {
             buttons,
             type,
         });
-    }, []);
+    }, [isAlertEnabled]);
 
     const hideAlert = useCallback(() => {
         setAlertConfig(prev => ({...prev, visible: false}));

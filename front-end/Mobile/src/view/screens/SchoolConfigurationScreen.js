@@ -8,13 +8,13 @@ import {
     TouchableOpacity,
     Modal,
     ActivityIndicator,
-    Switch,
     Platform,
     KeyboardAvoidingView,
     Keyboard,
-    Alert,
     Image,
 } from 'react-native';
+import { useCustomAlert } from '../components/common/useCustomAlert';
+import CustomAlert from '../components/common/CustomAlert';
 import styles from './Style';
 
 // ─────────────────────────────────────────────
@@ -69,28 +69,12 @@ const FormField = ({
     );
 };
 
-const ToggleRow = ({ label, description, value, onValueChange }) => (
-    <View style={styles.toggleRowSchoolConfig}>
-        <View style={styles.toggleLabelContainerSchoolConfig}>
-            <Text style={styles.toggleLabelSchoolConfig}>{label}</Text>
-            {description && (
-                <Text style={styles.toggleDescriptionSchoolConfig}>{description}</Text>
-            )}
-        </View>
-        <Switch
-            value={value}
-            onValueChange={onValueChange}
-            trackColor={{ false: '#E0E0E0', true: '#A8D8EA' }}
-            thumbColor={value ? '#4A90E2' : '#F0F0F0'}
-        />
-    </View>
-);
-
 // ─────────────────────────────────────────────
 // Componente principal
 // ─────────────────────────────────────────────
 
 const SchoolConfigurationScreen = ({ navigation }) => {
+    const { alertConfig, hideAlert, showError, showSuccess, showConfirm } = useCustomAlert();
 
     // ── Estados generales ──────────────────────
     const [activeTab, setActiveTab]              = useState('general');
@@ -145,7 +129,6 @@ const SchoolConfigurationScreen = ({ navigation }) => {
     });
 
     const [attendanceConfig, setAttendanceConfig] = useState({
-        biometricRequired:      true,
         toleranceMinutes:       '5',
         maxAbsences:            '15',
         maxLatenesses:          '10',
@@ -220,10 +203,10 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                     fetchCitiesByCountry(colombia.name);
                 }
             } else {
-                Alert.alert('Error', 'No se pudieron cargar los países.');
+                showError('Error', 'No se pudieron cargar los países.');
             }
         } catch {
-            Alert.alert('Error', 'Error de conexión al cargar los países.');
+            showError('Error', 'Error de conexión al cargar los países.');
         } finally {
             setLoadingCountries(false);
         }
@@ -251,7 +234,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
             }
         } catch {
             setCitiesOptions([]);
-            Alert.alert('Error', 'No se pudieron cargar las ciudades.');
+            showError('Error', 'No se pudieron cargar las ciudades.');
         } finally {
             setLoadingCities(false);
         }
@@ -364,9 +347,9 @@ const SchoolConfigurationScreen = ({ navigation }) => {
             await new Promise((resolve) => setTimeout(resolve, 2000));
             setHasChanges(false);
             setShowConfirmModal(false);
-            Alert.alert('Éxito', 'Configuración del colegio actualizada correctamente');
+            showSuccess('Éxito', 'Configuración del colegio actualizada correctamente');
         } catch {
-            Alert.alert('Error', 'No se pudo guardar los cambios');
+            showError('Error', 'No se pudo guardar los cambios');
         } finally {
             setIsLoading(false);
         }
@@ -414,13 +397,11 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                         style={styles.headerBackButtonSchoolConfig}
                         onPress={() => {
                             if (hasChanges) {
-                                Alert.alert(
+                                showConfirm(
                                     'Cambios sin guardar',
                                     '¿Descartar los cambios realizados?',
-                                    [
-                                        { text: 'Cancelar',  onPress: () => {} },
-                                        { text: 'Descartar', onPress: handleDiscardChanges },
-                                    ]
+                                    handleDiscardChanges,
+                                    () => {}
                                 );
                             } else {
                                 navigation.goBack();
@@ -652,7 +633,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                         ]}
                                         onPress={() => {
                                             if (!contactInfo.country) {
-                                                Alert.alert('Selecciona un país primero');
+                                                showError('Campo requerido', 'Selecciona un país primero');
                                                 return;
                                             }
                                             if (citiesOptions.length === 0 && !loadingCities) {
@@ -715,12 +696,6 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                         {activeTab === 'asistencia' && (
                             <View style={styles.formSectionSchoolConfig}>
                                 <Text style={styles.formSectionTitleSchoolConfig}>Configuración de Asistencia</Text>
-                                <ToggleRow
-                                    label="Biométrico Requerido"
-                                    description="Requiere autenticación biométrica"
-                                    value={attendanceConfig.biometricRequired}
-                                    onValueChange={(value) => handleAttendanceConfigChange('biometricRequired', value)}
-                                />
                                 <FormField
                                     label="Tolerancia (minutos)"
                                     value={attendanceConfig.toleranceMinutes}
@@ -748,18 +723,6 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                     onChangeText={(value) => handleAttendanceConfigChange('justificationDaysLimit', value)}
                                     placeholder="30"
                                     validationErrors={validationErrors}
-                                />
-                                <ToggleRow
-                                    label="Requerir Documentación"
-                                    description="Exige documento para justificar ausencias"
-                                    value={attendanceConfig.requireDocumentation}
-                                    onValueChange={(value) => handleAttendanceConfigChange('requireDocumentation', value)}
-                                />
-                                <ToggleRow
-                                    label="Habilitar Notificaciones"
-                                    description="Envía alertas automáticas a padres/tutores"
-                                    value={attendanceConfig.enableNotifications}
-                                    onValueChange={(value) => handleAttendanceConfigChange('enableNotifications', value)}
                                 />
                             </View>
                         )}
@@ -1039,6 +1002,14 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                     </View>
                 </View>
             </Modal>
+            <CustomAlert
+                visible={alertConfig.visible}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                buttons={alertConfig.buttons}
+                onClose={hideAlert}
+                type={alertConfig.type}
+            />
         </SafeAreaView>
     );
 };

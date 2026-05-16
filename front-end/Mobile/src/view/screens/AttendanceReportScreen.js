@@ -9,9 +9,10 @@ import {
     SafeAreaView,
     StatusBar,
     ActivityIndicator,
-    Alert,
     Platform,
 } from 'react-native';
+import { useCustomAlert } from '../components/common/useCustomAlert';
+import CustomAlert from '../components/common/CustomAlert';
 
 import styles from './Style';
 
@@ -128,6 +129,7 @@ function PersonCard({ person, onGenerateReport }) {
 // PANTALLA PRINCIPAL
 // ===========================================================================
 export default function AttendanceReportScreen({ navigation }) {
+    const { alertConfig, hideAlert, showSuccess, showConfirm } = useCustomAlert();
 
     const [activeRole, setActiveRole] = useState('student');
     const [activeType, setActiveType] = useState('absence');
@@ -180,36 +182,29 @@ export default function AttendanceReportScreen({ navigation }) {
         setIsLoading(true);
         setTimeout(() => {
             setIsLoading(false);
-            Alert.alert(
+            showSuccess(
                 'Reporte generado',
-                'El reporte de ' + selectedPerson?.name + ' fue enviado correctamente.',
-                [{ text: 'Aceptar' }],
+                'El reporte de ' + selectedPerson?.name + ' fue enviado correctamente.'
             );
         }, 1800);
-    }, [selectedPerson]);
+    }, [selectedPerson, showSuccess]);
 
     const handleGenerateAll = useCallback(() => {
         if (filteredData.length === 0) return;
         const roleLabel = activeRole === 'student' ? 'estudiante(s)' : 'docente(s)';
         const typeLabel = activeType === 'absence' ? 'inasistencias' : 'retardos';
-        Alert.alert(
+        showConfirm(
             'Generar reporte general',
             'Se generará un reporte para ' + filteredData.length + ' ' + roleLabel + ' con ' + typeLabel + ' superiores al tope. ¿Continuar?',
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                {
-                    text: 'Confirmar',
-                    onPress: () => {
-                        setIsLoading(true);
-                        setTimeout(() => {
-                            setIsLoading(false);
-                            Alert.alert('Reportes enviados ✓', filteredData.length + ' reporte(s) generados exitosamente.');
-                        }, 2000);
-                    },
-                },
-            ],
+            () => {
+                setIsLoading(true);
+                setTimeout(() => {
+                    setIsLoading(false);
+                    showSuccess('Reportes enviados ✓', filteredData.length + ' reporte(s) generados exitosamente.');
+                }, 2000);
+            }
         );
-    }, [filteredData, activeRole, activeType]);
+    }, [filteredData, activeRole, activeType, showConfirm, showSuccess]);
 
     const handleRoleChange = useCallback((role) => {
         setActiveRole(role);
@@ -384,6 +379,14 @@ export default function AttendanceReportScreen({ navigation }) {
                     </TouchableOpacity>
                 </TouchableOpacity>
             </Modal>
+            <CustomAlert
+                visible={alertConfig.visible}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                buttons={alertConfig.buttons}
+                onClose={hideAlert}
+                type={alertConfig.type}
+            />
         </SafeAreaView>
     );
 }
