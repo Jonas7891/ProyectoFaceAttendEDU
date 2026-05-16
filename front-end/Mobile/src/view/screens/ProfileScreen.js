@@ -43,270 +43,10 @@ const SectionTitle = ({title, colors, badge, badgeLabel}) => (
     </View>
 );
 
-// ─────────────────────────────────────────────
-//  TARJETAS — ESTUDIANTE
-// ─────────────────────────────────────────────
-
-/** Ítem individual de estadística con fondo contextual */
-const StatItem = ({label, value, color, backgroundColor}) => (
-    <View style={[styles.statItemProfile, {backgroundColor}]}>
+const StatItem = ({label, value, color}) => (
+    <View style={styles.statItemProfile}>
         <Text style={[styles.statValueProfile, {color}]}>{value ?? 0}</Text>
-        <Text style={[styles.statLabelProfile, {color: color + 'CC'}]}>{label}</Text>
-    </View>
-);
-
-/**
- * Card de estadísticas de asistencia.
- * Campos BD: attendance.status (Present / Absent / Late / Justified)
- * attendanceStats esperado: { attendancePercentage, totalClasses, present, absent, late, justified }
- */
-const AttendanceStatsCard = ({stats, colors, t}) => {
-    const attendanceRate = stats?.attendancePercentage ?? stats?.attendanceRate ?? '0%';
-    return (
-        <View style={[styles.statsCardProfile, {
-            backgroundColor: colors.card,
-            borderColor: colors.border ?? colors.textSecondary + '25',
-            shadowColor: colors.text,
-        }]}>
-            <View style={styles.statsCircleContainer}>
-                <View style={[styles.statsCircleRing, {borderColor: colors.primary}]}>
-                    <Text style={[styles.statsPctText, {color: colors.primary}]}>{attendanceRate}</Text>
-                    <Text style={[styles.statsLabel, {color: colors.textSecondary}]}>
-                        {t('profile.attendanceRate', 'Asistencia')}
-                    </Text>
-                </View>
-            </View>
-            <View style={styles.statsBreakdown}>
-                <StatItem
-                    label={t('profile.totalClasses', 'Clases')}
-                    value={stats?.totalClasses ?? stats?.classes ?? 0}
-                    color={colors.text}
-                    backgroundColor={colors.textSecondary + '12'}
-                />
-                <StatItem
-                    label={t('profile.presentCount', 'Presente')}
-                    value={stats?.present ?? stats?.presentCount ?? 0}
-                    color={colors.success}
-                    backgroundColor={colors.success + '12'}
-                />
-                <StatItem
-                    label={t('profile.absentCount', 'Ausente')}
-                    value={stats?.absent ?? stats?.absentCount ?? 0}
-                    color={colors.error}
-                    backgroundColor={colors.error + '12'}
-                />
-                {(stats?.late ?? 0) > 0 && (
-                    <StatItem
-                        label={t('profile.lateCount', 'Tarde')}
-                        value={stats?.late ?? 0}
-                        color={colors.warning ?? '#FF9800'}
-                        backgroundColor={(colors.warning ?? '#FF9800') + '12'}
-                    />
-                )}
-            </View>
-        </View>
-    );
-};
-
-/**
- * Card de justificación del estudiante.
- * Campos BD: justification.justification | justification.approval | justification.created_at
- */
-const JustificationCard = ({item, colors, t}) => {
-    const approval = item?.approval;
-    const isPending  = approval === 'Pending';
-    const isApproved = approval === 'Approved';
-    const statusColor = isPending ? colors.primary : isApproved ? colors.success : colors.error;
-
-    return (
-        <View style={[styles.justCardProfile, {
-            backgroundColor: colors.card,
-            borderColor: colors.border ?? colors.textSecondary + '20',
-            shadowColor: colors.text,
-        }]}>
-            <View style={[styles.justIndicatorProfile, {backgroundColor: statusColor}]} />
-            <View style={{flex: 1}}>
-                <Text style={[styles.justDateProfile, {color: colors.textSecondary}]}>
-                    {item?.date ?? item?.submittedAt ?? item?.created_at ?? '---'}
-                </Text>
-                <Text style={[styles.justTextProfile, {color: colors.text}]} numberOfLines={2}>
-                    {item?.justification ?? item?.reason ?? item?.description
-                        ?? t('profile.justification', 'Justificación')}
-                </Text>
-            </View>
-            <View style={[styles.justBadgeProfile, {
-                backgroundColor: statusColor + '15',
-                borderColor: statusColor + '30',
-            }]}>
-                <Text style={[styles.justBadgeTextProfile, {color: statusColor}]}>
-                    {approval ?? t('profile.pending', 'Pendiente')}
-                </Text>
-            </View>
-        </View>
-    );
-};
-
-// ─────────────────────────────────────────────
-//  TARJETAS — PROFESOR
-// ─────────────────────────────────────────────
-
-/**
- * Card de horario de clase para el profesor.
- * Campos BD: schedule.day | schedule.start_time | schedule.end_time
- *            course.course_name | classroom.classroom_name | period.name
- */
-const TeacherScheduleCard = ({schedule, colors}) => (
-    <View style={[styles.courseCardProfile, {
-        backgroundColor: colors.card,
-        borderLeftColor: colors.primary,
-        shadowColor: colors.text,
-    }]}>
-        <View style={styles.courseCardInnerProfile}>
-            <View style={[styles.courseCardDotProfile, {backgroundColor: colors.primary}]} />
-            <View style={{flex: 1}}>
-                <Text style={[styles.courseNameProfile, {color: colors.text}]}>
-                    {schedule.course_name}
-                </Text>
-                <Text style={[styles.courseCodeProfile, {color: colors.textSecondary}]}>
-                    {schedule.classroom_name}  ·  {schedule.start_time} – {schedule.end_time}
-                </Text>
-            </View>
-            <View style={[styles.courseStatusBadgeProfile, {
-                backgroundColor: colors.primary + '18',
-            }]}>
-                <Text style={[styles.courseStatusProfile, {color: colors.primary}]}>
-                    {schedule.day}
-                </Text>
-            </View>
-        </View>
-    </View>
-);
-
-/**
- * Resumen de asistencia de un curso dictado por el profesor.
- * Campos BD: calculados desde attendance por schedule/course
- * courseStat esperado: { course_name, course_code, totalStudents, presentAvg, absentAvg }
- */
-const TeacherCourseStatCard = ({courseStat, colors, t}) => (
-    <View style={[styles.statsCardProfile, {
-        backgroundColor: colors.card,
-        borderColor: colors.border ?? colors.textSecondary + '25',
-        shadowColor: colors.text,
-        flexDirection: 'column',
-        gap: 10,
-    }]}>
-        <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
-            <View style={[styles.courseCardDotProfile, {backgroundColor: colors.primary}]} />
-            <Text style={[styles.courseNameProfile, {color: colors.text, flex: 1}]}>
-                {courseStat.course_name}
-            </Text>
-            <Text style={[styles.courseCodeProfile, {color: colors.textSecondary}]}>
-                {courseStat.course_code}
-            </Text>
-        </View>
-        <View style={styles.statsBreakdown}>
-            <StatItem
-                label={t('profile.totalStudents', 'Alumnos')}
-                value={courseStat?.totalStudents ?? 0}
-                color={colors.text}
-                backgroundColor={colors.textSecondary + '12'}
-            />
-            <StatItem
-                label={t('profile.presentAvg', 'Presentes')}
-                value={courseStat?.presentAvg ?? 0}
-                color={colors.success}
-                backgroundColor={colors.success + '12'}
-            />
-            <StatItem
-                label={t('profile.absentAvg', 'Ausentes')}
-                value={courseStat?.absentAvg ?? 0}
-                color={colors.error}
-                backgroundColor={colors.error + '12'}
-            />
-        </View>
-    </View>
-);
-
-// ─────────────────────────────────────────────
-//  TARJETAS — ADMINISTRADOR
-// ─────────────────────────────────────────────
-
-/**
- * Tarjeta de dispositivo IoT.
- * Campos BD: iot_device.device_name | iot_device.status | iot_device.ip_address
- *            iot_device.last_connection | classroom.classroom_name
- */
-const DeviceCard = ({device, colors}) => {
-    const isActive = device?.status === 'Active';
-    return (
-        <View style={[styles.deviceCardProfile, {
-            backgroundColor: colors.card,
-            borderColor: colors.border ?? colors.textSecondary + '20',
-            shadowColor: colors.text,
-        }]}>
-            <View style={[styles.deviceIconContainerProfile, {
-                backgroundColor: isActive ? colors.success + '15' : colors.textSecondary + '12',
-            }]}>
-                <Text style={{fontSize: 20}}>{isActive ? '📡' : '🔌'}</Text>
-            </View>
-            <View style={{flex: 1}}>
-                <Text style={[styles.deviceNameProfile, {color: colors.text}]}>
-                    {device?.device_name ?? 'Dispositivo'}
-                </Text>
-                <Text style={[styles.deviceDetailProfile, {color: colors.textSecondary}]}>
-                    {device?.classroom_name ?? device?.location ?? 'Sin aula asignada'}
-                </Text>
-                {device?.ip_address ? (
-                    <Text style={[styles.deviceDetailProfile, {color: colors.textSecondary, fontSize: 11}]}>
-                        IP: {device.ip_address}
-                    </Text>
-                ) : null}
-            </View>
-            <View style={[styles.deviceStatusChipProfile, {
-                backgroundColor: isActive ? colors.success + '15' : colors.textSecondary + '12',
-            }]}>
-                <View style={[styles.deviceStatusDotProfile, {
-                    backgroundColor: isActive ? colors.success : colors.textSecondary,
-                }]} />
-                <Text style={[styles.deviceStatusProfile, {
-                    color: isActive ? colors.success : colors.textSecondary,
-                }]}>
-                    {device?.status ?? 'N/A'}
-                </Text>
-            </View>
-        </View>
-    );
-};
-
-/**
- * Resumen del colegio para el administrador.
- * Campos BD: school.name | school.nit | school.address | school.phone | school.email
- *            period.name | period.start_date | period.end_date (periodo activo)
- * schoolInfo esperado: { name, nit, address, phone, email, activePeriod }
- * activePeriod esperado: { name, start_date, end_date }
- */
-const SchoolInfoCard = ({schoolInfo, colors, t}) => (
-    <View style={[styles.statsCardProfile, {
-        backgroundColor: colors.card,
-        borderColor: colors.border ?? colors.textSecondary + '25',
-        shadowColor: colors.text,
-        flexDirection: 'column',
-        gap: 0,
-        padding: 16,
-    }]}>
-        <Text style={[styles.courseNameProfile, {color: colors.text, marginBottom: 10}]}>
-            🏫  {schoolInfo?.name ?? '—'}
-        </Text>
-        <InfoField label={t('profile.nit', 'NIT')}           value={schoolInfo?.nit}     colors={colors} />
-        <InfoField label={t('profile.address', 'Dirección')} value={schoolInfo?.address}  colors={colors} />
-        <InfoField label={t('profile.phone', 'Teléfono')}    value={schoolInfo?.phone}    colors={colors} />
-        {schoolInfo?.activePeriod && (
-            <InfoField
-                label={t('profile.activePeriod', 'Período activo')}
-                value={`${schoolInfo.activePeriod.name}  (${schoolInfo.activePeriod.start_date} – ${schoolInfo.activePeriod.end_date})`}
-                colors={colors}
-            />
-        )}
+        <Text style={[styles.statLabelProfile, {color}]}>{label}</Text>
     </View>
 );
 
@@ -325,16 +65,12 @@ export default function ProfileScreen() {
         updateKey,
         handleBack,
         toggleTheme,
-        // Estudiante
-        courses        = [],
-        attendanceStats = null,
-        justifications  = [],
-        // Profesor
-        teacherSchedules   = [],
-        teacherCourseStats = [],
-        // Administrador
-        iotDevices  = [],
-        schoolInfo  = null,
+
+        // ── Datos adicionales que debe proveer el ViewModel ──
+        courses,
+        attendanceStats,
+        justifications,
+        iotDevices,
     } = useProfileViewModel();
 
     const isStudent = userRole === 'Estudiante';
@@ -407,8 +143,14 @@ export default function ProfileScreen() {
                     <InfoField label={t('profile.joinDate',   'Fecha de ingreso')}   value={userInfo?.joinDate}       colors={colors} />
                     <InfoField label={t('profile.school',     'Colegio')}            value={userInfo?.school}         colors={colors} />
 
-                    {/* ══ SECCIÓN ESTUDIANTE ══ */}
-                    {isStudent && (
+                    <InfoField label={t('profile.email')} value={userInfo.email} colors={colors}/>
+                    <InfoField label={t('profile.employeeId')} value={userInfo.identification}
+                               colors={colors}/>
+                    <InfoField label={t('profile.joinDate')} value={userInfo.joinDate} colors={colors}/>
+                    <InfoField label={t('profile.school')} value={userInfo.school} colors={colors}/>
+
+                    {/* ── Cursos matriculados — Estudiante ── */}
+                    {isStudent && courses?.length > 0 && (
                         <>
                             {/* Cursos matriculados — BD: enrollment + course */}
                             {courses.length > 0 && (
@@ -608,3 +350,26 @@ export default function ProfileScreen() {
         </SafeAreaView>
     );
 }
+
+// ─────────────────────────────────────────────
+//  Helper: título de sección con badge opcional
+// ─────────────────────────────────────────────
+const SectionTitle = ({title, colors, badge, badgeLabel}) => (
+    <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 10, marginBottom: 10}}>
+        <Text style={[styles.sectionTitleMenuProfile, {color: colors.text, flex: 1}]}>
+            {title}
+        </Text>
+        {badge !== undefined && badge > 0 && (
+            <View style={{
+                backgroundColor: colors.primary + '20',
+                borderRadius: 12,
+                paddingHorizontal: 8,
+                paddingVertical: 2
+            }}>
+                <Text style={{fontSize: 12, color: colors.primary, fontWeight: '600'}}>
+                    {badge}{badgeLabel ? ` ${badgeLabel}` : ''}
+                </Text>
+            </View>
+        )}
+    </View>
+);
