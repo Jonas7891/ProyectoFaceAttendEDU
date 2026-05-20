@@ -23,12 +23,11 @@ function DetailRow({icon, label, value, colors, valueColor}) {
     if (!value || value === "—") return null;
     return (
         <View style={{
-            flexDirection: "row", alignItems: "flex-start",
+            flexDirection: "row", alignItems: "stretch",
             paddingVertical: 10,
             borderBottomWidth: 1, borderBottomColor: colors.separator ?? "#F0F0F0",
             gap: 12,
         }}>
-            <Text style={{fontSize: 18, width: 26, textAlign: "center"}}>{icon}</Text>
             <View style={{flex: 1}}>
                 <Text style={{fontSize: 11, color: colors.textMuted, marginBottom: 2}}>{label}</Text>
                 <Text style={{fontSize: 14, fontWeight: "600", color: valueColor ?? colors.text}}>
@@ -110,32 +109,32 @@ function TeacherDetailModal({item, visible, onClose, colors, t, isDark}) {
                     {/* Asistencia */}
                     <SectionLabel text={t("attendance.sectionAttendance", {defaultValue: "Registro de asistencia"})}
                                   colors={colors}/>
-                    <DetailRow icon="📅" label={t("attendance.date", {defaultValue: "Fecha"})} value={item.fecha}
+                    <DetailRow label={t("attendance.date", {defaultValue: "Fecha"})} value={item.fecha}
                                colors={colors}/>
-                    <DetailRow icon="⏰" label={t("attendance.time", {defaultValue: "Hora de entrada"})}
+                    <DetailRow label={t("attendance.time", {defaultValue: "Hora de entrada"})}
                                value={item.hora} colors={colors} valueColor={cfg.color}/>
-                    <DetailRow icon="📆" label={t("attendance.day", {defaultValue: "Día de clase"})} value={item.dia}
+                    <DetailRow label={t("attendance.day", {defaultValue: "Día de clase"})} value={item.dia}
                                colors={colors}/>
-                    <DetailRow icon="🕐" label={t("attendance.schedule", {defaultValue: "Horario"})}
+                    <DetailRow label={t("attendance.schedule", {defaultValue: "Horario"})}
                                value={`${item.hora_inicio} – ${item.hora_fin}`} colors={colors}/>
 
                     {/* Materia */}
                     <SectionLabel text={t("attendance.sectionCourse", {defaultValue: "Materia"})} colors={colors}/>
-                    <DetailRow icon="📚" label={t("attendance.subject", {defaultValue: "Materia"})} value={item.materia}
+                    <DetailRow label={t("attendance.subject", {defaultValue: "Materia"})} value={item.materia}
                                colors={colors}/>
-                    <DetailRow icon="🔖" label={t("attendance.courseCode", {defaultValue: "Código de curso"})}
+                    <DetailRow label={t("attendance.courseCode", {defaultValue: "Código de curso"})}
                                value={item.codigo_curso} colors={colors}/>
-                    <DetailRow icon="🏫" label={t("attendance.classroom", {defaultValue: "Salón"})} value={item.salon}
+                    <DetailRow label={t("attendance.classroom", {defaultValue: "Salón"})} value={item.salon}
                                colors={colors}/>
 
                     {/* Período */}
                     <SectionLabel text={t("attendance.sectionPeriod", {defaultValue: "Período académico"})}
                                   colors={colors}/>
-                    <DetailRow icon="🗓️" label={t("attendance.period", {defaultValue: "Período"})} value={item.periodo}
+                    <DetailRow label={t("attendance.period", {defaultValue: "Período"})} value={item.periodo}
                                colors={colors}/>
-                    <DetailRow icon="▶️" label={t("attendance.periodStart", {defaultValue: "Inicio"})}
+                    <DetailRow label={t("attendance.periodStart", {defaultValue: "Inicio"})}
                                value={item.periodo_inicio} colors={colors}/>
-                    <DetailRow icon="⏹️" label={t("attendance.periodEnd", {defaultValue: "Fin"})}
+                    <DetailRow label={t("attendance.periodEnd", {defaultValue: "Fin"})}
                                value={item.periodo_fin} colors={colors}/>
                 </ScrollView>
 
@@ -148,7 +147,7 @@ function TeacherDetailModal({item, visible, onClose, colors, t, isDark}) {
                         alignItems: "center",
                     }}
                 >
-                    <Text style={{fontSize: 15, fontWeight: "600", color: colors.textSecondary}}>
+                    <Text style={{fontSize: 15, fontWeight: "600", color: colors.textSecondary, borderWidth: 0.2,}}>
                         {t("common.close", {defaultValue: "Cerrar"})}
                     </Text>
                 </TouchableOpacity>
@@ -198,7 +197,6 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
                         gap: 14, marginBottom: 24,
                         borderWidth: 1, borderColor: cfg.color + "55",
                     }}>
-                        <Text style={{fontSize: 36}}>📖</Text>
                         <View style={{flex: 1}}>
                             <Text style={{fontSize: 17, fontWeight: "700", color: cfg.color}}>
                                 {item.materia}
@@ -212,31 +210,31 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
                     {/* Registro */}
                     <SectionLabel text={t("attendance.sectionAttendance", {defaultValue: "Registro de asistencia"})}
                                   colors={colors}/>
-                    <DetailRow icon="📅" label={t("attendance.date", {defaultValue: "Fecha"})} value={item.fecha}
+                    <DetailRow label={t("attendance.date", {defaultValue: "Fecha"})} value={item.fecha}
                                colors={colors}/>
-                    <DetailRow icon="⏰" label={t("attendance.time", {defaultValue: "Hora registrada"})}
+                    <DetailRow label={t("attendance.time", {defaultValue: "Hora registrada"})}
                                value={item.hora} colors={colors} valueColor={cfg.color}/>
 
                     {/* Clase */}
                     <SectionLabel text={t("attendance.sectionClass", {defaultValue: "Información de la clase"})}
                                   colors={colors}/>
-                    <DetailRow icon="👨‍🏫" label={t("attendance.teacher", {defaultValue: "Docente"})}
+                    <DetailRow label={t("attendance.teacher", {defaultValue: "Docente"})}
                                value={item.docente} colors={colors}/>
-                    <DetailRow icon="🏫" label={t("attendance.classroom", {defaultValue: "Salón"})} value={item.salon}
+                    <DetailRow label={t("attendance.classroom", {defaultValue: "Salón"})} value={item.salon}
                                colors={colors}/>
-                    <DetailRow icon="📆" label={t("attendance.day", {defaultValue: "Día"})} value={item.dia}
+                    <DetailRow label={t("attendance.day", {defaultValue: "Día"})} value={item.dia}
                                colors={colors}/>
-                    <DetailRow icon="🕐" label={t("attendance.schedule", {defaultValue: "Horario"})}
+                    <DetailRow label={t("attendance.schedule", {defaultValue: "Horario"})}
                                value={`${item.hora_inicio} – ${item.hora_fin}`} colors={colors}/>
 
                     {/* Período */}
                     <SectionLabel text={t("attendance.sectionPeriod", {defaultValue: "Período académico"})}
                                   colors={colors}/>
-                    <DetailRow icon="🗓️" label={t("attendance.period", {defaultValue: "Período"})} value={item.periodo}
+                    <DetailRow label={t("attendance.period", {defaultValue: "Período"})} value={item.periodo}
                                colors={colors}/>
-                    <DetailRow icon="▶️" label={t("attendance.periodStart", {defaultValue: "Inicio"})}
+                    <DetailRow label={t("attendance.periodStart", {defaultValue: "Inicio"})}
                                value={item.periodo_inicio} colors={colors}/>
-                    <DetailRow icon="⏹️" label={t("attendance.periodEnd", {defaultValue: "Fin"})}
+                    <DetailRow label={t("attendance.periodEnd", {defaultValue: "Fin"})}
                                value={item.periodo_fin} colors={colors}/>
 
                     {/* Justificación */}
@@ -251,7 +249,6 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
                                 paddingVertical: 10,
                                 borderBottomWidth: 1, borderBottomColor: colors.separator ?? "#F0F0F0",
                             }}>
-                                <Text style={{fontSize: 18, width: 26, textAlign: "center"}}>📋</Text>
                                 <View style={{flex: 1}}>
                                     <Text style={{fontSize: 11, color: colors.textMuted, marginBottom: 6}}>
                                         {t("attendance.approvalStatus", {defaultValue: "Estado de aprobación"})}
@@ -270,11 +267,11 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
                                 </View>
                             </View>
 
-                            <DetailRow icon="📝" label={t("attendance.justificationText", {defaultValue: "Descripción"})}
+                            <DetailRow label={t("attendance.justificationText", {defaultValue: "Descripción"})}
                                        value={item.justificacion.texto} colors={colors}/>
-                            <DetailRow icon="👤" label={t("attendance.reviewedBy", {defaultValue: "Revisado por"})}
+                            <DetailRow label={t("attendance.reviewedBy", {defaultValue: "Revisado por"})}
                                        value={item.justificacion.revisado_por} colors={colors}/>
-                            <DetailRow icon="🕓" label={t("attendance.reviewedAt", {defaultValue: "Fecha revisión"})}
+                            <DetailRow label={t("attendance.reviewedAt", {defaultValue: "Fecha revisión"})}
                                        value={item.justificacion.revisado_en} colors={colors}/>
                         </>
                     )}
@@ -288,7 +285,7 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
                             borderWidth: 1, borderColor: "#F59E0B55",
                         }}>
                             <Text style={{fontSize: 13, fontWeight: "600", color: "#F59E0B", marginBottom: 4}}>
-                                ⚠️ {t("attendance.noJustification", {defaultValue: "Sin justificación registrada"})}
+                                {t("attendance.noJustification", {defaultValue: "Sin justificación registrada"})}
                             </Text>
                             <Text style={{fontSize: 12, color: isDark ? "#FDE68A" : "#92400E"}}>
                                 {t("attendance.noJustificationHint", {defaultValue: "Puedes agregar una desde el menú de justificaciones."})}
@@ -436,10 +433,10 @@ function MyAttendanceCard({item, colors, t, isDark, onInfo}) {
                     <View style={{
                         alignSelf: "flex-end",
                         backgroundColor: isDark ? "#2E1065" : "#EDE9FE",
-                        borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3,
+                        borderRadius: 20, paddingHorizontal: 8
                     }}>
                         <Text style={{fontSize: 11, fontWeight: "700", color: "#8B5CF6"}}>
-                            📋 {t("attendance.justified", {defaultValue: "Justificado"})}
+                            {t("attendance.justified", {defaultValue: "Justificado"})}
                         </Text>
                     </View>
                 )}
@@ -528,7 +525,6 @@ export default function DisplayingAttendance() {
                         paddingVertical: 10,
                         gap: 6
                     }}>
-                        <Text style={{fontSize: 15}}>📅</Text>
                         <Text style={{flex: 1, color: selectedDate ? colors.text : colors.textMuted, fontSize: 13}}
                               numberOfLines={1}>
                             {formatDateDisplay(selectedDate, t)}
@@ -609,7 +605,6 @@ export default function DisplayingAttendance() {
                     }
                     ListEmptyComponent={
                         <View style={{alignItems: "center", paddingVertical: 50}}>
-                            <Text style={{fontSize: 40, marginBottom: 12}}>🔍</Text>
                             <Text style={{color: colors.textMuted, fontSize: 14, textAlign: "center"}}>
                                 {t("attendance.noResults", {defaultValue: "Sin resultados para los filtros aplicados"})}
                             </Text>

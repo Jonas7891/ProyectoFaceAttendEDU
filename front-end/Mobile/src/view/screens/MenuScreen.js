@@ -67,6 +67,7 @@ export default function MenuScreen({ onLogout }) {
     const handleFacialFail = () => navigateTo("FacialFail");
     const handleMenuJustify = () => navigateTo("MenuJustify");
     const handleSettings = () => navigateTo("LanguageSettings");
+    const handleSchool = () => navigateTo("SchoolConfigurationScreen");
 
     const MenuItem = ({ label, onPress }) => (
         <>
@@ -77,7 +78,7 @@ export default function MenuScreen({ onLogout }) {
                         {label}
                     </Text>
                     <Image
-                        source={require("../../assets/images/flecha.png")}
+                        source={require("../../assets/images/flecha-volver.png")}
                         style={[styles.arrowImage, { tintColor: colors.text }]}
                     />
                 </View>
@@ -103,7 +104,7 @@ export default function MenuScreen({ onLogout }) {
                             <TouchableOpacity onPress={handleBack} activeOpacity={0.2}>
                                 <View style={styles.backIcon}>
                                     <Image
-                                        source={require("../../assets/images/flecha.png")}
+                                        source={require("../../assets/images/flecha-volver.png")}
                                         style={[styles.backIconImage, { tintColor: colors.text }]}
                                     />
                                 </View>
@@ -138,10 +139,17 @@ export default function MenuScreen({ onLogout }) {
                                     }
                                     onPress={handleMenuJustify}
                                 />
+
                                 <MenuItem label={t('menu.appSettings')} onPress={handleSettings} />
+
                                 <MenuItem
                                     label={t('menu.facialRecognitionFail')}
                                     onPress={handleFacialFail}
+                                />
+
+                                <MenuItem
+                                    label={"Configuración de Colegio"}
+                                    onPress={handleSchool}
                                 />
 
                                 {/* Pasamos handleLogout (que ya tiene la confirmación) como onLogout */}

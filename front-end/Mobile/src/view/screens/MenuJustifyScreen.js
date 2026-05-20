@@ -66,7 +66,7 @@ export default function MenuJustifyScreen() {
               )}
             </View>
             <Image
-                source={require('../../assets/images/flecha.png')}
+                source={require('../../assets/images/flecha-volver.png')}
                 style={[styles.arrowImage, { tintColor: colors.text }]}
             />
           </View>

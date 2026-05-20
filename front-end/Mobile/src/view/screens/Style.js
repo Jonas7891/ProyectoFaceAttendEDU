@@ -1731,64 +1731,101 @@ const styles = StyleSheet.create({
         borderWidth: 1,
     },
 
-    // Estilos para ProfileScreen
+    // ========== PROFILE SCREEN STYLES (mejorados) ==========
     profileHeaderSectionProfile: {
         alignItems: 'center',
-        marginTop: 20,
-        marginBottom: 20,
+        marginBottom: 28,
+        paddingBottom: 24,
     },
     userNameProfile: {
-        fontSize: 24,
-        fontWeight: 'bold',
+        fontSize: 26,
+        fontWeight: '700',
         marginBottom: 8,
+        letterSpacing: 0.2,
+        textAlign: 'center',
     },
     roleBadgeProfile: {
-        paddingHorizontal: 15,
-        paddingVertical: 5,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 14,
+        paddingVertical: 6,
         borderRadius: 20,
+        borderWidth: 1,
+        gap: 6,
+    },
+    roleBadgeDotProfile: {
+        width: 7,
+        height: 7,
+        borderRadius: 4,
     },
     roleBadgeTextProfile: {
-        fontSize: 14,
-        fontWeight: '600',
+        fontSize: 13,
+        fontWeight: '700',
+        letterSpacing: 0.3,
     },
     infoFieldContainerProfile: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 15,
-        borderRadius: 10,
-        marginBottom: 10,
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        borderRadius: 14,
+        marginBottom: 8,
         borderWidth: 1,
+        shadowOffset: {width: 0, height: 1},
+        shadowOpacity: 0.04,
+        shadowRadius: 4,
+        elevation: 1,
     },
     infoFieldLabelProfile: {
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '600',
+        flex: 1,
     },
     infoFieldValueProfile: {
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '400',
+        maxWidth: '55%',
+        textAlign: 'right',
     },
     profileSettingsButtonProfile: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 15,
-        borderRadius: 10,
-        marginBottom: 10,
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        borderRadius: 14,
+        marginBottom: 8,
         borderWidth: 1,
+        shadowOffset: {width: 0, height: 1},
+        shadowOpacity: 0.04,
+        shadowRadius: 4,
+        elevation: 1,
+    },
+    settingsIconBoxProfile: {
+        width: 42,
+        height: 42,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    settingsChevronProfile: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 10,
     },
     profileSettingsTitleProfile: {
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '600',
     },
     profileSettingsSubtitleProfile: {
-        fontSize: 13,
+        fontSize: 12,
         marginTop: 2,
     },
     sectionTitleMenuProfile: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 10,
+        fontSize: 16,
+        fontWeight: '700',
+        flex: 1,
+        letterSpacing: 0.1,
     },
     secondaryButton: {
         alignItems: "center",
@@ -1945,11 +1982,14 @@ const styles = StyleSheet.create({
     actionText: {fontSize: 14},
     empty: {padding: 30, alignItems: 'center'},
 
-    modalWrapper: {flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.4)'},
+    modalWrapper: {flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.68)'},
     modal: {width: '90%', borderRadius: 8, padding: 16},
-    modalTitle: {fontSize: 18, fontWeight: '700', marginBottom: 12},
+    modalTitle: {fontSize: 20, fontWeight: '700', marginBottom: 10, textAlign: 'center'},
     input: {borderWidth: 0.2, borderRadius: 6, padding: 10, marginBottom: 10},
     modalActions: {alignItems: 'center', marginTop: 5, width: '100%', textAlign: "center"},
+    sectionTitleContainer: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 18, marginBottom: 10},
+    sectionBadge: {borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4},
+    sectionBadgeText: {fontSize: 12, fontWeight: '700'},
     searchItem: {
         flexDirection: 'row',
         padding: 10,
@@ -1958,123 +1998,229 @@ const styles = StyleSheet.create({
         marginBottom: 8,
         alignItems: 'center'
     },
-    // ========== PROFILE styles ==========
-    avatarCircleProfile: {
-        width: 72,
-        height: 72,
-        borderRadius: 36,
+    // ========== PROFILE styles (mejorados) ==========
+    avatarRingProfile: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        borderWidth: 3,
         alignItems: 'center',
         justifyContent: 'center',
         alignSelf: 'center',
-        marginBottom: 10,
+        marginBottom: 14,
+    },
+    avatarCircleProfile: {
+        width: 88,
+        height: 88,
+        borderRadius: 44,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 2,
     },
     avatarInitialsProfile: {
-        fontSize: 26,
-        fontWeight: '700',
+        fontSize: 30,
+        fontWeight: '800',
         letterSpacing: 1,
     },
 
     courseCardProfile: {
-        borderRadius: 10,
-        padding: 12,
+        borderRadius: 14,
+        padding: 14,
         marginBottom: 8,
+        borderLeftWidth: 3,
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.05,
+        shadowRadius: 6,
+        elevation: 2,
+    },
+    courseCardInnerProfile: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    courseCardDotProfile: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        marginTop: 2,
+        alignSelf: 'flex-start',
     },
     courseNameProfile: {
         fontSize: 14,
         fontWeight: '600',
-        marginBottom: 2,
+        marginBottom: 3,
     },
     courseCodeProfile: {
         fontSize: 12,
-        marginBottom: 4,
+    },
+    courseStatusBadgeProfile: {
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 10,
+        alignSelf: 'flex-start',
+        marginLeft: 4,
     },
     courseStatusProfile: {
         fontSize: 11,
-        fontWeight: '600',
+        fontWeight: '700',
         textTransform: 'uppercase',
         letterSpacing: 0.5,
     },
 
     statsCardProfile: {
-        borderRadius: 12,
-        padding: 16,
+        borderRadius: 16,
+        padding: 18,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 16,
         marginBottom: 8,
+        borderWidth: 1,
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
     },
     statsCircleContainer: {
         alignItems: 'center',
-        minWidth: 64,
+        minWidth: 80,
+    },
+    statsCircleRing: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        borderWidth: 4,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     statsPctText: {
-        fontSize: 28,
+        fontSize: 22,
         fontWeight: '800',
+        letterSpacing: -0.5,
     },
     statsLabel: {
-        fontSize: 11,
+        fontSize: 10,
         marginTop: 2,
+        fontWeight: '500',
     },
     statsBreakdown: {
         flex: 1,
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 10,
+        gap: 8,
     },
     statItemProfile: {
         alignItems: 'center',
-        minWidth: 56,
+        minWidth: 60,
+        paddingVertical: 8,
+        paddingHorizontal: 10,
+        borderRadius: 12,
     },
     statValueProfile: {
-        fontSize: 18,
-        fontWeight: '700',
+        fontSize: 20,
+        fontWeight: '800',
     },
     statLabelProfile: {
         fontSize: 10,
-        marginTop: 2,
+        marginTop: 3,
         textAlign: 'center',
+        fontWeight: '500',
     },
 
     justCardProfile: {
-        borderRadius: 10,
-        padding: 12,
+        borderRadius: 14,
+        padding: 14,
         marginBottom: 8,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10,
+        gap: 12,
+        borderWidth: 1,
+        shadowOffset: {width: 0, height: 1},
+        shadowOpacity: 0.04,
+        shadowRadius: 4,
+        elevation: 1,
+    },
+    justIndicatorProfile: {
+        width: 4,
+        height: '100%',
+        minHeight: 40,
+        borderRadius: 2,
+        alignSelf: 'stretch',
     },
     justDateProfile: {
         fontSize: 11,
         marginBottom: 3,
+        fontWeight: '500',
     },
     justTextProfile: {
         fontSize: 13,
+        lineHeight: 18,
     },
     justBadgeProfile: {
-        borderRadius: 8,
-        paddingHorizontal: 8,
-        paddingVertical: 4,
+        borderRadius: 10,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
         alignSelf: 'flex-start',
+        borderWidth: 1,
+    },
+    justBadgeTextProfile: {
+        fontSize: 11,
+        fontWeight: '700',
     },
 
-    // Tarjeta de dispositivo IoT
+    // Tarjeta de dispositivo IoT (mejorada)
     deviceCardProfile: {
-        borderRadius: 10,
-        padding: 12,
+        borderRadius: 14,
+        padding: 14,
         marginBottom: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        borderWidth: 1,
+        shadowOffset: {width: 0, height: 1},
+        shadowOpacity: 0.04,
+        shadowRadius: 4,
+        elevation: 1,
+    },
+    deviceIconContainerProfile: {
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     deviceNameProfile: {
         fontSize: 14,
         fontWeight: '600',
-        marginBottom: 4,
+        marginBottom: 3,
     },
     deviceDetailProfile: {
         fontSize: 12,
-        marginBottom: 4,
+        marginBottom: 2,
+    },
+    deviceStatusChipProfile: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 10,
+        gap: 5,
+    },
+    deviceStatusDotProfile: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
     },
     deviceStatusProfile: {
-        fontSize: 12,
-        fontWeight: '600',
+        fontSize: 11,
+        fontWeight: '700',
+    },
+
+    // Acento de sección
+    sectionTitleAccentProfile: {
+        width: 4,
+        height: 18,
+        borderRadius: 2,
+        marginRight: 8,
     },
 
     // ========== REPORTE DE INASISTENCIAS Y RETARDOS ==========
@@ -2798,6 +2944,826 @@ const styles = StyleSheet.create({
 
     filterChipTextWarningActiveReport: {
         color: '#E65100',
+    },
+
+    // ========== SCHOOL CONFIGURATION SCREEN STYLES ==========
+
+    // --- Contenedor principal ---
+    safeAreaSchoolConfig: {
+        flex: 1,
+        backgroundColor: '#F5F5F5',
+    },
+
+    containerSchoolConfig: {
+        flex: 1,
+        paddingTop: Platform.OS === 'android' ? 20 : 10,
+    },
+
+    scrollContentSchoolConfig: {
+        paddingBottom: 40,
+    },
+
+    // --- Encabezado ---
+    headerSchoolConfig: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingTop: Platform.OS === 'android' ? 45 : 15,
+        paddingBottom: 16,
+        backgroundColor: '#FFFFFF',
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.06,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+
+    headerBackButtonSchoolConfig: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#F5F5F5',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    headerBackTextSchoolConfig: {
+        fontSize: 20,
+        color: '#4A90E2',
+        fontWeight: '600',
+    },
+
+    headerTitleSchoolConfig: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        flex: 1,
+        textAlign: 'center',
+    },
+
+    headerIconButtonSchoolConfig: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#E8F5E9',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    headerIconSchoolConfig: {
+        fontSize: 18,
+    },
+
+    // --- Contenedor principal de contenido ---
+    mainContentSchoolConfig: {
+        paddingHorizontal: 20,
+        paddingTop: 20,
+    },
+
+    // --- Tarjeta de información del colegio ---
+    schoolInfoCardSchoolConfig: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 20,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
+        elevation: 3,
+        borderWidth: 1,
+        borderColor: '#F0F0F0',
+    },
+
+    schoolLogoContainerSchoolConfig: {
+        width: 100,
+        height: 100,
+        borderRadius: 16,
+        backgroundColor: '#F0F8FF',
+        justifyContent: 'center',
+        alignItems: 'center',
+        alignSelf: 'center',
+        marginBottom: 16,
+        borderWidth: 2,
+        borderColor: '#E3F2FD',
+    },
+
+    schoolLogoSchoolConfig: {
+        fontSize: 48,
+    },
+
+    schoolNameSchoolConfig: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        textAlign: 'center',
+        marginBottom: 6,
+    },
+
+    schoolCodeSchoolConfig: {
+        fontSize: 12,
+        color: '#666666',
+        textAlign: 'center',
+        marginBottom: 12,
+        fontWeight: '500',
+        backgroundColor: '#F5F5F5',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
+        alignSelf: 'center',
+    },
+
+    schoolStatusBadgeSchoolConfig: {
+        fontSize: 12,
+        fontWeight: '600',
+        textAlign: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8,
+        backgroundColor: '#E8F5E9',
+        color: '#2E7D32',
+        alignSelf: 'center',
+        overflow: 'hidden',
+    },
+
+    // --- Separador ---
+    dividerSchoolConfig: {
+        height: 1,
+        backgroundColor: '#E0E0E0',
+        marginVertical: 16,
+    },
+
+    // --- Información rápida (fila de 3 columnas) ---
+    quickInfoRowSchoolConfig: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginTop: 14,
+        paddingTop: 14,
+        borderTopWidth: 1,
+        borderTopColor: '#F0F0F0',
+    },
+
+    quickInfoItemSchoolConfig: {
+        alignItems: 'center',
+        flex: 1,
+    },
+
+    quickInfoIconSchoolConfig: {
+        fontSize: 24,
+        marginBottom: 6,
+        color: '#4A90E2',
+    },
+
+    quickInfoValueSchoolConfig: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        marginBottom: 2,
+    },
+
+    quickInfoLabelSchoolConfig: {
+        fontSize: 11,
+        color: '#888888',
+        textAlign: 'center',
+    },
+
+    // --- Tabs de secciones ---
+    sectionTabsSchoolConfig: {
+        flexDirection: 'row',
+        backgroundColor: '#F0F0F0',
+        borderRadius: 12,
+        padding: 4,
+        marginBottom: 20,
+    },
+
+    sectionTabSchoolConfig: {
+        flex: 1,
+        paddingVertical: 12,
+        alignItems: 'center',
+        borderRadius: 10,
+    },
+
+    sectionTabActiveSchoolConfig: {
+        backgroundColor: '#FFFFFF',
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+
+    sectionTabTextSchoolConfig: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#999999',
+    },
+
+    sectionTabTextActiveSchoolConfig: {
+        color: '#1A1A1A',
+    },
+
+    // --- Secciones de formulario ---
+    formSectionSchoolConfig: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 14,
+        padding: 16,
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 1},
+        shadowOpacity: 0.05,
+        shadowRadius: 3,
+        elevation: 2,
+    },
+
+    formSectionTitleSchoolConfig: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        marginBottom: 14,
+        paddingBottom: 12,
+        borderBottomWidth: 2,
+        borderBottomColor: '#E3F2FD',
+    },
+
+    formSectionIconSchoolConfig: {
+        fontSize: 16,
+        marginRight: 8,
+        color: '#4A90E2',
+    },
+
+    // --- Campos de entrada ---
+    formGroupSchoolConfig: {
+        marginBottom: 16,
+    },
+
+    formGroupLastSchoolConfig: {
+        marginBottom: 0,
+    },
+
+    inputLabelSchoolConfig: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#1A1A1A',
+        marginBottom: 8,
+    },
+
+    inputLabelRequiredSchoolConfig: {
+        color: '#F44336',
+        marginLeft: 4,
+    },
+
+    inputFieldSchoolConfig: {
+        backgroundColor: '#F8F9FA',
+        borderRadius: 12,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        fontSize: 14,
+        color: '#333333',
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+    },
+
+    inputFieldFocusedSchoolConfig: {
+        borderColor: '#4A90E2',
+        backgroundColor: '#F0F8FF',
+    },
+
+    inputFieldErrorSchoolConfig: {
+        borderColor: '#F44336',
+        backgroundColor: '#FFEBEE',
+    },
+
+    inputFieldDisabledSchoolConfig: {
+        backgroundColor: '#F5F5F5',
+        color: '#CCCCCC',
+    },
+
+    textAreaSchoolConfig: {
+        minHeight: 100,
+        textAlignVertical: 'top',
+        paddingTop: 12,
+    },
+
+    inputErrorMessageSchoolConfig: {
+        fontSize: 12,
+        color: '#F44336',
+        marginTop: 6,
+        fontWeight: '500',
+    },
+
+    inputSuccessMessageSchoolConfig: {
+        fontSize: 12,
+        color: '#2E7D32',
+        marginTop: 6,
+        fontWeight: '500',
+    },
+
+    inputHelperTextSchoolConfig: {
+        fontSize: 11,
+        color: '#888888',
+        marginTop: 6,
+        fontStyle: 'italic',
+    },
+
+    // --- Select / Picker ---
+    pickerContainerSchoolConfig: {
+        backgroundColor: '#F8F9FA',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        overflow: 'hidden',
+    },
+
+    countryPickerSchoolConfig: {
+        justifyContent: 'center',
+        minHeight: 52,
+    },
+
+    countryPickerTextSchoolConfig: {
+        fontSize: 14,
+        color: '#333333',
+    },
+
+    countryOptionSchoolConfig: {
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+        paddingVertical: 14,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+
+    countryOptionTextSchoolConfig: {
+        fontSize: 15,
+        color: '#1A1A1A',
+    },
+
+    countryDialCodeSchoolConfig: {
+        fontSize: 14,
+        color: '#666666',
+    },
+
+    pickerLabelSchoolConfig: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#1A1A1A',
+        marginBottom: 8,
+    },
+
+    // --- Toggle / Switch ---
+    toggleRowSchoolConfig: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: '#F8F9FA',
+        borderRadius: 12,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+    },
+
+    toggleLabelContainerSchoolConfig: {
+        flex: 1,
+    },
+
+    toggleLabelSchoolConfig: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#1A1A1A',
+        marginBottom: 2,
+    },
+
+    toggleDescriptionSchoolConfig: {
+        fontSize: 12,
+        color: '#888888',
+    },
+
+    // --- Tarjetas de información dentro del formulario ---
+    infoCardSchoolConfig: {
+        backgroundColor: '#F0F8FF',
+        borderLeftWidth: 4,
+        borderLeftColor: '#4A90E2',
+        borderRadius: 10,
+        padding: 12,
+        marginBottom: 14,
+    },
+
+    infoCardTitleSchoolConfig: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        marginBottom: 4,
+    },
+
+    infoCardTextSchoolConfig: {
+        fontSize: 12,
+        color: '#555555',
+        lineHeight: 18,
+    },
+
+    infoCardIconSchoolConfig: {
+        fontSize: 14,
+        color: '#4A90E2',
+        marginRight: 6,
+    },
+
+    // --- Grid de opciones (2 columnas) ---
+    optionsGridSchoolConfig: {
+        flexDirection: 'row',
+        gap: 10,
+        marginBottom: 16,
+    },
+
+    optionButtonSchoolConfig: {
+        flex: 1,
+        paddingVertical: 12,
+        paddingHorizontal: 10,
+        borderRadius: 10,
+        borderWidth: 2,
+        borderColor: '#E0E0E0',
+        backgroundColor: '#FFFFFF',
+        alignItems: 'center',
+        gap: 6,
+    },
+
+    optionButtonActiveSchoolConfig: {
+        borderColor: '#4A90E2',
+        backgroundColor: '#E3F2FD',
+    },
+
+    optionButtonIconSchoolConfig: {
+        fontSize: 24,
+    },
+
+    optionButtonTextSchoolConfig: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#666666',
+    },
+
+    optionButtonTextActiveSchoolConfig: {
+        color: '#4A90E2',
+    },
+
+    // --- Botones de acción ---
+    actionButtonsContainerSchoolConfig: {
+        marginTop: 24,
+        marginBottom: 30,
+        gap: 12,
+    },
+
+    saveButtonSchoolConfig: {
+        backgroundColor: '#4A90E2',
+        borderRadius: 12,
+        paddingVertical: 15,
+        alignItems: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 8,
+        shadowColor: '#4A90E2',
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 5,
+    },
+
+    saveButtonTextSchoolConfig: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#FFFFFF',
+    },
+
+    saveButtonIconSchoolConfig: {
+        fontSize: 18,
+        color: '#FFFFFF',
+    },
+
+    saveButtonDisabledSchoolConfig: {
+        backgroundColor: '#CCCCCC',
+        shadowOpacity: 0,
+        elevation: 0,
+    },
+
+    cancelButtonSchoolConfig: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        paddingVertical: 14,
+        alignItems: 'center',
+        borderWidth: 1.5,
+        borderColor: '#E0E0E0',
+    },
+
+    cancelButtonTextSchoolConfig: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#666666',
+    },
+
+    discardButtonSchoolConfig: {
+        backgroundColor: '#FFEBEE',
+        borderRadius: 12,
+        paddingVertical: 12,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#FFCDD2',
+    },
+
+    discardButtonTextSchoolConfig: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#C62828',
+    },
+
+    // --- Indicador de cambios no guardados ---
+    unsavedChangesIndicatorSchoolConfig: {
+        backgroundColor: '#FFF3E0',
+        borderRadius: 12,
+        padding: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+        borderLeftWidth: 4,
+        borderLeftColor: '#FF9800',
+    },
+
+    unsavedChangesIconSchoolConfig: {
+        fontSize: 18,
+        color: '#FF9800',
+        marginRight: 10,
+    },
+
+    unsavedChangesTextSchoolConfig: {
+        fontSize: 13,
+        color: '#E65100',
+        fontWeight: '500',
+        flex: 1,
+    },
+
+    // --- Indicador de éxito ---
+    successIndicatorSchoolConfig: {
+        backgroundColor: '#E8F5E9',
+        borderRadius: 12,
+        padding: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+        borderLeftWidth: 4,
+        borderLeftColor: '#2E7D32',
+    },
+
+    successIndicatorIconSchoolConfig: {
+        fontSize: 18,
+        color: '#2E7D32',
+        marginRight: 10,
+    },
+
+    successIndicatorTextSchoolConfig: {
+        fontSize: 13,
+        color: '#1B5E20',
+        fontWeight: '500',
+        flex: 1,
+    },
+
+    // --- Modal de confirmación ---
+    modalOverlaySchoolConfig: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    modalSheetSchoolConfig: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 20,
+        padding: 24,
+        width: '85%',
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 10},
+        shadowOpacity: 0.25,
+        shadowRadius: 15,
+        elevation: 8,
+    },
+
+    modalTitleSchoolConfig: {
+        fontSize: 19,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        marginBottom: 8,
+        textAlign: 'center',
+    },
+
+    modalSubtitleSchoolConfig: {
+        fontSize: 14,
+        color: '#666666',
+        textAlign: 'center',
+        marginBottom: 20,
+        lineHeight: 20,
+    },
+
+    modalMessageSchoolConfig: {
+        fontSize: 13,
+        color: '#555555',
+        textAlign: 'center',
+        marginBottom: 24,
+        lineHeight: 20,
+        backgroundColor: '#F8F9FA',
+        borderRadius: 10,
+        padding: 12,
+    },
+
+    modalActionsSchoolConfig: {
+        gap: 10,
+    },
+
+    modalConfirmButtonSchoolConfig: {
+        backgroundColor: '#4A90E2',
+        borderRadius: 12,
+        paddingVertical: 14,
+        alignItems: 'center',
+    },
+
+    modalConfirmButtonTextSchoolConfig: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#FFFFFF',
+    },
+
+    modalCancelButtonSchoolConfig: {
+        backgroundColor: '#F5F5F5',
+        borderRadius: 12,
+        paddingVertical: 13,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+    },
+
+    modalCancelButtonTextSchoolConfig: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#666666',
+    },
+
+    // --- Estado de carga ---
+    loadingOverlaySchoolConfig: {
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        borderRadius: 12,
+        paddingVertical: 16,
+        paddingHorizontal: 20,
+        alignItems: 'center',
+        gap: 8,
+    },
+
+    loadingTextSchoolConfig: {
+        fontSize: 14,
+        color: '#FFFFFF',
+        fontWeight: '500',
+    },
+
+    // --- Tarjeta de configuración avanzada (oculta por defecto) ---
+    advancedSettingsCardSchoolConfig: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        overflow: 'hidden',
+        marginBottom: 16,
+    },
+
+    advancedSettingsHeaderSchoolConfig: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        backgroundColor: '#F8F9FA',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+    },
+
+    advancedSettingsTitleSchoolConfig: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#1A1A1A',
+    },
+
+    advancedSettingsToggleSchoolConfig: {
+        fontSize: 20,
+        color: '#4A90E2',
+    },
+
+    advancedSettingsContentSchoolConfig: {
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+    },
+
+    // --- Fila de información (clave-valor) ---
+    infoRowSchoolConfig: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
+    },
+
+    infoRowLastSchoolConfig: {
+        borderBottomWidth: 0,
+    },
+
+    infoKeySchoolConfig: {
+        fontSize: 13,
+        color: '#888888',
+        fontWeight: '500',
+    },
+
+    infoValueSchoolConfig: {
+        fontSize: 13,
+        color: '#1A1A1A',
+        fontWeight: '600',
+    },
+
+    // --- Badges de estado ---
+    statusBadgeActiveSchoolConfig: {
+        backgroundColor: '#E8F5E9',
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 8,
+        alignSelf: 'flex-start',
+    },
+
+    statusBadgeInactiveSchoolConfig: {
+        backgroundColor: '#F5F5F5',
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 8,
+        alignSelf: 'flex-start',
+    },
+
+    statusBadgeTextActiveSchoolConfig: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: '#2E7D32',
+    },
+
+    statusBadgeTextInactiveSchoolConfig: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: '#999999',
+    },
+
+    // --- Botón flotante de ayuda ---
+    helpButtonSchoolConfig: {
+        position: 'absolute',
+        bottom: 30,
+        right: 20,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: '#4A90E2',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#4A90E2',
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+        elevation: 6,
+    },
+
+    helpButtonIconSchoolConfig: {
+        fontSize: 24,
+        color: '#FFFFFF',
+    },
+
+    // --- Validación visual de campos ---
+    fieldWithValidationSchoolConfig: {
+        marginBottom: 12,
+    },
+
+    fieldValidatedSchoolConfig: {
+        backgroundColor: '#F0F8FF',
+        borderColor: '#4CAF50',
+    },
+
+    validationCheckmarkSchoolConfig: {
+        position: 'absolute',
+        right: 12,
+        top: '50%',
+        marginTop: -10,
+        fontSize: 18,
+        color: '#4CAF50',
+    },
+
+    validationErrorIconSchoolConfig: {
+        position: 'absolute',
+        right: 12,
+        top: '50%',
+        marginTop: -10,
+        fontSize: 18,
+        color: '#F44336',
     },
 });
 

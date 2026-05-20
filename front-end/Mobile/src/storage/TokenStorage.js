@@ -1,79 +1,61 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { jwtDecode } from "jwt-decode";
 
 const TOKEN_KEY = "auth_token";
 
-/**
- * Guarda el token con metadata (fecha de guardado y expiración opcional)
- * @param {string} token
- * @param {number|null} expiresIn segundos hasta que expire (opcional)
- */
 export const saveToken = async (token) => {
-  // Guardar token junto con la fecha de expiración extraída del JWT
+  if (!token || typeof token !== 'string') {
+    console.warn("saveToken: token inválido");
+    return false;
+  }
+
   let expiresAt = null;
   try {
     const decoded = jwtDecode(token);
-    if (decoded.exp) {
-      expiresAt = decoded.exp * 1000; // a milisegundos
+    expiresAt = decoded.exp ? decoded.exp * 1000 : null;
+    if (expiresAt && expiresAt <= Date.now()) {
+      console.warn("saveToken: token expirado");
+      return false;
     }
-  } catch (e) {}
+  } catch (e) {
+    // En desarrollo, si el token no es JWT válido, lo guardamos igual
+    console.warn("saveToken: token no es JWT válido, guardando de todos modos:", e.message);
+  }
 
-  const data = {
-    token,
-    savedAt: Date.now(),
-    expiresAt, // opcional si usas la expiración del propio token
-  };
-
+  const data = { token, savedAt: Date.now(), expiresAt };
   await AsyncStorage.setItem(TOKEN_KEY, JSON.stringify(data));
+  console.log("saveToken: token guardado exitosamente");
+  return true;
 };
 
-/**
- * Obtiene el token si no ha expirado
- * @returns {Promise<string|null>}
- */
 export const getToken = async () => {
   try {
-    const value = await AsyncStorage.getItem(TOKEN_KEY);
-    if (!value) return null;
+    const raw = await AsyncStorage.getItem(TOKEN_KEY);
+    if (!raw) return null;
 
-    const parsed = JSON.parse(value);
+    const { token, expiresAt } = JSON.parse(raw);
+    if (!token) return null;
 
-    // Validación básica
-    if (!parsed?.token) return null;
-
-    // Validar expiración si existe
-    if (parsed.expiresIn) {
-      const now = Date.now();
-      const expiresAt = parsed.savedAt + parsed.expiresIn * 1000;
-
-      if (now > expiresAt) {
-        await removeToken();
-        return null;
-      }
+    if (expiresAt && Date.now() > expiresAt) {
+      await removeToken();
+      return null;
     }
 
-    return parsed.token;
-  } catch (error) {
-    console.error("Error obteniendo token:", error);
+    return token;
+  } catch {
     return null;
   }
 };
 
-/**
- * Elimina el token
- */
 export const removeToken = async () => {
   try {
     await AsyncStorage.removeItem(TOKEN_KEY);
-  } catch (error) {
-    console.error("Error eliminando token:", error);
+    return true;
+  } catch {
+    return false;
   }
 };
 
-/**
- * Verifica si hay un token válido
- * @returns {Promise<boolean>}
- */
 export const hasValidToken = async () => {
-  const token = await getToken();
-  return !!token;
+  return (await getToken()) !== null;
 };

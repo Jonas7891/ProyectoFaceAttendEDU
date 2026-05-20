@@ -4,6 +4,7 @@ import {createStackNavigator} from '@react-navigation/stack';
 import {I18nextProvider} from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {ThemeProvider} from './src/view/components/common/ThemeContext';
+import { AlertsConfigProvider } from './src/utils/AlertsConfigContext';
 import i18n from './src/utils/i18n';
 
 import HomesScreen from './src/view/screens/login/Login';
@@ -22,6 +23,7 @@ import JustificationsScreen from './src/view/screens/ValidAllJustifications';
 import AddValidJustificationScreen from './src/view/screens/AddValidJustificationScreen';
 import ManageUsersScreen from "./src/view/screens/ManageUsersScreen";
 import AttendanceReportScreen from './src/view/screens/AttendanceReportScreen';
+import SchoolConfigurationScreen from "./src/view/screens/SchoolConfigurationScreen"
 
 const Stack = createStackNavigator();
 
@@ -90,9 +92,10 @@ export default function App() {
     if (isAuthenticated === null) return null;
 
     return (
-        <ThemeProvider>
-            <I18nextProvider i18n={i18n}>
-                <NavigationContainer ref={navigationRef}>
+        <AlertsConfigProvider>
+            <ThemeProvider>
+                <I18nextProvider i18n={i18n}>
+                    <NavigationContainer ref={navigationRef}>
                     <Stack.Navigator
                         screenOptions={{
                             headerShown: false,
@@ -140,11 +143,13 @@ export default function App() {
                                 <Stack.Screen name="Profile" component={ProfileScreen}/>
                                 <Stack.Screen name="ManageUsersScreen" component={ManageUsersScreen}/>
                                 <Stack.Screen name="AttendanceReportScreen" component={AttendanceReportScreen}/>
+                                <Stack.Screen name="SchoolConfigurationScreen" component={SchoolConfigurationScreen}/>
                             </>
                         )}
                     </Stack.Navigator>
                 </NavigationContainer>
             </I18nextProvider>
-        </ThemeProvider>
+            </ThemeProvider>
+        </AlertsConfigProvider>
     );
 }
