@@ -72,12 +72,7 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
         };
     }, [i18n]);
 
-    // Carga inicial
-    useEffect(() => {
-        loadUserData();
-    }, [loadUserData]);
-
-    // Recargar al enfocar la pantalla
+    // Recargar al enfocar la pantalla (primera vez y cada vez que se navega a ella)
     useFocusEffect(
         useCallback(() => {
             loadUserData();

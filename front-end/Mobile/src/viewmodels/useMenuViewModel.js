@@ -51,10 +51,6 @@ export function useMenuViewModel({ onLogout }) {
         }
     }, [loadThemeForRole, i18n]);
 
-    useEffect(() => {
-        loadUserData();
-    }, [loadUserData]);
-
     useFocusEffect(
         useCallback(() => {
             loadUserData();

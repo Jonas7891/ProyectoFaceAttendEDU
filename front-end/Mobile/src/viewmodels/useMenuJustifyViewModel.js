@@ -13,42 +13,27 @@ export function useMenuJustifyViewModel() {
     const [pendingCount, setPendingCount] = useState(0);
     const [updateKey, setUpdateKey] = useState(0); // para refrescar al cambiar idioma
 
-    // Cargar rol y pendientes iniciales
-    useEffect(() => {
-        const init = async () => {
-            try {
-                const role = await AsyncStorage.getItem('userRole');
-                const finalRole = role || 'Estudiante';
-                setUserRole(finalRole);
-                await saveLanguageForRole(finalRole);
-
-                const pendingData = await AsyncStorage.getItem('pendingJustifications');
-                if (pendingData) {
-                    const pendings = JSON.parse(pendingData);
-                    setPendingCount(pendings.filter(j => j.status === 'pending').length);
-                }
-            } catch {
-                setUserRole('Estudiante');
-            }
-        };
-        init();
-    }, []);
-
-    // Recargar pendientes al enfocar la pantalla
+    // Cargar rol y pendientes al enfocar la pantalla (primera vez y cada vez que se navega a ella)
     useFocusEffect(
         useCallback(() => {
-            const loadPending = async () => {
+            const loadData = async () => {
                 try {
+                    const role = await AsyncStorage.getItem('userRole');
+                    const finalRole = role || 'Estudiante';
+                    setUserRole(finalRole);
+                    await saveLanguageForRole(finalRole);
+
                     const pendingData = await AsyncStorage.getItem('pendingJustifications');
                     if (pendingData) {
                         const pendings = JSON.parse(pendingData);
                         setPendingCount(pendings.filter(j => j.status === 'pending').length);
                     }
                 } catch (error) {
-                    console.error('Error loading pending count:', error);
+                    console.error('Error loading data:', error);
+                    setUserRole('Estudiante');
                 }
             };
-            loadPending();
+            loadData();
         }, [])
     );
 
