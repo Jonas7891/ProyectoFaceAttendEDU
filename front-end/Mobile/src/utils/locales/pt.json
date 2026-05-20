@@ -18,7 +18,8 @@
     "add": "Adicionar",
     "name": "Nome",
     "email": "Email",
-    "phone": "Telefone"
+    "phone": "Telefone",
+    "edit": "Editar"
   },
   "login": {
     "title": "Login",
@@ -62,7 +63,9 @@
     "appSettings": "Configurações do Aplicativo",
     "facialRecognitionFail": "Falha no reconhecimento facial?",
     "logout": "Sair",
-    "loggingOut": "Saindo..."
+    "loggingOut": "Saindo...",
+    "logoutConfirmTitle": "Sair",
+    "logoutConfirmMessage": "Tem certeza de que deseja sair?"
   },
   "logout": {
     "title": "Sair",
@@ -348,23 +351,36 @@
     "studentId": "ID do estudante",
     "category": "Categoria",
     "categoryHealth": "Saúde",
+    "categoryHealthDesc": "Incapacidades e consultas médicas",
     "categoryFamily": "Familiar",
+    "categoryFamilyDesc": "Situações de carácter familiar",
     "categoryLegal": "Legal",
+    "categoryLegalDesc": "Procedimentos judiciais ou legais",
     "categoryAcademic": "Acadêmica",
+    "categoryAcademicDesc": "Atividades acadêmicas externas",
     "categoryOther": "Outro",
+    "categoryOtherDesc": "Outros motivos justificados",
     "typeMedical": "Médica",
+    "typeMedicalDesc": "Consulta, cirurgia ou incapacidade",
     "typeFamily": "Familiar",
+    "typeFamilyDesc": "Morte ou emergência familiar",
     "typePersonal": "Pessoal",
+    "typePersonalDesc": "Assunto pessoal de força maior",
     "typeAcademic": "Acadêmica",
+    "typeAcademicDesc": "Evento, congresso ou representação",
     "typeWork": "Trabalho",
+    "typeWorkDesc": "Comissão ou atividade de trabalho",
     "typeOther": "Outro",
+    "typeOtherDesc": "Outro tipo de justificação",
     "description": "Descrição",
     "descriptionPlaceholder": "Descreva os detalhes desta justificativa...",
     "saveJustification": "Salvar Justificativa",
     "completeAllFields": "Por favor, preencha todos os campos obrigatórios",
     "justificationCreated": "Justificativa criada com sucesso",
     "errorCreating": "Erro ao criar justificativa",
-    "confirmDiscard": "Tem certeza de que deseja descartar as alterações?"
+    "confirmDiscard": "Tem certeza de que deseja descartar as alterações?",
+    "selectCategory": "Selecione uma categoria...",
+    "selectType": "Selecione um tipo..."
   },
   "justifications": {
     "validList": "Justificativas Válidas",

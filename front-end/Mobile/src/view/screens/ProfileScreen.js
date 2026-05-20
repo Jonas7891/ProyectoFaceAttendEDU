@@ -7,35 +7,35 @@ import {
     ScrollView,
     Platform,
 } from 'react-native';
-import {useTranslation} from 'react-i18next';
-import {useTheme} from '../components/common/ThemeContext';
-import {useLanguageRefresh} from '../../utils/useLanguageRefresh';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '../components/common/ThemeContext';
+import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import PasswordUpdateModal from '../components/common/PasswordUpdateModal';
 import ProfileUpdateModal from '../components/common/ProfileUpdateModal';
 import styles from './Style';
-import {useProfileViewModel} from '../../viewmodels/useProfileViewModel';
+import { useProfileViewModel } from '../../viewmodels/useProfileViewModel';
 
 /** Fila de información clave → valor */
-const InfoField = ({label, value, colors}) => (
+const InfoField = ({ label, value, colors }) => (
     <View style={[styles.infoFieldContainerProfile, {
         backgroundColor: colors.card,
         borderColor: colors.border ?? colors.textSecondary + '30',
         shadowColor: colors.text,
     }]}>
-        <Text style={[styles.infoFieldLabelProfile, {color: colors.textSecondary}]}>{label}</Text>
-        <Text style={[styles.infoFieldValueProfile, {color: colors.text}]}>{value ?? '—'}</Text>
+        <Text style={[styles.infoFieldLabelProfile, { color: colors.textSecondary }]}>{label}</Text>
+        <Text style={[styles.infoFieldValueProfile, { color: colors.text }]}>{value ?? '—'}</Text>
     </View>
 );
 
-/** Encabezado de sección con acento de color y badge opcional */
-const SectionTitle = ({title, colors, badge, badgeLabel}) => (
+/** Encabezado de sección con acento de color y badge opcional — ÚNICA definición */
+const SectionTitle = ({ title, colors, badge, badgeLabel }) => (
     <View style={styles.sectionTitleContainer}>
-        <View style={[styles.sectionTitleAccentProfile, {backgroundColor: colors.primary}]} />
-        <Text style={[styles.sectionTitleMenuProfile, {color: colors.text}]}>{title}</Text>
+        <View style={[styles.sectionTitleAccentProfile, { backgroundColor: colors.primary }]} />
+        <Text style={[styles.sectionTitleMenuProfile, { color: colors.text }]}>{title}</Text>
         {badge !== undefined && badge > 0 ? (
-            <View style={[styles.sectionBadge, {backgroundColor: colors.primary + '20'}]}>
-                <Text style={[styles.sectionBadgeText, {color: colors.primary}]}>
+            <View style={[styles.sectionBadge, { backgroundColor: colors.primary + '20' }]}>
+                <Text style={[styles.sectionBadgeText, { color: colors.primary }]}>
                     {badge}{badgeLabel ? ` ${badgeLabel}` : ''}
                 </Text>
             </View>
@@ -43,21 +43,187 @@ const SectionTitle = ({title, colors, badge, badgeLabel}) => (
     </View>
 );
 
-const StatItem = ({label, value, color}) => (
+const StatItem = ({ label, value, color }) => (
     <View style={styles.statItemProfile}>
-        <Text style={[styles.statValueProfile, {color}]}>{value ?? 0}</Text>
-        <Text style={[styles.statLabelProfile, {color}]}>{label}</Text>
+        <Text style={[styles.statValueProfile, { color }]}>{value ?? 0}</Text>
+        <Text style={[styles.statLabelProfile, { color }]}>{label}</Text>
     </View>
 );
+
+/** Tarjeta de curso para estudiante */
+const CourseCard = ({ course, colors }) => (
+    <View style={[styles.infoFieldContainerProfile, {
+        backgroundColor: colors.card,
+        borderColor: colors.border ?? colors.textSecondary + '30',
+        shadowColor: colors.text,
+    }]}>
+        <Text style={[styles.infoFieldLabelProfile, { color: colors.textSecondary }]}>
+            {course.course_code ?? '—'}
+        </Text>
+        <Text style={[styles.infoFieldValueProfile, { color: colors.text }]}>
+            {course.course_name ?? course.name ?? '—'}
+        </Text>
+    </View>
+);
+
+/** Tarjeta de estadísticas de asistencia para estudiante */
+const AttendanceStatsCard = ({ stats, colors, t }) => (
+    <View style={[styles.infoFieldContainerProfile, {
+        backgroundColor: colors.card,
+        borderColor: colors.border ?? colors.textSecondary + '30',
+        shadowColor: colors.text,
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        paddingVertical: 12,
+    }]}>
+        <StatItem
+            label={t('profile.present', 'Presentes')}
+            value={stats.present}
+            color={colors.success}
+        />
+        <StatItem
+            label={t('profile.absent', 'Ausentes')}
+            value={stats.absent}
+            color={colors.error ?? '#F44336'}
+        />
+        <StatItem
+            label={t('profile.justified', 'Justificadas')}
+            value={stats.justified}
+            color={colors.warning ?? '#FF9800'}
+        />
+    </View>
+);
+
+/** Tarjeta de justificación para estudiante */
+const JustificationCard = ({ item, colors, t }) => {
+    const isPending = item?.approval === 'Pending';
+    const statusColor = isPending
+        ? (colors.warning ?? '#FF9800')
+        : (colors.success ?? '#4CAF50');
+
+    return (
+        <View style={[styles.infoFieldContainerProfile, {
+            backgroundColor: colors.card,
+            borderColor: colors.border ?? colors.textSecondary + '30',
+            shadowColor: colors.text,
+        }]}>
+            <Text style={[styles.infoFieldLabelProfile, { color: colors.textSecondary }]}>
+                {item?.date ?? '—'}
+            </Text>
+            <Text style={[styles.infoFieldValueProfile, { color: colors.text }]}>
+                {item?.reason ?? '—'}
+            </Text>
+            <Text style={[styles.infoFieldLabelProfile, { color: statusColor, marginTop: 4 }]}>
+                {isPending
+                    ? t('profile.pending', 'Pendiente')
+                    : t('profile.approved', 'Aprobada')}
+            </Text>
+        </View>
+    );
+};
+
+/** Tarjeta de horario para profesor */
+const TeacherScheduleCard = ({ schedule, colors }) => (
+    <View style={[styles.infoFieldContainerProfile, {
+        backgroundColor: colors.card,
+        borderColor: colors.border ?? colors.textSecondary + '30',
+        shadowColor: colors.text,
+    }]}>
+        <Text style={[styles.infoFieldLabelProfile, { color: colors.textSecondary }]}>
+            {schedule.day ?? '—'} · {schedule.start_time ?? '—'} – {schedule.end_time ?? '—'}
+        </Text>
+        <Text style={[styles.infoFieldValueProfile, { color: colors.text }]}>
+            {schedule.course_name ?? '—'}
+        </Text>
+        <Text style={[styles.infoFieldLabelProfile, { color: colors.textSecondary, marginTop: 2 }]}>
+            {schedule.classroom ?? '—'}
+        </Text>
+    </View>
+);
+
+/** Tarjeta de asistencia por curso para profesor */
+const TeacherCourseStatCard = ({ courseStat, colors, t }) => (
+    <View style={[styles.infoFieldContainerProfile, {
+        backgroundColor: colors.card,
+        borderColor: colors.border ?? colors.textSecondary + '30',
+        shadowColor: colors.text,
+    }]}>
+        <Text style={[styles.infoFieldValueProfile, { color: colors.text }]}>
+            {courseStat.course_name ?? courseStat.course_code ?? '—'}
+        </Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
+            <StatItem
+                label={t('profile.present', 'Presentes')}
+                value={courseStat.present}
+                color={colors.success}
+            />
+            <StatItem
+                label={t('profile.absent', 'Ausentes')}
+                value={courseStat.absent}
+                color={colors.error ?? '#F44336'}
+            />
+            <StatItem
+                label={t('profile.total', 'Total')}
+                value={courseStat.total}
+                color={colors.text}
+            />
+        </View>
+    </View>
+);
+
+/** Tarjeta de información del colegio para administrador */
+const SchoolInfoCard = ({ schoolInfo, colors, t }) => (
+    <View>
+        <InfoField
+            label={t('profile.schoolName', 'Nombre')}
+            value={schoolInfo?.name}
+            colors={colors}
+        />
+        <InfoField
+            label={t('profile.activePeriod', 'Período activo')}
+            value={schoolInfo?.activePeriod}
+            colors={colors}
+        />
+        <InfoField
+            label={t('profile.address', 'Dirección')}
+            value={schoolInfo?.address}
+            colors={colors}
+        />
+    </View>
+);
+
+/** Tarjeta de dispositivo IoT para administrador */
+const DeviceCard = ({ device, colors }) => {
+    const isActive = device?.status === 'Active';
+    const statusColor = isActive ? (colors.success ?? '#4CAF50') : (colors.error ?? '#F44336');
+
+    return (
+        <View style={[styles.infoFieldContainerProfile, {
+            backgroundColor: colors.card,
+            borderColor: colors.border ?? colors.textSecondary + '30',
+            shadowColor: colors.text,
+        }]}>
+            <Text style={[styles.infoFieldLabelProfile, { color: colors.textSecondary }]}>
+                {device?.classroom ?? '—'}
+            </Text>
+            <Text style={[styles.infoFieldValueProfile, { color: colors.text }]}>
+                {device?.name ?? device?.device_name ?? '—'}
+            </Text>
+            <Text style={[styles.infoFieldLabelProfile, { color: statusColor, marginTop: 2 }]}>
+                {device?.status ?? '—'}
+            </Text>
+        </View>
+    );
+};
 
 // ─────────────────────────────────────────────
 //  PANTALLA PRINCIPAL
 // ─────────────────────────────────────────────
 
 export default function ProfileScreen() {
-    const {t}           = useTranslation();
-    const {colors, theme} = useTheme();
-    const refreshKey    = useLanguageRefresh();
+    const { t } = useTranslation();
+    const { colors, theme } = useTheme();
+    const refreshKey = useLanguageRefresh();
 
     const {
         userRole,
@@ -65,12 +231,13 @@ export default function ProfileScreen() {
         updateKey,
         handleBack,
         toggleTheme,
-
-        // ── Datos adicionales que debe proveer el ViewModel ──
         courses,
         attendanceStats,
         justifications,
         iotDevices,
+        teacherSchedules,
+        teacherCourseStats,
+        schoolInfo,
     } = useProfileViewModel();
 
     const isStudent = userRole === 'Estudiante';
@@ -93,7 +260,7 @@ export default function ProfileScreen() {
 
     return (
         <SafeAreaView
-            style={[styles.safeAreaWhite, {backgroundColor: colors.backgroundWhite}]}
+            style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}
             key={`${refreshKey}-${updateKey}`}
         >
             <ScrollView
@@ -101,19 +268,20 @@ export default function ProfileScreen() {
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
             >
-                <View style={[styles.container, {paddingHorizontal: 16}]}>
+                <View style={[styles.container, { paddingHorizontal: 16 }]}>
 
                     {/* ══ HEADER / AVATAR ══ */}
                     <View style={[
                         styles.profileHeaderSectionProfile,
-                        {marginTop: Platform.OS === 'ios' ? 8 : 30},
+                        { marginTop: Platform.OS === 'ios' ? 8 : 30 },
                     ]}>
-                        <View style={[styles.schoolInfoCardSchoolConfig, {marginTop: Platform.OS === 'ios' ? 10 : 25}]}>
+                        <View style={[styles.schoolInfoCardSchoolConfig, { marginTop: Platform.OS === 'ios' ? 10 : 25 }]}>
                             <View style={styles.schoolLogoContainerSchoolConfig}>
                                 <Text style={styles.schoolLogoSchoolConfig}>logo</Text>
                             </View>
                         </View>
-                        <Text style={[styles.userNameProfile, {color: colors.text}]}>
+
+                        <Text style={[styles.userNameProfile, { color: colors.text }]}>
                             {userInfo?.name ?? t('profile.noName', 'Sin nombre')}
                         </Text>
 
@@ -121,18 +289,14 @@ export default function ProfileScreen() {
                             backgroundColor: avatarColor + '15',
                             borderColor: isDark ? '#FFFFFF' : avatarColor + '40',
                         }]}>
-                            <View style={[styles.roleBadgeDotProfile, {backgroundColor: avatarColor}]} />
-                            <Text style={[styles.roleBadgeTextProfile, {color: isDark ? '#FFFFFF' : avatarColor}]}>
+                            <View style={[styles.roleBadgeDotProfile, { backgroundColor: avatarColor }]} />
+                            <Text style={[styles.roleBadgeTextProfile, { color: isDark ? '#FFFFFF' : avatarColor }]}>
                                 {userInfo?.role ?? t('profile.noRole', 'Sin rol')}
                             </Text>
                         </View>
                     </View>
 
-                    {/* ══ INFORMACIÓN PERSONAL ══
-                        BD: person.name | person.email | person.phone
-                            user.username | user.created_at (joinDate)
-                            school.name
-                    */}
+                    {/* ══ INFORMACIÓN PERSONAL ══ */}
                     <SectionTitle
                         title={t('profile.personalInfo', 'Información personal')}
                         colors={colors}
@@ -143,17 +307,11 @@ export default function ProfileScreen() {
                     <InfoField label={t('profile.joinDate',   'Fecha de ingreso')}   value={userInfo?.joinDate}       colors={colors} />
                     <InfoField label={t('profile.school',     'Colegio')}            value={userInfo?.school}         colors={colors} />
 
-                    <InfoField label={t('profile.email')} value={userInfo.email} colors={colors}/>
-                    <InfoField label={t('profile.employeeId')} value={userInfo.identification}
-                               colors={colors}/>
-                    <InfoField label={t('profile.joinDate')} value={userInfo.joinDate} colors={colors}/>
-                    <InfoField label={t('profile.school')} value={userInfo.school} colors={colors}/>
-
-                    {/* ── Cursos matriculados — Estudiante ── */}
-                    {isStudent && courses?.length > 0 && (
+                    {/* ══ SECCIÓN ESTUDIANTE ══ */}
+                    {isStudent && (
                         <>
-                            {/* Cursos matriculados — BD: enrollment + course */}
-                            {courses.length > 0 && (
+                            {/* Cursos matriculados */}
+                            {courses?.length > 0 && (
                                 <>
                                     <SectionTitle
                                         title={t('profile.enrolledCourses', 'Cursos matriculados')}
@@ -170,7 +328,7 @@ export default function ProfileScreen() {
                                 </>
                             )}
 
-                            {/* Estadísticas de asistencia — BD: attendance */}
+                            {/* Estadísticas de asistencia */}
                             {attendanceStats && (
                                 <>
                                     <SectionTitle
@@ -181,8 +339,8 @@ export default function ProfileScreen() {
                                 </>
                             )}
 
-                            {/* Justificaciones — BD: justification */}
-                            {justifications.length > 0 && (
+                            {/* Justificaciones */}
+                            {justifications?.length > 0 && (
                                 <>
                                     <SectionTitle
                                         title={t('profile.pendingJustifications', 'Justificaciones')}
@@ -205,8 +363,8 @@ export default function ProfileScreen() {
                     {/* ══ SECCIÓN PROFESOR ══ */}
                     {isTeacher && (
                         <>
-                            {/* Horario — BD: schedule + course + classroom */}
-                            {teacherSchedules.length > 0 && (
+                            {/* Horario */}
+                            {teacherSchedules?.length > 0 && (
                                 <>
                                     <SectionTitle
                                         title={t('profile.teacherSchedule', 'Mi horario')}
@@ -224,8 +382,8 @@ export default function ProfileScreen() {
                                 </>
                             )}
 
-                            {/* Asistencia por curso — BD: attendance agregada por schedule/course */}
-                            {teacherCourseStats.length > 0 && (
+                            {/* Asistencia por curso */}
+                            {teacherCourseStats?.length > 0 && (
                                 <>
                                     <SectionTitle
                                         title={t('profile.courseAttendance', 'Asistencia por curso')}
@@ -247,7 +405,7 @@ export default function ProfileScreen() {
                     {/* ══ SECCIÓN ADMINISTRADOR ══ */}
                     {isAdmin && (
                         <>
-                            {/* Información del colegio y período activo — BD: school + period */}
+                            {/* Información del colegio */}
                             {schoolInfo && (
                                 <>
                                     <SectionTitle
@@ -258,8 +416,8 @@ export default function ProfileScreen() {
                                 </>
                             )}
 
-                            {/* Dispositivos IoT — BD: iot_device + classroom */}
-                            {iotDevices.length > 0 && (
+                            {/* Dispositivos IoT */}
+                            {iotDevices?.length > 0 && (
                                 <>
                                     <SectionTitle
                                         title={t('profile.iotDevices', 'Dispositivos IoT')}
@@ -280,7 +438,7 @@ export default function ProfileScreen() {
                     )}
 
                     {/* ══ CONFIGURACIÓN RÁPIDA ══ */}
-                    <View style={{marginTop: 25}}>
+                    <View style={{ marginTop: 25 }}>
                         <SectionTitle
                             title={t('profile.quickSettings', 'Configuración rápida')}
                             colors={colors}
@@ -296,11 +454,11 @@ export default function ProfileScreen() {
                             onPress={toggleTheme}
                             activeOpacity={0.75}
                         >
-                            <View style={{flex: 1, marginLeft: 12}}>
-                                <Text style={[styles.profileSettingsTitleProfile, {color: colors.text}]}>
+                            <View style={{ flex: 1, marginLeft: 12 }}>
+                                <Text style={[styles.profileSettingsTitleProfile, { color: colors.text }]}>
                                     {t('settings.theme', 'Tema')}
                                 </Text>
-                                <Text style={[styles.profileSettingsSubtitleProfile, {color: colors.textSecondary}]}>
+                                <Text style={[styles.profileSettingsSubtitleProfile, { color: colors.textSecondary }]}>
                                     {isDark
                                         ? t('settings.darkTheme', 'Tema oscuro activo')
                                         : t('settings.lightTheme', 'Tema claro activo')}
@@ -309,7 +467,7 @@ export default function ProfileScreen() {
                             <View style={[styles.settingsChevronProfile, {
                                 backgroundColor: colors.primary + '15',
                             }]}>
-                                <Text style={{fontSize: 13, color: colors.primary, fontWeight: '700'}}>
+                                <Text style={{ fontSize: 13, color: colors.primary, fontWeight: '700' }}>
                                     {t('settings.changeTheme', 'Cambiar')}
                                 </Text>
                             </View>
@@ -339,7 +497,7 @@ export default function ProfileScreen() {
                     </View>
 
                     {/* ══ BOTÓN VOLVER ══ */}
-                    <View style={{marginTop: Platform.OS === 'ios' ? 5 : 0}}>
+                    <View style={{ marginTop: Platform.OS === 'ios' ? 5 : 0 }}>
                         <View style={styles.buttonContainer}>
                             <PrimaryButton title={t('consultJustify.back', 'Volver')} onPress={handleBack} />
                         </View>
@@ -350,26 +508,3 @@ export default function ProfileScreen() {
         </SafeAreaView>
     );
 }
-
-// ─────────────────────────────────────────────
-//  Helper: título de sección con badge opcional
-// ─────────────────────────────────────────────
-const SectionTitle = ({title, colors, badge, badgeLabel}) => (
-    <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 10, marginBottom: 10}}>
-        <Text style={[styles.sectionTitleMenuProfile, {color: colors.text, flex: 1}]}>
-            {title}
-        </Text>
-        {badge !== undefined && badge > 0 && (
-            <View style={{
-                backgroundColor: colors.primary + '20',
-                borderRadius: 12,
-                paddingHorizontal: 8,
-                paddingVertical: 2
-            }}>
-                <Text style={{fontSize: 12, color: colors.primary, fontWeight: '600'}}>
-                    {badge}{badgeLabel ? ` ${badgeLabel}` : ''}
-                </Text>
-            </View>
-        )}
-    </View>
-);
