@@ -1,3 +1,8 @@
+// ============================================================
+//  FaceAttend EDU — Dashboard Screen
+//  Colores desde useTheme() — sin imports de Colors.
+// ============================================================
+
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
@@ -11,7 +16,7 @@ import CoursesView   from "../components/own_components/courses/coursesView";
 import ReportsView   from "../components/own_components/reports/reportsView";
 import SettingsView  from "../components/own_components/settings/settingsView";
 
-import Colors from "../components/constants/colors";
+import { useTheme }      from "../components/hooks/useTheme";
 import { useResponsive } from "../components/hooks/useResponsive";
 
 type Tab = "dashboard" | "students" | "courses" | "reports" | "settings";
@@ -35,15 +40,17 @@ function TabContent({ tab }: { tab: Tab }) {
 }
 
 export default function DashboardScreen() {
-    const navigation          = useNavigation<any>();
-    const [currentTab, setTab] = useState<Tab>("dashboard");
-    const { isSmall }         = useResponsive();
-    const insets              = useSafeAreaInsets();
+    const navigation            = useNavigation<any>();
+    const [currentTab, setTab]  = useState<Tab>("dashboard");
+    const { isSmall }           = useResponsive();
+    const insets                = useSafeAreaInsets();
+    const { theme }             = useTheme();
+    const c                     = theme.colors;
 
     return (
         <SafeAreaProvider>
             <SafeAreaView
-                style={{ flex: 1, flexDirection: "row", backgroundColor: Colors.bg }}
+                style={{ flex: 1, flexDirection: "row", backgroundColor: c.background.app }}
                 edges={["top", "bottom"]}
             >
                 {/* Sidebar — solo desktop/tablet */}
@@ -57,8 +64,8 @@ export default function DashboardScreen() {
 
                 {/* Contenido principal */}
                 <View style={{
-                    flex: 1,
-                    overflow: "hidden",
+                    flex:         1,
+                    overflow:     "hidden",
                     paddingBottom: isSmall ? 64 + insets.bottom : 0,
                 }}>
                     <TabContent tab={currentTab} />
@@ -67,15 +74,15 @@ export default function DashboardScreen() {
                 {/* Bottom tabs — solo móvil */}
                 {isSmall && (
                     <View style={{
-                        position: "absolute",
+                        position:        "absolute",
                         bottom: 0, left: 0, right: 0,
-                        backgroundColor: Colors.surface,
-                        borderTopWidth: 1,
-                        borderTopColor: Colors.border,
-                        flexDirection: "row",
-                        paddingTop: 4,
-                        paddingBottom: Math.max(8, insets.bottom),
-                        minHeight: 52 + insets.bottom,
+                        backgroundColor: c.background.surface,
+                        borderTopWidth:  1,
+                        borderTopColor:  c.border.primary,
+                        flexDirection:   "row",
+                        paddingTop:      4,
+                        paddingBottom:   Math.max(8, insets.bottom),
+                        minHeight:       52 + insets.bottom,
                     }}>
                         {BOTTOM_TABS.map((item) => {
                             const isActive = currentTab === item.key;
@@ -84,22 +91,22 @@ export default function DashboardScreen() {
                                     key={item.key}
                                     onPress={() => setTab(item.key)}
                                     style={{
-                                        flex: 1,
-                                        alignItems: "center",
-                                        paddingTop: 6,
+                                        flex:         1,
+                                        alignItems:   "center",
+                                        paddingTop:   6,
                                         borderTopWidth: isActive ? 2 : 0,
-                                        borderTopColor: Colors.primary,
+                                        borderTopColor: c.brand.primary,
                                     }}
                                 >
                                     <Feather
                                         name={item.icon}
                                         size={20}
-                                        color={isActive ? Colors.primary : Colors.muted}
+                                        color={isActive ? c.brand.primary : c.text.secondary}
                                     />
                                     <Text style={{
-                                        fontSize: 10,
-                                        marginTop: 3,
-                                        color: isActive ? Colors.primary : Colors.muted,
+                                        fontSize:   10,
+                                        marginTop:  3,
+                                        color:      isActive ? c.brand.primary : c.text.secondary,
                                         fontWeight: isActive ? "600" : "400",
                                     }}>
                                         {item.label}

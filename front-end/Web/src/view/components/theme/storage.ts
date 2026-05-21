@@ -1,28 +1,54 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+// ============================================================
+//  FaceAttend EDU — Theme Persistence
+//  Persiste el modo y el accent color del usuario.
+//  Funciona en React Native (AsyncStorage) y web (localStorage).
+// ============================================================
 
-const THEME_MODE_KEY = "@faceattend_theme_mode";
-const ACCENT_COLOR_KEY = "@faceattend_accent_color";
+import { Platform } from "react-native";
+import { DEFAULT_ACCENT, DEFAULT_MODE } from "./presets";
+import type { ThemeMode } from "./colourTokens";
 
-export async function saveThemeMode(mode: "light" | "dark") {
-    await AsyncStorage.setItem(THEME_MODE_KEY, mode);
-}
+const KEYS = {
+    MODE:   "@faceattend:theme_mode",
+    ACCENT: "@faceattend:accent_color",
+} as const;
 
-export async function loadThemeMode(): Promise<"light" | "dark"> {
-    const value = await AsyncStorage.getItem(THEME_MODE_KEY);
+// ── Abstracción de storage multiplataforma ────────────────────
 
-    if (value === "dark") {
-        return "dark";
+async function storageGet(key: string): Promise<string | null> {
+    if (Platform.OS === "web") {
+        try { return localStorage.getItem(key); } catch { return null; }
     }
-
-    return "light";
+    // React Native — import dinámico para evitar crash en web si no está instalado
+    const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
+    return AsyncStorage.getItem(key);
 }
 
-export async function saveAccentColor(color: string) {
-    await AsyncStorage.setItem(ACCENT_COLOR_KEY, color);
+async function storageSet(key: string, value: string): Promise<void> {
+    if (Platform.OS === "web") {
+        try { localStorage.setItem(key, value); } catch { /* silent */ }
+        return;
+    }
+    const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
+    await AsyncStorage.setItem(key, value);
+}
+
+// ── API pública ──────────────────────────────────────────────
+
+export async function saveThemeMode(mode: ThemeMode): Promise<void> {
+    await storageSet(KEYS.MODE, mode);
+}
+
+export async function loadThemeMode(): Promise<ThemeMode> {
+    const value = await storageGet(KEYS.MODE);
+    return value === "dark" ? "dark" : DEFAULT_MODE;
+}
+
+export async function saveAccentColor(color: string): Promise<void> {
+    await storageSet(KEYS.ACCENT, color);
 }
 
 export async function loadAccentColor(): Promise<string> {
-    const value = await AsyncStorage.getItem(ACCENT_COLOR_KEY);
-
-    return value || "#2563EB";
+    const value = await storageGet(KEYS.ACCENT);
+    return value ?? DEFAULT_ACCENT;
 }

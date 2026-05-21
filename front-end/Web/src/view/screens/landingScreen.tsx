@@ -1,17 +1,12 @@
+// ============================================================
+//  FaceAttend EDU — Landing Screen
+//  Colores desde useTheme() — sin imports de Colors.
+// ============================================================
+
 import React from "react";
 import { useNavigation } from "@react-navigation/native";
-import {
-    View,
-    ScrollView,
-    Image,
-    Text,
-    StyleSheet,
-} from "react-native";
-import {
-    SafeAreaView,
-    SafeAreaProvider,
-    useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { View, ScrollView, Image, Text, StyleSheet } from "react-native";
+import { SafeAreaView, SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 
 import Navbar    from "../components/own_components/layout/navBar";
@@ -20,11 +15,9 @@ import HeroRight from "../components/own_components/hero/heroRight";
 
 import { useHeroEntrance } from "../components/hooks/useHeroEntrance";
 import { useResponsive }   from "../components/hooks/useResponsive";
+import { useTheme }        from "../components/hooks/useTheme";
 import { getTypography }   from "../components/constants/typography";
 import BadgePositions, { BadgePositionsMobile } from "../components/constants/badgePositions";
-import Colors from "../components/constants/colors";
-
-// ─── Datos ─────────────────────────────────────────────────
 
 const STATS = [
     { value: "99%", label: "Precisión"   },
@@ -50,14 +43,14 @@ const FEATURES = [
     },
 ];
 
-// ─── HeroContent ───────────────────────────────────────────
+// ── HeroContent ─────────────────────────────────────────────
 
 function HeroContent({
-    fadeLeft, slideLeft, fadeRight, slideRight,
-}: ReturnType<typeof useHeroEntrance>) {
-    const navigation = useNavigation<any>();
+                         fadeLeft, slideLeft, fadeRight, slideRight,
+                     }: ReturnType<typeof useHeroEntrance>) {
+    const navigation  = useNavigation<any>();
     const { sp, isSmall } = useResponsive();
-    const badgePos = isSmall ? BadgePositionsMobile : BadgePositions;
+    const badgePos    = isSmall ? BadgePositionsMobile : BadgePositions;
 
     const BADGES = [
         { label: "Reconociendo",  icon: "✅", delay: 0,   style: badgePos.topLeft  },
@@ -85,30 +78,27 @@ function HeroContent({
                 onPrimary={()  => navigation.navigate("FaceAttendEDU-Register")}
                 onSecondary={() => navigation.navigate("FaceAttendEDU-Login")}
             />
-            <HeroRight
-                fadeRight={fadeRight} slideRight={slideRight}
-                badges={BADGES}
-            />
+            <HeroRight fadeRight={fadeRight} slideRight={slideRight} badges={BADGES} />
         </View>
     );
 }
 
-// ─── Features (bloque primario) ────────────────────────────
+// ── FeaturesSection ──────────────────────────────────────────
 
 function FeaturesSection() {
     const { sp, fs, isSmall } = useResponsive();
-    const T = getTypography(fs);
+    const { theme }           = useTheme();
+    const c                   = theme.colors;
+    const T                   = getTypography(fs);
 
     return (
         <View style={{
-            backgroundColor: Colors.primary,
-            paddingVertical:   sp(48),
+            backgroundColor:  c.brand.primary,
+            paddingVertical:  sp(48),
             paddingHorizontal: sp(isSmall ? 24 : 64),
-            width: "100%",
+            width:            "100%",
         }}>
-            {/* Título */}
             <View style={{ alignItems: "center", marginBottom: sp(36) }}>
-                {/* Eyebrow */}
                 <View style={{
                     backgroundColor: "rgba(255,255,255,0.15)",
                     paddingHorizontal: sp(14), paddingVertical: sp(5),
@@ -118,12 +108,11 @@ function FeaturesSection() {
                         ¿Por qué FaceAttend EDU?
                     </Text>
                 </View>
-                <Text style={[T.heading1, { color: "#fff", textAlign: "center" }]}>
+                <Text style={[T.heading1, { color: c.text.onBrand, textAlign: "center" }]}>
                     Todo lo que necesitas{"\n"}en una sola plataforma
                 </Text>
             </View>
 
-            {/* Cards de features */}
             <View style={{
                 flexDirection:  isSmall ? "column" : "row",
                 gap:            sp(16),
@@ -133,7 +122,7 @@ function FeaturesSection() {
             }}>
                 {FEATURES.map((f) => (
                     <View key={f.title} style={{
-                        flex: 1,
+                        flex:            1,
                         backgroundColor: "rgba(255,255,255,0.10)",
                         borderRadius:    sp(14),
                         padding:         sp(24),
@@ -141,16 +130,16 @@ function FeaturesSection() {
                         borderColor:     "rgba(255,255,255,0.18)",
                         gap:             sp(12),
                     }}>
-                        {/* Ícono */}
                         <View style={{
                             width: sp(44), height: sp(44),
-                            borderRadius: sp(12),
+                            borderRadius:    sp(12),
                             backgroundColor: "rgba(255,255,255,0.20)",
-                            alignItems: "center", justifyContent: "center",
+                            alignItems:      "center",
+                            justifyContent:  "center",
                         }}>
-                            <Feather name={f.icon} size={sp(20)} color="#fff" />
+                            <Feather name={f.icon} size={sp(20)} color={c.text.onBrand} />
                         </View>
-                        <Text style={[T.heading2, { color: "#fff", marginTop: sp(4) }]}>
+                        <Text style={[T.heading2, { color: c.text.onBrand, marginTop: sp(4) }]}>
                             {f.title}
                         </Text>
                         <Text style={[T.bodyMD, { color: "rgba(255,255,255,0.75)" }]}>
@@ -160,7 +149,7 @@ function FeaturesSection() {
                 ))}
             </View>
 
-            {/* Decorative circles */}
+            {/* Círculos decorativos */}
             <View style={{
                 position: "absolute", width: sp(280), height: sp(280),
                 borderRadius: sp(140), borderWidth: 1,
@@ -177,11 +166,13 @@ function FeaturesSection() {
     );
 }
 
-// ─── Navbar ────────────────────────────────────────────────
+// ── AppNavbar ────────────────────────────────────────────────
 
 function AppNavbar() {
     const { sp, fs } = useResponsive();
-    const T = getTypography(fs);
+    const { theme }  = useTheme();
+    const c          = theme.colors;
+    const T          = getTypography(fs);
 
     return (
         <Navbar
@@ -191,9 +182,9 @@ function AppNavbar() {
                         source={require("../../assets/images/logoFaceAttend-Minimalista.png")}
                         style={{ width: sp(44), height: sp(44) }}
                     />
-                    <Text style={[T.brandName, { color: Colors.text }]}>
+                    <Text style={[T.brandName, { color: c.text.primary }]}>
                         FaceAttend{" "}
-                        <Text style={{ color: Colors.primary }}>EDU</Text>
+                        <Text style={{ color: c.brand.primary }}>EDU</Text>
                     </Text>
                 </View>
             }
@@ -207,68 +198,62 @@ function AppNavbar() {
     );
 }
 
-// ─── Footer ────────────────────────────────────────────────
+// ── Footer ───────────────────────────────────────────────────
 
 function Footer() {
-    const { fs } = useResponsive();
-    const T = getTypography(fs);
-    const insets = useSafeAreaInsets();
+    const { fs }    = useResponsive();
+    const { theme } = useTheme();
+    const c         = theme.colors;
+    const T         = getTypography(fs);
+    const insets    = useSafeAreaInsets();
 
     return (
         <View style={{
-            paddingVertical: insets.bottom + 10,
-            alignItems: "center",
-            borderTopWidth: 1,
-            borderTopColor: Colors.border,
-            backgroundColor: Colors.surface,
+            paddingVertical:  insets.bottom + 10,
+            alignItems:       "center",
+            borderTopWidth:   1,
+            borderTopColor:   c.border.primary,
+            backgroundColor:  c.background.surface,
         }}>
-            <Text style={[T.caption, { color: Colors.muted }]}>
+            <Text style={[T.caption, { color: c.text.secondary }]}>
                 © FaceAttend EDU {new Date().getFullYear()} — Derechos reservados
             </Text>
         </View>
     );
 }
 
-// ─── MAIN ──────────────────────────────────────────────────
+// ── MAIN ─────────────────────────────────────────────────────
 
 export default function LandingPage() {
-    const entrance = useHeroEntrance();
+    const entrance    = useHeroEntrance();
     const { sp, isSmall } = useResponsive();
-
-    const hero = <HeroContent {...entrance} />;
+    const { theme }   = useTheme();
+    const c           = theme.colors;
 
     return (
         <SafeAreaProvider>
-            <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+            <SafeAreaView
+                style={{ flex: 1, backgroundColor: c.background.app }}
+                edges={["top", "bottom"]}
+            >
                 <AppNavbar />
-
-                {/* Siempre scroll para que la sección de features sea accesible */}
                 <ScrollView
                     contentContainerStyle={{ flexGrow: 1 }}
                     showsVerticalScrollIndicator={false}
                 >
-                    {/* Hero — ocupa toda la altura visible */}
                     <View style={{
-                        minHeight: isSmall ? undefined : sp(560),
-                        alignItems: "center",
+                        minHeight:      isSmall ? undefined : sp(560),
+                        alignItems:     "center",
                         justifyContent: "center",
                         paddingVertical: sp(isSmall ? 40 : 0),
-                        paddingBottom: sp(isSmall ? 24 : 0),
+                        paddingBottom:  sp(isSmall ? 24 : 0),
                     }}>
-                        {hero}
+                        <HeroContent {...entrance} />
                     </View>
-
-                    {/* Features */}
                     <FeaturesSection />
-
-                    {/* Footer */}
                     <Footer />
                 </ScrollView>
             </SafeAreaView>
         </SafeAreaProvider>
     );
 }
-
-const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: Colors.bg },
-});

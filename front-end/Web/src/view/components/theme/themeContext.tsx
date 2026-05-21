@@ -1,3 +1,21 @@
+// ============================================================
+//  FaceAttend EDU — ThemeContext
+//  Proveedor central del sistema de temas.
+//
+//  Expone:
+//    · theme        → ThemeTokens completo (todos los colores)
+//    · mode         → "light" | "dark"
+//    · accentColor  → hex del color de acento actual
+//    · setMode()    → cambia el modo y lo persiste
+//    · toggleMode() → alterna entre light/dark
+//    · setAccentColor() → cambia el accent y lo persiste
+//
+//  Uso:
+//    const { theme } = useTheme();
+//    const colors = theme.colors;
+//    <View style={{ backgroundColor: colors.background.surface }} />
+// ============================================================
+
 import React, {
     createContext,
     useContext,
@@ -6,9 +24,9 @@ import React, {
     useState,
 } from "react";
 
-import { generateTheme } from "./generateTheme";
-import { ThemeMode, ThemeTokens } from "./colourTokens";
-
+import { generateTheme }  from "./generateTheme";
+import type { ThemeMode, ThemeTokens } from "./colourTokens";
+import { DEFAULT_ACCENT, DEFAULT_MODE } from "./presets";
 import {
     loadAccentColor,
     loadThemeMode,
@@ -16,100 +34,78 @@ import {
     saveThemeMode,
 } from "./storage";
 
-type ThemeContextType = {
-    mode: ThemeMode;
+// ── Tipos del contexto ───────────────────────────────────────
 
-    accentColor: string;
-
+export type ThemeContextType = {
+    /** ThemeTokens completo — tu única fuente de colores */
     theme: ThemeTokens;
-
-    setMode: (mode: ThemeMode) => void;
-
-    toggleMode: () => void;
-
-    setAccentColor: (color: string) => void;
+    mode: ThemeMode;
+    accentColor: string;
+    /** true mientras se carga la preferencia guardada */
+    isLoading: boolean;
+    setMode: (mode: ThemeMode) => Promise<void>;
+    toggleMode: () => Promise<void>;
+    setAccentColor: (color: string) => Promise<void>;
 };
+
+// ── Context ──────────────────────────────────────────────────
 
 const ThemeContext = createContext<ThemeContextType | null>(null);
 
-export function ThemeProvider({
-                                  children,
-                              }: {
-    children: React.ReactNode;
-}) {
+// ── Provider ─────────────────────────────────────────────────
 
-    const [mode, setModeState] =
-        useState<ThemeMode>("light");
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+    const [mode,        setModeState]        = useState<ThemeMode>(DEFAULT_MODE);
+    const [accentColor, setAccentColorState] = useState<string>(DEFAULT_ACCENT);
+    const [isLoading,   setIsLoading]        = useState(true);
 
-    const [accentColor, setAccentColorState] =
-        useState("#2563EB");
-
+    // Cargar preferencias guardadas una sola vez al montar
     useEffect(() => {
-
-        async function loadTheme() {
-
-            const storedMode =
-                await loadThemeMode();
-
-            const storedAccent =
-                await loadAccentColor();
-
+        (async () => {
+            const [storedMode, storedAccent] = await Promise.all([
+                loadThemeMode(),
+                loadAccentColor(),
+            ]);
             setModeState(storedMode);
             setAccentColorState(storedAccent);
-        }
-
-        loadTheme();
-
+            setIsLoading(false);
+        })();
     }, []);
 
+    // ── Acciones ──────────────────────────────────────────────
+
     const setMode = async (newMode: ThemeMode) => {
-
         setModeState(newMode);
-
         await saveThemeMode(newMode);
     };
 
     const toggleMode = async () => {
-
-        const nextMode =
-            mode === "light"
-                ? "dark"
-                : "light";
-
-        setModeState(nextMode);
-
-        await saveThemeMode(nextMode);
+        const next = mode === "light" ? "dark" : "light";
+        setModeState(next);
+        await saveThemeMode(next);
     };
 
     const setAccentColor = async (color: string) => {
-
         setAccentColorState(color);
-
         await saveAccentColor(color);
     };
 
-    const theme = useMemo(() => {
+    // ── Tema derivado (re-calculado solo si cambia accent o mode) ─
 
-        return generateTheme(
-            accentColor,
-            mode
-        );
-
-    }, [accentColor, mode]);
+    const theme = useMemo(
+        () => generateTheme(accentColor, mode),
+        [accentColor, mode]
+    );
 
     return (
         <ThemeContext.Provider
             value={{
-                mode,
-
-                accentColor,
-
                 theme,
-
+                mode,
+                accentColor,
+                isLoading,
                 setMode,
-
                 toggleMode,
-
                 setAccentColor,
             }}
         >
@@ -118,16 +114,15 @@ export function ThemeProvider({
     );
 }
 
-export function useTheme() {
+// ── Hook ─────────────────────────────────────────────────────
 
-    const context =
-        useContext(ThemeContext);
-
-    if (!context) {
+export function useTheme(): ThemeContextType {
+    const ctx = useContext(ThemeContext);
+    if (!ctx) {
         throw new Error(
-            "useTheme debe usarse dentro de ThemeProvider"
+            "[FaceAttend] useTheme() debe usarse dentro de <ThemeProvider>. " +
+            "Asegúrate de envolver app.tsx con <ThemeProvider>."
         );
     }
-
-    return context;
+    return ctx;
 }

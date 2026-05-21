@@ -1,23 +1,21 @@
 import React from "react";
 import { Text } from "react-native";
 import { useResponsive } from "../../hooks/useResponsive";
-import { getTypography } from "../../constants/typography";
-import Colors from "../../constants/colors";
+import { getTypography }  from "../../constants/typography";
+import { useTheme }       from "../../hooks/useTheme";
 
-type Props = {
-    title: string;
-    accent: string;
-    end: string;
-};
+type Props = { title: string; accent: string; end: string };
 
 export default function HeroTitle({ title, accent, end }: Props) {
-    const { fs } = useResponsive();
-    const T = getTypography(fs);
+    const { fs }    = useResponsive();
+    const { theme } = useTheme();
+    const T         = getTypography(fs);
+    const c         = theme.colors;
 
     return (
-        <Text style={[T.displayLG, { color: Colors.text }]}>
+        <Text style={[T.displayLG, { color: c.text.primary }]}>
             {title}
-            <Text style={{ color: Colors.primary }}>{accent}</Text>
+            <Text style={{ color: c.brand.primary }}>{accent}</Text>
             {end}
         </Text>
     );
