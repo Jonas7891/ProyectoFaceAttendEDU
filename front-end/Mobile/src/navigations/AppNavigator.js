@@ -2,6 +2,7 @@ import React, {useEffect, useState, useRef} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import i18n from '../utils/i18n';
 import HomesScreen from '../view/screens/login/Login';
 import MenuScreen from '../view/screens/MenuScreen';
 import DashboardScreen from '../view/screens/DashboardScreen';
@@ -18,6 +19,8 @@ import ProfileScreen from '../view/screens/ProfileScreen';
 import ManageUsersScreen from '../view/screens/ManageUsersScreen';
 import AttendanceReportScreen from '../view/screens/AttendanceReportScreen';
 import SchoolConfigurationScreen from '../view/screens/SchoolConfigurationScreen';
+import VerifyCodeScreen from "../view/screens/login/Verifycodescreen";
+import ForgotPasswordScreen from "../view/screens/login/Forgotpasswordscreen";
 
 const Stack = createStackNavigator();
 
@@ -97,7 +100,11 @@ export default function App() {
                 }}
             >
                 {!isAuthenticated ? (
-                    <Stack.Screen name="HomesScreen"> {props => ( <HomesScreen {...props} onLogin={handleLogin} /> )}</Stack.Screen>
+                    <>
+                        <Stack.Screen name="HomesScreen"> {props => ( <HomesScreen {...props} onLogin={handleLogin} /> )}</Stack.Screen>
+                        <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen}/>
+                        <Stack.Screen name="VerifyCodeScreen" component={VerifyCodeScreen}/>
+                    </>
                 ) : (
                     <>
                         <Stack.Screen name="DashboardScreen">

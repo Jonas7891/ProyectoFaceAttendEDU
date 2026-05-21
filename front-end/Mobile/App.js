@@ -23,7 +23,9 @@ import JustificationsScreen from './src/view/screens/ValidAllJustifications';
 import AddValidJustificationScreen from './src/view/screens/AddValidJustificationScreen';
 import ManageUsersScreen from "./src/view/screens/ManageUsersScreen";
 import AttendanceReportScreen from './src/view/screens/AttendanceReportScreen';
-import SchoolConfigurationScreen from "./src/view/screens/SchoolConfigurationScreen"
+import SchoolConfigurationScreen from "./src/view/screens/SchoolConfigurationScreen";
+import VerifyCodeScreen from "./src/view/screens/login/Verifycodescreen";
+import ForgotPasswordScreen from "./src/view/screens/login/Forgotpasswordscreen";
 
 const Stack = createStackNavigator();
 
@@ -103,14 +105,18 @@ export default function App() {
                         }}
                     >
                         {!isAuthenticated ? (
-                            <Stack.Screen name="HomesScreen">
-                                {props => (
-                                    <HomesScreen
-                                        {...props}
-                                        onLogin={handleLogin}
-                                    />
-                                )}
-                            </Stack.Screen>
+                            <>
+                                <Stack.Screen name="HomesScreen">
+                                    {props => (
+                                        <HomesScreen
+                                            {...props}
+                                            onLogin={handleLogin}
+                                        />
+                                    )}
+                                </Stack.Screen>
+                                <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen}/>
+                                <Stack.Screen name="VerifyCodeScreen" component={VerifyCodeScreen}/>
+                            </>
                         ) : (
                             <>
                                 <Stack.Screen name="DashboardScreen">
