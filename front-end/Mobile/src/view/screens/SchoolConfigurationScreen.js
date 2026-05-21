@@ -78,12 +78,6 @@ const ToggleRow = ({ label, description, value, onValueChange }) => (
                 <Text style={styles.toggleDescriptionSchoolConfig}>{description}</Text>
             )}
         </View>
-        <Switch
-            value={value}
-            onValueChange={onValueChange}
-            trackColor={{ false: '#E0E0E0', true: '#A8D8EA' }}
-            thumbColor={value ? '#4A90E2' : '#F0F0F0'}
-        />
     </View>
 );
 

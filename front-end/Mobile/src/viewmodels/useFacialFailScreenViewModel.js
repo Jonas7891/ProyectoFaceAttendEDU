@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '../view/components/common/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
 import { getCurrentUserRole } from "../services/UserService";
+import { useLanguageRefresh } from '../utils/useLanguageRefresh';
 
 export function useFacialFailViewModel() {
     const navigation = useNavigation();
@@ -12,7 +13,7 @@ export function useFacialFailViewModel() {
     const [userRole, setUserRole] = useState(null);
     const [showQuestionnaire, setShowQuestionnaire] = useState(false);
     const [showFacialUpdate, setShowFacialUpdate] = useState(false);
-    const [updateKey, setUpdateKey] = useState(0);
+    const updateKey = useLanguageRefresh();
 
     // Inicialización: cargar rol y tema
     useEffect(() => {
@@ -27,15 +28,6 @@ export function useFacialFailViewModel() {
         };
         init();
     }, [loadThemeForRole]);
-
-    // Refrescar vista al cambiar idioma
-    useEffect(() => {
-        const handleLanguageChanged = () => {
-            setUpdateKey(prev => prev + 1);
-        };
-        i18n.on('languageChanged', handleLanguageChanged);
-        return () => i18n.off('languageChanged', handleLanguageChanged);
-    }, [i18n]);
 
     // Navegación
     const handleBack = useCallback(() => navigation.goBack(), [navigation]);

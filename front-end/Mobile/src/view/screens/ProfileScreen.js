@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../components/common/ThemeContext';
-import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import PasswordUpdateModal from '../components/common/PasswordUpdateModal';
 import ProfileUpdateModal from '../components/common/ProfileUpdateModal';
@@ -223,7 +222,7 @@ const DeviceCard = ({ device, colors }) => {
 export default function ProfileScreen() {
     const { t } = useTranslation();
     const { colors, theme } = useTheme();
-    const refreshKey = useLanguageRefresh();
+
 
     const {
         userRole,
@@ -261,7 +260,7 @@ export default function ProfileScreen() {
     return (
         <SafeAreaView
             style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}
-            key={`${refreshKey}-${updateKey}`}
+            key={`${updateKey}`}
         >
             <ScrollView
                 contentContainerStyle={styles.ScrollViewContent}

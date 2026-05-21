@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { saveLanguageForRole } from '../view/components/common/languageByRole';
 import { getCurrentUserRole, getCurrentUser } from "../services/UserService";
+import { useLanguageRefresh } from '../utils/useLanguageRefresh';
 
 export function useMenuJustifyViewModel() {
     const navigation = useNavigation();
@@ -11,7 +12,7 @@ export function useMenuJustifyViewModel() {
 
     const [userRole, setUserRole] = useState(null);
     const [pendingCount, setPendingCount] = useState(0);
-    const [updateKey, setUpdateKey] = useState(0); // para refrescar al cambiar idioma
+    const updateKey = useLanguageRefresh(); // para refrescar al cambiar idioma
 
     // Cargar rol y pendientes al enfocar la pantalla (primera vez y cada vez que se navega a ella)
     useFocusEffect(
@@ -37,12 +38,6 @@ export function useMenuJustifyViewModel() {
         }, [])
     );
 
-    // Refrescar vista al cambiar idioma
-    useEffect(() => {
-        const handleLanguageChange = () => setUpdateKey(prev => prev + 1);
-        i18n.on('languageChanged', handleLanguageChange);
-        return () => i18n.off('languageChanged', handleLanguageChange);
-    }, [i18n]);
 
     // Navegación
     const handleBack = useCallback(() => navigation.goBack(), [navigation]);

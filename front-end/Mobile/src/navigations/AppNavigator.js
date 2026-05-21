@@ -128,6 +128,7 @@ export default function App() {
                         <Stack.Screen name="Novedades" component={NewsScreen}/>
                         <Stack.Screen name="FacialFail" component={FacialFail}/>
                         <Stack.Screen name="UpdatePhoto" component={UpdatePhoto}/>
+                        <Stack.Screen name="LanguageSettingsScreen" component={LanguageSettingsScreen}/>
                         <Stack.Screen name="DisplayingAttendance" component={DisplayingAttendance}/>
                         <Stack.Screen name="MenuJustify" component={MenuJustify}/>
                         <Stack.Screen name="AddJustification" component={AddJustification}/>

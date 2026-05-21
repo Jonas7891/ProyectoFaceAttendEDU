@@ -6,6 +6,7 @@ import {saveLanguageForRole} from '../view/components/common/languageByRole';
 import {useTheme} from '../view/components/common/ThemeContext';
 import {getUserByEmail} from "../services/UserService";
 import { getCurrentUser } from "../services/UserService";
+import { useLanguageRefresh } from '../utils/useLanguageRefresh';
 
 export function useProfileViewModel() {
     const navigation = useNavigation();
@@ -13,7 +14,7 @@ export function useProfileViewModel() {
     const {theme, toggleTheme, loadThemeForRole} = useTheme();
 
     const [userRole, setUserRole] = useState(null);
-    const [updateKey, setUpdateKey] = useState(0);
+    const updateKey = useLanguageRefresh();
     const [isLoading, setIsLoading] = useState(false);
     const [userInfo, setUserInfo] = useState({
         name: '',
@@ -23,13 +24,6 @@ export function useProfileViewModel() {
         colegio: '',
         employeeId: '',
     });
-
-    // Refrescar al cambiar idioma
-    useEffect(() => {
-        const handleLanguageChanged = () => setUpdateKey(prev => prev + 1);
-        i18n.on('languageChanged', handleLanguageChanged);
-        return () => i18n.off('languageChanged', handleLanguageChanged);
-    }, [i18n]);
 
     // Cargar datos del usuario al recibir foco
     useFocusEffect(

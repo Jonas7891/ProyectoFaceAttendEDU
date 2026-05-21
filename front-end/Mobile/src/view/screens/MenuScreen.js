@@ -10,7 +10,6 @@ import {
     ScrollView,
 } from "react-native";
 import { useTranslation } from "react-i18next";
-import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import { useTheme } from '../components/common/ThemeContext';
 import DangerButton from "../components/auth/DangerButton";
 import CustomLogo from "../components/common/logo";
@@ -20,7 +19,6 @@ import styles from "./Style";
 import { useMenuViewModel } from '../../viewmodels/useMenuViewModel';
 
 export default function MenuScreen({ onLogout }) {
-    const refreshKey = useLanguageRefresh();
     const { t } = useTranslation();
     const { colors } = useTheme();
 
@@ -66,7 +64,7 @@ export default function MenuScreen({ onLogout }) {
     const handleUpdatePhoto = () => navigateTo("UpdatePhoto");
     const handleFacialFail = () => navigateTo("FacialFail");
     const handleMenuJustify = () => navigateTo("MenuJustify");
-    const handleSettings = () => navigateTo("LanguageSettings");
+    const handleSettings = () => navigateTo("LanguageSettingsScreen");
     const handleSchool = () => navigateTo("SchoolConfigurationScreen");
 
     const MenuItem = ({ label, onPress }) => (
@@ -90,7 +88,7 @@ export default function MenuScreen({ onLogout }) {
         <>
             <SafeAreaView
                 style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}
-                key={`${refreshKey}-${updateKey}`}
+                key={`${updateKey}`}
             >
                 <KeyboardAvoidingView
                     behavior={Platform.OS === "ios" ? "padding" : "height"}

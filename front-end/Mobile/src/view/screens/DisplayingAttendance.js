@@ -452,7 +452,6 @@ export default function DisplayingAttendance() {
         isAdmin,
         isDark,
         colors,
-        refreshKey,
         updateKey,
         searchText,
         setSearchText,
@@ -475,7 +474,7 @@ export default function DisplayingAttendance() {
     return (
         <SafeAreaView
             style={[styles.safeArea, {backgroundColor: colors.background}]}
-            key={`${refreshKey}-${updateKey}`}
+            key={`${updateKey}`}
         >
             <View style={{flex: 1, backgroundColor: colors.background, marginTop: Platform.OS === "ios" ? 15 : 10}}>
                 <View style={{marginHorizontal: 20}}>

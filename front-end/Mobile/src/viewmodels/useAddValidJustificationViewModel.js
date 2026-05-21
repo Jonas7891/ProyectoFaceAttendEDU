@@ -1,11 +1,12 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import { useLanguageRefresh } from '../utils/useLanguageRefresh';
 
 export function useAddValidJustificationViewModel() {
     const navigation = useNavigation();
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
 
     // Estados del formulario
     const [type, setType] = useState('');
@@ -15,15 +16,7 @@ export function useAddValidJustificationViewModel() {
     const [isSaving, setIsSaving] = useState(false);
 
     // Key para refrescar la vista al cambiar idioma
-    const [updateKey, setUpdateKey] = useState(0);
-
-    useEffect(() => {
-        const handleLanguageChanged = (lng) => {
-            setUpdateKey(prev => prev + 1);
-        };
-        i18n.on('languageChanged', handleLanguageChanged);
-        return () => i18n.off('languageChanged', handleLanguageChanged);
-    }, [i18n]);
+    const updateKey = useLanguageRefresh();
 
     // ---- NUEVO: estado de alerta centralizado ----
     const [alertData, setAlertData] = useState({

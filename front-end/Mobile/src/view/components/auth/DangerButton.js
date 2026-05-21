@@ -16,12 +16,6 @@ export default function DangerButton({ title, disabled = false, onLogout }) {
     const handleLogout = async () => {
         try {
             // Limpiar almacenamiento
-            /*
-            await AsyncStorage.removeItem('userRole');
-            await AsyncStorage.removeItem('userEmail');
-            await AsyncStorage.removeItem('userToken');
-            await AsyncStorage.removeItem('authToken');
-            */
             await removeToken();
 
             // Ejecutar callback (que ya incluye la confirmación desde la pantalla)

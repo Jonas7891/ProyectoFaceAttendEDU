@@ -1,23 +1,15 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
+import { useLanguageRefresh } from '../utils/useLanguageRefresh';
 
 export function useValidJustificationsViewModel() {
     const navigation = useNavigation();
     const { t, i18n } = useTranslation();
 
     const [activeSection, setActiveSection] = useState('inasistencias');
-    const [updateKey, setUpdateKey] = useState(0);
+    const updateKey = useLanguageRefresh();
     const [isLoading, setIsLoading] = useState(false); // por si más adelante cargas datos
-
-    // Efecto para cambios de idioma
-    useEffect(() => {
-        const handleLanguageChanged = (lng) => {
-            setUpdateKey(prev => prev + 1);
-        };
-        i18n.on('languageChanged', handleLanguageChanged);
-        return () => i18n.off('languageChanged', handleLanguageChanged);
-    }, [i18n]);
 
     // Datos mock (quemados, pero se pueden mover a servicios después)
     const inasistenciasData = useMemo(() => [

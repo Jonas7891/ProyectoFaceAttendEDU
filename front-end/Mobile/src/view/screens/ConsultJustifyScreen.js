@@ -13,14 +13,12 @@ import { useTranslation } from 'react-i18next';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import Separador from '../components/common/Separador';
 import styles from './Style';
-import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import { useTheme } from '../components/common/ThemeContext';
 import { useValidJustificationsViewModel } from '../../viewmodels/useConsultJustifyViewModel';
 
 export default function ValidJustificationsScreen() {
     const { t } = useTranslation();
     const { colors } = useTheme();
-    const refreshKey = useLanguageRefresh();
 
     const {
         activeSection,
@@ -63,7 +61,7 @@ export default function ValidJustificationsScreen() {
     return (
         <SafeAreaView
             style={[styles.safeAreaWhite, { backgroundColor: colors.background }]}
-            key={`${refreshKey}-${updateKey}`}
+            key={`${updateKey}`}
         >
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

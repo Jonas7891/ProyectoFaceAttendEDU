@@ -5,13 +5,14 @@ import { useTheme } from '../view/components/common/ThemeContext';
 import { getHighestRole } from '../utils/getHighestRole';
 import { useFocusEffect } from '@react-navigation/native';
 import { getCurrentUserRole, getCurrentUser } from "../services/UserService";
+import { useLanguageRefresh } from '../utils/useLanguageRefresh';
 
 export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {}) {
     const { t, i18n } = useTranslation();
     const { colors, loadThemeForRole, toggleTheme, theme } = useTheme();
 
     const [userRole, setUserRole] = useState(propUserRole || null);
-    const [updateKey, setUpdateKey] = useState(0); // forzar re-render cuando cambia el idioma
+    const updateKey = useLanguageRefresh();
     const [isLoading, setIsLoading] = useState(false);
 
     // Datos mock (podrían venir de servicios)
@@ -55,22 +56,10 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
             if (role) {
                 await loadThemeForRole(role);
             }
-            setUpdateKey(prev => prev + 1);
         } catch (error) {
             console.error('Error cargando datos de usuario:', error);
         }
     }, [propUserRole, loadThemeForRole]);
-
-    // Escuchar cambios de idioma para forzar re-render
-    useEffect(() => {
-        const handleLanguageChanged = (lng) => {
-            setUpdateKey(prev => prev + 1);
-        };
-        i18n.on('languageChanged', handleLanguageChanged);
-        return () => {
-            i18n.off('languageChanged', handleLanguageChanged);
-        };
-    }, [i18n]);
 
     // Recargar al enfocar la pantalla (primera vez y cada vez que se navega a ella)
     useFocusEffect(

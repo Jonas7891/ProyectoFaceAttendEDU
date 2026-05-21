@@ -31,11 +31,13 @@ export default function LanguageSettingsScreen() {
     selectedTheme,
     setSelectedTheme,
     isLoading,
-    componentKey,
+    updateKey,
     languages,
     themes,
     handleSave,
     handleBack,
+    alertData,
+    clearAlert,
   } = useLanguageSettingsViewModel();
 
   return (
@@ -44,7 +46,7 @@ export default function LanguageSettingsScreen() {
             styles.languageSettingsSafeArea,
             { backgroundColor: colors.background },
           ]}
-          key={componentKey}
+          key={updateKey}
       >
         <KeyboardAvoidingView
             style={{ flex: 1 }}
@@ -223,11 +225,54 @@ export default function LanguageSettingsScreen() {
                 </Text>
               </TouchableOpacity>
 
-              <PrimaryButton
-                  title={t('common.save')}
-                  onPress={handleSave}
-                  isLoading={isLoading}
-              />
+                {/* ── Alerta de resultado ── */}
+                {alertData.message && (
+                    <TouchableOpacity
+                        onPress={clearAlert}
+                        style={{
+                            padding: 12,
+                            borderRadius: 8,
+                            marginBottom: 12,
+                            backgroundColor:
+                                alertData.type === 'success'
+                                    ? colors.success + '20'
+                                    : alertData.type === 'error'
+                                        ? colors.error + '20'
+                                        : colors.warning + '20',
+                        }}
+                    >
+                        <Text
+                            style={{
+                                color:
+                                    alertData.type === 'success'
+                                        ? colors.success
+                                        : alertData.type === 'error'
+                                            ? colors.error
+                                            : colors.warning,
+                                fontSize: 14,
+                                textAlign: 'center',
+                            }}
+                        >
+                            {alertData.message}
+                        </Text>
+                        <Text
+                            style={{
+                                color: colors.textSecondary,
+                                fontSize: 11,
+                                textAlign: 'center',
+                                marginTop: 4,
+                            }}
+                        >
+                            {t('common.tapToClose', { defaultValue: 'Toca para cerrar' })}
+                        </Text>
+                    </TouchableOpacity>
+                )}
+
+                <PrimaryButton
+                    title={t('common.save')}
+                    onPress={handleSave}
+                    isLoading={isLoading}
+                />
 
               <TouchableOpacity
                   onPress={handleBack}

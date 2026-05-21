@@ -169,11 +169,12 @@ export function useAttendanceViewModel() {
     const { t, i18n } = useTranslation();
     const { colors, loadThemeForRole, theme } = useTheme();
     const refreshKey = useLanguageRefresh();
+    const updateKey = refreshKey; // Sincronizar con cambios de idioma
     const isDark = theme === "dark";
 
     const [userRole, setUserRole] = useState(null);
+    const [loading, setLoading] = useState(false);
     const [searchText, setSearchText] = useState("");
-    const [updateKey, setUpdateKey] = useState(0);
     const [selectedDate, setSelectedDate] = useState(null);
     const [showPicker, setShowPicker] = useState(false);
     const [showIOSModal, setShowIOSModal] = useState(false);
@@ -199,14 +200,6 @@ export function useAttendanceViewModel() {
         };
 
         init();
-
-        // Escuchar cambios de idioma
-        const onLangChange = () => setUpdateKey(p => p + 1);
-        i18n.on("languageChanged", onLangChange);
-
-        return () => {
-            i18n.off("languageChanged", onLangChange);
-        };
     }, []);
 
     const isAdmin = userRole === "admin";

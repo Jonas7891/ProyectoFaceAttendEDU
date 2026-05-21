@@ -12,14 +12,12 @@ import {
 import { useTranslation } from 'react-i18next';
 import { QuestionInput } from '../components/common/QuestionInput';
 import PrimaryButton from '../components/auth/PrimaryButton';
-import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import { useTheme } from '../components/common/ThemeContext';
 import styles from './Style';
 import { useUpdatePhotoViewModel } from '../../viewmodels/useUpdatePhotoViewModel';
 
 export default function UpdatePhoto() {
     const { t } = useTranslation();
-    const refreshKey = useLanguageRefresh();
     const { colors, theme } = useTheme();
 
     const {
@@ -97,7 +95,7 @@ export default function UpdatePhoto() {
     return (
         <SafeAreaView
             style={[styles.safeAreaUpdatePhoto, dynamicStyles.safeAreaUpdatePhoto]}
-            key={`${refreshKey}-${updateKey}`}
+            key={`${updateKey}`}
         >
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

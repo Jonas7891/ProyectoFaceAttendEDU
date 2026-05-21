@@ -11,7 +11,6 @@ import {
     Keyboard,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import { useTheme } from '../components/common/ThemeContext';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import { QuestionnaireModal } from '../components/common/QuestionnaireModal';
@@ -23,7 +22,6 @@ import { useFacialFailViewModel } from '../../viewmodels/useFacialFailScreenView
 export default function FacialFail() {
     const { t } = useTranslation();
     const { colors } = useTheme();
-    const refreshKey = useLanguageRefresh();
 
     const {
         updateKey,
@@ -41,7 +39,7 @@ export default function FacialFail() {
     return (
         <SafeAreaView
             style={[styles.safeAreaFacialFail, { backgroundColor: colors.background }]}
-            key={`${refreshKey}-${updateKey}`}
+            key={`${updateKey}`}
         >
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <KeyboardAvoidingView
