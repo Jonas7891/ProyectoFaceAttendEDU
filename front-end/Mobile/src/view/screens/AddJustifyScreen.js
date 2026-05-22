@@ -14,15 +14,12 @@ import PrimaryButton from '../components/auth/PrimaryButton';
 import Separador from '../components/common/Separador';
 import styles from './Style';
 import { useTheme } from '../components/common/ThemeContext';
-import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import { useAddJustificationViewModel } from '../../viewmodels/useAddJustifyViewModel';
 
 export default function AddJustification() {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const refreshKey = useLanguageRefresh();
 
-  // ViewModel
   const {
     justificationType,
     setJustificationType,
@@ -41,7 +38,7 @@ export default function AddJustification() {
   return (
       <SafeAreaView
           style={[styles.safeAreaWhite, { backgroundColor: colors.background }]}
-          key={`${refreshKey}-${updateKey}`}
+          key={`${updateKey}`}
       >
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../view/components/common/ThemeContext';
 import {getCurrentUserRole} from "../services/UserService";
+import { useLanguageRefresh } from '../utils/useLanguageRefresh';
 
 const DEFAULT_JUSTIFICATIONS = [
     { id: "1", type: "Médica", description: "Ausencia por cita médica con especialista", requiresDocument: true, category: "Salud" },
@@ -19,9 +20,9 @@ export function useJustificationsViewModel() {
 
     const [justifications, setJustifications] = useState([]);
     const [userRole, setUserRole] = useState(null);
-    const [updateKey, setUpdateKey] = useState(0);
+    const updateKey = useLanguageRefresh();
 
-    // Inicializar rol y tema, y escuchar cambios de idioma
+    // Inicializar rol y tema
     useEffect(() => {
         const init = async () => {
             try {
@@ -33,11 +34,7 @@ export function useJustificationsViewModel() {
             }
         };
         init();
-
-        const handleLanguageChanged = () => setUpdateKey(prev => prev + 1);
-        i18n.on('languageChanged', handleLanguageChanged);
-        return () => i18n.off('languageChanged', handleLanguageChanged);
-    }, [loadThemeForRole, i18n]);
+    }, [loadThemeForRole]);
 
     // Cargar justificaciones (y recargar al enfocar pantalla)
     const loadJustifications = useCallback(async () => {

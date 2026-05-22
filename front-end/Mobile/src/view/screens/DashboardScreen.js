@@ -2,7 +2,6 @@ import React from 'react';
 import { Text, View, SafeAreaView, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import { useTheme } from '../components/common/ThemeContext';
 import BottomBar from '../components/common/NavigationBar';
 import ScrollViewWrapper from '../components/common/ScrollView';
@@ -14,7 +13,6 @@ export default function Dashboard({ onLogout, userRole: propUserRole }) {
     const navigation = useNavigation();
     const { t } = useTranslation();
     const { colors } = useTheme();
-    const refreshKey = useLanguageRefresh();
 
     // ViewModel: toda la lógica aquí
     const {
@@ -39,7 +37,7 @@ export default function Dashboard({ onLogout, userRole: propUserRole }) {
     return (
         <SafeAreaView
             style={[styles.safeArea, { backgroundColor: colors.background }]}
-            key={`${refreshKey}-${updateKey}`}
+            key={`${updateKey}`}
         >
             <ScrollViewWrapper>
                 <View style={styles.container} marginHorizontal={15}>

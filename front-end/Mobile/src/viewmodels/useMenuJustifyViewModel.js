@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { saveLanguageForRole } from '../view/components/common/languageByRole';
 import { getCurrentUserRole, getCurrentUser } from "../services/UserService";
+import { useLanguageRefresh } from '../utils/useLanguageRefresh';
 
 export function useMenuJustifyViewModel() {
     const navigation = useNavigation();
@@ -11,53 +12,32 @@ export function useMenuJustifyViewModel() {
 
     const [userRole, setUserRole] = useState(null);
     const [pendingCount, setPendingCount] = useState(0);
-    const [updateKey, setUpdateKey] = useState(0); // para refrescar al cambiar idioma
+    const updateKey = useLanguageRefresh(); // para refrescar al cambiar idioma
 
-    // Cargar rol y pendientes iniciales
-    useEffect(() => {
-        const init = async () => {
-            try {
-                const role = await getCurrentUserRole();
-                const finalRole = role || 'Estudiante';
-                setUserRole(finalRole);
-                await saveLanguageForRole(finalRole);
-
-                const pendingData = await AsyncStorage.getItem('pendingJustifications');
-                if (pendingData) {
-                    const pendings = JSON.parse(pendingData);
-                    setPendingCount(pendings.filter(j => j.status === 'pending').length);
-                }
-            } catch {
-                setUserRole('Estudiante');
-            }
-        };
-        init();
-    }, []);
-
-    // Recargar pendientes al enfocar la pantalla
+    // Cargar rol y pendientes al enfocar la pantalla (primera vez y cada vez que se navega a ella)
     useFocusEffect(
         useCallback(() => {
-            const loadPending = async () => {
+            const loadData = async () => {
                 try {
+                    const role = await getCurrentUserRole();
+                    const finalRole = role || 'Estudiante';
+                    setUserRole(finalRole);
+                    await saveLanguageForRole(finalRole);
+
                     const pendingData = await AsyncStorage.getItem('pendingJustifications');
                     if (pendingData) {
                         const pendings = JSON.parse(pendingData);
                         setPendingCount(pendings.filter(j => j.status === 'pending').length);
                     }
                 } catch (error) {
-                    console.error('Error loading pending count:', error);
+                    console.error('Error loading data:', error);
+                    setUserRole('Estudiante');
                 }
             };
-            loadPending();
+            loadData();
         }, [])
     );
 
-    // Refrescar vista al cambiar idioma
-    useEffect(() => {
-        const handleLanguageChange = () => setUpdateKey(prev => prev + 1);
-        i18n.on('languageChanged', handleLanguageChange);
-        return () => i18n.off('languageChanged', handleLanguageChange);
-    }, [i18n]);
 
     // Navegación
     const handleBack = useCallback(() => navigation.goBack(), [navigation]);

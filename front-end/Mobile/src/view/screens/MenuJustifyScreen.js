@@ -15,13 +15,11 @@ import CustomLogo from '../components/common/logo';
 import Separador from '../components/common/Separador';
 import styles from './Style';
 import { useTheme } from '../components/common/ThemeContext';
-import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import { useMenuJustifyViewModel } from '../../viewmodels/useMenuJustifyViewModel';
 
 export default function MenuJustifyScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const refreshKey = useLanguageRefresh();
 
   const {
     userRole,
@@ -77,7 +75,7 @@ export default function MenuJustifyScreen() {
   return (
       <SafeAreaView
           style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}
-          key={`${refreshKey}-${updateKey}`}
+          key={`${updateKey}`}
       >
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
