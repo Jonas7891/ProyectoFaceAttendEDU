@@ -20,6 +20,7 @@ export const mockCourses = [
   { id: 3, name: "Física I",                          code: "FIS-101", professor: "Dr. Mauricio Reyes",  students: 52, schedule: "Lun/Mié/Vie 7:00–8:00",    room: "Lab. Física",    semester: "2024-2", avgAttendance: 91, color: "#F59E0B" },
   { id: 4, name: "Programación Orientada a Objetos",  code: "POO-301", professor: "Ing. Sandra Varela",  students: 29, schedule: "Mar/Jue 14:00–16:00",      room: "Lab. Computación",semester:"2024-2", avgAttendance: 93, color: "#8B5CF6" },
   { id: 5, name: "Bases de Datos",                    code: "BD-401",  professor: "Dr. Hugo Méndez",     students: 38, schedule: "Vie 8:00–12:00",            room: "Lab. Computación",semester:"2024-2", avgAttendance: 82, color: "#EF4444" },
+  { id: 6, name: "Pizzas de Datos",                   code: "PD-101",  professor: "Dr. Hugo Verdosa",     students: 15, schedule: "Lun 8:00–12:00",            room: "Aula 301",semester:"2024-2", avgAttendance: 82, color: "#EF4444" },
 ];
 
 export const mockAttendanceByDay = [
