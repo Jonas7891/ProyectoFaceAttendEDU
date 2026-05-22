@@ -16,6 +16,7 @@ import PrimaryButton from '../components/auth/PrimaryButton';
 import { QuestionnaireModal } from '../components/common/QuestionnaireModal';
 import { FacialUpdateModal } from '../components/common/FacialUpdateModal';
 import CustomLogo from '../components/common/logo';
+import CustomAlert from '../components/common/CustomAlert';
 import styles from './Style';
 import { useFacialFailViewModel } from '../../viewmodels/useFacialFailScreenViewModel';
 
@@ -34,6 +35,8 @@ export default function FacialFail() {
         closeFacialUpdate,
         handleQuestionnaireSuccess,
         handleFacialUpdateSuccess,
+        alertConfig,
+        hideAlert,
     } = useFacialFailViewModel();
 
     return (
@@ -144,6 +147,11 @@ export default function FacialFail() {
                 visible={showFacialUpdate}
                 onClose={closeFacialUpdate}
                 onSuccess={handleFacialUpdateSuccess}
+            />
+
+            <CustomAlert
+                {...alertConfig}
+                onDismiss={hideAlert}
             />
         </SafeAreaView>
     );

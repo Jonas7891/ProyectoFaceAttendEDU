@@ -6,12 +6,15 @@ import {
     TouchableOpacity,
     TouchableWithoutFeedback,
     Keyboard,
+    Pressable,
+    StyleSheet,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from './ThemeContext';
 import { DocumentSelector } from './DocumentSelector';
 import { RHSelector } from './RHSelector';
 import { QuestionInput } from './QuestionInput';
+import { DatePickerInput } from './DatePickerInput';
 import { ProgressBar } from './ProgressBar';
 import stylescommon from './style/Style';
 import CustomAlert from './CustomAlert';
@@ -26,65 +29,62 @@ export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
     const [selectedRH, setSelectedRH] = useState(null);
     const inputRef = useRef(null);
 
-    const { alertConfig, hideAlert, showWarning, showAlert } = useCustomAlert();
+    const { alertConfig, hideAlert, showWarning } = useCustomAlert();
 
     const questions = [
         {
             id: 1,
             question: t('questionnaire.documentQuestion'),
-            type: "selector",
-            selectorType: "document"
+            type: 'selector',
+            selectorType: 'document',
         },
         {
             id: 2,
-            question: t('questionnaire.documentPlaceholder'),
+            question: t('updatePhoto.documentNumber'),
             placeholder: t('questionnaire.documentPlaceholder'),
-            type: "input",
-            keyboardType: "numeric"
+            type: 'input',
+            keyboardType: 'numeric',
         },
         {
             id: 3,
-            question: t('questionnaire.rhQuestion'),
-            type: "selector",
-            selectorType: "rh"
+            question: t('rhSelector.label'),
+            type: 'selector',
+            selectorType: 'rh',
         },
         {
             id: 4,
             question: t('questionnaire.relativeDocumentQuestion'),
             placeholder: t('questionnaire.documentPlaceholder'),
-            type: "input",
-            keyboardType: "numeric"
+            type: 'input',
+            keyboardType: 'numeric',
         },
         {
             id: 5,
             question: t('questionnaire.birthDateQuestion'),
             placeholder: t('questionnaire.birthDatePlaceholder'),
             hint: t('questionnaire.birthDateHint'),
-            type: "input",
-            keyboardType: "numeric"
+            type: 'date',
         },
         {
             id: 6,
             question: t('questionnaire.addressQuestion'),
             placeholder: t('questionnaire.addressPlaceholder'),
             hint: t('questionnaire.addressHint'),
-            type: "input"
+            type: 'input',
         },
         {
             id: 7,
             question: t('questionnaire.phoneQuestion'),
             placeholder: t('questionnaire.phonePlaceholder'),
             hint: t('questionnaire.phoneHint'),
-            type: "input",
-            keyboardType: "numeric"
-        }
+            type: 'input',
+            keyboardType: 'numeric',
+        },
     ];
 
     const dismissKeyboard = () => {
         Keyboard.dismiss();
-        if (inputRef.current) {
-            inputRef.current.blur();
-        }
+        if (inputRef.current) inputRef.current.blur();
     };
 
     const handleNext = () => {
@@ -92,9 +92,8 @@ export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
 
         const currentQuestion = questions[step - 1];
 
-        // Validación con alertas personalizadas
-        if (currentQuestion.type === "selector") {
-            if (currentQuestion.selectorType === "document" && !selectedDocument) {
+        if (currentQuestion.type === 'selector') {
+            if (currentQuestion.selectorType === 'document' && !selectedDocument) {
                 showWarning(
                     t('common.requiredField', { defaultValue: 'Campo requerido' }),
                     t('questionnaire.selectDocument', { defaultValue: 'Por favor selecciona tu tipo de documento' }),
@@ -102,7 +101,7 @@ export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
                 );
                 return;
             }
-            if (currentQuestion.selectorType === "rh" && !selectedRH) {
+            if (currentQuestion.selectorType === 'rh' && !selectedRH) {
                 showWarning(
                     t('common.requiredField', { defaultValue: 'Campo requerido' }),
                     t('questionnaire.selectRH', { defaultValue: 'Por favor selecciona tu tipo de RH' }),
@@ -114,7 +113,9 @@ export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
             if (!answers[currentQuestion.id]) {
                 showWarning(
                     t('common.requiredField', { defaultValue: 'Campo requerido' }),
-                    t('questionnaire.answerRequired', { defaultValue: 'Por favor responde la pregunta antes de continuar' }),
+                    t('questionnaire.answerRequired', {
+                        defaultValue: 'Por favor responde la pregunta antes de continuar',
+                    }),
                     [{ text: 'OK', onPress: hideAlert }]
                 );
                 return;
@@ -124,89 +125,82 @@ export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
         if (step < questions.length) {
             setStep(step + 1);
         } else {
-            const documentoInfo = answers.documento?.label || t('common.notSelected', { defaultValue: 'No seleccionado' });
-            const numeroDocumento = answers[2] || t('common.notProvided', { defaultValue: 'No proporcionado' });
-            const rhInfo = answers.tipoRH?.label || t('common.notSelected', { defaultValue: 'No seleccionado' });
-            const familiarDocumento = answers[4] || t('common.notProvided', { defaultValue: 'No proporcionado' });
-
-            showAlert({
-                title: t('questionnaire.completed', { defaultValue: 'Cuestionario Completado' }),
-                message: `${t('questionnaire.document')}: ${documentoInfo}\n${t('questionnaire.number')}: ${numeroDocumento}\n${t('questionnaire.rhType')}: ${rhInfo}\n${t('questionnaire.relativeDocument')}: ${familiarDocumento}\n\n${t('questionnaire.successMessage', { defaultValue: 'Tus respuestas han sido enviadas. En breve recibirás asistencia.' })}`,
-                type: 'success',
-                buttons: [
-                    {
-                        text: t('common.accept', { defaultValue: 'Aceptar' }),
-                        onPress: () => {
-                            hideAlert();
-                            onSuccess();
-                            onClose();
-                            setStep(1);
-                            setAnswers({});
-                            setSelectedDocument(null);
-                            setSelectedRH(null);
-                        },
-                    },
-                ],
-            });
+            // Completar formulario: ejecutar onSuccess con los datos y cerrar
+            const formData = {
+                documentType: selectedDocument?.label || '',
+                documentNumber: answers[2] || '',
+                rhType: selectedRH?.label || '',
+                relativeDocument: answers[4] || '',
+                birthDate: answers[5] || '',
+                address: answers[6] || '',
+                phone: answers[7] || '',
+            };
+            onSuccess(formData);
+            onClose();
+            // Resetear estado
+            setStep(1);
+            setAnswers({});
+            setSelectedDocument(null);
+            setSelectedRH(null);
         }
     };
 
     const handlePrevious = () => {
         dismissKeyboard();
-        if (step > 1) {
-            setStep(step - 1);
-        }
+        if (step > 1) setStep(step - 1);
     };
 
     const handleDocumentSelect = (documento) => {
         setSelectedDocument(documento);
-        setAnswers({
-            ...answers,
-            documento: documento
-        });
+        setAnswers({ ...answers, documento });
     };
 
     const handleRHSelect = (rh) => {
         setSelectedRH(rh);
-        setAnswers({
-            ...answers,
-            tipoRH: rh
-        });
+        setAnswers({ ...answers, tipoRH: rh });
     };
 
     const handleAnswer = (text) => {
-        setAnswers({
-            ...answers,
-            [questions[step - 1].id]: text
-        });
+        setAnswers({ ...answers, [questions[step - 1].id]: text });
     };
 
     const renderQuestionContent = () => {
         const currentQuestion = questions[step - 1];
 
-        if (currentQuestion.type === "selector") {
-            if (currentQuestion.selectorType === "document") {
+        if (currentQuestion.type === 'selector') {
+            if (currentQuestion.selectorType === 'document') {
                 return (
                     <DocumentSelector
                         selectedDocument={selectedDocument}
                         onSelect={handleDocumentSelect}
                     />
                 );
-            } else if (currentQuestion.selectorType === "rh") {
+            }
+            if (currentQuestion.selectorType === 'rh') {
                 return (
-                    <RHSelector
-                        selectedRH={selectedRH}
-                        onSelect={handleRHSelect}
-                    />
+                    <RHSelector selectedRH={selectedRH} onSelect={handleRHSelect} />
                 );
             }
         }
 
+        // ── Date picker ──
+        if (currentQuestion.type === 'date') {
+            return (
+                <DatePickerInput
+                    value={answers[currentQuestion.id] || ''}
+                    onChange={handleAnswer}
+                    placeholder={currentQuestion.placeholder}
+                    hint={currentQuestion.hint}
+                />
+            );
+        }
+
+        // ── Text input (default) ──
         return (
             <QuestionInput
                 ref={inputRef}
                 placeholder={currentQuestion.placeholder}
-                value={answers[currentQuestion.id] || ""}
+                value={answers[currentQuestion.id] || ''}
                 onChangeText={handleAnswer}
                 keyboardType={currentQuestion.keyboardType}
                 hint={currentQuestion.hint}
@@ -222,51 +216,112 @@ export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
                 transparent={true}
                 onRequestClose={onClose}
             >
-                <TouchableWithoutFeedback onPress={onClose}>
-                    <View style={[stylescommon.questionnaireModalOverlay, { backgroundColor: colors.modalOverlay }]}>
-                        <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-                            <View style={[stylescommon.questionnaireModalContainer, { backgroundColor: colors.modalBackground }]}>
-                                <Text style={[stylescommon.questionnaireModalTitle, { color: colors.modalText }]}>
-                                    {t('questionnaire.title', { defaultValue: 'Cuestionario' })}
-                                </Text>
-                                <Text style={[stylescommon.questionnaireQuestion, { color: colors.modalTextSecondary }]}>
-                                    {t('questionnaire.description', { defaultValue: 'Se debe realizar un cuestionario en el que se pregunten por cosas específicas las cuales solo conozca un usuario' })}
-                                </Text>
+                <View
+                    style={[
+                        stylescommon.questionnaireModalOverlay,
+                        { backgroundColor: colors.modalOverlay },
+                    ]}
+                >
+                    {/* Transparent backdrop — tapping it closes the modal */}
+                    <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
 
-                                <ProgressBar currentStep={step} totalSteps={questions.length} />
+                    {/* Modal card — touches here do NOT propagate to the backdrop */}
+                    <View
+                        style={[
+                            stylescommon.questionnaireModalContainer,
+                            { backgroundColor: colors.modalBackground },
+                        ]}
+                    >
+                        <Text
+                            style={[
+                                stylescommon.questionnaireModalTitle,
+                                { color: colors.modalText },
+                            ]}
+                        >
+                            {t('questionnaire.title', { defaultValue: 'Cuestionario' })}
+                        </Text>
+                        <Text
+                            style={[
+                                stylescommon.questionnaireQuestion,
+                                { color: colors.modalTextSecondary },
+                            ]}
+                        >
+                            {t('questionnaire.description', {
+                                defaultValue:
+                                    'Se debe realizar un cuestionario en el que se pregunten por cosas específicas las cuales solo conozca un usuario',
+                            })}
+                        </Text>
 
-                                <Text style={[stylescommon.questionnaireQuestion, { color: colors.modalText }]}>
-                                    {questions[step - 1].question}
-                                </Text>
+                        <ProgressBar currentStep={step} totalSteps={questions.length} />
 
-                                {renderQuestionContent()}
+                        <Text
+                            style={[
+                                stylescommon.questionnaireQuestion,
+                                { color: colors.modalText },
+                            ]}
+                        >
+                            {questions[step - 1].question?.trim()}
+                        </Text>
 
-                                <View style={stylescommon.questionnaireButtonsContainer}>
-                                    {step > 1 && (
-                                        <TouchableOpacity
-                                            style={[stylescommon.questionnaireButton, stylescommon.questionnairePreviousButton, { backgroundColor: colors.modalButtonSecondary, borderColor: colors.modalBorder }]}
-                                            onPress={handlePrevious}
-                                        >
-                                            <Text style={[stylescommon.questionnairePreviousButtonText, { color: colors.modalButtonSecondaryText }]}>
-                                                {t('common.previous', { defaultValue: 'Anterior' })}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    )}
-                                    <TouchableOpacity
-                                        style={[stylescommon.questionnaireButton, stylescommon.questionnaireNextButton, { backgroundColor: colors.modalButton }]}
-                                        onPress={handleNext}
+                        {renderQuestionContent()}
+
+                        <View style={stylescommon.questionnaireButtonsContainer}>
+                            {step > 1 && (
+                                <TouchableOpacity
+                                    style={[
+                                        stylescommon.questionnaireButton,
+                                        stylescommon.questionnairePreviousButton,
+                                        {
+                                            backgroundColor: colors.modalButtonSecondary,
+                                            borderColor: colors.modalBorder,
+                                        },
+                                    ]}
+                                    onPress={handlePrevious}
+                                >
+                                    <Text
+                                        style={[
+                                            stylescommon.questionnairePreviousButtonText,
+                                            { color: colors.modalButtonSecondaryText },
+                                        ]}
                                     >
-                                        <Text style={[stylescommon.questionnaireNextButtonText, { color: colors.modalButtonText }]}>
-                                            {step === questions.length
-                                                ? t('common.send', { defaultValue: 'Enviar' })
-                                                : t('common.next', { defaultValue: 'Siguiente' })}
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        </TouchableWithoutFeedback>
+                                        {t('common.previous', { defaultValue: 'Anterior' })}
+                                    </Text>
+                                </TouchableOpacity>
+                            )}
+                            <TouchableOpacity
+                            style={[stylescommon.facialModalButton, stylescommon.facialCancelModalButton, {
+                                backgroundColor: colors.modalButtonSecondary,
+                                borderColor: colors.modalBorder
+                            }]}
+                            onPress={onClose}
+                        >
+                            <Text
+                                style={[stylescommon.facialCancelModalButtonText, {color: colors.modalButtonSecondaryText}]}>
+                                {t('common.cancel')}
+                            </Text>
+                        </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[
+                                    stylescommon.questionnaireButton,
+                                    stylescommon.questionnaireNextButton,
+                                    { backgroundColor: colors.modalButton },
+                                ]}
+                                onPress={handleNext}
+                            >
+                                <Text
+                                    style={[
+                                        stylescommon.questionnaireNextButtonText,
+                                        { color: colors.modalButtonText },
+                                    ]}
+                                >
+                                    {step === questions.length
+                                        ? t('common.send', { defaultValue: 'Enviar' })
+                                        : t('common.next', { defaultValue: 'Siguiente' })}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                </TouchableWithoutFeedback>
+                </View>
             </Modal>
 
             <CustomAlert

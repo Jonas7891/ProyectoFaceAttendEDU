@@ -101,7 +101,14 @@ export default function App() {
             >
                 {!isAuthenticated ? (
                     <>
-                        <Stack.Screen name="HomesScreen"> {props => ( <HomesScreen {...props} onLogin={handleLogin} /> )}</Stack.Screen>
+                        <Stack.Screen name="HomesScreen">
+                            {(props) => (
+                                <HomesScreen
+                                    {...props}
+                                    onLogin={handleLogin}
+                                />
+                            )}
+                        </Stack.Screen>
                         <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen}/>
                         <Stack.Screen name="VerifyCodeScreen" component={VerifyCodeScreen}/>
                     </>
