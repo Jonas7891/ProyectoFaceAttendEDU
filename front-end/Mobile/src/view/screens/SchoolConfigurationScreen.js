@@ -5,6 +5,7 @@ import {
     Text,
     ScrollView,
     TextInput,
+    Switch,
     TouchableOpacity,
     Modal,
     ActivityIndicator,
@@ -179,18 +180,18 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                             <View style={styles.schoolLogoContainerSchoolConfig}>
                                 <Text style={styles.schoolLogoSchoolConfig}>logo</Text>
                             </View>
-                            <Text style={styles.schoolNameSchoolConfig}>{generalInfo.schoolName}</Text>
+                            <Text style={styles.schoolNameSchoolConfig}>{generalInfo?.name}</Text>
                             <View style={styles.quickInfoRowSchoolConfig}>
                                 <View style={styles.quickInfoItemSchoolConfig}>
-                                    <Text style={styles.quickInfoValueSchoolConfig}>{academicConfig.totalStudents}</Text>
+                                    <Text style={styles.quickInfoValueSchoolConfig}>{academicConfig?.totalStudents}</Text>
                                     <Text style={styles.quickInfoLabelSchoolConfig}>Estudiantes</Text>
                                 </View>
                                 <View style={styles.quickInfoItemSchoolConfig}>
-                                    <Text style={styles.quickInfoValueSchoolConfig}>{academicConfig.totalTeachers}</Text>
+                                    <Text style={styles.quickInfoValueSchoolConfig}>{academicConfig?.totalTeachers}</Text>
                                     <Text style={styles.quickInfoLabelSchoolConfig}>Docentes</Text>
                                 </View>
                                 <View style={styles.quickInfoItemSchoolConfig}>
-                                    <Text style={styles.quickInfoValueSchoolConfig}>{academicConfig.totalCourses}</Text>
+                                    <Text style={styles.quickInfoValueSchoolConfig}>{academicConfig?.totalCourses}</Text>
                                     <Text style={styles.quickInfoLabelSchoolConfig}>Cursos</Text>
                                 </View>
                             </View>
@@ -230,7 +231,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                 <Text style={styles.formSectionTitleSchoolConfig}>Información General</Text>
                                 <FormField
                                     label="Nombre del Colegio"
-                                    value={generalInfo.schoolName}
+                                    value={generalInfo?.name}
                                     onChangeText={(value) => handleGeneralInfoChange('schoolName', value)}
                                     placeholder="Nombre del colegio"
                                     required
@@ -238,7 +239,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                 />
                                 <FormField
                                     label="NIT del Colegio"
-                                    value={generalInfo.schoolCode}
+                                    value={generalInfo?.code}
                                     onChangeText={(value) => handleGeneralInfoChange('schoolCode', value)}
                                     placeholder="COL-XXXX-XXX"
                                     editable={false}
@@ -246,7 +247,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                 />
                                 <FormField
                                     label="Distrito Educativo"
-                                    value={generalInfo.district}
+                                    value={generalInfo?.district}
                                     onChangeText={(value) => handleGeneralInfoChange('district', value)}
                                     placeholder="Nombre del distrito"
                                     required
@@ -295,8 +296,8 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                             <ActivityIndicator size="small" color="#4A90E2" />
                                         ) : (
                                             <Text style={styles.countryPickerTextSchoolConfig}>
-                                                {contactInfo.country
-                                                    ? `${contactInfo.country}  ${contactInfo.dialCode}`
+                                                {contactInfo?.country
+                                                    ? `${contactInfo?.country}  ${contactInfo?.dialCode}`
                                                     : 'Selecciona un país'}
                                             </Text>
                                         )}
@@ -631,7 +632,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                     <View style={[styles.modalSheetSchoolConfig, { width: '90%', maxHeight: '80%' }]}>
                         <Text style={styles.modalTitleSchoolConfig}>Seleccionar Ciudad</Text>
                         <Text style={styles.modalSubtitleSchoolConfig}>
-                            Ciudades disponibles para {contactInfo.country}
+                            Ciudades disponibles para {contactInfo?.country}
                         </Text>
 
                         {/* Buscador */}

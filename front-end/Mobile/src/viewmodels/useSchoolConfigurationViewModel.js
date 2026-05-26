@@ -1,6 +1,16 @@
 import {Alert, Platform, Switch, Text, TextInput, TouchableOpacity, View} from "react-native";
 import React, {useState, useCallback, useEffect} from 'react';
+import { validateEmail, validatePhone } from "../utils/validators";
+import { CountryService } from "../services/CountryService";
+import { getSchoolById } from "../services/SchoolService";
+import { SchoolResponse,
+    GeneralInfo,
+    ContactInfo,
+    AcademicConfig,
+    AttendanceConfig} from "../model/SchoolResponse";
 import styles from "../view/screens/Style";
+import {getCurrentUser, getUserByEmail} from "../services/UserService";
+import UserResponse from "../model/UserResponse";
 
 
 export function useSchoolConfigurationViewModel() {
@@ -10,63 +20,38 @@ export function useSchoolConfigurationViewModel() {
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [hasChanges, setHasChanges] = useState(false);
 
-    // Estado del formulario - Información General
-    const [generalInfo, setGeneralInfo] = useState({
-        schoolName: 'Colegio Municipal San Antonio',
-        schoolCode: 'COL-2024-001',
-        district:   'Distrito Educativo 5',
-        zone:       'Zona Urbana Centro',
-        level:      'Primaria y Secundaria',
-        modality:   'Presencial',
-        status:     true,
-    });
+    const [generalInfo, setGeneralInfo] = useState(null);
+    const [contactInfo, setContactInfo] = useState(null);
+    const [academicConfig, setAcademicConfig] = useState(null);
+    const [attendanceConfig, setAttendanceConfig] = useState(null);
 
-    // Estado del formulario - Contacto
-    const [contactInfo, setContactInfo] = useState({
-        email:      'admin@colegiosanantonio.edu',
-        phone:      '',
-        address:    'Calle Principal 123, Bogotá',
-        city:       '',
-        postalCode: '',
-        country:    '',
-        dialCode:   '',
-    });
+    const loadSchoolInfo = async () => {
+        try {
+            const userInfo = await getCurrentUser();
+            const email = userInfo?.email;
+            const user = getUserByEmail(email);
 
-    // Estado del formulario - Configuración Académica
-    const [academicConfig, setAcademicConfig] = useState({
-        academicYear:  '2024-2025',
-        totalStudents: '1247',
-        totalTeachers: '89',
-        totalCourses:  '42',
-        startDate:     '02/09/2024',
-        endDate:       '28/06/2025',
-        gradeSystem:   'Calificación 0-10',
-        minimumGrade:  '6',
-    });
+            const schoolResponse = getSchoolById(user.school_id);
 
-    // Estado del formulario - Configuración de Asistencia
-    const [attendanceConfig, setAttendanceConfig] = useState({
-        biometricRequired:      true,
-        toleranceMinutes:       '5',
-        maxAbsences:            '15',
-        maxLatenesses:          '10',
-        justificationDaysLimit: '30',
-        requireDocumentation:   true,
-        enableNotifications:    true,
-    });
+            setGeneralInfo(GeneralInfo.fromApi(schoolResponse));
+            setContactInfo(ContactInfo.fromApi(schoolResponse));
+            setAcademicConfig(AcademicConfig.fromApi(schoolResponse));
+            setAttendanceConfig(AttendanceConfig.fromApi(schoolResponse));
+        } catch (error) {
+            console.error('Error cargando datos de usuario:', error);
+        }
+    };
+    useEffect(() => {
+        loadSchoolInfo();
+    }, []);
+
+    // console.log(generalInfo);
+    useEffect(() => {
+        console.log(generalInfo);
+    }, [generalInfo]);
 
     // Validación de campos
     const [validationErrors, setValidationErrors] = useState({});
-
-    const validateEmail = (email) => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-    };
-
-    const validatePhone = (phone) => {
-        const phoneRegex = /^[\d\s\-\+\(\)]+$/;
-        return phoneRegex.test(phone) && phone.length >= 9;
-    };
 
     const validateField = (fieldName, value) => {
         const errors = { ...validationErrors };
@@ -139,6 +124,7 @@ export function useSchoolConfigurationViewModel() {
         setHasChanges(false);
         setValidationErrors({});
         setGeneralInfo({
+            /*
             schoolName: 'Colegio Municipal San Antonio',
             schoolCode: 'COL-2024-001',
             district:   'Distrito Educativo 5',
@@ -146,6 +132,7 @@ export function useSchoolConfigurationViewModel() {
             level:      'Primaria y Secundaria',
             modality:   'Presencial',
             status:     true,
+             */
         });
         const colombia = countryOptions.find(
             (c) => c.name.toLowerCase() === 'colombia'
@@ -180,7 +167,7 @@ export function useSchoolConfigurationViewModel() {
     // ─────────────────────────────────────────────
 
     useEffect(() => {
-        fetchAllCountries();
+        loadAllCountries();
     }, []);
 
     // Países filtrados por búsqueda
@@ -206,75 +193,41 @@ export function useSchoolConfigurationViewModel() {
     // ─────────────────────────────────────────────
 
     // 1. Obtener TODOS los países con sus dial codes
-    const fetchAllCountries = async () => {
+    const loadAllCountries = async () => {
         setLoadingCountries(true);
         try {
-            const response = await fetch(
-                'https://countriesnow.space/api/v0.1/countries/codes'
-            );
-            const data = await response.json();
+            const countries = await CountryService.fetchAllCountries();
+            setCountryOptions(countries);
 
-            if (!data.error && data.data) {
-                const parsed = data.data
-                    .filter((c) => c.name && c.dial_code)
-                    .map((c) => ({
-                        name:     c.name,
-                        dialCode: c.dial_code,
-                        code:     c.code || '',
-                    }))
-                    .sort((a, b) => a.name.localeCompare(b.name));
-
-                setCountryOptions(parsed);
-
-                // Colombia como país por defecto
-                const colombia = parsed.find(
-                    (c) => c.name.toLowerCase() === 'colombia'
-                );
-                if (colombia) {
-                    setContactInfo((prev) => ({
-                        ...prev,
-                        country:  colombia.name,
-                        dialCode: colombia.dialCode,
-                    }));
-                    fetchCitiesByCountry(colombia.name);
-                }
-            } else {
-                Alert.alert('Error', 'No se pudieron cargar los países.');
+            // Configurar Colombia por defecto
+            const colombia = CountryService.findCountryByName(countries, 'colombia');
+            if (colombia) {
+                setContactInfo(prev => ({
+                    ...prev,
+                    country: colombia.name,
+                    dialCode: colombia.dialCode,
+                }));
+                loadCities(colombia.name);
             }
-        } catch {
-            Alert.alert('Error', 'Error de conexión al cargar los países.');
+        } catch (error) {
+            Alert.alert('Error', error.message);
         } finally {
             setLoadingCountries(false);
         }
     };
 
-    // 2. Obtener ciudades del país seleccionado
-    const fetchCitiesByCountry = async (countryName) => {
+    const loadCities = async (countryName) => {
         setLoadingCities(true);
         setCitiesOptions([]);
         try {
-            const response = await fetch(
-                'https://countriesnow.space/api/v0.1/countries/cities',
-                {
-                    method:  'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body:    JSON.stringify({ country: countryName }),
-                }
-            );
-            const data = await response.json();
-
-            if (!data.error && data.data) {
-                setCitiesOptions(data.data);
-            } else {
-                setCitiesOptions([]);
-            }
-        } catch {
-            setCitiesOptions([]);
-            Alert.alert('Error', 'No se pudieron cargar las ciudades.');
+            const cities = await CountryService.fetchCities(countryName);
+            setCitiesOptions(cities);
+        } catch (error) {
+            Alert.alert('Error', error.message);
         } finally {
             setLoadingCities(false);
         }
-    };
+    }
 
     // ─────────────────────────────────────────────
     // Handlers de país y ciudad
@@ -292,7 +245,7 @@ export function useSchoolConfigurationViewModel() {
         setCountrySearch('');
         setHasChanges(true);
         setCountryModalVisible(false);
-        fetchCitiesByCountry(option.name);
+        loadAllCountries(option.name);
     };
 
     const handleCityChange = (cityName) => {
