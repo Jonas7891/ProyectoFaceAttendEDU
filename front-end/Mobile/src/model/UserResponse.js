@@ -1,10 +1,10 @@
 export default class UserResponse {
-    constructor(name, role, email, identification, school) {
+    constructor(name, role, email, identification, school_id) {
         this.name = name;
         this.role = role;
         this.email = email;
         this.identification = identification;
-        this.school = school;
+        this.school_id = school_id;
     }
 
     static fromApi(data) {
@@ -13,7 +13,7 @@ export default class UserResponse {
             data.role,
             data.email,
             data.identification,
-            data.school
+            data.school_id
         );
     }
 }

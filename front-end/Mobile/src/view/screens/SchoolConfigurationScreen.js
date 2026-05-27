@@ -5,6 +5,7 @@ import {
     Text,
     ScrollView,
     TextInput,
+    Switch,
     TouchableOpacity,
     Modal,
     ActivityIndicator,
@@ -17,6 +18,7 @@ import {
 import { useCustomAlert } from '../components/common/useCustomAlert';
 import CustomAlert from '../components/common/CustomAlert';
 import styles from './Style';
+import {useSchoolConfigurationViewModel} from "../../viewmodels/useSchoolConfigurationViewModel";
 
 // ─────────────────────────────────────────────
 // Sub-componentes FUERA del componente principal
@@ -87,311 +89,43 @@ const ToggleRow = ({ label, description, value, onValueChange }) => (
 
 const SchoolConfigurationScreen = ({ navigation }) => {
 
-    // ── Estados generales ──────────────────────
-    const [activeTab, setActiveTab]              = useState('general');
-    const [isLoading, setIsLoading]              = useState(false);
-    const [showConfirmModal, setShowConfirmModal] = useState(false);
-    const [hasChanges, setHasChanges]            = useState(false);
-
-    // ── Estados de modales ─────────────────────
-    const [countryModalVisible, setCountryModalVisible] = useState(false);
-    const [cityModalVisible, setCityModalVisible]       = useState(false);
-
-    // ── Estados de países (desde API) ──────────
-    const [countryOptions, setCountryOptions]     = useState([]);
-    const [loadingCountries, setLoadingCountries] = useState(false);
-    const [countrySearch, setCountrySearch]       = useState('');
-
-    // ── Estados de ciudades ────────────────────
-    const [citiesOptions, setCitiesOptions] = useState([]);
-    const [loadingCities, setLoadingCities] = useState(false);
-    const [citySearch, setCitySearch]       = useState('');
-
-    // ── Formularios ────────────────────────────
-    const [generalInfo, setGeneralInfo] = useState({
-        schoolName: 'Colegio Municipal San Antonio',
-        schoolCode: 'COL-2024-001',
-        district:   'Distrito Educativo 5',
-        zone:       'Zona Urbana Centro',
-        level:      'Primaria y Secundaria',
-        modality:   'Presencial',
-        status:     true,
-    });
-
-    const [contactInfo, setContactInfo] = useState({
-        email:      'admin@colegiosanantonio.edu',
-        phone:      '',
-        address:    'Calle Principal 123, Bogotá',
-        city:       '',
-        postalCode: '',
-        country:    '',
-        dialCode:   '',
-    });
-
-    const [academicConfig, setAcademicConfig] = useState({
-        academicYear:  '2024-2025',
-        totalStudents: '1247',
-        totalTeachers: '89',
-        totalCourses:  '42',
-        startDate:     '02/09/2024',
-        endDate:       '28/06/2025',
-        gradeSystem:   'Calificación 0-10',
-        minimumGrade:  '6',
-    });
-
-    const [attendanceConfig, setAttendanceConfig] = useState({
-        biometricRequired:      true,
-        toleranceMinutes:       '5',
-        maxAbsences:            '15',
-        maxLatenesses:          '10',
-        justificationDaysLimit: '30',
-        requireDocumentation:   true,
-        enableNotifications:    true,
-    });
-
-    const [validationErrors, setValidationErrors] = useState({});
-
-    // ─────────────────────────────────────────────
-    // Carga inicial de países al montar el componente
-    // ─────────────────────────────────────────────
-
-    useEffect(() => {
-        fetchAllCountries();
-    }, []);
-
-    // Países filtrados por búsqueda
-    const filteredCountries = countryOptions.filter((c) =>
-        c.name.toLowerCase().includes(countrySearch.toLowerCase()) ||
-        c.dialCode.includes(countrySearch)
-    );
-
-    // Ciudades filtradas por búsqueda
-    const filteredCities = citiesOptions.filter((city) =>
-        city.toLowerCase().includes(citySearch.toLowerCase())
-    );
-
-    const CITY_LIMIT = 20;
-    const citySearchTrimmed = citySearch.trim();
-    const displayedCities = citySearchTrimmed
-        ? filteredCities
-        : citiesOptions.slice(0, CITY_LIMIT);
-    const isCityListLimited = !citySearchTrimmed && citiesOptions.length > CITY_LIMIT;
-
-    // ─────────────────────────────────────────────
-    // Funciones de API - CountriesNow
-    // ─────────────────────────────────────────────
-
-    // 1. Obtener TODOS los países con sus dial codes
-    const fetchAllCountries = async () => {
-        setLoadingCountries(true);
-        try {
-            const response = await fetch(
-                'https://countriesnow.space/api/v0.1/countries/codes'
-            );
-            const data = await response.json();
-
-            if (!data.error && data.data) {
-                const parsed = data.data
-                    .filter((c) => c.name && c.dial_code)
-                    .map((c) => ({
-                        name:     c.name,
-                        dialCode: c.dial_code,
-                        code:     c.code || '',
-                    }))
-                    .sort((a, b) => a.name.localeCompare(b.name));
-
-                setCountryOptions(parsed);
-
-                // Colombia como país por defecto
-                const colombia = parsed.find(
-                    (c) => c.name.toLowerCase() === 'colombia'
-                );
-                if (colombia) {
-                    setContactInfo((prev) => ({
-                        ...prev,
-                        country:  colombia.name,
-                        dialCode: colombia.dialCode,
-                    }));
-                    fetchCitiesByCountry(colombia.name);
-                }
-            } else {
-                Alert.alert('Error', 'No se pudieron cargar los países.');
-            }
-        } catch {
-            Alert.alert('Error', 'Error de conexión al cargar los países.');
-        } finally {
-            setLoadingCountries(false);
-        }
-    };
-
-    // 2. Obtener ciudades del país seleccionado
-    const fetchCitiesByCountry = async (countryName) => {
-        setLoadingCities(true);
-        setCitiesOptions([]);
-        try {
-            const response = await fetch(
-                'https://countriesnow.space/api/v0.1/countries/cities',
-                {
-                    method:  'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body:    JSON.stringify({ country: countryName }),
-                }
-            );
-            const data = await response.json();
-
-            if (!data.error && data.data) {
-                setCitiesOptions(data.data);
-            } else {
-                setCitiesOptions([]);
-            }
-        } catch {
-            setCitiesOptions([]);
-            Alert.alert('Error', 'No se pudieron cargar las ciudades.');
-        } finally {
-            setLoadingCities(false);
-        }
-    };
-
-    // ─────────────────────────────────────────────
-    // Handlers de país y ciudad
-    // ─────────────────────────────────────────────
-
-    const handleCountryChange = (option) => {
-        setContactInfo((prev) => ({
-            ...prev,
-            country:    option.name,
-            dialCode:   option.dialCode,
-            phone:      '',
-            city:       '',
-            postalCode: '',
-        }));
-        setCountrySearch('');
-        setHasChanges(true);
-        setCountryModalVisible(false);
-        fetchCitiesByCountry(option.name);
-    };
-
-    const handleCityChange = (cityName) => {
-        setContactInfo((prev) => ({ ...prev, city: cityName }));
-        setCitySearch('');
-        setHasChanges(true);
-        setCityModalVisible(false);
-        fetchPostalCode(contactInfo.country, cityName);
-    };
-
-    // ─────────────────────────────────────────────
-    // Validación
-    // ─────────────────────────────────────────────
-
-    const validateEmail = (email) => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-    };
-
-    const validatePhone = (phone) => {
-        const phoneRegex = /^[\d\s\-\+\(\)]+$/;
-        return phoneRegex.test(phone) && phone.length >= 6;
-    };
-
-    const validateField = (fieldName, value) => {
-        const errors = { ...validationErrors };
-
-        if (!value || String(value).trim() === '') {
-            errors[fieldName] = 'Este campo es requerido';
-        } else if (fieldName === 'email' && !validateEmail(value)) {
-            errors[fieldName] = 'Email inválido';
-        } else if (fieldName === 'phone' && !validatePhone(value)) {
-            errors[fieldName] = 'Teléfono inválido';
-        } else if (
-            fieldName === 'toleranceMinutes' ||
-            fieldName === 'maxAbsences'      ||
-            fieldName === 'maxLatenesses'    ||
-            fieldName === 'minimumGrade'
-        ) {
-            if (isNaN(value)) {
-                errors[fieldName] = 'Debe ser un número';
-            } else {
-                delete errors[fieldName];
-            }
-        } else {
-            delete errors[fieldName];
-        }
-
-        setValidationErrors(errors);
-        return !errors[fieldName];
-    };
-
-    // ─────────────────────────────────────────────
-    // Handlers de formulario
-    // ─────────────────────────────────────────────
-
-    const handleGeneralInfoChange = (field, value) => {
-        setGeneralInfo((prev) => ({ ...prev, [field]: value }));
-        setHasChanges(true);
-        validateField(field, value);
-    };
-
-    const handleContactInfoChange = (field, value) => {
-        setContactInfo((prev) => ({ ...prev, [field]: value }));
-        setHasChanges(true);
-        validateField(field, value);
-    };
-
-    const handleAcademicConfigChange = (field, value) => {
-        setAcademicConfig((prev) => ({ ...prev, [field]: value }));
-        setHasChanges(true);
-        validateField(field, value);
-    };
-
-    const handleAttendanceConfigChange = (field, value) => {
-        setAttendanceConfig((prev) => ({ ...prev, [field]: value }));
-        setHasChanges(true);
-        validateField(field, value);
-    };
-
-    // ─────────────────────────────────────────────
-    // Guardar / Descartar
-    // ─────────────────────────────────────────────
-
-    const handleSaveChanges = async () => {
-        try {
-            setIsLoading(true);
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-            setHasChanges(false);
-            setShowConfirmModal(false);
-            Alert.alert('Éxito', 'Configuración del colegio actualizada correctamente');
-        } catch {
-            Alert.alert('Error', 'No se pudo guardar los cambios');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleDiscardChanges = () => {
-        setHasChanges(false);
-        setValidationErrors({});
-        setGeneralInfo({
-            schoolName: 'Colegio Municipal San Antonio',
-            schoolCode: 'COL-2024-001',
-            district:   'Distrito Educativo 5',
-            zone:       'Zona Urbana Centro',
-            level:      'Primaria y Secundaria',
-            modality:   'Presencial',
-            status:     true,
-        });
-        const colombia = countryOptions.find(
-            (c) => c.name.toLowerCase() === 'colombia'
-        );
-        setContactInfo({
-            email:      'admin@colegiosanantonio.edu',
-            phone:      '',
-            address:    'Calle Principal 123, Bogotá',
-            city:       '',
-            postalCode: '',
-            country:    colombia?.name     || 'Colombia',
-            dialCode:   colombia?.dialCode || '+57',
-        });
-    };
+    const {
+        activeTab,
+        isLoading,
+        showConfirmModal,
+        showAdvanced,
+        hasChanges,
+        generalInfo,
+        contactInfo,
+        academicConfig,
+        attendanceConfig,
+        validationErrors,
+        handleGeneralInfoChange,
+        handleContactInfoChange,
+        handleAcademicConfigChange,
+        handleAttendanceConfigChange,
+        handleSaveChanges,
+        handleDiscardChanges,
+        countryModalVisible,
+        cityModalVisible,
+        loadingCountries,
+        loadingCities,
+        filteredCountries,
+        displayedCities,
+        isCityListLimited,
+        handleCountryChange,
+        handleCityChange,
+        countrySearch,
+        setCountrySearch,
+        citySearch,
+        setCitySearch,
+        CITY_LIMIT,
+        citiesOptions,
+        setActiveTab,
+        setCountryModalVisible,
+        setCityModalVisible,
+        setShowConfirmModal
+    } = useSchoolConfigurationViewModel();
 
     // ─────────────────────────────────────────────
     // Render
@@ -440,18 +174,18 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                             <View style={styles.schoolLogoContainerSchoolConfig}>
                                 <Text style={styles.schoolLogoSchoolConfig}>logo</Text>
                             </View>
-                            <Text style={styles.schoolNameSchoolConfig}>{generalInfo.schoolName}</Text>
+                            <Text style={styles.schoolNameSchoolConfig}>{generalInfo?.name}</Text>
                             <View style={styles.quickInfoRowSchoolConfig}>
                                 <View style={styles.quickInfoItemSchoolConfig}>
-                                    <Text style={styles.quickInfoValueSchoolConfig}>{academicConfig.totalStudents}</Text>
+                                    <Text style={styles.quickInfoValueSchoolConfig}>{academicConfig?.totalStudents}</Text>
                                     <Text style={styles.quickInfoLabelSchoolConfig}>Estudiantes</Text>
                                 </View>
                                 <View style={styles.quickInfoItemSchoolConfig}>
-                                    <Text style={styles.quickInfoValueSchoolConfig}>{academicConfig.totalTeachers}</Text>
+                                    <Text style={styles.quickInfoValueSchoolConfig}>{academicConfig?.totalTeachers}</Text>
                                     <Text style={styles.quickInfoLabelSchoolConfig}>Docentes</Text>
                                 </View>
                                 <View style={styles.quickInfoItemSchoolConfig}>
-                                    <Text style={styles.quickInfoValueSchoolConfig}>{academicConfig.totalCourses}</Text>
+                                    <Text style={styles.quickInfoValueSchoolConfig}>{academicConfig?.totalCourses}</Text>
                                     <Text style={styles.quickInfoLabelSchoolConfig}>Cursos</Text>
                                 </View>
                             </View>
@@ -491,7 +225,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                 <Text style={styles.formSectionTitleSchoolConfig}>Información General</Text>
                                 <FormField
                                     label="Nombre del Colegio"
-                                    value={generalInfo.schoolName}
+                                    value={generalInfo?.name}
                                     onChangeText={(value) => handleGeneralInfoChange('schoolName', value)}
                                     placeholder="Nombre del colegio"
                                     required
@@ -499,7 +233,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                 />
                                 <FormField
                                     label="NIT del Colegio"
-                                    value={generalInfo.schoolCode}
+                                    value={generalInfo?.code}
                                     onChangeText={(value) => handleGeneralInfoChange('schoolCode', value)}
                                     placeholder="COL-XXXX-XXX"
                                     editable={false}
@@ -507,7 +241,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                 />
                                 <FormField
                                     label="Distrito Educativo"
-                                    value={generalInfo.district}
+                                    value={generalInfo?.district}
                                     onChangeText={(value) => handleGeneralInfoChange('district', value)}
                                     placeholder="Nombre del distrito"
                                     required
@@ -556,8 +290,8 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                             <ActivityIndicator size="small" color="#4A90E2" />
                                         ) : (
                                             <Text style={styles.countryPickerTextSchoolConfig}>
-                                                {contactInfo.country
-                                                    ? `${contactInfo.country}  ${contactInfo.dialCode}`
+                                                {contactInfo?.country
+                                                    ? `${contactInfo?.country}  ${contactInfo?.dialCode}`
                                                     : 'Selecciona un país'}
                                             </Text>
                                         )}
@@ -892,7 +626,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                     <View style={[styles.modalSheetSchoolConfig, { width: '90%', maxHeight: '80%' }]}>
                         <Text style={styles.modalTitleSchoolConfig}>Seleccionar Ciudad</Text>
                         <Text style={styles.modalSubtitleSchoolConfig}>
-                            Ciudades disponibles para {contactInfo.country}
+                            Ciudades disponibles para {contactInfo?.country}
                         </Text>
 
                         {/* Buscador */}

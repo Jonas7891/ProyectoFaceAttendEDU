@@ -5,7 +5,7 @@ export const users = [
         "role": "Administrador",
         "email": "admin@example.com",
         "joinDate": "15/01/2024",
-        "school": "Institución Educativa Técnico Superior"
+        "school_id": 1
     },
     {
         "identification": 2,
@@ -13,7 +13,7 @@ export const users = [
         "role": "Docente",
         "email": "teacher@example.com",
         "joinDate": "15/01/2024",
-        "school": "Institución Educativa Técnico Superior"
+        "school_id": 1
     },
     {
         "identification": 3,
@@ -21,6 +21,6 @@ export const users = [
         "role": "Estudiante",
         "email": "student@example.com",
         "joinDate": "15/01/2024",
-        "school": "Institución Educativa Técnico Superior"
+        "school_id": 1
     }
 ]
