@@ -3765,6 +3765,447 @@ const styles = StyleSheet.create({
         fontSize: 18,
         color: '#F44336',
     },
+
+    // ========== PENDING JUSTIFICATION SCREEN styles ==========
+    // Layout principal
+    safeAreaPending: {
+        flex: 1,
+        backgroundColor: '#F4F6FB',
+    },
+    containerPending: {
+        flex: 1,
+    },
+
+    // Header
+    headerPending: {
+        paddingHorizontal: 20,
+        paddingTop: 16,
+        paddingBottom: 12,
+        backgroundColor: '#F4F6FB',
+    },
+    headerTitlePending: {
+        fontSize: 26,
+        fontWeight: '800',
+        color: '#111827',
+        letterSpacing: -0.5,
+    },
+    headerSubtitlePending: {
+        fontSize: 14,
+        color: '#6B7280',
+        marginTop: 2,
+    },
+
+    // Filtros de rol
+    filterRowPending: {
+        flexDirection: 'row',
+        paddingHorizontal: 20,
+        paddingBottom: 12,
+        gap: 8,
+    },
+    filterChipPending: {
+        paddingHorizontal: 16,
+        paddingVertical: 7,
+        borderRadius: 20,
+        borderWidth: 1.5,
+        borderColor: '#E5E7EB',
+        backgroundColor: '#FFFFFF',
+    },
+    filterChipActivePending: {
+        backgroundColor: '#2563EB',
+        borderColor: '#2563EB',
+    },
+    filterChipTextPending: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#6B7280',
+    },
+    filterChipTextActivePending: {
+        color: '#FFFFFF',
+    },
+
+    // Contador de resultados
+    resultsRowPending: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingBottom: 10,
+        gap: 6,
+    },
+    resultsTextPending: {
+        fontSize: 13,
+        color: '#9CA3AF',
+    },
+    resultsBadgePending: {
+        backgroundColor: '#2563EB',
+        borderRadius: 10,
+        paddingHorizontal: 7,
+        paddingVertical: 1,
+    },
+    resultsBadgeTextPending: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: '#FFFFFF',
+    },
+
+    // Lista
+    listContentPending: {
+        paddingHorizontal: 16,
+        paddingBottom: 24,
+    },
+
+    // Tarjeta de justificación
+    cardPending: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        marginBottom: 12,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 6,
+        elevation: 3,
+    },
+    cardHeaderPending: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginBottom: 10,
+    },
+    avatarContainerPending: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+    },
+    avatarTextPending: {
+        fontSize: 17,
+        fontWeight: '700',
+        color: '#FFFFFF',
+    },
+    cardHeaderInfoPending: {
+        flex: 1,
+    },
+    cardNamePending: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#111827',
+    },
+    cardMetaPending: {
+        fontSize: 12,
+        color: '#9CA3AF',
+        marginTop: 1,
+    },
+    badgeRowPending: {
+        flexDirection: 'row',
+        gap: 6,
+        marginBottom: 8,
+    },
+    typeBadgePending: {
+        paddingHorizontal: 10,
+        paddingVertical: 3,
+        borderRadius: 8,
+    },
+    typeBadgeTextPending: {
+        fontSize: 11,
+        fontWeight: '700',
+        letterSpacing: 0.2,
+    },
+    roleBadgePending: {
+        paddingHorizontal: 10,
+        paddingVertical: 3,
+        borderRadius: 8,
+    },
+    roleBadgeTextPending: {
+        fontSize: 11,
+        fontWeight: '600',
+    },
+    cardDescriptionPending: {
+        fontSize: 13,
+        color: '#6B7280',
+        lineHeight: 18,
+        marginBottom: 10,
+    },
+    cardFooterPending: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderTopWidth: 1,
+        borderTopColor: '#F3F4F6',
+        paddingTop: 10,
+        marginTop: 2,
+    },
+    cardDatePending: {
+        fontSize: 12,
+        color: '#9CA3AF',
+    },
+    viewButtonPending: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#2563EB',
+        paddingHorizontal: 14,
+        paddingVertical: 6,
+        borderRadius: 10,
+        gap: 4,
+    },
+    viewButtonTextPending: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#FFFFFF',
+    },
+    attachmentIndicatorPending: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    attachmentTextPending: {
+        fontSize: 11,
+        color: '#9CA3AF',
+    },
+
+    // Empty state
+    emptyContainerPending: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 60,
+    },
+    emptyIconPending: {
+        fontSize: 48,
+        marginBottom: 12,
+    },
+    emptyTitlePending: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#111827',
+        marginBottom: 4,
+    },
+    emptySubtitlePending: {
+        fontSize: 13,
+        color: '#9CA3AF',
+        textAlign: 'center',
+    },
+
+    // Modal overlay
+    modalOverlayPending: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.45)',
+        justifyContent: 'flex-end',
+    },
+    modalSheetPending: {
+        backgroundColor: '#F4F6FB',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        maxHeight: '92%',
+        paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+    },
+    modalHandlePending: {
+        width: 40,
+        height: 4,
+        backgroundColor: '#D1D5DB',
+        borderRadius: 2,
+        alignSelf: 'center',
+        marginTop: 10,
+        marginBottom: 4,
+    },
+    modalHeaderPending: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingVertical: 14,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E5E7EB',
+    },
+    modalTitlePending: {
+        fontSize: 17,
+        fontWeight: '800',
+        color: '#111827',
+    },
+    modalCloseBtnPending: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#FFFFFF',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+    },
+    modalCloseTextPending: {
+        fontSize: 16,
+        color: '#6B7280',
+        lineHeight: 18,
+    },
+    modalScrollPending: {
+        paddingHorizontal: 20,
+        paddingTop: 16,
+        paddingBottom: 8,
+    },
+
+    // Modal — Secciones de detalle
+    detailUserRowPending: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 14,
+        padding: 14,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        gap: 12,
+    },
+    detailAvatarLargePending: {
+        width: 52,
+        height: 52,
+        borderRadius: 26,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    detailAvatarTextPending: {
+        fontSize: 20,
+        fontWeight: '800',
+        color: '#FFFFFF',
+    },
+    detailUserNamePending: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#111827',
+    },
+    detailUserMetaPending: {
+        fontSize: 13,
+        color: '#6B7280',
+        marginTop: 1,
+    },
+    sectionLabelPending: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: '#9CA3AF',
+        letterSpacing: 0.8,
+        textTransform: 'uppercase',
+        marginBottom: 8,
+        marginTop: 4,
+    },
+    detailCardPending: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 14,
+        padding: 14,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+    },
+    detailRowPending: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 6,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
+        gap: 10,
+    },
+    detailRowLastPending: {
+        borderBottomWidth: 0,
+    },
+    detailIconPending: {
+        fontSize: 16,
+        width: 22,
+        textAlign: 'center',
+    },
+    detailKeyPending: {
+        fontSize: 13,
+        color: '#6B7280',
+        width: 80,
+    },
+    detailValuePending: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#111827',
+        flex: 1,
+    },
+    descriptionBoxPending: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 14,
+        padding: 14,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+    },
+    descriptionTextPending: {
+        fontSize: 14,
+        color: '#374151',
+        lineHeight: 21,
+    },
+    attachmentBoxPending: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 14,
+        padding: 14,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        gap: 12,
+    },
+    attachmentIconBoxPending: {
+        width: 44,
+        height: 44,
+        borderRadius: 10,
+        backgroundColor: '#EFF6FF',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    attachmentIconTextPending: {
+        fontSize: 22,
+    },
+    attachmentFileNamePending: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#111827',
+    },
+    attachmentFileSizePending: {
+        fontSize: 11,
+        color: '#9CA3AF',
+        marginTop: 2,
+    },
+
+    // Modal — Botones de acción
+    actionRowPending: {
+        flexDirection: 'row',
+        gap: 10,
+        paddingHorizontal: 20,
+        paddingTop: 8,
+    },
+    approveBtnPending: {
+        flex: 1,
+        backgroundColor: '#16A34A',
+        borderRadius: 14,
+        paddingVertical: 14,
+        alignItems: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 6,
+    },
+    approveBtnTextPending: {
+        color: '#FFFFFF',
+        fontSize: 15,
+        fontWeight: '700',
+    },
+    rejectBtnPending: {
+        flex: 1,
+        backgroundColor: '#DC2626',
+        borderRadius: 14,
+        paddingVertical: 14,
+        alignItems: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 6,
+    },
+    rejectBtnTextPending: {
+        color: '#FFFFFF',
+        fontSize: 15,
+        fontWeight: '700',
+    },
 });
 
 export default styles;
