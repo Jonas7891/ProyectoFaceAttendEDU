@@ -6,6 +6,7 @@ import { getHighestRole } from '../utils/getHighestRole';
 import { removeToken } from '../storage/TokenStorage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { getCurrentUserRole, getCurrentUser } from "../services/UserService";
+import { useLanguageRefresh } from '../utils/useLanguageRefresh';
 
 export function useMenuViewModel({ onLogout }) {
     const navigation = useNavigation();
@@ -14,7 +15,7 @@ export function useMenuViewModel({ onLogout }) {
 
     const [isLoading, setIsLoading] = useState(false);
     const [userRole, setUserRole] = useState(null);
-    const [updateKey, setUpdateKey] = useState(0);
+    const updateKey = useLanguageRefresh();
 
     const loadUserData = useCallback(async () => {
         try {
@@ -44,16 +45,10 @@ export function useMenuViewModel({ onLogout }) {
             if (savedLang && savedLang !== i18n.language) {
                 await i18n.changeLanguage(savedLang);
             }
-
-            setUpdateKey(prev => prev + 1);
         } catch (error) {
             console.error('Error en loadUserData:', error);
         }
     }, [loadThemeForRole, i18n]);
-
-    useEffect(() => {
-        loadUserData();
-    }, [loadUserData]);
 
     useFocusEffect(
         useCallback(() => {

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../view/components/common/ThemeContext';
 import {getCurrentUserRole} from "../services/UserService";
+import { useLanguageRefresh } from '../utils/useLanguageRefresh';
 
 export function useUpdatePhotoViewModel() {
     const navigation = useNavigation();
@@ -10,7 +11,7 @@ export function useUpdatePhotoViewModel() {
     const { loadThemeForRole } = useTheme();
 
     const [attendanceRegistered, setAttendanceRegistered] = useState(false);
-    const [updateKey, setUpdateKey] = useState(0);
+    const updateKey = useLanguageRefresh();
     const [formData, setFormData] = useState({
         nombreCompleto: '',
         documento: '',
@@ -25,7 +26,7 @@ export function useUpdatePhotoViewModel() {
     });
     const clearAlert = () => setAlertData({ message: null, type: 'warning', timestamp: 0 });
 
-    // Inicialización y listener de idioma
+    // Inicialización
     useEffect(() => {
         const init = async () => {
             const role = await getCurrentUserRole();
@@ -34,11 +35,7 @@ export function useUpdatePhotoViewModel() {
             }
         };
         init();
-
-        const handleLanguageChanged = () => setUpdateKey(prev => prev + 1);
-        i18n.on('languageChanged', handleLanguageChanged);
-        return () => i18n.off('languageChanged', handleLanguageChanged);
-    }, [loadThemeForRole, i18n]);
+    }, [loadThemeForRole]);
 
     const handleInputChange = useCallback((field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));

@@ -1,10 +1,11 @@
-import {useState, useEffect} from 'react';
+import {useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useNavigation} from '@react-navigation/native';
+import { useLanguageRefresh } from '../utils/useLanguageRefresh';
 
 export function useAddJustificationViewModel() {
     const navigation = useNavigation();
-    const {t, i18n} = useTranslation();
+    const {t} = useTranslation();
 
     // Estados del formulario
     const [justificationType, setJustificationType] = useState('inasistencia');
@@ -20,18 +21,8 @@ export function useAddJustificationViewModel() {
         timestamp: 0,
     });
 
-    // Idioma: forzar actualizaciones
-    const [updateKey, setUpdateKey] = useState(0);
-
-    useEffect(() => {
-        const handleLanguageChanged = (lng) => {
-            setUpdateKey(prev => prev + 1);
-        };
-        i18n.on('languageChanged', handleLanguageChanged);
-        return () => {
-            i18n.off('languageChanged', handleLanguageChanged);
-        };
-    }, [i18n]);
+    // Idioma: usar hook universal
+    const updateKey = useLanguageRefresh();
 
     // Limpiar alerta
     const clearAlert = () => setAlertData({message: null, type: 'warning', timestamp: 0});

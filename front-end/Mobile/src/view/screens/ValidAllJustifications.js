@@ -1,7 +1,6 @@
 import React from "react";
 import {View, Text, ScrollView, TouchableOpacity, SafeAreaView, Platform} from "react-native";
 import { useTranslation } from "react-i18next";
-import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import { useTheme } from '../components/common/ThemeContext';
 import styles from "./Style";
 import { useJustificationsViewModel } from '../../viewmodels/useValidAllJustificationsViewModel';
@@ -9,7 +8,6 @@ import { useJustificationsViewModel } from '../../viewmodels/useValidAllJustific
 export default function JustificationsScreen() {
     const { t } = useTranslation();
     const { colors } = useTheme();
-    const refreshKey = useLanguageRefresh();
 
     const {
         justifications,
@@ -54,7 +52,7 @@ export default function JustificationsScreen() {
     return (
         <SafeAreaView
             style={[styles.validAllJustificationsSafeArea, { backgroundColor: colors.background }]}
-            key={`${refreshKey}-${updateKey}`}
+            key={`${updateKey}`}
         >
             <View style={[styles.validAllJustificationsContainer, { backgroundColor: colors.background,  marginTop: Platform.OS === "ios" ? 0 : 50} ]} marginHorizontal={10}>
                 <View style={[styles.validAllJustificationsHeader, { backgroundColor: colors.background }]}>

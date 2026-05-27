@@ -1,20 +1,20 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AlertsConfigContext = createContext();
 
-export const AlertsConfigProvider = ({ children }) => {
-    const [alertsConfig, setAlertsConfig] = useState({
-        enableSuccess: true,
-        enableError: true,
-        enableWarning: true,
-        enableConfirm: true,
-        enableDefault: true,
-    });
+const DEFAULT_CONFIG = {
+    enableSuccess: true,
+    enableError: true,
+    enableWarning: true,
+    enableConfirm: true,
+    enableDefault: true,
+};
 
+export const AlertsConfigProvider = ({ children }) => {
+    const [alertsConfig, setAlertsConfig] = useState(DEFAULT_CONFIG);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Cargar configuración al iniciar
     useEffect(() => {
         loadAlertsConfig();
     }, []);
@@ -23,11 +23,12 @@ export const AlertsConfigProvider = ({ children }) => {
         try {
             const saved = await AsyncStorage.getItem('alertsConfig');
             if (saved) {
-                setAlertsConfig(JSON.parse(saved));
+                // ✅ Fix 1: merge con defaults — nunca pierde claves nuevas
+                setAlertsConfig({ ...DEFAULT_CONFIG, ...JSON.parse(saved) });
             }
-            setIsLoading(false);
         } catch (error) {
             console.error('Error cargando configuración de alertas:', error);
+        } finally {
             setIsLoading(false);
         }
     };
@@ -43,27 +44,18 @@ export const AlertsConfigProvider = ({ children }) => {
 
     const toggleAlertType = (type) => {
         const key = `enable${type.charAt(0).toUpperCase()}${type.slice(1)}`;
-        const newConfig = {
-            ...alertsConfig,
-            [key]: !alertsConfig[key],
-        };
+        const newConfig = { ...alertsConfig, [key]: !alertsConfig[key] };
         saveAlertsConfig(newConfig);
     };
 
-    const isAlertEnabled = (type) => {
+    const isAlertEnabled = useCallback((type) => {
         const key = `enable${type.charAt(0).toUpperCase()}${type.slice(1)}`;
         return alertsConfig[key] !== false;
-    };
+    }, [alertsConfig]);
 
     return (
         <AlertsConfigContext.Provider
-            value={{
-                alertsConfig,
-                isLoading,
-                saveAlertsConfig,
-                toggleAlertType,
-                isAlertEnabled,
-            }}
+            value={{ alertsConfig, isLoading, saveAlertsConfig, toggleAlertType, isAlertEnabled }}
         >
             {children}
         </AlertsConfigContext.Provider>

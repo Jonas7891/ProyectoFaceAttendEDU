@@ -13,13 +13,11 @@ import CustomTabs from '../components/common/CustomTabs';
 import Separador from '../components/common/Separador';
 import styles from './Style';
 import { useTheme } from '../components/common/ThemeContext';
-import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import { useNewsViewModel } from '../../viewmodels/useNewsViewModel';
 
 export default function NewsScreen() {
     const { t } = useTranslation();
     const { colors, theme } = useTheme();
-    const refreshKey = useLanguageRefresh();
 
     const { userRole, updateKey } = useNewsViewModel();
 
@@ -29,7 +27,7 @@ export default function NewsScreen() {
                 styles.safeArea,
                 { backgroundColor: colors.background }
             ]}
-            key={`${refreshKey}-${updateKey}`}
+            key={`${updateKey}`}
         >
             <ScrollViewWrapper>
                 <View style={styles.container} marginHorizontal={10}>

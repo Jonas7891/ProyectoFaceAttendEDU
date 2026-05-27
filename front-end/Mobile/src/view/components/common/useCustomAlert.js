@@ -2,7 +2,10 @@ import {useState, useCallback} from "react";
 import { useAlertsConfig } from "../../../utils/AlertsConfigContext";
 
 export const useCustomAlert = () => {
-    const { isAlertEnabled } = useAlertsConfig();
+    const isAlertEnabled = (type) => {
+        const enabledTypes = ['default', 'warning', 'error', 'confirm', 'success']; // ← agrega 'success'
+        return enabledTypes.includes(type);
+    };
     const [alertConfig, setAlertConfig] = useState({
         visible: false,
         title: "",

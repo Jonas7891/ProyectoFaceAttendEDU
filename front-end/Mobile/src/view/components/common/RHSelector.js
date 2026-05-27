@@ -25,7 +25,6 @@ export const RHSelector = ({ selectedRH, onSelect }) => {
 
     return (
         <View style={stylescommon.rhSelectorContainer}>
-            <Text style={[stylescommon.rhSelectorLabel, { color: colors.modalText }]}>{t('rhSelector.label')}</Text>
             <View style={stylescommon.rhGridContainer}>
                 {tiposRH.map((rh) => (
                     <TouchableOpacity

@@ -8,15 +8,16 @@ import { getHighestRole } from "../utils/getHighestRole";
 import LoginRequest from "../model/LoginRequest";
 import AuthResponse from "../model/AuthResponse";
 
+const MAX_FAILED_ATTEMPTS = 3;
+
 export function useLoginViewModel({ onLogin }) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [terms, setTerms] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
-
-    // ✅ Nuevo estado para forzar la reactividad
     const [errorTimestamp, setErrorTimestamp] = useState(0);
+    const [failedAttempts, setFailedAttempts] = useState(0);
 
     const { t } = useTranslation();
     const { loadThemeForRole } = useTheme();
@@ -45,13 +46,19 @@ export function useLoginViewModel({ onLogin }) {
 
     const handleError = (err) => {
         console.error("Login error:", err);
+
+        // Sólo contamos como intento fallido los errores de credenciales,
+        // no los de validación local (terms, campos vacíos).
+        const newCount = failedAttempts + 1;
+        setFailedAttempts(newCount);
+        console.log(`❌ Intento fallido ${newCount}/${MAX_FAILED_ATTEMPTS}`);
+
         setErrorWithTimestamp(
             t("login.invalidCredentials", { defaultValue: "Credenciales incorrectas" })
         );
     };
 
     const submit = async () => {
-        // Limpiar error y timestamp
         setError(null);
         setErrorTimestamp(0);
 
@@ -69,20 +76,20 @@ export function useLoginViewModel({ onLogin }) {
                 throw new Error("Token no recibido en la respuesta");
             }
 
-            // Solo guardamos el token, los datos se extraen de él
             const saved = await saveToken(authResponse.token);
 
             if (!saved) {
                 throw new Error("No se pudo guardar el token");
             }
 
-            // Obtener datos del token JWT (fuente única de verdad)
             const userData = authResponse.user;
             const role = getHighestRole(userData?.roles ?? []);
 
             console.log("✅ Login exitoso - Rol:", role);
 
-            // Aplicar tema y lenguaje según el rol
+            // Resetear intentos fallidos al lograr un login exitoso
+            setFailedAttempts(0);
+
             await loadThemeForRole(role);
             await restoreLanguageForRole(role);
 
@@ -103,6 +110,10 @@ export function useLoginViewModel({ onLogin }) {
         setErrorTimestamp(0);
     };
 
+    const resetFailedAttempts = () => {
+        setFailedAttempts(0);
+    };
+
     return {
         email,
         password,
@@ -110,10 +121,13 @@ export function useLoginViewModel({ onLogin }) {
         isLoading,
         error,
         errorTimestamp,
+        failedAttempts,
+        maxFailedAttempts: MAX_FAILED_ATTEMPTS,
         setEmail,
         setPassword,
         setTerms,
         submit,
         clearError,
+        resetFailedAttempts,
     };
 }

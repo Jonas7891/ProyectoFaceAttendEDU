@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useLanguageRefresh } from '../utils/useLanguageRefresh';
 
 // Datos iniciales en JSON dentro del archivo (punto único de verdad para demo)
 const initialData = {
@@ -67,11 +68,14 @@ export function useManageUsersViewModel() {
     setTeachers(prev => prev.filter(t => t.id !== id));
   }, []);
 
+  const updateKey = useLanguageRefresh();
+
   return {
     // datos
     allStudents,
     students,
     teachers,
+    updateKey,
     // student operations
     searchStudents,
     addStudentById,
