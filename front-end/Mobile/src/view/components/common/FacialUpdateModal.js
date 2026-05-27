@@ -32,7 +32,6 @@ export const FacialUpdateModal = ({visible, onClose, onSuccess}) => {
         hideAlert,
         showWarning,
         showConfirm,
-        showSuccess,
     } = useCustomAlert();
 
     const handleUpdate = () => {
@@ -49,16 +48,15 @@ export const FacialUpdateModal = ({visible, onClose, onSuccess}) => {
             t('facialUpdate.updateParams', {defaultValue: 'Actualizar parámetros'}),
             t('facialUpdate.confirmUpdate', {defaultValue: '¿Confirmas la actualización?'}),
             () => {
-                // Confirmado: mostrar éxito, ejecutar callbacks y cerrar
-                showSuccess(
-                    t('facialUpdate.success', {defaultValue: 'Éxito'}),
-                    t('facialUpdate.paramsUpdated', {defaultValue: 'Parámetros faciales actualizados correctamente.'}),
-                    () => {
-                        onSuccess();
-                        onClose();
-                        setSelectedChange(null);
-                    }
-                );
+                // Confirmado: encontrar el cambio seleccionado y pasar los datos
+                const selectedItem = facialChanges.find(change => change.id === selectedChange);
+                const facialData = {
+                    changeId: selectedChange,
+                    changeLabel: selectedItem ? t(selectedItem.label) : selectedChange,
+                };
+                onSuccess(facialData);
+                onClose();
+                setSelectedChange(null);
             },
             () => {
                 // Cancelado

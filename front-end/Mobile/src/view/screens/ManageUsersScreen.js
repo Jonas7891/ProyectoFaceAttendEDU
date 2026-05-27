@@ -26,6 +26,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
         allStudents,
         students,
         teachers,
+        updateKey,
         searchStudents,
         searchTeachers,
         addStudentById,

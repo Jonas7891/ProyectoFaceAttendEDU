@@ -18,7 +18,8 @@
     "add": "Add",
     "name": "Name",
     "email": "Email",
-    "phone": "Phone"
+    "phone": "Phone",
+    "edit": "Edit"
   },
   "login": {
     "title": "Login",
@@ -62,7 +63,9 @@
     "appSettings": "Application Settings",
     "facialRecognitionFail": "Facial recognition failed?",
     "logout": "Logout",
-    "loggingOut": "Logging out..."
+    "loggingOut": "Logging out...",
+    "logoutConfirmTitle": "Logout",
+    "logoutConfirmMessage": "Are you sure you want to logout?"
   },
   "logout": {
     "title": "Logout",

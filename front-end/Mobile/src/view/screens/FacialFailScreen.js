@@ -11,19 +11,18 @@ import {
     Keyboard,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useLanguageRefresh } from '../../utils/useLanguageRefresh';
 import { useTheme } from '../components/common/ThemeContext';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import { QuestionnaireModal } from '../components/common/QuestionnaireModal';
 import { FacialUpdateModal } from '../components/common/FacialUpdateModal';
 import CustomLogo from '../components/common/logo';
+import CustomAlert from '../components/common/CustomAlert';
 import styles from './Style';
 import { useFacialFailViewModel } from '../../viewmodels/useFacialFailScreenViewModel';
 
 export default function FacialFail() {
     const { t } = useTranslation();
     const { colors } = useTheme();
-    const refreshKey = useLanguageRefresh();
 
     const {
         updateKey,
@@ -36,12 +35,14 @@ export default function FacialFail() {
         closeFacialUpdate,
         handleQuestionnaireSuccess,
         handleFacialUpdateSuccess,
+        alertConfig,
+        hideAlert,
     } = useFacialFailViewModel();
 
     return (
         <SafeAreaView
             style={[styles.safeAreaFacialFail, { backgroundColor: colors.background }]}
-            key={`${refreshKey}-${updateKey}`}
+            key={`${updateKey}`}
         >
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <KeyboardAvoidingView
@@ -146,6 +147,11 @@ export default function FacialFail() {
                 visible={showFacialUpdate}
                 onClose={closeFacialUpdate}
                 onSuccess={handleFacialUpdateSuccess}
+            />
+
+            <CustomAlert
+                {...alertConfig}
+                onDismiss={hideAlert}
             />
         </SafeAreaView>
     );

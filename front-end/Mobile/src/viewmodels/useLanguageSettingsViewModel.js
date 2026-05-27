@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { saveLanguageForRole } from '../view/components/common/languageByRole';
 import { useTheme } from '../view/components/common/ThemeContext';
-import { getCurrentUserRole, getCurrentUser } from "../services/UserService";
+import { useLanguageRefresh } from '../utils/useLanguageRefresh';
+import { getCurrentUserRole } from "../services/UserService";
 
 export function useLanguageSettingsViewModel() {
     const { t, i18n } = useTranslation();
@@ -13,16 +14,19 @@ export function useLanguageSettingsViewModel() {
     const [selectedLanguage, setSelectedLanguage] = useState(i18n.language);
     const [selectedTheme, setSelectedTheme] = useState(theme);
     const [isLoading, setIsLoading] = useState(false);
-    const [componentKey, setComponentKey] = useState(0);
 
-    // ---- NUEVO: estado de alerta centralizado ----
+    const updateKey = useLanguageRefresh();
+
+    // ---- Estado de alerta centralizado ----
     const [alertData, setAlertData] = useState({
         message: null,
-        type: 'warning',   // 'warning', 'success', 'error'
+        type: 'warning',
         timestamp: 0,
     });
 
-    const clearAlert = () => setAlertData({ message: null, type: 'warning', timestamp: 0 });
+    const clearAlert = useCallback(() => {
+        setAlertData({ message: null, type: 'warning', timestamp: 0 });
+    }, []);
 
     // Listas de idiomas y temas
     const languages = useMemo(() => [
@@ -37,16 +41,12 @@ export function useLanguageSettingsViewModel() {
         { code: 'dark', label: t('settings.darkTheme', { defaultValue: 'Tema Oscuro' }), icon: '🌙' },
     ], [t]);
 
-    // Sincronizar cambios de idioma desde i18n
+    // Sincronizar idioma cuando cambia externamente
     useEffect(() => {
-        const handleLanguageChange = (newLang) => {
-            setSelectedLanguage(newLang);
-            setComponentKey(prev => prev + 1);
-        };
-        i18n.on('languageChanged', handleLanguageChange);
-        setSelectedLanguage(i18n.language);
-        return () => i18n.off('languageChanged', handleLanguageChange);
-    }, [i18n]);
+        if (i18n.language !== selectedLanguage) {
+            setSelectedLanguage(i18n.language);
+        }
+    }, [i18n.language]);
 
     // Sincronizar tema desde contexto global
     useEffect(() => {
@@ -83,7 +83,6 @@ export function useLanguageSettingsViewModel() {
                     type: 'error',
                     timestamp: Date.now(),
                 });
-                setIsLoading(false);
                 return;
             }
 
@@ -94,7 +93,6 @@ export function useLanguageSettingsViewModel() {
             await saveLanguageForRole(role, selectedLanguage);
             await setThemeForRole(role, selectedTheme);
 
-            // Pequeña pausa para dar feedback visual
             await new Promise(resolve => setTimeout(resolve, 100));
 
             setAlertData({
@@ -112,7 +110,7 @@ export function useLanguageSettingsViewModel() {
         } finally {
             setIsLoading(false);
         }
-    }, [selectedLanguage, selectedTheme, i18n, t, saveLanguageForRole, setThemeForRole]);
+    }, [selectedLanguage, selectedTheme, i18n, t, setThemeForRole]);
 
     const handleBack = useCallback(() => navigation.goBack(), [navigation]);
 
@@ -122,12 +120,11 @@ export function useLanguageSettingsViewModel() {
         selectedTheme,
         setSelectedTheme,
         isLoading,
-        componentKey,
+        updateKey,
         languages,
         themes,
         handleSave,
         handleBack,
-        // Manejo de alertas
         alertData,
         clearAlert,
     };
