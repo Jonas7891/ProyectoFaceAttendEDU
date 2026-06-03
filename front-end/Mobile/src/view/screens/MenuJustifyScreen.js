@@ -29,6 +29,7 @@ export default function MenuJustifyScreen() {
     handleConsultJustify,
     handleAddOrEditJustify,
     handleValidJustifications,
+    handlePendingJustificationScreen
   } = useMenuJustifyViewModel();
 
   // Componentes presentacionales reutilizados dentro de la pantalla
@@ -55,13 +56,6 @@ export default function MenuJustifyScreen() {
               <Text style={[styles.sectionTitleMenu, { color: colors.text, flex: 1 }]}>
                 {label}
               </Text>
-              {showBadge && pendingCount > 0 && (
-                  <View style={[styles.badgeContainer, { backgroundColor: colors.primary, marginLeft: 10 }]}>
-                    <Text style={[styles.badgeText, { color: '#fff' }]}>
-                      {pendingCount}
-                    </Text>
-                  </View>
-              )}
             </View>
             <Image
                 source={require('../../assets/images/flecha-volver.png')}
@@ -108,8 +102,7 @@ export default function MenuJustifyScreen() {
                     />
                     <MenuItem
                         label={t('admin.pendingJustifications')}
-                        // onPress={} – puedes añadir un manejador si es necesario
-                        showBadge
+                        onPress={handlePendingJustificationScreen}
                     />
                     <MenuItem
                         label={t('admin.addNewJustification')}
