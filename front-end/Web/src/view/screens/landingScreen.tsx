@@ -1,17 +1,18 @@
 // ============================================================
-//  FaceAttend EDU — Landing Screen
-//  Colores desde useTheme() — sin imports de Colors.
+//  FaceAttend EDU — Landing Screen (View Layer)
+//  La pantalla de landing ya estaba bien separada con hooks.
+//  Se mantiene limpia, importando desde las rutas correctas.
 // ============================================================
 
 import React from "react";
 import { useNavigation } from "@react-navigation/native";
-import { View, ScrollView, Image, Text, StyleSheet } from "react-native";
+import { View, ScrollView, Image, Text } from "react-native";
 import { SafeAreaView, SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 
-import Navbar    from "../components/own_components/layout/navBar";
-import HeroLeft  from "../components/own_components/hero/heroLeft";
-import HeroRight from "../components/own_components/hero/heroRight";
+import Navbar    from "../components/layout/navBar";
+import HeroLeft  from "../components/hero/heroLeft";
+import HeroRight from "../components/hero/heroRight";
 
 import { useHeroEntrance } from "../components/hooks/useHeroEntrance";
 import { useResponsive }   from "../components/hooks/useResponsive";
@@ -43,14 +44,12 @@ const FEATURES = [
     },
 ];
 
-// ── HeroContent ─────────────────────────────────────────────
+// ── HeroContent ──────────────────────────────────────────────
 
-function HeroContent({
-                         fadeLeft, slideLeft, fadeRight, slideRight,
-                     }: ReturnType<typeof useHeroEntrance>) {
-    const navigation  = useNavigation<any>();
+function HeroContent(props: ReturnType<typeof useHeroEntrance>) {
+    const navigation      = useNavigation<any>();
     const { sp, isSmall } = useResponsive();
-    const badgePos    = isSmall ? BadgePositionsMobile : BadgePositions;
+    const badgePos        = isSmall ? BadgePositionsMobile : BadgePositions;
 
     const BADGES = [
         { label: "Reconociendo",  icon: "✅", delay: 0,   style: badgePos.topLeft  },
@@ -60,15 +59,14 @@ function HeroContent({
 
     return (
         <View style={{
-            flexDirection:  isSmall ? "column" : "row",
-            alignItems:     "center",
-            justifyContent: "center",
+            flexDirection: isSmall ? "column" : "row",
+            alignItems: "center", justifyContent: "center",
             paddingHorizontal: sp(isSmall ? 24 : 64),
             gap: sp(isSmall ? 80 : 40),
             width: "100%",
         }}>
             <HeroLeft
-                fadeLeft={fadeLeft}   slideLeft={slideLeft}
+                fadeLeft={props.fadeLeft}   slideLeft={props.slideLeft}
                 title={"Asistencia\n"}
                 accent={"inteligente\n"}
                 end="para tu institución"
@@ -78,7 +76,7 @@ function HeroContent({
                 onPrimary={()  => navigation.navigate("FaceAttendEDU-Register")}
                 onSecondary={() => navigation.navigate("FaceAttendEDU-Login")}
             />
-            <HeroRight fadeRight={fadeRight} slideRight={slideRight} badges={BADGES} />
+            <HeroRight fadeRight={props.fadeRight} slideRight={props.slideRight} badges={BADGES} />
         </View>
     );
 }
@@ -93,10 +91,10 @@ function FeaturesSection() {
 
     return (
         <View style={{
-            backgroundColor:  c.brand.primary,
-            paddingVertical:  sp(48),
+            backgroundColor: c.brand.primary,
+            paddingVertical: sp(48),
             paddingHorizontal: sp(isSmall ? 24 : 64),
-            width:            "100%",
+            width: "100%",
         }}>
             <View style={{ alignItems: "center", marginBottom: sp(36) }}>
                 <View style={{
@@ -114,28 +112,19 @@ function FeaturesSection() {
             </View>
 
             <View style={{
-                flexDirection:  isSmall ? "column" : "row",
-                gap:            sp(16),
-                maxWidth:       1100,
-                alignSelf:      "center",
-                width:          "100%",
+                flexDirection: isSmall ? "column" : "row",
+                gap: sp(16), maxWidth: 1100, alignSelf: "center", width: "100%",
             }}>
                 {FEATURES.map((f) => (
                     <View key={f.title} style={{
-                        flex:            1,
-                        backgroundColor: "rgba(255,255,255,0.10)",
-                        borderRadius:    sp(14),
-                        padding:         sp(24),
-                        borderWidth:     1,
-                        borderColor:     "rgba(255,255,255,0.18)",
-                        gap:             sp(12),
+                        flex: 1, backgroundColor: "rgba(255,255,255,0.10)",
+                        borderRadius: sp(14), padding: sp(24),
+                        borderWidth: 1, borderColor: "rgba(255,255,255,0.18)", gap: sp(12),
                     }}>
                         <View style={{
-                            width: sp(44), height: sp(44),
-                            borderRadius:    sp(12),
+                            width: sp(44), height: sp(44), borderRadius: sp(12),
                             backgroundColor: "rgba(255,255,255,0.20)",
-                            alignItems:      "center",
-                            justifyContent:  "center",
+                            alignItems: "center", justifyContent: "center",
                         }}>
                             <Feather name={f.icon} size={sp(20)} color={c.text.onBrand} />
                         </View>
@@ -148,20 +137,6 @@ function FeaturesSection() {
                     </View>
                 ))}
             </View>
-
-            {/* Círculos decorativos */}
-            <View style={{
-                position: "absolute", width: sp(280), height: sp(280),
-                borderRadius: sp(140), borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.08)",
-                top: -sp(80), right: -sp(60), pointerEvents: "none",
-            }} />
-            <View style={{
-                position: "absolute", width: sp(180), height: sp(180),
-                borderRadius: sp(90), borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.06)",
-                bottom: -sp(60), left: -sp(40), pointerEvents: "none",
-            }} />
         </View>
     );
 }
@@ -209,11 +184,10 @@ function Footer() {
 
     return (
         <View style={{
-            paddingVertical:  insets.bottom + 10,
-            alignItems:       "center",
-            borderTopWidth:   1,
-            borderTopColor:   c.border.primary,
-            backgroundColor:  c.background.surface,
+            paddingVertical: insets.bottom + 10,
+            alignItems: "center",
+            borderTopWidth: 1, borderTopColor: c.border.primary,
+            backgroundColor: c.background.surface,
         }}>
             <Text style={[T.caption, { color: c.text.secondary }]}>
                 © FaceAttend EDU {new Date().getFullYear()} — Derechos reservados
@@ -222,9 +196,9 @@ function Footer() {
     );
 }
 
-// ── MAIN ─────────────────────────────────────────────────────
+// ── LandingScreen ────────────────────────────────────────────
 
-export default function LandingPage() {
+export default function LandingScreen() {
     const entrance    = useHeroEntrance();
     const { sp, isSmall } = useResponsive();
     const { theme }   = useTheme();
@@ -242,11 +216,10 @@ export default function LandingPage() {
                     showsVerticalScrollIndicator={false}
                 >
                     <View style={{
-                        minHeight:      isSmall ? undefined : sp(560),
-                        alignItems:     "center",
-                        justifyContent: "center",
+                        minHeight: isSmall ? undefined : sp(560),
+                        alignItems: "center", justifyContent: "center",
                         paddingVertical: sp(isSmall ? 40 : 0),
-                        paddingBottom:  sp(isSmall ? 24 : 0),
+                        paddingBottom: sp(isSmall ? 24 : 0),
                     }}>
                         <HeroContent {...entrance} />
                     </View>

@@ -1,22 +1,28 @@
 // ============================================================
-//  FaceAttend EDU — Signup Screen
+//  FaceAttend EDU — Signup Screen (View Layer)
 // ============================================================
+
 import React from "react";
 import { useNavigation } from "@react-navigation/native";
-import SignupPage from "../components/own_components/auth/signupView";
+import SignupView from "../components/auth/SignupView";
+import type { SignupForm } from "../../viewmodels/useAuthViewModel";
 
 export default function SignupScreen() {
     const navigation = useNavigation<any>();
 
+    function onRegisterSuccess(data: SignupForm) {
+        console.log("Registro exitoso:", data.email);
+        navigation.replace("FaceAttendEDU-Dashboard");
+    }
+
+    function onGoToLogin() {
+        navigation.navigate("FaceAttendEDU-Login");
+    }
+
     return (
-        <SignupPage
-            onRegister={(data) => {
-                console.log("Register:", data);
-                navigation.replace("FaceAttendEDU-Dashboard");
-            }}
-            onLogin={() => {
-                navigation.navigate("FaceAttendEDU-Login");
-            }}
+        <SignupView
+            onRegisterSuccess={onRegisterSuccess}
+            onGoToLogin={onGoToLogin}
         />
     );
 }
