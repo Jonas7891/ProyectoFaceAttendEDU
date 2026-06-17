@@ -9,6 +9,7 @@ import { Card, PageHeader, UIButton, ToggleRow, Divider } from "../ui/UI";
 import { useTheme }      from "../hooks/useTheme";
 import { generateTheme } from "../theme/generateTheme";
 import { useResponsive } from "../hooks/useResponsive";
+import { useTranslation } from "../../../i18n/hooks/useTranslation";
 import {
     VISION_PRESETS, VISION_MODES, VISION_DESCRIPTIONS,
     AccessibilityPreset, VisionMode, DEFAULT_VISION_MODE,
@@ -328,6 +329,48 @@ function ModeSelector() {
                                 </View>
                             )}
                         </View>
+                    </TouchableOpacity>
+                );
+            })}
+        </View>
+    );
+}
+
+// ── LanguageSelector ─────────────────────────────────────────
+//  Reutiliza el mismo patrón visual de chips que las tabs de
+//  visión (AccentColorSelector) y el estado activo de ModeSelector.
+
+function LanguageSelector() {
+    const { theme } = useTheme();
+    const c = theme.colors;
+    const { language, setLanguage, supportedLanguages, isLoading } = useTranslation();
+
+    return (
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            {supportedLanguages.map(lang => {
+                const active = language === lang.code;
+                return (
+                    <TouchableOpacity
+                        key={lang.code}
+                        onPress={() => setLanguage(lang.code)}
+                        disabled={isLoading}
+                        style={{
+                            flexDirection: "row", alignItems: "center", gap: 6,
+                            paddingVertical: 7, paddingHorizontal: 12, borderRadius: 8,
+                            borderWidth: active ? 2 : 1.5,
+                            borderColor: active ? c.brand.primary : c.border.primary,
+                            backgroundColor: active ? c.brand.primaryLight : c.background.surface,
+                            opacity: isLoading ? 0.5 : 1,
+                        }}
+                    >
+                        <Text style={{ fontSize: 14 }}>{lang.flag}</Text>
+                        <Text style={{
+                            fontSize: 12, fontWeight: active ? "600" : "400",
+                            color: active ? c.brand.primary : c.text.secondary,
+                        }}>
+                            {lang.labelES}
+                        </Text>
+                        {active && <Feather name="check" size={11} color={c.brand.primary} />}
                     </TouchableOpacity>
                 );
             })}
@@ -809,6 +852,7 @@ function ConfidenceGuide({ value }: { value: number }) {
 export default function SettingsView() {
     const { isSmall }                        = useResponsive();
     const { theme, mode, accentColor, setAccentColor } = useTheme();
+    const { currentLanguage }                = useTranslation();
     const c                                  = theme.colors;
 
     const [section, setSection] = useState("general");
@@ -1051,6 +1095,17 @@ export default function SettingsView() {
 
                             <Divider />
 
+                            {/* Idioma de la aplicación */}
+                            <View>
+                                <Text style={labelStyle}>Idioma de la aplicación</Text>
+                                <Text style={[descStyle, { marginTop: 0, marginBottom: 10 }]}>
+                                    Traduce toda la interfaz automáticamente. El español es el idioma original de FaceAttend EDU.
+                                </Text>
+                                <LanguageSelector />
+                            </View>
+
+                            <Divider />
+
                             {/* Resumen rápido */}
                             <Text style={{ fontSize: 12, fontWeight: "600", color: c.text.secondary, letterSpacing: 0.5, textTransform: "uppercase" }}>
                                 Resumen actual
@@ -1061,6 +1116,8 @@ export default function SettingsView() {
                                 <StatsRow label="Semestre activo" value={semester || "Sin definir"} icon="calendar" color="#8B5CF6" />
                                 <Divider />
                                 <StatsRow label="Mínimo de asistencia" value={`${minAttendance}%`} icon="bar-chart-2" color="#10B981" />
+                                <Divider />
+                                <StatsRow label="Idioma" value={currentLanguage?.labelES ?? "Español"} icon="globe" color="#3B82F6" />
                             </View>
                         </View>
                     )}
