@@ -6,7 +6,6 @@ import com.faceattend_edu.domain.dto.request.JustificationRequest;
 import com.faceattend_edu.domain.dto.response.JustificationResponse;
 import com.faceattend_edu.domain.exception.NotFoundException;
 import com.faceattend_edu.domain.model.Attendance;
-import com.faceattend_edu.domain.model.Classroom;
 import com.faceattend_edu.domain.model.Justification;
 import com.faceattend_edu.domain.model.User;
 import com.faceattend_edu.domain.port.AttendanceRepositoryPort;

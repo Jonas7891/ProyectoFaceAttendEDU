@@ -2,17 +2,12 @@ package com.faceattend_edu.application.mapper;
 
 import com.faceattend_edu.domain.dto.request.UserRequest;
 import com.faceattend_edu.domain.dto.response.UserResponse;
-import com.faceattend_edu.domain.dto.response.UserRoleResponse;
 import com.faceattend_edu.domain.model.Person;
 import com.faceattend_edu.domain.model.User;
-import com.faceattend_edu.infrastructure.persistence.adapter.RoleRepositoryAdapter;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 @AllArgsConstructor

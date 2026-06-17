@@ -1,8 +1,5 @@
 package com.faceattend_edu.domain.dto.request;
 
-import com.faceattend_edu.domain.model.IotDevice;
-import com.faceattend_edu.domain.model.Person;
-import com.faceattend_edu.domain.model.Schedule;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;

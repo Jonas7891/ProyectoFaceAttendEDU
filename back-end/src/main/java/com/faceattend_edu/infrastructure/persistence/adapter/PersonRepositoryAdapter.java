@@ -3,7 +3,6 @@ package com.faceattend_edu.infrastructure.persistence.adapter;
 import com.faceattend_edu.domain.model.Person;
 import com.faceattend_edu.domain.port.PersonRepositoryPort;
 import com.faceattend_edu.infrastructure.persistence.entity.PersonEntity;
-import com.faceattend_edu.infrastructure.persistence.entity.SchoolEntity;
 import com.faceattend_edu.infrastructure.persistence.mapper.PersonRepositoryMapper;
 import com.faceattend_edu.infrastructure.persistence.repository.PersonJpaRepository;
 import lombok.AllArgsConstructor;

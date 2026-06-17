@@ -7,7 +7,6 @@ import com.faceattend_edu.domain.dto.response.IotDeviceResponse;
 import com.faceattend_edu.domain.exception.NotFoundException;
 import com.faceattend_edu.domain.model.Classroom;
 import com.faceattend_edu.domain.model.IotDevice;
-import com.faceattend_edu.domain.model.Person;
 import com.faceattend_edu.domain.port.ClassroomRepositoryPort;
 import com.faceattend_edu.domain.port.IotDeviceRepositoryPort;
 import lombok.AllArgsConstructor;

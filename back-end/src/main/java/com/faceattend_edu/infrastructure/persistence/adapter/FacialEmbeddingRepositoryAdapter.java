@@ -3,7 +3,6 @@ package com.faceattend_edu.infrastructure.persistence.adapter;
 import com.faceattend_edu.domain.model.FacialEmbedding;
 import com.faceattend_edu.domain.port.FacialEmbeddingRepositoryPort;
 import com.faceattend_edu.infrastructure.persistence.entity.FacialEmbeddingEntity;
-import com.faceattend_edu.infrastructure.persistence.entity.PersonEntity;
 import com.faceattend_edu.infrastructure.persistence.mapper.FacialEmbeddingRepositoryMapper;
 import com.faceattend_edu.infrastructure.persistence.repository.FacialEmbeddingJpaRepository;
 import lombok.AllArgsConstructor;

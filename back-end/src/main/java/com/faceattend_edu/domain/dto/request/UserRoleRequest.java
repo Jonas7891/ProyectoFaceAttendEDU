@@ -1,7 +1,5 @@
 package com.faceattend_edu.domain.dto.request;
 
-import com.faceattend_edu.domain.model.Role;
-import com.faceattend_edu.domain.model.User;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.Instant;

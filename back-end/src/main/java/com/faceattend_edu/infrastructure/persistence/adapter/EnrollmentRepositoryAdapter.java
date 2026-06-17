@@ -2,10 +2,7 @@ package com.faceattend_edu.infrastructure.persistence.adapter;
 
 import com.faceattend_edu.domain.model.Enrollment;
 import com.faceattend_edu.domain.port.EnrollmentRepositoryPort;
-import com.faceattend_edu.infrastructure.persistence.entity.CourseEntity;
 import com.faceattend_edu.infrastructure.persistence.entity.EnrollmentEntity;
-import com.faceattend_edu.infrastructure.persistence.entity.PeriodEntity;
-import com.faceattend_edu.infrastructure.persistence.entity.PersonEntity;
 import com.faceattend_edu.infrastructure.persistence.mapper.EnrollmentRepositoryMapper;
 import com.faceattend_edu.infrastructure.persistence.repository.EnrollmentJpaRepository;
 import lombok.AllArgsConstructor;

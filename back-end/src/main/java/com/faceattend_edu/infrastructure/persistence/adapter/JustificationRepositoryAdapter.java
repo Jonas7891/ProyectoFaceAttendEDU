@@ -2,9 +2,7 @@ package com.faceattend_edu.infrastructure.persistence.adapter;
 
 import com.faceattend_edu.domain.model.Justification;
 import com.faceattend_edu.domain.port.JustificationRepositoryPort;
-import com.faceattend_edu.infrastructure.persistence.entity.AttendanceEntity;
 import com.faceattend_edu.infrastructure.persistence.entity.JustificationEntity;
-import com.faceattend_edu.infrastructure.persistence.entity.UserEntity;
 import com.faceattend_edu.infrastructure.persistence.mapper.JustificationRepositoryMapper;
 import com.faceattend_edu.infrastructure.persistence.repository.JustificationJpaRepository;
 import lombok.AllArgsConstructor;

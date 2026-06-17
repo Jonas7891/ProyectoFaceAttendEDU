@@ -1,7 +1,5 @@
 package com.faceattend_edu.domain.dto.request;
 
-import com.faceattend_edu.domain.model.Attendance;
-import com.faceattend_edu.domain.model.User;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

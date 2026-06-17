@@ -3,7 +3,6 @@ package com.faceattend_edu.infrastructure.persistence.adapter;
 import com.faceattend_edu.domain.model.Log;
 import com.faceattend_edu.domain.port.LogRepositoryPort;
 import com.faceattend_edu.infrastructure.persistence.entity.LogEntity;
-import com.faceattend_edu.infrastructure.persistence.entity.UserEntity;
 import com.faceattend_edu.infrastructure.persistence.mapper.LogRepositoryMapper;
 import com.faceattend_edu.infrastructure.persistence.repository.LogJpaRepository;
 import lombok.AllArgsConstructor;
