@@ -1,6 +1,5 @@
 package com.faceattend_edu.presentation.controller;
 
-import com.faceattend_edu.application.impl.AuthServiceImpl;
 import com.faceattend_edu.application.service.AuthService;
 import com.faceattend_edu.domain.dto.request.LoginRequest;
 import com.faceattend_edu.domain.dto.response.AuthResponse;

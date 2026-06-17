@@ -1,7 +1,5 @@
 package com.faceattend_edu.domain.dto.response;
 
-import com.faceattend_edu.domain.model.Action;
-
 import java.util.List;
 
 public record ViewResponse(
@@ -10,6 +8,6 @@ public record ViewResponse(
         String route,
         String title,
         Boolean isPublic,
-        List<Action> actions
+        List<ActionResponse> actions
 ) {
 }

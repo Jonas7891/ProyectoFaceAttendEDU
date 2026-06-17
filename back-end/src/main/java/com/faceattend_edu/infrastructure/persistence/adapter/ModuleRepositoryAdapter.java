@@ -39,6 +39,14 @@ public class ModuleRepositoryAdapter implements ModuleRepositoryPort {
     }
 
     @Override
+    public List<Module> findAllById(List<Integer> ids) {
+        return jpaRepository.findAllById(ids)
+                .stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
     public void deleteById(Integer id) {
         jpaRepository.deleteById(id);
     }

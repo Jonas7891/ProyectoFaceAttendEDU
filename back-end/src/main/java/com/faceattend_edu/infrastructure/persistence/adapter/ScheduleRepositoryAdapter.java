@@ -2,7 +2,7 @@ package com.faceattend_edu.infrastructure.persistence.adapter;
 
 import com.faceattend_edu.domain.model.Schedule;
 import com.faceattend_edu.domain.port.ScheduleRepositoryPort;
-import com.faceattend_edu.infrastructure.persistence.entity.*;
+import com.faceattend_edu.infrastructure.persistence.entity.ScheduleEntity;
 import com.faceattend_edu.infrastructure.persistence.mapper.ScheduleRepositoryMapper;
 import com.faceattend_edu.infrastructure.persistence.repository.ScheduleJpaRepository;
 import lombok.AllArgsConstructor;

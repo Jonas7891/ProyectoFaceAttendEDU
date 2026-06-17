@@ -12,6 +12,8 @@ public interface ViewRepositoryPort {
 
     List<View> findAll();
 
+    List<View> findAllById(List<Integer> ids);
+
     void deleteById(Integer id);
 
     boolean existsByName(String name);

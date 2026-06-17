@@ -3,7 +3,6 @@ package com.faceattend_edu.infrastructure.persistence.mapper;
 import com.faceattend_edu.domain.model.Action;
 import com.faceattend_edu.infrastructure.persistence.entity.ActionEntity;
 import org.mapstruct.Mapper;
-import org.springframework.stereotype.Component;
 
 @Mapper(componentModel = "spring")
 public interface ActionRepositoryMapper {

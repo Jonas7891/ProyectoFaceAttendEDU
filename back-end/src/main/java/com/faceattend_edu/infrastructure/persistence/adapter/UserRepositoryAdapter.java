@@ -1,15 +1,12 @@
 package com.faceattend_edu.infrastructure.persistence.adapter;
 
-import com.faceattend_edu.domain.model.Person;
 import com.faceattend_edu.domain.model.User;
 import com.faceattend_edu.domain.port.UserRepositoryPort;
-import com.faceattend_edu.infrastructure.persistence.entity.PersonEntity;
 import com.faceattend_edu.infrastructure.persistence.entity.UserEntity;
 import com.faceattend_edu.infrastructure.persistence.mapper.UserRepositoryMapper;
 import com.faceattend_edu.infrastructure.persistence.repository.UserJpaRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;

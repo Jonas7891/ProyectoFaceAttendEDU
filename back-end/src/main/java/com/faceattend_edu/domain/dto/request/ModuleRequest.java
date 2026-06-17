@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.util.List;
+
 public record ModuleRequest(
         @NotBlank(message = "El nombre es requerido")
         @Size(min = 1, max = 100, message = "El nombre debe tener entre 1 y 100 caracteres")
@@ -18,6 +20,9 @@ public record ModuleRequest(
 
         @NotNull(message = "El orden es requerido")
         @Min(value = 0, message = "El orden debe ser un número positivo")
-        Integer order
+        Integer order,
+
+        @NotNull(message = "Los IDs de vistas son requeridos")
+        List<Integer> viewIds
 ) {
 }

@@ -2,7 +2,6 @@ package com.faceattend_edu.infrastructure.persistence.adapter;
 
 import com.faceattend_edu.domain.model.IotDevice;
 import com.faceattend_edu.domain.port.IotDeviceRepositoryPort;
-import com.faceattend_edu.infrastructure.persistence.entity.ClassroomEntity;
 import com.faceattend_edu.infrastructure.persistence.entity.IotDeviceEntity;
 import com.faceattend_edu.infrastructure.persistence.mapper.IotDeviceRepositoryMapper;
 import com.faceattend_edu.infrastructure.persistence.repository.IotDeviceJpaRepository;

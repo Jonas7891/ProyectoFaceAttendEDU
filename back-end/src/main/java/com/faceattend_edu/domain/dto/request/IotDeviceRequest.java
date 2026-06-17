@@ -1,6 +1,5 @@
 package com.faceattend_edu.domain.dto.request;
 
-import com.faceattend_edu.domain.model.Classroom;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -10,7 +9,7 @@ import java.time.Instant;
 
 public record IotDeviceRequest(
         @NotNull(message = "El aula es requerida")
-        Classroom classroom,
+        Integer classroomId,
 
         @NotBlank(message = "El nombre del dispositivo es requerido")
         @Size(min = 1, max = 100, message = "El nombre debe tener entre 1 y 100 caracteres")

@@ -5,7 +5,9 @@ import com.faceattend_edu.application.service.ViewService;
 import com.faceattend_edu.domain.dto.request.ViewRequest;
 import com.faceattend_edu.domain.dto.response.ViewResponse;
 import com.faceattend_edu.domain.exception.NotFoundException;
+import com.faceattend_edu.domain.model.Action;
 import com.faceattend_edu.domain.model.View;
+import com.faceattend_edu.domain.port.ActionRepositoryPort;
 import com.faceattend_edu.domain.port.ViewRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,7 +22,10 @@ public class ViewServiceImpl implements ViewService {
     private final ViewRepositoryPort repository;
     private final ViewServiceMapper mapper;
 
+    private final ActionRepositoryPort actionRepositoryPort;
+
     @Override
+    @Transactional(readOnly = true)
     public ViewResponse findById(Integer id) {
         View view = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("View", id));
@@ -37,23 +42,30 @@ public class ViewServiceImpl implements ViewService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ViewResponse save(ViewRequest request) {
-        View view = mapper.toDomain(request);
+        List<Action> actions = actionRepositoryPort.findAllById(request.actionIds());
+
+        View view = mapper.toDomain(request, actions);
         View saved = repository.save(view);
         return mapper.toResponse(saved);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ViewResponse update(Integer id, ViewRequest request) {
         repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("View", id));
-        View updated = mapper.toDomain(request);
+        List<Action> actions = actionRepositoryPort.findAllById(request.actionIds());
+
+        View updated = mapper.toDomain(request, actions);
         updated.setId(id);
         View saved = repository.save(updated);
         return mapper.toResponse(saved);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void deleteById(Integer id) {
         if (repository.findById(id).isEmpty()) {
             throw new NotFoundException("View", id);

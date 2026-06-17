@@ -6,9 +6,12 @@ import com.faceattend_edu.domain.dto.request.ClassroomRequest;
 import com.faceattend_edu.domain.dto.response.ClassroomResponse;
 import com.faceattend_edu.domain.exception.NotFoundException;
 import com.faceattend_edu.domain.model.Classroom;
+import com.faceattend_edu.domain.model.School;
 import com.faceattend_edu.domain.port.ClassroomRepositoryPort;
+import com.faceattend_edu.domain.port.SchoolRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -19,7 +22,10 @@ public class ClassroomServiceImpl implements ClassroomService {
     private final ClassroomRepositoryPort repository;
     private final ClassroomServiceMapper mapper;
 
+    private final SchoolRepositoryPort schoolRepositoryPort;
+
     @Override
+    @Transactional(readOnly = true)
     public ClassroomResponse findById(Integer id) {
         Classroom classroom = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Classroom", id));
@@ -27,6 +33,7 @@ public class ClassroomServiceImpl implements ClassroomService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ClassroomResponse> findAll() {
         return repository.findAll()
                 .stream()
@@ -35,23 +42,32 @@ public class ClassroomServiceImpl implements ClassroomService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ClassroomResponse save(ClassroomRequest request) {
-        Classroom classroom = mapper.toDomain(request);
+        School school = schoolRepositoryPort.findById(request.schoolId())
+                .orElseThrow(() -> new NotFoundException("School", request.schoolId()));
+
+        Classroom classroom = mapper.toDomain(request, school);
         Classroom saved = repository.save(classroom);
         return mapper.toResponse(saved);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ClassroomResponse update(Integer id, ClassroomRequest request) {
         Classroom existing = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Classroom", id));
-        Classroom updated = mapper.toDomain(request);
+        School school = schoolRepositoryPort.findById(request.schoolId())
+                .orElseThrow(() -> new NotFoundException("School", request.schoolId()));
+
+        Classroom updated = mapper.toDomain(request, school);
         updated.setId(id);
         Classroom saved = repository.save(updated);
         return mapper.toResponse(saved);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void deleteById(Integer id) {
         if (repository.findById(id).isEmpty()) {
             throw new NotFoundException("Classroom", id);

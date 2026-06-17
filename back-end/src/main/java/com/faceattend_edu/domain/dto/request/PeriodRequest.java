@@ -1,6 +1,5 @@
 package com.faceattend_edu.domain.dto.request;
 
-import com.faceattend_edu.domain.model.School;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -9,7 +8,7 @@ import java.time.LocalDate;
 
 public record PeriodRequest(
         @NotNull(message = "La escuela es requerida")
-        School school,
+        Integer schoolId,
 
         @NotBlank(message = "El nombre es requerido")
         @Size(min = 1, max = 100, message = "El nombre debe tener entre 1 y 100 caracteres")

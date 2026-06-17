@@ -3,7 +3,6 @@ package com.faceattend_edu.infrastructure.persistence.adapter;
 import com.faceattend_edu.domain.model.Period;
 import com.faceattend_edu.domain.port.PeriodRepositoryPort;
 import com.faceattend_edu.infrastructure.persistence.entity.PeriodEntity;
-import com.faceattend_edu.infrastructure.persistence.entity.SchoolEntity;
 import com.faceattend_edu.infrastructure.persistence.mapper.PeriodRepositoryMapper;
 import com.faceattend_edu.infrastructure.persistence.repository.PeriodJpaRepository;
 import lombok.AllArgsConstructor;

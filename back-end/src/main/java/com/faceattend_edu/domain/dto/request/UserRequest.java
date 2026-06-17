@@ -1,6 +1,5 @@
 package com.faceattend_edu.domain.dto.request;
 
-import com.faceattend_edu.domain.model.Person;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -10,7 +9,7 @@ import java.time.Instant;
 
 public record UserRequest(
         @NotNull(message = "La persona es requerida")
-        Person person,
+        Integer personId,
 
         @NotBlank(message = "El nombre de usuario es requerido")
         @Size(min = 3, max = 50, message = "El nombre de usuario debe tener entre 3 y 50 caracteres")

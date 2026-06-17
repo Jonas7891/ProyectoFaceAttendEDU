@@ -1,6 +1,5 @@
 package com.faceattend_edu.domain.dto.request;
 
-import com.faceattend_edu.domain.model.Person;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -11,7 +10,7 @@ import java.util.List;
 
 public record FacialEmbeddingRequest(
         @NotNull(message = "La persona es requerida")
-        Person person,
+        Integer personId,
 
         @NotEmpty(message = "El embedding no puede estar vacío")
         List<Float> embedding,

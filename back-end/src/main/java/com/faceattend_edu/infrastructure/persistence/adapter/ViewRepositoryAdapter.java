@@ -39,6 +39,14 @@ public class ViewRepositoryAdapter implements ViewRepositoryPort {
     }
 
     @Override
+    public List<View> findAllById(List<Integer> ids) {
+        return jpaRepository.findAllById(ids)
+                .stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
     public void deleteById(Integer id) {
         jpaRepository.deleteById(id);
     }

@@ -6,9 +6,12 @@ import com.faceattend_edu.domain.dto.request.PeriodRequest;
 import com.faceattend_edu.domain.dto.response.PeriodResponse;
 import com.faceattend_edu.domain.exception.NotFoundException;
 import com.faceattend_edu.domain.model.Period;
+import com.faceattend_edu.domain.model.School;
 import com.faceattend_edu.domain.port.PeriodRepositoryPort;
+import com.faceattend_edu.domain.port.SchoolRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -19,7 +22,10 @@ public class PeriodServiceImpl implements PeriodService {
     private final PeriodRepositoryPort repository;
     private final PeriodServiceMapper mapper;
 
+    private final SchoolRepositoryPort schoolRepositoryPort;
+
     @Override
+    @Transactional(readOnly = true)
     public PeriodResponse findById(Integer id) {
         Period period = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Period", id));
@@ -27,6 +33,7 @@ public class PeriodServiceImpl implements PeriodService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PeriodResponse> findAll() {
         return repository.findAll()
                 .stream()
@@ -35,23 +42,32 @@ public class PeriodServiceImpl implements PeriodService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PeriodResponse save(PeriodRequest request) {
-        Period period = mapper.toDomain(request);
+        School school = schoolRepositoryPort.findById(request.schoolId())
+                .orElseThrow(() -> new NotFoundException("School", request.schoolId()));
+
+        Period period = mapper.toDomain(request, school);
         Period saved = repository.save(period);
         return mapper.toResponse(saved);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PeriodResponse update(Integer id, PeriodRequest request) {
         repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Period", id));
-        Period updated = mapper.toDomain(request);
+        School school = schoolRepositoryPort.findById(request.schoolId())
+                .orElseThrow(() -> new NotFoundException("School", request.schoolId()));
+
+        Period updated = mapper.toDomain(request, school);
         updated.setId(id);
         Period saved = repository.save(updated);
         return mapper.toResponse(saved);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void deleteById(Integer id) {
         if (repository.findById(id).isEmpty()) {
             throw new NotFoundException("Period", id);

@@ -3,7 +3,6 @@ package com.faceattend_edu.presentation.controller;
 import com.faceattend_edu.application.service.ActionService;
 import com.faceattend_edu.domain.dto.request.ActionRequest;
 import com.faceattend_edu.domain.dto.response.ActionResponse;
-import com.faceattend_edu.domain.model.Action;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;

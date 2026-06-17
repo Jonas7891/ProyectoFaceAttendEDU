@@ -3,15 +3,21 @@ package com.faceattend_edu.application.mapper;
 import com.faceattend_edu.domain.dto.request.PersonRequest;
 import com.faceattend_edu.domain.dto.response.PersonResponse;
 import com.faceattend_edu.domain.model.Person;
+import com.faceattend_edu.domain.model.School;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@AllArgsConstructor
 public class PersonServiceMapper {
 
-    public Person toDomain(PersonRequest request) {
+    private final SchoolServiceMapper schoolServiceMapper;
+
+    public Person toDomain(PersonRequest request,
+                           School school) {
         return new Person(
                 null,
-                request.school(),
+                school,
                 request.name(),
                 request.lastName(),
                 request.email(),
@@ -27,7 +33,7 @@ public class PersonServiceMapper {
     public PersonResponse toResponse(Person person) {
         return new PersonResponse(
                 person.getId(),
-                person.getSchool(),
+                schoolServiceMapper.toResponse(person.getSchool()),
                 person.getName(),
                 person.getLastName(),
                 person.getEmail(),
