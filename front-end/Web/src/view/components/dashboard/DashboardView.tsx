@@ -10,6 +10,7 @@ import { Card, StatCard, Badge, PageHeader, UIButton, ProgressBar } from "../ui/
 import { useTheme }      from "../hooks/useTheme";
 import { useResponsive } from "../hooks/useResponsive";
 import { useDashboardViewModel } from "../../../viewmodels/useDashboardViewModel";
+import { useTranslation }        from "../../../i18n/hooks/useTranslation";
 import type { DailyAttendance, WeeklyAttendance } from "../../../models/types";
 
 // ── DailyBarChart ────────────────────────────────────────────
@@ -87,9 +88,10 @@ export function ActivityStatusIcon({ status }: { status: string }) {
 }
 
 export function ActivityBadge({ status }: { status: string }) {
-    if (status === "on_time") return <Badge variant="success">A tiempo</Badge>;
-    if (status === "late")    return <Badge variant="warning">Tardanza</Badge>;
-    return                           <Badge variant="danger">Ausente</Badge>;
+    if (status === "on_time") return <Badge variant="success">{t("A tiempo")}</Badge>;
+    const { t } = useTranslation();
+    if (status === "late")    return <Badge variant="warning">{t("Tardanza")}</Badge>;
+    return                           <Badge variant="danger">{t("Ausente")}</Badge>;
 }
 
 // ── DashboardView ────────────────────────────────────────────
@@ -100,6 +102,7 @@ export default function DashboardView() {
     const { theme }   = useTheme();
     const c           = theme.colors;
     const vm          = useDashboardViewModel();
+    const { t }       = useTranslation();
 
     return (
         <ScrollView
@@ -107,9 +110,9 @@ export default function DashboardView() {
             showsVerticalScrollIndicator={false}
         >
             <PageHeader
-                title="Dashboard"
+                title={t("Dashboard")}
                 subtitle={vm.todayLabel}
-                actions={<UIButton variant="primary" size="sm">Tomar asistencia</UIButton>}
+                actions={<UIButton variant="primary" size="sm">{t("Tomar asistencia")}</UIButton>}
             />
 
             {/* Stat cards */}
@@ -132,27 +135,27 @@ export default function DashboardView() {
             <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
                 <Card style={{ flex: 1 }}>
                     <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary, marginBottom: 4 }}>
-                        Tendencia semanal
+                        {t("Tendencia semanal")}
                     </Text>
                     <Text style={{ fontSize: 12, color: c.text.secondary, marginBottom: 16 }}>
-                        Últimas 5 semanas
+                        {t("Últimas 5 semanas")}
                     </Text>
                     <WeeklyTrend data={vm.attendanceByWeek} />
                 </Card>
 
                 <Card style={{ flex: 1 }}>
                     <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary, marginBottom: 4 }}>
-                        Asistencia por día
+                        {t("Asistencia por día")}
                     </Text>
                     <Text style={{ fontSize: 12, color: c.text.secondary, marginBottom: 16 }}>
-                        Esta semana · Presentes / Tardanzas / Ausentes
+                        {t("Esta semana · Presentes / Tardanzas / Ausentes")}
                     </Text>
                     <DailyBarChart data={vm.attendanceByDay} />
                     <View style={{ flexDirection: "row", gap: 12, marginTop: 12 }}>
                         {[
-                            [c.states.success, "Presentes"],
-                            [c.states.warning, "Tardanzas"],
-                            [c.states.danger,  "Ausentes" ],
+                            [c.states.success, t("Presentes")],
+                            [c.states.warning, t("Tardanzas")],
+                            [c.states.danger,  t("Ausentes") ],
                         ].map(([color, label]) => (
                             <View key={label} style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
                                 <View style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: color }} />
@@ -163,11 +166,11 @@ export default function DashboardView() {
                 </Card>
             </View>
 
-            {/* Asistencia por curso + Actividad reciente */}
+            {/* {t("Asistencia por curso")} + {t("Actividad reciente")} */}
             <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
                 <Card style={{ flex: 1 }}>
                     <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary, marginBottom: 16 }}>
-                        Asistencia por curso
+                        {t("Asistencia por curso")}
                     </Text>
                     <View style={{ gap: 14 }}>
                         {vm.courseAttendance.map(item => (
@@ -191,7 +194,7 @@ export default function DashboardView() {
 
                 <Card style={isSmall ? undefined : { width: 300 }}>
                     <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary, marginBottom: 16 }}>
-                        Actividad reciente
+                        {t("Actividad reciente")}
                     </Text>
                     <View style={{ gap: 12 }}>
                         {vm.recentActivity.map(item => (
@@ -217,7 +220,7 @@ export default function DashboardView() {
                     }}>
                         <TouchableOpacity>
                             <Text style={{ fontSize: 12, color: c.brand.primary, fontWeight: "500" }}>
-                                Ver toda la actividad →
+                                {t("Ver toda la actividad")} →
                             </Text>
                         </TouchableOpacity>
                     </View>

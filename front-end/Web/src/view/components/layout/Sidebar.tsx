@@ -1,24 +1,27 @@
 // ============================================================
 //  FaceAttend EDU — Sidebar
 //  Colores desde useTheme() — sin imports de Colors.
+//  FIX: labels de navegación traducidos con useTranslation().
 // ============================================================
 
 import React from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { useTheme } from "../hooks/useTheme";
-import { Avatar }   from "../ui/UI";
-import { mockUser } from "../../../models/data/mockData";
+import { useTheme }       from "../hooks/useTheme";
+import { Avatar }         from "../ui/UI";
+import { mockUser }       from "../../../models/data/mockData";
+import { useTranslation } from "../../../i18n/hooks/useTranslation";
 
-const NAV_ITEMS: { key: string; label: string; feather: any }[] = [
-    { key: "dashboard", label: "Dashboard",    feather: "layout"     },
-    { key: "students",  label: "Estudiantes",  feather: "users"      },
-    { key: "courses",   label: "Cursos",       feather: "book-open"  },
-    { key: "reports",   label: "Reportes",     feather: "bar-chart-2"},
+// Las keys son estables (para la navegación); los labels se traducen en render.
+const NAV_ITEMS: { key: string; labelES: string; feather: any }[] = [
+    { key: "dashboard", labelES: "Dashboard",    feather: "layout"      },
+    { key: "students",  labelES: "Estudiantes",  feather: "users"       },
+    { key: "courses",   labelES: "Cursos",       feather: "book-open"   },
+    { key: "reports",   labelES: "Reportes",     feather: "bar-chart-2" },
 ];
 
-const SYSTEM_ITEMS: { key: string; label: string; feather: any }[] = [
-    { key: "settings", label: "Configuración", feather: "settings" },
+const SYSTEM_ITEMS: { key: string; labelES: string; feather: any }[] = [
+    { key: "settings", labelES: "Configuración", feather: "settings" },
 ];
 
 type Props = {
@@ -29,6 +32,7 @@ type Props = {
 
 export default function Sidebar({ currentTab, onNavigate, onLogout }: Props) {
     const { theme } = useTheme();
+    const { t }     = useTranslation();
     const c         = theme.colors;
 
     function NavItem({ item, system = false }: { item: typeof NAV_ITEMS[0]; system?: boolean }) {
@@ -38,14 +42,14 @@ export default function Sidebar({ currentTab, onNavigate, onLogout }: Props) {
                 key={item.key}
                 onPress={() => onNavigate(item.key)}
                 style={{
-                    flexDirection:   "row",
-                    alignItems:      "center",
-                    gap:             10,
-                    padding:         9,
+                    flexDirection:    "row",
+                    alignItems:       "center",
+                    gap:              10,
+                    padding:          9,
                     paddingHorizontal: 10,
-                    borderRadius:    6,
-                    marginBottom:    2,
-                    backgroundColor: isActive ? c.brand.primaryLight : "transparent",
+                    borderRadius:     6,
+                    marginBottom:     2,
+                    backgroundColor:  isActive ? c.brand.primaryLight : "transparent",
                 }}
             >
                 <Feather
@@ -59,7 +63,7 @@ export default function Sidebar({ currentTab, onNavigate, onLogout }: Props) {
                     color:      isActive ? c.brand.primary : c.text.secondary,
                     fontWeight: isActive ? "600" : "400",
                 }}>
-                    {item.label}
+                    {t(item.labelES)}
                 </Text>
                 {isActive && !system && (
                     <Feather name="chevron-right" size={14} color={c.brand.primary} />
@@ -71,15 +75,15 @@ export default function Sidebar({ currentTab, onNavigate, onLogout }: Props) {
     function SectionLabel({ label }: { label: string }) {
         return (
             <Text style={{
-                fontSize:        10,
-                fontWeight:      "600",
-                color:           c.text.secondary,
+                fontSize:         10,
+                fontWeight:       "600",
+                color:            c.text.secondary,
                 paddingHorizontal: 10,
-                paddingBottom:   8,
-                textTransform:   "uppercase",
-                letterSpacing:   1.2,
+                paddingBottom:    8,
+                textTransform:    "uppercase",
+                letterSpacing:    1.2,
             }}>
-                {label}
+                {t(label)}
             </Text>
         );
     }
@@ -135,13 +139,13 @@ export default function Sidebar({ currentTab, onNavigate, onLogout }: Props) {
 
             {/* User footer */}
             <View style={{
-                padding:          12,
+                padding:           12,
                 paddingHorizontal: 16,
-                borderTopWidth:   1,
-                borderTopColor:   c.border.primary,
-                flexDirection:    "row",
-                alignItems:       "center",
-                gap:              10,
+                borderTopWidth:    1,
+                borderTopColor:    c.border.primary,
+                flexDirection:     "row",
+                alignItems:        "center",
+                gap:               10,
             }}>
                 <Avatar name={mockUser.name} size={34} />
                 <View style={{ flex: 1 }}>

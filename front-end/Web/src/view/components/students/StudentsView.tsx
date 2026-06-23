@@ -10,12 +10,14 @@ import { Card, Badge, Avatar, PageHeader, UIButton, ProgressBar, EmptyState } fr
 import { useTheme }      from "../hooks/useTheme";
 import { useResponsive } from "../hooks/useResponsive";
 import { useStudentsViewModel } from "../../../viewmodels/useStudentsViewModel";
+import { useTranslation }         from "../../../i18n/hooks/useTranslation";
 import type { Student } from "../../../models/types";
 
 // ── StudentDetailModal ───────────────────────────────────────
 
 function StudentDetailModal({ student, onClose }: { student: Student | null; onClose: () => void }) {
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const c = theme.colors;
     if (!student) return null;
 
@@ -51,7 +53,7 @@ function StudentDetailModal({ student, onClose }: { student: Student | null; onC
                                 </Text>
                                 <View style={{ marginTop: 6 }}>
                                     <Badge variant={student.status === "active" ? "success" : "default"}>
-                                        {student.status === "active" ? "Activo" : "Inactivo"}
+                                        {student.status === "active" ? t("Activo") : t("Inactivo")}
                                     </Badge>
                                 </View>
                             </View>
@@ -64,9 +66,9 @@ function StudentDetailModal({ student, onClose }: { student: Student | null; onC
                         <ScrollView style={{ padding: 20 }}>
                             <View style={{ gap: 12, marginBottom: 16 }}>
                                 {[
-                                    { label: "Correo",   value: student.email,  icon: "mail"        },
-                                    { label: "Programa", value: student.course, icon: "book-open"   },
-                                    { label: "Semestre", value: student.grade,  icon: "trending-up" },
+                                    { label: t("Correo"),   value: student.email,  icon: "mail"        },
+                                    { label: t("Programa"), value: student.course, icon: "book-open"   },
+                                    { label: t("Semestre"), value: student.grade,  icon: "trending-up" },
                                 ].map(({ label, value, icon }) => (
                                     <View key={label} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                                         <Feather name={icon as any} size={14} color={c.text.secondary} />
@@ -93,7 +95,7 @@ function StudentDetailModal({ student, onClose }: { student: Student | null; onC
                                 <ProgressBar value={student.attendance} color={attendanceColor} height={8} />
                                 <Text style={{ fontSize: 11, color: c.text.secondary, marginTop: 8 }}>
                                     {student.attendance >= 80
-                                        ? "Cumple el mínimo requerido (80%)"
+                                        ? t("Cumple el mínimo requerido (80%)")
                                         : "⚠ Por debajo del mínimo requerido (80%)"}
                                 </Text>
                             </View>
@@ -110,7 +112,7 @@ function StudentDetailModal({ student, onClose }: { student: Student | null; onC
                                             Reconocimiento facial
                                         </Text>
                                         <Text style={{ fontSize: 11, color: c.text.secondary }}>
-                                            {student.registered ? "Rostro registrado" : "Sin registro facial"}
+                                            {student.registered ? t("Rostro registrado") : t("Sin registro facial")}
                                         </Text>
                                     </View>
                                 </View>
@@ -140,6 +142,7 @@ function StudentDetailModal({ student, onClose }: { student: Student | null; onC
 
 function StudentRow({ student, onPress, isLast }: {
     student: Student; onPress: () => void; isLast: boolean;
+    const { t } = useTranslation();
 }) {
     const { isSmall } = useResponsive();
     const { theme }   = useTheme();
@@ -183,12 +186,12 @@ function StudentRow({ student, onPress, isLast }: {
                     </View>
                     <View style={{ flex: 1, paddingHorizontal: 14 }}>
                         <Badge variant={student.registered ? "success" : "warning"}>
-                            {student.registered ? "Registrado" : "Pendiente"}
+                            {student.registered ? t("Registrado") : t("Pendiente")}
                         </Badge>
                     </View>
                     <View style={{ flex: 1, paddingHorizontal: 14 }}>
                         <Badge variant={student.status === "active" ? "success" : "default"}>
-                            {student.status === "active" ? "Activo" : "Inactivo"}
+                            {student.status === "active" ? t("Activo") : t("Inactivo")}
                         </Badge>
                     </View>
                 </>
@@ -200,7 +203,7 @@ function StudentRow({ student, onPress, isLast }: {
                         {student.attendance}%
                     </Text>
                     <Badge variant={student.registered ? "success" : "warning"}>
-                        {student.registered ? "Facial OK" : "Pendiente"}
+                        {student.registered ? t("Facial OK") : t("Pendiente")}
                     </Badge>
                 </View>
             )}
@@ -215,6 +218,7 @@ export default function StudentsView() {
     const { theme }   = useTheme();
     const c           = theme.colors;
     const vm          = useStudentsViewModel();
+    const { t }       = useTranslation();
 
     return (
         <View style={{ flex: 1 }}>
@@ -223,11 +227,11 @@ export default function StudentsView() {
                 showsVerticalScrollIndicator={false}
             >
                 <PageHeader
-                    title="Estudiantes"
+                    title={t("Estudiantes")}
                     subtitle={`${vm.filtered.length} estudiante${vm.filtered.length !== 1 ? "s" : ""} encontrado${vm.filtered.length !== 1 ? "s" : ""}`}
                     actions={<>
-                        <UIButton variant="ghost" size="sm">Exportar</UIButton>
-                        <UIButton variant="primary" size="sm">+ Nuevo estudiante</UIButton>
+                        <UIButton variant="ghost" size="sm">{t("Exportar")}</UIButton>
+                        <UIButton variant="primary" size="sm">+ {t("Nuevo estudiante")}</UIButton>
                     </>}
                 />
 
@@ -239,7 +243,7 @@ export default function StudentsView() {
                                 <Feather name="search" size={14} color={c.text.secondary} />
                             </View>
                             <TextInput
-                                placeholder="Buscar por nombre o código..."
+                                placeholder={t("Buscar por nombre o código...")}
                                 value={vm.search}
                                 onChangeText={vm.setSearch}
                                 style={{
@@ -282,9 +286,9 @@ export default function StudentsView() {
                             flexDirection: "row", padding: "10px 14px" as any,
                             borderBottomWidth: 1, borderBottomColor: c.border.primary,
                         }}>
-                            {["Estudiante", "Correo", "Programa", "Asistencia", "Facial", "Estado"].map(col => (
+                            {[t("Estudiante"), t("Correo"), t("Programa"), t("Asistencia"), t("Facial"), t("Estado")].map(col => (
                                 <Text key={col} style={{
-                                    flex: col === "Estudiante" ? 2 : 1,
+                                    flex: col === t("Estudiante") ? 2 : 1, // flex driven by translated label position
                                     fontSize: 11, fontWeight: "600", color: c.text.secondary,
                                     textTransform: "uppercase", letterSpacing: 0.5,
                                     paddingHorizontal: 14,
@@ -298,8 +302,8 @@ export default function StudentsView() {
                     {vm.filtered.length === 0 ? (
                         <EmptyState
                             icon={<Feather name="users" size={40} color={c.text.secondary} />}
-                            title="Sin resultados"
-                            description="Ajusta los filtros o agrega nuevos estudiantes"
+                            title={t("Sin resultados")}
+                            description={t("Ajusta los filtros o agrega nuevos estudiantes")}
                         />
                     ) : vm.filtered.map((student, i) => (
                         <StudentRow

@@ -11,6 +11,7 @@ import { Avatar }        from "../ui/UI";
 import { useTheme }      from "../hooks/useTheme";
 import { useResponsive } from "../hooks/useResponsive";
 import { useReportsViewModel, PERIOD_OPTIONS } from "../../../viewmodels/useReportsViewModel";
+import { useTranslation }                              from "../../../i18n/hooks/useTranslation";
 import type { DailyAttendance, WeeklyAttendance } from "../../../models/types";
 
 // ── WeeklySparkline ──────────────────────────────────────────
@@ -42,6 +43,7 @@ function WeeklySparkline({ data }: { data: WeeklyAttendance[] }) {
 
 function DailyBars({ data }: { data: DailyAttendance[] }) {
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const c = theme.colors;
     return (
         <View style={{ gap: 10 }}>
@@ -66,9 +68,9 @@ function DailyBars({ data }: { data: DailyAttendance[] }) {
             ))}
             <View style={{ flexDirection: "row", gap: 14, marginTop: 4 }}>
                 {[
-                    [c.states.success, "Presentes"],
-                    [c.states.warning, "Tardanzas"],
-                    [c.states.danger,  "Ausentes" ],
+                    [c.states.success, t("Presentes")],
+                    [c.states.warning, t("Tardanzas")],
+                    [c.states.danger,  t("Ausentes") ],
                 ].map(([color, label]) => (
                     <View key={label} style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
                         <View style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: color }} />
@@ -87,6 +89,7 @@ export default function ReportsView() {
     const { theme }   = useTheme();
     const c           = theme.colors;
     const vm          = useReportsViewModel();
+    const { t }       = useTranslation();
 
     return (
         <ScrollView
@@ -94,12 +97,12 @@ export default function ReportsView() {
             showsVerticalScrollIndicator={false}
         >
             <PageHeader
-                title="Reportes y estadísticas"
-                subtitle="Análisis de asistencia por período académico"
+                title={t("Reportes y estadísticas")}
+                subtitle={t("Análisis de asistencia por período académico")}
                 actions={<>
-                    <UIButton variant="ghost" size="sm">Filtros</UIButton>
-                    <UIButton variant="ghost" size="sm">Exportar PDF</UIButton>
-                    <UIButton variant="primary" size="sm">Exportar Excel</UIButton>
+                    <UIButton variant="ghost" size="sm">{t("Filtros")}</UIButton>
+                    <UIButton variant="ghost" size="sm">{t("Exportar PDF")}</UIButton>
+                    <UIButton variant="primary" size="sm">{t("Exportar Excel")}</UIButton>
                 </>}
             />
 
@@ -108,7 +111,7 @@ export default function ReportsView() {
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                         <Feather name="calendar" size={14} color={c.text.secondary} />
-                        <Text style={{ fontSize: 13, fontWeight: "500", color: c.text.secondary }}>Período:</Text>
+                        <Text style={{ fontSize: 13, fontWeight: "500", color: c.text.secondary }}>{t("Período:")}</Text>
                     </View>
                     {PERIOD_OPTIONS.map(opt => (
                         <TouchableOpacity
@@ -149,10 +152,10 @@ export default function ReportsView() {
             <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
                 <Card style={{ flex: 2 }}>
                     <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary, marginBottom: 4 }}>
-                        Evolución de asistencia
+                        {t("Evolución de asistencia")}
                     </Text>
                     <Text style={{ fontSize: 12, color: c.text.secondary, marginBottom: 16 }}>
-                        Porcentaje por semana
+                        {t("Porcentaje por semana")}
                     </Text>
                     <WeeklySparkline data={vm.attendanceByWeek} />
                 </Card>
@@ -162,7 +165,7 @@ export default function ReportsView() {
                         Distribución
                     </Text>
                     <Text style={{ fontSize: 12, color: c.text.secondary, marginBottom: 16 }}>
-                        Estado de asistencia
+                        {t("Estado de asistencia")}
                     </Text>
                     <View style={{ gap: 14 }}>
                         {vm.distribution.map(item => (
@@ -189,7 +192,7 @@ export default function ReportsView() {
                     <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary, marginBottom: 4 }}>
                         Asistencia por día
                     </Text>
-                    <Text style={{ fontSize: 12, color: c.text.secondary, marginBottom: 16 }}>Esta semana</Text>
+                    <Text style={{ fontSize: 12, color: c.text.secondary, marginBottom: 16 }}>{t("Esta semana")}</Text>
                     <DailyBars data={vm.attendanceByDay} />
                 </Card>
 
@@ -198,7 +201,7 @@ export default function ReportsView() {
                         Ranking por curso
                     </Text>
                     <Text style={{ fontSize: 12, color: c.text.secondary, marginBottom: 16 }}>
-                        Asistencia promedio
+                        {t("Asistencia promedio")}
                     </Text>
                     <View style={{ gap: 14 }}>
                         {vm.courseRanking.map(item => (
@@ -235,23 +238,23 @@ export default function ReportsView() {
                 </Card>
             </View>
 
-            {/* Estudiantes en riesgo */}
+            {/* {t("Estudiantes en riesgo")} */}
             <Card>
                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                     <View>
                         <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary }}>
-                            Estudiantes en riesgo
+                            {t("Estudiantes en riesgo")}
                         </Text>
                         <Text style={{ fontSize: 12, color: c.text.secondary }}>
-                            Asistencia por debajo del 75%
+                            {t("Asistencia por debajo del 75%")}
                         </Text>
                     </View>
-                    <UIButton variant="danger" size="sm">Notificar a todos</UIButton>
+                    <UIButton variant="danger" size="sm">{t("Notificar a todos")}</UIButton>
                 </View>
 
                 {vm.atRiskStudents.length === 0 ? (
                     <Text style={{ fontSize: 13, color: c.text.secondary, textAlign: "center", paddingVertical: 24 }}>
-                        No hay estudiantes en riesgo actualmente
+                        {t("No hay estudiantes en riesgo actualmente")}
                     </Text>
                 ) : (
                     <View style={{ gap: 10 }}>
@@ -270,7 +273,7 @@ export default function ReportsView() {
                                     </Text>
                                 </View>
                                 <Badge variant="danger">{student.attendance}%</Badge>
-                                <UIButton variant="ghost" size="sm">Notificar</UIButton>
+                                <UIButton variant="ghost" size="sm">{t("Notificar")}</UIButton>
                             </View>
                         ))}
                     </View>
