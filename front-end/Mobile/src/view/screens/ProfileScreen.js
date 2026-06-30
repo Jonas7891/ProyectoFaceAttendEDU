@@ -1,0 +1,509 @@
+﻿import React from 'react';
+import {
+    Text,
+    View,
+    SafeAreaView,
+    TouchableOpacity,
+    ScrollView,
+    Platform,
+} from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '../components/common/ThemeContext';
+import PrimaryButton from '../components/auth/PrimaryButton';
+import PasswordUpdateModal from '../components/common/PasswordUpdateModal';
+import ProfileUpdateModal from '../components/common/ProfileUpdateModal';
+import styles from './Style';
+import { useProfileViewModel } from '../../viewmodels/useProfileViewModel';
+
+/** Fila de información clave → valor */
+const InfoField = ({ label, value, colors }) => (
+    <View style={[styles.infoFieldContainerProfile, {
+        backgroundColor: colors.card,
+        borderColor: colors.border ?? colors.textSecondary + '30',
+        shadowColor: colors.text,
+    }]}>
+        <Text style={[styles.infoFieldLabelProfile, { color: colors.textSecondary }]}>{label}</Text>
+        <Text style={[styles.infoFieldValueProfile, { color: colors.text }]}>{value ?? '—'}</Text>
+    </View>
+);
+
+/** Encabezado de sección con acento de color y badge opcional — ÚNICA definición */
+const SectionTitle = ({ title, colors, badge, badgeLabel }) => (
+    <View style={styles.sectionTitleContainer}>
+        <View style={[styles.sectionTitleAccentProfile, { backgroundColor: colors.primary }]} />
+        <Text style={[styles.sectionTitleMenuProfile, { color: colors.text }]}>{title}</Text>
+        {badge !== undefined && badge > 0 ? (
+            <View style={[styles.sectionBadge, { backgroundColor: colors.primary + '20' }]}>
+                <Text style={[styles.sectionBadgeText, { color: colors.primary }]}>
+                    {badge}{badgeLabel ? ` ${badgeLabel}` : ''}
+                </Text>
+            </View>
+        ) : null}
+    </View>
+);
+
+const StatItem = ({ label, value, color }) => (
+    <View style={styles.statItemProfile}>
+        <Text style={[styles.statValueProfile, { color }]}>{value ?? 0}</Text>
+        <Text style={[styles.statLabelProfile, { color }]}>{label}</Text>
+    </View>
+);
+
+/** Tarjeta de curso para estudiante */
+const CourseCard = ({ course, colors }) => (
+    <View style={[styles.infoFieldContainerProfile, {
+        backgroundColor: colors.card,
+        borderColor: colors.border ?? colors.textSecondary + '30',
+        shadowColor: colors.text,
+    }]}>
+        <Text style={[styles.infoFieldLabelProfile, { color: colors.textSecondary }]}>
+            {course.course_code ?? '—'}
+        </Text>
+        <Text style={[styles.infoFieldValueProfile, { color: colors.text }]}>
+            {course.course_name ?? course.name ?? '—'}
+        </Text>
+    </View>
+);
+
+/** Tarjeta de estadísticas de asistencia para estudiante */
+const AttendanceStatsCard = ({ stats, colors, t }) => (
+    <View style={[styles.infoFieldContainerProfile, {
+        backgroundColor: colors.card,
+        borderColor: colors.border ?? colors.textSecondary + '30',
+        shadowColor: colors.text,
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        paddingVertical: 12,
+    }]}>
+        <StatItem
+            label={t('profile.present', 'Presentes')}
+            value={stats.present}
+            color={colors.success}
+        />
+        <StatItem
+            label={t('profile.absent', 'Ausentes')}
+            value={stats.absent}
+            color={colors.error ?? '#F44336'}
+        />
+        <StatItem
+            label={t('profile.justified', 'Justificadas')}
+            value={stats.justified}
+            color={colors.warning ?? '#FF9800'}
+        />
+    </View>
+);
+
+/** Tarjeta de justificación para estudiante */
+const JustificationCard = ({ item, colors, t }) => {
+    const isPending = item?.approval === 'Pending';
+    const statusColor = isPending
+        ? (colors.warning ?? '#FF9800')
+        : (colors.success ?? '#4CAF50');
+
+    return (
+        <View style={[styles.infoFieldContainerProfile, {
+            backgroundColor: colors.card,
+            borderColor: colors.border ?? colors.textSecondary + '30',
+            shadowColor: colors.text,
+        }]}>
+            <Text style={[styles.infoFieldLabelProfile, { color: colors.textSecondary }]}>
+                {item?.date ?? '—'}
+            </Text>
+            <Text style={[styles.infoFieldValueProfile, { color: colors.text }]}>
+                {item?.reason ?? '—'}
+            </Text>
+            <Text style={[styles.infoFieldLabelProfile, { color: statusColor, marginTop: 4 }]}>
+                {isPending
+                    ? t('profile.pending', 'Pendiente')
+                    : t('profile.approved', 'Aprobada')}
+            </Text>
+        </View>
+    );
+};
+
+/** Tarjeta de horario para profesor */
+const TeacherScheduleCard = ({ schedule, colors }) => (
+    <View style={[styles.infoFieldContainerProfile, {
+        backgroundColor: colors.card,
+        borderColor: colors.border ?? colors.textSecondary + '30',
+        shadowColor: colors.text,
+    }]}>
+        <Text style={[styles.infoFieldLabelProfile, { color: colors.textSecondary }]}>
+            {schedule.day ?? '—'} · {schedule.start_time ?? '—'} – {schedule.end_time ?? '—'}
+        </Text>
+        <Text style={[styles.infoFieldValueProfile, { color: colors.text }]}>
+            {schedule.course_name ?? '—'}
+        </Text>
+        <Text style={[styles.infoFieldLabelProfile, { color: colors.textSecondary, marginTop: 2 }]}>
+            {schedule.classroom ?? '—'}
+        </Text>
+    </View>
+);
+
+/** Tarjeta de asistencia por curso para profesor */
+const TeacherCourseStatCard = ({ courseStat, colors, t }) => (
+    <View style={[styles.infoFieldContainerProfile, {
+        backgroundColor: colors.card,
+        borderColor: colors.border ?? colors.textSecondary + '30',
+        shadowColor: colors.text,
+    }]}>
+        <Text style={[styles.infoFieldValueProfile, { color: colors.text }]}>
+            {courseStat.course_name ?? courseStat.course_code ?? '—'}
+        </Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
+            <StatItem
+                label={t('profile.present', 'Presentes')}
+                value={courseStat.present}
+                color={colors.success}
+            />
+            <StatItem
+                label={t('profile.absent', 'Ausentes')}
+                value={courseStat.absent}
+                color={colors.error ?? '#F44336'}
+            />
+            <StatItem
+                label={t('profile.total', 'Total')}
+                value={courseStat.total}
+                color={colors.text}
+            />
+        </View>
+    </View>
+);
+
+/** Tarjeta de información del colegio para administrador */
+const SchoolInfoCard = ({ schoolInfo, colors, t }) => (
+    <View>
+        <InfoField
+            label={t('profile.schoolName', 'Nombre')}
+            value={schoolInfo?.name}
+            colors={colors}
+        />
+        <InfoField
+            label={t('profile.activePeriod', 'Período activo')}
+            value={schoolInfo?.activePeriod}
+            colors={colors}
+        />
+        <InfoField
+            label={t('profile.address', 'Dirección')}
+            value={schoolInfo?.address}
+            colors={colors}
+        />
+    </View>
+);
+
+/** Tarjeta de dispositivo IoT para administrador */
+const DeviceCard = ({ device, colors }) => {
+    const isActive = device?.status === 'Active';
+    const statusColor = isActive ? (colors.success ?? '#4CAF50') : (colors.error ?? '#F44336');
+
+    return (
+        <View style={[styles.infoFieldContainerProfile, {
+            backgroundColor: colors.card,
+            borderColor: colors.border ?? colors.textSecondary + '30',
+            shadowColor: colors.text,
+        }]}>
+            <Text style={[styles.infoFieldLabelProfile, { color: colors.textSecondary }]}>
+                {device?.classroom ?? '—'}
+            </Text>
+            <Text style={[styles.infoFieldValueProfile, { color: colors.text }]}>
+                {device?.name ?? device?.device_name ?? '—'}
+            </Text>
+            <Text style={[styles.infoFieldLabelProfile, { color: statusColor, marginTop: 2 }]}>
+                {device?.status ?? '—'}
+            </Text>
+        </View>
+    );
+};
+
+// ─────────────────────────────────────────────
+//  PANTALLA PRINCIPAL
+// ─────────────────────────────────────────────
+
+export default function ProfileScreen() {
+    const { t } = useTranslation();
+    const { colors, theme } = useTheme();
+
+
+    const {
+        userRole,
+        userInfo,
+        updateKey,
+        handleBack,
+        toggleTheme,
+        courses,
+        attendanceStats,
+        justifications,
+        iotDevices,
+        teacherSchedules,
+        teacherCourseStats,
+        schoolInfo,
+    } = useProfileViewModel();
+
+    const isStudent = userRole === 'Estudiante';
+    const isTeacher = userRole === 'Profesor';
+    const isAdmin   = userRole === 'Administrador';
+    const isDark    = theme === 'dark';
+
+    const initials = userInfo?.name
+        ?.split(' ')
+        .slice(0, 2)
+        .map((w) => w[0])
+        .join('')
+        .toUpperCase() ?? '??';
+
+    const avatarColor = isAdmin
+        ? colors.primary
+        : isTeacher
+            ? (colors.warning ?? '#FF9800')
+            : colors.success;
+
+    return (
+        <SafeAreaView
+            style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}
+            key={`${updateKey}`}
+        >
+            <ScrollView
+                contentContainerStyle={styles.ScrollViewContent}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+            >
+                <View style={[styles.container, { paddingHorizontal: 16 }]}>
+
+                    {/* ══ HEADER / AVATAR ══ */}
+                    <View style={[
+                        styles.profileHeaderSectionProfile,
+                        { marginTop: Platform.OS === 'ios' ? 8 : 30 },
+                    ]}>
+                        <View style={[styles.schoolInfoCardSchoolConfig, { marginTop: Platform.OS === 'ios' ? 10 : 25 }]}>
+                            <View style={styles.schoolLogoContainerSchoolConfig}>
+                                <Text style={styles.schoolLogoSchoolConfig}>logo</Text>
+                            </View>
+                        </View>
+
+                        <Text style={[styles.userNameProfile, { color: colors.text }]}>
+                            {userInfo?.name ?? t('profile.noName', 'Sin nombre')}
+                        </Text>
+
+                        <View style={[styles.roleBadgeProfile, {
+                            backgroundColor: avatarColor + '15',
+                            borderColor: isDark ? '#FFFFFF' : avatarColor + '40',
+                        }]}>
+                            <View style={[styles.roleBadgeDotProfile, { backgroundColor: avatarColor }]} />
+                            <Text style={[styles.roleBadgeTextProfile, { color: isDark ? '#FFFFFF' : avatarColor }]}>
+                                {userInfo?.role ?? t('profile.noRole', 'Sin rol')}
+                            </Text>
+                        </View>
+                    </View>
+
+                    {/* ══ INFORMACIÓN PERSONAL ══ */}
+                    <SectionTitle
+                        title={t('profile.personalInfo', 'Información personal')}
+                        colors={colors}
+                    />
+                    <InfoField label={t('profile.email',      'Correo electrónico')} value={userInfo?.email}          colors={colors} />
+                    <InfoField label={t('profile.phone',      'Teléfono')}           value={userInfo?.phone}          colors={colors} />
+                    <InfoField label={t('profile.employeeId', 'Identificación')}     value={userInfo?.identification} colors={colors} />
+                    <InfoField label={t('profile.joinDate',   'Fecha de ingreso')}   value={userInfo?.joinDate}       colors={colors} />
+                    <InfoField label={t('profile.school',     'Colegio')}            value={userInfo?.school}         colors={colors} />
+
+                    {/* ══ SECCIÓN ESTUDIANTE ══ */}
+                    {isStudent && (
+                        <>
+                            {/* Cursos matriculados */}
+                            {courses?.length > 0 && (
+                                <>
+                                    <SectionTitle
+                                        title={t('profile.enrolledCourses', 'Cursos matriculados')}
+                                        colors={colors}
+                                        badge={courses.length}
+                                    />
+                                    {courses.map((course) => (
+                                        <CourseCard
+                                            key={course.id_enrollment ?? course.id_course ?? course.course_code}
+                                            course={course}
+                                            colors={colors}
+                                        />
+                                    ))}
+                                </>
+                            )}
+
+                            {/* Estadísticas de asistencia */}
+                            {attendanceStats && (
+                                <>
+                                    <SectionTitle
+                                        title={t('profile.attendanceStats', 'Estadísticas de asistencia')}
+                                        colors={colors}
+                                    />
+                                    <AttendanceStatsCard stats={attendanceStats} colors={colors} t={t} />
+                                </>
+                            )}
+
+                            {/* Justificaciones */}
+                            {justifications?.length > 0 && (
+                                <>
+                                    <SectionTitle
+                                        title={t('profile.pendingJustifications', 'Justificaciones')}
+                                        colors={colors}
+                                        badge={justifications.filter((j) => j?.approval === 'Pending').length}
+                                    />
+                                    {justifications.map((item) => (
+                                        <JustificationCard
+                                            key={item.id_justification ?? item.id}
+                                            item={item}
+                                            colors={colors}
+                                            t={t}
+                                        />
+                                    ))}
+                                </>
+                            )}
+                        </>
+                    )}
+
+                    {/* ══ SECCIÓN PROFESOR ══ */}
+                    {isTeacher && (
+                        <>
+                            {/* Horario */}
+                            {teacherSchedules?.length > 0 && (
+                                <>
+                                    <SectionTitle
+                                        title={t('profile.teacherSchedule', 'Mi horario')}
+                                        colors={colors}
+                                        badge={teacherSchedules.length}
+                                        badgeLabel={t('profile.classes', 'clases')}
+                                    />
+                                    {teacherSchedules.map((sch) => (
+                                        <TeacherScheduleCard
+                                            key={sch.id_schedule}
+                                            schedule={sch}
+                                            colors={colors}
+                                        />
+                                    ))}
+                                </>
+                            )}
+
+                            {/* Asistencia por curso */}
+                            {teacherCourseStats?.length > 0 && (
+                                <>
+                                    <SectionTitle
+                                        title={t('profile.courseAttendance', 'Asistencia por curso')}
+                                        colors={colors}
+                                    />
+                                    {teacherCourseStats.map((stat) => (
+                                        <TeacherCourseStatCard
+                                            key={stat.id_course ?? stat.course_code}
+                                            courseStat={stat}
+                                            colors={colors}
+                                            t={t}
+                                        />
+                                    ))}
+                                </>
+                            )}
+                        </>
+                    )}
+
+                    {/* ══ SECCIÓN ADMINISTRADOR ══ */}
+                    {isAdmin && (
+                        <>
+                            {/* Información del colegio */}
+                            {schoolInfo && (
+                                <>
+                                    <SectionTitle
+                                        title={t('profile.schoolInfo', 'Información del colegio')}
+                                        colors={colors}
+                                    />
+                                    <SchoolInfoCard schoolInfo={schoolInfo} colors={colors} t={t} />
+                                </>
+                            )}
+
+                            {/* Dispositivos IoT */}
+                            {iotDevices?.length > 0 && (
+                                <>
+                                    <SectionTitle
+                                        title={t('profile.iotDevices', 'Dispositivos IoT')}
+                                        colors={colors}
+                                        badge={iotDevices.filter((d) => d?.status === 'Active').length}
+                                        badgeLabel={t('profile.active', 'activos')}
+                                    />
+                                    {iotDevices.map((device) => (
+                                        <DeviceCard
+                                            key={device.id_device ?? device.id}
+                                            device={device}
+                                            colors={colors}
+                                        />
+                                    ))}
+                                </>
+                            )}
+                        </>
+                    )}
+
+                    {/* ══ CONFIGURACIÓN RÁPIDA ══ */}
+                    <View style={{ marginTop: 25 }}>
+                        <SectionTitle
+                            title={t('profile.quickSettings', 'Configuración rápida')}
+                            colors={colors}
+                        />
+
+                        {/* Toggle de tema */}
+                        <TouchableOpacity
+                            style={[styles.profileSettingsButtonProfile, {
+                                backgroundColor: colors.card,
+                                borderColor:     colors.border ?? colors.textSecondary + '20',
+                                shadowColor:     colors.text,
+                            }]}
+                            onPress={toggleTheme}
+                            activeOpacity={0.75}
+                        >
+                            <View style={{ flex: 1, marginLeft: 12 }}>
+                                <Text style={[styles.profileSettingsTitleProfile, { color: colors.text }]}>
+                                    {t('settings.theme', 'Tema')}
+                                </Text>
+                                <Text style={[styles.profileSettingsSubtitleProfile, { color: colors.textSecondary }]}>
+                                    {isDark
+                                        ? t('settings.darkTheme', 'Tema oscuro activo')
+                                        : t('settings.lightTheme', 'Tema claro activo')}
+                                </Text>
+                            </View>
+                            <View style={[styles.settingsChevronProfile, {
+                                backgroundColor: colors.primary + '15',
+                            }]}>
+                                <Text style={{ fontSize: 13, color: colors.primary, fontWeight: '700' }}>
+                                    {t('settings.changeTheme', 'Cambiar')}
+                                </Text>
+                            </View>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.profileSettingsButtonProfile, {
+                                backgroundColor: colors.card,
+                                borderColor:     colors.border ?? colors.textSecondary + '20',
+                                shadowColor:     colors.text,
+                            }]}
+                            activeOpacity={0.75}
+                        >
+                            <ProfileUpdateModal userInfo={userInfo} />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.profileSettingsButtonProfile, {
+                                backgroundColor: colors.card,
+                                borderColor:     colors.border ?? colors.textSecondary + '20',
+                                shadowColor:     colors.text,
+                            }]}
+                            activeOpacity={0.75}
+                        >
+                            <PasswordUpdateModal />
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* ══ BOTÓN VOLVER ══ */}
+                    <View style={{ marginTop: Platform.OS === 'ios' ? 5 : 0 }}>
+                        <View style={styles.buttonContainer}>
+                            <PrimaryButton title={t('consultJustify.back', 'Volver')} onPress={handleBack} />
+                        </View>
+                    </View>
+
+                </View>
+            </ScrollView>
+        </SafeAreaView>
+    );
+}

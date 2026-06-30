@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "faceattend-edu",
+    "slug": "faceattend-edu",
+    "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "enabled": false
+    },
+    "orientation": "portrait",
+    "icon": "./src/assets/images/logoFaceAttend.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.faceattendedu"
+    },
+    "plugins": [
+      "expo-localization",
+      "@react-native-community/datetimepicker"
+    ]
+  }
+}

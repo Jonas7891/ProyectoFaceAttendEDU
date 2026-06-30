@@ -1,0 +1,775 @@
+import React, { useState, useEffect } from 'react';
+import {
+    SafeAreaView,
+    View,
+    Text,
+    ScrollView,
+    TextInput,
+    Switch,
+    TouchableOpacity,
+    Modal,
+    ActivityIndicator,
+    Platform,
+    KeyboardAvoidingView,
+    Keyboard,
+    Alert,
+    Image,
+} from 'react-native';
+import { useCustomAlert } from '../components/common/useCustomAlert';
+import CustomAlert from '../components/common/CustomAlert';
+import styles from './Style';
+import {useSchoolConfigurationViewModel} from "../../viewmodels/useSchoolConfigurationViewModel";
+
+// ─────────────────────────────────────────────
+// Sub-componentes FUERA del componente principal
+// ─────────────────────────────────────────────
+
+const FormField = ({
+                       label,
+                       value,
+                       onChangeText,
+                       placeholder,
+                       multiline = false,
+                       required = false,
+                       editable = true,
+                       validationErrors = {},
+                   }) => {
+    const fieldKey = label.toLowerCase().replace(/\s+/g, '_');
+    const hasError = validationErrors[fieldKey];
+
+    return (
+        <View style={styles.formGroupSchoolConfig}>
+            <Text style={styles.inputLabelSchoolConfig}>
+                {label}
+                {required && <Text style={styles.inputLabelRequiredSchoolConfig}>*</Text>}
+            </Text>
+            <View style={{ position: 'relative' }}>
+                <TextInput
+                    style={[
+                        styles.inputFieldSchoolConfig,
+                        multiline && styles.textAreaSchoolConfig,
+                        hasError && styles.inputFieldErrorSchoolConfig,
+                        !editable && styles.inputFieldDisabledSchoolConfig,
+                    ]}
+                    value={value}
+                    onChangeText={onChangeText}
+                    placeholder={placeholder}
+                    multiline={multiline}
+                    numberOfLines={multiline ? 4 : 1}
+                    editable={editable}
+                />
+                {!hasError && value && editable && (
+                    <Text style={styles.validationCheckmarkSchoolConfig}>✓</Text>
+                )}
+                {hasError && (
+                    <Text style={styles.validationErrorIconSchoolConfig}>✗</Text>
+                )}
+            </View>
+            {hasError && (
+                <Text style={styles.inputErrorMessageSchoolConfig}>{hasError}</Text>
+            )}
+        </View>
+    );
+};
+
+const ToggleRow = ({ label, description, value, onValueChange }) => (
+    <View style={styles.toggleRowSchoolConfig}>
+        <View style={styles.toggleLabelContainerSchoolConfig}>
+            <Text style={styles.toggleLabelSchoolConfig}>{label}</Text>
+            {description && (
+                <Text style={styles.toggleDescriptionSchoolConfig}>{description}</Text>
+            )}
+        </View>
+    </View>
+);
+
+// ─────────────────────────────────────────────
+// Componente principal
+// ─────────────────────────────────────────────
+
+const SchoolConfigurationScreen = ({ navigation }) => {
+
+    const {
+        activeTab,
+        isLoading,
+        showConfirmModal,
+        showAdvanced,
+        hasChanges,
+        generalInfo,
+        contactInfo,
+        academicConfig,
+        attendanceConfig,
+        validationErrors,
+        handleGeneralInfoChange,
+        handleContactInfoChange,
+        handleAcademicConfigChange,
+        handleAttendanceConfigChange,
+        handleSaveChanges,
+        handleDiscardChanges,
+        countryModalVisible,
+        cityModalVisible,
+        loadingCountries,
+        loadingCities,
+        filteredCountries,
+        displayedCities,
+        isCityListLimited,
+        handleCountryChange,
+        handleCityChange,
+        countrySearch,
+        setCountrySearch,
+        citySearch,
+        setCitySearch,
+        CITY_LIMIT,
+        citiesOptions,
+        setActiveTab,
+        setCountryModalVisible,
+        setCityModalVisible,
+        setShowConfirmModal
+    } = useSchoolConfigurationViewModel();
+
+    // ─────────────────────────────────────────────
+    // Render
+    // ─────────────────────────────────────────────
+
+    return (
+        <SafeAreaView style={styles.safeAreaSchoolConfig}>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.containerSchoolConfig}
+            >
+                {/* ── Header ── */}
+                <View style={styles.headerSchoolConfig}>
+                    <TouchableOpacity
+                        style={styles.headerBackButtonSchoolConfig}
+                        onPress={() => {
+                            if (hasChanges) {
+                                showConfirm(
+                                    'Cambios sin guardar',
+                                    '¿Descartar los cambios realizados?',
+                                    [
+                                        { text: 'Cancelar',  onPress: () => {} },
+                                        { text: 'Descartar', onPress: handleDiscardChanges },
+                                    ]
+                                );
+                            } else {
+                                navigation.goBack();
+                            }
+                        }}
+                    >
+                        <Text style={styles.headerBackTextSchoolConfig}>←</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitleSchoolConfig}>Configuración del Colegio</Text>
+                </View>
+
+                <ScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={styles.scrollContentSchoolConfig}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                >
+                    <View style={styles.mainContentSchoolConfig}>
+
+                        {/* ── Tarjeta resumen ── */}
+                        <View style={styles.schoolInfoCardSchoolConfig}>
+                            <View style={styles.schoolLogoContainerSchoolConfig}>
+                                <Text style={styles.schoolLogoSchoolConfig}>logo</Text>
+                            </View>
+                            <Text style={styles.schoolNameSchoolConfig}>{generalInfo?.name}</Text>
+                            <View style={styles.quickInfoRowSchoolConfig}>
+                                <View style={styles.quickInfoItemSchoolConfig}>
+                                    <Text style={styles.quickInfoValueSchoolConfig}>{academicConfig?.totalStudents}</Text>
+                                    <Text style={styles.quickInfoLabelSchoolConfig}>Estudiantes</Text>
+                                </View>
+                                <View style={styles.quickInfoItemSchoolConfig}>
+                                    <Text style={styles.quickInfoValueSchoolConfig}>{academicConfig?.totalTeachers}</Text>
+                                    <Text style={styles.quickInfoLabelSchoolConfig}>Docentes</Text>
+                                </View>
+                                <View style={styles.quickInfoItemSchoolConfig}>
+                                    <Text style={styles.quickInfoValueSchoolConfig}>{academicConfig?.totalCourses}</Text>
+                                    <Text style={styles.quickInfoLabelSchoolConfig}>Cursos</Text>
+                                </View>
+                            </View>
+                        </View>
+
+                        {/* ── Tabs ── */}
+                        <View style={styles.sectionTabsSchoolConfig}>
+                            {['general', 'contacto', 'academica', 'asistencia'].map((tab) => (
+                                <TouchableOpacity
+                                    key={tab}
+                                    style={[
+                                        styles.sectionTabSchoolConfig,
+                                        activeTab === tab && styles.sectionTabActiveSchoolConfig,
+                                    ]}
+                                    onPress={() => setActiveTab(tab)}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.sectionTabTextSchoolConfig,
+                                            activeTab === tab && styles.sectionTabTextActiveSchoolConfig,
+                                        ]}
+                                    >
+                                        {tab === 'general'    && 'General'}
+                                        {tab === 'contacto'   && 'Contacto'}
+                                        {tab === 'academica'  && 'Académica'}
+                                        {tab === 'asistencia' && 'Asistencia'}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+
+                        {/* ════════════════════════════════
+                            TAB: INFORMACIÓN GENERAL
+                        ════════════════════════════════ */}
+                        {activeTab === 'general' && (
+                            <View style={styles.formSectionSchoolConfig}>
+                                <Text style={styles.formSectionTitleSchoolConfig}>Información General</Text>
+                                <FormField
+                                    label="Nombre del Colegio"
+                                    value={generalInfo?.name}
+                                    onChangeText={(value) => handleGeneralInfoChange('schoolName', value)}
+                                    placeholder="Nombre del colegio"
+                                    required
+                                    validationErrors={validationErrors}
+                                />
+                                <FormField
+                                    label="NIT del Colegio"
+                                    value={generalInfo?.code}
+                                    onChangeText={(value) => handleGeneralInfoChange('schoolCode', value)}
+                                    placeholder="COL-XXXX-XXX"
+                                    editable={false}
+                                    validationErrors={validationErrors}
+                                />
+                                <FormField
+                                    label="Distrito Educativo"
+                                    value={generalInfo?.district}
+                                    onChangeText={(value) => handleGeneralInfoChange('district', value)}
+                                    placeholder="Nombre del distrito"
+                                    required
+                                    validationErrors={validationErrors}
+                                />
+                            </View>
+                        )}
+
+                        {/* ════════════════════════════════
+                            TAB: CONTACTO
+                        ════════════════════════════════ */}
+                        {activeTab === 'contacto' && (
+                            <View style={styles.formSectionSchoolConfig}>
+                                <Text style={styles.formSectionTitleSchoolConfig}>Información de Contacto</Text>
+
+                                {/* Email */}
+                                <FormField
+                                    label="Email Institucional"
+                                    value={contactInfo.email}
+                                    onChangeText={(value) => handleContactInfoChange('email', value)}
+                                    placeholder="admin@colegio.edu"
+                                    required
+                                    validationErrors={validationErrors}
+                                />
+
+                                {/* País */}
+                                <View style={styles.formGroupSchoolConfig}>
+                                    <Text style={styles.inputLabelSchoolConfig}>
+                                        País
+                                        <Text style={styles.inputLabelRequiredSchoolConfig}>*</Text>
+                                    </Text>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.inputFieldSchoolConfig,
+                                            styles.pickerContainerSchoolConfig,
+                                            styles.countryPickerSchoolConfig,
+                                            { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+                                        ]}
+                                        onPress={() => {
+                                            setCountrySearch('');
+                                            setCountryModalVisible(true);
+                                        }}
+                                        disabled={loadingCountries}
+                                    >
+                                        {loadingCountries ? (
+                                            <ActivityIndicator size="small" color="#4A90E2" />
+                                        ) : (
+                                            <Text style={styles.countryPickerTextSchoolConfig}>
+                                                {contactInfo?.country
+                                                    ? `${contactInfo?.country}  ${contactInfo?.dialCode}`
+                                                    : 'Selecciona un país'}
+                                            </Text>
+                                        )}
+                                        <Image
+                                            source={require('../../assets/images/flecha.png')}
+                                            style={{ width: 16, height: 16, resizeMode: 'contain' }}
+                                        />
+                                    </TouchableOpacity>
+                                </View>
+
+                                {/* Teléfono con prefijo estático */}
+                                <View style={styles.formGroupSchoolConfig}>
+                                    <Text style={styles.inputLabelSchoolConfig}>
+                                        Teléfono
+                                        <Text style={styles.inputLabelRequiredSchoolConfig}>*</Text>
+                                    </Text>
+                                    <View
+                                        style={[
+                                            styles.inputFieldSchoolConfig,
+                                            {
+                                                flexDirection:     'row',
+                                                alignItems:        'center',
+                                                paddingHorizontal: 0,
+                                                overflow:          'hidden',
+                                            },
+                                        ]}
+                                    >
+                                        {/* Prefijo — no editable */}
+                                        <View
+                                            style={{
+                                                paddingHorizontal: 12,
+                                                borderRightWidth:  1,
+                                                justifyContent:    'center',
+                                                minWidth:          55,
+                                                alignItems:        'center',
+                                            }}
+                                        >
+                                            <Text style={{ fontSize: 14, color: '#444444', fontWeight: '500' }}>
+                                                {contactInfo.dialCode || '---'}
+                                            </Text>
+                                        </View>
+                                        {/* Solo los números */}
+                                        <TextInput
+                                            style={{
+                                                flex:              1,
+                                                paddingHorizontal: 12,
+                                                fontSize:          14,
+                                                color:             '#333333',
+                                            }}
+                                            value={contactInfo.phone}
+                                            onChangeText={(value) =>
+                                                handleContactInfoChange('phone', value)
+                                            }
+                                            placeholder="300 123 4567"
+                                            keyboardType="phone-pad"
+                                        />
+                                    </View>
+                                    {validationErrors['phone'] && (
+                                        <Text style={styles.inputErrorMessageSchoolConfig}>
+                                            {validationErrors['phone']}
+                                        </Text>
+                                    )}
+                                </View>
+
+                                {/* Dirección */}
+                                <FormField
+                                    label="Dirección"
+                                    value={contactInfo.address}
+                                    onChangeText={(value) => handleContactInfoChange('address', value)}
+                                    placeholder="Calle y número"
+                                    required
+                                    validationErrors={validationErrors}
+                                />
+
+                                {/* Ciudad — selector desplegable */}
+                                <View style={styles.formGroupSchoolConfig}>
+                                    <Text style={styles.inputLabelSchoolConfig}>
+                                        Ciudad
+                                        <Text style={styles.inputLabelRequiredSchoolConfig}>*</Text>
+                                    </Text>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.inputFieldSchoolConfig,
+                                            styles.pickerContainerSchoolConfig,
+                                            styles.countryPickerSchoolConfig,
+                                            { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+                                        ]}
+                                        onPress={() => {
+                                            if (!contactInfo.country) {
+                                                Alert.alert('Selecciona un país primero');
+                                                return;
+                                            }
+                                            if (citiesOptions.length === 0 && !loadingCities) {
+                                                fetchCitiesByCountry(contactInfo.country);
+                                            }
+                                            setCitySearch('');
+                                            setCityModalVisible(true);
+                                        }}
+                                    >
+                                        {loadingCities ? (
+                                            <ActivityIndicator size="small" color="#4A90E2" />
+                                        ) : (
+                                            <Text style={styles.countryPickerTextSchoolConfig}>
+                                                {contactInfo.city || 'Selecciona una ciudad'}
+                                            </Text>
+                                        )}
+                                        <Image
+                                            source={require('../../assets/images/flecha.png')}
+                                            style={{ width: 16, height: 16, resizeMode: 'contain' }}
+                                        />
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        )}
+
+                        {/* ════════════════════════════════
+                            TAB: CONFIGURACIÓN ACADÉMICA
+                        ════════════════════════════════ */}
+                        {activeTab === 'academica' && (
+                            <View style={styles.formSectionSchoolConfig}>
+                                <Text style={styles.formSectionTitleSchoolConfig}>Configuración Académica</Text>
+                                <FormField
+                                    label="Año Académico"
+                                    value={academicConfig.academicYear}
+                                    onChangeText={(value) => handleAcademicConfigChange('academicYear', value)}
+                                    placeholder="YYYY-YYYY"
+                                    editable={false}
+                                    validationErrors={validationErrors}
+                                />
+                                <FormField
+                                    label="Fecha de Inicio"
+                                    value={academicConfig.startDate}
+                                    onChangeText={(value) => handleAcademicConfigChange('startDate', value)}
+                                    placeholder="DD/MM/YYYY"
+                                    validationErrors={validationErrors}
+                                />
+                                <FormField
+                                    label="Fecha de Fin"
+                                    value={academicConfig.endDate}
+                                    onChangeText={(value) => handleAcademicConfigChange('endDate', value)}
+                                    placeholder="DD/MM/YYYY"
+                                    validationErrors={validationErrors}
+                                />
+                            </View>
+                        )}
+
+                        {/* ════════════════════════════════
+                            TAB: CONFIGURACIÓN DE ASISTENCIA
+                        ════════════════════════════════ */}
+                        {activeTab === 'asistencia' && (
+                            <View style={styles.formSectionSchoolConfig}>
+                                <Text style={styles.formSectionTitleSchoolConfig}>Configuración de Asistencia</Text>
+                                <ToggleRow
+                                    label="Biométrico Requerido"
+                                    description="Requiere autenticación biométrica"
+                                    value={attendanceConfig.biometricRequired}
+                                    onValueChange={(value) => handleAttendanceConfigChange('biometricRequired', value)}
+                                />
+                                <FormField
+                                    label="Tolerancia (minutos)"
+                                    value={attendanceConfig.toleranceMinutes}
+                                    onChangeText={(value) => handleAttendanceConfigChange('toleranceMinutes', value)}
+                                    placeholder="5"
+                                    validationErrors={validationErrors}
+                                />
+                                <FormField
+                                    label="Máx. Inasistencias"
+                                    value={attendanceConfig.maxAbsences}
+                                    onChangeText={(value) => handleAttendanceConfigChange('maxAbsences', value)}
+                                    placeholder="15"
+                                    validationErrors={validationErrors}
+                                />
+                                <FormField
+                                    label="Máx. Retardos"
+                                    value={attendanceConfig.maxLatenesses}
+                                    onChangeText={(value) => handleAttendanceConfigChange('maxLatenesses', value)}
+                                    placeholder="10"
+                                    validationErrors={validationErrors}
+                                />
+                                <FormField
+                                    label="Límite de Justificación (días)"
+                                    value={attendanceConfig.justificationDaysLimit}
+                                    onChangeText={(value) => handleAttendanceConfigChange('justificationDaysLimit', value)}
+                                    placeholder="30"
+                                    validationErrors={validationErrors}
+                                />
+                                <ToggleRow
+                                    label="Requerir Documentación"
+                                    description="Exige documento para justificar ausencias"
+                                    value={attendanceConfig.requireDocumentation}
+                                    onValueChange={(value) => handleAttendanceConfigChange('requireDocumentation', value)}
+                                />
+                                <ToggleRow
+                                    label="Habilitar Notificaciones"
+                                    description="Envía alertas automáticas a padres/tutores"
+                                    value={attendanceConfig.enableNotifications}
+                                    onValueChange={(value) => handleAttendanceConfigChange('enableNotifications', value)}
+                                />
+                            </View>
+                        )}
+                    </View>
+                </ScrollView>
+
+                {/* ── Botones de Acción ── */}
+                {hasChanges && (
+                    <View style={[styles.actionButtonsContainerSchoolConfig, { marginHorizontal: 20 }]}>
+                        <TouchableOpacity
+                            style={styles.saveButtonSchoolConfig}
+                            onPress={() => setShowConfirmModal(true)}
+                        >
+                            <Text style={styles.saveButtonTextSchoolConfig}>Guardar Cambios</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.cancelButtonSchoolConfig}
+                            onPress={handleDiscardChanges}
+                        >
+                            <Text style={styles.cancelButtonTextSchoolConfig}>Descartar</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+            </KeyboardAvoidingView>
+
+            {/* ════════════════════════════════
+                MODAL: Selección de País
+            ════════════════════════════════ */}
+            <Modal
+                visible={countryModalVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setCountryModalVisible(false)}
+            >
+                <View style={styles.modalOverlaySchoolConfig}>
+                    <View style={[styles.modalSheetSchoolConfig, { width: '90%', maxHeight: '80%' }]}>
+                        <Text style={styles.modalTitleSchoolConfig}>Seleccionar País</Text>
+
+                        {/* Buscador */}
+                        <View style={{
+                            flexDirection:    'row',
+                            alignItems:       'center',
+                            borderWidth:      1,
+                            borderColor:      '#D0D0D0',
+                            borderRadius:     8,
+                            marginBottom:     10,
+                            overflow:         'hidden',
+                        }}>
+                            <TextInput
+                                style={{
+                                    flex:              1,
+                                    paddingHorizontal: 12,
+                                    paddingVertical:   8,
+                                    fontSize:          14,
+                                    color:             '#333333',
+                                }}
+                                placeholder="Buscar país o código (+57)..."
+                                placeholderTextColor="black"
+                                value={countrySearch}
+                                onChangeText={setCountrySearch}
+                                autoCorrect={false}
+                                keyboardType="default"
+                            />
+                            <TouchableOpacity
+                                style={{
+                                    paddingHorizontal: 12,
+                                    paddingVertical: 8,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                }}
+                                onPress={() => {
+                                    setCountrySearch('');
+                                    Keyboard.dismiss();
+                                }}
+                            >
+                                <Text style={{ fontSize: 16, color: '#666666' }}>✕</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {loadingCountries ? (
+                            <View style={{ paddingVertical: 30, alignItems: 'center' }}>
+                                <ActivityIndicator size="large" color="#4A90E2" />
+                                <Text style={{ marginTop: 10, color: '#666666', fontSize: 13 }}>
+                                    Cargando países...
+                                </Text>
+                            </View>
+                        ) : (
+                            <ScrollView
+                                keyboardShouldPersistTaps="handled"
+                                showsVerticalScrollIndicator
+                            >
+                                {filteredCountries.length === 0 ? (
+                                    <Text style={{ textAlign: 'center', color: '#999999', padding: 20 }}>
+                                        No se encontraron países
+                                    </Text>
+                                ) : (
+                                    filteredCountries.map((option) => (
+                                        <TouchableOpacity
+                                            key={`${option.name}-${option.code}`}
+                                            style={styles.countryOptionSchoolConfig}
+                                            onPress={() => handleCountryChange(option)}
+                                        >
+                                            <Text style={styles.countryOptionTextSchoolConfig}>
+                                                {option.name}
+                                            </Text>
+                                            <Text style={styles.countryDialCodeSchoolConfig}>
+                                                {option.dialCode}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))
+                                )}
+                            </ScrollView>
+                        )}
+
+                        <TouchableOpacity
+                            style={styles.modalCancelButtonSchoolConfig}
+                            onPress={() => setCountryModalVisible(false)}
+                        >
+                            <Text style={styles.modalCancelButtonTextSchoolConfig}>Cancelar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* ════════════════════════════════
+                MODAL: Selección de Ciudad
+            ════════════════════════════════ */}
+            <Modal
+                visible={cityModalVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setCityModalVisible(false)}
+            >
+                <View style={styles.modalOverlaySchoolConfig}>
+                    <View style={[styles.modalSheetSchoolConfig, { width: '90%', maxHeight: '80%' }]}>
+                        <Text style={styles.modalTitleSchoolConfig}>Seleccionar Ciudad</Text>
+                        <Text style={styles.modalSubtitleSchoolConfig}>
+                            Ciudades disponibles para {contactInfo?.country}
+                        </Text>
+
+                        {/* Buscador */}
+                        <View style={{
+                            flexDirection:    'row',
+                            alignItems:       'center',
+                            borderWidth:      1,
+                            borderColor:      '#D0D0D0',
+                            borderRadius:     8,
+                            marginBottom:     10,
+                            overflow:         'hidden',
+                        }}>
+                            <TextInput
+                                style={{
+                                    flex:              1,
+                                    paddingHorizontal: 12,
+                                    paddingVertical:   8,
+                                    fontSize:          14,
+                                    color:             '#333333',
+                                }}
+                                placeholder="Buscar ciudad..."
+                                placeholderTextColor="black"
+                                value={citySearch}
+                                onChangeText={setCitySearch}
+                                autoCorrect={false}
+                                keyboardType="default"
+                            />
+                            <TouchableOpacity
+                                style={{
+                                    paddingHorizontal: 12,
+                                    paddingVertical: 8,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                }}
+                                onPress={() => {
+                                    setCitySearch('');
+                                    Keyboard.dismiss();
+                                }}
+                            >
+                                <Text style={{ fontSize: 16, color: '#666666' }}>✕</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {loadingCities ? (
+                            <View style={{ paddingVertical: 30, alignItems: 'center' }}>
+                                <ActivityIndicator size="large" color="#4A90E2" />
+                                <Text style={{ marginTop: 10, color: '#666666', fontSize: 13 }}>
+                                    Cargando ciudades...
+                                </Text>
+                            </View>
+                        ) : (
+                            <>
+                                {isCityListLimited && (
+                                    <Text style={{
+                                        textAlign: 'center',
+                                        color: '#666666',
+                                        paddingVertical: 10,
+                                        fontSize: 13,
+                                    }}>
+                                        Mostrando {CITY_LIMIT} de {citiesOptions.length} ciudades. Busca para ver más.
+                                    </Text>
+                                )}
+                                <ScrollView
+                                    keyboardShouldPersistTaps="handled"
+                                    showsVerticalScrollIndicator
+                                >
+                                    {displayedCities.length === 0 ? (
+                                        <Text style={{ textAlign: 'center', color: '#999999', padding: 20 }}>
+                                            No se encontraron ciudades
+                                        </Text>
+                                    ) : (
+                                        displayedCities.map((city) => (
+                                            <TouchableOpacity
+                                                key={city}
+                                                style={styles.countryOptionSchoolConfig}
+                                                onPress={() => handleCityChange(city)}
+                                            >
+                                                <Text style={styles.countryOptionTextSchoolConfig}>{city}</Text>
+                                            </TouchableOpacity>
+                                        ))
+                                    )}
+                                </ScrollView>
+                            </>
+                        )}
+
+                        <TouchableOpacity
+                            style={styles.modalCancelButtonSchoolConfig}
+                            onPress={() => setCityModalVisible(false)}
+                        >
+                            <Text style={styles.modalCancelButtonTextSchoolConfig}>Cancelar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* ════════════════════════════════
+                MODAL: Confirmación de Guardado
+            ════════════════════════════════ */}
+            <Modal
+                visible={showConfirmModal}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowConfirmModal(false)}
+            >
+                <View style={styles.modalOverlaySchoolConfig}>
+                    <View style={styles.modalSheetSchoolConfig}>
+                        <Text style={styles.modalTitleSchoolConfig}>Confirmar Cambios</Text>
+                        <Text style={styles.modalSubtitleSchoolConfig}>
+                            ¿Estás seguro de que deseas guardar todos los cambios?
+                        </Text>
+                        <View style={styles.modalMessageSchoolConfig}>
+                            <Text style={{ fontSize: 13, color: '#555555' }}>
+                                Los cambios se aplicarán a toda la institución y podrían afectar el funcionamiento del sistema.
+                            </Text>
+                        </View>
+                        {isLoading ? (
+                            <View style={styles.loadingOverlaySchoolConfig}>
+                                <ActivityIndicator size="large" color="#FFFFFF" />
+                                <Text style={styles.loadingTextSchoolConfig}>Guardando cambios...</Text>
+                            </View>
+                        ) : (
+                            <View style={styles.modalActionsSchoolConfig}>
+                                <TouchableOpacity
+                                    style={styles.modalConfirmButtonSchoolConfig}
+                                    onPress={handleSaveChanges}
+                                    disabled={isLoading}
+                                >
+                                    <Text style={styles.modalConfirmButtonTextSchoolConfig}>Confirmar y Guardar</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.modalCancelButtonSchoolConfig}
+                                    onPress={() => setShowConfirmModal(false)}
+                                    disabled={isLoading}
+                                >
+                                    <Text style={styles.modalCancelButtonTextSchoolConfig}>Cancelar</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </View>
+                </View>
+            </Modal>
+        </SafeAreaView>
+    );
+};
+
+export default SchoolConfigurationScreen;
