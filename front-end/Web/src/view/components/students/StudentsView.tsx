@@ -142,8 +142,8 @@ function StudentDetailModal({ student, onClose }: { student: Student | null; onC
 
 function StudentRow({ student, onPress, isLast }: {
     student: Student; onPress: () => void; isLast: boolean;
-    const { t } = useTranslation();
 }) {
+    const { t } = useTranslation();
     const { isSmall } = useResponsive();
     const { theme }   = useTheme();
     const c           = theme.colors;

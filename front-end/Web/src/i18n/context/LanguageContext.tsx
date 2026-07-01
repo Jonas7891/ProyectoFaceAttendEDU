@@ -1,17 +1,35 @@
 // ============================================================
 //  FaceAttend EDU — LanguageContext (i18n · Context)
 //
-//  Contexto global de idioma.
-//  Patrón idéntico a ThemeContext para coherencia arquitectónica.
+//  MODO PROVISIONAL — traducciones desde archivos JSON estáticos.
 //
-//  Responsabilidades:
-//  - Cargar el idioma guardado al arrancar
-//  - Exponer el idioma activo y la función setLanguage
-//  - Hidratar TranslationService al cambiar de idioma
-//  - Notificar a toda la app cuando el idioma cambia
+//  ┌─ Qué cambió respecto a la versión original ──────────────┐
+//  │                                                           │
+//  │  • t() ahora es SÍNCRONO: lee de JsonDictionary que      │
+//  │    tiene los JSON ya en memoria (bundle estático).        │
+//  │    Sin flash de contenido en español, sin re-renders      │
+//  │    asíncronos, sin llamadas HTTP.                         │
+//  │                                                           │
+//  │  • Se eliminó temporalmente el patrón resolvedRef/bump()  │
+//  │    (solo necesario para fuentes asíncronas).              │
+//  │                                                           │
+//  │  • translationService, TranslationCache y                 │
+//  │    TranslationStorage siguen en el proyecto intactos.     │
+//  │                                                           │
+//  └───────────────────────────────────────────────────────────┘
 //
-//  Uso:
-//    const { t, language, setLanguage } = useTranslation();
+//  ┌─ Cómo reactivar LibreTranslate en el futuro ─────────────┐
+//  │                                                           │
+//  │  1. Quitar el import de JsonDictionary / lookup().        │
+//  │  2. Descomentar el import de translationService.          │
+//  │  3. Restaurar resolvedRef, bump() y el patrón async       │
+//  │     en t() (ver comentarios inline).                      │
+//  │  4. Sin ningún cambio en la UI ni en useTranslation().    │
+//  │                                                           │
+//  └───────────────────────────────────────────────────────────┘
+//
+//  API pública (sin cambios):
+//    const { t, language, setLanguage, isLoading } = useLanguageContext();
 // ============================================================
 
 import React, {
@@ -20,19 +38,30 @@ import React, {
     useContext,
     useEffect,
     useMemo,
-    useRef,
     useState,
 } from "react";
 
-import { translationService }        from "../services/TranslationService";
-import { LanguageStorage }           from "../storage/LanguageStorage";
+// ── Arquitectura original — mantenida, desacoplada temporalmente ──────────
+//
+//  Descomentar en el futuro para reactivar LibreTranslate:
+//
+// import { translationService } from "../services/TranslationService";
+//
+//  (TranslationService, TranslationCache y TranslationStorage
+//   permanecen en disco intactos, listos para ser reactivados.)
+
+import { LanguageStorage }                   from "../storage/LanguageStorage";
 import { SOURCE_LANGUAGE, DEFAULT_LANGUAGE } from "../constants/SupportedLanguages";
-import type { LanguageCode }          from "../models/TranslationEntry";
+import type { LanguageCode }                 from "../models/TranslationEntry";
+
+// ── MODO PROVISIONAL: lookup síncrono desde JSON en bundle ────────────────
+
+import { lookup } from "../translations/JsonDictionary";
 
 // ── Tipos del contexto ────────────────────────────────────────────────────
 
 interface LanguageContextValue {
-    /** Código BCP-47 del idioma activo ("es", "en", "fr", …) */
+    /** Código BCP-47 del idioma activo ("es", "en", …) */
     language: LanguageCode;
 
     /** Cambia el idioma de la app y persiste la preferencia. */
@@ -41,14 +70,9 @@ interface LanguageContextValue {
     /**
      * Traduce un texto del español al idioma activo.
      *
-     * - Si el idioma activo es "es", devuelve el texto sin tocar la red.
-     * - Si existe en caché, devuelve instantáneamente.
-     * - Si no existe, retorna el texto en español mientras se carga
-     *   y activa un re-render una vez disponible la traducción.
-     *
-     * Ejemplo:
-     *   const { t } = useTranslation();
-     *   <Text>{t("Inicio de sesión")}</Text>
+     * MODO PROVISIONAL: síncrono, O(1), sin re-renders adicionales.
+     * MODO PRODUCCIÓN (futuro): asíncrono con fallback al español
+     * mientras llega la traducción de la red + bump() para re-render.
      */
     t: (text: string) => string;
 
@@ -71,16 +95,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     const [language,  setLanguageState] = useState<LanguageCode>(DEFAULT_LANGUAGE);
     const [isLoading, setIsLoading]     = useState(true);
 
-    // Mapa en memoria para traducciones ya resueltas en esta sesión.
-    // Indexado por idioma para limpiar al cambiar idioma sin pérdida.
-    // Usamos un ref de Map para no causar re-renders en cada actualización.
-    const resolvedRef = useRef<Map<string, string>>(new Map());
-
-    // Trigger de re-render cuando llegan nuevas traducciones asíncronas
-    const [tick, setTick] = useState(0);
-    const bump = useCallback(() => setTick(n => n + 1), []);
-
     // ── Inicialización ───────────────────────────────────────────────
+    //
+    //  Lee el idioma guardado en storage al arrancar.
+    //
+    //  MODO PRODUCCIÓN (futuro) — descomentar:
+    //    if (saved !== SOURCE_LANGUAGE) {
+    //        await translationService.hydrate(saved);
+    //    }
 
     useEffect(() => {
         let cancelled = false;
@@ -89,70 +111,57 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
             const saved = await LanguageStorage.load();
             if (cancelled) return;
 
-            if (saved !== SOURCE_LANGUAGE) {
-                await translationService.hydrate(saved);
-            }
-
-            if (!cancelled) {
-                setLanguageState(saved);
-                setIsLoading(false);
-            }
+            setLanguageState(saved);
+            setIsLoading(false);
         })();
 
         return () => { cancelled = true; };
     }, []);
 
     // ── Cambio de idioma ─────────────────────────────────────────────
+    //
+    //  MODO PRODUCCIÓN (futuro) — descomentar:
+    //    if (code !== SOURCE_LANGUAGE) {
+    //        await translationService.hydrate(code);
+    //    }
 
     const setLanguage = useCallback(async (code: LanguageCode) => {
         if (code === language) return;
-
-        // Limpiar traducciones resueltas del idioma anterior
-        resolvedRef.current.clear();
-
-        // Hidratar el nuevo idioma (carga storage → caché en memoria)
-        if (code !== SOURCE_LANGUAGE) {
-            await translationService.hydrate(code);
-        }
-
         setLanguageState(code);
         await LanguageStorage.save(code);
+    }, [language]);
 
-        // Forzar re-render para que todos los `t()` se re-evalúen
-        bump();
-    }, [language, bump]);
-
-    // ── Función t() ──────────────────────────────────────────────────
+    // ── Función t() — SÍNCRONA en modo provisional ───────────────────
+    //
+    //  Lee directamente del objeto JSON importado en bundle.
+    //  O(1), sin efectos secundarios, sin re-renders adicionales.
+    //
+    //  MODO PRODUCCIÓN (futuro) — restaurar:
+    //    const resolvedRef = useRef<Map<string, string>>(new Map());
+    //    const [tick, setTick] = useState(0);
+    //    const bump = useCallback(() => setTick(n => n + 1), []);
+    //
+    //    const t = useCallback((text: string): string => {
+    //        if (!text || language === SOURCE_LANGUAGE) return text;
+    //        const key = text;
+    //        if (resolvedRef.current.has(key)) return resolvedRef.current.get(key)!;
+    //        translationService.translate(text, language).then(translated => {
+    //            resolvedRef.current.set(key, translated);
+    //            bump();
+    //        });
+    //        return text; // fallback al español mientras carga
+    //    }, [language, bump]);
 
     const t = useCallback((text: string): string => {
         if (!text || language === SOURCE_LANGUAGE) return text;
-
-        // ¿Ya está resuelta en esta sesión para este idioma?
-        const key = text; // La clave es el propio texto español
-        if (resolvedRef.current.has(key)) {
-            return resolvedRef.current.get(key)!;
-        }
-
-        // Lanzar traducción asíncrona sin bloquear el render
-        translationService.translate(text, language).then(translated => {
-            if (translated !== text || language !== SOURCE_LANGUAGE) {
-                resolvedRef.current.set(key, translated);
-                bump(); // Re-render para mostrar la traducción
-            }
-        });
-
-        // Devolver el texto en español mientras llega la traducción
-        // (el componente re-renderizará cuando esté lista)
-        return text;
-    }, [language, bump]);
+        return lookup(text, language);
+    }, [language]);
 
     // ── Valor del contexto ───────────────────────────────────────────
 
     const value = useMemo<LanguageContextValue>(
         () => ({ language, setLanguage, t, isLoading }),
-        // tick causa que `t` se reconstruya cuando llegan traducciones
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [language, setLanguage, isLoading, tick],
+        [language, setLanguage, t, isLoading],
     );
 
     return (

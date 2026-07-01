@@ -144,16 +144,6 @@ function evaluateColor(hex: string): ColorVerdict {
     return { score, scoreColor, readability, vibe, uiFit, tip, contrastRatio: Math.round(bestContrast * 10) / 10, wcagLevel };
 }
 
-// ── Secciones ────────────────────────────────────────────────
-
-const SECTIONS = [
-    { id: "general",       label: "General",        icon: "globe",    desc: "Institución y semestre" },
-    { id: "facial",        label: "Reconocimiento", icon: "aperture", desc: "Umbral y cámara" },
-    { id: "notifications", label: "Notificaciones", icon: "bell",     desc: "Alertas y reportes" },
-    { id: "security",      label: "Seguridad",      icon: "shield",   desc: "Acceso y sesiones" },
-    { id: "appearance",    label: "Apariencia",     icon: "sliders",  desc: "Tema y colores" },
-] as const;
-
 // ── Componente: Badge de estado WCAG ─────────────────────────
 
 function WcagBadge({ level }: { level: ColorVerdict["wcagLevel"] }) {
@@ -180,13 +170,14 @@ function WcagBadge({ level }: { level: ColorVerdict["wcagLevel"] }) {
 
 function ContrastBar({ ratio }: { ratio: number }) {
     const { theme } = useTheme();
+    const { t }     = useTranslation();
     const c = theme.colors;
     const pct = Math.min((ratio / 21) * 100, 100);
     const color = ratio >= 7 ? "#10B981" : ratio >= 4.5 ? "#3B82F6" : ratio >= 3 ? "#F59E0B" : "#EF4444";
     return (
         <View style={{ gap: 4 }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                <Text style={{ fontSize: 11, color: c.text.secondary }}>Ratio de contraste</Text>
+                <Text style={{ fontSize: 11, color: c.text.secondary }}>{t("Ratio de contraste")}</Text>
                 <Text style={{ fontSize: 11, fontWeight: "700", color }}>{ratio}:1</Text>
             </View>
             <View style={{ height: 5, backgroundColor: c.border.primary, borderRadius: 99 }}>
@@ -270,11 +261,12 @@ function HexInput({ value, onChange }: { value: string; onChange: (v: string) =>
 
 function ModeSelector() {
     const { mode, setMode, theme } = useTheme();
+    const { t } = useTranslation();
     const c = theme.colors;
 
     const modes = [
-        { key: "light" as const, label: "Claro", icon: "sun" as const, preview: { bg: "#FFFFFF", surface: "#F9FAFB", text: "#111827" } },
-        { key: "dark"  as const, label: "Oscuro", icon: "moon" as const, preview: { bg: "#111827", surface: "#1F2937", text: "#F9FAFB" } },
+        { key: "light" as const, label: t("Claro"), icon: "sun" as const, preview: { bg: "#FFFFFF", surface: "#F9FAFB", text: "#111827" } },
+        { key: "dark"  as const, label: t("Oscuro"), icon: "moon" as const, preview: { bg: "#111827", surface: "#1F2937", text: "#F9FAFB" } },
     ];
 
     return (
@@ -337,8 +329,6 @@ function ModeSelector() {
 }
 
 // ── LanguageSelector ─────────────────────────────────────────
-//  Reutiliza el mismo patrón visual de chips que las tabs de
-//  visión (AccentColorSelector) y el estado activo de ModeSelector.
 
 function LanguageSelector() {
     const { theme } = useTheme();
@@ -381,6 +371,7 @@ function LanguageSelector() {
 // ── ThemePreview ─────────────────────────────────────────────
 
 function ThemePreview({ previewTheme }: { previewTheme: ThemeTokens }) {
+    const { t } = useTranslation();
     const c = previewTheme.colors;
     return (
         <View style={{ borderWidth: 1, borderColor: c.border.primary, borderRadius: 10, overflow: "hidden" }}>
@@ -390,13 +381,13 @@ function ThemePreview({ previewTheme }: { previewTheme: ThemeTokens }) {
                 borderBottomWidth: 1, borderBottomColor: c.border.primary,
             }}>
                 <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: c.brand.primary }} />
-                <Text style={{ fontSize: 11, color: c.text.secondary }}>Vista previa en vivo</Text>
+                <Text style={{ fontSize: 11, color: c.text.secondary }}>{t("Vista previa en vivo")}</Text>
                 <View style={{
                     marginLeft: "auto" as any,
                     backgroundColor: c.brand.primaryLight,
                     borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2,
                 }}>
-                    <Text style={{ fontSize: 9, color: c.brand.primary, fontWeight: "700" }}>SIN GUARDAR</Text>
+                    <Text style={{ fontSize: 9, color: c.brand.primary, fontWeight: "700" }}>{t("SIN GUARDAR")}</Text>
                 </View>
             </View>
             <View style={{ backgroundColor: c.background.app, padding: 12, gap: 8 }}>
@@ -412,7 +403,7 @@ function ThemePreview({ previewTheme }: { previewTheme: ThemeTokens }) {
                 {/* Botones */}
                 <View style={{ flexDirection: "row", gap: 6 }}>
                     <View style={{ flex: 1, backgroundColor: c.brand.primary, borderRadius: 6, padding: 7, alignItems: "center" }}>
-                        <Text style={{ fontSize: 11, color: "#fff", fontWeight: "600" }}>Primario</Text>
+                        <Text style={{ fontSize: 11, color: "#fff", fontWeight: "600" }}>{t("Primario")}</Text>
                     </View>
                     <View style={{ flex: 1, borderRadius: 6, padding: 7, alignItems: "center", borderWidth: 1, borderColor: c.brand.primary }}>
                         <Text style={{ fontSize: 11, color: c.brand.primary, fontWeight: "600" }}>Outline</Text>
@@ -424,13 +415,13 @@ function ThemePreview({ previewTheme }: { previewTheme: ThemeTokens }) {
                 {/* Badges */}
                 <View style={{ flexDirection: "row", gap: 5, flexWrap: "wrap" }}>
                     {[
-                        { label: "Activo",      bg: c.brand.primaryLight,  color: c.brand.primary },
-                        { label: "Éxito",       bg: c.states.successLight, color: "#065F46"       },
-                        { label: "Advertencia", bg: c.states.warningLight, color: "#92400E"       },
-                        { label: "Peligro",     bg: c.states.dangerLight,  color: "#991B1B"       },
+                        { labelKey: "Activo",      bg: c.brand.primaryLight,  color: c.brand.primary },
+                        { labelKey: "Éxito",       bg: c.states.successLight, color: "#065F46"       },
+                        { labelKey: "Advertencia", bg: c.states.warningLight, color: "#92400E"       },
+                        { labelKey: "Peligro",     bg: c.states.dangerLight,  color: "#991B1B"       },
                     ].map(b => (
-                        <View key={b.label} style={{ backgroundColor: b.bg, borderRadius: 99, paddingHorizontal: 8, paddingVertical: 2 }}>
-                            <Text style={{ fontSize: 10, color: b.color, fontWeight: "600" }}>{b.label}</Text>
+                        <View key={b.labelKey} style={{ backgroundColor: b.bg, borderRadius: 99, paddingHorizontal: 8, paddingVertical: 2 }}>
+                            <Text style={{ fontSize: 10, color: b.color, fontWeight: "600" }}>{t(b.labelKey)}</Text>
                         </View>
                     ))}
                 </View>
@@ -448,6 +439,7 @@ type AccentSelectorProps = {
 
 function AccentColorSelector({ previewHex, onPreviewChange }: AccentSelectorProps) {
     const { theme } = useTheme();
+    const { t }     = useTranslation();
     const c         = theme.colors;
 
     const [visionMode, setVisionMode] = useState<VisionMode>(DEFAULT_VISION_MODE);
@@ -583,7 +575,7 @@ function AccentColorSelector({ previewHex, onPreviewChange }: AccentSelectorProp
             <View style={{ gap: 14 }}>
                 {[
                     {
-                        label: "Tono",
+                        label: t("Tono"),
                         val: hue, min: 0, max: 359,
                         onChange: (v: number) => apply(v, sat, lum),
                         suffix: "°",
@@ -591,7 +583,7 @@ function AccentColorSelector({ previewHex, onPreviewChange }: AccentSelectorProp
                         gradient: "hue",
                     },
                     {
-                        label: "Saturación",
+                        label: t("Saturación"),
                         val: sat, min: 0, max: 100,
                         onChange: (v: number) => apply(hue, v, lum),
                         suffix: "%",
@@ -599,7 +591,7 @@ function AccentColorSelector({ previewHex, onPreviewChange }: AccentSelectorProp
                         hint: sat < 20 ? "⚠ Muy bajo — el color se verá gris" : sat > 90 ? "⚠ Muy alto — puede fatigar la vista" : null,
                     },
                     {
-                        label: "Luminosidad",
+                        label: t("Luminosidad"),
                         val: lum, min: 15, max: 85,
                         onChange: (v: number) => apply(hue, sat, v),
                         suffix: "%",
@@ -640,13 +632,13 @@ function AccentColorSelector({ previewHex, onPreviewChange }: AccentSelectorProp
             >
                 <Feather name={showHexInput ? "chevron-up" : "chevron-down"} size={13} color={c.text.secondary} />
                 <Text style={{ fontSize: 12, color: c.text.secondary }}>
-                    {showHexInput ? "Ocultar entrada HEX" : "Ingresar código HEX manualmente"}
+                    {showHexInput ? t("Ocultar entrada HEX") : t("Ingresar código HEX manualmente")}
                 </Text>
             </TouchableOpacity>
             {showHexInput && (
                 <View style={{ gap: 6 }}>
                     <Text style={{ fontSize: 11, color: c.text.secondary }}>
-                        Pega directamente un color de tu paleta de marca, Figma, o cualquier herramienta.
+                        {t("Pega directamente un color de tu paleta de marca, Figma, o cualquier herramienta.")}
                     </Text>
                     <HexInput value={currentHex} onChange={handleHexChange} />
                 </View>
@@ -692,9 +684,9 @@ function AccentColorSelector({ previewHex, onPreviewChange }: AccentSelectorProp
 
                 {/* Filas de análisis */}
                 {[
-                    { icon: "eye",    label: "Legibilidad", value: verdict.readability },
-                    { icon: "sun",    label: "Sensación",   value: verdict.vibe        },
-                    { icon: "layout", label: "En la UI",    value: verdict.uiFit       },
+                    { icon: "eye",    label: t("Legibilidad"), value: verdict.readability },
+                    { icon: "sun",    label: t("Sensación"),   value: verdict.vibe        },
+                    { icon: "layout", label: t("En la UI"),    value: verdict.uiFit       },
                 ].map((row, i, arr) => (
                     <View key={row.label} style={{
                         flexDirection: "row", alignItems: "flex-start",
@@ -728,7 +720,7 @@ function AccentColorSelector({ previewHex, onPreviewChange }: AccentSelectorProp
                         borderRadius: 7,
                     }}>
                         <Feather name="check-circle" size={13} color="#059669" style={{ marginTop: 1 }} />
-                        <Text style={{ fontSize: 12, color: "#065F46", flex: 1 }}>Este color funciona bien — no necesita ajustes</Text>
+                        <Text style={{ fontSize: 12, color: "#065F46", flex: 1 }}>{t("Este color funciona bien — no necesita ajustes")}</Text>
                     </View>
                 )}
             </View>
@@ -765,6 +757,7 @@ function StatsRow({ label, value, icon, color }: { label: string; value: string;
 
 function SecurityMeter({ twoFactor, sessionTime }: { twoFactor: boolean; sessionTime: string }) {
     const { theme } = useTheme();
+    const { t }     = useTranslation();
     const c = theme.colors;
 
     const score = [
@@ -787,7 +780,7 @@ function SecurityMeter({ twoFactor, sessionTime }: { twoFactor: boolean; session
             gap: 10,
         }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                <Text style={{ fontSize: 12, color: c.text.secondary }}>Nivel de seguridad</Text>
+                <Text style={{ fontSize: 12, color: c.text.secondary }}>{t("Nivel de seguridad")}</Text>
                 <Text style={{ fontSize: 12, fontWeight: "700", color }}>{label}</Text>
             </View>
             <View style={{ flexDirection: "row", gap: 4 }}>
@@ -800,8 +793,8 @@ function SecurityMeter({ twoFactor, sessionTime }: { twoFactor: boolean; session
             </View>
             <View style={{ gap: 6 }}>
                 {[
-                    { label: "Autenticación de dos factores", ok: twoFactor },
-                    { label: "Sesión corta (≤60 min)", ok: parseInt(sessionTime) <= 60 },
+                    { label: t("Autenticación de dos factores"), ok: twoFactor },
+                    { label: t("Sesión corta (≤60 min)"), ok: parseInt(sessionTime) <= 60 },
                 ].map(item => (
                     <View key={item.label} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                         <Feather
@@ -852,7 +845,7 @@ function ConfidenceGuide({ value }: { value: number }) {
 export default function SettingsView() {
     const { isSmall }                        = useResponsive();
     const { theme, mode, accentColor, setAccentColor } = useTheme();
-    const { currentLanguage }                = useTranslation();
+    const { currentLanguage, t }             = useTranslation();
     const c                                  = theme.colors;
 
     const [section, setSection] = useState("general");
@@ -883,6 +876,14 @@ export default function SettingsView() {
     const [saved,           setSaved]           = useState(false);
 
     const activeNotifications = [emailAlert, weeklyReport, atRiskAlert, dailySummary].filter(Boolean).length;
+
+    const SECTIONS = [
+        { id: "general",       label: t("General"),        icon: "globe",    desc: t("Institución y semestre") },
+        { id: "facial",        label: t("Reconocimiento"), icon: "aperture", desc: t("Umbral y cámara") },
+        { id: "notifications", label: t("Notificaciones"), icon: "bell",     desc: t("Alertas y reportes") },
+        { id: "security",      label: t("Seguridad"),      icon: "shield",   desc: t("Acceso y sesiones") },
+        { id: "appearance",    label: t("Apariencia"),     icon: "sliders",  desc: t("Tema y colores") },
+    ] as const;
 
     function handleSave() {
         if (hasUnsaved) {
@@ -932,8 +933,8 @@ export default function SettingsView() {
             showsVerticalScrollIndicator={false}
         >
             <PageHeader
-                title="Configuración"
-                subtitle="Personaliza FaceAttend EDU a tu institución"
+                title={t("Configuración")}
+                subtitle={t("Personaliza FaceAttend EDU a tu institución")}
                 actions={
                     <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
                         {hasUnsaved && (
@@ -945,16 +946,16 @@ export default function SettingsView() {
                                 }}>
                                     <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: c.states.warning }} />
                                     <Text style={{ fontSize: 11, color: c.states.warning, fontWeight: "600" }}>
-                                        Sin guardar
+                                        {t("Sin guardar")}
                                     </Text>
                                 </View>
                                 <UIButton variant="ghost" size="sm" onPress={handleDiscard}>
-                                    Descartar
+                                    {t("Descartar")}
                                 </UIButton>
                             </>
                         )}
                         <UIButton variant="primary" onPress={handleSave} size="sm">
-                            {saved ? "¡Guardado ✓" : "Guardar cambios"}
+                            {saved ? t("¡Guardado ✓") : t("Guardar cambios")}
                         </UIButton>
                     </View>
                 }
@@ -1025,30 +1026,30 @@ export default function SettingsView() {
                     {/* ══ GENERAL ══════════════════════════════════════════ */}
                     {section === "general" && (
                         <View style={{ gap: 18 }}>
-                            <Text style={sectionTitle}>General</Text>
+                            <Text style={sectionTitle}>{t("General")}</Text>
 
                             <View>
-                                <Text style={labelStyle}>Nombre de la institución</Text>
+                                <Text style={labelStyle}>{t("Nombre de la institución")}</Text>
                                 <TextInput value={institutionName} onChangeText={setInstitutionName} style={inputStyle} />
-                                <Text style={descStyle}>Aparece en reportes, correos y en la cabecera de la app.</Text>
+                                <Text style={descStyle}>{t("Aparece en reportes, correos y en la cabecera de la app.")}</Text>
                             </View>
 
                             <View>
-                                <Text style={labelStyle}>Semestre activo</Text>
+                                <Text style={labelStyle}>{t("Semestre activo")}</Text>
                                 <TextInput
                                     value={semester} onChangeText={setSemester}
-                                    placeholder="Ej: 2024-2"
+                                    placeholder={t("Ej: 2024-2")}
                                     placeholderTextColor={c.text.disabled}
                                     style={inputStyle}
                                 />
-                                <Text style={descStyle}>Formato recomendado: AÑO-PERÍODO (ej. 2025-1). Se usa para agrupar los registros de asistencia.</Text>
+                                <Text style={descStyle}>{t("Formato recomendado: AÑO-PERÍODO (ej. 2025-1). Se usa para agrupar los registros de asistencia.")}</Text>
                             </View>
 
                             <View>
                                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 8 }}>
                                     <View>
-                                        <Text style={labelStyle}>Asistencia mínima requerida</Text>
-                                        <Text style={[descStyle, { marginTop: 0 }]}>Umbral para marcar estudiantes "en riesgo"</Text>
+                                        <Text style={labelStyle}>{t("Asistencia mínima requerida")}</Text>
+                                        <Text style={[descStyle, { marginTop: 0 }]}>{t("Umbral para marcar estudiantes \"en riesgo\"")}</Text>
                                     </View>
                                     <Text style={{ fontSize: 22, fontWeight: "800", color: c.brand.primary }}>{minAttendance}%</Text>
                                 </View>
@@ -1084,9 +1085,9 @@ export default function SettingsView() {
                                     />
                                     <Text style={{ fontSize: 12, color: minAttendance >= 90 ? "#92400E" : c.brand.primary, flex: 1, lineHeight: 18 }}>
                                         {minAttendance >= 90
-                                            ? "Umbral muy alto — muchos estudiantes podrían quedar en riesgo aunque asistan con regularidad."
+                                            ? t("Umbral muy alto — muchos estudiantes podrían quedar en riesgo aunque asistan con regularidad.")
                                             : minAttendance <= 60
-                                            ? "Umbral bajo — los estudiantes tendrán mucha flexibilidad de faltar. Asegúrate de que sea intencional."
+                                            ? t("Umbral bajo — los estudiantes tendrán mucha flexibilidad de faltar. Asegúrate de que sea intencional.")
                                             : `Con este umbral, un estudiante puede faltar hasta ${Math.floor((100 - minAttendance))} clases de cada 100 sin quedar en riesgo.`
                                         }
                                     </Text>
@@ -1097,9 +1098,9 @@ export default function SettingsView() {
 
                             {/* Idioma de la aplicación */}
                             <View>
-                                <Text style={labelStyle}>Idioma de la aplicación</Text>
+                                <Text style={labelStyle}>{t("Idioma de la aplicación")}</Text>
                                 <Text style={[descStyle, { marginTop: 0, marginBottom: 10 }]}>
-                                    Traduce toda la interfaz automáticamente. El español es el idioma original de FaceAttend EDU.
+                                    {t("Traduce toda la interfaz automáticamente. El español es el idioma original de FaceAttend EDU.")}
                                 </Text>
                                 <LanguageSelector />
                             </View>
@@ -1108,16 +1109,16 @@ export default function SettingsView() {
 
                             {/* Resumen rápido */}
                             <Text style={{ fontSize: 12, fontWeight: "600", color: c.text.secondary, letterSpacing: 0.5, textTransform: "uppercase" }}>
-                                Resumen actual
+                                {t("Resumen actual")}
                             </Text>
                             <View style={{ gap: 0 }}>
-                                <StatsRow label="Institución" value={institutionName || "Sin definir"} icon="home" color={c.brand.primary} />
+                                <StatsRow label={t("Institución")} value={institutionName || t("Sin definir")} icon="home" color={c.brand.primary} />
                                 <Divider />
-                                <StatsRow label="Semestre activo" value={semester || "Sin definir"} icon="calendar" color="#8B5CF6" />
+                                <StatsRow label={t("Semestre activo")} value={semester || t("Sin definir")} icon="calendar" color="#8B5CF6" />
                                 <Divider />
-                                <StatsRow label="Mínimo de asistencia" value={`${minAttendance}%`} icon="bar-chart-2" color="#10B981" />
+                                <StatsRow label={t("Mínimo de asistencia")} value={`${minAttendance}%`} icon="bar-chart-2" color="#10B981" />
                                 <Divider />
-                                <StatsRow label="Idioma" value={currentLanguage?.labelES ?? "Español"} icon="globe" color="#3B82F6" />
+                                <StatsRow label={t("Idioma")} value={currentLanguage?.labelES ?? t("Español")} icon="globe" color="#3B82F6" />
                             </View>
                         </View>
                     )}
@@ -1125,13 +1126,13 @@ export default function SettingsView() {
                     {/* ══ RECONOCIMIENTO ═══════════════════════════════════ */}
                     {section === "facial" && (
                         <View style={{ gap: 18 }}>
-                            <Text style={sectionTitle}>Reconocimiento facial</Text>
+                            <Text style={sectionTitle}>{t("Reconocimiento facial")}</Text>
 
                             <View>
                                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 8 }}>
                                     <View>
-                                        <Text style={labelStyle}>Umbral de confianza</Text>
-                                        <Text style={[descStyle, { marginTop: 0 }]}>Qué tan seguro debe estar el modelo para registrar</Text>
+                                        <Text style={labelStyle}>{t("Umbral de confianza")}</Text>
+                                        <Text style={[descStyle, { marginTop: 0 }]}>{t("Qué tan seguro debe estar el modelo para registrar")}</Text>
                                     </View>
                                     <Text style={{ fontSize: 22, fontWeight: "800", color: c.brand.primary }}>{confidence}%</Text>
                                 </View>
@@ -1155,8 +1156,8 @@ export default function SettingsView() {
                             <Divider />
 
                             <ToggleRow
-                                label="Registro automático"
-                                description="Registra automáticamente al detectar el rostro sin confirmación manual"
+                                label={t("Registro automático")}
+                                description={t("Registra automáticamente al detectar el rostro sin confirmación manual")}
                                 value={autoRegister}
                                 onToggle={() => setAutoRegister(v => !v)}
                             />
@@ -1169,14 +1170,14 @@ export default function SettingsView() {
                                 }}>
                                     <Feather name="alert-triangle" size={13} color={c.states.warning} style={{ marginTop: 1 }} />
                                     <Text style={{ fontSize: 12, color: "#92400E", flex: 1, lineHeight: 18 }}>
-                                        Con umbral bajo y registro automático habilitado, hay mayor riesgo de registrar asistencia incorrectamente. Considera subir el umbral a al menos 75%.
+                                        {t("Con umbral bajo y registro automático habilitado, hay mayor riesgo de registrar asistencia incorrectamente. Considera subir el umbral a al menos 75%.")}
                                     </Text>
                                 </View>
                             )}
 
                             <ToggleRow
-                                label="Guardar fotos de registro"
-                                description="Almacena la foto tomada al registrar. Útil para auditorías pero consume más espacio."
+                                label={t("Guardar fotos de registro")}
+                                description={t("Almacena la foto tomada al registrar. Útil para auditorías pero consume más espacio.")}
                                 value={savePhotos}
                                 onToggle={() => setSavePhotos(v => !v)}
                             />
@@ -1188,7 +1189,7 @@ export default function SettingsView() {
                                 }}>
                                     <Feather name="info" size={13} color={c.brand.primary} style={{ marginTop: 1 }} />
                                     <Text style={{ fontSize: 12, color: c.brand.primary, flex: 1, lineHeight: 18 }}>
-                                        Las fotos se almacenan localmente. Asegúrate de tener suficiente espacio y de informar a los estudiantes según tu política de privacidad.
+                                        {t("Las fotos se almacenan localmente. Asegúrate de tener suficiente espacio y de informar a los estudiantes según tu política de privacidad.")}
                                     </Text>
                                 </View>
                             )}
@@ -1199,38 +1200,38 @@ export default function SettingsView() {
                     {section === "notifications" && (
                         <View style={{ gap: 4 }}>
                             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                                <Text style={sectionTitle}>Notificaciones</Text>
+                                <Text style={sectionTitle}>{t("Notificaciones")}</Text>
                                 <View style={{
                                     backgroundColor: c.brand.primaryLight, borderRadius: 99,
                                     paddingHorizontal: 10, paddingVertical: 4,
                                 }}>
                                     <Text style={{ fontSize: 11, color: c.brand.primary, fontWeight: "600" }}>
-                                        {activeNotifications} activa{activeNotifications !== 1 ? "s" : ""}
+                                        {activeNotifications} {activeNotifications !== 1 ? t("activas") : t("activa")}
                                     </Text>
                                 </View>
                             </View>
                             <Divider />
                             <ToggleRow
-                                label="Alertas por correo"
-                                description="Envía un correo al docente cuando un estudiante no asiste. Ideal para clases pequeñas o con seguimiento individual."
+                                label={t("Alertas por correo")}
+                                description={t("Envía un correo al docente cuando un estudiante no asiste. Ideal para clases pequeñas o con seguimiento individual.")}
                                 value={emailAlert}
                                 onToggle={() => setEmailAlert(v => !v)}
                             />
                             <ToggleRow
-                                label="Reporte semanal"
-                                description="Resumen automático de asistencia enviado cada lunes a las 8am. Incluye porcentajes por curso."
+                                label={t("Reporte semanal")}
+                                description={t("Resumen automático de asistencia enviado cada lunes a las 8am. Incluye porcentajes por curso.")}
                                 value={weeklyReport}
                                 onToggle={() => setWeeklyReport(v => !v)}
                             />
                             <ToggleRow
-                                label="Alerta de estudiantes en riesgo"
-                                description={`Notifica cuando un estudiante cae por debajo del ${minAttendance}% de asistencia mínima configurado en General.`}
+                                label={t("Alerta de estudiantes en riesgo")}
+                                description={`${t("Notifica cuando un estudiante cae por debajo del")} ${minAttendance}% ${t("de asistencia mínima configurado en General.")}`}
                                 value={atRiskAlert}
                                 onToggle={() => setAtRiskAlert(v => !v)}
                             />
                             <ToggleRow
-                                label="Resumen diario"
-                                description="Resumen automático de asistencia al finalizar el día. Puede generar muchas notificaciones en días de muchas clases."
+                                label={t("Resumen diario")}
+                                description={t("Resumen automático de asistencia al finalizar el día. Puede generar muchas notificaciones en días de muchas clases.")}
                                 value={dailySummary}
                                 onToggle={() => setDailySummary(v => !v)}
                             />
@@ -1244,7 +1245,7 @@ export default function SettingsView() {
                                 }}>
                                     <Feather name="bell-off" size={14} color={c.states.warning} style={{ marginTop: 1 }} />
                                     <Text style={{ fontSize: 12, color: "#92400E", flex: 1, lineHeight: 18 }}>
-                                        No tienes ninguna notificación activa. No recibirás avisos sobre asistencia ni estudiantes en riesgo.
+                                        {t("No tienes ninguna notificación activa. No recibirás avisos sobre asistencia ni estudiantes en riesgo.")}
                                     </Text>
                                 </View>
                             )}
@@ -1258,7 +1259,7 @@ export default function SettingsView() {
                                 }}>
                                     <Feather name="info" size={13} color={c.brand.primary} style={{ marginTop: 1 }} />
                                     <Text style={{ fontSize: 12, color: c.brand.primary, flex: 1, lineHeight: 18 }}>
-                                        Tienes el resumen diario y el semanal activados. Considera desactivar uno para reducir el volumen de correos.
+                                        {t("Tienes el resumen diario y el semanal activados. Considera desactivar uno para reducir el volumen de correos.")}
                                     </Text>
                                 </View>
                             )}
@@ -1268,15 +1269,15 @@ export default function SettingsView() {
                     {/* ══ SEGURIDAD ═════════════════════════════════════════ */}
                     {section === "security" && (
                         <View style={{ gap: 18 }}>
-                            <Text style={sectionTitle}>Seguridad</Text>
+                            <Text style={sectionTitle}>{t("Seguridad")}</Text>
 
                             <SecurityMeter twoFactor={twoFactor} sessionTime={sessionTime} />
 
                             <Divider />
 
                             <ToggleRow
-                                label="Autenticación de dos factores"
-                                description="Requiere un código adicional al iniciar sesión. Protege la cuenta aunque alguien obtenga tu contraseña."
+                                label={t("Autenticación de dos factores")}
+                                description={t("Requiere un código adicional al iniciar sesión. Protege la cuenta aunque alguien obtenga tu contraseña.")}
                                 value={twoFactor}
                                 onToggle={() => setTwoFactor(v => !v)}
                             />
@@ -1288,13 +1289,13 @@ export default function SettingsView() {
                                 }}>
                                     <Feather name="shield" size={13} color={c.states.warning} style={{ marginTop: 1 }} />
                                     <Text style={{ fontSize: 12, color: "#92400E", flex: 1, lineHeight: 18 }}>
-                                        Sin 2FA, la cuenta queda vulnerable si la contraseña se compromete. Se recomienda activarlo.
+                                        {t("Sin 2FA, la cuenta queda vulnerable si la contraseña se compromete. Se recomienda activarlo.")}
                                     </Text>
                                 </View>
                             )}
 
                             <View>
-                                <Text style={labelStyle}>Tiempo de sesión (minutos)</Text>
+                                <Text style={labelStyle}>{t("Tiempo de sesión (minutos)")}</Text>
                                 <TextInput
                                     keyboardType="numeric"
                                     value={sessionTime}
@@ -1302,12 +1303,12 @@ export default function SettingsView() {
                                     style={[inputStyle, { width: 140 }]}
                                 />
                                 <Text style={descStyle}>
-                                    La sesión se cerrará automáticamente tras este tiempo de inactividad.
+                                    {t("La sesión se cerrará automáticamente tras este tiempo de inactividad.")}
                                     {parseInt(sessionTime) > 120
-                                        ? " ⚠ Sesiones largas aumentan el riesgo si el dispositivo queda desbloqueado."
+                                        ? t(" ⚠ Sesiones largas aumentan el riesgo si el dispositivo queda desbloqueado.")
                                         : parseInt(sessionTime) <= 15
-                                        ? " Sesión muy corta — el usuario deberá iniciar sesión con frecuencia."
-                                        : " Tiempo razonable para uso normal en aula."}
+                                        ? t(" Sesión muy corta — el usuario deberá iniciar sesión con frecuencia.")
+                                        : t(" Tiempo razonable para uso normal en aula.")}
                                 </Text>
                             </View>
                         </View>
@@ -1316,13 +1317,13 @@ export default function SettingsView() {
                     {/* ══ APARIENCIA ════════════════════════════════════════ */}
                     {section === "appearance" && (
                         <View style={{ gap: 20 }}>
-                            <Text style={sectionTitle}>Apariencia</Text>
+                            <Text style={sectionTitle}>{t("Apariencia")}</Text>
 
                             {/* Modo de visualización */}
                             <View style={{ gap: 8 }}>
-                                <Text style={labelStyle}>Modo de visualización</Text>
+                                <Text style={labelStyle}>{t("Modo de visualización")}</Text>
                                 <Text style={descStyle}>
-                                    Elige el tema base de la interfaz. Afecta fondos, textos y superficies de toda la app.
+                                    {t("Elige el tema base de la interfaz. Afecta fondos, textos y superficies de toda la app.")}
                                 </Text>
                                 <ModeSelector />
                             </View>
@@ -1332,10 +1333,9 @@ export default function SettingsView() {
                             {/* Color de acento */}
                             <View style={{ gap: 10 }}>
                                 <View>
-                                    <Text style={labelStyle}>Color de acento</Text>
+                                    <Text style={labelStyle}>{t("Color de acento")}</Text>
                                     <Text style={descStyle}>
-                                        Este color se aplica a botones principales, tabs activos, barras de progreso, bordes de foco y todos los elementos interactivos.
-                                        Los cambios se previsualizan abajo — presiona "Guardar cambios" para aplicarlos en toda la app.
+                                        {t("Este color se aplica a botones principales, tabs activos, barras de progreso, bordes de foco y todos los elementos interactivos. Los cambios se previsualizan abajo — presiona \"Guardar cambios\" para aplicarlos en toda la app.")}
                                     </Text>
                                 </View>
                                 <AccentColorSelector
@@ -1348,7 +1348,7 @@ export default function SettingsView() {
 
                             {/* Preview */}
                             <View style={{ gap: 8 }}>
-                                <Text style={labelStyle}>Vista previa en vivo</Text>
+                                <Text style={labelStyle}>{t("Vista previa en vivo")}</Text>
                                 <ThemePreview previewTheme={previewTheme} />
                             </View>
 
@@ -1360,7 +1360,7 @@ export default function SettingsView() {
                             }}>
                                 <Feather name="info" size={13} color={c.brand.primary} />
                                 <Text style={{ fontSize: 12, color: c.brand.primary, flex: 1, lineHeight: 18 }}>
-                                    La preview muestra cómo se verá el color en botones, badges y elementos activos. Presiona "Guardar cambios" para aplicarlo en toda la app.
+                                    {t("La preview muestra cómo se verá el color en botones, badges y elementos activos. Presiona \"Guardar cambios\" para aplicarlo en toda la app.")}
                                 </Text>
                             </View>
                         </View>

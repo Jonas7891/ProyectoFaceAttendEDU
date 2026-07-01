@@ -1,16 +1,18 @@
 // ============================================================
 //  FaceAttend EDU — TranslationService (i18n · Service)
 //
-//  FIXES aplicados:
-//  - BUG CORREGIDO: el fallback de error ya NO se guarda en caché.
-//    Antes: si LibreTranslate fallaba, se cacheaba el texto original
-//    como si fuera la traducción, bloqueando reintentos para siempre.
-//    Ahora: solo se cachea cuando la traducción es exitosa.
+//  Orquesta la cadena de traducciones:
+//    Nivel 1 → caché en memoria (TranslationCache)
+//    Nivel 2 → almacenamiento persistente (TranslationStorage)
+//    Nivel 3 → proveedor HTTP (RestTranslationProvider)
+//
+//  FIX: el fallback de error NO se guarda en caché.
+//  Solo se cachea si la traducción es exitosa.
 // ============================================================
 
-import { translationCache }       from "../cache/TranslationCache";
-import { TranslationStorage }     from "../storage/TranslationStorage";
-import { LibreTranslateProvider } from "../providers/LibreTranslateProvider";
+import { translationCache }          from "../cache/TranslationCache";
+import { TranslationStorage }        from "../storage/TranslationStorage";
+import { RestTranslationProvider }   from "../providers/RestTranslationProvider";
 import type { ITranslationProvider } from "../providers/ITranslationProvider";
 import type { LanguageCode }         from "../models/TranslationEntry";
 import { SOURCE_LANGUAGE }           from "../constants/SupportedLanguages";
@@ -19,7 +21,7 @@ const BATCH_SIZE        = 20;
 const PERSIST_DEBOUNCE_MS = 1_500;
 
 class TranslationService {
-    private provider: ITranslationProvider = new LibreTranslateProvider();
+    private provider: ITranslationProvider = new RestTranslationProvider();
     private hydratedLanguages = new Set<LanguageCode>();
     private persistTimers     = new Map<LanguageCode, ReturnType<typeof setTimeout>>();
 

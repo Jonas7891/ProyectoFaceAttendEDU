@@ -61,8 +61,8 @@ function CourseDetailModal({ course, onClose }: { course: Course | null; onClose
                                     { label: t("Semestre"),    value: course.semester  },
                                     { label: t("Horario"),     value: course.schedule  },
                                     { label: t("Aula"),        value: course.room      },
-                                    { label: "Estudiantes", value: `${course.students} ${t("inscritos")}` },
-                                    { label: "Asistencia",  value: `${course.avgAttendance}%`    },
+                                    { label: t("Estudiantes"), value: `${course.students} ${t("inscritos")}` },
+                                    { label: t("Asistencia"),  value: `${course.avgAttendance}%`    },
                                 ].map(({ label, value }) => (
                                     <View key={label} style={{
                                         width: "47%",

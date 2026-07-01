@@ -14,12 +14,7 @@ import { useTheme }      from "../hooks/useTheme";
 import Button            from "../ui/button";
 import { FormField, AuthErrorBanner, AuthFooterLink, BrandPanelCircles } from "./AuthComponents";
 import { useLoginViewModel } from "../../../viewmodels/useAuthViewModel";
-
-const FEATURES = [
-    { title: "Reconocimiento facial en tiempo real", desc: "Registra asistencia automáticamente con IA."  },
-    { title: "Reportes y estadísticas detalladas",   desc: "Analiza patrones de asistencia por curso."   },
-    { title: "Gestión completa de estudiantes",      desc: "Centraliza toda la información académica."   },
-];
+import { useTranslation }    from "../../../i18n/hooks/useTranslation";
 
 interface LoginViewProps {
     onLoginSuccess:    (email: string, password: string) => void;
@@ -32,15 +27,22 @@ export default function LoginView({ onLoginSuccess, onForgotPassword, onGoToRegi
     const { theme }   = useTheme();
     const c           = theme.colors;
     const vm          = useLoginViewModel(onLoginSuccess);
+    const { t }       = useTranslation();
+
+    const FEATURES = [
+        { title: t("Reconocimiento facial en tiempo real"), desc: t("Registra asistencia automáticamente con IA.")  },
+        { title: t("Reportes y estadísticas detalladas"),   desc: t("Analiza patrones de asistencia por curso.")   },
+        { title: t("Gestión completa de estudiantes"),      desc: t("Centraliza toda la información académica.")   },
+    ];
 
     const fields = (
         <View style={{ gap: 18 }}>
             <FormField
-                label="Correo electrónico" placeholder="correo@universidad.edu"
+                label={t("Correo electrónico")} placeholder={t("correo@universidad.edu")}
                 onChangeText={vm.setEmail} icon="mail"
             />
             <FormField
-                label="Contraseña" placeholder="Tu contraseña"
+                label={t("Contraseña")} placeholder={t("Tu contraseña")}
                 onChangeText={vm.setPassword}
                 secureTextEntry={!vm.showPassword} icon="lock"
                 rightIcon={vm.showPassword ? "eye-off" : "eye"}
@@ -57,15 +59,15 @@ export default function LoginView({ onLoginSuccess, onForgotPassword, onGoToRegi
                 style={{ alignSelf: "flex-end", marginTop: 14 }}
             >
                 <Text style={{ fontSize: 13, color: c.brand.primary, fontWeight: "500" }}>
-                    ¿Olvidaste tu contraseña?
+                    {t("¿Olvidaste tu contraseña?")}
                 </Text>
             </TouchableOpacity>
             <View style={{ marginTop: 24 }}>
-                <Button label={vm.loading ? "Ingresando…" : "Ingresar"} onPress={vm.handleLogin} />
+                <Button label={vm.loading ? t("Ingresando…") : t("Ingresar")} onPress={vm.handleLogin} />
             </View>
-            <AuthFooterLink prompt="¿No tienes cuenta?" linkLabel="Regístrate aquí" onPress={onGoToRegister} />
+            <AuthFooterLink prompt={t("¿No tienes cuenta?")} linkLabel={t("Regístrate aquí")} onPress={onGoToRegister} />
             <Text style={{ fontSize: 12, color: c.text.secondary, textAlign: "center", marginTop: 40 }}>
-                © FaceAttend EDU {new Date().getFullYear()} — Derechos reservados
+                © FaceAttend EDU {new Date().getFullYear()} — {t("Derechos reservados")}
             </Text>
         </>
     );
@@ -91,10 +93,10 @@ export default function LoginView({ onLoginSuccess, onForgotPassword, onGoToRegi
                                 </Text>
                             </View>
                             <Text style={{ fontSize: 30, fontWeight: "800", color: c.text.primary, marginBottom: 6, letterSpacing: -0.5 }}>
-                                Inicio de sesión
+                                {t("Inicio de sesión")}
                             </Text>
                             <Text style={{ fontSize: 15, color: c.text.secondary, marginBottom: 32, lineHeight: 22 }}>
-                                Bienvenido de vuelta. Ingresa tus credenciales.
+                                {t("Bienvenido de vuelta. Ingresa tus credenciales.")}
                             </Text>
                             {fields}
                             {footer}
@@ -126,7 +128,7 @@ export default function LoginView({ onLoginSuccess, onForgotPassword, onGoToRegi
                                 FaceAttend EDU
                             </Text>
                             <Text style={{ fontSize: 16, color: "rgba(255,255,255,0.75)", textAlign: "center", lineHeight: 26, marginBottom: 40 }}>
-                                Asistencia inteligente para tu institución
+                                {t("Asistencia inteligente para tu institución")}
                             </Text>
                             <View style={{ gap: 18, width: "100%" }}>
                                 {FEATURES.map(f => (
@@ -150,10 +152,10 @@ export default function LoginView({ onLoginSuccess, onForgotPassword, onGoToRegi
                     >
                         <View style={{ width: "100%", maxWidth: 360 }}>
                             <Text style={{ fontSize: 28, fontWeight: "800", color: c.text.primary, marginBottom: 6, letterSpacing: -0.5 }}>
-                                Inicio de sesión
+                                {t("Inicio de sesión")}
                             </Text>
                             <Text style={{ fontSize: 15, color: c.text.secondary, marginBottom: 32, lineHeight: 24 }}>
-                                Bienvenido de vuelta. Ingresa tus credenciales.
+                                {t("Bienvenido de vuelta. Ingresa tus credenciales.")}
                             </Text>
                             {fields}
                             {footer}

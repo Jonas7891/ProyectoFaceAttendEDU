@@ -58,9 +58,9 @@ export function FormField({
                     onBlur={() => setFocused(false)}
                     autoCapitalize="none"
                     autoCorrect={false}
+                    // @ts-ignore - outlineStyle es válido en react-native-web aunque no esté en los tipos de RN
                     style={{
                         flex: 1, fontSize: 15, color: c.text.primary,
-                        // @ts-ignore
                         outlineStyle: "none",
                     }}
                 />

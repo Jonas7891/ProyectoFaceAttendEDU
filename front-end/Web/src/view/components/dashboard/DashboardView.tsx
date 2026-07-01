@@ -88,8 +88,8 @@ export function ActivityStatusIcon({ status }: { status: string }) {
 }
 
 export function ActivityBadge({ status }: { status: string }) {
-    if (status === "on_time") return <Badge variant="success">{t("A tiempo")}</Badge>;
     const { t } = useTranslation();
+    if (status === "on_time") return <Badge variant="success">{t("A tiempo")}</Badge>;
     if (status === "late")    return <Badge variant="warning">{t("Tardanza")}</Badge>;
     return                           <Badge variant="danger">{t("Ausente")}</Badge>;
 }

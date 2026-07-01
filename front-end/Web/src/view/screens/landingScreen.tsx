@@ -19,42 +19,26 @@ import { useResponsive }   from "../components/hooks/useResponsive";
 import { useTheme }        from "../components/hooks/useTheme";
 import { getTypography }   from "../components/constants/typography";
 import BadgePositions, { BadgePositionsMobile } from "../components/constants/badgePositions";
-
-const STATS = [
-    { value: "99%", label: "Precisión"   },
-    { value: "<1s", label: "Detección"   },
-    { value: "∞",   label: "Estudiantes" },
-];
-
-const FEATURES = [
-    {
-        icon: "aperture" as const,
-        title: "Reconocimiento facial en tiempo real",
-        desc: "Registra asistencia automáticamente con IA. Sin listas en papel, sin errores humanos.",
-    },
-    {
-        icon: "bar-chart-2" as const,
-        title: "Reportes y estadísticas detalladas",
-        desc: "Analiza patrones de asistencia por curso, semana y estudiante. Exporta en PDF o Excel.",
-    },
-    {
-        icon: "users" as const,
-        title: "Gestión completa de estudiantes",
-        desc: "Centraliza toda la información académica. Detecta estudiantes en riesgo de manera proactiva.",
-    },
-];
+import { useTranslation }  from "../../i18n/hooks/useTranslation";
 
 // ── HeroContent ──────────────────────────────────────────────
 
 function HeroContent(props: ReturnType<typeof useHeroEntrance>) {
     const navigation      = useNavigation<any>();
     const { sp, isSmall } = useResponsive();
+    const { t }           = useTranslation();
     const badgePos        = isSmall ? BadgePositionsMobile : BadgePositions;
 
+    const STATS = [
+        { value: "99%", label: t("Precisión")   },
+        { value: "<1s", label: t("Detección")   },
+        { value: "∞",   label: t("estudiantes") },
+    ];
+
     const BADGES = [
-        { label: "Reconociendo",  icon: "✅", delay: 0,   style: badgePos.topLeft  },
-        { label: "Escaneando…",   icon: "📷", delay: 400, style: badgePos.topRight },
-        { label: "Asistencia OK", icon: "📋", delay: 800, style: badgePos.bottom   },
+        { label: t("Reconociendo"),  icon: "✅", delay: 0,   style: badgePos.topLeft  },
+        { label: t("Escaneando…"),   icon: "📷", delay: 400, style: badgePos.topRight },
+        { label: t("Asistencia OK"), icon: "📋", delay: 800, style: badgePos.bottom   },
     ];
 
     return (
@@ -67,11 +51,11 @@ function HeroContent(props: ReturnType<typeof useHeroEntrance>) {
         }}>
             <HeroLeft
                 fadeLeft={props.fadeLeft}   slideLeft={props.slideLeft}
-                title={"Asistencia\n"}
-                accent={"inteligente\n"}
-                end="para tu institución"
-                primary="Registrarse"
-                secondary="Iniciar sesión"
+                title={t("Asistencia\n")}
+                accent={t("inteligente\n")}
+                end={t("para tu institución")}
+                primary={t("Registrarse landing")}
+                secondary={t("Iniciar sesión")}
                 stats={STATS}
                 onPrimary={()  => navigation.navigate("FaceAttendEDU-Register")}
                 onSecondary={() => navigation.navigate("FaceAttendEDU-Login")}
@@ -86,8 +70,27 @@ function HeroContent(props: ReturnType<typeof useHeroEntrance>) {
 function FeaturesSection() {
     const { sp, fs, isSmall } = useResponsive();
     const { theme }           = useTheme();
+    const { t }               = useTranslation();
     const c                   = theme.colors;
     const T                   = getTypography(fs);
+
+    const FEATURES = [
+        {
+            icon: "aperture" as const,
+            title: t("Reconocimiento facial en tiempo real"),
+            desc: t("Registra asistencia automáticamente con IA. Sin listas en papel, sin errores humanos."),
+        },
+        {
+            icon: "bar-chart-2" as const,
+            title: t("Reportes y estadísticas detalladas"),
+            desc: t("Analiza patrones de asistencia por curso, semana y estudiante. Exporta en PDF o Excel."),
+        },
+        {
+            icon: "users" as const,
+            title: t("Gestión completa de estudiantes"),
+            desc: t("Centraliza toda la información académica. Detecta estudiantes en riesgo de manera proactiva."),
+        },
+    ];
 
     return (
         <View style={{
@@ -103,11 +106,11 @@ function FeaturesSection() {
                     borderRadius: 99, marginBottom: sp(12),
                 }}>
                     <Text style={[T.eyebrow, { color: "rgba(255,255,255,0.85)", letterSpacing: 1.2 }]}>
-                        ¿Por qué FaceAttend EDU?
+                        {t("¿Por qué FaceAttend EDU?")}
                     </Text>
                 </View>
                 <Text style={[T.heading1, { color: c.text.onBrand, textAlign: "center" }]}>
-                    Todo lo que necesitas{"\n"}en una sola plataforma
+                    {t("Todo lo que necesitas en una sola plataforma")}
                 </Text>
             </View>
 
@@ -178,6 +181,7 @@ function AppNavbar() {
 function Footer() {
     const { fs }    = useResponsive();
     const { theme } = useTheme();
+    const { t }     = useTranslation();
     const c         = theme.colors;
     const T         = getTypography(fs);
     const insets    = useSafeAreaInsets();
@@ -190,7 +194,7 @@ function Footer() {
             backgroundColor: c.background.surface,
         }}>
             <Text style={[T.caption, { color: c.text.secondary }]}>
-                © FaceAttend EDU {new Date().getFullYear()} — Derechos reservados
+                © FaceAttend EDU {new Date().getFullYear()} — {t("Derechos reservados")}
             </Text>
         </View>
     );

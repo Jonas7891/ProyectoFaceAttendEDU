@@ -162,7 +162,7 @@ export default function ReportsView() {
 
                 <Card style={{ flex: 1 }}>
                     <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary, marginBottom: 4 }}>
-                        Distribución
+                        {t("Distribución")}
                     </Text>
                     <Text style={{ fontSize: 12, color: c.text.secondary, marginBottom: 16 }}>
                         {t("Estado de asistencia")}
@@ -190,7 +190,7 @@ export default function ReportsView() {
             <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
                 <Card style={{ flex: 1 }}>
                     <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary, marginBottom: 4 }}>
-                        Asistencia por día
+                        {t("Asistencia por día")}
                     </Text>
                     <Text style={{ fontSize: 12, color: c.text.secondary, marginBottom: 16 }}>{t("Esta semana")}</Text>
                     <DailyBars data={vm.attendanceByDay} />
@@ -198,7 +198,7 @@ export default function ReportsView() {
 
                 <Card style={{ flex: 1 }}>
                     <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary, marginBottom: 4 }}>
-                        Ranking por curso
+                        {t("Ranking por curso")}
                     </Text>
                     <Text style={{ fontSize: 12, color: c.text.secondary, marginBottom: 16 }}>
                         {t("Asistencia promedio")}
