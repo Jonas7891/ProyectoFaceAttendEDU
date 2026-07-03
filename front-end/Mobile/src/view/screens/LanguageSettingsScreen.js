@@ -225,49 +225,6 @@ export default function LanguageSettingsScreen() {
                 </Text>
               </TouchableOpacity>
 
-                {/* ── Alerta de resultado ── */}
-                {alertData.message && (
-                    <TouchableOpacity
-                        onPress={clearAlert}
-                        style={{
-                            padding: 12,
-                            borderRadius: 8,
-                            marginBottom: 12,
-                            backgroundColor:
-                                alertData.type === 'success'
-                                    ? colors.success + '20'
-                                    : alertData.type === 'error'
-                                        ? colors.error + '20'
-                                        : colors.warning + '20',
-                        }}
-                    >
-                        <Text
-                            style={{
-                                color:
-                                    alertData.type === 'success'
-                                        ? colors.success
-                                        : alertData.type === 'error'
-                                            ? colors.error
-                                            : colors.warning,
-                                fontSize: 14,
-                                textAlign: 'center',
-                            }}
-                        >
-                            {alertData.message}
-                        </Text>
-                        <Text
-                            style={{
-                                color: colors.textSecondary,
-                                fontSize: 11,
-                                textAlign: 'center',
-                                marginTop: 4,
-                            }}
-                        >
-                            {t('common.tapToClose', { defaultValue: 'Toca para cerrar' })}
-                        </Text>
-                    </TouchableOpacity>
-                )}
-
                 <PrimaryButton
                     title={t('common.save')}
                     onPress={handleSave}
@@ -326,7 +283,6 @@ export default function LanguageSettingsScreen() {
                       },
                     ]}
                 >
-                  🔔{' '}
                   {t('settings.configureAlerts', {
                     defaultValue: 'Configurar Alertas',
                   })}
@@ -683,7 +639,68 @@ export default function LanguageSettingsScreen() {
                         }
                     />
                   </View>
+
+                    {/* Alerta por Defecto */}
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'flex-start',
+                            justifyContent: 'space-between',
+                            paddingVertical: 12,
+                        }}
+                    >
+                        <View
+                            style={{
+                                flex: 1,
+                                marginRight: 12,
+                            }}
+                        >
+                            <Text
+                                style={[
+                                    styles.languageSettingsOptionText,
+                                    { color: colors.text },
+                                ]}
+                            >
+                                {t('settings.defaultAlerts', {
+                                    defaultValue:
+                                        'Alertas en Dispositivos IoT',
+                                })}
+                            </Text>
+
+                            <Text
+                                style={[
+                                    styles.languageSettingsSubtitle,
+                                    {
+                                        color: colors.textSecondary,
+                                        fontSize: 12,
+                                        marginTop: 4,
+                                        textAlign: 'left',
+                                    },
+                                ]}
+                            >
+                                {t('settings.defaultAlertsDesc', {
+                                    defaultValue:
+                                        'Mensajes sobre los dispositivos de escaneo facial',
+                                })}
+                            </Text>
+                        </View>
+
+                        <Switch
+                            value={alertsConfig.enableDefault}
+                            onValueChange={() => toggleAlertType('default')}
+                            trackColor={{
+                                false: colors.textSecondary + '40',
+                                true: colors.danger + '70',
+                            }}
+                            thumbColor={
+                                alertsConfig.enableDefault
+                                    ? colors.danger
+                                    : colors.textSecondary
+                            }
+                        />
+                    </View>
                 </ScrollView>
+
 
                 {/* Botón Cerrar */}
                 <TouchableOpacity

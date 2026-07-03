@@ -21,6 +21,7 @@ import AttendanceReportScreen from '../view/screens/AttendanceReportScreen';
 import SchoolConfigurationScreen from '../view/screens/SchoolConfigurationScreen';
 import VerifyCodeScreen from "../view/screens/login/Verifycodescreen";
 import ForgotPasswordScreen from "../view/screens/login/Forgotpasswordscreen";
+import PendingJustificationScreen from "../view/screens/PendingJustificationScreen";
 
 const Stack = createStackNavigator();
 
@@ -153,6 +154,7 @@ export default function App() {
                         </Stack.Screen>
                         <Stack.Screen name="AttendanceReportScreen" component={AttendanceReportScreen}/>
                         <Stack.Screen name="SchoolConfigurationScreen" component={SchoolConfigurationScreen}/>
+                        <Stack.Screen name="PendingJustificationScreen" component={PendingJustificationScreen}/>
                     </>
                 )}
             </Stack.Navigator>
