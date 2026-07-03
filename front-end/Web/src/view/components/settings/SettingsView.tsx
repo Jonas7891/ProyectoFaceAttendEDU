@@ -334,37 +334,217 @@ function ModeSelector() {
 function LanguageSelector() {
     const { theme } = useTheme();
     const c = theme.colors;
-    const { language, setLanguage, supportedLanguages, isLoading } = useTranslation();
+    const { language, setLanguage, supportedLanguages, currentLanguage, isLoading } = useTranslation();
+
+    const [open,   setOpen]   = useState(false);
+    const [query,  setQuery]  = useState("");
+    const searchRef           = useRef<TextInput>(null);
+    const dropdownAnim        = useRef(new Animated.Value(0)).current;
+
+    // Filtra la lista según el texto buscado (por nombre o código)
+    const filtered = query.trim() === ""
+        ? supportedLanguages
+        : supportedLanguages.filter(l =>
+            l.labelES.toLowerCase().includes(query.toLowerCase()) ||
+            l.label.toLowerCase().includes(query.toLowerCase())   ||
+            l.code.toLowerCase().includes(query.toLowerCase())
+        );
+
+    // Anima la apertura / cierre del dropdown
+    const toggleOpen = useCallback(() => {
+        const toValue = open ? 0 : 1;
+        setOpen(prev => !prev);
+        if (!open) setQuery("");
+        Animated.timing(dropdownAnim, {
+            toValue,
+            duration: 180,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: false,
+        }).start(() => {
+            // Al abrir, enfoca el input de búsqueda
+            if (!open) searchRef.current?.focus();
+        });
+    }, [open, dropdownAnim]);
+
+    const handleSelect = useCallback((code: string) => {
+        setLanguage(code as any);
+        // Cierra el dropdown al seleccionar
+        Animated.timing(dropdownAnim, {
+            toValue: 0,
+            duration: 150,
+            easing: Easing.in(Easing.quad),
+            useNativeDriver: false,
+        }).start(() => {
+            setOpen(false);
+            setQuery("");
+        });
+    }, [setLanguage, dropdownAnim]);
+
+    const dropdownHeight = dropdownAnim.interpolate({
+        inputRange:  [0, 1],
+        outputRange: [0, Math.min(supportedLanguages.length, 6) * 44 + 52],
+    });
+
+    const dropdownOpacity = dropdownAnim.interpolate({
+        inputRange:  [0, 1],
+        outputRange: [0, 1],
+    });
 
     return (
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {supportedLanguages.map(lang => {
-                const active = language === lang.code;
-                return (
-                    <TouchableOpacity
-                        key={lang.code}
-                        onPress={() => setLanguage(lang.code)}
-                        disabled={isLoading}
+        <View style={{ opacity: isLoading ? 0.5 : 1 }}>
+            {/* ── Trigger ────────────────────────────────────────── */}
+            <TouchableOpacity
+                onPress={toggleOpen}
+                disabled={isLoading}
+                activeOpacity={0.75}
+                style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10,
+                    paddingVertical: 10,
+                    paddingHorizontal: 14,
+                    borderRadius: open ? 10 : 10,
+                    borderWidth: open ? 2 : 1.5,
+                    borderColor: open ? c.brand.primary : c.border.primary,
+                    backgroundColor: open ? c.brand.primaryLight : c.background.surface,
+                    // Cuando está abierto, redondea solo arriba
+                    borderBottomLeftRadius:  open ? 0 : 10,
+                    borderBottomRightRadius: open ? 0 : 10,
+                }}
+            >
+                {/* Bandera + nombre del idioma activo */}
+                <Text style={{ fontSize: 18, lineHeight: 22 }}>{currentLanguage?.flag ?? "🌐"}</Text>
+                <View style={{ flex: 1 }}>
+                    <Text style={{
+                        fontSize: 13, fontWeight: "600",
+                        color: open ? c.brand.primary : c.text.primary,
+                    }}>
+                        {currentLanguage?.labelES ?? "Idioma"}
+                    </Text>
+                    <Text style={{ fontSize: 11, color: c.text.tertiary ?? c.text.secondary, marginTop: 1 }}>
+                        {currentLanguage?.label ?? ""}
+                    </Text>
+                </View>
+                {/* Chevron animado */}
+                <Animated.View style={{
+                    transform: [{
+                        rotate: dropdownAnim.interpolate({
+                            inputRange:  [0, 1],
+                            outputRange: ["0deg", "180deg"],
+                        }),
+                    }],
+                }}>
+                    <Feather name="chevron-down" size={16} color={open ? c.brand.primary : c.text.secondary} />
+                </Animated.View>
+            </TouchableOpacity>
+
+            {/* ── Dropdown panel ─────────────────────────────────── */}
+            <Animated.View style={{
+                height:   dropdownHeight,
+                opacity:  dropdownOpacity,
+                overflow: "hidden",
+                borderWidth: 2,
+                borderTopWidth: 0,
+                borderColor: c.brand.primary,
+                borderBottomLeftRadius: 10,
+                borderBottomRightRadius: 10,
+                backgroundColor: c.background.surface,
+            }}>
+                {/* Buscador */}
+                <View style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 8,
+                    margin: 8,
+                    paddingHorizontal: 10,
+                    paddingVertical: 7,
+                    borderRadius: 7,
+                    borderWidth: 1,
+                    borderColor: c.border.primary,
+                    backgroundColor: c.background.app,
+                }}>
+                    <Feather name="search" size={13} color={c.text.secondary} />
+                    <TextInput
+                        ref={searchRef}
+                        value={query}
+                        onChangeText={setQuery}
+                        placeholder="Buscar idioma…"
+                        placeholderTextColor={c.text.secondary}
                         style={{
-                            flexDirection: "row", alignItems: "center", gap: 6,
-                            paddingVertical: 7, paddingHorizontal: 12, borderRadius: 8,
-                            borderWidth: active ? 2 : 1.5,
-                            borderColor: active ? c.brand.primary : c.border.primary,
-                            backgroundColor: active ? c.brand.primaryLight : c.background.surface,
-                            opacity: isLoading ? 0.5 : 1,
+                            flex: 1,
+                            fontSize: 13,
+                            color: c.text.primary,
+                            padding: 0,
+                            outline: "none" as any,
                         }}
-                    >
-                        <Text style={{ fontSize: 14 }}>{lang.flag}</Text>
-                        <Text style={{
-                            fontSize: 12, fontWeight: active ? "600" : "400",
-                            color: active ? c.brand.primary : c.text.secondary,
-                        }}>
-                            {lang.labelES}
-                        </Text>
-                        {active && <Feather name="check" size={11} color={c.brand.primary} />}
-                    </TouchableOpacity>
-                );
-            })}
+                    />
+                    {query.length > 0 && (
+                        <TouchableOpacity onPress={() => setQuery("")} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
+                            <Feather name="x" size={13} color={c.text.secondary} />
+                        </TouchableOpacity>
+                    )}
+                </View>
+
+                {/* Lista de idiomas */}
+                <ScrollView
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                    style={{ maxHeight: Math.min(supportedLanguages.length, 6) * 44 }}
+                >
+                    {filtered.length === 0 ? (
+                        <View style={{ paddingVertical: 14, alignItems: "center" }}>
+                            <Text style={{ fontSize: 12, color: c.text.secondary }}>Sin resultados</Text>
+                        </View>
+                    ) : (
+                        filtered.map((lang, index) => {
+                            const active = language === lang.code;
+                            const isLast = index === filtered.length - 1;
+                            return (
+                                <TouchableOpacity
+                                    key={lang.code}
+                                    onPress={() => handleSelect(lang.code)}
+                                    activeOpacity={0.7}
+                                    style={{
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        gap: 10,
+                                        paddingHorizontal: 14,
+                                        paddingVertical: 10,
+                                        backgroundColor: active ? c.brand.primaryLight : "transparent",
+                                        borderBottomWidth: isLast ? 0 : 1,
+                                        borderBottomColor: c.border.primary,
+                                    }}
+                                >
+                                    <Text style={{ fontSize: 16, width: 22, textAlign: "center" }}>{lang.flag}</Text>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={{
+                                            fontSize: 13,
+                                            fontWeight: active ? "600" : "400",
+                                            color: active ? c.brand.primary : c.text.primary,
+                                        }}>
+                                            {lang.labelES}
+                                        </Text>
+                                        <Text style={{ fontSize: 11, color: c.text.secondary }}>
+                                            {lang.label}
+                                        </Text>
+                                    </View>
+                                    {active && (
+                                        <View style={{
+                                            width: 18, height: 18,
+                                            borderRadius: 9,
+                                            backgroundColor: c.brand.primary,
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                        }}>
+                                            <Feather name="check" size={10} color="#fff" />
+                                        </View>
+                                    )}
+                                </TouchableOpacity>
+                            );
+                        })
+                    )}
+                </ScrollView>
+            </Animated.View>
         </View>
     );
 }
