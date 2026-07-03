@@ -153,7 +153,7 @@ export default function Sidebar({ currentTab, onNavigate, onLogout }: Props) {
                         {mockUser.name}
                     </Text>
                     <Text style={{ fontSize: 11, color: c.text.secondary }}>
-                        {mockUser.role}
+                        {mockUser.role === "teacher" ? t("Docente") : mockUser.role}
                     </Text>
                 </View>
                 <TouchableOpacity onPress={onLogout}>

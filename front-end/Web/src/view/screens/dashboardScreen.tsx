@@ -21,6 +21,7 @@ import { useTheme }      from "../components/hooks/useTheme";
 import { useResponsive } from "../components/hooks/useResponsive";
 import { useDashboardScreenViewModel } from "../../viewmodels/useDashboardScreenViewModel";
 import type { TabKey } from "../../viewmodels/useDashboardScreenViewModel";
+import { useTranslation } from "../../i18n/hooks/useTranslation";
 
 // ── TabContent ───────────────────────────────────────────────
 
@@ -43,6 +44,7 @@ export default function DashboardScreen() {
     const { theme }   = useTheme();
     const c           = theme.colors;
     const vm          = useDashboardScreenViewModel();
+    const { t }       = useTranslation();
 
     return (
         <SafeAreaProvider>
@@ -106,7 +108,7 @@ export default function DashboardScreen() {
                                         color: isActive ? c.brand.primary : c.text.secondary,
                                         fontWeight: isActive ? "600" : "400",
                                     }}>
-                                        {item.label}
+                                        {t(item.label)}
                                     </Text>
                                 </TouchableOpacity>
                             );

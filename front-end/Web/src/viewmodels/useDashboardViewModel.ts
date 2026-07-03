@@ -4,6 +4,7 @@
 
 import { useMemo } from "react";
 import { useTheme } from "../view/components/hooks/useTheme";
+import { useTranslation } from "../i18n/hooks/useTranslation";
 import {
     mockStudents, mockCourses,
     mockAttendanceByDay, mockAttendanceByWeek,
@@ -31,6 +32,7 @@ export interface DashboardViewModel {
 
 export function useDashboardViewModel(): DashboardViewModel {
     const { theme } = useTheme();
+    const { t }     = useTranslation();
     const c = theme.colors;
 
     const todayLabel = useMemo(() => {
@@ -42,33 +44,33 @@ export function useDashboardViewModel(): DashboardViewModel {
 
     const stats: DashboardStat[] = useMemo(() => [
         {
-            label: "Total estudiantes",
+            label: t("Total estudiantes"),
             value: mockStudents.length,
-            change: 2.4, changeLabel: "este mes",
+            change: 2.4, changeLabel: t("este mes"),
             color: c.brand.primary,
             icon:  "users",
         },
         {
-            label: "Cursos activos",
+            label: t("Cursos activos"),
             value: mockCourses.length,
             color: c.states.success,
             icon:  "book-open",
         },
         {
-            label: "Asistencia prom.",
+            label: t("Asistencia prom."),
             value: "85.4%",
-            change: 1.2, changeLabel: "vs sem. ant.",
+            change: 1.2, changeLabel: t("vs sem. ant."),
             color: "#8B5CF6",
             icon:  "trending-up",
         },
         {
-            label: "Alertas",
+            label: t("Alertas"),
             value: "3",
-            change: -8, changeLabel: "vs sem. ant.",
+            change: -8, changeLabel: t("vs sem. ant."),
             color: c.states.warning,
             icon:  "alert-circle",
         },
-    ], [c]);
+    ], [c, t]);
 
     const courseAttendance = useMemo(() =>
         mockCourseAttendance.map(item => {

@@ -4,6 +4,7 @@
 
 import { useState, useMemo } from "react";
 import { useTheme } from "../view/components/hooks/useTheme";
+import { useTranslation } from "../i18n/hooks/useTranslation";
 import {
     mockStudents, mockCourses,
     mockAttendanceByDay, mockAttendanceByWeek, mockCourseAttendance,
@@ -58,6 +59,7 @@ export interface ReportsViewModel {
 export function useReportsViewModel(): ReportsViewModel {
     const [period, setPeriod] = useState<Period>("semester");
     const { theme } = useTheme();
+    const { t }     = useTranslation();
     const c = theme.colors;
 
     const atRiskStudents = useMemo(
@@ -66,17 +68,17 @@ export function useReportsViewModel(): ReportsViewModel {
     );
 
     const stats: ReportStat[] = useMemo(() => [
-        { label: "Asistencia global", value: "85.4%", change: 1.2,  changeLabel: "vs período ant.", color: c.brand.primary,  icon: "trending-up"  },
-        { label: "Total registros",   value: "2,847", change: 5.8,  changeLabel: "vs período ant.", color: c.states.success, icon: "users"         },
-        { label: "Tardanzas",         value: "324",   change: -3.1, changeLabel: "vs período ant.", color: c.states.warning, icon: "calendar"      },
-        { label: "En riesgo",         value: atRiskStudents.length,  color: c.states.danger, icon: "alert-circle" },
-    ], [c, atRiskStudents.length]);
+        { label: t("Asistencia global"), value: "85.4%", change: 1.2,  changeLabel: t("vs período ant."), color: c.brand.primary,  icon: "trending-up"  },
+        { label: t("Total registros"),   value: "2,847", change: 5.8,  changeLabel: t("vs período ant."), color: c.states.success, icon: "users"         },
+        { label: t("Tardanzas"),         value: "324",   change: -3.1, changeLabel: t("vs período ant."), color: c.states.warning, icon: "calendar"      },
+        { label: t("En riesgo"),         value: atRiskStudents.length,  color: c.states.danger, icon: "alert-circle" },
+    ], [c, t, atRiskStudents.length]);
 
     const distribution: DistributionItem[] = useMemo(() => [
-        { name: "A tiempo",  value: 72, color: c.states.success },
-        { name: "Tardanzas", value: 13, color: c.states.warning },
-        { name: "Ausentes",  value: 15, color: c.states.danger  },
-    ], [c]);
+        { name: t("A tiempo"),  value: 72, color: c.states.success },
+        { name: t("Tardanzas"), value: 13, color: c.states.warning },
+        { name: t("Ausentes"),  value: 15, color: c.states.danger  },
+    ], [c, t]);
 
     const courseRanking: CourseRankingItem[] = useMemo(() =>
         mockCourseAttendance.map((item, rank) => {

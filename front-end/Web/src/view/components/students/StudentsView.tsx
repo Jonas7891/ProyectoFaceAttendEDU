@@ -86,7 +86,7 @@ function StudentDetailModal({ student, onClose }: { student: Student | null; onC
                             }}>
                                 <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 10 }}>
                                     <Text style={{ fontSize: 13, fontWeight: "600", color: c.text.primary }}>
-                                        Asistencia
+                                        {t("Asistencia")}
                                     </Text>
                                     <Text style={{ fontSize: 18, fontWeight: "800", color: attendanceColor }}>
                                         {student.attendance}%
@@ -96,7 +96,7 @@ function StudentDetailModal({ student, onClose }: { student: Student | null; onC
                                 <Text style={{ fontSize: 11, color: c.text.secondary, marginTop: 8 }}>
                                     {student.attendance >= 80
                                         ? t("Cumple el mínimo requerido (80%)")
-                                        : "⚠ Por debajo del mínimo requerido (80%)"}
+                                        : t("⚠ Por debajo del mínimo requerido (80%)")}
                                 </Text>
                             </View>
 
@@ -109,7 +109,7 @@ function StudentDetailModal({ student, onClose }: { student: Student | null; onC
                                     <Feather name="aperture" size={18} color={c.brand.primary} />
                                     <View>
                                         <Text style={{ fontSize: 12, fontWeight: "600", color: c.text.primary }}>
-                                            Reconocimiento facial
+                                            {t("Reconocimiento facial")}
                                         </Text>
                                         <Text style={{ fontSize: 11, color: c.text.secondary }}>
                                             {student.registered ? t("Rostro registrado") : t("Sin registro facial")}
@@ -118,7 +118,7 @@ function StudentDetailModal({ student, onClose }: { student: Student | null; onC
                                 </View>
                                 {student.registered
                                     ? <Feather name="check-circle" size={16} color={c.states.success} />
-                                    : <UIButton variant="primary" size="sm">Registrar</UIButton>
+                                    : <UIButton variant="primary" size="sm">{t("Registrar")}</UIButton>
                                 }
                             </View>
                         </ScrollView>
@@ -128,8 +128,8 @@ function StudentDetailModal({ student, onClose }: { student: Student | null; onC
                             padding: 16, borderTopWidth: 1, borderTopColor: c.border.primary,
                             flexDirection: "row", gap: 8, justifyContent: "flex-end",
                         }}>
-                            <UIButton variant="ghost" onPress={onClose}>Cerrar</UIButton>
-                            <UIButton variant="primary">Editar estudiante</UIButton>
+                            <UIButton variant="ghost" onPress={onClose}>{t("Cerrar")}</UIButton>
+                            <UIButton variant="primary">{t("Editar estudiante")}</UIButton>
                         </View>
                     </View>
                 </TouchableOpacity>
@@ -228,7 +228,7 @@ export default function StudentsView() {
             >
                 <PageHeader
                     title={t("Estudiantes")}
-                    subtitle={`${vm.filtered.length} estudiante${vm.filtered.length !== 1 ? "s" : ""} encontrado${vm.filtered.length !== 1 ? "s" : ""}`}
+                    subtitle={`${vm.filtered.length} ${vm.filtered.length !== 1 ? t("estudiantes") : t("estudiante")} ${vm.filtered.length !== 1 ? t("encontrados") : t("encontrado")}`}
                     actions={<>
                         <UIButton variant="ghost" size="sm">{t("Exportar")}</UIButton>
                         <UIButton variant="primary" size="sm">+ {t("Nuevo estudiante")}</UIButton>
@@ -270,7 +270,7 @@ export default function StudentsView() {
                                             fontSize: 12, fontWeight: "600",
                                             color: vm.courseFilter === course ? c.text.onBrand : c.text.secondary,
                                         }}>
-                                            {course || "Todos"}
+                                            {course || t("Todos")}
                                         </Text>
                                     </TouchableOpacity>
                                 ))}
