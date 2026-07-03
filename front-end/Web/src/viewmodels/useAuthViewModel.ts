@@ -5,6 +5,7 @@
 // ============================================================
 
 import { useState, useRef } from "react";
+import { useTranslation } from "../i18n/hooks/useTranslation";
 
 export interface LoginForm {
     email:    string;
@@ -20,6 +21,7 @@ export interface SignupForm {
 // ── useLoginViewModel ────────────────────────────────────────
 
 export function useLoginViewModel(onSuccess: (email: string, password: string) => void) {
+    const { t } = useTranslation();
     const emailRef    = useRef("");
     const passwordRef = useRef("");
 
@@ -33,7 +35,7 @@ export function useLoginViewModel(onSuccess: (email: string, password: string) =
 
     function validate(): boolean {
         if (!emailRef.current || !passwordRef.current) {
-            setError("Completa todos los campos");
+            setError(t("Completa todos los campos"));
             return false;
         }
         setError("");
@@ -66,6 +68,7 @@ export function useLoginViewModel(onSuccess: (email: string, password: string) =
 export function useSignupViewModel(
     onSuccess: (data: SignupForm) => void
 ) {
+    const { t } = useTranslation();
     const usernameRef = useRef("");
     const emailRef    = useRef("");
     const passwordRef = useRef("");
@@ -81,7 +84,7 @@ export function useSignupViewModel(
 
     function validate(): boolean {
         if (!usernameRef.current || !emailRef.current || !passwordRef.current) {
-            setError("Completa todos los campos");
+            setError(t("Completa todos los campos"));
             return false;
         }
         setError("");

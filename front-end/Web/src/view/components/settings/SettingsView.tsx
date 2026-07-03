@@ -61,7 +61,7 @@ type ColorVerdict = {
     wcagLevel: "AAA" | "AA" | "A" | "Falla";
 };
 
-function evaluateColor(hex: string): ColorVerdict {
+function evaluateColor(hex: string, t: (s: string) => string): ColorVerdict {
     const r = parseInt(hex.slice(1, 3), 16) / 255;
     const g = parseInt(hex.slice(3, 5), 16) / 255;
     const b = parseInt(hex.slice(5, 7), 16) / 255;
@@ -93,39 +93,39 @@ function evaluateColor(hex: string): ColorVerdict {
     else                          wcagLevel = "Falla";
 
     let readability: string;
-    if (contrastVsWhite >= 7)        readability = "Texto blanco encima se ve perfecto";
-    else if (contrastVsWhite >= 4.5) readability = "Texto blanco es legible sin problema";
-    else if (contrastVsWhite >= 3)   readability = "Texto blanco se ve, pero cuesta leerlo — mejor usar texto oscuro";
-    else                              readability = "Texto blanco encima no se lee bien — este color es demasiado claro";
+    if (contrastVsWhite >= 7)        readability = t("Texto blanco encima se ve perfecto");
+    else if (contrastVsWhite >= 4.5) readability = t("Texto blanco es legible sin problema");
+    else if (contrastVsWhite >= 3)   readability = t("Texto blanco se ve, pero cuesta leerlo — mejor usar texto oscuro");
+    else                              readability = t("Texto blanco encima no se lee bien — este color es demasiado claro");
 
     let vibe: string;
-    if (satPct < 15)                        vibe = "Tono neutro — discreto, no llama la atención";
-    else if (hueDeg < 30 || hueDeg >= 340)  vibe = "Rojo — enérgico y llamativo, úsalo con moderación";
-    else if (hueDeg < 60)                   vibe = "Naranja / dorado — cálido y amigable";
-    else if (hueDeg < 150)                  vibe = "Verde — fresco, transmite calma y confianza";
-    else if (hueDeg < 200)                  vibe = "Cian / turquesa — moderno y tecnológico";
-    else if (hueDeg < 260)                  vibe = "Azul — profesional, genera confianza";
-    else if (hueDeg < 310)                  vibe = "Violeta / púrpura — creativo y sofisticado";
-    else                                    vibe = "Rosa / magenta — expresivo y llamativo";
+    if (satPct < 15)                        vibe = t("Tono neutro — discreto, no llama la atención");
+    else if (hueDeg < 30 || hueDeg >= 340)  vibe = t("Rojo — enérgico y llamativo, úsalo con moderación");
+    else if (hueDeg < 60)                   vibe = t("Naranja / dorado — cálido y amigable");
+    else if (hueDeg < 150)                  vibe = t("Verde — fresco, transmite calma y confianza");
+    else if (hueDeg < 200)                  vibe = t("Cian / turquesa — moderno y tecnológico");
+    else if (hueDeg < 260)                  vibe = t("Azul — profesional, genera confianza");
+    else if (hueDeg < 310)                  vibe = t("Violeta / púrpura — creativo y sofisticado");
+    else                                    vibe = t("Rosa / magenta — expresivo y llamativo");
 
     let uiFit: string;
-    if (lumPct > 80)                          uiFit = "Muy claro — puede perderse sobre fondos blancos";
-    else if (lumPct < 20)                     uiFit = "Muy oscuro — puede confundirse con el texto";
-    else if (satPct < 15)                     uiFit = "Poco saturado — funciona como neutro, pero puede pasar desapercibido";
-    else if (satPct > 95 && lumPct > 60)      uiFit = "Muy vibrante — llama la atención, puede cansar en uso prolongado";
-    else                                      uiFit = "Proporciones equilibradas — ideal para botones, tabs y bordes";
+    if (lumPct > 80)                          uiFit = t("Muy claro — puede perderse sobre fondos blancos");
+    else if (lumPct < 20)                     uiFit = t("Muy oscuro — puede confundirse con el texto");
+    else if (satPct < 15)                     uiFit = t("Poco saturado — funciona como neutro, pero puede pasar desapercibido");
+    else if (satPct > 95 && lumPct > 60)      uiFit = t("Muy vibrante — llama la atención, puede cansar en uso prolongado");
+    else                                      uiFit = t("Proporciones equilibradas — ideal para botones, tabs y bordes");
 
     let tip: string;
     if (contrastVsWhite < 3 && lumPct > 70)
-        tip = "Baja la luminosidad 15–20 puntos para que el texto blanco sea legible";
+        tip = t("Baja la luminosidad 15–20 puntos para que el texto blanco sea legible");
     else if (contrastVsWhite < 4.5 && lumPct > 55)
-        tip = "Baja la luminosidad 8–10 puntos para mejorar la legibilidad";
+        tip = t("Baja la luminosidad 8–10 puntos para mejorar la legibilidad");
     else if (satPct < 15 && lumPct > 50)
-        tip = "Sube la saturación para que el acento resalte sobre los fondos";
+        tip = t("Sube la saturación para que el acento resalte sobre los fondos");
     else if (lumPct > 80)
-        tip = "Este tono es muy pálido — bájalo para que se vea como un acento real";
+        tip = t("Este tono es muy pálido — bájalo para que se vea como un acento real");
     else
-        tip = "Este color funciona bien — no necesita ajustes";
+        tip = t("Este color funciona bien — no necesita ajustes");
 
     let score: ColorVerdict["score"];
     let scoreColor: string;
@@ -147,6 +147,7 @@ function evaluateColor(hex: string): ColorVerdict {
 // ── Componente: Badge de estado WCAG ─────────────────────────
 
 function WcagBadge({ level }: { level: ColorVerdict["wcagLevel"] }) {
+    const { t } = useTranslation();
     const colors: Record<string, { bg: string; text: string }> = {
         "AAA":   { bg: "#D1FAE5", text: "#065F46" },
         "AA":    { bg: "#DBEAFE", text: "#1E40AF" },
@@ -160,7 +161,7 @@ function WcagBadge({ level }: { level: ColorVerdict["wcagLevel"] }) {
             paddingHorizontal: 6, paddingVertical: 2,
         }}>
             <Text style={{ fontSize: 10, fontWeight: "700", color: style.text, letterSpacing: 0.5 }}>
-                WCAG {level}
+                WCAG {level === "Falla" ? t("Falla") : level}
             </Text>
         </View>
     );
@@ -406,10 +407,10 @@ function ThemePreview({ previewTheme }: { previewTheme: ThemeTokens }) {
                         <Text style={{ fontSize: 11, color: "#fff", fontWeight: "600" }}>{t("Primario")}</Text>
                     </View>
                     <View style={{ flex: 1, borderRadius: 6, padding: 7, alignItems: "center", borderWidth: 1, borderColor: c.brand.primary }}>
-                        <Text style={{ fontSize: 11, color: c.brand.primary, fontWeight: "600" }}>Outline</Text>
+                        <Text style={{ fontSize: 11, color: c.brand.primary, fontWeight: "600" }}>{t("Outline")}</Text>
                     </View>
                     <View style={{ flex: 1, backgroundColor: c.interactive.disabled, borderRadius: 6, padding: 7, alignItems: "center" }}>
-                        <Text style={{ fontSize: 11, color: c.text.secondary, fontWeight: "600" }}>Ghost</Text>
+                        <Text style={{ fontSize: 11, color: c.text.secondary, fontWeight: "600" }}>{t("Ghost")}</Text>
                     </View>
                 </View>
                 {/* Badges */}
@@ -449,7 +450,7 @@ function AccentColorSelector({ previewHex, onPreviewChange }: AccentSelectorProp
     const [showHexInput, setShowHexInput] = useState(false);
 
     const currentHex = hslToHex(hue, sat, lum);
-    const verdict    = evaluateColor(currentHex);
+    const verdict    = evaluateColor(currentHex, t);
 
     function apply(h: number, s: number, l: number) {
         setHue(h); setSat(s); setLum(l);
@@ -470,27 +471,27 @@ function AccentColorSelector({ previewHex, onPreviewChange }: AccentSelectorProp
     const sliderDescriptions = {
         hue: {
             ranges: [
-                { max: 30,  label: "🔴 Rojo" },
-                { max: 60,  label: "🟠 Naranja" },
-                { max: 150, label: "🟢 Verde" },
-                { max: 200, label: "🩵 Cian" },
-                { max: 260, label: "🔵 Azul" },
-                { max: 310, label: "🟣 Violeta" },
-                { max: 340, label: "🩷 Rosa" },
-                { max: 360, label: "🔴 Rojo" },
+                { max: 30,  label: t("🔴 Rojo") },
+                { max: 60,  label: t("🟠 Naranja") },
+                { max: 150, label: t("🟢 Verde") },
+                { max: 200, label: t("🩵 Cian") },
+                { max: 260, label: t("🔵 Azul") },
+                { max: 310, label: t("🟣 Violeta") },
+                { max: 340, label: t("🩷 Rosa") },
+                { max: 360, label: t("🔴 Rojo") },
             ],
-            get: (v: number) => sliderDescriptions.hue.ranges.find(r => v < r.max)?.label ?? "Rojo"
+            get: (v: number) => sliderDescriptions.hue.ranges.find(r => v < r.max)?.label ?? t("Rojo")
         },
         sat: (v: number) =>
-            v < 15 ? "Gris / neutro" :
-            v < 40 ? "Suave" :
-            v < 70 ? "Equilibrado" :
-            v < 90 ? "Vivo" : "Muy intenso",
+            v < 15 ? t("Gris / neutro") :
+            v < 40 ? t("Suave") :
+            v < 70 ? t("Equilibrado") :
+            v < 90 ? t("Vivo") : t("Muy intenso"),
         lum: (v: number) =>
-            v < 20 ? "Casi negro" :
-            v < 35 ? "Oscuro" :
-            v < 55 ? "Medio — ideal ✓" :
-            v < 70 ? "Claro" : "Muy claro",
+            v < 20 ? t("Casi negro") :
+            v < 35 ? t("Oscuro") :
+            v < 55 ? t("Medio — ideal ✓") :
+            v < 70 ? t("Claro") : t("Muy claro"),
     };
 
     return (
@@ -517,10 +518,10 @@ function AccentColorSelector({ previewHex, onPreviewChange }: AccentSelectorProp
                                 fontSize: 11, fontWeight: active ? "600" : "400",
                                 color: active ? "#fff" : c.text.secondary,
                             }}>
-                                {vm === "normal"        ? "Normal"       :
-                                    vm === "deuteranopia"  ? "Deuteranopia" :
-                                        vm === "protanopia"    ? "Protanopia"   :
-                                            vm === "tritanopia"    ? "Tritanopia"   : "Acromatopsia"}
+                                {vm === "normal"        ? t("Normal")       :
+                                    vm === "deuteranopia"  ? t("Deuteranopia") :
+                                        vm === "protanopia"    ? t("Protanopia")   :
+                                            vm === "tritanopia"    ? t("Tritanopia")   : t("Acromatopsia")}
                             </Text>
                         </TouchableOpacity>
                     );
@@ -588,7 +589,7 @@ function AccentColorSelector({ previewHex, onPreviewChange }: AccentSelectorProp
                         onChange: (v: number) => apply(hue, v, lum),
                         suffix: "%",
                         desc: sliderDescriptions.sat(sat),
-                        hint: sat < 20 ? "⚠ Muy bajo — el color se verá gris" : sat > 90 ? "⚠ Muy alto — puede fatigar la vista" : null,
+                        hint: sat < 20 ? t("⚠ Muy bajo — el color se verá gris") : sat > 90 ? t("⚠ Muy alto — puede fatigar la vista") : null,
                     },
                     {
                         label: t("Luminosidad"),
@@ -596,7 +597,7 @@ function AccentColorSelector({ previewHex, onPreviewChange }: AccentSelectorProp
                         onChange: (v: number) => apply(hue, sat, v),
                         suffix: "%",
                         desc: sliderDescriptions.lum(lum),
-                        hint: lum > 75 ? "⚠ Muy claro — el texto blanco encima no será legible" : lum < 22 ? "⚠ Muy oscuro — puede confundirse con el texto" : null,
+                        hint: lum > 75 ? t("⚠ Muy claro — el texto blanco encima no será legible") : lum < 22 ? t("⚠ Muy oscuro — puede confundirse con el texto") : null,
                     },
                 ].map(sl => (
                     <View key={sl.label} style={{ gap: 5 }}>
@@ -670,7 +671,7 @@ function AccentColorSelector({ previewHex, onPreviewChange }: AccentSelectorProp
                                 backgroundColor: verdict.scoreColor,
                             }} />
                             <Text style={{ fontSize: 11, fontWeight: "600", color: verdict.scoreColor }}>
-                                {verdict.score.charAt(0).toUpperCase() + verdict.score.slice(1)}
+                                {(() => { const s = t(verdict.score); return s.charAt(0).toUpperCase() + s.slice(1); })()}
                             </Text>
                             <WcagBadge level={verdict.wcagLevel} />
                         </View>
@@ -702,7 +703,7 @@ function AccentColorSelector({ previewHex, onPreviewChange }: AccentSelectorProp
                 ))}
 
                 {/* Consejo */}
-                {verdict.tip !== "Este color funciona bien — no necesita ajustes" ? (
+                {verdict.tip !== t("Este color funciona bien — no necesita ajustes") ? (
                     <View style={{
                         flexDirection: "row", alignItems: "flex-start", gap: 8,
                         padding: 10, margin: 8,
@@ -767,9 +768,9 @@ function SecurityMeter({ twoFactor, sessionTime }: { twoFactor: boolean; session
         true, // base
     ].filter(Boolean).length;
 
-    const levels = ["Débil", "Regular", "Buena", "Fuerte"];
+    const levels = [t("Débil"), t("Regular"), t("Buena"), t("Fuerte")];
     const colors = ["#EF4444", "#F59E0B", "#3B82F6", "#10B981"];
-    const label  = levels[score - 1] ?? "Débil";
+    const label  = levels[score - 1] ?? t("Débil");
     const color  = colors[score - 1] ?? "#EF4444";
 
     return (
@@ -816,13 +817,14 @@ function SecurityMeter({ twoFactor, sessionTime }: { twoFactor: boolean; session
 
 function ConfidenceGuide({ value }: { value: number }) {
     const { theme } = useTheme();
+    const { t }     = useTranslation();
     const c = theme.colors;
 
     const zones = [
-        { min: 60, max: 70, label: "Permisivo", color: "#10B981", desc: "Detecta bien aunque haya cambios de luz o ángulo. Más falsos positivos." },
-        { min: 71, max: 85, label: "Equilibrado", color: "#3B82F6", desc: "Buen balance entre precisión y tolerancia. Recomendado para la mayoría." },
-        { min: 86, max: 94, label: "Estricto", color: "#F59E0B", desc: "Muy preciso, pero puede fallar si el estudiante cambió de lentes o peinado." },
-        { min: 95, max: 99, label: "Muy estricto", color: "#EF4444", desc: "Alto riesgo de falsos negativos. Solo para entornos con iluminación controlada." },
+        { min: 60, max: 70, label: t("Permisivo"), color: "#10B981", desc: t("Detecta bien aunque haya cambios de luz o ángulo. Más falsos positivos.") },
+        { min: 71, max: 85, label: t("Equilibrado"), color: "#3B82F6", desc: t("Buen balance entre precisión y tolerancia. Recomendado para la mayoría.") },
+        { min: 86, max: 94, label: t("Estricto"), color: "#F59E0B", desc: t("Muy preciso, pero puede fallar si el estudiante cambió de lentes o peinado.") },
+        { min: 95, max: 99, label: t("Muy estricto"), color: "#EF4444", desc: t("Alto riesgo de falsos negativos. Solo para entornos con iluminación controlada.") },
     ];
 
     const zone = zones.find(z => value >= z.min && value <= z.max) ?? zones[1];
@@ -1088,7 +1090,7 @@ export default function SettingsView() {
                                             ? t("Umbral muy alto — muchos estudiantes podrían quedar en riesgo aunque asistan con regularidad.")
                                             : minAttendance <= 60
                                             ? t("Umbral bajo — los estudiantes tendrán mucha flexibilidad de faltar. Asegúrate de que sea intencional.")
-                                            : `Con este umbral, un estudiante puede faltar hasta ${Math.floor((100 - minAttendance))} clases de cada 100 sin quedar en riesgo.`
+                                            : `${t("Con este umbral, un estudiante puede faltar hasta")} ${Math.floor((100 - minAttendance))} ${t("clases de cada 100 sin quedar en riesgo.")}`
                                         }
                                     </Text>
                                 </View>
@@ -1144,7 +1146,7 @@ export default function SettingsView() {
                                 />
                                 {/* Zonas de referencia */}
                                 <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 4 }}>
-                                    {["60 — Permisivo", "75", "85 ✓", "95 — Estricto", "99"].map((v, i) => (
+                                    {[`60 — ${t("Permisivo")}`, "75", "85 ✓", `95 — ${t("Estricto")}`, "99"].map((v, i) => (
                                         <Text key={i} style={{ fontSize: 9, color: c.text.disabled }}>{v}</Text>
                                     ))}
                                 </View>

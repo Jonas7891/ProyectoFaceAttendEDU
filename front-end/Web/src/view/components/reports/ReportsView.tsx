@@ -127,7 +127,7 @@ export default function ReportsView() {
                                 fontWeight: vm.period === opt.value ? "600" : "400",
                                 color: vm.period === opt.value ? c.text.onBrand : c.text.secondary,
                             }}>
-                                {opt.label}
+                                {t(opt.label)}
                             </Text>
                         </TouchableOpacity>
                     ))}
