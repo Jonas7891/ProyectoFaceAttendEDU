@@ -1,7 +1,7 @@
 // ============================================================
 //  FaceAttend EDU — SupportedLanguages (i18n · Constants)
 //
-//  MODO PROVISIONAL — Español e Inglés disponibles desde JSON.
+//  MODO PROVISIONAL — Español, Inglés, Francés y Alemán disponibles desde JSON.
 //
 //  Los demás idiomas están comentados y listos para activarse
 //  cuando se implemente el proveedor de traducción automática
@@ -34,13 +34,13 @@ export interface SupportedLanguage {
 //  y entrada en JsonDictionary.ts deben estar descomentados.
 
 export const SUPPORTED_LANGUAGES: SupportedLanguage[] = [
-    { code: "es", label: "Español", labelES: "Español", flag: "🇪🇸" },
-    { code: "en", label: "English", labelES: "Inglés",  flag: "🇺🇸" },
+    { code: "es", label: "Español",  labelES: "Español", flag: "🇪🇸" },
+    { code: "en", label: "English",  labelES: "Inglés",  flag: "🇺🇸" },
+    { code: "fr", label: "Français", labelES: "Francés", flag: "🇫🇷" },
+    { code: "de", label: "Deutsch",  labelES: "Alemán",  flag: "🇩🇪" },
 
     // ── Idiomas para fase de producción (requieren JSON o LibreTranslate) ──
     //
-    // { code: "fr", label: "Français",  labelES: "Francés",   flag: "🇫🇷" },
-    // { code: "de", label: "Deutsch",   labelES: "Alemán",    flag: "🇩🇪" },
     // { code: "it", label: "Italiano",  labelES: "Italiano",  flag: "🇮🇹" },
     // { code: "pt", label: "Português", labelES: "Portugués", flag: "🇧🇷" },
     // { code: "ja", label: "日本語",    labelES: "Japonés",   flag: "🇯🇵" },
