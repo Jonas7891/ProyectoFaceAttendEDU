@@ -136,3 +136,19 @@ export function BrandPanelCircles() {
         </>
     );
 }
+
+// ── AuthCopyright ─────────────────────────────────────────────
+// Pie de página con copyright compartido por todas las pantallas de auth
+
+export function AuthCopyright() {
+    const { theme } = useTheme();
+    const c = theme.colors;
+    return (
+        <Text style={{
+            fontSize: 12, color: c.text.secondary,
+            textAlign: "center", marginTop: 40,
+        }}>
+            © FaceAttend EDU {new Date().getFullYear()} — Derechos reservados
+        </Text>
+    );
+}
