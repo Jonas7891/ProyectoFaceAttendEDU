@@ -54,7 +54,7 @@ function HeroContent(props: ReturnType<typeof useHeroEntrance>) {
                 title={t("Asistencia\n")}
                 accent={t("inteligente\n")}
                 end={t("para tu institución")}
-                primary={t("Registrarse landing")}
+                primary={t("Registrarse")}
                 secondary={t("Iniciar sesión")}
                 stats={STATS}
                 onPrimary={()  => navigation.navigate("FaceAttendEDU-Register")}
