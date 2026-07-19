@@ -12,5 +12,5 @@ public interface AbstractRepositoryPort<Model, ID> {
 
     List<Model> findAll();
 
-    void deleteById(Integer id);
+    void deleteById(ID id);
 }

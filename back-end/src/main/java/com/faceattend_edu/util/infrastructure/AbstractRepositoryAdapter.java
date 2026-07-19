@@ -47,7 +47,7 @@ public abstract class AbstractRepositoryAdapter<Entity, Model, ID>
     }
 
     @Override
-    public void deleteById(Integer id) {
-        // getJpaRepository().deleteById(id);
+    public void deleteById(ID id) {
+        getJpaRepository().deleteById(id);
     }
 }

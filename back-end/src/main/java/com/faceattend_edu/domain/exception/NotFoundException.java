@@ -1,8 +1,42 @@
 package com.faceattend_edu.domain.exception;
 
+import java.util.UUID;
+
 public class NotFoundException extends BaseException {
 
     public NotFoundException(String resourceName, Integer id) {
+        super(
+                "NOT_FOUND",
+                resourceName + " con id " + id + " no fue encontrado",
+                404
+        );
+    }
+
+    public NotFoundException(String resourceName, Long id) {
+        super(
+                "NOT_FOUND",
+                resourceName + " con id " + id + " no fue encontrado",
+                404
+        );
+    }
+
+    public NotFoundException(String resourceName, UUID id) {
+        super(
+                "NOT_FOUND",
+                resourceName + " con id " + id + " no fue encontrado",
+                404
+        );
+    }
+
+    public NotFoundException(String resourceName, String id) {
+        super(
+                "NOT_FOUND",
+                resourceName + " con id " + id + " no fue encontrado",
+                404
+        );
+    }
+
+    public NotFoundException(String resourceName, Object id) {
         super(
                 "NOT_FOUND",
                 resourceName + " con id " + id + " no fue encontrado",
