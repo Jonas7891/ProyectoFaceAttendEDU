@@ -13,7 +13,7 @@ import java.util.UUID;
 @SuperBuilder
 @Getter
 @Setter
-public class UUIDBaseEntity extends AuditBaseEntity {
+public abstract class UUIDBaseEntity extends AuditBaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
