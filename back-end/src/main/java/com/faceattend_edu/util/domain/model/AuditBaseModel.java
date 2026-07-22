@@ -1,6 +1,5 @@
 package com.faceattend_edu.util.domain.model;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

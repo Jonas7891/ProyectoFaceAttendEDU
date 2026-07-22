@@ -8,13 +8,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-public abstract class AbstractController<Response, Request, ID> {
+public abstract class AbstractController<Response, Request, Patch, ID> {
 
-    // ── Hook ──────────────────────────────────────────────────────────────────
-
-    protected abstract AbstractService<Request, Response, ID> getService();
-
-    // ── Endpoints genéricos ───────────────────────────────────────────────────
+    protected abstract AbstractService<Request, Response, Patch, ID> getService();
 
     @GetMapping
     public ResponseEntity<List<Response>> findAll() {
@@ -41,6 +37,18 @@ public abstract class AbstractController<Response, Request, ID> {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteById(@PathVariable ID id) {
         getService().deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<Void> partialUpdate(@PathVariable ID id, @RequestBody Patch patch) {
+        getService().partialUpdate(id, patch);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}/delete")
+    public ResponseEntity<Void> logicalDelete(@PathVariable ID id) {
+        getService().logicalDelete(id);
         return ResponseEntity.noContent().build();
     }
 }

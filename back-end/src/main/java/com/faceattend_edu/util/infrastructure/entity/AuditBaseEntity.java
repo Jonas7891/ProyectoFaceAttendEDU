@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public abstract class AuditBaseEntity {
-    @Column(name = "status")
+    @Column(name = "status", nullable = false)
     protected boolean status;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -30,6 +30,7 @@ public abstract class AuditBaseEntity {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        status = true;
     }
     @PreUpdate
     protected void onUpdate(){

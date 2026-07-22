@@ -13,6 +13,6 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 @MappedSuperclass
-public abstract class IntegerBaseModel {
+public abstract class IntegerBaseModel extends AuditBaseModel {
     protected Integer id;
 }

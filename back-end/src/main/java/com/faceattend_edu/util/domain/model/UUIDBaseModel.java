@@ -15,6 +15,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @SuperBuilder
 @MappedSuperclass
-public abstract class UUIDBaseModel {
+public abstract class UUIDBaseModel extends AuditBaseModel {
     protected UUID id;
 }
