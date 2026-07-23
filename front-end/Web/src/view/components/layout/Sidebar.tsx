@@ -14,10 +14,11 @@ import { useTranslation } from "../../../i18n/hooks/useTranslation";
 
 // Las keys son estables (para la navegación); los labels se traducen en render.
 const NAV_ITEMS: { key: string; labelES: string; feather: any }[] = [
-    { key: "dashboard", labelES: "Dashboard",    feather: "layout"      },
-    { key: "students",  labelES: "Estudiantes",  feather: "users"       },
-    { key: "courses",   labelES: "Cursos",       feather: "book-open"   },
-    { key: "reports",   labelES: "Reportes",     feather: "bar-chart-2" },
+    { key: "dashboard",    labelES: "Dashboard",    feather: "layout"      },
+    { key: "students",     labelES: "Estudiantes",  feather: "users"       },
+    { key: "courses",      labelES: "Cursos",       feather: "book-open"   },
+    { key: "environments", labelES: "Ambientes",    feather: "home"        },
+    { key: "reports",      labelES: "Reportes",     feather: "bar-chart-2" },
 ];
 
 const SYSTEM_ITEMS: { key: string; labelES: string; feather: any }[] = [

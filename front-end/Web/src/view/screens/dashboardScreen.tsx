@@ -16,6 +16,7 @@ import StudentsView  from "../components/students/StudentsView";
 import CoursesView   from "../components/courses/CoursesView";
 import ReportsView   from "../components/reports/ReportsView";
 import SettingsView  from "../components/settings/SettingsView";
+import EnvironmentsView from "../components/environments/EnvironmentsView";
 
 import { useTheme }      from "../components/hooks/useTheme";
 import { useResponsive } from "../components/hooks/useResponsive";
@@ -27,11 +28,12 @@ import { useTranslation } from "../../i18n/hooks/useTranslation";
 
 function TabContent({ tab }: { tab: TabKey }) {
     switch (tab) {
-        case "dashboard": return <DashboardView />;
-        case "students":  return <StudentsView />;
-        case "courses":   return <CoursesView />;
-        case "reports":   return <ReportsView />;
-        case "settings":  return <SettingsView />;
+        case "dashboard":    return <DashboardView />;
+        case "students":     return <StudentsView />;
+        case "courses":      return <CoursesView />;
+        case "environments": return <EnvironmentsView />;
+        case "reports":      return <ReportsView />;
+        case "settings":     return <SettingsView />;
     }
 }
 

@@ -7,14 +7,15 @@
 import { useState } from "react";
 import type { Tab } from "../models/types";
 
-export type TabKey = "dashboard" | "students" | "courses" | "reports" | "settings";
+export type TabKey = "dashboard" | "students" | "courses" | "environments" | "reports" | "settings";
 
 export const BOTTOM_TABS: Tab[] = [
-    { key: "dashboard", label: "Inicio",   icon: "layout"      },
-    { key: "students",  label: "Alumnos",  icon: "users"       },
-    { key: "courses",   label: "Cursos",   icon: "book-open"   },
-    { key: "reports",   label: "Reportes", icon: "bar-chart-2" },
-    { key: "settings",  label: "Config",   icon: "settings"    },
+    { key: "dashboard",    label: "Inicio",      icon: "layout"      },
+    { key: "students",     label: "Alumnos",     icon: "users"       },
+    { key: "courses",      label: "Cursos",      icon: "book-open"   },
+    { key: "environments", label: "Ambientes",   icon: "home"        },
+    { key: "reports",      label: "Reportes",    icon: "bar-chart-2" },
+    { key: "settings",     label: "Config",      icon: "settings"    },
 ];
 
 export interface DashboardScreenViewModel {
