@@ -1,17 +1,20 @@
 // ============================================================
 //  FaceAttend EDU — Students Components (View Layer)
-//  Toda lógica (filtrado, selección) en useStudentsViewModel.
+//  Toda lógica (filtrado, selección, registro, importación)
+//  en useStudentsViewModel.
 // ============================================================
 
 import React from "react";
-import { View, Text, ScrollView, TextInput, TouchableOpacity, Modal } from "react-native";
+import { View, Text, ScrollView, TextInput, TouchableOpacity, Modal, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Card, Badge, Avatar, PageHeader, UIButton, ProgressBar, EmptyState } from "../ui/UI";
-import { useTheme }      from "../hooks/useTheme";
-import { useResponsive } from "../hooks/useResponsive";
-import { useStudentsViewModel } from "../../../viewmodels/useStudentsViewModel";
+import { useTheme }               from "../hooks/useTheme";
+import { useResponsive }          from "../hooks/useResponsive";
+import { useStudentsViewModel }   from "../../../viewmodels/useStudentsViewModel";
 import { useTranslation }         from "../../../i18n/hooks/useTranslation";
-import type { Student } from "../../../models/types";
+import RegisterStudentModal       from "./RegisterStudentModal";
+import ImportStudentsModal        from "./ImportStudentsModal";
+import type { Student }           from "../../../models/types";
 
 // ── StudentDetailModal ───────────────────────────────────────
 
@@ -143,7 +146,7 @@ function StudentDetailModal({ student, onClose }: { student: Student | null; onC
 function StudentRow({ student, onPress, isLast }: {
     student: Student; onPress: () => void; isLast: boolean;
 }) {
-    const { t } = useTranslation();
+    const { t }       = useTranslation();
     const { isSmall } = useResponsive();
     const { theme }   = useTheme();
     const c           = theme.colors;
@@ -220,6 +223,14 @@ export default function StudentsView() {
     const vm          = useStudentsViewModel();
     const { t }       = useTranslation();
 
+    if (vm.isLoading) {
+        return (
+            <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+                <ActivityIndicator size="large" color={c.brand.primary} />
+            </View>
+        );
+    }
+
     return (
         <View style={{ flex: 1 }}>
             <ScrollView
@@ -230,8 +241,21 @@ export default function StudentsView() {
                     title={t("Estudiantes")}
                     subtitle={`${vm.filtered.length} ${vm.filtered.length !== 1 ? t("estudiantes") : t("estudiante")} ${vm.filtered.length !== 1 ? t("encontrados") : t("encontrado")}`}
                     actions={<>
-                        <UIButton variant="ghost" size="sm">{t("Exportar")}</UIButton>
-                        <UIButton variant="primary" size="sm">+ {t("Nuevo estudiante")}</UIButton>
+                        <UIButton
+                            variant="ghost"
+                            size="sm"
+                            onPress={vm.openImportModal}
+                        >
+                            <Feather name="upload" size={13} color={c.text.secondary} />
+                            {"  "}{t("Importar")}
+                        </UIButton>
+                        <UIButton
+                            variant="primary"
+                            size="sm"
+                            onPress={vm.openRegisterModal}
+                        >
+                            + {t("Nuevo estudiante")}
+                        </UIButton>
                     </>}
                 />
 
@@ -288,7 +312,7 @@ export default function StudentsView() {
                         }}>
                             {[t("Estudiante"), t("Correo"), t("Programa"), t("Asistencia"), t("Facial"), t("Estado")].map(col => (
                                 <Text key={col} style={{
-                                    flex: col === t("Estudiante") ? 2 : 1, // flex driven by translated label position
+                                    flex: col === t("Estudiante") ? 2 : 1,
                                     fontSize: 11, fontWeight: "600", color: c.text.secondary,
                                     textTransform: "uppercase", letterSpacing: 0.5,
                                     paddingHorizontal: 14,
@@ -316,7 +340,20 @@ export default function StudentsView() {
                 </Card>
             </ScrollView>
 
+            {/* Modales */}
             <StudentDetailModal student={vm.selected} onClose={vm.clearSelection} />
+
+            <RegisterStudentModal
+                visible={vm.showRegisterModal}
+                onClose={vm.closeRegisterModal}
+                onSubmit={vm.registerStudent}
+            />
+
+            <ImportStudentsModal
+                visible={vm.showImportModal}
+                onClose={vm.closeImportModal}
+                onImport={vm.importStudents}
+            />
         </View>
     );
 }
