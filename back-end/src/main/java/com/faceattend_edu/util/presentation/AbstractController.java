@@ -1,6 +1,8 @@
 package com.faceattend_edu.util.presentation;
 
+import com.faceattend_edu.util.Views;
 import com.faceattend_edu.util.application.AbstractService;
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +15,7 @@ public abstract class AbstractController<Response, Request, Patch, ID> {
     protected abstract AbstractService<Request, Response, Patch, ID> getService();
 
     @GetMapping
+    @JsonView(Views.Public.class)
     public ResponseEntity<List<Response>> findAll() {
         return ResponseEntity.ok(getService().findAll());
     }
