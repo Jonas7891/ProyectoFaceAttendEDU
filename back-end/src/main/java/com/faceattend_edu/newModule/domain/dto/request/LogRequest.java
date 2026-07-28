@@ -5,29 +5,25 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 public record LogRequest(
-        @NotNull(message = "El usuario es requerido")
-        Integer userId,
+        UUID userId,
 
-        @NotBlank(message = "La acción es requerida")
-        @Size(min = 1, max = 50, message = "La acción debe tener entre 1 y 50 caracteres")
+        @NotBlank(message = "La acción es obligatoria")
         String action,
 
-        @NotBlank(message = "El nombre de la tabla es requerido")
-        @Size(min = 1, max = 100, message = "El nombre debe tener entre 1 y 100 caracteres")
+        @NotBlank(message = "La tabla es obligatoria")
         String tableName,
 
-        @Size(max = 100, message = "El registro afectado debe tener máximo 100 caracteres")
+        @NotBlank(message = "El registro afectado es obligatorio")
         String affectedRecord,
 
-        @Size(max = 500, message = "La descripción debe tener máximo 500 caracteres")
+        @NotBlank(message = "La descripción es obligatoria")
         String description,
 
-        @NotNull(message = "La fecha es requerida")
-        Instant date
+        @NotNull(message = "La fecha es obligatoria")
+        LocalDateTime date
 ) {
-    public Integer att() {
-        return null;
-    }
 }

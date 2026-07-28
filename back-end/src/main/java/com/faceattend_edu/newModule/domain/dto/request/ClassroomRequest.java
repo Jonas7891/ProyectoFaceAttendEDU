@@ -4,12 +4,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-public record ClassroomRequest(
-        @NotNull(message = "La escuela es requerida")
-        Integer schoolId,
+import java.util.UUID;
 
-        @NotBlank(message = "El nombre del aula es requerido")
-        @Size(min = 1, max = 100, message = "El nombre debe tener entre 1 y 100 caracteres")
-        String classroomName
+public record ClassroomRequest(
+        @NotNull(message = "La institución es obligatoria")
+        UUID schoolId,
+
+        @NotBlank(message = "El nombre es obligatorio")
+        @Size(max = 100, message = "El nombre no puede superar los 100 caracteres")
+        String name
 ) {
 }

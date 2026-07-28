@@ -6,27 +6,21 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.time.Instant;
+import java.util.UUID;
 
 public record UserRequest(
-        @NotNull(message = "La persona es requerida")
-        Integer personId,
+        @NotNull(message = "La persona es obligatoria")
+        UUID personId,
 
-        @NotBlank(message = "El nombre de usuario es requerido")
-        @Size(min = 3, max = 50, message = "El nombre de usuario debe tener entre 3 y 50 caracteres")
-        @Pattern(regexp = "^[a-zA-Z0-9._-]+$", message = "El nombre de usuario solo puede contener letras, números, puntos, guiones y guiones bajos")
+        @NotNull(message = "El rol es obligatorio")
+        Integer roleId,
+
+        @NotBlank(message = "El nombre de usuario es obligatorio")
+        @Size(min = 4, max = 50, message = "El usuario debe tener entre 4 y 50 caracteres")
         String username,
 
-        @NotBlank(message = "La contraseña es requerida")
-        @Size(min = 8, max = 100, message = "La contraseña debe tener entre 8 y 100 caracteres")
-        String password,
-
-        @NotNull(message = "El estado es requerido")
-        Boolean status,
-
-        Instant createdAt,
-
-        Instant updatedAt,
-
-        Instant lastLogin
+        @NotBlank(message = "La contraseña es obligatoria")
+        @Size(min = 8, message = "La contraseña debe tener mínimo 8 caracteres")
+        String password
 ) {
 }

@@ -1,5 +1,6 @@
 package com.faceattend_edu.newModule.domain.dto.request;
 
+import com.faceattend_edu.util.enums.ApprovalStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -7,21 +8,17 @@ import jakarta.validation.constraints.Size;
 import java.time.Instant;
 
 public record JustificationRequest(
-        @NotNull(message = "La asistencia es requerida")
-        Integer attendanceId,
+        @NotNull(message = "La asistencia es obligatoria")
+        Long attendanceId,
 
-        @NotBlank(message = "La justificación es requerida")
-        @Size(min = 10, max = 1000, message = "La justificación debe tener entre 10 y 1000 caracteres")
-        String justification,
+        @NotBlank(message = "La justificación es obligatoria")
+        String text,
 
-        @NotNull(message = "La aprobación es requerida")
-        Object approval,
+        @NotNull(message = "El estado de aprobación es obligatorio")
+        ApprovalStatus approval
 
-        @NotNull(message = "La fecha de creación es requerida")
-        Instant createdAt,
+        // Integer reviewedBy,
 
-        Integer reviewedBy,
-
-        Instant reviewedAt
+        //Instant reviewedAt
 ) {
 }

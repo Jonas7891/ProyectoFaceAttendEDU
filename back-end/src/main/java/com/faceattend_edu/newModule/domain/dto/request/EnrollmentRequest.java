@@ -3,21 +3,20 @@ package com.faceattend_edu.newModule.domain.dto.request;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 public record EnrollmentRequest(
-        @NotNull(message = "El estudiante es requerido")
-        Integer studentId,
+        @NotNull(message = "El estudiante es obligatorio")
+        UUID studentId,
 
-        @NotNull(message = "El curso es requerido")
+        @NotNull(message = "El curso es obligatorio")
         Integer courseId,
 
-        @NotNull(message = "El período es requerido")
+        @NotNull(message = "El periodo es obligatorio")
         Integer periodId,
 
-        @NotNull(message = "La fecha de matrícula es requerida")
-        Instant enrollmentDate,
-
-        @NotNull(message = "El estado es requerido")
-        Object status
+        @NotNull(message = "La fecha es obligatoria")
+        LocalDateTime date
 ) {
 }

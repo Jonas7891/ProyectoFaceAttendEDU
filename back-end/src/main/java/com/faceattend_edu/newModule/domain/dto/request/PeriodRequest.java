@@ -5,22 +5,19 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 public record PeriodRequest(
-        @NotNull(message = "La escuela es requerida")
-        Integer schoolId,
+        @NotNull(message = "La institución es obligatoria")
+        UUID schoolId,
 
-        @NotBlank(message = "El nombre es requerido")
-        @Size(min = 1, max = 100, message = "El nombre debe tener entre 1 y 100 caracteres")
+        @NotBlank(message = "El nombre es obligatorio")
         String name,
 
-        @NotNull(message = "La fecha de inicio es requerida")
+        @NotNull(message = "La fecha inicial es obligatoria")
         LocalDate startDate,
 
-        @NotNull(message = "La fecha de fin es requerida")
-        LocalDate endDate,
-
-        @NotNull(message = "El estado activo es requerido")
-        Boolean isActive
+        @NotNull(message = "La fecha final es obligatoria")
+        LocalDate endDate
 ) {
 }

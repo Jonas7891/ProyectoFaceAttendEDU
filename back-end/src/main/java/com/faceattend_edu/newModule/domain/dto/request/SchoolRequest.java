@@ -5,22 +5,23 @@ import jakarta.validation.constraints.*;
 import java.time.Instant;
 
 public record SchoolRequest(
-        @NotBlank(message = "El nombre es requerido")
-        @Size(min = 1, max = 150, message = "El nombre debe tener entre 1 y 150 caracteres")
+        @NotBlank(message = "El nombre es obligatorio")
         String name,
 
-        @NotBlank(message = "El NIT es requerido")
+        @NotBlank(message = "El NIT es obligatorio")
+        @Size(max = 50, message = "El NIT no puede superar los 50 caracteres")
         String nit,
 
-        @NotBlank(message = "La dirección es requerida")
+        @Size(max = 500, message = "La dirección no puede superar los 500 caracteres")
         String address,
 
-        @NotBlank(message = "El teléfono es requerido")
-        @Pattern(regexp = "^[+]?[0-9]{10,}$", message = "El teléfono debe ser válido (mínimo 10 dígitos)")
+        @Pattern(
+                regexp = "^[0-9]{7,15}$",
+                message = "El teléfono debe contener entre 7 y 15 dígitos"
+        )
         String phone,
 
-        @NotBlank(message = "El email es requerido")
-        @Email(message = "El email debe ser válido")
+        @Email(message = "El correo no es válido")
         String email
 ) {
 }

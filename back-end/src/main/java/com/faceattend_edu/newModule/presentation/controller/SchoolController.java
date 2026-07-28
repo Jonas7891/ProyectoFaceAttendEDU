@@ -17,10 +17,10 @@ import java.util.UUID;
 @RequestMapping("/api/schools")
 public class SchoolController extends AbstractController<SchoolResponse, SchoolRequest, SchoolPatch, UUID> {
 
-    private final SchoolService schoolService;
+    private final SchoolService service;
 
     @Override
     protected AbstractService<SchoolRequest, SchoolResponse, SchoolPatch, UUID> getService() {
-        return schoolService;
+        return service;
     }
 }

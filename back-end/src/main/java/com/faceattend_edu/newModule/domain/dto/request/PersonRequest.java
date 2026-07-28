@@ -3,38 +3,30 @@ package com.faceattend_edu.newModule.domain.dto.request;
 import jakarta.validation.constraints.*;
 
 import java.time.Instant;
+import java.util.UUID;
 
 public record PersonRequest(
-        @NotNull(message = "La escuela es requerida")
-        Integer schoolId,
+        @NotNull(message = "La institución es obligatoria")
+        UUID schoolId,
 
-        @NotBlank(message = "El nombre es requerido")
-        @Size(min = 1, max = 100, message = "El nombre debe tener entre 1 y 100 caracteres")
+        @NotBlank(message = "El nombre es obligatorio")
         String name,
 
-        @NotBlank(message = "El apellido es requerido")
-        @Size(min = 1, max = 100, message = "El apellido debe tener entre 1 y 100 caracteres")
+        @NotBlank(message = "El apellido es obligatorio")
         String lastName,
 
-        @NotBlank(message = "El email es requerido")
-        @Email(message = "El email debe ser válido")
+        @Email(message = "El correo no es válido")
+        @NotBlank(message = "El correo es obligatorio")
         String email,
 
-        @NotBlank(message = "El teléfono es requerido")
-        @Pattern(regexp = "^[+]?[0-9]{10,}$", message = "El teléfono debe ser válido (mínimo 10 dígitos)")
+        @Pattern(
+                regexp = "^[0-9]{7,15}$",
+                message = "El teléfono debe contener entre 7 y 15 dígitos"
+        )
         String phone,
 
-        @NotNull(message = "El estado de estudiante es requerido")
-        Boolean isStudent,
+        boolean isStudent,
 
-        @NotNull(message = "El estado de profesor es requerido")
-        Boolean isTeacher,
-
-        @NotNull(message = "El estado es requerido")
-        Boolean status,
-
-        Instant createdAt,
-
-        Instant updatedAt
+        boolean isTeacher
 ) {
 }

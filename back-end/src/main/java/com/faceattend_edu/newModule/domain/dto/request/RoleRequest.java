@@ -3,12 +3,14 @@ package com.faceattend_edu.newModule.domain.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.util.List;
+
 public record RoleRequest(
-        @NotBlank(message = "El nombre es requerido")
-        @Size(min = 1, max = 100, message = "El nombre debe tener entre 1 y 100 caracteres")
+        List<Integer> moduleIds,
+
+        @NotBlank(message = "El nombre es obligatorio")
         String name,
 
-        @Size(max = 500, message = "La descripción debe tener máximo 500 caracteres")
         String description
 ) {
 }
