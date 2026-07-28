@@ -317,7 +317,6 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                 </TouchableOpacity>
             </View>
 
-            {/* ✅ El botón ahora aparece en ambos tabs */}
             <View style={styles.actionsRow}>
                 <PrimaryButton
                     title={
@@ -354,8 +353,6 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
             <View style={styles.buttonContainer}>
                 <PrimaryButton title={t('consultJustify.back')} onPress={handleBack}/>
             </View>
-
-            <BottomBar/>
             
             <CustomAlert
                 visible={alertConfig.visible}

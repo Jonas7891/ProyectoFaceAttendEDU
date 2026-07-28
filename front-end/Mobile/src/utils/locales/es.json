@@ -116,6 +116,7 @@
     "registerAttendanceDesc": "Actualización de parámetros faciales",
     "employeeManagement": "Gestión de Profesores",
     "employeeManagementDesc": "Agregar, editar o eliminar profesores",
+    "manageEnvironmentDesc" : "Agregar, editar o Eliminar Ambientes",
     "reports": "Reportes",
     "reportsDesc": "Generar reportes de asistencia",
     "facialConfig": "Configuración Facial",
@@ -131,7 +132,8 @@
     "facialRecognitionMsg": "El sistema ha actualizado sus algoritmos",
     "minutesAgo": "minutos",
     "hoursAgo": "horas",
-    "ago": "hace"
+    "ago": "hace",
+    "environmentManagement": "Gestión de Ambientes"
   },
   "consultJustify": {
     "mainTitle": "Justificaciones Aceptadas",

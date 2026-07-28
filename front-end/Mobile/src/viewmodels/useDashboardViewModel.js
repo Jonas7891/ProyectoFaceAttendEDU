@@ -6,6 +6,7 @@ import { getHighestRole } from '../utils/getHighestRole';
 import { useFocusEffect } from '@react-navigation/native';
 import { getCurrentUserRole, getCurrentUser } from "../services/UserService";
 import { useLanguageRefresh } from '../utils/useLanguageRefresh';
+import ManageEnviromentScreen from "../view/screens/ManageEnviromentScreen";
 
 export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {}) {
     const { t, i18n } = useTranslation();
@@ -91,8 +92,9 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
     const menuAccionesAdmin = [
         { id: 1, title: t('dashboard.registerAttendance'), description: t('dashboard.registerAttendanceDesc'), color: '#4CAF50', screen: 'RegistroAsistencia' },
         { id: 2, title: t('dashboard.manageUsers', 'Gestión Usuarios'), description: t('dashboard.manageUsersDesc', 'Agregar, editar y eliminar estudiantes y profesores'), color: '#E91E63', screen: 'ManageUsersScreen' },
-        { id: 3, title: t('dashboard.reports'), description: t('dashboard.reportsDesc'), color: '#FF9800', screen: 'AttendanceReportScreen' },
-        { id: 4, title: t('dashboard.facialConfig'), description: t('dashboard.facialConfigDesc'), color: '#9C27B0', screen: 'ConfiguracionFacial' },
+        { id: 3, title: t('dashboard.environmentManagement', 'Gestión Ambientes'), description: t('dashboard.manageEnvironmentDesc', 'Agregar, editar y eliminar ambientes/salones'), color: '#1e58e9', screen: 'ManageEnviromentScreen' },
+        { id: 4, title: t('dashboard.reports'), description: t('dashboard.reportsDesc'), color: '#FF9800', screen: 'AttendanceReportScreen' },
+        { id: 5, title: t('dashboard.facialConfig'), description: t('dashboard.facialConfigDesc'), color: '#9C27B0', screen: 'ConfiguracionFacial' },
     ];
 
     const menuAccionesEstudiante = [

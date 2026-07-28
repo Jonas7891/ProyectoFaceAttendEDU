@@ -74,6 +74,7 @@ export default function Dashboard({ onLogout, userRole: propUserRole }) {
                             </Text>
                         </View>
 
+
                         <View style={[styles.progressBar, { backgroundColor: colors.progressBackground }]}>
                             <View
                                 style={[

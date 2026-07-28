@@ -31,8 +31,19 @@ export default function ValidJustificationsScreen() {
         getEstadoColor,
     } = useValidJustificationsViewModel();
 
+    // Tarjeta con borde propio: evita que "flote" sin definición cuando
+    // colors.card y colors.background son tonos muy parecidos en modo oscuro.
+    const cardStyle = [
+        styles.justificationCard,
+        {
+            backgroundColor: colors.card,
+            borderWidth: 1,
+            borderColor: colors.border,
+        },
+    ];
+
     const renderInasistenciaItem = ({ item }) => (
-        <View style={[styles.justificationCard, { backgroundColor: colors.card }]}>
+        <View style={cardStyle}>
             <View style={styles.cardHeader}>
                 <Text style={[styles.cardDate, { color: colors.text }]}>{item.fecha}</Text>
                 <View style={[styles.statusBadge, { backgroundColor: getEstadoColor(item.estado) }]}>
@@ -44,7 +55,7 @@ export default function ValidJustificationsScreen() {
     );
 
     const renderRetardoItem = ({ item }) => (
-        <View style={[styles.justificationCard, { backgroundColor: colors.card }]}>
+        <View style={cardStyle}>
             <View style={styles.cardHeader}>
                 <View style={styles.dateTimeContainer}>
                     <Text style={[styles.cardDate, { color: colors.text }]}>{item.fecha}</Text>
@@ -71,24 +82,38 @@ export default function ValidJustificationsScreen() {
                     style={styles.ScrollView}
                     contentContainerStyle={styles.ScrollViewContent}
                     showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
                 >
                     <View style={styles.containerValidJustifications}>
-                        <Text style={styles.mainTitleValidJustifications}>
+                        <Text style={[styles.mainTitleValidJustifications, { color: colors.text }]}>
                             {t('consultJustify.mainTitle')}
                         </Text>
 
-                        <Text style={styles.subTitleValidJustifications}>
+                        <Text style={[styles.subTitleValidJustifications, { color: colors.textSecondary }]}>
                             {t('consultJustify.subtitle')}
                         </Text>
 
                         <Separador />
-                        <View style={styles.sectionSelector}>
+
+                        <View
+                            style={[
+                                styles.sectionSelector,
+                                {
+                                    backgroundColor: colors.card,
+                                    borderWidth: 1,
+                                    borderColor: colors.border,
+                                    borderRadius: 12,
+                                    padding: 4,
+                                },
+                            ]}
+                        >
                             <TouchableOpacity
                                 style={[
                                     styles.sectionTab,
                                     {
                                         backgroundColor:
                                             activeSection === 'inasistencias' ? colors.primary : 'transparent',
+                                        borderRadius: 9,
                                     },
                                     activeSection === 'inasistencias' && styles.activeSectionTab,
                                 ]}
@@ -100,6 +125,7 @@ export default function ValidJustificationsScreen() {
                                         {
                                             color:
                                                 activeSection === 'inasistencias' ? '#FFFFFF' : colors.textSecondary,
+                                            fontWeight: activeSection === 'inasistencias' ? '700' : '500',
                                         },
                                     ]}
                                 >
@@ -112,6 +138,7 @@ export default function ValidJustificationsScreen() {
                                     {
                                         backgroundColor:
                                             activeSection === 'retardos' ? colors.primary : 'transparent',
+                                        borderRadius: 9,
                                     },
                                     activeSection === 'retardos' && styles.activeSectionTab,
                                 ]}
@@ -123,6 +150,7 @@ export default function ValidJustificationsScreen() {
                                         {
                                             color:
                                                 activeSection === 'retardos' ? '#FFFFFF' : colors.textSecondary,
+                                            fontWeight: activeSection === 'retardos' ? '700' : '500',
                                         },
                                     ]}
                                 >
@@ -144,7 +172,17 @@ export default function ValidJustificationsScreen() {
                                         scrollEnabled={false}
                                     />
                                 ) : (
-                                    <View style={[styles.emptyContainer, { backgroundColor: colors.card }]}>
+                                    <View
+                                        style={[
+                                            styles.emptyContainer,
+                                            {
+                                                backgroundColor: colors.card,
+                                                borderWidth: 1,
+                                                borderColor: colors.border,
+                                                borderStyle: 'dashed',
+                                            },
+                                        ]}
+                                    >
                                         <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                                             {t('consultJustify.noAbsencesRegistered')}
                                         </Text>
@@ -166,7 +204,17 @@ export default function ValidJustificationsScreen() {
                                         scrollEnabled={false}
                                     />
                                 ) : (
-                                    <View style={[styles.emptyContainer, { backgroundColor: colors.card }]}>
+                                    <View
+                                        style={[
+                                            styles.emptyContainer,
+                                            {
+                                                backgroundColor: colors.card,
+                                                borderWidth: 1,
+                                                borderColor: colors.border,
+                                                borderStyle: 'dashed',
+                                            },
+                                        ]}
+                                    >
                                         <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                                             {t('consultJustify.noDelaysRegistered')}
                                         </Text>
