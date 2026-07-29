@@ -12,7 +12,7 @@ import {
     addStudent,
     addStudentsBulk,
 } from "../models/data/StudentStorage";
-import type { Student } from "../models/types";
+import type { Student, AppUserRole } from "../models/types";
 
 // ── Tipos de formulario ───────────────────────────────────
 
@@ -21,7 +21,7 @@ export interface StudentFormData {
     code:       string;
     email:      string;
     course:     string;
-    grade:      string;
+    role:       AppUserRole;
     attendance: number;
     registered: boolean;
     status:     "active" | "inactive";
@@ -32,7 +32,7 @@ export const EMPTY_FORM: StudentFormData = {
     code:       "",
     email:      "",
     course:     "",
-    grade:      "",
+    role:       "student",
     attendance: 100,
     registered: false,
     status:     "active",
@@ -45,7 +45,7 @@ export function validateStudentForm(form: StudentFormData): string | null {
     if (!form.code.trim())   return "Completa todos los campos";
     if (!form.email.trim())  return "Completa todos los campos";
     if (!form.course.trim()) return "Completa todos los campos";
-    if (!form.grade.trim())  return "Completa todos los campos";
+    if (!form.role)          return "Completa todos los campos";
     return null;
 }
 
@@ -128,7 +128,7 @@ export function useStudentsViewModel(): StudentsViewModel {
             code:       form.code.trim(),
             email:      form.email.trim(),
             course:     form.course.trim(),
-            grade:      form.grade.trim(),
+            grade:      form.role,
             attendance: form.attendance,
             registered: form.registered,
             status:     form.status,

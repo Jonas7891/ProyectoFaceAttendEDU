@@ -23,6 +23,7 @@ import esTranslations from "./es.json";
 import enTranslations from "./en.json";
 import frTranslations from "./fr.json";
 import deTranslations from "./de.json";
+import ptTranslations from "./pt.json";
 
 // ── Mapa de diccionarios ──────────────────────────────────────
 //
@@ -34,6 +35,7 @@ const DICTIONARIES: Record<string, Record<string, string>> = {
     en: enTranslations,
     fr: frTranslations,
     de: deTranslations,
+    pt: ptTranslations,
 };
 
 // ── API pública ───────────────────────────────────────────────
