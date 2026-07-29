@@ -6,17 +6,19 @@
 //  validación inline y soporte completo de i18n + tema.
 // ============================================================
 
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import {
     Modal, View, Text, TextInput, ScrollView,
     TouchableOpacity, ActivityIndicator, KeyboardAvoidingView,
-    Platform,
+    Platform, Animated, Easing,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { UIButton, Badge } from "../ui/UI";
 import { useTheme }       from "../hooks/useTheme";
 import { useResponsive }  from "../hooks/useResponsive";
 import { useTranslation } from "../../../i18n/hooks/useTranslation";
+import type { AppUserRole } from "../../../models/types";
+import FaceRegistrationModal from "./FaceRegistrationModal";
 import {
     EMPTY_FORM,
     type StudentFormData,
@@ -87,6 +89,231 @@ function FormField({
     );
 }
 
+// ── Definición de roles disponibles ──────────────────────
+
+const ROLES: { value: AppUserRole; labelES: string; labelKey: string; icon: string }[] = [
+    { value: "admin",   labelES: "Administrador", labelKey: "Admin",   icon: "shield" },
+    { value: "teacher", labelES: "Docente",       labelKey: "Teacher", icon: "book-open" },
+    { value: "student", labelES: "Estudiante",    labelKey: "Student", icon: "user" },
+];
+
+// ── Selector de rol estilo pestaña ────────────────────────
+// El panel usa un Modal transparente secundario para flotar
+// por encima del ScrollView y del modal padre sin que nada
+// lo recorte.
+
+function RoleSelector({
+    value,
+    onChange,
+    error,
+}: {
+    value:    AppUserRole;
+    onChange: (role: AppUserRole) => void;
+    error?:   boolean;
+}) {
+    const { theme }  = useTheme();
+    const { t }      = useTranslation();
+    const c          = theme.colors;
+
+    const [open,        setOpen]        = useState(false);
+    const [triggerRect, setTriggerRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+    const triggerRef   = useRef<View>(null);
+    const dropdownAnim = useRef(new Animated.Value(0)).current;
+
+    const TRIGGER_H = 40;
+    const ITEM_H    = 44;
+    const PANEL_H   = ROLES.length * ITEM_H;
+
+    const measureAndOpen = useCallback(() => {
+        triggerRef.current?.measureInWindow((x, y, width, height) => {
+            setTriggerRect({ x, y, width, height });
+            setOpen(true);
+            Animated.timing(dropdownAnim, {
+                toValue: 1, duration: 180,
+                easing: Easing.out(Easing.quad), useNativeDriver: false,
+            }).start();
+        });
+    }, [dropdownAnim]);
+
+    const animateClose = useCallback(() => {
+        Animated.timing(dropdownAnim, {
+            toValue: 0, duration: 140,
+            easing: Easing.in(Easing.quad), useNativeDriver: false,
+        }).start(() => setOpen(false));
+    }, [dropdownAnim]);
+
+    const handleToggle = useCallback(() => {
+        open ? animateClose() : measureAndOpen();
+    }, [open, measureAndOpen, animateClose]);
+
+    const handleSelect = useCallback((role: AppUserRole) => {
+        onChange(role);
+        animateClose();
+    }, [onChange, animateClose]);
+
+    const panelHeight = dropdownAnim.interpolate({
+        inputRange: [0, 1], outputRange: [0, PANEL_H],
+    });
+    const panelOpacity = dropdownAnim.interpolate({
+        inputRange: [0, 0.3, 1], outputRange: [0, 1, 1],
+    });
+
+    const current = ROLES.find(r => r.value === value) ?? ROLES[2];
+
+    return (
+        <View style={{ marginBottom: 14 }}>
+            <Text style={{
+                fontSize: 12, fontWeight: "600",
+                color: error ? c.states.danger : c.text.secondary,
+                marginBottom: 6,
+            }}>
+                {t("Rol") + " *"}
+            </Text>
+
+            {/* ── Trigger ──────────────────────────────────── */}
+            <View ref={triggerRef} collapsable={false}>
+                <TouchableOpacity
+                    onPress={handleToggle}
+                    activeOpacity={0.8}
+                    style={{
+                        height: TRIGGER_H,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 8,
+                        paddingHorizontal: 12,
+                        borderRadius: 6,
+                        borderWidth: open ? 2 : 1,
+                        borderColor: error
+                            ? c.states.danger
+                            : open ? c.brand.primary : c.border.primary,
+                        backgroundColor: open ? c.brand.primaryLight : c.background.app,
+                        borderBottomLeftRadius:  open ? 0 : 6,
+                        borderBottomRightRadius: open ? 0 : 6,
+                    }}
+                >
+                    <Feather
+                        name={current.icon as any}
+                        size={14}
+                        color={open ? c.brand.primary : c.text.secondary}
+                    />
+                    <View style={{ flex: 1 }}>
+                        <Text style={{
+                            fontSize: 13, fontWeight: "600",
+                            color: open ? c.brand.primary : c.text.primary,
+                        }}>
+                            {t(current.labelES)}
+                        </Text>
+                        <Text style={{ fontSize: 11, color: c.text.secondary, marginTop: 1 }}>
+                            {t(current.labelKey)}
+                        </Text>
+                    </View>
+                    <Animated.View style={{
+                        transform: [{
+                            rotate: dropdownAnim.interpolate({
+                                inputRange: [0, 1], outputRange: ["0deg", "180deg"],
+                            }),
+                        }],
+                    }}>
+                        <Feather
+                            name="chevron-down"
+                            size={14}
+                            color={open ? c.brand.primary : c.text.secondary}
+                        />
+                    </Animated.View>
+                </TouchableOpacity>
+            </View>
+
+            {/* ── Dropdown en Modal transparente — flota sobre todo ── */}
+            {open && triggerRect && (
+                <Modal
+                    transparent
+                    animationType="none"
+                    visible={open}
+                    onRequestClose={animateClose}
+                    statusBarTranslucent
+                >
+                    {/* Fondo invisible que cierra al tocar fuera */}
+                    <TouchableOpacity
+                        style={{ flex: 1 }}
+                        activeOpacity={1}
+                        onPress={animateClose}
+                    >
+                        <Animated.View
+                            pointerEvents="box-none"
+                            style={{
+                                position: "absolute",
+                                top:    triggerRect.y + triggerRect.height,
+                                left:   triggerRect.x,
+                                width:  triggerRect.width,
+                                height: panelHeight,
+                                opacity: panelOpacity,
+                                overflow: "hidden",
+                                borderWidth: 2,
+                                borderTopWidth: 0,
+                                borderColor: c.brand.primary,
+                                borderBottomLeftRadius: 6,
+                                borderBottomRightRadius: 6,
+                                backgroundColor: c.background.surface,
+                                shadowColor: "#000",
+                                shadowOffset: { width: 0, height: 4 },
+                                shadowOpacity: 0.18,
+                                shadowRadius: 10,
+                                elevation: 20,
+                            }}
+                        >
+                            <TouchableOpacity activeOpacity={1}>
+                                {ROLES.map((role, i) => {
+                                    const active = value === role.value;
+                                    const isLast = i === ROLES.length - 1;
+                                    return (
+                                        <TouchableOpacity
+                                            key={role.value}
+                                            onPress={() => handleSelect(role.value)}
+                                            activeOpacity={0.7}
+                                            style={{
+                                                flexDirection: "row",
+                                                alignItems: "center",
+                                                gap: 10,
+                                                paddingHorizontal: 12,
+                                                paddingVertical: 11,
+                                                backgroundColor: active ? c.brand.primaryLight : "transparent",
+                                                borderBottomWidth: isLast ? 0 : 1,
+                                                borderBottomColor: c.border.primary,
+                                                height: ITEM_H,
+                                            }}
+                                        >
+                                            <Feather
+                                                name={role.icon as any}
+                                                size={14}
+                                                color={active ? c.brand.primary : c.text.secondary}
+                                            />
+                                            <View style={{ flex: 1 }}>
+                                                <Text style={{
+                                                    fontSize: 13,
+                                                    fontWeight: active ? "600" : "400",
+                                                    color: active ? c.brand.primary : c.text.primary,
+                                                }}>
+                                                    {t(role.labelES)}
+                                                </Text>
+                                                <Text style={{ fontSize: 11, color: c.text.secondary }}>
+                                                    {t(role.labelKey)}
+                                                </Text>
+                                            </View>
+                                            {active && (
+                                                <Feather name="check" size={14} color={c.brand.primary} />
+                                            )}
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </TouchableOpacity>
+                        </Animated.View>
+                    </TouchableOpacity>
+                </Modal>
+            )}
+        </View>
+    );
+}
+
 // ── Modal principal ───────────────────────────────────────
 
 export default function RegisterStudentModal({
@@ -97,11 +324,14 @@ export default function RegisterStudentModal({
     const { t }       = useTranslation();
     const c           = theme.colors;
 
-    const [form,       setForm]       = useState<StudentFormData>(EMPTY_FORM);
-    const [error,      setError]      = useState<string | null>(null);
-    const [saving,     setSaving]     = useState(false);
-    const [showErrors, setShowErrors] = useState(false);
-    const [success,    setSuccess]    = useState(false);
+    const [form,           setForm]           = useState<StudentFormData>(EMPTY_FORM);
+    const [error,          setError]          = useState<string | null>(null);
+    const [saving,         setSaving]         = useState(false);
+    const [showErrors,     setShowErrors]     = useState(false);
+    const [success,        setSuccess]        = useState(false);
+    const [showFaceModal,  setShowFaceModal]  = useState(false);
+    // Guarda el form validado listo para guardar tras el registro facial
+    const pendingFormRef = useRef<StudentFormData | null>(null);
 
     const setField = <K extends keyof StudentFormData>(key: K, value: StudentFormData[K]) => {
         setForm(prev => ({ ...prev, [key]: value }));
@@ -118,10 +348,32 @@ export default function RegisterStudentModal({
 
     const handleSubmit = async () => {
         setShowErrors(true);
+        setError(null);
+
+        // Validación previa sin guardar aún
+        const { validateStudentForm } = await import("../../../viewmodels/useStudentsViewModel");
+        const validationErr = validateStudentForm(form);
+        if (validationErr) {
+            setSaving(false);
+            return;
+        }
+
+        // Si el reconocimiento facial no está registrado, abrimos el modal facial primero
+        if (!form.registered) {
+            pendingFormRef.current = form;
+            setShowFaceModal(true);
+            return;
+        }
+
+        // Guardar directamente (ya tiene facial registrado)
+        await doSave(form);
+    };
+
+    const doSave = async (formToSave: StudentFormData) => {
         setSaving(true);
         setError(null);
 
-        const err = await onSubmit(form);
+        const err = await onSubmit(formToSave);
         setSaving(false);
 
         if (err) {
@@ -295,28 +547,13 @@ export default function RegisterStudentModal({
                                     />
                                 </View>
                                 <View style={{ flex: 1 }}>
-                                    <FormField
-                                        label={t("Semestre") + " *"}
-                                        value={form.grade}
-                                        onChangeText={v => setField("grade", v)}
-                                        placeholder={t("Ej: 3er semestre")}
-                                        error={isEmpty(form.grade)}
+                                    <RoleSelector
+                                        value={form.role}
+                                        onChange={v => setField("role", v)}
+                                        error={showErrors && !form.role}
                                     />
                                 </View>
                             </View>
-
-                            {/* Asistencia inicial */}
-                            <FormField
-                                label={t("Asistencia inicial (%)") }
-                                value={String(form.attendance)}
-                                onChangeText={v => {
-                                    const n = parseInt(v, 10);
-                                    setField("attendance", isNaN(n) ? 0 : Math.min(100, Math.max(0, n)));
-                                }}
-                                keyboardType="numeric"
-                                placeholder="100"
-                                hint={t("Valor entre 0 y 100")}
-                            />
 
                             {/* Estado */}
                             <View style={{ marginBottom: 14 }}>
@@ -373,18 +610,22 @@ export default function RegisterStudentModal({
                                 justifyContent: "space-between",
                                 padding: 14,
                                 borderWidth: 1,
-                                borderColor: c.border.primary,
+                                borderColor: form.registered ? c.states.success : c.border.primary,
                                 borderRadius: 8,
                                 marginBottom: 20,
                                 backgroundColor: c.background.app,
                             }}>
                                 <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
-                                    <Feather name="aperture" size={18} color={c.brand.primary} />
+                                    <Feather
+                                        name="aperture"
+                                        size={18}
+                                        color={form.registered ? c.states.success : c.brand.primary}
+                                    />
                                     <View>
                                         <Text style={{ fontSize: 13, fontWeight: "600", color: c.text.primary }}>
                                             {t("Reconocimiento facial")}
                                         </Text>
-                                        <Text style={{ fontSize: 11, color: c.text.secondary }}>
+                                        <Text style={{ fontSize: 11, color: form.registered ? c.states.success : c.text.secondary }}>
                                             {form.registered
                                                 ? t("Rostro registrado")
                                                 : t("Sin registro facial")}
@@ -396,7 +637,7 @@ export default function RegisterStudentModal({
                                     style={{
                                         width: 44, height: 24, borderRadius: 12,
                                         backgroundColor: form.registered
-                                            ? c.brand.primary
+                                            ? c.states.success
                                             : c.interactive.disabled,
                                         justifyContent: "center",
                                         paddingHorizontal: 3,
@@ -451,6 +692,22 @@ export default function RegisterStudentModal({
                     </TouchableOpacity>
                 </TouchableOpacity>
             </KeyboardAvoidingView>
+
+            {/* ── Modal de registro facial — se abre desde handleSubmit ── */}
+            <FaceRegistrationModal
+                visible={showFaceModal}
+                studentName={form.name}
+                studentId={form.code}
+                onClose={() => setShowFaceModal(false)}
+                onConfirm={(_descriptor) => {
+                    setShowFaceModal(false);
+                    if (pendingFormRef.current) {
+                        const formWithFace = { ...pendingFormRef.current, registered: true };
+                        pendingFormRef.current = null;
+                        doSave(formWithFace);
+                    }
+                }}
+            />
         </Modal>
     );
 }
