@@ -4,8 +4,8 @@
 //  en useStudentsViewModel.
 // ============================================================
 
-import React from "react";
-import { View, Text, ScrollView, TextInput, TouchableOpacity, Modal, ActivityIndicator } from "react-native";
+import React, { useState, useRef, useCallback } from "react";
+import { View, Text, ScrollView, TextInput, TouchableOpacity, Modal, ActivityIndicator, Animated, Easing } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Card, Badge, Avatar, PageHeader, UIButton, ProgressBar, EmptyState } from "../ui/UI";
 import { useTheme }               from "../hooks/useTheme";
@@ -15,6 +15,213 @@ import { useTranslation }         from "../../../i18n/hooks/useTranslation";
 import RegisterStudentModal       from "./RegisterStudentModal";
 import ImportStudentsModal        from "./ImportStudentsModal";
 import type { Student }           from "../../../models/types";
+
+// ── CourseFilterSelector ─────────────────────────────────────
+// Dropdown estilo RoleSelector: flota sobre todo el contenido
+// usando un Modal transparente secundario.
+
+function CourseFilterSelector({
+    courses,
+    value,
+    onChange,
+}: {
+    courses:  string[];
+    value:    string;
+    onChange: (v: string) => void;
+}) {
+    const { theme } = useTheme();
+    const { t }     = useTranslation();
+    const c         = theme.colors;
+
+    const [open,        setOpen]        = useState(false);
+    const [triggerRect, setTriggerRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+    const triggerRef   = useRef<View>(null);
+    const dropdownAnim = useRef(new Animated.Value(0)).current;
+
+    const TRIGGER_H = 38;
+    const ITEM_H    = 40;
+    const ALL_ITEMS = ["", ...courses];   // "" = Todos
+    const MAX_VISIBLE = 6;
+    const PANEL_H   = Math.min(ALL_ITEMS.length, MAX_VISIBLE) * ITEM_H;
+
+    const animateOpen = useCallback(() => {
+        triggerRef.current?.measureInWindow((x, y, width, height) => {
+            setTriggerRect({ x, y, width, height });
+            setOpen(true);
+            Animated.timing(dropdownAnim, {
+                toValue: 1, duration: 170,
+                easing: Easing.out(Easing.quad), useNativeDriver: false,
+            }).start();
+        });
+    }, [dropdownAnim]);
+
+    const animateClose = useCallback(() => {
+        Animated.timing(dropdownAnim, {
+            toValue: 0, duration: 130,
+            easing: Easing.in(Easing.quad), useNativeDriver: false,
+        }).start(() => setOpen(false));
+    }, [dropdownAnim]);
+
+    const handleToggle = useCallback(() => {
+        open ? animateClose() : animateOpen();
+    }, [open, animateOpen, animateClose]);
+
+    const handleSelect = useCallback((v: string) => {
+        onChange(v);
+        animateClose();
+    }, [onChange, animateClose]);
+
+    const panelHeight = dropdownAnim.interpolate({
+        inputRange: [0, 1], outputRange: [0, PANEL_H],
+    });
+    const panelOpacity = dropdownAnim.interpolate({
+        inputRange: [0, 0.4, 1], outputRange: [0, 1, 1],
+    });
+
+    const label = value ? value : t("Todos");
+
+    return (
+        <View style={{ position: "relative" }}>
+            
+
+            {/* Trigger */}
+            <View ref={triggerRef} collapsable={false}>
+                <TouchableOpacity
+                    onPress={handleToggle}
+                    activeOpacity={0.8}
+                    style={{
+                        height: TRIGGER_H,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 8,
+                        paddingHorizontal: 12,
+                        borderRadius: 6,
+                        borderWidth: open ? 2 : 1,
+                        borderColor: open ? c.brand.primary : c.border.primary,
+                        backgroundColor: open ? c.brand.primaryLight : c.background.surface,
+                        borderBottomLeftRadius:  open ? 0 : 6,
+                        borderBottomRightRadius: open ? 0 : 6,
+                        minWidth: 160,
+                    }}
+                >
+                    <Feather
+                        name="book-open"
+                        size={13}
+                        color={open ? c.brand.primary : c.text.secondary}
+                    />
+                    <Text style={{
+                        flex: 1, fontSize: 13, fontWeight: "600",
+                        color: open ? c.brand.primary : (value ? c.text.primary : c.text.secondary),
+                    }} numberOfLines={1}>
+                        {label}
+                    </Text>
+                    <Animated.View style={{
+                        transform: [{
+                            rotate: dropdownAnim.interpolate({
+                                inputRange: [0, 1], outputRange: ["0deg", "180deg"],
+                            }),
+                        }],
+                    }}>
+                        <Feather
+                            name="chevron-down"
+                            size={13}
+                            color={open ? c.brand.primary : c.text.secondary}
+                        />
+                    </Animated.View>
+                </TouchableOpacity>
+            </View>
+
+            {/* Dropdown flotante en Modal transparente */}
+            {open && triggerRect && (
+                <Modal
+                    transparent
+                    animationType="none"
+                    visible={open}
+                    onRequestClose={animateClose}
+                    statusBarTranslucent
+                >
+                    <TouchableOpacity
+                        style={{ flex: 1 }}
+                        activeOpacity={1}
+                        onPress={animateClose}
+                    >
+                        <Animated.View
+                            pointerEvents="box-none"
+                            style={{
+                                position: "absolute",
+                                top:   triggerRect.y + triggerRect.height,
+                                left:  triggerRect.x,
+                                width: triggerRect.width,
+                                height:  panelHeight,
+                                opacity: panelOpacity,
+                                overflow: "hidden",
+                                borderWidth: 2,
+                                borderTopWidth: 0,
+                                borderColor: c.brand.primary,
+                                borderBottomLeftRadius: 6,
+                                borderBottomRightRadius: 6,
+                                backgroundColor: c.background.surface,
+                                shadowColor: "#000",
+                                shadowOffset: { width: 0, height: 4 },
+                                shadowOpacity: 0.18,
+                                shadowRadius: 10,
+                                elevation: 20,
+                                zIndex: 9999,
+                            }}
+                        >
+                            <TouchableOpacity activeOpacity={1}>
+                                <ScrollView
+                                    showsVerticalScrollIndicator={false}
+                                    keyboardShouldPersistTaps="handled"
+                                    style={{ maxHeight: PANEL_H }}
+                                >
+                                    {ALL_ITEMS.map((course, i) => {
+                                        const active = value === course;
+                                        const isLast = i === ALL_ITEMS.length - 1;
+                                        return (
+                                            <TouchableOpacity
+                                                key={course || "__all__"}
+                                                onPress={() => handleSelect(course)}
+                                                activeOpacity={0.7}
+                                                style={{
+                                                    flexDirection: "row",
+                                                    alignItems: "center",
+                                                    gap: 10,
+                                                    paddingHorizontal: 12,
+                                                    height: ITEM_H,
+                                                    backgroundColor: active
+                                                        ? c.brand.primaryLight : "transparent",
+                                                    borderBottomWidth: isLast ? 0 : 1,
+                                                    borderBottomColor: c.border.primary,
+                                                }}
+                                            >
+                                                <Feather
+                                                    name={course ? "book-open" : "layers"}
+                                                    size={12}
+                                                    color={active ? c.brand.primary : c.text.secondary}
+                                                />
+                                                <Text style={{
+                                                    flex: 1, fontSize: 13,
+                                                    fontWeight: active ? "600" : "400",
+                                                    color: active ? c.brand.primary : c.text.primary,
+                                                }} numberOfLines={1}>
+                                                    {course || t("Todos")}
+                                                </Text>
+                                                {active && (
+                                                    <Feather name="check" size={13} color={c.brand.primary} />
+                                                )}
+                                            </TouchableOpacity>
+                                        );
+                                    })}
+                                </ScrollView>
+                            </TouchableOpacity>
+                        </Animated.View>
+                    </TouchableOpacity>
+                </Modal>
+            )}
+        </View>
+    );
+}
 
 // ── StudentDetailModal ───────────────────────────────────────
 
@@ -279,27 +486,11 @@ export default function StudentsView() {
                             />
                         </View>
 
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}>
-                            <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
-                                {["", ...vm.courses].map(course => (
-                                    <TouchableOpacity
-                                        key={course || "all"}
-                                        onPress={() => vm.setCourseFilter(course)}
-                                        style={{
-                                            paddingHorizontal: 12, paddingVertical: 6, borderRadius: 99,
-                                            backgroundColor: vm.courseFilter === course ? c.brand.primary : c.interactive.disabled,
-                                        }}
-                                    >
-                                        <Text style={{
-                                            fontSize: 12, fontWeight: "600",
-                                            color: vm.courseFilter === course ? c.text.onBrand : c.text.secondary,
-                                        }}>
-                                            {course || t("Todos")}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                        </ScrollView>
+                        <CourseFilterSelector
+                                courses={vm.courses}
+                                value={vm.courseFilter}
+                                onChange={vm.setCourseFilter}
+                            />
                     </View>
                 </Card>
 
