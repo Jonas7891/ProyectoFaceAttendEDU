@@ -4,7 +4,7 @@
 // ============================================================
 
 import React from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Card, Badge, PageHeader, UIButton, ProgressBar, EmptyState } from "../ui/UI";
 import { useTheme }      from "../hooks/useTheme";
@@ -174,6 +174,14 @@ export default function CoursesView() {
     const c           = theme.colors;
     const vm          = useCoursesViewModel();
     const { t }       = useTranslation();
+
+    if (vm.isLoading) {
+        return (
+            <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+                <ActivityIndicator size="large" color={c.brand.primary} />
+            </View>
+        );
+    }
 
     return (
         <View style={{ flex: 1 }}>

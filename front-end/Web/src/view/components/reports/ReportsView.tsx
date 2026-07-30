@@ -16,7 +16,6 @@ import { useResponsive } from "../hooks/useResponsive";
 import { useReportsViewModel, PERIOD_OPTIONS, DEFAULT_FILTERS } from "../../../viewmodels/useReportsViewModel";
 import type { ReportFilters } from "../../../viewmodels/useReportsViewModel";
 import { useTranslation } from "../../../i18n/hooks/useTranslation";
-import { mockCourses }   from "../../../models/data/mockData";
 import type { DailyAttendance, WeeklyAttendance } from "../../../models/types";
 
 // ── WeeklySparkline ──────────────────────────────────────────
@@ -90,13 +89,14 @@ function DailyBars({ data }: { data: DailyAttendance[] }) {
 // ── FiltersPanel ─────────────────────────────────────────────
 
 function FiltersPanel({
-    visible, filters, onApply, onReset, onClose,
+    visible, filters, onApply, onReset, onClose, availableCourses,
 }: {
-    visible:  boolean;
-    filters:  ReportFilters;
-    onApply:  (f: ReportFilters) => void;
-    onReset:  () => void;
-    onClose:  () => void;
+    visible:          boolean;
+    filters:          ReportFilters;
+    onApply:          (f: ReportFilters) => void;
+    onReset:          () => void;
+    onClose:          () => void;
+    availableCourses: string[];
 }) {
     const { theme } = useTheme();
     const { t }     = useTranslation();
@@ -109,8 +109,8 @@ function FiltersPanel({
     React.useEffect(() => { setDraft(filters); }, [filters]);
 
     const courseOptions = [
-        { value: "", label: t("Todos los cursos") },
-        ...Array.from(new Set(mockCourses.map(c => c.name))).map(name => ({ value: name, label: name })),
+        { value: "", label: t("Todos los programas") },
+        ...availableCourses.map(name => ({ value: name, label: name })),
     ];
 
     const statusOptions: { value: ReportFilters["statusFilter"]; label: string }[] = [
@@ -183,7 +183,7 @@ function FiltersPanel({
 
                 <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
                     {/* Curso */}
-                    <FilterLabel label={t("Curso")} />
+                    <FilterLabel label={t("Programa")} />
                     <ChipRow
                         options={courseOptions}
                         value={draft.courseCode}
@@ -271,6 +271,15 @@ export default function ReportsView() {
     const c           = theme.colors;
     const vm          = useReportsViewModel();
     const { t }       = useTranslation();
+
+    if (vm.isLoading) {
+        return (
+            <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 12 }}>
+                <Feather name="loader" size={28} color={c.brand.primary} />
+                <Text style={{ fontSize: 14, color: c.text.secondary }}>{t("Cargando datos...")}</Text>
+            </View>
+        );
+    }
 
     return (
         <>
@@ -530,17 +539,26 @@ export default function ReportsView() {
                     )}
                 </Card>
 
-                {/* Tabla completa de estudiantes filtrados */}
-                {vm.filtersActive && (
-                    <Card>
-                        <View style={{ marginBottom: 12 }}>
-                            <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary }}>
-                                {t("Todos los estudiantes")}
-                            </Text>
-                            <Text style={{ fontSize: 12, color: c.text.secondary }}>
-                                {vm.filteredStudents.length} {t("resultado(s) con filtros aplicados")}
-                            </Text>
-                        </View>
+                {/* Tabla completa de aprendices — siempre visible */}
+                <Card>
+                    <View style={{ marginBottom: 12 }}>
+                        <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary }}>
+                            {t("Todos los aprendices")}
+                        </Text>
+                        <Text style={{ fontSize: 12, color: c.text.secondary }}>
+                            {vm.filteredStudents.length}{" "}
+                            {vm.filtersActive
+                                ? t("resultado(s) con filtros aplicados")
+                                : `${t("aprendices registrados")} · ${vm.availableCourses.length} ${t("programa(s)")}`}
+                        </Text>
+                    </View>
+                    {vm.filteredStudents.length === 0 ? (
+                        <Text style={{ fontSize: 13, color: c.text.secondary, textAlign: "center", paddingVertical: 24 }}>
+                            {vm.filtersActive
+                                ? t("Ningún aprendiz coincide con los filtros aplicados")
+                                : t("No hay aprendices registrados")}
+                        </Text>
+                    ) : (
                         <View style={{ gap: 8 }}>
                             {vm.filteredStudents.map(student => (
                                 <View key={student.id} style={{
@@ -566,8 +584,8 @@ export default function ReportsView() {
                                 </View>
                             ))}
                         </View>
-                    </Card>
-                )}
+                    )}
+                </Card>
 
             </ScrollView>
 
@@ -578,6 +596,7 @@ export default function ReportsView() {
                 onApply={vm.setFilters}
                 onReset={vm.resetFilters}
                 onClose={vm.closeFilters}
+                availableCourses={vm.availableCourses}
             />
         </>
     );

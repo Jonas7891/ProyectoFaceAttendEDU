@@ -1,17 +1,12 @@
 // ============================================================
 //  FaceAttend EDU — Students ViewModel
 //
-//  Gestiona la lista de estudiantes con persistencia en
-//  AsyncStorage a través de StudentStorage.
-//  Incluye registro manual y registro por importación (CSV/Excel).
+//  Consume AppDataContext como única fuente de verdad.
+//  Ya no carga datos propios: lee students del contexto global.
 // ============================================================
 
-import { useState, useMemo, useEffect, useCallback } from "react";
-import {
-    loadStudents,
-    addStudent,
-    addStudentsBulk,
-} from "../models/data/StudentStorage";
+import { useState, useMemo, useCallback } from "react";
+import { useAppData }  from "../context/AppDataContext";
 import type { Student, AppUserRole } from "../models/types";
 
 // ── Tipos de formulario ───────────────────────────────────
@@ -55,7 +50,7 @@ export interface StudentsViewModel {
     // datos
     students:            Student[];
     filtered:            Student[];
-    courses:             string[];
+    courses:             string[];   // programas únicos (= AppDataContext.programs.name)
     selected:            Student | null;
     isLoading:           boolean;
 
@@ -87,43 +82,36 @@ export interface StudentsViewModel {
 }
 
 export function useStudentsViewModel(): StudentsViewModel {
-    const [students,     setStudents]     = useState<Student[]>([]);
-    const [isLoading,    setIsLoading]    = useState(true);
+    const appData = useAppData();
+
     const [search,       setSearch]       = useState("");
     const [courseFilter, setCourseFilter] = useState("");
     const [selected,     setSelected]     = useState<Student | null>(null);
     const [showRegisterModal, setShowRegisterModal] = useState(false);
     const [showImportModal,   setShowImportModal]   = useState(false);
 
-    // Carga inicial desde storage
-    useEffect(() => {
-        loadStudents().then(loaded => {
-            setStudents(loaded);
-            setIsLoading(false);
-        });
-    }, []);
-
+    // Programas únicos — derivados del contexto global
     const courses = useMemo(
-        () => [...new Set(students.map(s => s.course))],
-        [students]
+        () => appData.programs.map(p => p.name),
+        [appData.programs]
     );
 
     const filtered = useMemo(() =>
-        students.filter(s => {
+        appData.students.filter(s => {
             const matchSearch = !search
                 || s.name.toLowerCase().includes(search.toLowerCase())
                 || s.code.toLowerCase().includes(search.toLowerCase());
             const matchCourse = !courseFilter || s.course === courseFilter;
             return matchSearch && matchCourse;
         }),
-        [students, search, courseFilter]
+        [appData.students, search, courseFilter]
     );
 
     const registerStudent = useCallback(async (form: StudentFormData): Promise<string | null> => {
         const err = validateStudentForm(form);
         if (err) return err;
 
-        const updated = await addStudent(students, {
+        await appData.addStudent({
             name:       form.name.trim(),
             code:       form.code.trim(),
             email:      form.email.trim(),
@@ -133,23 +121,19 @@ export function useStudentsViewModel(): StudentsViewModel {
             registered: form.registered,
             status:     form.status,
         });
-        setStudents(updated);
         return null;
-    }, [students]);
+    }, [appData]);
 
     const importStudents = useCallback(async (drafts: Omit<Student, "id">[]): Promise<number> => {
-        if (drafts.length === 0) return 0;
-        const updated = await addStudentsBulk(students, drafts);
-        setStudents(updated);
-        return drafts.length;
-    }, [students]);
+        return appData.importStudents(drafts);
+    }, [appData]);
 
     return {
-        students,
+        students:  appData.students,
         filtered,
         courses,
         selected,
-        isLoading,
+        isLoading: appData.isLoading,
         search,
         courseFilter,
         showRegisterModal,

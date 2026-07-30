@@ -353,5 +353,22 @@
   "Archivo inválido. Debe ser un descriptor faceattend-v1 con 128 valores.": "Arquivo inválido. Deve ser um descritor faceattend-v1 com 128 valores.",
   "El archivo no es un JSON válido.": "O arquivo não é um JSON válido.",
   "Dimensiones:": "Dimensões:",
-  "Formato:": "Formato:"
+  "Formato:": "Formato:",
+
+  "Cargando modelos de reconocimiento facial…": "Carregando modelos de reconhecimento facial…",
+  "No se pudieron cargar los modelos. Verifica la conexión.": "Não foi possível carregar os modelos. Verifique a conexão.",
+  "Rostro centrado": "Rosto centralizado",
+  "Tamaño adecuado": "Tamanho adequado",
+  "Iluminación correcta": "Iluminação correta",
+  "Capturando…": "Capturando…",
+  "Buscando rostro…": "Procurando rosto…",
+  "La imagen se captura automáticamente cuando todos los criterios son correctos": "A imagem é capturada automaticamente quando todos os critérios são atendidos",
+  "Autocapturando…": "Captura automática…",
+  "Capturar ahora": "Capturar agora",
+  "Capturado:": "Capturado:",
+  "Descriptor real generado con face-api.js (128D)": "Descritor real gerado com face-api.js (128D)",
+  "Descriptor no generado — los modelos no cargaron correctamente": "Descritor não gerado — os modelos não carregaram corretamente",
+  "De frente": "De frente",
+  "Cabeza nivelada": "Cabeça nivelada",
+  "Ojos abiertos": "Olhos abertos"
 }

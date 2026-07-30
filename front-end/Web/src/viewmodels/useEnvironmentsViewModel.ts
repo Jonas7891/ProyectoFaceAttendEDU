@@ -1,21 +1,12 @@
 // ============================================================
 //  FaceAttend EDU — Environments ViewModel
 //
-//  Gestiona la lista de ambientes/salones con persistencia.
-//  También carga usuarios para el autocomplete de instructores.
+//  Consume AppDataContext como única fuente de verdad.
+//  Ya no carga environments ni users de forma independiente.
 // ============================================================
 
-import { useState, useMemo, useEffect, useCallback } from "react";
-import {
-    loadEnvironments,
-    addEnvironment,
-    updateEnvironment,
-    deleteEnvironment,
-    addScheduleToEnvironment,
-    updateSchedule,
-    deleteSchedule,
-} from "../models/data/EnvironmentStorage";
-import { loadUsers } from "../models/data/UserStorage";
+import { useState, useMemo, useCallback } from "react";
+import { useAppData }  from "../context/AppDataContext";
 import type { Environment, EnvironmentSchedule, AppUser } from "../models/types";
 
 // ── Formulario de ambiente ────────────────────────────────
@@ -35,11 +26,11 @@ export const EMPTY_ENV_FORM: EnvironmentFormData = {
 // ── Formulario de horario ─────────────────────────────────
 
 export interface ScheduleFormData {
-    courseCode:     string;
-    courseName:     string;
-    instructorQuery: string;   // texto de búsqueda del instructor
-    instructorId:    string;   // ID seleccionado
-    instructorName:  string;   // nombre para display
+    courseCode:      string;
+    courseName:      string;
+    instructorQuery: string;
+    instructorId:    string;
+    instructorName:  string;
     startTime:       string;
     endTime:         string;
     days:            string[];
@@ -67,15 +58,15 @@ export function validateEnvironmentForm(form: EnvironmentFormData): string | nul
 }
 
 export function validateScheduleForm(form: ScheduleFormData): string | null {
-    if (!form.courseCode.trim())    return "Completa todos los campos";
-    if (!form.courseName.trim())    return "Completa todos los campos";
-    if (!form.instructorId.trim())  return "Selecciona un instructor";
-    if (form.days.length === 0)     return "Selecciona al menos un día";
+    if (!form.courseCode.trim())   return "Completa todos los campos";
+    if (!form.courseName.trim())   return "Completa todos los campos";
+    if (!form.instructorId.trim()) return "Selecciona un instructor";
+    if (form.days.length === 0)    return "Selecciona al menos un día";
     if (!form.startTime || !form.endTime) return "Completa el horario";
     return null;
 }
 
-// ── ViewModel ─────────────────────────────────────────────
+// ── Tipos del ViewModel ───────────────────────────────────
 
 export type EnvironmentModalMode = "none" | "register" | "edit" | "detail";
 export type ScheduleModalMode    = "none" | "add" | "edit";
@@ -85,50 +76,49 @@ export interface EnvironmentsViewModel {
     environments: Environment[];
     filtered:     Environment[];
     users:        AppUser[];
-    instructors:  AppUser[];   // solo role === "teacher" | "admin"
+    instructors:  AppUser[];
     isLoading:    boolean;
 
     // filtros
-    search:       string;
-    setSearch:    (v: string) => void;
+    search:    string;
+    setSearch: (v: string) => void;
 
     // selección
-    selected:     Environment | null;
+    selected:          Environment | null;
     selectEnvironment: (e: Environment) => void;
     clearSelection:    () => void;
 
     // modales de ambiente
-    envModalMode: EnvironmentModalMode;
+    envModalMode:      EnvironmentModalMode;
     openRegisterModal: () => void;
     openEditModal:     (e: Environment) => void;
     openDetailModal:   (e: Environment) => void;
     closeEnvModal:     () => void;
 
     // modales de horario
-    scheduleModalMode:  ScheduleModalMode;
-    editingSchedule:    EnvironmentSchedule | null;
+    scheduleModalMode:   ScheduleModalMode;
+    editingSchedule:     EnvironmentSchedule | null;
+    scheduleTargetEnvId: string | null;
     openAddSchedule:    (envId: string) => void;
     openEditSchedule:   (envId: string, schedule: EnvironmentSchedule) => void;
     closeScheduleModal: () => void;
-    scheduleTargetEnvId: string | null;
 
-    // acciones CRUD ambiente
+    // CRUD ambiente
     registerEnvironment: (form: EnvironmentFormData) => Promise<string | null>;
     editEnvironment:     (id: string, form: EnvironmentFormData) => Promise<string | null>;
     removeEnvironment:   (id: string) => Promise<void>;
 
-    // acciones CRUD horario
-    saveSchedule:    (form: ScheduleFormData) => Promise<string | null>;
-    removeSchedule:  (envId: string, scheduleId: string) => Promise<void>;
+    // CRUD horario
+    saveSchedule:   (form: ScheduleFormData) => Promise<string | null>;
+    removeSchedule: (envId: string, scheduleId: string) => Promise<void>;
 
     // autocomplete instructores
     searchInstructors: (query: string) => AppUser[];
 }
 
 export function useEnvironmentsViewModel(): EnvironmentsViewModel {
-    const [environments,   setEnvironments]   = useState<Environment[]>([]);
-    const [users,          setUsers]          = useState<AppUser[]>([]);
-    const [isLoading,      setIsLoading]      = useState(true);
+    const appData = useAppData();
+
     const [search,         setSearch]         = useState("");
     const [selected,       setSelected]       = useState<Environment | null>(null);
     const [envModalMode,   setEnvModalMode]   = useState<EnvironmentModalMode>("none");
@@ -136,21 +126,14 @@ export function useEnvironmentsViewModel(): EnvironmentsViewModel {
     const [editingSchedule,   setEditingSchedule]   = useState<EnvironmentSchedule | null>(null);
     const [scheduleTargetEnvId, setScheduleTargetEnvId] = useState<string | null>(null);
 
-    useEffect(() => {
-        Promise.all([loadEnvironments(), loadUsers()]).then(([envs, usrs]) => {
-            setEnvironments(envs);
-            setUsers(usrs);
-            setIsLoading(false);
-        });
-    }, []);
-
+    // Instructores: usuarios activos con rol teacher o admin del contexto global
     const instructors = useMemo(
-        () => users.filter(u => (u.role === "teacher" || u.role === "admin") && u.status === "active"),
-        [users]
+        () => appData.users.filter(u => (u.role === "teacher" || u.role === "admin") && u.status === "active"),
+        [appData.users]
     );
 
     const filtered = useMemo(() =>
-        environments.filter(env => {
+        appData.environments.filter(env => {
             if (!search) return true;
             const q = search.toLowerCase();
             return (
@@ -163,7 +146,7 @@ export function useEnvironmentsViewModel(): EnvironmentsViewModel {
                 )
             );
         }),
-        [environments, search]
+        [appData.environments, search]
     );
 
     const searchInstructors = useCallback((query: string): AppUser[] => {
@@ -181,37 +164,34 @@ export function useEnvironmentsViewModel(): EnvironmentsViewModel {
     const registerEnvironment = useCallback(async (form: EnvironmentFormData): Promise<string | null> => {
         const err = validateEnvironmentForm(form);
         if (err) return err;
-        const updated = await addEnvironment(environments, {
+        await appData.addEnvironment({
             number:      form.number.trim(),
             description: form.description.trim(),
             capacity:    form.capacity ? parseInt(form.capacity, 10) : undefined,
             schedules:   [],
         });
-        setEnvironments(updated);
         return null;
-    }, [environments]);
+    }, [appData]);
 
     const editEnvironment = useCallback(async (id: string, form: EnvironmentFormData): Promise<string | null> => {
         const err = validateEnvironmentForm(form);
         if (err) return err;
-        const updated = await updateEnvironment(environments, id, {
+        await appData.updateEnvironment(id, {
             number:      form.number.trim(),
             description: form.description.trim(),
             capacity:    form.capacity ? parseInt(form.capacity, 10) : undefined,
         });
-        setEnvironments(updated);
-        // Actualiza el selected si es el mismo
-        const updatedEnv = updated.find(e => e.id === id) ?? null;
-        setSelected(updatedEnv);
+        // Actualiza el selected sincronizando con el nuevo estado global
+        const updatedEnv = appData.environments.find(e => e.id === id);
+        if (updatedEnv) setSelected({ ...updatedEnv, number: form.number.trim(), description: form.description.trim() });
         return null;
-    }, [environments]);
+    }, [appData]);
 
     const removeEnvironment = useCallback(async (id: string): Promise<void> => {
-        const updated = await deleteEnvironment(environments, id);
-        setEnvironments(updated);
+        await appData.removeEnvironment(id);
         setSelected(null);
         setEnvModalMode("none");
-    }, [environments]);
+    }, [appData]);
 
     // ── Acciones de horario ───────────────────────────────
 
@@ -230,34 +210,32 @@ export function useEnvironmentsViewModel(): EnvironmentsViewModel {
             days:           form.days,
         };
 
-        let updated: Environment[];
         if (scheduleModalMode === "add") {
-            updated = await addScheduleToEnvironment(environments, scheduleTargetEnvId, draft);
+            await appData.addSchedule(scheduleTargetEnvId, draft);
         } else if (editingSchedule) {
-            updated = await updateSchedule(environments, scheduleTargetEnvId, editingSchedule.id, draft);
+            await appData.updateSchedule(scheduleTargetEnvId, editingSchedule.id, draft);
         } else {
             return "Error interno";
         }
 
-        setEnvironments(updated);
-        const updatedEnv = updated.find(e => e.id === scheduleTargetEnvId) ?? null;
-        setSelected(updatedEnv);
+        // Sincroniza el selected con el nuevo estado global
+        const updatedEnv = appData.environments.find(e => e.id === scheduleTargetEnvId);
+        if (updatedEnv) setSelected(updatedEnv);
         return null;
-    }, [environments, scheduleTargetEnvId, scheduleModalMode, editingSchedule]);
+    }, [appData, scheduleTargetEnvId, scheduleModalMode, editingSchedule]);
 
     const removeSchedule = useCallback(async (envId: string, scheduleId: string): Promise<void> => {
-        const updated = await deleteSchedule(environments, envId, scheduleId);
-        setEnvironments(updated);
-        const updatedEnv = updated.find(e => e.id === envId) ?? null;
-        setSelected(updatedEnv);
-    }, [environments]);
+        await appData.removeSchedule(envId, scheduleId);
+        const updatedEnv = appData.environments.find(e => e.id === envId);
+        if (updatedEnv) setSelected(updatedEnv);
+    }, [appData]);
 
     return {
-        environments,
+        environments: appData.environments,
         filtered,
-        users,
+        users:        appData.users,
         instructors,
-        isLoading,
+        isLoading:    appData.isLoading,
         search,
         setSearch,
         selected,
@@ -266,19 +244,19 @@ export function useEnvironmentsViewModel(): EnvironmentsViewModel {
 
         envModalMode,
         openRegisterModal: () => { setSelected(null); setEnvModalMode("register"); },
-        openEditModal:     (e) => { setSelected(e);   setEnvModalMode("edit");     },
-        openDetailModal:   (e) => { setSelected(e);   setEnvModalMode("detail");   },
-        closeEnvModal:     () => { setEnvModalMode("none"); },
+        openEditModal:     (e) => { setSelected(e); setEnvModalMode("edit"); },
+        openDetailModal:   (e) => { setSelected(e); setEnvModalMode("detail"); },
+        closeEnvModal:     () => setEnvModalMode("none"),
 
         scheduleModalMode,
         editingSchedule,
         scheduleTargetEnvId,
-        openAddSchedule:    (envId) => {
+        openAddSchedule: (envId) => {
             setScheduleTargetEnvId(envId);
             setEditingSchedule(null);
             setScheduleModalMode("add");
         },
-        openEditSchedule:   (envId, schedule) => {
+        openEditSchedule: (envId, schedule) => {
             setScheduleTargetEnvId(envId);
             setEditingSchedule(schedule);
             setScheduleModalMode("edit");
