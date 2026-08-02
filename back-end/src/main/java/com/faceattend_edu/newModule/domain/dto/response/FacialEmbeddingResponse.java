@@ -11,19 +11,21 @@ import java.util.UUID;
 
 public record FacialEmbeddingResponse(
 
+        @JsonView(Views.ActiveFacialEmbeddings.class)
         UUID id,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.ActiveFacialEmbeddings.class})
         PersonResponse person,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.ActiveFacialEmbeddings.class})
         String embedding, // VECTOR
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.ActiveFacialEmbeddings.class})
         String modelVersion,
 
         boolean status,
 
+        @JsonView(Views.ActiveFacialEmbeddings.class)
         LocalDateTime createdAt,
 
         LocalDateTime updatedAt

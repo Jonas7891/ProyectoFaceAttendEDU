@@ -9,12 +9,13 @@ import java.util.List;
 
 public record RoleResponse(
 
+        @JsonView({Views.RolePermissions.class, Views.UserDetail.class})
         Integer id,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.RolePermissions.class})
         List<ModuleResponse> modules,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.RolePermissions.class, Views.UserDetail.class})
         String name,
 
         @JsonView(Views.Public.class)

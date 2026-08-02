@@ -7,15 +7,16 @@ import java.time.LocalDateTime;
 
 public record ActionResponse(
 
+        @JsonView(Views.RolePermissions.class)
         Integer id,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.RolePermissions.class})
         String name,
 
         @JsonView(Views.Public.class)
         String description,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.RolePermissions.class})
         String httpMethod,
 
         boolean status,

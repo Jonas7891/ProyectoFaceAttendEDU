@@ -8,15 +8,16 @@ import java.time.LocalDateTime;
 
 public record CourseResponse(
 
+        @JsonView({Views.ScheduleDetail.class, Views.ActiveEnrollments.class, Views.AttendanceDetail.class})
         Integer id,
 
         @JsonView(Views.Public.class)
         SchoolResponse school,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.ScheduleDetail.class, Views.ActiveEnrollments.class, Views.AttendanceDetail.class, Views.PendingJustifications.class})
         String name,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.ScheduleDetail.class, Views.ActiveEnrollments.class, Views.AttendanceDetail.class})
         String code,
 
         boolean status,

@@ -9,9 +9,10 @@ import java.util.UUID;
 
 public record SchoolResponse(
 
+        @JsonView({Views.UserDetail.class, Views.DeviceStatus.class})
         UUID id,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.UserDetail.class, Views.DeviceStatus.class})
         String name,
 
         @JsonView(Views.Public.class)

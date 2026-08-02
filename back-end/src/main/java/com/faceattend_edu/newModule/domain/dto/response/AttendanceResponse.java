@@ -12,23 +12,25 @@ import java.time.LocalTime;
 
 public record AttendanceResponse(
 
+        @JsonView({Views.AttendanceDetail.class, Views.PendingJustifications.class})
         Long id,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.AttendanceDetail.class, Views.PendingJustifications.class})
         PersonResponse student,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.AttendanceDetail.class, Views.PendingJustifications.class})
         ScheduleResponse schedule,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.AttendanceDetail.class})
         IotDeviceResponse device,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.AttendanceDetail.class, Views.PendingJustifications.class})
         LocalDate date,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.AttendanceDetail.class})
         LocalTime time,
 
+        @JsonView({Views.AttendanceDetail.class, Views.PendingJustifications.class})
         boolean status,
 
         LocalDateTime createdAt,

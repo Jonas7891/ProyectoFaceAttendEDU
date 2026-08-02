@@ -10,27 +10,28 @@ import java.util.UUID;
 
 public record PersonResponse(
 
+        @JsonView({Views.UserDetail.class, Views.ScheduleDetail.class, Views.ActiveEnrollments.class, Views.AttendanceDetail.class, Views.PendingJustifications.class, Views.ActiveFacialEmbeddings.class})
         UUID id,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.UserDetail.class})
         SchoolResponse school,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.UserDetail.class, Views.ScheduleDetail.class, Views.ActiveEnrollments.class, Views.AttendanceDetail.class, Views.AttendanceDetail.class, Views.PendingJustifications.class, Views.ActiveFacialEmbeddings.class, Views.AuditLog.class})
         String name,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.UserDetail.class, Views.ScheduleDetail.class, Views.ActiveEnrollments.class, Views.AttendanceDetail.class, Views.AttendanceDetail.class, Views.PendingJustifications.class, Views.ActiveFacialEmbeddings.class, Views.AuditLog.class})
         String lastName,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.UserDetail.class, Views.ActiveEnrollments.class})
         String email,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.UserDetail.class})
         String phone,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.UserDetail.class})
         boolean isStudent,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.UserDetail.class})
         boolean isTeacher,
 
         boolean status,

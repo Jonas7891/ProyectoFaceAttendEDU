@@ -9,21 +9,22 @@ import java.util.List;
 
 public record ViewResponse(
 
+        @JsonView(Views.RolePermissions.class)
         Integer id,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.RolePermissions.class})
         List<ActionResponse> actions,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.RolePermissions.class})
         String name,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.RolePermissions.class})
         String route,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.RolePermissions.class})
         String title,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.RolePermissions.class})
         boolean isPublic,
 
         boolean status,

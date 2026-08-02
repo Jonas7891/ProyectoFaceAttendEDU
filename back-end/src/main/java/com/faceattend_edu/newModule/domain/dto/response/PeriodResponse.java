@@ -9,12 +9,13 @@ import java.time.LocalDateTime;
 
 public record PeriodResponse(
 
+        @JsonView({Views.ScheduleDetail.class, Views.ActiveEnrollments.class, Views.AttendanceDetail.class})
         Integer id,
 
         @JsonView(Views.Public.class)
         SchoolResponse school,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.ScheduleDetail.class, Views.ActiveEnrollments.class, Views.AttendanceDetail.class})
         String name,
 
         @JsonView(Views.Public.class)
@@ -23,6 +24,7 @@ public record PeriodResponse(
         @JsonView(Views.Public.class)
         LocalDate endDate,
 
+        @JsonView(Views.ScheduleDetail.class)
         boolean status,
 
         LocalDateTime createdAt,

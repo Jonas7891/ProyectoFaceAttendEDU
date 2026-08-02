@@ -9,12 +9,13 @@ import java.time.LocalDateTime;
 
 public record JustificationResponse(
 
+        @JsonView(Views.PendingJustifications.class)
         Integer id,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.PendingJustifications.class})
         AttendanceResponse attendance,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.PendingJustifications.class})
         String text,
 
         @JsonView(Views.Public.class)
@@ -26,6 +27,7 @@ public record JustificationResponse(
 
         boolean status,
 
+        @JsonView(Views.PendingJustifications.class)
         LocalDateTime createdAt,
 
         LocalDateTime updatedAt

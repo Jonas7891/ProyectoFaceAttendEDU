@@ -8,12 +8,13 @@ import java.time.LocalDateTime;
 
 public record ClassroomResponse(
 
+        @JsonView({Views.ScheduleDetail.class, Views.DeviceStatus.class})
         Integer id,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.DeviceStatus.class})
         SchoolResponse school,
 
-        @JsonView(Views.Public.class)
+        @JsonView({Views.Public.class, Views.ScheduleDetail.class, Views.AttendanceDetail.class, Views.DeviceStatus.class})
         String name,
 
         boolean status,
