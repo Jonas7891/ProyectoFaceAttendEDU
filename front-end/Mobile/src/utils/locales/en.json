@@ -481,6 +481,21 @@
       "students": "Estudiantes",
       "teachers": "Docentes",
       "courses": "Cursos"
+    },
+    "modals": {
+      "selectCountry": "Select Country",
+      "selectCity": "Select City",
+      "searchCountry": "Search country or code (+57)...",
+      "searchCity": "Search city...",
+      "loadingCountries": "Loading countries...",
+      "loadingCities": "Loading cities...",
+      "noResults": "No results",
+      "confirmSave": "Confirm Changes",
+      "confirmSaveMessage": "Are you sure you want to save all changes?",
+      "confirmAndSave": "Confirm and Save",
+      "cancel": "Cancel",
+      "saveChanges": "Save Changes",
+      "selectCountryFirst": "Select a country first"
     }
   },
   "attendanceReport": {
