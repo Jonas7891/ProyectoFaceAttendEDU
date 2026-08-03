@@ -19,7 +19,9 @@
     "name": "Nom",
     "email": "Email",
     "phone": "Téléphone",
-    "edit": "Modifier"
+    "edit": "Modifier",
+    "saving": "Guardando...",
+    "ok": "OK"
   },
   "login": {
     "title": "Início de Sessão",
@@ -65,7 +67,9 @@
     "logout": "Déconnexion",
     "loggingOut": "Déconnexion en cours...",
     "logoutConfirmTitle": "Déconnexion",
-    "logoutConfirmMessage": "Êtes-vous sûr de vouloir vous déconnecter?"
+    "logoutConfirmMessage": "Êtes-vous sûr de vouloir vous déconnecter?",
+    "logoutCancel": "Logout cancelado por el usuario",
+    "userInfo": "Información de las Justificaciones"
   },
   "logout": {
     "title": "Déconnexion",
@@ -135,7 +139,8 @@
     "hoursAgo": "horas",
     "ago": "atrás",
     "environmentManagement": "Gestion des Environnements",
-    "manageEnvironmentDesc": "Ajouter, modifier ou supprimer des environnements"
+    "manageEnvironmentDesc": "Ajouter, modifier ou supprimer des environnements",
+    "viewAttendance": "Ver Asistencia Detallada"
   },
   "consultJustify": {
     "mainTitle": "Justificativas Aprovadas",
@@ -401,7 +406,9 @@
     "quickSettings": "Paramètres Rapides",
     "logout": "Déconnexion",
     "logoutConfirm": "Êtes-vous sûr de vouloir vous déconnecter?",
-    "school": "École"
+    "school": "École",
+    "pending": "Pendiente",
+    "active": "Activo"
   },
   "manageUsers": {
     "title": "Gestion des Utilisateurs",
@@ -422,5 +429,123 @@
     "deleteQuestion": "Supprimer l'enregistrement?",
     "accessDenied": "Accès refusé",
     "onlyAdmins": "Seuls les administrateurs peuvent accéder à cet écran."
+  },
+  "schoolConfig": {
+    "title": "Configuración del Colegio",
+    "tabs": {
+      "general": "General",
+      "contact": "Contacto",
+      "academic": "Académica",
+      "attendance": "Asistencia"
+    },
+    "sections": {
+      "generalInfo": "Información General",
+      "contactInfo": "Información de Contacto",
+      "academicConfig": "Configuración Académica",
+      "attendanceConfig": "Configuración de Asistencia"
+    },
+    "fields": {
+      "schoolName": "Nombre del Colegio",
+      "schoolNamePlaceholder": "Nombre del colegio",
+      "schoolCode": "NIT del Colegio",
+      "schoolCodePlaceholder": "COL-XXXX-XXX",
+      "district": "Distrito Educativo",
+      "districtPlaceholder": "Nombre del distrito",
+      "email": "Email Institucional",
+      "emailPlaceholder": "admin@colegio.edu",
+      "country": "País",
+      "selectCountry": "Selecciona un país",
+      "dialCode": "Código",
+      "phone": "Teléfono",
+      "phonePlaceholder": "300 123 4567",
+      "address": "Dirección",
+      "addressPlaceholder": "Calle y número",
+      "city": "Ciudad",
+      "selectCity": "Selecciona una ciudad",
+      "academicYear": "Año Académico",
+      "academicYearPlaceholder": "YYYY-YYYY",
+      "startDate": "Fecha de Inicio",
+      "startDatePlaceholder": "DD/MM/YYYY",
+      "endDate": "Fecha de Fin",
+      "endDatePlaceholder": "DD/MM/YYYY",
+      "tolerance": "Tolerancia (minutos)",
+      "tolerancePlaceholder": "5",
+      "maxAbsences": "Máx. Inasistencias",
+      "maxAbsencesPlaceholder": "15",
+      "maxLateness": "Máx. Retardos",
+      "maxLatenessPlaceholder": "10",
+      "justificationLimit": "Límite de Justificación (días)",
+      "justificationLimitPlaceholder": "30"
+    },
+    "labels": {
+      "students": "Estudiantes",
+      "teachers": "Docentes",
+      "courses": "Cursos"
+    }
+  },
+  "attendanceReport": {
+    "title": "Reporte de Asistencia",
+    "tabs": {
+      "students": "Estudiantes",
+      "teachers": "Profesores"
+    },
+    "types": {
+      "absences": "Inasistencias",
+      "lateness": "Retardos"
+    },
+    "filters": {
+      "all": "Todos",
+      "critical": "Críticos",
+      "warning": "En límite"
+    },
+    "searchPlaceholder": "Buscar por nombre, código o materia…",
+    "noResults": "No hay {{role}} que superen el tope de {{type}} con los filtros actuales.",
+    "resultsCount": "{{count}} {{role}} encontrado(s)",
+    "generateReport": "Generar reporte general ({{count}})",
+    "individualReport": "Generar reporte individual",
+    "modalTitle": "Generar reporte",
+    "notificationMessage": "Se notificará al {{recipient}} sobre el estado de asistencia de",
+    "recipients": {
+      "guardian": "acudiente",
+      "coordinator": "coordinador"
+    },
+    "statusLabels": {
+      "critical": "CRÍTICO",
+      "warning": "EN LÍMITE"
+    },
+    "absenceLabel": "Inasistencias\n(tope {{limit}})",
+    "latenessLabel": "Retardos\n(tope {{limit}})"
+  },
+  "validation": {
+    "incompleteFields": "Campos incompletos",
+    "selectCategoryAndType": "Debes seleccionar categoría y tipo.",
+    "descriptionRequired": "Ingresa una descripción para la justificación.",
+    "confirmTitle": "Guardar justificación",
+    "confirmMessage": "¿Deseas guardar esta justificación?",
+    "cancelSave": "Guardado cancelado por el usuario"
+  },
+  "languageSettings": {
+    "appearance": "Apariencia",
+    "themeSelection": "Selecciona el tema de la aplicación",
+    "alertSettings": "Configuración de Alertas",
+    "customizeAlerts": "Personaliza qué tipos de alertas deseas recibir",
+    "configureAlerts": "Configurar Alertas",
+    "alertTypes": "Selecciona qué tipos de alertas deseas ver",
+    "successConfirmations": "Confirmación de operaciones exitosas",
+    "errorAlerts": "Alertas de Error",
+    "errorNotifications": "Notificaciones de errores y problemas",
+    "warningAlerts": "Alertas de Advertencia",
+    "confirmationAlerts": "Alertas de Confirmación",
+    "confirmationRequests": "Solicitudes de confirmación de acciones",
+    "generalAlerts": "Alertas Generales",
+    "generalMessages": "Mensajes informativos generales",
+    "iotAlerts": "Alertas en Dispositivos IoT",
+    "iotMessages": "Mensajes sobre los dispositivos de escaneo facial",
+    "closeButton": "Cerrar"
+  },
+  "userRoles": {
+    "administrator": "Administrador",
+    "student": "Estudiante",
+    "teacher": "Profesor"
   }
 }
