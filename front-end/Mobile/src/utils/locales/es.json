@@ -63,7 +63,9 @@
     "appSettings": "Configuración del Aplicativo",
     "facialRecognitionFail": "¿Falla en el reconocimiento facial?",
     "logout": "Cerrar Sesión",
-    "loggingOut": "Cerrando Sesión..."
+    "loggingOut": "Cerrando Sesión...",
+    "logoutConfirmMessage": "¿Estás seguro de que deseas cerrar sesión?",
+    "logoutConfirmTitle": "Cerrar Sesión"
   },
   "logout": {
     "title": "Cerrar Sesión",
@@ -116,7 +118,7 @@
     "registerAttendanceDesc": "Actualización de parámetros faciales",
     "employeeManagement": "Gestión de Profesores",
     "employeeManagementDesc": "Agregar, editar o eliminar profesores",
-    "manageEnvironmentDesc" : "Agregar, editar o Eliminar Ambientes",
+    "manageEnvironmentDesc": "Agregar, editar o Eliminar Ambientes",
     "reports": "Reportes",
     "reportsDesc": "Generar reportes de asistencia",
     "facialConfig": "Configuración Facial",
