@@ -139,8 +139,7 @@
     "hoursAgo": "horas",
     "ago": "atrás",
     "environmentManagement": "Gestion des Environnements",
-    "manageEnvironmentDesc": "Ajouter, modifier ou supprimer des environnements",
-    "viewAttendance": "Ver Asistencia Detallada"
+    "manageEnvironmentDesc": "Ajouter, modifier ou supprimer des environnements"
   },
   "consultJustify": {
     "mainTitle": "Justificativas Aprovadas",

@@ -139,8 +139,7 @@
     "hoursAgo": "horas",
     "ago": "atrás",
     "environmentManagement": "Gestão de Ambientes",
-    "manageEnvironmentDesc": "Adicionar, editar ou Excluir Ambientes",
-    "viewAttendance": "Ver Asistencia Detallada"
+    "manageEnvironmentDesc": "Adicionar, editar ou Excluir Ambientes"
   },
   "consultJustify": {
     "mainTitle": "Justificativas Aceitas",

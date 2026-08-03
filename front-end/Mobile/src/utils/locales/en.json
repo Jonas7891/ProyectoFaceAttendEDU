@@ -139,8 +139,7 @@
     "hoursAgo": "hours",
     "ago": "ago",
     "environmentManagement": "Environment Management",
-    "manageEnvironmentDesc": "Add, edit or Delete Environments",
-    "viewAttendance": "Ver Asistencia Detallada"
+    "manageEnvironmentDesc": "Add, edit or Delete Environments"
   },
   "consultJustify": {
     "mainTitle": "Approved Justifications",
