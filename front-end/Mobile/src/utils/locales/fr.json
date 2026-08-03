@@ -133,7 +133,9 @@
     "facialRecognitionMsg": "O sistema atualizou seus algoritmos",
     "minutesAgo": "minutos",
     "hoursAgo": "horas",
-    "ago": "atrás"
+    "ago": "atrás",
+    "environmentManagement": "Gestion des Environnements",
+    "manageEnvironmentDesc": "Ajouter, modifier ou supprimer des environnements"
   },
   "consultJustify": {
     "mainTitle": "Justificativas Aprovadas",
