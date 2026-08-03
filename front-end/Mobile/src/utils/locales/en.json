@@ -19,7 +19,9 @@
     "name": "Name",
     "email": "Email",
     "phone": "Phone",
-    "edit": "Edit"
+    "edit": "Edit",
+    "saving": "Guardando...",
+    "ok": "OK"
   },
   "login": {
     "title": "Login",
@@ -65,7 +67,9 @@
     "logout": "Logout",
     "loggingOut": "Logging out...",
     "logoutConfirmTitle": "Logout",
-    "logoutConfirmMessage": "Are you sure you want to logout?"
+    "logoutConfirmMessage": "Are you sure you want to logout?",
+    "logoutCancel": "Logout cancelado por el usuario",
+    "userInfo": "Información de las Justificaciones"
   },
   "logout": {
     "title": "Logout",
@@ -401,7 +405,9 @@
     "quickSettings": "Quick Settings",
     "logout": "Logout",
     "logoutConfirm": "Are you sure you want to logout?",
-    "school": "School"
+    "school": "School",
+    "pending": "Pendiente",
+    "active": "Activo"
   },
   "manageUsers": {
     "title": "User Management",
@@ -422,5 +428,138 @@
     "deleteQuestion": "Delete record?",
     "accessDenied": "Access denied",
     "onlyAdmins": "Only administrators can access this screen."
+  },
+  "schoolConfig": {
+    "title": "Configuración del Colegio",
+    "tabs": {
+      "general": "General",
+      "contact": "Contacto",
+      "academic": "Académica",
+      "attendance": "Asistencia"
+    },
+    "sections": {
+      "generalInfo": "Información General",
+      "contactInfo": "Información de Contacto",
+      "academicConfig": "Configuración Académica",
+      "attendanceConfig": "Configuración de Asistencia"
+    },
+    "fields": {
+      "schoolName": "Nombre del Colegio",
+      "schoolNamePlaceholder": "Nombre del colegio",
+      "schoolCode": "NIT del Colegio",
+      "schoolCodePlaceholder": "COL-XXXX-XXX",
+      "district": "Distrito Educativo",
+      "districtPlaceholder": "Nombre del distrito",
+      "email": "Email Institucional",
+      "emailPlaceholder": "admin@colegio.edu",
+      "country": "País",
+      "selectCountry": "Selecciona un país",
+      "dialCode": "Código",
+      "phone": "Teléfono",
+      "phonePlaceholder": "300 123 4567",
+      "address": "Dirección",
+      "addressPlaceholder": "Calle y número",
+      "city": "Ciudad",
+      "selectCity": "Selecciona una ciudad",
+      "academicYear": "Año Académico",
+      "academicYearPlaceholder": "YYYY-YYYY",
+      "startDate": "Fecha de Inicio",
+      "startDatePlaceholder": "DD/MM/YYYY",
+      "endDate": "Fecha de Fin",
+      "endDatePlaceholder": "DD/MM/YYYY",
+      "tolerance": "Tolerancia (minutos)",
+      "tolerancePlaceholder": "5",
+      "maxAbsences": "Máx. Inasistencias",
+      "maxAbsencesPlaceholder": "15",
+      "maxLateness": "Máx. Retardos",
+      "maxLatenessPlaceholder": "10",
+      "justificationLimit": "Límite de Justificación (días)",
+      "justificationLimitPlaceholder": "30"
+    },
+    "labels": {
+      "students": "Estudiantes",
+      "teachers": "Docentes",
+      "courses": "Cursos"
+    },
+    "modals": {
+      "selectCountry": "Select Country",
+      "selectCity": "Select City",
+      "searchCountry": "Search country or code (+57)...",
+      "searchCity": "Search city...",
+      "loadingCountries": "Loading countries...",
+      "loadingCities": "Loading cities...",
+      "noResults": "No results",
+      "confirmSave": "Confirm Changes",
+      "confirmSaveMessage": "Are you sure you want to save all changes?",
+      "confirmAndSave": "Confirm and Save",
+      "cancel": "Cancel",
+      "saveChanges": "Save Changes",
+      "selectCountryFirst": "Select a country first"
+    }
+  },
+  "attendanceReport": {
+    "title": "Reporte de Asistencia",
+    "tabs": {
+      "students": "Estudiantes",
+      "teachers": "Profesores"
+    },
+    "types": {
+      "absences": "Inasistencias",
+      "lateness": "Retardos"
+    },
+    "filters": {
+      "all": "Todos",
+      "critical": "Críticos",
+      "warning": "En límite"
+    },
+    "searchPlaceholder": "Buscar por nombre, código o materia…",
+    "noResults": "No hay {{role}} que superen el tope de {{type}} con los filtros actuales.",
+    "resultsCount": "{{count}} {{role}} encontrado(s)",
+    "generateReport": "Generar reporte general ({{count}})",
+    "individualReport": "Generar reporte individual",
+    "modalTitle": "Generar reporte",
+    "notificationMessage": "Se notificará al {{recipient}} sobre el estado de asistencia de",
+    "recipients": {
+      "guardian": "acudiente",
+      "coordinator": "coordinador"
+    },
+    "statusLabels": {
+      "critical": "CRÍTICO",
+      "warning": "EN LÍMITE"
+    },
+    "absenceLabel": "Inasistencias\n(tope {{limit}})",
+    "latenessLabel": "Retardos\n(tope {{limit}})"
+  },
+  "validation": {
+    "incompleteFields": "Campos incompletos",
+    "selectCategoryAndType": "Debes seleccionar categoría y tipo.",
+    "descriptionRequired": "Ingresa una descripción para la justificación.",
+    "confirmTitle": "Guardar justificación",
+    "confirmMessage": "¿Deseas guardar esta justificación?",
+    "cancelSave": "Guardado cancelado por el usuario"
+  },
+  "languageSettings": {
+    "appearance": "Apariencia",
+    "themeSelection": "Selecciona el tema de la aplicación",
+    "alertSettings": "Configuración de Alertas",
+    "customizeAlerts": "Personaliza qué tipos de alertas deseas recibir",
+    "configureAlerts": "Configurar Alertas",
+    "alertTypes": "Selecciona qué tipos de alertas deseas ver",
+    "successConfirmations": "Confirmación de operaciones exitosas",
+    "errorAlerts": "Alertas de Error",
+    "errorNotifications": "Notificaciones de errores y problemas",
+    "warningAlerts": "Alertas de Advertencia",
+    "confirmationAlerts": "Alertas de Confirmación",
+    "confirmationRequests": "Solicitudes de confirmación de acciones",
+    "generalAlerts": "Alertas Generales",
+    "generalMessages": "Mensajes informativos generales",
+    "iotAlerts": "Alertas en Dispositivos IoT",
+    "iotMessages": "Mensajes sobre los dispositivos de escaneo facial",
+    "closeButton": "Cerrar"
+  },
+  "userRoles": {
+    "administrator": "Administrador",
+    "student": "Estudiante",
+    "teacher": "Profesor"
   }
 }
