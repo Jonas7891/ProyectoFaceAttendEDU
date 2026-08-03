@@ -67,9 +67,7 @@
     "logout": "Cerrar Sesión",
     "loggingOut": "Cerrando Sesión...",
     "logoutConfirmMessage": "¿Estás seguro de que deseas cerrar sesión?",
-    "logoutConfirmTitle": "Cerrar Sesión",
-    "logoutCancel": "Logout cancelado por el usuario",
-    "userInfo": "Información de las Justificaciones"
+    "logoutConfirmTitle": "Cerrar Sesión"
   },
   "logout": {
     "title": "Cerrar Sesión",
