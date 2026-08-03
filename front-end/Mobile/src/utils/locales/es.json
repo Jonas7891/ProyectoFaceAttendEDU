@@ -481,6 +481,21 @@
       "students": "Estudiantes",
       "teachers": "Docentes",
       "courses": "Cursos"
+    },
+    "modals": {
+      "selectCountry": "Seleccionar País",
+      "selectCity": "Seleccionar Ciudad",
+      "searchCountry": "Buscar país o código (+57)...",
+      "searchCity": "Buscar ciudad...",
+      "loadingCountries": "Cargando países...",
+      "loadingCities": "Cargando ciudades...",
+      "noResults": "Sin resultados",
+      "confirmSave": "Confirmar Cambios",
+      "confirmSaveMessage": "¿Estás seguro de que deseas guardar todos los cambios?",
+      "confirmAndSave": "Confirmar y Guardar",
+      "cancel": "Cancelar",
+      "saveChanges": "Guardar Cambios",
+      "selectCountryFirst": "Selecciona un país primero"
     }
   },
   "attendanceReport": {

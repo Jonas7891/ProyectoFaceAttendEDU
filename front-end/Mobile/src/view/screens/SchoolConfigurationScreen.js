@@ -22,6 +22,7 @@ import styles from './Style';
 import { useSchoolConfigurationViewModel } from "../../viewmodels/useSchoolConfigurationViewModel";
 // ⚠️ Ajusta esta ruta a donde realmente esté tu ThemeContext.js
 import { useTheme } from '../../view/components/common/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 // ─────────────────────────────────────────────
 // Sub-componentes FUERA del componente principal
@@ -146,6 +147,7 @@ const ToggleRow = ({ label, description, value, onValueChange }) => {
 
 const SchoolConfigurationScreen = ({ navigation }) => {
     const { colors, isDark, toggleTheme } = useTheme();
+    const { t } = useTranslation();
 
     const {
         activeTab,
@@ -205,7 +207,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                         <Text style={[styles.headerBackTextReport, { color: colors.text }]}>‹</Text>
                     </TouchableOpacity>
                     <Text style={[styles.headerTitleSchoolConfig, { color: colors.text }]}>
-                        Configuración del Colegio
+                        {t('schoolConfig.title')}
                     </Text>
 
                     {/* Switch de tema claro/oscuro */}
@@ -238,7 +240,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                         {academicConfig?.totalStudents}
                                     </Text>
                                     <Text style={[styles.quickInfoLabelSchoolConfig, { color: colors.textSecondary }]}>
-                                        Estudiantes
+                                        {t('schoolConfig.labels.students')}
                                     </Text>
                                 </View>
                                 <View style={styles.quickInfoItemSchoolConfig}>
@@ -246,7 +248,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                         {academicConfig?.totalTeachers}
                                     </Text>
                                     <Text style={[styles.quickInfoLabelSchoolConfig, { color: colors.textSecondary }]}>
-                                        Docentes
+                                        {t('schoolConfig.labels.teachers')}
                                     </Text>
                                 </View>
                                 <View style={styles.quickInfoItemSchoolConfig}>
@@ -254,7 +256,8 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                         {academicConfig?.totalCourses}
                                     </Text>
                                     <Text style={[styles.quickInfoLabelSchoolConfig, { color: colors.textSecondary }]}>
-                                        Cursos
+                                        {t('schoolConfig.labels.courses')}
+                                    </Text>
                                     </Text>
                                 </View>
                             </View>
@@ -284,10 +287,10 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                             ],
                                         ]}
                                     >
-                                        {tab === 'general'    && 'General'}
-                                        {tab === 'contacto'   && 'Contacto'}
-                                        {tab === 'academica'  && 'Académica'}
-                                        {tab === 'asistencia' && 'Asistencia'}
+                                        {tab === 'general'    && t('schoolConfig.tabs.general')}
+                                        {tab === 'contacto'   && t('schoolConfig.tabs.contact')}
+                                        {tab === 'academica'  && t('schoolConfig.tabs.academic')}
+                                        {tab === 'asistencia' && t('schoolConfig.tabs.attendance')}
                                     </Text>
                                 </TouchableOpacity>
                             ))}
