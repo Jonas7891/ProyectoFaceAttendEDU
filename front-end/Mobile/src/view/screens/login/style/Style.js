@@ -354,6 +354,23 @@ const styles = StyleSheet.create({
         height: 24,
         resizeMode: 'contain',
     },
+
+    codeInputRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginVertical: 8,
+    },
+
+    codeDigit: {
+        width: 48,
+        height: 56,
+        borderRadius: 12,
+        borderWidth: 2,
+        textAlign: 'center',
+        fontSize: 22,
+        fontWeight: '700',
+    },
 });
 
 export default styles;

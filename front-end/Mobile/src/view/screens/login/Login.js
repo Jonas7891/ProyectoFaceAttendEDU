@@ -32,31 +32,23 @@ export default function HomesScreen({ onLogin, navigation }) {
     const refreshKey = useLanguageRefresh();
     const { t } = useTranslation();
     const { colors } = useTheme();
-
     const { alertConfig, hideAlert, showError } = useCustomAlert();
+
+    const emailInputRef = useRef(null);
+    const passwordInputRef = useRef(null);
 
     const [isRegisterModalVisible, setIsRegisterModalVisible] = React.useState(false);
     const [isTerminosModalVisible, setIsTerminosModalVisible] = React.useState(false);
     const [failedAttempts, setFailedAttempts] = React.useState(0);
 
-    // Animación para mostrar el link de recuperación
     const forgotLinkOpacity = useRef(new Animated.Value(0)).current;
     const forgotLinkTranslateY = useRef(new Animated.Value(-8)).current;
 
     const {
-        email,
-        password,
-        terms,
-        isLoading,
-        error,
-        errorTimestamp,
-        setEmail,
-        setPassword,
-        setTerms,
-        submit,
+        email, password, terms, isLoading, error, errorTimestamp,
+        setEmail, setPassword, setTerms, submit,
     } = useLoginViewModel({ onLogin });
 
-    // Cada vez que el ViewModel reporta un error, incrementamos el contador
     useEffect(() => {
         if (error) {
             const newCount = failedAttempts + 1;
@@ -68,19 +60,10 @@ export default function HomesScreen({ onLogin, navigation }) {
                 hideAlert
             );
 
-            // Animar la aparición del link cuando se llega a MAX_FAILED_ATTEMPTS
             if (newCount >= MAX_FAILED_ATTEMPTS) {
                 Animated.parallel([
-                    Animated.timing(forgotLinkOpacity, {
-                        toValue: 1,
-                        duration: 350,
-                        useNativeDriver: true,
-                    }),
-                    Animated.timing(forgotLinkTranslateY, {
-                        toValue: 0,
-                        duration: 350,
-                        useNativeDriver: true,
-                    }),
+                    Animated.timing(forgotLinkOpacity, { toValue: 1, duration: 350, useNativeDriver: true }),
+                    Animated.timing(forgotLinkTranslateY, { toValue: 0, duration: 350, useNativeDriver: true }),
                 ]).start();
             }
         }
@@ -89,10 +72,7 @@ export default function HomesScreen({ onLogin, navigation }) {
     const showForgotLink = failedAttempts >= MAX_FAILED_ATTEMPTS;
 
     const handleForgotPassword = () => {
-        // Navega a la pantalla de recuperación de contraseña
-        if (navigation) {
-            navigation.navigate('ForgotPasswordScreen');
-        }
+        if (navigation) navigation.navigate('ForgotPasswordScreen');
     };
 
     return (
@@ -101,13 +81,19 @@ export default function HomesScreen({ onLogin, navigation }) {
                 style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}
                 key={refreshKey}
             >
-                <ScrollView>
-                    <KeyboardAvoidingView
-                        behavior={Platform.OS === "ios" ? "position" : "position"}
-                        style={styles.keyboardview}
+                {/* ⬇️ KeyboardAvoidingView PRIMERO */}
+                <KeyboardAvoidingView
+                    style={{ flex: 1 }}
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+                >
+                    {/* ⬇️ ScrollView DENTRO del KeyboardAvoidingView */}
+                    <ScrollView
+                        contentContainerStyle={{ flexGrow: 1 }}
+                        keyboardShouldPersistTaps="handled"
                         keyboardDismissMode="on-drag"
-                        keyboardVerticalOffset={80}
-                        enableOnAndroid={true}
+                        showsVerticalScrollIndicator={false}
+                        bounces={false}
                     >
                         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                             <View style={[styles.container, { backgroundColor: colors.backgroundWhite }]}>
@@ -132,6 +118,7 @@ export default function HomesScreen({ onLogin, navigation }) {
                                             {t('login.email')}
                                         </Text>
                                         <TextInput
+                                            ref={emailInputRef}
                                             style={[styles.inputEscrito, {
                                                 backgroundColor: colors.inputBackground,
                                                 borderColor: colors.border ?? colors.separator,
@@ -146,6 +133,7 @@ export default function HomesScreen({ onLogin, navigation }) {
                                             autoCorrect={false}
                                             returnKeyType="next"
                                             blurOnSubmit={false}
+                                            onSubmitEditing={() => passwordInputRef.current?.focus()}
                                         />
                                     </View>
 
@@ -155,6 +143,7 @@ export default function HomesScreen({ onLogin, navigation }) {
                                             {t('login.password')}
                                         </Text>
                                         <TextInput
+                                            ref={passwordInputRef}
                                             style={[styles.inputEscrito, {
                                                 backgroundColor: colors.inputBackground,
                                                 borderColor: colors.border ?? colors.separator,
@@ -167,9 +156,9 @@ export default function HomesScreen({ onLogin, navigation }) {
                                             textContentType="password"
                                             placeholderTextColor={colors.textMuted}
                                             returnKeyType="done"
+                                            onSubmitEditing={Keyboard.dismiss}
                                         />
 
-                                        {/* Link "¿Olvidaste tu contraseña?" — aparece tras 3 intentos fallidos */}
                                         {showForgotLink && (
                                             <Animated.View
                                                 style={[
@@ -180,10 +169,7 @@ export default function HomesScreen({ onLogin, navigation }) {
                                                     },
                                                 ]}
                                             >
-                                                <TouchableOpacity
-                                                    onPress={handleForgotPassword}
-                                                    activeOpacity={0.7}
-                                                >
+                                                <TouchableOpacity onPress={handleForgotPassword} activeOpacity={0.7}>
                                                     <Text style={[styles.forgotPasswordText, { color: colors.primary }]}>
                                                         {t('login.forgotPassword', { defaultValue: '¿Olvidaste tu contraseña?' })}
                                                     </Text>
@@ -234,8 +220,8 @@ export default function HomesScreen({ onLogin, navigation }) {
                                 />
                             </View>
                         </TouchableWithoutFeedback>
-                    </KeyboardAvoidingView>
-                </ScrollView>
+                    </ScrollView>
+                </KeyboardAvoidingView>
             </SafeAreaView>
 
             <CustomAlert
