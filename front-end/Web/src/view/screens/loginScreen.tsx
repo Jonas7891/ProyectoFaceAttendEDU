@@ -1,7 +1,7 @@
 // ============================================================
 //  FaceAttend EDU — Login Screen (View Layer)
 //  Orquesta: useLoginViewModel + LoginView component.
-//  NO contiene lógica de negocio.
+//  La navegación post-login sucede dentro del ViewModel.
 // ============================================================
 
 import React from "react";
@@ -11,14 +11,13 @@ import LoginView from "../components/auth/LoginView";
 export default function LoginScreen() {
     const navigation = useNavigation<any>();
 
-    function onLoginSuccess(email: string, password: string) {
-        console.log("Login exitoso:", email);
+    function onLoginSuccess() {
         navigation.replace("FaceAttendEDU-Dashboard");
     }
 
     function onForgotPassword() {
+        // TODO: navegar a pantalla de recuperación de contraseña
         console.log("Recuperar contraseña");
-        // TODO: navegar a pantalla de recuperación
     }
 
     function onGoToRegister() {

@@ -1,6 +1,7 @@
 // ============================================================
 //  FaceAttend EDU — Environments View
 //  Gestión de ambientes/salones: CRUD + horarios por ambiente.
+//  Acciones de gestión condicionadas por useRolePermissions.
 // ============================================================
 
 import React, { useState } from "react";
@@ -10,9 +11,11 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Card, Badge, PageHeader, UIButton, EmptyState } from "../ui/UI";
+import { FormField as InputField } from "../ui/FormField";
 import { useTheme }        from "../hooks/useTheme";
 import { useResponsive }   from "../hooks/useResponsive";
 import { useTranslation }  from "../../../i18n/hooks/useTranslation";
+import { useRolePermissions } from "../../hooks/useRolePermissions";
 import {
     useEnvironmentsViewModel,
     EMPTY_ENV_FORM,
@@ -22,37 +25,6 @@ import {
     type ScheduleFormData,
 } from "../../../viewmodels/useEnvironmentsViewModel";
 import type { Environment, EnvironmentSchedule, AppUser } from "../../../models/types";
-
-// ── FormField helper ─────────────────────────────────────────
-
-function FormField({ label, value, onChangeText, placeholder, keyboardType, error, hint, multiline }: {
-    label: string; value: string; onChangeText: (v: string) => void;
-    placeholder?: string; keyboardType?: "default" | "numeric";
-    error?: boolean; hint?: string; multiline?: boolean;
-}) {
-    const { theme } = useTheme();
-    const c = theme.colors;
-    return (
-        <View style={{ marginBottom: 14 }}>
-            <Text style={{ fontSize: 12, fontWeight: "600", color: error ? c.states.danger : c.text.secondary, marginBottom: 6 }}>
-                {label}
-            </Text>
-            <TextInput
-                value={value} onChangeText={onChangeText} placeholder={placeholder}
-                placeholderTextColor={c.text.disabled} keyboardType={keyboardType ?? "default"}
-                multiline={multiline} numberOfLines={multiline ? 3 : 1}
-                style={{
-                    minHeight: multiline ? 80 : 40, borderWidth: 1,
-                    borderColor: error ? c.states.danger : c.border.primary,
-                    borderRadius: 6, paddingHorizontal: 12, paddingTop: multiline ? 10 : 0,
-                    fontSize: 13, backgroundColor: c.background.app, color: c.text.primary,
-                    textAlignVertical: multiline ? "top" : "center",
-                }}
-            />
-            {hint && <Text style={{ fontSize: 11, color: c.text.secondary, marginTop: 4 }}>{hint}</Text>}
-        </View>
-    );
-}
 
 // ── InstructorAutocomplete ───────────────────────────────────
 
@@ -221,11 +193,11 @@ function ScheduleModal({ visible, mode, editing, envId, searchFn, onClose, onSav
 
                             <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
                                 <View style={{ flex: 1 }}>
-                                    <FormField label={t("N° Ficha / Código") + " *"} value={form.courseCode}
+                                    <InputField label={t("N° Ficha / Código") + " *"} value={form.courseCode}
                                         onChangeText={v => setField("courseCode", v)} placeholder="Ej: 2240001" error={isEmpty(form.courseCode)} />
                                 </View>
                                 <View style={{ flex: 2 }}>
-                                    <FormField label={t("Nombre del programa") + " *"} value={form.courseName}
+                                    <InputField label={t("Nombre del programa") + " *"} value={form.courseName}
                                         onChangeText={v => setField("courseName", v)} placeholder={t("Ej: Tecnología en Sistemas")} error={isEmpty(form.courseName)} />
                                 </View>
                             </View>
@@ -241,11 +213,11 @@ function ScheduleModal({ visible, mode, editing, envId, searchFn, onClose, onSav
 
                             <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
                                 <View style={{ flex: 1 }}>
-                                    <FormField label={t("Hora inicio") + " *"} value={form.startTime}
+                                    <InputField label={t("Hora inicio") + " *"} value={form.startTime}
                                         onChangeText={v => setField("startTime", v)} placeholder="08:00" error={isEmpty(form.startTime)} />
                                 </View>
                                 <View style={{ flex: 1 }}>
-                                    <FormField label={t("Hora fin") + " *"} value={form.endTime}
+                                    <InputField label={t("Hora fin") + " *"} value={form.endTime}
                                         onChangeText={v => setField("endTime", v)} placeholder="10:00" error={isEmpty(form.endTime)} />
                                 </View>
                             </View>
@@ -368,17 +340,17 @@ function EnvironmentFormModal({ visible, mode, environment, onClose, onSubmit, t
 
                             <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
                                 <View style={{ flex: 1 }}>
-                                    <FormField label={t("Número / Nombre del ambiente") + " *"} value={form.number}
+                                    <InputField label={t("Número / Nombre del ambiente") + " *"} value={form.number}
                                         onChangeText={v => setField("number", v)} placeholder={t("Ej: 301")} error={isEmpty(form.number)} />
                                 </View>
                                 <View style={{ flex: 1 }}>
-                                    <FormField label={t("Capacidad (personas)")} value={form.capacity}
+                                    <InputField label={t("Capacidad (personas)")} value={form.capacity}
                                         onChangeText={v => setField("capacity", v)} placeholder="40" keyboardType="numeric"
                                         hint={t("Opcional")} />
                                 </View>
                             </View>
 
-                            <FormField label={t("Descripción / Ubicación") + " *"} value={form.description}
+                            <InputField label={t("Descripción / Ubicación") + " *"} value={form.description}
                                 onChangeText={v => setField("description", v)}
                                 placeholder={t("Ej: Bloque A, piso 3. Aula de teoría con videobeam.")}
                                 error={isEmpty(form.description)} multiline />
@@ -603,6 +575,7 @@ export default function EnvironmentsView() {
     const c           = theme.colors;
     const vm          = useEnvironmentsViewModel();
     const { t }       = useTranslation();
+    const permissions = useRolePermissions();
 
     if (vm.isLoading) {
         return (
@@ -621,9 +594,12 @@ export default function EnvironmentsView() {
                     title={t("Ambientes")}
                     subtitle={`${vm.filtered.length} ${vm.filtered.length !== 1 ? t("ambientes registrados") : t("ambiente registrado")}`}
                     actions={
-                        <UIButton variant="primary" size="sm" onPress={vm.openRegisterModal}>
-                            + {t("Nuevo ambiente")}
-                        </UIButton>
+                        /* Solo admin puede crear ambientes */
+                        permissions.canManageEnvironments
+                            ? <UIButton variant="primary" size="sm" onPress={vm.openRegisterModal}>
+                                + {t("Nuevo ambiente")}
+                              </UIButton>
+                            : undefined
                     }
                 />
 

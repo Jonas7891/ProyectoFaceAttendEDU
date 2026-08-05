@@ -1,15 +1,18 @@
 // ============================================================
-//  FaceAttend EDU — Dashboard Components (View Layer)
-//  Componentes de visualización. Toda lógica en useDashboardViewModel.
+//  FaceAttend EDU — Dashboard View (View Layer)
+//  Toda lógica en useDashboardViewModel.
+//  El botón "Tomar asistencia" solo lo ven admin y teacher.
 // ============================================================
 
 import React from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Card, StatCard, Badge, PageHeader, UIButton, ProgressBar } from "../ui/UI";
-import { useTheme }      from "../hooks/useTheme";
-import { useResponsive } from "../hooks/useResponsive";
+import { AttendanceStatusIcon, AttendanceStatusBadge } from "../ui/AttendanceBadge";
+import { useTheme }              from "../hooks/useTheme";
+import { useResponsive }         from "../hooks/useResponsive";
 import { useDashboardViewModel } from "../../../viewmodels/useDashboardViewModel";
+import { useRolePermissions }    from "../../hooks/useRolePermissions";
 import { useTranslation }        from "../../../i18n/hooks/useTranslation";
 import type { DailyAttendance, WeeklyAttendance } from "../../../models/types";
 
@@ -32,10 +35,10 @@ export function DailyBarChart({ data }: { data: DailyAttendance[] }) {
                             { val: item.absent,  color: c.states.danger  },
                         ].map(({ val, color }, i) => (
                             <View key={i} style={{
-                                width: 8,
-                                height: Math.max(3, (val / maxVal) * HEIGHT),
+                                width:           8,
+                                height:          Math.max(3, (val / maxVal) * HEIGHT),
                                 backgroundColor: color,
-                                borderRadius: 2,
+                                borderRadius:    2,
                             }} />
                         ))}
                     </View>
@@ -59,10 +62,10 @@ export function WeeklyTrend({ data }: { data: WeeklyAttendance[] }) {
                     <Text style={{ fontSize: 10, color: c.text.secondary, width: 42 }}>{item.week}</Text>
                     <View style={{ flex: 1, height: 6, backgroundColor: c.border.primary, borderRadius: 99 }}>
                         <View style={{
-                            height: "100%",
-                            width: `${item.rate}%` as any,
+                            height:          "100%",
+                            width:           `${item.rate}%` as any,
                             backgroundColor: c.brand.primary,
-                            borderRadius: 99,
+                            borderRadius:    99,
                         }} />
                     </View>
                     <Text style={{
@@ -77,25 +80,7 @@ export function WeeklyTrend({ data }: { data: WeeklyAttendance[] }) {
     );
 }
 
-// ── ActivityStatusIcon ───────────────────────────────────────
-
-export function ActivityStatusIcon({ status }: { status: string }) {
-    const { theme } = useTheme();
-    const c = theme.colors;
-    if (status === "on_time") return <Feather name="check-circle" size={16} color={c.states.success} />;
-    if (status === "late")    return <Feather name="clock"        size={16} color={c.states.warning} />;
-    return                           <Feather name="x-circle"     size={16} color={c.states.danger}  />;
-}
-
-export function ActivityBadge({ status }: { status: string }) {
-    const { t } = useTranslation();
-    if (status === "on_time") return <Badge variant="success">{t("A tiempo")}</Badge>;
-    if (status === "late")    return <Badge variant="warning">{t("Tardanza")}</Badge>;
-    return                           <Badge variant="danger">{t("Ausente")}</Badge>;
-}
-
 // ── DashboardView ────────────────────────────────────────────
-// Vista principal — obtiene todo del ViewModel
 
 export default function DashboardView() {
     const { isSmall } = useResponsive();
@@ -103,6 +88,7 @@ export default function DashboardView() {
     const c           = theme.colors;
     const vm          = useDashboardViewModel();
     const { t }       = useTranslation();
+    const permissions = useRolePermissions();
 
     return (
         <ScrollView
@@ -112,7 +98,12 @@ export default function DashboardView() {
             <PageHeader
                 title={t("Dashboard")}
                 subtitle={vm.todayLabel}
-                actions={<UIButton variant="primary" size="sm">{t("Tomar asistencia")}</UIButton>}
+                actions={
+                    /* Solo admin y teacher pueden tomar asistencia */
+                    permissions.canRegisterFace
+                        ? <UIButton variant="primary" size="sm">{t("Tomar asistencia")}</UIButton>
+                        : undefined
+                }
             />
 
             {/* Stat cards */}
@@ -131,42 +122,44 @@ export default function DashboardView() {
                 ))}
             </View>
 
-            {/* Gráficas */}
-            <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
-                <Card style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary, marginBottom: 4 }}>
-                        {t("Tendencia semanal")}
-                    </Text>
-                    <Text style={{ fontSize: 12, color: c.text.secondary, marginBottom: 16 }}>
-                        {t("Últimas 5 semanas")}
-                    </Text>
-                    <WeeklyTrend data={vm.attendanceByWeek} />
-                </Card>
+            {/* Gráficas — solo si puede ver reportes */}
+            {permissions.canViewReports && (
+                <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
+                    <Card style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary, marginBottom: 4 }}>
+                            {t("Tendencia semanal")}
+                        </Text>
+                        <Text style={{ fontSize: 12, color: c.text.secondary, marginBottom: 16 }}>
+                            {t("Últimas 5 semanas")}
+                        </Text>
+                        <WeeklyTrend data={vm.attendanceByWeek} />
+                    </Card>
 
-                <Card style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary, marginBottom: 4 }}>
-                        {t("Asistencia por día")}
-                    </Text>
-                    <Text style={{ fontSize: 12, color: c.text.secondary, marginBottom: 16 }}>
-                        {t("Esta semana · Presentes / Tardanzas / Ausentes")}
-                    </Text>
-                    <DailyBarChart data={vm.attendanceByDay} />
-                    <View style={{ flexDirection: "row", gap: 12, marginTop: 12 }}>
-                        {[
-                            [c.states.success, t("Presentes")],
-                            [c.states.warning, t("Tardanzas")],
-                            [c.states.danger,  t("Ausentes") ],
-                        ].map(([color, label]) => (
-                            <View key={label} style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                                <View style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: color }} />
-                                <Text style={{ fontSize: 11, color: c.text.secondary }}>{label}</Text>
-                            </View>
-                        ))}
-                    </View>
-                </Card>
-            </View>
+                    <Card style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary, marginBottom: 4 }}>
+                            {t("Asistencia por día")}
+                        </Text>
+                        <Text style={{ fontSize: 12, color: c.text.secondary, marginBottom: 16 }}>
+                            {t("Esta semana · Presentes / Tardanzas / Ausentes")}
+                        </Text>
+                        <DailyBarChart data={vm.attendanceByDay} />
+                        <View style={{ flexDirection: "row", gap: 12, marginTop: 12 }}>
+                            {[
+                                [c.states.success, t("Presentes")],
+                                [c.states.warning, t("Tardanzas")],
+                                [c.states.danger,  t("Ausentes") ],
+                            ].map(([color, label]) => (
+                                <View key={label as string} style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                                    <View style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: color as string }} />
+                                    <Text style={{ fontSize: 11, color: c.text.secondary }}>{label as string}</Text>
+                                </View>
+                            ))}
+                        </View>
+                    </Card>
+                </View>
+            )}
 
-            {/* {t("Asistencia por curso")} + {t("Actividad reciente")} */}
+            {/* Asistencia por curso + Actividad reciente */}
             <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
                 <Card style={{ flex: 1 }}>
                     <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary, marginBottom: 16 }}>
@@ -200,7 +193,7 @@ export default function DashboardView() {
                         {vm.recentActivity.map(item => (
                             <View key={item.id} style={{ flexDirection: "row", alignItems: "flex-start", gap: 10 }}>
                                 <View style={{ marginTop: 2 }}>
-                                    <ActivityStatusIcon status={item.status} />
+                                    <AttendanceStatusIcon status={item.status} />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={{ fontSize: 12, fontWeight: "600", color: c.text.primary }}>
@@ -210,20 +203,23 @@ export default function DashboardView() {
                                         {item.course} · {item.time}
                                     </Text>
                                 </View>
-                                <ActivityBadge status={item.status} />
+                                <AttendanceStatusBadge status={item.status} />
                             </View>
                         ))}
                     </View>
-                    <View style={{
-                        marginTop: 16, paddingTop: 12,
-                        borderTopWidth: 1, borderTopColor: c.border.primary,
-                    }}>
-                        <TouchableOpacity>
-                            <Text style={{ fontSize: 12, color: c.brand.primary, fontWeight: "500" }}>
-                                {t("Ver toda la actividad")} →
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
+                    {/* Enlace a reportes completos solo para quienes pueden verlos */}
+                    {permissions.canViewAllReports && (
+                        <View style={{
+                            marginTop: 16, paddingTop: 12,
+                            borderTopWidth: 1, borderTopColor: c.border.primary,
+                        }}>
+                            <TouchableOpacity>
+                                <Text style={{ fontSize: 12, color: c.brand.primary, fontWeight: "500" }}>
+                                    {t("Ver toda la actividad")} →
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
                 </Card>
             </View>
         </ScrollView>

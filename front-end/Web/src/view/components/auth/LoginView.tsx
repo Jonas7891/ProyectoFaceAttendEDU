@@ -1,10 +1,13 @@
 // ============================================================
 //  FaceAttend EDU — Login View Component (View Layer)
 //  Recibe callbacks del Screen. Lógica en useLoginViewModel.
+//  onLoginSuccess ya no recibe credenciales — el ViewModel
+//  las maneja internamente a través de AuthContext.
 // ============================================================
 
 import React from "react";
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import { View, Text, TouchableOpacity, Image, ScrollView } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { useResponsive }  from "../hooks/useResponsive";
 import { useTheme }       from "../hooks/useTheme";
 import Button             from "../ui/button";
@@ -17,18 +20,91 @@ import AuthAnimatedLayout from "./AuthAnimatedLayout";
 import { useLoginViewModel } from "../../../viewmodels/useAuthViewModel";
 import { useTranslation }    from "../../../i18n/hooks/useTranslation";
 
+// ── Credenciales de desarrollo ───────────────────────────────
+// Solo visible cuando __DEV__ === true (Expo/Metro en desarrollo).
+// En producción este bloque nunca se renderiza.
+
+const DEV_USERS = [
+    { role: "Admin",    email: "admin@uni.edu",      color: "#EF4444" },
+    { role: "Docente",  email: "f.torres@uni.edu",   color: "#F59E0B" },
+    { role: "Alumno",   email: "m.garcia@uni.edu",   color: "#10B981" },
+] as const;
+
+function DevCredentials({ onFill }: { onFill: (email: string) => void }) {
+    const { theme } = useTheme();
+    const c = theme.colors;
+    // __DEV__ es una variable global de React Native / Metro — true en desarrollo
+    if (typeof __DEV__ === "undefined" || !__DEV__) return null;
+
+    return (
+        <View style={{
+            marginTop: 20,
+            borderWidth: 1,
+            borderColor: "#F59E0B",
+            borderRadius: 8,
+            padding: 12,
+            backgroundColor: "#FFFBEB",
+            gap: 8,
+        }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                <Feather name="zap" size={12} color="#92400E" />
+                <Text style={{ fontSize: 11, fontWeight: "700", color: "#92400E", textTransform: "uppercase", letterSpacing: 0.5 }}>
+                    Dev — acceso rápido
+                </Text>
+            </View>
+            <Text style={{ fontSize: 11, color: "#92400E", marginBottom: 4 }}>
+                Contraseña: cualquier texto no vacío
+            </Text>
+            {DEV_USERS.map(u => (
+                <TouchableOpacity
+                    key={u.role}
+                    onPress={() => onFill(u.email)}
+                    style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 8,
+                        paddingVertical: 6,
+                        paddingHorizontal: 10,
+                        borderRadius: 6,
+                        backgroundColor: u.color + "15",
+                        borderWidth: 1,
+                        borderColor: u.color + "40",
+                    }}
+                >
+                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: u.color }} />
+                    <Text style={{ fontSize: 12, fontWeight: "600", color: "#1a1a2e", flex: 1 }}>
+                        {u.role}
+                    </Text>
+                    <Text style={{ fontSize: 11, color: "#64748B" }}>{u.email}</Text>
+                    <Feather name="arrow-right" size={11} color="#64748B" />
+                </TouchableOpacity>
+            ))}
+        </View>
+    );
+}
+
 interface LoginViewProps {
-    onLoginSuccess:    (email: string, password: string) => void;
+    onLoginSuccess:    () => void;
     onForgotPassword?: () => void;
     onGoToRegister?:   () => void;
 }
 
-export default function LoginView({ onLoginSuccess, onForgotPassword, onGoToRegister }: LoginViewProps) {
+export default function LoginView({
+    onLoginSuccess,
+    onForgotPassword,
+    onGoToRegister,
+}: LoginViewProps) {
     const { isSmall } = useResponsive();
     const { theme }   = useTheme();
     const c           = theme.colors;
     const vm          = useLoginViewModel(onLoginSuccess);
     const { t }       = useTranslation();
+
+    // Rellena el email desde el panel dev y pone foco listo para escribir contraseña
+    function handleDevFill(email: string) {
+        vm.setEmail(email);
+        vm.prefillEmail(email);
+    }
 
     const FEATURES = [
         { title: t("Reconocimiento facial en tiempo real"), desc: t("Registra asistencia automáticamente con IA.")  },
@@ -36,7 +112,6 @@ export default function LoginView({ onLoginSuccess, onForgotPassword, onGoToRegi
         { title: t("Gestión completa de estudiantes"),      desc: t("Centraliza toda la información académica.")   },
     ];
 
-    // ── Secciones compartidas entre mobile y desktop ─────────
     const fields = (
         <View style={{ gap: 18 }}>
             <FormField
@@ -44,6 +119,7 @@ export default function LoginView({ onLoginSuccess, onForgotPassword, onGoToRegi
                 placeholder={t("correo@universidad.edu")}
                 onChangeText={vm.setEmail}
                 icon="mail"
+                value={vm.emailDisplay}
             />
             <FormField
                 label={t("Contraseña")}
@@ -79,11 +155,11 @@ export default function LoginView({ onLoginSuccess, onForgotPassword, onGoToRegi
                 linkLabel={t("Regístrate aquí")}
                 onPress={onGoToRegister}
             />
+            <DevCredentials onFill={handleDevFill} />
             <AuthCopyright />
         </>
     );
 
-    // ── MÓVIL ─────────────────────────────────────────────────
     if (isSmall) {
         return (
             <AuthMobileLayout
@@ -96,7 +172,6 @@ export default function LoginView({ onLoginSuccess, onForgotPassword, onGoToRegi
         );
     }
 
-    // ── DESKTOP — split panel con animaciones de entrada ──────
     const brandPanel = (
         <>
             <BrandPanelCircles />
