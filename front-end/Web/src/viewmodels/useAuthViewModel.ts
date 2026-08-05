@@ -1,11 +1,14 @@
 // ============================================================
 //  FaceAttend EDU — Auth ViewModel
-//  Encapsula lógica de autenticación.
+//
+//  Encapsula la lógica de formulario de autenticación.
+//  Usa AuthContext como fuente de verdad para la sesión.
 //  Las Views solo llaman funciones y leen estado de aquí.
 // ============================================================
 
 import { useState, useRef } from "react";
 import { useTranslation } from "../i18n/hooks/useTranslation";
+import { useAuth }        from "../context/AuthContext";
 
 export interface LoginForm {
     email:    string;
@@ -20,45 +23,61 @@ export interface SignupForm {
 
 // ── useLoginViewModel ────────────────────────────────────────
 
-export function useLoginViewModel(onSuccess: (email: string, password: string) => void) {
-    const { t } = useTranslation();
+export function useLoginViewModel(onSuccess: () => void) {
+    const { t }    = useTranslation();
+    const { login } = useAuth();
+
     const emailRef    = useRef("");
     const passwordRef = useRef("");
+
+    // Estado visible del email para rellenado programático (panel dev)
+    const [emailDisplay, setEmailDisplay] = useState("");
 
     const [showPassword, setShowPassword] = useState(false);
     const [loading,      setLoading]      = useState(false);
     const [error,        setError]        = useState("");
 
-    function setEmail(v: string)    { emailRef.current = v; }
+    function setEmail(v: string)    { emailRef.current    = v; }
     function setPassword(v: string) { passwordRef.current = v; }
     function togglePassword()       { setShowPassword(v => !v); }
 
-    function validate(): boolean {
-        if (!emailRef.current || !passwordRef.current) {
-            setError(t("Completa todos los campos"));
-            return false;
-        }
-        setError("");
-        return true;
+    /** Rellena el campo de email visualmente (usado por panel dev) */
+    function prefillEmail(email: string) {
+        emailRef.current = email;
+        setEmailDisplay(email);
     }
 
-    function handleLogin() {
-        if (!validate()) return;
+    async function handleLogin() {
+        if (!emailRef.current || !passwordRef.current) {
+            setError(t("Completa todos los campos"));
+            return;
+        }
+        setError("");
         setLoading(true);
-        // TODO: reemplazar con llamada real a API de auth
-        setTimeout(() => {
-            setLoading(false);
-            onSuccess(emailRef.current, passwordRef.current);
-        }, 900);
+
+        const err = await login({
+            email:    emailRef.current,
+            password: passwordRef.current,
+        });
+
+        setLoading(false);
+
+        if (err) {
+            setError(t(err));
+        } else {
+            onSuccess();
+        }
     }
 
     return {
         showPassword,
         loading,
         error,
+        emailDisplay,
         setEmail,
         setPassword,
         togglePassword,
+        prefillEmail,
         handleLogin,
     };
 }
@@ -69,6 +88,7 @@ export function useSignupViewModel(
     onSuccess: (data: SignupForm) => void
 ) {
     const { t } = useTranslation();
+
     const usernameRef = useRef("");
     const emailRef    = useRef("");
     const passwordRef = useRef("");
@@ -78,7 +98,7 @@ export function useSignupViewModel(
     const [error,        setError]        = useState("");
 
     function setUsername(v: string) { usernameRef.current = v; }
-    function setEmail(v: string)    { emailRef.current = v; }
+    function setEmail(v: string)    { emailRef.current    = v; }
     function setPassword(v: string) { passwordRef.current = v; }
     function togglePassword()       { setShowPassword(v => !v); }
 

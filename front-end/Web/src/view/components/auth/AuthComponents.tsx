@@ -1,21 +1,23 @@
 // ============================================================
 //  FaceAttend EDU — Auth Components (View Layer)
-//  Componentes puros de UI. Toda lógica vive en useAuthViewModel.
+//  Componentes puros de UI para las pantallas de autenticación.
+//  Sin lógica de negocio — toda lógica vive en useAuthViewModel.
 // ============================================================
 
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { useTheme } from "../hooks/useTheme";
+import { useTheme }       from "../hooks/useTheme";
+import { useTranslation } from "../../../i18n/hooks/useTranslation";
 
 // ── FormField ────────────────────────────────────────────────
-// Componente reutilizable para inputs de formulario con icono,
-// estado de foco, visibilidad de contraseña y mensaje de error.
 
 interface FormFieldProps {
     label:            string;
     placeholder:      string;
     onChangeText:     (v: string) => void;
+    /** Valor controlado (opcional — útil para rellenado programático) */
+    value?:           string;
     secureTextEntry?: boolean;
     icon?:            any;
     rightIcon?:       any;
@@ -24,7 +26,7 @@ interface FormFieldProps {
 }
 
 export function FormField({
-    label, placeholder, onChangeText,
+    label, placeholder, onChangeText, value,
     secureTextEntry = false, icon, rightIcon, onRightIcon, error,
 }: FormFieldProps) {
     const [focused, setFocused] = useState(false);
@@ -53,12 +55,13 @@ export function FormField({
                     placeholder={placeholder}
                     placeholderTextColor={c.text.disabled}
                     onChangeText={onChangeText}
+                    value={value}
                     secureTextEntry={secureTextEntry}
                     onFocus={() => setFocused(true)}
                     onBlur={() => setFocused(false)}
                     autoCapitalize="none"
                     autoCorrect={false}
-                    // @ts-ignore - outlineStyle es válido en react-native-web aunque no esté en los tipos de RN
+                    // @ts-ignore — outlineStyle es válido en react-native-web
                     style={{
                         flex: 1, fontSize: 15, color: c.text.primary,
                         outlineStyle: "none",
@@ -118,7 +121,6 @@ export function AuthFooterLink({
 }
 
 // ── BrandPanelCircles ────────────────────────────────────────
-// Decoración de fondo para el panel de marca en desktop
 
 export function BrandPanelCircles() {
     return (
@@ -138,17 +140,17 @@ export function BrandPanelCircles() {
 }
 
 // ── AuthCopyright ─────────────────────────────────────────────
-// Pie de página con copyright compartido por todas las pantallas de auth
 
 export function AuthCopyright() {
     const { theme } = useTheme();
+    const { t }     = useTranslation();
     const c = theme.colors;
     return (
         <Text style={{
             fontSize: 12, color: c.text.secondary,
             textAlign: "center", marginTop: 40,
         }}>
-            © FaceAttend EDU {new Date().getFullYear()} — Derechos reservados
+            {`© FaceAttend EDU ${new Date().getFullYear()} — ${t("Derechos reservados")}`}
         </Text>
     );
 }
