@@ -24,24 +24,29 @@ export interface SignupForm {
 // ── useLoginViewModel ────────────────────────────────────────
 
 export function useLoginViewModel(onSuccess: () => void) {
-    const { t }    = useTranslation();
+    const { t }     = useTranslation();
     const { login } = useAuth();
 
     const emailRef    = useRef("");
     const passwordRef = useRef("");
 
-    // Estado visible del email para rellenado programático (panel dev)
+    // Estado visible del email — controla el TextInput (input controlado)
     const [emailDisplay, setEmailDisplay] = useState("");
 
     const [showPassword, setShowPassword] = useState(false);
     const [loading,      setLoading]      = useState(false);
     const [error,        setError]        = useState("");
 
-    function setEmail(v: string)    { emailRef.current    = v; }
+    // Actualiza ref Y estado visible → el usuario puede escribir normalmente
+    function setEmail(v: string) {
+        emailRef.current = v;
+        setEmailDisplay(v);
+    }
+
     function setPassword(v: string) { passwordRef.current = v; }
     function togglePassword()       { setShowPassword(v => !v); }
 
-    /** Rellena el campo de email visualmente (usado por panel dev) */
+    /** Rellena el campo de email desde el panel dev sin perder la capacidad de editar */
     function prefillEmail(email: string) {
         emailRef.current = email;
         setEmailDisplay(email);
