@@ -7,6 +7,7 @@
 import type {
     Student, Course, AttendanceRecord,
     DailyAttendance, WeeklyAttendance, CourseAttendance, User,
+    AppUser, Environment,
 } from "../types";
 
 export const mockStudents: Student[] = [
@@ -70,3 +71,59 @@ export const mockUser: User = {
     email: "f.castro@uni.edu",
     role:  "teacher",
 };
+
+// ── AppUsers mock ────────────────────────────────────────────
+
+export const mockAppUsers: AppUser[] = [
+    { id: "au1", name: "Dr. Felipe Torres",   email: "f.torres@uni.edu",   role: "teacher", code: "DOC001", department: "Ingeniería de Sistemas", status: "active"   },
+    { id: "au2", name: "Dra. Patricia Soto",  email: "p.soto@uni.edu",     role: "teacher", code: "DOC002", department: "Matemáticas",            status: "active"   },
+    { id: "au3", name: "Dr. Mauricio Reyes",  email: "m.reyes@uni.edu",    role: "teacher", code: "DOC003", department: "Física",                  status: "active"   },
+    { id: "au4", name: "Ing. Sandra Varela",  email: "s.varela@uni.edu",   role: "teacher", code: "DOC004", department: "Programación",            status: "active"   },
+    { id: "au5", name: "Dr. Hugo Méndez",     email: "h.mendez@uni.edu",   role: "teacher", code: "DOC005", department: "Bases de Datos",          status: "active"   },
+    { id: "au6", name: "Prof. Fernando Castro", email: "f.castro@uni.edu", role: "teacher", code: "DOC006", department: "Administración",          status: "active"   },
+    { id: "au7", name: "Admin. General",      email: "admin@uni.edu",      role: "admin",   code: "ADM001", department: "TI",                      status: "active"   },
+    { id: "au8", name: "María García López",  email: "m.garcia@uni.edu",   role: "student", code: "2021001",                                        status: "active"   },
+    { id: "au9", name: "Carlos Rodríguez",    email: "c.rodriguez@uni.edu",role: "student", code: "2021002",                                        status: "inactive" },
+];
+
+// ── Environments mock ────────────────────────────────────────
+
+export const mockEnvironments: Environment[] = [
+    {
+        id: "env1",
+        number: "301",
+        description: "Bloque A, piso 3 — Aula de teoría con capacidad para 40 estudiantes. Dotada de videobeam y aire acondicionado.",
+        capacity: 40,
+        schedules: [
+            { id: "sch1", courseCode: "2240001", courseName: "Algoritmos y Estructuras de Datos", instructor: "au1", instructorName: "Dr. Felipe Torres",  startTime: "08:00", endTime: "10:00", days: ["Lun", "Mié"] },
+            { id: "sch2", courseCode: "2240006", courseName: "Bases de Datos",                    instructor: "au5", instructorName: "Dr. Hugo Méndez",    startTime: "14:00", endTime: "18:00", days: ["Vie"]         },
+        ],
+    },
+    {
+        id: "env2",
+        number: "105",
+        description: "Bloque B, piso 1 — Aula de matemáticas con tablero de vidrio y sistema de audio.",
+        capacity: 50,
+        schedules: [
+            { id: "sch3", courseCode: "2240002", courseName: "Cálculo Diferencial", instructor: "au2", instructorName: "Dra. Patricia Soto", startTime: "10:00", endTime: "12:00", days: ["Mar", "Jue"] },
+        ],
+    },
+    {
+        id: "env3",
+        number: "Lab. Física",
+        description: "Bloque C, piso 1 — Laboratorio de física con equipos de medición. Requiere bata de laboratorio.",
+        capacity: 30,
+        schedules: [
+            { id: "sch4", courseCode: "2240003", courseName: "Física I", instructor: "au3", instructorName: "Dr. Mauricio Reyes", startTime: "07:00", endTime: "08:00", days: ["Lun", "Mié", "Vie"] },
+        ],
+    },
+    {
+        id: "env4",
+        number: "Lab. Computación",
+        description: "Bloque A, piso 2 — Laboratorio de cómputo con 30 equipos. Acceso con carné estudiantil.",
+        capacity: 30,
+        schedules: [
+            { id: "sch5", courseCode: "2240004", courseName: "Programación Orientada a Objetos", instructor: "au4", instructorName: "Ing. Sandra Varela", startTime: "14:00", endTime: "16:00", days: ["Mar", "Jue"] },
+        ],
+    },
+];

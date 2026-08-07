@@ -1,24 +1,39 @@
 // ============================================================
-//  FaceAttend EDU — Courses Components (View Layer)
+//  FaceAttend EDU — Courses View (View Layer)
 //  Toda lógica en useCoursesViewModel.
+//  Gestión (crear, editar) solo visible para admin.
 // ============================================================
 
 import React from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal } from "react-native";
+import {
+    View, Text, ScrollView, TouchableOpacity,
+    TextInput, Modal, ActivityIndicator,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Card, Badge, PageHeader, UIButton, ProgressBar, EmptyState } from "../ui/UI";
-import { useTheme }      from "../hooks/useTheme";
-import { useResponsive } from "../hooks/useResponsive";
-import { useCoursesViewModel } from "../../../viewmodels/useCoursesViewModel";
-import { useTranslation }         from "../../../i18n/hooks/useTranslation";
-import type { Course } from "../../../models/types";
+import { useAttendanceColor, ATTENDANCE_THRESHOLDS } from "../ui/AttendanceBadge";
+import { useTheme }             from "../hooks/useTheme";
+import { useResponsive }        from "../hooks/useResponsive";
+import { useCoursesViewModel }  from "../../../viewmodels/useCoursesViewModel";
+import { useRolePermissions }   from "../../hooks/useRolePermissions";
+import { useTranslation }       from "../../../i18n/hooks/useTranslation";
+import type { Course }          from "../../../models/types";
 
 // ── CourseDetailModal ────────────────────────────────────────
 
-function CourseDetailModal({ course, onClose }: { course: Course | null; onClose: () => void }) {
+function CourseDetailModal({
+    course,
+    onClose,
+    canManage,
+}: {
+    course:    Course | null;
+    onClose:   () => void;
+    canManage: boolean;
+}) {
     const { theme } = useTheme();
-    const { t } = useTranslation();
-    const c = theme.colors;
+    const { t }     = useTranslation();
+    const c         = theme.colors;
+
     if (!course) return null;
 
     return (
@@ -28,7 +43,8 @@ function CourseDetailModal({ course, onClose }: { course: Course | null; onClose
                     flex: 1, backgroundColor: c.background.overlay,
                     justifyContent: "center", alignItems: "center", padding: 24,
                 }}
-                onPress={onClose} activeOpacity={1}
+                onPress={onClose}
+                activeOpacity={1}
             >
                 <TouchableOpacity activeOpacity={1} onPress={e => e.stopPropagation()}>
                     <View style={{
@@ -62,7 +78,7 @@ function CourseDetailModal({ course, onClose }: { course: Course | null; onClose
                                     { label: t("Horario"),     value: course.schedule  },
                                     { label: t("Aula"),        value: course.room      },
                                     { label: t("Estudiantes"), value: `${course.students} ${t("inscritos")}` },
-                                    { label: t("Asistencia"),  value: `${course.avgAttendance}%`    },
+                                    { label: t("Asistencia"),  value: `${course.avgAttendance}%`             },
                                 ].map(({ label, value }) => (
                                     <View key={label} style={{
                                         width: "47%",
@@ -81,7 +97,9 @@ function CourseDetailModal({ course, onClose }: { course: Course | null; onClose
 
                             <View style={{ flexDirection: "row", gap: 8, justifyContent: "flex-end" }}>
                                 <UIButton variant="ghost" onPress={onClose}>{t("Cerrar")}</UIButton>
-                                <UIButton variant="primary">{t("Editar curso")}</UIButton>
+                                {canManage && (
+                                    <UIButton variant="primary">{t("Editar curso")}</UIButton>
+                                )}
                             </View>
                         </View>
                     </View>
@@ -95,9 +113,9 @@ function CourseDetailModal({ course, onClose }: { course: Course | null; onClose
 
 function CourseCard({ course, onPress }: { course: Course; onPress: () => void }) {
     const { theme } = useTheme();
-    const { t } = useTranslation();
-    const c = theme.colors;
-    const barColor = course.avgAttendance >= 85 ? c.states.success : c.states.warning;
+    const { t }     = useTranslation();
+    const c         = theme.colors;
+    const barColor  = useAttendanceColor(course.avgAttendance);
 
     return (
         <TouchableOpacity onPress={onPress} style={{ flex: 1, minWidth: 260 }}>
@@ -123,8 +141,8 @@ function CourseCard({ course, onPress }: { course: Course; onPress: () => void }
                     <View style={{ gap: 6, marginBottom: 14 }}>
                         {[
                             { icon: "users",   text: `${course.students} ${t("estudiantes")}` },
-                            { icon: "clock",   text: course.schedule                  },
-                            { icon: "map-pin", text: course.room                      },
+                            { icon: "clock",   text: course.schedule                           },
+                            { icon: "map-pin", text: course.room                               },
                         ].map(({ icon, text }) => (
                             <View key={icon} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                                 <Feather name={icon as any} size={13} color={c.text.secondary} />
@@ -158,7 +176,9 @@ function CourseCard({ course, onPress }: { course: Course; onPress: () => void }
                         justifyContent: "center", gap: 6, padding: 10,
                     }}>
                         <Feather name="users" size={13} color={c.brand.primary} />
-                        <Text style={{ fontSize: 12, color: c.brand.primary, fontWeight: "600" }}>{t("Estudiantes")}</Text>
+                        <Text style={{ fontSize: 12, color: c.brand.primary, fontWeight: "600" }}>
+                            {t("Estudiantes")}
+                        </Text>
                     </TouchableOpacity>
                 </View>
             </Card>
@@ -174,6 +194,15 @@ export default function CoursesView() {
     const c           = theme.colors;
     const vm          = useCoursesViewModel();
     const { t }       = useTranslation();
+    const permissions = useRolePermissions();
+
+    if (vm.isLoading) {
+        return (
+            <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+                <ActivityIndicator size="large" color={c.brand.primary} />
+            </View>
+        );
+    }
 
     return (
         <View style={{ flex: 1 }}>
@@ -185,8 +214,13 @@ export default function CoursesView() {
                     title={t("Cursos")}
                     subtitle={`${vm.filtered.length} ${t("cursos activos este semestre")}`}
                     actions={<>
-                        <UIButton variant="ghost" size="sm">{t("Importar")}</UIButton>
-                        <UIButton variant="primary" size="sm">+ {t("Nuevo curso")}</UIButton>
+                        {/* Solo admin puede gestionar cursos */}
+                        {permissions.canManageCourses && (
+                            <>
+                                <UIButton variant="ghost" size="sm">{t("Importar")}</UIButton>
+                                <UIButton variant="primary" size="sm">+ {t("Nuevo curso")}</UIButton>
+                            </>
+                        )}
                     </>}
                 />
 
@@ -202,7 +236,8 @@ export default function CoursesView() {
                         style={{
                             height: 38, borderWidth: 1, borderColor: c.border.primary,
                             borderRadius: 6, paddingLeft: 32, paddingRight: 12,
-                            fontSize: 13, backgroundColor: c.background.surface, color: c.text.primary,
+                            fontSize: 13, backgroundColor: c.background.surface,
+                            color: c.text.primary,
                         }}
                         placeholderTextColor={c.text.disabled}
                     />
@@ -211,10 +246,10 @@ export default function CoursesView() {
                 {/* Mini stats */}
                 <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
                     {[
-                        { label: t("Total cursos"),     value: vm.courses.length,    color: c.brand.primary  },
-                        { label: t("Estudiantes"),      value: vm.totalStudents,     color: c.states.success },
-                        { label: t("Asistencia prom."), value: `${vm.avgAttendance}%`, color: "#8B5CF6"     },
-                        { label: t("Con alerta"),       value: vm.alertCount,        color: c.states.warning },
+                        { label: t("Total cursos"),     value: vm.courses.length,      color: c.brand.primary  },
+                        { label: t("Estudiantes"),      value: vm.totalStudents,       color: c.states.success },
+                        { label: t("Asistencia prom."), value: `${vm.avgAttendance}%`, color: "#8B5CF6"        },
+                        { label: t("Con alerta"),       value: vm.alertCount,          color: c.states.warning },
                     ].map(({ label, value, color }) => (
                         <Card key={label} style={{ flex: 1, minWidth: 100, alignItems: "center" }} padding={14}>
                             <Text style={{
@@ -242,14 +277,21 @@ export default function CoursesView() {
                     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16 }}>
                         {vm.filtered.map(course => (
                             <View key={course.id} style={{ flexBasis: isSmall ? "100%" : "30%", flexGrow: 1 }}>
-                                <CourseCard course={course} onPress={() => vm.selectCourse(course)} />
+                                <CourseCard
+                                    course={course}
+                                    onPress={() => vm.selectCourse(course)}
+                                />
                             </View>
                         ))}
                     </View>
                 )}
             </ScrollView>
 
-            <CourseDetailModal course={vm.selected} onClose={vm.clearSelection} />
+            <CourseDetailModal
+                course={vm.selected}
+                onClose={vm.clearSelection}
+                canManage={permissions.canManageCourses}
+            />
         </View>
     );
 }

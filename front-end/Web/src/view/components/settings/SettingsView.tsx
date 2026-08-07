@@ -10,143 +10,18 @@ import { useTheme }      from "../hooks/useTheme";
 import { generateTheme } from "../theme/generateTheme";
 import { useResponsive } from "../hooks/useResponsive";
 import { useTranslation } from "../../../i18n/hooks/useTranslation";
+import { useRolePermissions } from "../../hooks/useRolePermissions";
 import {
     VISION_PRESETS, VISION_MODES, VISION_DESCRIPTIONS,
     AccessibilityPreset, VisionMode, DEFAULT_VISION_MODE,
 } from "../theme/presets";
 import type { ThemeTokens } from "../theme/colourTokens";
-
-// ── Helpers HSL ──────────────────────────────────────────────
-
-function hslToHex(h: number, s: number, l: number): string {
-    const sv = s / 100, lv = l / 100;
-    const k  = (n: number) => (n + h / 30) % 12;
-    const a  = sv * Math.min(lv, 1 - lv);
-    const f  = (n: number) =>
-        lv - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
-    return "#" + [f(0), f(8), f(4)]
-        .map(v => Math.round(v * 255).toString(16).padStart(2, "0"))
-        .join("");
-}
-
-function hexToHsl(hex: string): [number, number, number] {
-    const r = parseInt(hex.slice(1, 3), 16) / 255;
-    const g = parseInt(hex.slice(3, 5), 16) / 255;
-    const b = parseInt(hex.slice(5, 7), 16) / 255;
-    const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    let h = 0, s = 0;
-    const l = (max + min) / 2;
-    if (max !== min) {
-        const d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        switch (max) {
-            case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-            case g: h = ((b - r) / d + 2) / 6; break;
-            case b: h = ((r - g) / d + 4) / 6; break;
-        }
-    }
-    return [Math.round(h * 360), Math.round(s * 100), Math.round(l * 100)];
-}
-
-// ── Evaluador de color ────────────────────────────────────────
-
-type ColorVerdict = {
-    score:       "excelente" | "bueno" | "aceptable" | "precaución" | "problemático";
-    scoreColor:  string;
-    readability: string;
-    vibe:        string;
-    uiFit:       string;
-    tip:         string;
-    contrastRatio: number;
-    wcagLevel: "AAA" | "AA" | "A" | "Falla";
-};
-
-function evaluateColor(hex: string): ColorVerdict {
-    const r = parseInt(hex.slice(1, 3), 16) / 255;
-    const g = parseInt(hex.slice(3, 5), 16) / 255;
-    const b = parseInt(hex.slice(5, 7), 16) / 255;
-    const lin = (v: number) => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
-    const L   = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
-    const contrastVsWhite = 1.05 / (L + 0.05);
-    const contrastVsBlack = (L + 0.05) / 0.05;
-    const bestContrast = Math.max(contrastVsWhite, contrastVsBlack);
-
-    const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    const lv  = (max + min) / 2;
-    const sv  = max === min ? 0 : (lv > 0.5 ? (max - min) / (2 - max - min) : (max - min) / (max + min));
-    let hv = 0;
-    if (max !== min) {
-        switch (max) {
-            case r: hv = ((g - b) / (max - min) + (g < b ? 6 : 0)) / 6; break;
-            case g: hv = ((b - r) / (max - min) + 2) / 6; break;
-            case b: hv = ((r - g) / (max - min) + 4) / 6; break;
-        }
-    }
-    const hueDeg = Math.round(hv * 360);
-    const satPct = Math.round(sv * 100);
-    const lumPct = Math.round(lv * 100);
-
-    let wcagLevel: ColorVerdict["wcagLevel"];
-    if (bestContrast >= 7)        wcagLevel = "AAA";
-    else if (bestContrast >= 4.5) wcagLevel = "AA";
-    else if (bestContrast >= 3)   wcagLevel = "A";
-    else                          wcagLevel = "Falla";
-
-    let readability: string;
-    if (contrastVsWhite >= 7)        readability = "Texto blanco encima se ve perfecto";
-    else if (contrastVsWhite >= 4.5) readability = "Texto blanco es legible sin problema";
-    else if (contrastVsWhite >= 3)   readability = "Texto blanco se ve, pero cuesta leerlo — mejor usar texto oscuro";
-    else                              readability = "Texto blanco encima no se lee bien — este color es demasiado claro";
-
-    let vibe: string;
-    if (satPct < 15)                        vibe = "Tono neutro — discreto, no llama la atención";
-    else if (hueDeg < 30 || hueDeg >= 340)  vibe = "Rojo — enérgico y llamativo, úsalo con moderación";
-    else if (hueDeg < 60)                   vibe = "Naranja / dorado — cálido y amigable";
-    else if (hueDeg < 150)                  vibe = "Verde — fresco, transmite calma y confianza";
-    else if (hueDeg < 200)                  vibe = "Cian / turquesa — moderno y tecnológico";
-    else if (hueDeg < 260)                  vibe = "Azul — profesional, genera confianza";
-    else if (hueDeg < 310)                  vibe = "Violeta / púrpura — creativo y sofisticado";
-    else                                    vibe = "Rosa / magenta — expresivo y llamativo";
-
-    let uiFit: string;
-    if (lumPct > 80)                          uiFit = "Muy claro — puede perderse sobre fondos blancos";
-    else if (lumPct < 20)                     uiFit = "Muy oscuro — puede confundirse con el texto";
-    else if (satPct < 15)                     uiFit = "Poco saturado — funciona como neutro, pero puede pasar desapercibido";
-    else if (satPct > 95 && lumPct > 60)      uiFit = "Muy vibrante — llama la atención, puede cansar en uso prolongado";
-    else                                      uiFit = "Proporciones equilibradas — ideal para botones, tabs y bordes";
-
-    let tip: string;
-    if (contrastVsWhite < 3 && lumPct > 70)
-        tip = "Baja la luminosidad 15–20 puntos para que el texto blanco sea legible";
-    else if (contrastVsWhite < 4.5 && lumPct > 55)
-        tip = "Baja la luminosidad 8–10 puntos para mejorar la legibilidad";
-    else if (satPct < 15 && lumPct > 50)
-        tip = "Sube la saturación para que el acento resalte sobre los fondos";
-    else if (lumPct > 80)
-        tip = "Este tono es muy pálido — bájalo para que se vea como un acento real";
-    else
-        tip = "Este color funciona bien — no necesita ajustes";
-
-    let score: ColorVerdict["score"];
-    let scoreColor: string;
-    if (contrastVsWhite >= 4.5 && satPct >= 15 && lumPct >= 20 && lumPct <= 78) {
-        score = "excelente"; scoreColor = "#10B981";
-    } else if (contrastVsWhite >= 3 && satPct >= 10 && lumPct >= 18 && lumPct <= 82) {
-        score = "bueno"; scoreColor = "#10B981";
-    } else if (contrastVsWhite >= 2.5 || contrastVsBlack >= 4.5) {
-        score = "aceptable"; scoreColor = "#F59E0B";
-    } else if (lumPct > 80 || lumPct < 15) {
-        score = "precaución"; scoreColor = "#F59E0B";
-    } else {
-        score = "problemático"; scoreColor = "#EF4444";
-    }
-
-    return { score, scoreColor, readability, vibe, uiFit, tip, contrastRatio: Math.round(bestContrast * 10) / 10, wcagLevel };
-}
+import { hslToHex, hexToHsl, evaluateColor } from "./colorUtils";
 
 // ── Componente: Badge de estado WCAG ─────────────────────────
 
 function WcagBadge({ level }: { level: ColorVerdict["wcagLevel"] }) {
+    const { t } = useTranslation();
     const colors: Record<string, { bg: string; text: string }> = {
         "AAA":   { bg: "#D1FAE5", text: "#065F46" },
         "AA":    { bg: "#DBEAFE", text: "#1E40AF" },
@@ -160,7 +35,7 @@ function WcagBadge({ level }: { level: ColorVerdict["wcagLevel"] }) {
             paddingHorizontal: 6, paddingVertical: 2,
         }}>
             <Text style={{ fontSize: 10, fontWeight: "700", color: style.text, letterSpacing: 0.5 }}>
-                WCAG {level}
+                WCAG {level === "Falla" ? t("Falla") : level}
             </Text>
         </View>
     );
@@ -333,37 +208,214 @@ function ModeSelector() {
 function LanguageSelector() {
     const { theme } = useTheme();
     const c = theme.colors;
-    const { language, setLanguage, supportedLanguages, isLoading } = useTranslation();
+    const { language, setLanguage, supportedLanguages, currentLanguage, isLoading } = useTranslation();
+
+    const [open,  setOpen]  = useState(false);
+    const [query, setQuery] = useState("");
+    const searchRef         = useRef<TextInput>(null);
+    const dropdownAnim      = useRef(new Animated.Value(0)).current;
+
+    // Altura del trigger en px — necesaria para posicionar el dropdown justo debajo
+    const TRIGGER_H = 52;
+    // Altura máxima del panel (hasta 6 ítems de 44px + 52 de buscador)
+    const MAX_ITEMS = Math.min(supportedLanguages.length, 6);
+    const PANEL_H   = MAX_ITEMS * 44 + 52;
+
+    const filtered = query.trim() === ""
+        ? supportedLanguages
+        : supportedLanguages.filter(l =>
+            l.labelES.toLowerCase().includes(query.toLowerCase()) ||
+            l.label.toLowerCase().includes(query.toLowerCase())   ||
+            l.code.toLowerCase().includes(query.toLowerCase())
+        );
+
+    const animateOpen = useCallback(() => {
+        setOpen(true);
+        setQuery("");
+        Animated.timing(dropdownAnim, {
+            toValue: 1, duration: 180,
+            easing: Easing.out(Easing.quad), useNativeDriver: false,
+        }).start(() => searchRef.current?.focus());
+    }, [dropdownAnim]);
+
+    const animateClose = useCallback(() => {
+        Animated.timing(dropdownAnim, {
+            toValue: 0, duration: 140,
+            easing: Easing.in(Easing.quad), useNativeDriver: false,
+        }).start(() => { setOpen(false); setQuery(""); });
+    }, [dropdownAnim]);
+
+    const handleToggle = useCallback(() => {
+        open ? animateClose() : animateOpen();
+    }, [open, animateOpen, animateClose]);
+
+    const handleSelect = useCallback((code: string) => {
+        setLanguage(code as any);
+        animateClose();
+    }, [setLanguage, animateClose]);
+
+    const panelHeight = dropdownAnim.interpolate({
+        inputRange: [0, 1], outputRange: [0, PANEL_H],
+    });
+    const panelOpacity = dropdownAnim.interpolate({
+        inputRange: [0, 0.3, 1], outputRange: [0, 1, 1],
+    });
 
     return (
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {supportedLanguages.map(lang => {
-                const active = language === lang.code;
-                return (
-                    <TouchableOpacity
-                        key={lang.code}
-                        onPress={() => setLanguage(lang.code)}
-                        disabled={isLoading}
+        // position: relative para que el absolute del dropdown se ancle aquí
+        <View style={{ position: "relative", width: 220, zIndex: 200 }}>
+
+            {/* ── Trigger ──────────────────────────────────────── */}
+            <TouchableOpacity
+                onPress={handleToggle}
+                disabled={isLoading}
+                activeOpacity={0.8}
+                style={{
+                    height: TRIGGER_H,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10,
+                    paddingHorizontal: 14,
+                    borderRadius: 10,
+                    borderWidth: open ? 2 : 1.5,
+                    borderColor: open ? c.brand.primary : c.border.primary,
+                    backgroundColor: open ? c.brand.primaryLight : c.background.surface,
+                    borderBottomLeftRadius:  open ? 0 : 10,
+                    borderBottomRightRadius: open ? 0 : 10,
+                    opacity: isLoading ? 0.5 : 1,
+                    // zIndex para que el trigger quede sobre el panel cuando está cerrado
+                    zIndex: 201,
+                }}
+            >
+                <Text style={{ fontSize: 18, lineHeight: 22 }}>{currentLanguage?.flag ?? "🌐"}</Text>
+                <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 13, fontWeight: "600", color: open ? c.brand.primary : c.text.primary }}>
+                        {currentLanguage?.labelES ?? "Idioma"}
+                    </Text>
+                    <Text style={{ fontSize: 11, color: c.text.secondary, marginTop: 1 }}>
+                        {currentLanguage?.label ?? ""}
+                    </Text>
+                </View>
+                <Animated.View style={{
+                    transform: [{
+                        rotate: dropdownAnim.interpolate({
+                            inputRange: [0, 1], outputRange: ["0deg", "180deg"],
+                        }),
+                    }],
+                }}>
+                    <Feather name="chevron-down" size={16} color={open ? c.brand.primary : c.text.secondary} />
+                </Animated.View>
+            </TouchableOpacity>
+
+            {/* ── Dropdown flotante — position absolute ────────── */}
+            <Animated.View
+                pointerEvents={open ? "auto" : "none"}
+                style={{
+                    position: "absolute",
+                    top: TRIGGER_H,          // justo debajo del trigger
+                    left: 0,
+                    right: 0,
+                    zIndex: 200,
+                    height:  panelHeight,
+                    opacity: panelOpacity,
+                    overflow: "hidden",
+                    borderWidth: 2,
+                    borderTopWidth: 0,
+                    borderColor: c.brand.primary,
+                    borderBottomLeftRadius: 10,
+                    borderBottomRightRadius: 10,
+                    backgroundColor: c.background.surface,
+                    // Sombra para que visualmente flote
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.12,
+                    shadowRadius: 8,
+                    elevation: 8,
+                }}
+            >
+                {/* Buscador */}
+                <View style={{
+                    flexDirection: "row", alignItems: "center", gap: 8,
+                    margin: 8, paddingHorizontal: 10, paddingVertical: 7,
+                    borderRadius: 7, borderWidth: 1, borderColor: c.border.primary,
+                    backgroundColor: c.background.app,
+                }}>
+                    <Feather name="search" size={13} color={c.text.secondary} />
+                    <TextInput
+                        ref={searchRef}
+                        value={query}
+                        onChangeText={setQuery}
+                        placeholder={t("Buscar idioma…")}
+                        placeholderTextColor={c.text.secondary}
                         style={{
-                            flexDirection: "row", alignItems: "center", gap: 6,
-                            paddingVertical: 7, paddingHorizontal: 12, borderRadius: 8,
-                            borderWidth: active ? 2 : 1.5,
-                            borderColor: active ? c.brand.primary : c.border.primary,
-                            backgroundColor: active ? c.brand.primaryLight : c.background.surface,
-                            opacity: isLoading ? 0.5 : 1,
+                            flex: 1, fontSize: 13,
+                            color: c.text.primary,
+                            padding: 0,
+                            // @ts-ignore — válido en web
+                            outlineStyle: "none",
                         }}
-                    >
-                        <Text style={{ fontSize: 14 }}>{lang.flag}</Text>
-                        <Text style={{
-                            fontSize: 12, fontWeight: active ? "600" : "400",
-                            color: active ? c.brand.primary : c.text.secondary,
-                        }}>
-                            {lang.labelES}
-                        </Text>
-                        {active && <Feather name="check" size={11} color={c.brand.primary} />}
-                    </TouchableOpacity>
-                );
-            })}
+                    />
+                    {query.length > 0 && (
+                        <TouchableOpacity
+                            onPress={() => setQuery("")}
+                            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                        >
+                            <Feather name="x" size={13} color={c.text.secondary} />
+                        </TouchableOpacity>
+                    )}
+                </View>
+
+                {/* Lista */}
+                <ScrollView
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                >
+                    {filtered.length === 0 ? (
+                        <View style={{ paddingVertical: 14, alignItems: "center" }}>
+                            <Text style={{ fontSize: 12, color: c.text.secondary }}>{t("Sin resultados")}</Text>
+                        </View>
+                    ) : filtered.map((lang, i) => {
+                        const active = language === lang.code;
+                        const isLast = i === filtered.length - 1;
+                        return (
+                            <TouchableOpacity
+                                key={lang.code}
+                                onPress={() => handleSelect(lang.code)}
+                                activeOpacity={0.7}
+                                style={{
+                                    flexDirection: "row", alignItems: "center", gap: 10,
+                                    paddingHorizontal: 14, paddingVertical: 10,
+                                    backgroundColor: active ? c.brand.primaryLight : "transparent",
+                                    borderBottomWidth: isLast ? 0 : 1,
+                                    borderBottomColor: c.border.primary,
+                                }}
+                            >
+                                <Text style={{ fontSize: 16, width: 22, textAlign: "center" }}>{lang.flag}</Text>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{
+                                        fontSize: 13, fontWeight: active ? "600" : "400",
+                                        color: active ? c.brand.primary : c.text.primary,
+                                    }}>
+                                        {lang.labelES}
+                                    </Text>
+                                    <Text style={{ fontSize: 11, color: c.text.secondary }}>
+                                        {lang.label}
+                                    </Text>
+                                </View>
+                                {active && (
+                                    <View style={{
+                                        width: 18, height: 18, borderRadius: 9,
+                                        backgroundColor: c.brand.primary,
+                                        alignItems: "center", justifyContent: "center",
+                                    }}>
+                                        <Feather name="check" size={10} color="#fff" />
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+                        );
+                    })}
+                </ScrollView>
+            </Animated.View>
         </View>
     );
 }
@@ -406,10 +458,10 @@ function ThemePreview({ previewTheme }: { previewTheme: ThemeTokens }) {
                         <Text style={{ fontSize: 11, color: "#fff", fontWeight: "600" }}>{t("Primario")}</Text>
                     </View>
                     <View style={{ flex: 1, borderRadius: 6, padding: 7, alignItems: "center", borderWidth: 1, borderColor: c.brand.primary }}>
-                        <Text style={{ fontSize: 11, color: c.brand.primary, fontWeight: "600" }}>Outline</Text>
+                        <Text style={{ fontSize: 11, color: c.brand.primary, fontWeight: "600" }}>{t("Outline")}</Text>
                     </View>
                     <View style={{ flex: 1, backgroundColor: c.interactive.disabled, borderRadius: 6, padding: 7, alignItems: "center" }}>
-                        <Text style={{ fontSize: 11, color: c.text.secondary, fontWeight: "600" }}>Ghost</Text>
+                        <Text style={{ fontSize: 11, color: c.text.secondary, fontWeight: "600" }}>{t("Ghost")}</Text>
                     </View>
                 </View>
                 {/* Badges */}
@@ -449,7 +501,7 @@ function AccentColorSelector({ previewHex, onPreviewChange }: AccentSelectorProp
     const [showHexInput, setShowHexInput] = useState(false);
 
     const currentHex = hslToHex(hue, sat, lum);
-    const verdict    = evaluateColor(currentHex);
+    const verdict    = evaluateColor(currentHex, t);
 
     function apply(h: number, s: number, l: number) {
         setHue(h); setSat(s); setLum(l);
@@ -470,27 +522,27 @@ function AccentColorSelector({ previewHex, onPreviewChange }: AccentSelectorProp
     const sliderDescriptions = {
         hue: {
             ranges: [
-                { max: 30,  label: "🔴 Rojo" },
-                { max: 60,  label: "🟠 Naranja" },
-                { max: 150, label: "🟢 Verde" },
-                { max: 200, label: "🩵 Cian" },
-                { max: 260, label: "🔵 Azul" },
-                { max: 310, label: "🟣 Violeta" },
-                { max: 340, label: "🩷 Rosa" },
-                { max: 360, label: "🔴 Rojo" },
+                { max: 30,  label: t("🔴 Rojo") },
+                { max: 60,  label: t("🟠 Naranja") },
+                { max: 150, label: t("🟢 Verde") },
+                { max: 200, label: t("🩵 Cian") },
+                { max: 260, label: t("🔵 Azul") },
+                { max: 310, label: t("🟣 Violeta") },
+                { max: 340, label: t("🩷 Rosa") },
+                { max: 360, label: t("🔴 Rojo") },
             ],
-            get: (v: number) => sliderDescriptions.hue.ranges.find(r => v < r.max)?.label ?? "Rojo"
+            get: (v: number) => sliderDescriptions.hue.ranges.find(r => v < r.max)?.label ?? t("Rojo")
         },
         sat: (v: number) =>
-            v < 15 ? "Gris / neutro" :
-            v < 40 ? "Suave" :
-            v < 70 ? "Equilibrado" :
-            v < 90 ? "Vivo" : "Muy intenso",
+            v < 15 ? t("Gris / neutro") :
+            v < 40 ? t("Suave") :
+            v < 70 ? t("Equilibrado") :
+            v < 90 ? t("Vivo") : t("Muy intenso"),
         lum: (v: number) =>
-            v < 20 ? "Casi negro" :
-            v < 35 ? "Oscuro" :
-            v < 55 ? "Medio — ideal ✓" :
-            v < 70 ? "Claro" : "Muy claro",
+            v < 20 ? t("Casi negro") :
+            v < 35 ? t("Oscuro") :
+            v < 55 ? t("Medio — ideal ✓") :
+            v < 70 ? t("Claro") : t("Muy claro"),
     };
 
     return (
@@ -517,10 +569,10 @@ function AccentColorSelector({ previewHex, onPreviewChange }: AccentSelectorProp
                                 fontSize: 11, fontWeight: active ? "600" : "400",
                                 color: active ? "#fff" : c.text.secondary,
                             }}>
-                                {vm === "normal"        ? "Normal"       :
-                                    vm === "deuteranopia"  ? "Deuteranopia" :
-                                        vm === "protanopia"    ? "Protanopia"   :
-                                            vm === "tritanopia"    ? "Tritanopia"   : "Acromatopsia"}
+                                {vm === "normal"        ? t("Normal")       :
+                                    vm === "deuteranopia"  ? t("Deuteranopia") :
+                                        vm === "protanopia"    ? t("Protanopia")   :
+                                            vm === "tritanopia"    ? t("Tritanopia")   : t("Acromatopsia")}
                             </Text>
                         </TouchableOpacity>
                     );
@@ -588,7 +640,7 @@ function AccentColorSelector({ previewHex, onPreviewChange }: AccentSelectorProp
                         onChange: (v: number) => apply(hue, v, lum),
                         suffix: "%",
                         desc: sliderDescriptions.sat(sat),
-                        hint: sat < 20 ? "⚠ Muy bajo — el color se verá gris" : sat > 90 ? "⚠ Muy alto — puede fatigar la vista" : null,
+                        hint: sat < 20 ? t("⚠ Muy bajo — el color se verá gris") : sat > 90 ? t("⚠ Muy alto — puede fatigar la vista") : null,
                     },
                     {
                         label: t("Luminosidad"),
@@ -596,7 +648,7 @@ function AccentColorSelector({ previewHex, onPreviewChange }: AccentSelectorProp
                         onChange: (v: number) => apply(hue, sat, v),
                         suffix: "%",
                         desc: sliderDescriptions.lum(lum),
-                        hint: lum > 75 ? "⚠ Muy claro — el texto blanco encima no será legible" : lum < 22 ? "⚠ Muy oscuro — puede confundirse con el texto" : null,
+                        hint: lum > 75 ? t("⚠ Muy claro — el texto blanco encima no será legible") : lum < 22 ? t("⚠ Muy oscuro — puede confundirse con el texto") : null,
                     },
                 ].map(sl => (
                     <View key={sl.label} style={{ gap: 5 }}>
@@ -670,7 +722,7 @@ function AccentColorSelector({ previewHex, onPreviewChange }: AccentSelectorProp
                                 backgroundColor: verdict.scoreColor,
                             }} />
                             <Text style={{ fontSize: 11, fontWeight: "600", color: verdict.scoreColor }}>
-                                {verdict.score.charAt(0).toUpperCase() + verdict.score.slice(1)}
+                                {(() => { const s = t(verdict.score); return s.charAt(0).toUpperCase() + s.slice(1); })()}
                             </Text>
                             <WcagBadge level={verdict.wcagLevel} />
                         </View>
@@ -702,7 +754,7 @@ function AccentColorSelector({ previewHex, onPreviewChange }: AccentSelectorProp
                 ))}
 
                 {/* Consejo */}
-                {verdict.tip !== "Este color funciona bien — no necesita ajustes" ? (
+                {verdict.tip !== t("Este color funciona bien — no necesita ajustes") ? (
                     <View style={{
                         flexDirection: "row", alignItems: "flex-start", gap: 8,
                         padding: 10, margin: 8,
@@ -767,9 +819,9 @@ function SecurityMeter({ twoFactor, sessionTime }: { twoFactor: boolean; session
         true, // base
     ].filter(Boolean).length;
 
-    const levels = ["Débil", "Regular", "Buena", "Fuerte"];
+    const levels = [t("Débil"), t("Regular"), t("Buena"), t("Fuerte")];
     const colors = ["#EF4444", "#F59E0B", "#3B82F6", "#10B981"];
-    const label  = levels[score - 1] ?? "Débil";
+    const label  = levels[score - 1] ?? t("Débil");
     const color  = colors[score - 1] ?? "#EF4444";
 
     return (
@@ -816,13 +868,14 @@ function SecurityMeter({ twoFactor, sessionTime }: { twoFactor: boolean; session
 
 function ConfidenceGuide({ value }: { value: number }) {
     const { theme } = useTheme();
+    const { t }     = useTranslation();
     const c = theme.colors;
 
     const zones = [
-        { min: 60, max: 70, label: "Permisivo", color: "#10B981", desc: "Detecta bien aunque haya cambios de luz o ángulo. Más falsos positivos." },
-        { min: 71, max: 85, label: "Equilibrado", color: "#3B82F6", desc: "Buen balance entre precisión y tolerancia. Recomendado para la mayoría." },
-        { min: 86, max: 94, label: "Estricto", color: "#F59E0B", desc: "Muy preciso, pero puede fallar si el estudiante cambió de lentes o peinado." },
-        { min: 95, max: 99, label: "Muy estricto", color: "#EF4444", desc: "Alto riesgo de falsos negativos. Solo para entornos con iluminación controlada." },
+        { min: 60, max: 70, label: t("Permisivo"), color: "#10B981", desc: t("Detecta bien aunque haya cambios de luz o ángulo. Más falsos positivos.") },
+        { min: 71, max: 85, label: t("Equilibrado"), color: "#3B82F6", desc: t("Buen balance entre precisión y tolerancia. Recomendado para la mayoría.") },
+        { min: 86, max: 94, label: t("Estricto"), color: "#F59E0B", desc: t("Muy preciso, pero puede fallar si el estudiante cambió de lentes o peinado.") },
+        { min: 95, max: 99, label: t("Muy estricto"), color: "#EF4444", desc: t("Alto riesgo de falsos negativos. Solo para entornos con iluminación controlada.") },
     ];
 
     const zone = zones.find(z => value >= z.min && value <= z.max) ?? zones[1];
@@ -846,9 +899,10 @@ export default function SettingsView() {
     const { isSmall }                        = useResponsive();
     const { theme, mode, accentColor, setAccentColor } = useTheme();
     const { currentLanguage, t }             = useTranslation();
+    const permissions                        = useRolePermissions();
     const c                                  = theme.colors;
 
-    const [section, setSection] = useState("general");
+    const [section, setSection] = useState("appearance");
 
     const [previewAccent, setPreviewAccent] = useState(accentColor);
     const [hasUnsaved,    setHasUnsaved]    = useState(false);
@@ -859,7 +913,6 @@ export default function SettingsView() {
         setPreviewAccent(hex);
         setHasUnsaved(hex.toLowerCase() !== accentColor.toLowerCase());
     }
-
     // Estados de settings
     const [institutionName, setInstitutionName] = useState("Universidad Nacional");
     const [minAttendance,   setMinAttendance]   = useState(80);
@@ -877,13 +930,16 @@ export default function SettingsView() {
 
     const activeNotifications = [emailAlert, weeklyReport, atRiskAlert, dailySummary].filter(Boolean).length;
 
-    const SECTIONS = [
-        { id: "general",       label: t("General"),        icon: "globe",    desc: t("Institución y semestre") },
-        { id: "facial",        label: t("Reconocimiento"), icon: "aperture", desc: t("Umbral y cámara") },
-        { id: "notifications", label: t("Notificaciones"), icon: "bell",     desc: t("Alertas y reportes") },
-        { id: "security",      label: t("Seguridad"),      icon: "shield",   desc: t("Acceso y sesiones") },
-        { id: "appearance",    label: t("Apariencia"),     icon: "sliders",  desc: t("Tema y colores") },
+    // Secciones visibles según el rol: admin ve todo, teacher/student solo apariencia
+    const ALL_SECTIONS = [
+        { id: "general",       label: t("General"),        icon: "globe",    desc: t("Institución y semestre"),  adminOnly: true  },
+        { id: "facial",        label: t("Reconocimiento"), icon: "aperture", desc: t("Umbral y cámara"),        adminOnly: true  },
+        { id: "notifications", label: t("Notificaciones"), icon: "bell",     desc: t("Alertas y reportes"),     adminOnly: false },
+        { id: "security",      label: t("Seguridad"),      icon: "shield",   desc: t("Acceso y sesiones"),      adminOnly: true  },
+        { id: "appearance",    label: t("Apariencia"),     icon: "sliders",  desc: t("Tema y colores"),         adminOnly: false },
     ] as const;
+
+    const SECTIONS = ALL_SECTIONS.filter(s => !s.adminOnly || permissions.canManageUsers);
 
     function handleSave() {
         if (hasUnsaved) {
@@ -1088,7 +1144,7 @@ export default function SettingsView() {
                                             ? t("Umbral muy alto — muchos estudiantes podrían quedar en riesgo aunque asistan con regularidad.")
                                             : minAttendance <= 60
                                             ? t("Umbral bajo — los estudiantes tendrán mucha flexibilidad de faltar. Asegúrate de que sea intencional.")
-                                            : `Con este umbral, un estudiante puede faltar hasta ${Math.floor((100 - minAttendance))} clases de cada 100 sin quedar en riesgo.`
+                                            : `${t("Con este umbral, un estudiante puede faltar hasta")} ${Math.floor((100 - minAttendance))} ${t("clases de cada 100 sin quedar en riesgo.")}`
                                         }
                                     </Text>
                                 </View>
@@ -1097,11 +1153,15 @@ export default function SettingsView() {
                             <Divider />
 
                             {/* Idioma de la aplicación */}
-                            <View>
-                                <Text style={labelStyle}>{t("Idioma de la aplicación")}</Text>
-                                <Text style={[descStyle, { marginTop: 0, marginBottom: 10 }]}>
-                                    {t("Traduce toda la interfaz automáticamente. El español es el idioma original de FaceAttend EDU.")}
-                                </Text>
+                            <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 16, zIndex: 100 }}>
+                                {/* Texto a la izquierda */}
+                                <View style={{ flex: 1 }}>
+                                    <Text style={labelStyle}>{t("Idioma de la aplicación")}</Text>
+                                    <Text style={[descStyle, { marginTop: 0 }]}>
+                                        {t("Traduce toda la interfaz automáticamente. El español es el idioma original de FaceAttend EDU.")}
+                                    </Text>
+                                </View>
+                                {/* Selector a la derecha — el dropdown flota */}
                                 <LanguageSelector />
                             </View>
 
@@ -1144,7 +1204,7 @@ export default function SettingsView() {
                                 />
                                 {/* Zonas de referencia */}
                                 <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 4 }}>
-                                    {["60 — Permisivo", "75", "85 ✓", "95 — Estricto", "99"].map((v, i) => (
+                                    {[`60 — ${t("Permisivo")}`, "75", "85 ✓", `95 — ${t("Estricto")}`, "99"].map((v, i) => (
                                         <Text key={i} style={{ fontSize: 9, color: c.text.disabled }}>{v}</Text>
                                     ))}
                                 </View>

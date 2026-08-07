@@ -21,6 +21,9 @@
 
 import esTranslations from "./es.json";
 import enTranslations from "./en.json";
+import frTranslations from "./fr.json";
+import deTranslations from "./de.json";
+import ptTranslations from "./pt.json";
 
 // ── Mapa de diccionarios ──────────────────────────────────────
 //
@@ -30,6 +33,9 @@ import enTranslations from "./en.json";
 const DICTIONARIES: Record<string, Record<string, string>> = {
     es: esTranslations,
     en: enTranslations,
+    fr: frTranslations,
+    de: deTranslations,
+    pt: ptTranslations,
 };
 
 // ── API pública ───────────────────────────────────────────────
@@ -37,6 +43,10 @@ const DICTIONARIES: Record<string, Record<string, string>> = {
 /**
  * Devuelve la traducción de un texto para un idioma dado.
  * Si el idioma no tiene JSON o la key no existe, devuelve el texto original.
+ *
+ * Se intenta primero una coincidencia exacta y luego una normalizada (NFC)
+ * para cubrir posibles diferencias de codificación Unicode entre el texto
+ * del componente y la clave del JSON.
  *
  * @param text     Texto en español (clave del diccionario).
  * @param language Código BCP-47 del idioma destino.
@@ -46,7 +56,16 @@ export function lookup(text: string, language: string): string {
     if (!text) return text;
     const dict = DICTIONARIES[language];
     if (!dict) return text;
-    return dict[text] ?? text;
+
+    // Intento 1: coincidencia exacta (caso normal, O(1))
+    if (text in dict) return dict[text];
+
+    // Intento 2: normalización NFC (cubre diferencias de codificación Unicode)
+    const normalized = text.normalize("NFC");
+    if (normalized in dict) return dict[normalized];
+
+    // Fallback: texto original (español)
+    return text;
 }
 
 /**

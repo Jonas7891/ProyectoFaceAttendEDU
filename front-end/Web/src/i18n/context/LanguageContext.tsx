@@ -136,13 +136,18 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     //  Lee directamente del objeto JSON importado en bundle.
     //  O(1), sin efectos secundarios, sin re-renders adicionales.
     //
+    //  Para TODOS los idiomas (incluido "es") se pasa por lookup() para
+    //  que el JSON sea la fuente de verdad única. Si la key no existe en
+    //  el JSON del idioma activo, se devuelve el texto original (fallback).
+    //
     //  MODO PRODUCCIÓN (futuro) — restaurar:
     //    const resolvedRef = useRef<Map<string, string>>(new Map());
     //    const [tick, setTick] = useState(0);
     //    const bump = useCallback(() => setTick(n => n + 1), []);
     //
     //    const t = useCallback((text: string): string => {
-    //        if (!text || language === SOURCE_LANGUAGE) return text;
+    //        if (!text) return text;
+    //        if (language === SOURCE_LANGUAGE) return lookup(text, SOURCE_LANGUAGE) ?? text;
     //        const key = text;
     //        if (resolvedRef.current.has(key)) return resolvedRef.current.get(key)!;
     //        translationService.translate(text, language).then(translated => {
@@ -153,7 +158,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     //    }, [language, bump]);
 
     const t = useCallback((text: string): string => {
-        if (!text || language === SOURCE_LANGUAGE) return text;
+        if (!text) return text;
         return lookup(text, language);
     }, [language]);
 
