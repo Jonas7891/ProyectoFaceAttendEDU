@@ -13,7 +13,7 @@ export default function AppNavigator() {
     return (
         // @ts-expect-error - tipos de @react-navigation/native-stack exigen "id" en este overload
         <Stack.Navigator
-            screenOptions={{
+            screenOptions={{           
                 headerShown: false,
             }}
         >

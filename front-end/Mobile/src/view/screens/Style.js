@@ -438,9 +438,6 @@ const styles = StyleSheet.create({
     footer: {
         height: 40,
     },
-    safeAreaUpdatePhoto: {
-        flex: 1,
-    },
     keyboardAvoidingViewUpdatePhoto: {
         flex: 1,
     },
@@ -454,54 +451,11 @@ const styles = StyleSheet.create({
         alignItems: "center",
         marginTop: 20,
     },
-    profileImageUpdatePhoto: {
-        width: 120,
-        height: 120,
-    },
-    titleUpdatePhoto: {
-        fontSize: 22,
-        fontWeight: "bold",
-        textAlign: "center",
-        marginTop: 10,
-    },
-    instructionTextUpdatePhoto: {
-        textAlign: "center",
-        marginVertical: 15,
-    },
-    formCardUpdatePhoto: {
-        borderRadius: 15,
-        padding: 20,
-        borderWidth: 0,
-    },
     formCardDarkUpdatePhoto: {
         borderWidth: 1,
     },
-    formTitleUpdatePhoto: {
-        fontSize: 18,
-        fontWeight: "bold",
-        marginBottom: 15,
-    },
     inputFieldContainerUpdatePhoto: {
         marginBottom: 15,
-    },
-    inputLabelUpdatePhoto: {
-        marginBottom: 5,
-        fontSize: 14,
-        fontWeight: "500",
-    },
-    questionInputUpdatePhoto: {
-        borderWidth: 1,
-        borderRadius: 8,
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-    },
-    registerButtonUpdatePhoto: {
-        padding: 15,
-        borderRadius: 12,
-        marginTop: 20,
-        alignItems: "center",
-        flexDirection: "row",
-        justifyContent: "center",
     },
     registerButtonSuccessUpdatePhoto: {
         backgroundColor: "#2da351",
@@ -4168,8 +4122,6 @@ const styles = StyleSheet.create({
         color: '#9CA3AF',
         marginTop: 2,
     },
-
-    // Modal — Botones de acción
     actionRowPending: {
         flexDirection: 'row',
         gap: 10,
@@ -4205,6 +4157,242 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 15,
         fontWeight: '700',
+    },cameraContainer: {
+        flex: 1
+    },
+    overlayContainer: {
+        ...StyleSheet.absoluteFillObject,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    ovalContainer: {
+        width: 280,
+        height: 380,
+        borderRadius: 200,
+        borderWidth: 4,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    ovalInner: {
+        width: 260,
+        height: 360,
+        borderRadius: 190,
+        borderWidth: 2,
+        borderStyle: 'dashed'
+    },
+    cameraHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingTop: Platform.OS === 'ios' ? 60 : 40,
+        paddingHorizontal: 20
+    },
+    previewHeader: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingTop: Platform.OS === 'ios' ? 60 : 40,
+        paddingHorizontal: 20,
+        paddingBottom: 12,
+        zIndex: 10,
+    },
+    previewHeaderTitle: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: '600'
+    },
+    closeButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    closeButtonText: {
+        color: '#fff',
+        fontSize: 20,
+        fontWeight: 'bold'
+    },
+    flipButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    flipButtonText: {
+        fontSize: 20
+    },
+    cameraTitle: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: '600'},
+    statusOverlay: {
+        position: 'absolute',
+        bottom: 220,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        paddingHorizontal: 20
+    },
+    statusContainer: {
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 20
+    },
+    statusTextUpdate: {
+        color: '#fff',
+        fontSize: 15,
+        fontWeight: '500',
+        textAlign: 'center'
+    },
+    captureContainer: {
+        position: 'absolute',
+        bottom: 60,
+        left: 0,
+        right: 0,
+        alignItems: 'center'
+    },
+    captureButton: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        borderWidth: 4,
+        borderColor: '#fff',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    captureButtonInner: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: '#fff'
+    },
+    previewOverlayWrapper: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: -10},
+        shadowOpacity: 0.5,
+        shadowRadius: 20,
+        elevation: 20,
+    },
+    previewOverlay: {
+        backgroundColor: 'rgba(0, 0, 0, 0.82)',
+        paddingTop: 30,
+        paddingBottom: Platform.OS === 'ios' ? 50 : 30,
+        paddingHorizontal: 24,
+        borderTopLeftRadius: 28,
+        borderTopRightRadius: 28,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.08)',
+        borderBottomWidth: 0,
+    },
+    previewIconContainer: {
+        alignSelf: 'center',
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.15)',
+    },
+    previewIcon: {
+        fontSize: 28,
+    },
+    previewTitle: {
+        color: '#fff',
+        fontSize: 22,
+        fontWeight: '700',
+        textAlign: 'center',
+        marginBottom: 8,
+        letterSpacing: 0.3,
+    },
+    previewSubtitle: {
+        color: 'rgba(255, 255, 255, 0.75)',
+        fontSize: 14,
+        textAlign: 'center',
+        marginBottom: 16,
+        lineHeight: 20,
+        paddingHorizontal: 10,
+    },
+    previewStatusBox: {
+        alignSelf: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        borderWidth: 1,
+        marginBottom: 16,
+    },
+    previewStatus: {
+        fontSize: 14,
+        fontWeight: '600',
+        textAlign: 'center',
+    },
+    previewButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 12,
+        marginTop: 8,
+    },
+    previewButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 16,
+        paddingHorizontal: 20,
+        borderRadius: 14,
+        flex: 1,
+        gap: 8,
+    },
+    retakeButton: {
+        backgroundColor: 'rgba(255, 255, 255, 0.12)',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.2)',
+    },
+    confirmButton: {
+        shadowOffset: {
+            width: 0,
+            height: 4
+        },
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+        elevation: 6,
+    },
+    previewButtonIcon: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: '700',
+    },
+    previewButtonText: {
+        color: '#fff',
+        fontSize: 15,
+        fontWeight: '600',
+        letterSpacing: 0.3,
+    },
+    alreadyRegisteredBox: {
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        borderLeftWidth: 3,
+        borderLeftColor: '#10B981',
+        padding: 10,
+        borderRadius: 6,
+        marginTop: 10,
+    },
+    alreadyRegisteredText: {
+        fontSize: 13,
+        fontWeight: '500'
     },
 });
 

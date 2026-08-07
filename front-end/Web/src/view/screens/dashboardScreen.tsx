@@ -1,7 +1,7 @@
 // ============================================================
 //  FaceAttend EDU — Dashboard Screen (View Layer)
 //  Orquesta tabs. Toda lógica de navegación en useDashboardScreenViewModel.
-//  Cada sección delega a su propio ViewModel.
+//  Los tabs visibles se filtran por rol via useRolePermissions.
 // ============================================================
 
 import React from "react";
@@ -10,27 +10,31 @@ import { useNavigation } from "@react-navigation/native";
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 
-import Sidebar       from "../components/layout/Sidebar";
-import DashboardView from "../components/dashboard/DashboardView";
-import StudentsView  from "../components/students/StudentsView";
-import CoursesView   from "../components/courses/CoursesView";
-import ReportsView   from "../components/reports/ReportsView";
-import SettingsView  from "../components/settings/SettingsView";
+import Sidebar          from "../components/layout/Sidebar";
+import DashboardView    from "../components/dashboard/DashboardView";
+import StudentsView     from "../components/students/StudentsView";
+import CoursesView      from "../components/courses/CoursesView";
+import ReportsView      from "../components/reports/ReportsView";
+import SettingsView     from "../components/settings/SettingsView";
+import EnvironmentsView from "../components/environments/EnvironmentsView";
 
 import { useTheme }      from "../components/hooks/useTheme";
 import { useResponsive } from "../components/hooks/useResponsive";
+import { useAuth }       from "../../context/AuthContext";
 import { useDashboardScreenViewModel } from "../../viewmodels/useDashboardScreenViewModel";
-import type { TabKey } from "../../viewmodels/useDashboardScreenViewModel";
+import type { TabKey }   from "../../viewmodels/useDashboardScreenViewModel";
+import { useTranslation } from "../../i18n/hooks/useTranslation";
 
 // ── TabContent ───────────────────────────────────────────────
 
 function TabContent({ tab }: { tab: TabKey }) {
     switch (tab) {
-        case "dashboard": return <DashboardView />;
-        case "students":  return <StudentsView />;
-        case "courses":   return <CoursesView />;
-        case "reports":   return <ReportsView />;
-        case "settings":  return <SettingsView />;
+        case "dashboard":    return <DashboardView />;
+        case "students":     return <StudentsView />;
+        case "courses":      return <CoursesView />;
+        case "environments": return <EnvironmentsView />;
+        case "reports":      return <ReportsView />;
+        case "settings":     return <SettingsView />;
     }
 }
 
@@ -43,6 +47,13 @@ export default function DashboardScreen() {
     const { theme }   = useTheme();
     const c           = theme.colors;
     const vm          = useDashboardScreenViewModel();
+    const { t }       = useTranslation();
+    const { logout }  = useAuth();
+
+    async function handleLogout() {
+        await logout();
+        navigation.replace("FaceAttendEDU");
+    }
 
     return (
         <SafeAreaProvider>
@@ -54,8 +65,8 @@ export default function DashboardScreen() {
                 {!isSmall && (
                     <Sidebar
                         currentTab={vm.currentTab}
-                        onNavigate={(t) => vm.setTab(t as TabKey)}
-                        onLogout={() => navigation.replace("FaceAttendEDU")}
+                        onNavigate={(tab) => vm.setTab(tab as TabKey)}
+                        onLogout={handleLogout}
                     />
                 )}
 
@@ -71,15 +82,15 @@ export default function DashboardScreen() {
                 {/* Bottom tabs — solo móvil */}
                 {isSmall && (
                     <View style={{
-                        position: "absolute",
+                        position:        "absolute",
                         bottom: 0, left: 0, right: 0,
                         backgroundColor: c.background.surface,
-                        borderTopWidth: 1,
-                        borderTopColor: c.border.primary,
-                        flexDirection: "row",
-                        paddingTop: 4,
-                        paddingBottom: Math.max(8, insets.bottom),
-                        minHeight: 52 + insets.bottom,
+                        borderTopWidth:  1,
+                        borderTopColor:  c.border.primary,
+                        flexDirection:   "row",
+                        paddingTop:      4,
+                        paddingBottom:   Math.max(8, insets.bottom),
+                        minHeight:       52 + insets.bottom,
                     }}>
                         {vm.bottomTabs.map((item) => {
                             const isActive = vm.currentTab === item.key;
@@ -88,9 +99,9 @@ export default function DashboardScreen() {
                                     key={item.key}
                                     onPress={() => vm.setTab(item.key as TabKey)}
                                     style={{
-                                        flex: 1,
-                                        alignItems: "center",
-                                        paddingTop: 6,
+                                        flex:           1,
+                                        alignItems:     "center",
+                                        paddingTop:     6,
                                         borderTopWidth: isActive ? 2 : 0,
                                         borderTopColor: c.brand.primary,
                                     }}
@@ -101,12 +112,12 @@ export default function DashboardScreen() {
                                         color={isActive ? c.brand.primary : c.text.secondary}
                                     />
                                     <Text style={{
-                                        fontSize: 10,
-                                        marginTop: 3,
-                                        color: isActive ? c.brand.primary : c.text.secondary,
+                                        fontSize:   10,
+                                        marginTop:  3,
+                                        color:      isActive ? c.brand.primary : c.text.secondary,
                                         fontWeight: isActive ? "600" : "400",
                                     }}>
-                                        {item.label}
+                                        {t(item.label)}
                                     </Text>
                                 </TouchableOpacity>
                             );

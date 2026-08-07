@@ -1,27 +1,30 @@
 // ============================================================
 //  FaceAttend EDU — Sidebar
-//  Colores desde useTheme() — sin imports de Colors.
-//  FIX: labels de navegación traducidos con useTranslation().
+//  Lee el usuario desde AuthContext en vez de mockData.
+//  Filtra los ítems de navegación según los permisos del rol.
 // ============================================================
 
 import React from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { useTheme }       from "../hooks/useTheme";
-import { Avatar }         from "../ui/UI";
-import { mockUser }       from "../../../models/data/mockData";
-import { useTranslation } from "../../../i18n/hooks/useTranslation";
+import { useTheme }            from "../hooks/useTheme";
+import { Avatar }              from "../ui/UI";
+import { useAuth }             from "../../../context/AuthContext";
+import { useRolePermissions }  from "../../hooks/useRolePermissions";
+import { useTranslation }      from "../../../i18n/hooks/useTranslation";
+import type { TabKey }         from "../../../viewmodels/useDashboardScreenViewModel";
 
-// Las keys son estables (para la navegación); los labels se traducen en render.
-const NAV_ITEMS: { key: string; labelES: string; feather: any }[] = [
-    { key: "dashboard", labelES: "Dashboard",    feather: "layout"      },
-    { key: "students",  labelES: "Estudiantes",  feather: "users"       },
-    { key: "courses",   labelES: "Cursos",       feather: "book-open"   },
-    { key: "reports",   labelES: "Reportes",     feather: "bar-chart-2" },
+// Definición completa de ítems con la tab key asociada
+const NAV_ITEMS: { key: TabKey; labelKey: string; feather: string }[] = [
+    { key: "dashboard",    labelKey: "Dashboard",      feather: "layout"      },
+    { key: "students",     labelKey: "Estudiantes",    feather: "users"       },
+    { key: "courses",      labelKey: "Cursos",         feather: "book-open"   },
+    { key: "environments", labelKey: "Ambientes",      feather: "home"        },
+    { key: "reports",      labelKey: "Reportes",       feather: "bar-chart-2" },
 ];
 
-const SYSTEM_ITEMS: { key: string; labelES: string; feather: any }[] = [
-    { key: "settings", labelES: "Configuración", feather: "settings" },
+const SYSTEM_ITEMS: { key: TabKey; labelKey: string; feather: string }[] = [
+    { key: "settings", labelKey: "Configuración", feather: "settings" },
 ];
 
 type Props = {
@@ -31,29 +34,46 @@ type Props = {
 };
 
 export default function Sidebar({ currentTab, onNavigate, onLogout }: Props) {
-    const { theme } = useTheme();
-    const { t }     = useTranslation();
-    const c         = theme.colors;
+    const { theme }   = useTheme();
+    const { t }       = useTranslation();
+    const { user }    = useAuth();
+    const permissions = useRolePermissions();
+    const c           = theme.colors;
 
-    function NavItem({ item, system = false }: { item: typeof NAV_ITEMS[0]; system?: boolean }) {
+    // Filtra según los tabs visibles para el rol actual
+    const visibleNav    = NAV_ITEMS.filter(i => permissions.visibleTabs.includes(i.key));
+    const visibleSystem = SYSTEM_ITEMS.filter(i => permissions.visibleTabs.includes(i.key));
+
+    // Etiqueta de rol traducida
+    const roleLabel = user
+        ? user.role === "admin"
+            ? t("Administrador")
+            : user.role === "teacher"
+                ? t("Docente")
+                : t("Estudiante")
+        : "";
+
+    function NavItem({ item, system = false }: {
+        item: typeof NAV_ITEMS[0];
+        system?: boolean;
+    }) {
         const isActive = currentTab === item.key;
         return (
             <TouchableOpacity
-                key={item.key}
                 onPress={() => onNavigate(item.key)}
                 style={{
-                    flexDirection:    "row",
-                    alignItems:       "center",
-                    gap:              10,
-                    padding:          9,
+                    flexDirection:     "row",
+                    alignItems:        "center",
+                    gap:               10,
+                    padding:           9,
                     paddingHorizontal: 10,
-                    borderRadius:     6,
-                    marginBottom:     2,
-                    backgroundColor:  isActive ? c.brand.primaryLight : "transparent",
+                    borderRadius:      6,
+                    marginBottom:      2,
+                    backgroundColor:   isActive ? c.brand.primaryLight : "transparent",
                 }}
             >
                 <Feather
-                    name={item.feather}
+                    name={item.feather as any}
                     size={16}
                     color={isActive ? c.brand.primary : c.text.secondary}
                 />
@@ -63,7 +83,7 @@ export default function Sidebar({ currentTab, onNavigate, onLogout }: Props) {
                     color:      isActive ? c.brand.primary : c.text.secondary,
                     fontWeight: isActive ? "600" : "400",
                 }}>
-                    {t(item.labelES)}
+                    {t(item.labelKey)}
                 </Text>
                 {isActive && !system && (
                     <Feather name="chevron-right" size={14} color={c.brand.primary} />
@@ -75,13 +95,13 @@ export default function Sidebar({ currentTab, onNavigate, onLogout }: Props) {
     function SectionLabel({ label }: { label: string }) {
         return (
             <Text style={{
-                fontSize:         10,
-                fontWeight:       "600",
-                color:            c.text.secondary,
+                fontSize:          10,
+                fontWeight:        "600",
+                color:             c.text.secondary,
                 paddingHorizontal: 10,
-                paddingBottom:    8,
-                textTransform:    "uppercase",
-                letterSpacing:    1.2,
+                paddingBottom:     8,
+                textTransform:     "uppercase",
+                letterSpacing:     1.2,
             }}>
                 {t(label)}
             </Text>
@@ -129,15 +149,18 @@ export default function Sidebar({ currentTab, onNavigate, onLogout }: Props) {
             {/* Nav principal */}
             <ScrollView style={{ flex: 1, paddingHorizontal: 10, paddingTop: 12 }}>
                 <SectionLabel label="Menú principal" />
-                {NAV_ITEMS.map(item => <NavItem key={item.key} item={item} />)}
+                {visibleNav.map(item => <NavItem key={item.key} item={item} />)}
 
-                <View style={{ height: 1, backgroundColor: c.border.primary, marginVertical: 12 }} />
-
-                <SectionLabel label="Sistema" />
-                {SYSTEM_ITEMS.map(item => <NavItem key={item.key} item={item} system />)}
+                {visibleSystem.length > 0 && (
+                    <>
+                        <View style={{ height: 1, backgroundColor: c.border.primary, marginVertical: 12 }} />
+                        <SectionLabel label="Sistema" />
+                        {visibleSystem.map(item => <NavItem key={item.key} item={item} system />)}
+                    </>
+                )}
             </ScrollView>
 
-            {/* User footer */}
+            {/* User footer — datos reales desde AuthContext */}
             <View style={{
                 padding:           12,
                 paddingHorizontal: 16,
@@ -147,16 +170,19 @@ export default function Sidebar({ currentTab, onNavigate, onLogout }: Props) {
                 alignItems:        "center",
                 gap:               10,
             }}>
-                <Avatar name={mockUser.name} size={34} />
+                <Avatar name={user?.name ?? "?"} size={34} />
                 <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 12, fontWeight: "600", color: c.text.primary }} numberOfLines={1}>
-                        {mockUser.name}
+                    <Text
+                        style={{ fontSize: 12, fontWeight: "600", color: c.text.primary }}
+                        numberOfLines={1}
+                    >
+                        {user?.name ?? "—"}
                     </Text>
                     <Text style={{ fontSize: 11, color: c.text.secondary }}>
-                        {mockUser.role}
+                        {roleLabel}
                     </Text>
                 </View>
-                <TouchableOpacity onPress={onLogout}>
+                <TouchableOpacity onPress={onLogout} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                     <Feather name="log-out" size={15} color={c.text.secondary} />
                 </TouchableOpacity>
             </View>
