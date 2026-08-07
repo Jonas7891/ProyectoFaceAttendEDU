@@ -60,6 +60,7 @@ export const darkColors = {
     tabInactive: '#2A2A2A',
     text: '#FFFFFF',
     textSecondary: '#AAAAAA',
+    textSecondaryButtons: '#FFFFFF',
     textMuted: '#777777',
     border: '#2A2A2A',
     separator: '#333333',
@@ -96,6 +97,7 @@ export const darkColors = {
     modalRadioSelected: '#1392ED',
     modalOptionSelected: '#1A3A5C',
     modalOptionBorder: '#1392ED',
+    customtabs: '#52b7ff',
 };
 
 const ThemeContext = createContext(null);
@@ -103,9 +105,11 @@ const ThemeContext = createContext(null);
 export function ThemeProvider({ children }) {
     const [theme, setTheme] = useState('light');
 
+    const isDark = theme === 'dark';
+
     const colors = useMemo(
-        () => (theme === 'dark' ? darkColors : lightColors),
-        [theme]
+        () => (isDark ? darkColors : lightColors),
+        [isDark]
     );
 
     useEffect(() => {
@@ -118,11 +122,13 @@ export function ThemeProvider({ children }) {
                 setTheme('light');
             }
         };
+
         restore();
     }, []);
 
     const loadThemeForRole = useCallback(async (role) => {
         if (!role) return;
+
         try {
             const saved = await getThemeForRole(role);
             setTheme(saved);
@@ -133,6 +139,7 @@ export function ThemeProvider({ children }) {
 
     const setThemeForRole = useCallback(async (role, newTheme) => {
         if (!role || !newTheme) return;
+
         try {
             await saveThemeForRole(role, newTheme);
             setTheme(newTheme);
@@ -144,21 +151,33 @@ export function ThemeProvider({ children }) {
     const toggleTheme = useCallback(async () => {
         try {
             const role = await AsyncStorage.getItem('userRole');
-            const newTheme = theme === 'light' ? 'dark' : 'light';
+            const newTheme = isDark ? 'light' : 'dark';
+
             await saveThemeForRole(role, newTheme);
             setTheme(newTheme);
         } catch (e) {
             console.error('Error alternando tema:', e);
         }
-    }, [theme]);
+    }, [isDark]);
 
-    const contextValue = useMemo(() => ({
-        theme,
-        colors,
-        toggleTheme,
-        setThemeForRole,
-        loadThemeForRole,
-    }), [theme, colors, toggleTheme, setThemeForRole, loadThemeForRole]);
+    const contextValue = useMemo(
+        () => ({
+            theme,
+            isDark,
+            colors,
+            toggleTheme,
+            setThemeForRole,
+            loadThemeForRole,
+        }),
+        [
+            theme,
+            isDark,
+            colors,
+            toggleTheme,
+            setThemeForRole,
+            loadThemeForRole,
+        ]
+    );
 
     return (
         <ThemeContext.Provider value={contextValue}>
@@ -169,6 +188,10 @@ export function ThemeProvider({ children }) {
 
 export const useTheme = () => {
     const ctx = useContext(ThemeContext);
-    if (!ctx) throw new Error('useTheme debe usarse dentro de ThemeProvider');
+
+    if (!ctx) {
+        throw new Error('useTheme debe usarse dentro de ThemeProvider');
+    }
+
     return ctx;
 };

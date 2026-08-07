@@ -12,16 +12,21 @@ import {
     Platform,
     KeyboardAvoidingView,
     Keyboard,
+    TouchableWithoutFeedback,
     Alert,
     Image,
 } from 'react-native';
 import { useCustomAlert } from '../components/common/useCustomAlert';
 import CustomAlert from '../components/common/CustomAlert';
 import styles from './Style';
-import {useSchoolConfigurationViewModel} from "../../viewmodels/useSchoolConfigurationViewModel";
+import { useSchoolConfigurationViewModel } from "../../viewmodels/useSchoolConfigurationViewModel";
+// ⚠️ Ajusta esta ruta a donde realmente esté tu ThemeContext.js
+import { useTheme } from '../../view/components/common/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 // ─────────────────────────────────────────────
 // Sub-componentes FUERA del componente principal
+// (llaman a useTheme() por su cuenta, siguen dentro del ThemeProvider)
 // ─────────────────────────────────────────────
 
 const FormField = ({
@@ -34,60 +39,115 @@ const FormField = ({
                        editable = true,
                        validationErrors = {},
                    }) => {
+    const { colors } = useTheme();
     const fieldKey = label.toLowerCase().replace(/\s+/g, '_');
     const hasError = validationErrors[fieldKey];
 
     return (
         <View style={styles.formGroupSchoolConfig}>
-            <Text style={styles.inputLabelSchoolConfig}>
+            <Text style={[styles.inputLabelSchoolConfig, { color: colors.text }]}>
                 {label}
-                {required && <Text style={styles.inputLabelRequiredSchoolConfig}>*</Text>}
+                {required && (
+                    <Text style={[styles.inputLabelRequiredSchoolConfig, { color: colors.danger }]}>
+                        *
+                    </Text>
+                )}
             </Text>
             <View style={{ position: 'relative' }}>
                 <TextInput
                     style={[
                         styles.inputFieldSchoolConfig,
+                        {
+                            backgroundColor: colors.inputBackground,
+                            borderColor: colors.border,
+                            color: colors.text,
+                        },
                         multiline && styles.textAreaSchoolConfig,
-                        hasError && styles.inputFieldErrorSchoolConfig,
-                        !editable && styles.inputFieldDisabledSchoolConfig,
+                        hasError && [
+                            styles.inputFieldErrorSchoolConfig,
+                            { borderColor: colors.danger },
+                        ],
+                        !editable && [
+                            styles.inputFieldDisabledSchoolConfig,
+                            { backgroundColor: colors.background, color: colors.textMuted },
+                        ],
                     ]}
                     value={value}
                     onChangeText={onChangeText}
                     placeholder={placeholder}
+                    placeholderTextColor={colors.textMuted}
                     multiline={multiline}
                     numberOfLines={multiline ? 4 : 1}
                     editable={editable}
                 />
                 {!hasError && value && editable && (
-                    <Text style={styles.validationCheckmarkSchoolConfig}>✓</Text>
+                    <Text
+                        style={[
+                            styles.validationCheckmarkSchoolConfig,
+                            { color: colors.novedadSuccess },
+                        ]}
+                    >
+                        ✓
+                    </Text>
                 )}
                 {hasError && (
-                    <Text style={styles.validationErrorIconSchoolConfig}>✗</Text>
+                    <Text
+                        style={[
+                            styles.validationErrorIconSchoolConfig,
+                            { color: colors.danger },
+                        ]}
+                    >
+                        ✗
+                    </Text>
                 )}
             </View>
             {hasError && (
-                <Text style={styles.inputErrorMessageSchoolConfig}>{hasError}</Text>
+                <Text style={[styles.inputErrorMessageSchoolConfig, { color: colors.danger }]}>
+                    {hasError}
+                </Text>
             )}
         </View>
     );
 };
 
-const ToggleRow = ({ label, description, value, onValueChange }) => (
-    <View style={styles.toggleRowSchoolConfig}>
-        <View style={styles.toggleLabelContainerSchoolConfig}>
-            <Text style={styles.toggleLabelSchoolConfig}>{label}</Text>
-            {description && (
-                <Text style={styles.toggleDescriptionSchoolConfig}>{description}</Text>
-            )}
+const ToggleRow = ({ label, description, value, onValueChange }) => {
+    const { colors, isDark } = useTheme();
+
+    return (
+        <View style={styles.toggleRowSchoolConfig}>
+            <View style={styles.toggleLabelContainerSchoolConfig}>
+                <Text style={[styles.toggleLabelSchoolConfig, { color: colors.text }]}>
+                    {label}
+                </Text>
+                {description && (
+                    <Text
+                        style={[
+                            styles.toggleDescriptionSchoolConfig,
+                            { color: colors.textSecondary },
+                        ]}
+                    >
+                        {description}
+                    </Text>
+                )}
+            </View>
+            <Switch
+                value={value}
+                onValueChange={onValueChange}
+                trackColor={{ false: colors.tabInactive, true: colors.primary }}
+                thumbColor={Platform.OS === 'android' ? colors.tabActive : undefined}
+                ios_backgroundColor={colors.tabInactive}
+            />
         </View>
-    </View>
-);
+    );
+};
 
 // ─────────────────────────────────────────────
 // Componente principal
 // ─────────────────────────────────────────────
 
 const SchoolConfigurationScreen = ({ navigation }) => {
+    const { colors, isDark, toggleTheme } = useTheme();
+    const { t } = useTranslation();
 
     const {
         activeTab,
@@ -132,33 +192,30 @@ const SchoolConfigurationScreen = ({ navigation }) => {
     // ─────────────────────────────────────────────
 
     return (
-        <SafeAreaView style={styles.safeAreaSchoolConfig}>
+        <SafeAreaView style={[styles.safeAreaSchoolConfig, { backgroundColor: colors.background }]}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={styles.containerSchoolConfig}
+                style={[styles.containerSchoolConfig, { backgroundColor: colors.background }]}
             >
                 {/* ── Header ── */}
-                <View style={styles.headerSchoolConfig}>
+                <View style={[styles.headerSchoolConfig, { backgroundColor: colors.navBar, borderBottomColor: colors.border }]}>
                     <TouchableOpacity
-                        style={styles.headerBackButtonSchoolConfig}
-                        onPress={() => {
-                            if (hasChanges) {
-                                showConfirm(
-                                    'Cambios sin guardar',
-                                    '¿Descartar los cambios realizados?',
-                                    [
-                                        { text: 'Cancelar',  onPress: () => {} },
-                                        { text: 'Descartar', onPress: handleDiscardChanges },
-                                    ]
-                                );
-                            } else {
-                                navigation.goBack();
-                            }
-                        }}
+                        style={[styles.headerBackButtonReport, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }]}
+                        onPress={() => navigation?.goBack()}
+                        activeOpacity={0.7}
                     >
-                        <Text style={styles.headerBackTextSchoolConfig}>←</Text>
+                        <Text style={[styles.headerBackTextReport, { color: colors.text }]}>‹</Text>
                     </TouchableOpacity>
-                    <Text style={styles.headerTitleSchoolConfig}>Configuración del Colegio</Text>
+                    <Text style={[styles.headerTitleSchoolConfig, { color: colors.text }]}>
+                        {t('schoolConfig.title')}
+                    </Text>
+
+                    {/* Switch de tema claro/oscuro */}
+                    <TouchableOpacity
+                        onPress={toggleTheme}
+                        style={{ marginLeft: 'auto', paddingHorizontal: 8 }}
+                    >
+                    </TouchableOpacity>
                 </View>
 
                 <ScrollView
@@ -170,48 +227,70 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                     <View style={styles.mainContentSchoolConfig}>
 
                         {/* ── Tarjeta resumen ── */}
-                        <View style={styles.schoolInfoCardSchoolConfig}>
+                        <View style={[styles.schoolInfoCardSchoolConfig, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
                             <View style={styles.schoolLogoContainerSchoolConfig}>
-                                <Text style={styles.schoolLogoSchoolConfig}>logo</Text>
+                                <Text style={{ color: colors.textSecondary }}>logo</Text>
                             </View>
-                            <Text style={styles.schoolNameSchoolConfig}>{generalInfo?.name}</Text>
+                            <Text style={[styles.schoolNameSchoolConfig, { color: colors.text }]}>
+                                {generalInfo?.name}
+                            </Text>
                             <View style={styles.quickInfoRowSchoolConfig}>
                                 <View style={styles.quickInfoItemSchoolConfig}>
-                                    <Text style={styles.quickInfoValueSchoolConfig}>{academicConfig?.totalStudents}</Text>
-                                    <Text style={styles.quickInfoLabelSchoolConfig}>Estudiantes</Text>
+                                    <Text style={[styles.quickInfoValueSchoolConfig, { color: colors.primary }]}>
+                                        {academicConfig?.totalStudents}
+                                    </Text>
+                                    <Text style={[styles.quickInfoLabelSchoolConfig, { color: colors.textSecondary }]}>
+                                        {t('schoolConfig.labels.students')}
+                                    </Text>
                                 </View>
                                 <View style={styles.quickInfoItemSchoolConfig}>
-                                    <Text style={styles.quickInfoValueSchoolConfig}>{academicConfig?.totalTeachers}</Text>
-                                    <Text style={styles.quickInfoLabelSchoolConfig}>Docentes</Text>
+                                    <Text style={[styles.quickInfoValueSchoolConfig, { color: colors.primary }]}>
+                                        {academicConfig?.totalTeachers}
+                                    </Text>
+                                    <Text style={[styles.quickInfoLabelSchoolConfig, { color: colors.textSecondary }]}>
+                                        {t('schoolConfig.labels.teachers')}
+                                    </Text>
                                 </View>
                                 <View style={styles.quickInfoItemSchoolConfig}>
-                                    <Text style={styles.quickInfoValueSchoolConfig}>{academicConfig?.totalCourses}</Text>
-                                    <Text style={styles.quickInfoLabelSchoolConfig}>Cursos</Text>
+                                    <Text style={[styles.quickInfoValueSchoolConfig, { color: colors.primary }]}>
+                                        {academicConfig?.totalCourses}
+                                    </Text>
+                                    <Text style={[styles.quickInfoLabelSchoolConfig, { color: colors.textSecondary }]}>
+                                        {t('schoolConfig.labels.courses')}
+                                    </Text>
+                                    </Text>
                                 </View>
                             </View>
                         </View>
 
                         {/* ── Tabs ── */}
-                        <View style={styles.sectionTabsSchoolConfig}>
+                        <View style={[styles.sectionTabsSchoolConfig, { backgroundColor: colors.card, borderColor: colors.border }]}>
                             {['general', 'contacto', 'academica', 'asistencia'].map((tab) => (
                                 <TouchableOpacity
                                     key={tab}
                                     style={[
                                         styles.sectionTabSchoolConfig,
-                                        activeTab === tab && styles.sectionTabActiveSchoolConfig,
+                                        activeTab === tab && [
+                                            styles.sectionTabActiveSchoolConfig,
+                                            { backgroundColor: colors.primary },
+                                        ],
                                     ]}
                                     onPress={() => setActiveTab(tab)}
                                 >
                                     <Text
                                         style={[
                                             styles.sectionTabTextSchoolConfig,
-                                            activeTab === tab && styles.sectionTabTextActiveSchoolConfig,
+                                            { color: colors.textSecondary },
+                                            activeTab === tab && [
+                                                styles.sectionTabTextActiveSchoolConfig,
+                                                { color: colors.modalButtonText },
+                                            ],
                                         ]}
                                     >
-                                        {tab === 'general'    && 'General'}
-                                        {tab === 'contacto'   && 'Contacto'}
-                                        {tab === 'academica'  && 'Académica'}
-                                        {tab === 'asistencia' && 'Asistencia'}
+                                        {tab === 'general'    && t('schoolConfig.tabs.general')}
+                                        {tab === 'contacto'   && t('schoolConfig.tabs.contact')}
+                                        {tab === 'academica'  && t('schoolConfig.tabs.academic')}
+                                        {tab === 'asistencia' && t('schoolConfig.tabs.attendance')}
                                     </Text>
                                 </TouchableOpacity>
                             ))}
@@ -221,8 +300,10 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                             TAB: INFORMACIÓN GENERAL
                         ════════════════════════════════ */}
                         {activeTab === 'general' && (
-                            <View style={styles.formSectionSchoolConfig}>
-                                <Text style={styles.formSectionTitleSchoolConfig}>Información General</Text>
+                            <View style={[styles.formSectionSchoolConfig, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+                                <Text style={[styles.formSectionTitleSchoolConfig, { color: colors.text }]}>
+                                    Información General
+                                </Text>
                                 <FormField
                                     label="Nombre del Colegio"
                                     value={generalInfo?.name}
@@ -254,8 +335,10 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                             TAB: CONTACTO
                         ════════════════════════════════ */}
                         {activeTab === 'contacto' && (
-                            <View style={styles.formSectionSchoolConfig}>
-                                <Text style={styles.formSectionTitleSchoolConfig}>Información de Contacto</Text>
+                            <View style={[styles.formSectionSchoolConfig, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+                                <Text style={[styles.formSectionTitleSchoolConfig, { color: colors.text }]}>
+                                    Información de Contacto
+                                </Text>
 
                                 {/* Email */}
                                 <FormField
@@ -269,16 +352,22 @@ const SchoolConfigurationScreen = ({ navigation }) => {
 
                                 {/* País */}
                                 <View style={styles.formGroupSchoolConfig}>
-                                    <Text style={styles.inputLabelSchoolConfig}>
+                                    <Text style={[styles.inputLabelSchoolConfig, { color: colors.text }]}>
                                         País
-                                        <Text style={styles.inputLabelRequiredSchoolConfig}>*</Text>
+                                        <Text style={{ color: colors.danger }}>*</Text>
                                     </Text>
                                     <TouchableOpacity
                                         style={[
                                             styles.inputFieldSchoolConfig,
                                             styles.pickerContainerSchoolConfig,
                                             styles.countryPickerSchoolConfig,
-                                            { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+                                            {
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                backgroundColor: colors.inputBackground,
+                                                borderColor: colors.border,
+                                            },
                                         ]}
                                         onPress={() => {
                                             setCountrySearch('');
@@ -287,9 +376,9 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                         disabled={loadingCountries}
                                     >
                                         {loadingCountries ? (
-                                            <ActivityIndicator size="small" color="#4A90E2" />
+                                            <ActivityIndicator size="small" color={colors.primary} />
                                         ) : (
-                                            <Text style={styles.countryPickerTextSchoolConfig}>
+                                            <Text style={[styles.countryPickerTextSchoolConfig, { color: colors.text }]}>
                                                 {contactInfo?.country
                                                     ? `${contactInfo?.country}  ${contactInfo?.dialCode}`
                                                     : 'Selecciona un país'}
@@ -297,16 +386,21 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                         )}
                                         <Image
                                             source={require('../../assets/images/flecha.png')}
-                                            style={{ width: 16, height: 16, resizeMode: 'contain' }}
+                                            style={{
+                                                width: 16,
+                                                height: 16,
+                                                resizeMode: 'contain',
+                                                tintColor: colors.textSecondary,
+                                            }}
                                         />
                                     </TouchableOpacity>
                                 </View>
 
                                 {/* Teléfono con prefijo estático */}
                                 <View style={styles.formGroupSchoolConfig}>
-                                    <Text style={styles.inputLabelSchoolConfig}>
+                                    <Text style={[styles.inputLabelSchoolConfig, { color: colors.text }]}>
                                         Teléfono
-                                        <Text style={styles.inputLabelRequiredSchoolConfig}>*</Text>
+                                        <Text style={{ color: colors.danger }}>*</Text>
                                     </Text>
                                     <View
                                         style={[
@@ -316,6 +410,8 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                                 alignItems:        'center',
                                                 paddingHorizontal: 0,
                                                 overflow:          'hidden',
+                                                backgroundColor:   colors.inputBackground,
+                                                borderColor:       colors.border,
                                             },
                                         ]}
                                     >
@@ -324,12 +420,13 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                             style={{
                                                 paddingHorizontal: 12,
                                                 borderRightWidth:  1,
+                                                borderRightColor:  colors.border,
                                                 justifyContent:    'center',
                                                 minWidth:          55,
                                                 alignItems:        'center',
                                             }}
                                         >
-                                            <Text style={{ fontSize: 14, color: '#444444', fontWeight: '500' }}>
+                                            <Text style={{ fontSize: 14, color: colors.textSecondary, fontWeight: '500' }}>
                                                 {contactInfo.dialCode || '---'}
                                             </Text>
                                         </View>
@@ -339,18 +436,19 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                                 flex:              1,
                                                 paddingHorizontal: 12,
                                                 fontSize:          14,
-                                                color:             '#333333',
+                                                color:             colors.text,
                                             }}
                                             value={contactInfo.phone}
                                             onChangeText={(value) =>
                                                 handleContactInfoChange('phone', value)
                                             }
                                             placeholder="300 123 4567"
+                                            placeholderTextColor={colors.textMuted}
                                             keyboardType="phone-pad"
                                         />
                                     </View>
                                     {validationErrors['phone'] && (
-                                        <Text style={styles.inputErrorMessageSchoolConfig}>
+                                        <Text style={[styles.inputErrorMessageSchoolConfig, { color: colors.danger }]}>
                                             {validationErrors['phone']}
                                         </Text>
                                     )}
@@ -368,16 +466,22 @@ const SchoolConfigurationScreen = ({ navigation }) => {
 
                                 {/* Ciudad — selector desplegable */}
                                 <View style={styles.formGroupSchoolConfig}>
-                                    <Text style={styles.inputLabelSchoolConfig}>
+                                    <Text style={[styles.inputLabelSchoolConfig, { color: colors.text }]}>
                                         Ciudad
-                                        <Text style={styles.inputLabelRequiredSchoolConfig}>*</Text>
+                                        <Text style={{ color: colors.danger }}>*</Text>
                                     </Text>
                                     <TouchableOpacity
                                         style={[
                                             styles.inputFieldSchoolConfig,
                                             styles.pickerContainerSchoolConfig,
                                             styles.countryPickerSchoolConfig,
-                                            { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+                                            {
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                backgroundColor: colors.inputBackground,
+                                                borderColor: colors.border,
+                                            },
                                         ]}
                                         onPress={() => {
                                             if (!contactInfo.country) {
@@ -392,15 +496,20 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                         }}
                                     >
                                         {loadingCities ? (
-                                            <ActivityIndicator size="small" color="#4A90E2" />
+                                            <ActivityIndicator size="small" color={colors.primary} />
                                         ) : (
-                                            <Text style={styles.countryPickerTextSchoolConfig}>
+                                            <Text style={[styles.countryPickerTextSchoolConfig, { color: colors.text }]}>
                                                 {contactInfo.city || 'Selecciona una ciudad'}
                                             </Text>
                                         )}
                                         <Image
                                             source={require('../../assets/images/flecha.png')}
-                                            style={{ width: 16, height: 16, resizeMode: 'contain' }}
+                                            style={{
+                                                width: 16,
+                                                height: 16,
+                                                resizeMode: 'contain',
+                                                tintColor: colors.textSecondary,
+                                            }}
                                         />
                                     </TouchableOpacity>
                                 </View>
@@ -411,8 +520,10 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                             TAB: CONFIGURACIÓN ACADÉMICA
                         ════════════════════════════════ */}
                         {activeTab === 'academica' && (
-                            <View style={styles.formSectionSchoolConfig}>
-                                <Text style={styles.formSectionTitleSchoolConfig}>Configuración Académica</Text>
+                            <View style={[styles.formSectionSchoolConfig, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+                                <Text style={[styles.formSectionTitleSchoolConfig, { color: colors.text }]}>
+                                    Configuración Académica
+                                </Text>
                                 <FormField
                                     label="Año Académico"
                                     value={academicConfig.academicYear}
@@ -442,14 +553,10 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                             TAB: CONFIGURACIÓN DE ASISTENCIA
                         ════════════════════════════════ */}
                         {activeTab === 'asistencia' && (
-                            <View style={styles.formSectionSchoolConfig}>
-                                <Text style={styles.formSectionTitleSchoolConfig}>Configuración de Asistencia</Text>
-                                <ToggleRow
-                                    label="Biométrico Requerido"
-                                    description="Requiere autenticación biométrica"
-                                    value={attendanceConfig.biometricRequired}
-                                    onValueChange={(value) => handleAttendanceConfigChange('biometricRequired', value)}
-                                />
+                            <View style={[styles.formSectionSchoolConfig, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+                                <Text style={[styles.formSectionTitleSchoolConfig, { color: colors.text }]}>
+                                    Configuración de Asistencia
+                                </Text>
                                 <FormField
                                     label="Tolerancia (minutos)"
                                     value={attendanceConfig.toleranceMinutes}
@@ -478,18 +585,6 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                     placeholder="30"
                                     validationErrors={validationErrors}
                                 />
-                                <ToggleRow
-                                    label="Requerir Documentación"
-                                    description="Exige documento para justificar ausencias"
-                                    value={attendanceConfig.requireDocumentation}
-                                    onValueChange={(value) => handleAttendanceConfigChange('requireDocumentation', value)}
-                                />
-                                <ToggleRow
-                                    label="Habilitar Notificaciones"
-                                    description="Envía alertas automáticas a padres/tutores"
-                                    value={attendanceConfig.enableNotifications}
-                                    onValueChange={(value) => handleAttendanceConfigChange('enableNotifications', value)}
-                                />
                             </View>
                         )}
                     </View>
@@ -499,16 +594,20 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                 {hasChanges && (
                     <View style={[styles.actionButtonsContainerSchoolConfig, { marginHorizontal: 20 }]}>
                         <TouchableOpacity
-                            style={styles.saveButtonSchoolConfig}
+                            style={[styles.saveButtonSchoolConfig, { backgroundColor: colors.primary }]}
                             onPress={() => setShowConfirmModal(true)}
                         >
-                            <Text style={styles.saveButtonTextSchoolConfig}>Guardar Cambios</Text>
+                            <Text style={[styles.saveButtonTextSchoolConfig, { color: colors.modalButtonText }]}>
+                                Guardar Cambios
+                            </Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={styles.cancelButtonSchoolConfig}
+                            style={[styles.cancelButtonSchoolConfig, { backgroundColor: colors.modalButtonSecondary }]}
                             onPress={handleDiscardChanges}
                         >
-                            <Text style={styles.cancelButtonTextSchoolConfig}>Descartar</Text>
+                            <Text style={[styles.cancelButtonTextSchoolConfig, { color: colors.modalButtonSecondaryText }]}>
+                                Descartar
+                            </Text>
                         </TouchableOpacity>
                     </View>
                 )}
@@ -523,19 +622,22 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                 animationType="fade"
                 onRequestClose={() => setCountryModalVisible(false)}
             >
-                <View style={styles.modalOverlaySchoolConfig}>
-                    <View style={[styles.modalSheetSchoolConfig, { width: '90%', maxHeight: '80%' }]}>
-                        <Text style={styles.modalTitleSchoolConfig}>Seleccionar País</Text>
+                <View style={[styles.modalOverlaySchoolConfig, { backgroundColor: colors.modalOverlay }]}>
+                    <View style={[styles.modalSheetSchoolConfig, { width: '90%', maxHeight: '80%', backgroundColor: colors.modalBackground }]}>
+                        <Text style={[styles.modalTitleSchoolConfig, { color: colors.modalText }]}>
+                            Seleccionar País
+                        </Text>
 
                         {/* Buscador */}
                         <View style={{
                             flexDirection:    'row',
                             alignItems:       'center',
                             borderWidth:      1,
-                            borderColor:      '#D0D0D0',
+                            borderColor:      colors.modalBorder,
                             borderRadius:     8,
                             marginBottom:     10,
                             overflow:         'hidden',
+                            backgroundColor:  colors.modalInputBackground,
                         }}>
                             <TextInput
                                 style={{
@@ -543,10 +645,10 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                     paddingHorizontal: 12,
                                     paddingVertical:   8,
                                     fontSize:          14,
-                                    color:             '#333333',
+                                    color:             colors.modalInputText,
                                 }}
                                 placeholder="Buscar país o código (+57)..."
-                                placeholderTextColor="black"
+                                placeholderTextColor={colors.modalInputPlaceholder}
                                 value={countrySearch}
                                 onChangeText={setCountrySearch}
                                 autoCorrect={false}
@@ -564,14 +666,14 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                     Keyboard.dismiss();
                                 }}
                             >
-                                <Text style={{ fontSize: 16, color: '#666666' }}>✕</Text>
+                                <Text style={{ fontSize: 16, color: colors.modalTextSecondary }}>✕</Text>
                             </TouchableOpacity>
                         </View>
 
                         {loadingCountries ? (
                             <View style={{ paddingVertical: 30, alignItems: 'center' }}>
-                                <ActivityIndicator size="large" color="#4A90E2" />
-                                <Text style={{ marginTop: 10, color: '#666666', fontSize: 13 }}>
+                                <ActivityIndicator size="large" color={colors.primary} />
+                                <Text style={{ marginTop: 10, color: colors.modalTextSecondary, fontSize: 13 }}>
                                     Cargando países...
                                 </Text>
                             </View>
@@ -581,20 +683,20 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                 showsVerticalScrollIndicator
                             >
                                 {filteredCountries.length === 0 ? (
-                                    <Text style={{ textAlign: 'center', color: '#999999', padding: 20 }}>
+                                    <Text style={{ textAlign: 'center', color: colors.textMuted, padding: 20 }}>
                                         No se encontraron países
                                     </Text>
                                 ) : (
                                     filteredCountries.map((option) => (
                                         <TouchableOpacity
                                             key={`${option.name}-${option.code}`}
-                                            style={styles.countryOptionSchoolConfig}
+                                            style={[styles.countryOptionSchoolConfig, { borderBottomColor: colors.modalBorder }]}
                                             onPress={() => handleCountryChange(option)}
                                         >
-                                            <Text style={styles.countryOptionTextSchoolConfig}>
+                                            <Text style={[styles.countryOptionTextSchoolConfig, { color: colors.modalText }]}>
                                                 {option.name}
                                             </Text>
-                                            <Text style={styles.countryDialCodeSchoolConfig}>
+                                            <Text style={[styles.countryDialCodeSchoolConfig, { color: colors.modalTextSecondary }]}>
                                                 {option.dialCode}
                                             </Text>
                                         </TouchableOpacity>
@@ -604,10 +706,12 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                         )}
 
                         <TouchableOpacity
-                            style={styles.modalCancelButtonSchoolConfig}
+                            style={[styles.modalCancelButtonSchoolConfig, { backgroundColor: colors.modalButtonSecondary }]}
                             onPress={() => setCountryModalVisible(false)}
                         >
-                            <Text style={styles.modalCancelButtonTextSchoolConfig}>Cancelar</Text>
+                            <Text style={[styles.modalCancelButtonTextSchoolConfig, { color: colors.modalButtonSecondaryText }]}>
+                                Cancelar
+                            </Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -622,10 +726,12 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                 animationType="fade"
                 onRequestClose={() => setCityModalVisible(false)}
             >
-                <View style={styles.modalOverlaySchoolConfig}>
-                    <View style={[styles.modalSheetSchoolConfig, { width: '90%', maxHeight: '80%' }]}>
-                        <Text style={styles.modalTitleSchoolConfig}>Seleccionar Ciudad</Text>
-                        <Text style={styles.modalSubtitleSchoolConfig}>
+                <View style={[styles.modalOverlaySchoolConfig, { backgroundColor: colors.modalOverlay }]}>
+                    <View style={[styles.modalSheetSchoolConfig, { width: '90%', maxHeight: '80%', backgroundColor: colors.modalBackground }]}>
+                        <Text style={[styles.modalTitleSchoolConfig, { color: colors.modalText }]}>
+                            Seleccionar Ciudad
+                        </Text>
+                        <Text style={[styles.modalSubtitleSchoolConfig, { color: colors.modalTextSecondary }]}>
                             Ciudades disponibles para {contactInfo?.country}
                         </Text>
 
@@ -634,10 +740,11 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                             flexDirection:    'row',
                             alignItems:       'center',
                             borderWidth:      1,
-                            borderColor:      '#D0D0D0',
+                            borderColor:      colors.modalBorder,
                             borderRadius:     8,
                             marginBottom:     10,
                             overflow:         'hidden',
+                            backgroundColor:  colors.modalInputBackground,
                         }}>
                             <TextInput
                                 style={{
@@ -645,10 +752,10 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                     paddingHorizontal: 12,
                                     paddingVertical:   8,
                                     fontSize:          14,
-                                    color:             '#333333',
+                                    color:             colors.modalInputText,
                                 }}
                                 placeholder="Buscar ciudad..."
-                                placeholderTextColor="black"
+                                placeholderTextColor={colors.modalInputPlaceholder}
                                 value={citySearch}
                                 onChangeText={setCitySearch}
                                 autoCorrect={false}
@@ -666,14 +773,14 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                     Keyboard.dismiss();
                                 }}
                             >
-                                <Text style={{ fontSize: 16, color: '#666666' }}>✕</Text>
+                                <Text style={{ fontSize: 16, color: colors.modalTextSecondary }}>✕</Text>
                             </TouchableOpacity>
                         </View>
 
                         {loadingCities ? (
                             <View style={{ paddingVertical: 30, alignItems: 'center' }}>
-                                <ActivityIndicator size="large" color="#4A90E2" />
-                                <Text style={{ marginTop: 10, color: '#666666', fontSize: 13 }}>
+                                <ActivityIndicator size="large" color={colors.primary} />
+                                <Text style={{ marginTop: 10, color: colors.modalTextSecondary, fontSize: 13 }}>
                                     Cargando ciudades...
                                 </Text>
                             </View>
@@ -682,7 +789,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                 {isCityListLimited && (
                                     <Text style={{
                                         textAlign: 'center',
-                                        color: '#666666',
+                                        color: colors.modalTextSecondary,
                                         paddingVertical: 10,
                                         fontSize: 13,
                                     }}>
@@ -694,17 +801,19 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                     showsVerticalScrollIndicator
                                 >
                                     {displayedCities.length === 0 ? (
-                                        <Text style={{ textAlign: 'center', color: '#999999', padding: 20 }}>
+                                        <Text style={{ textAlign: 'center', color: colors.textMuted, padding: 20 }}>
                                             No se encontraron ciudades
                                         </Text>
                                     ) : (
                                         displayedCities.map((city) => (
                                             <TouchableOpacity
                                                 key={city}
-                                                style={styles.countryOptionSchoolConfig}
+                                                style={[styles.countryOptionSchoolConfig, { borderBottomColor: colors.modalBorder }]}
                                                 onPress={() => handleCityChange(city)}
                                             >
-                                                <Text style={styles.countryOptionTextSchoolConfig}>{city}</Text>
+                                                <Text style={[styles.countryOptionTextSchoolConfig, { color: colors.modalText }]}>
+                                                    {city}
+                                                </Text>
                                             </TouchableOpacity>
                                         ))
                                     )}
@@ -713,10 +822,12 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                         )}
 
                         <TouchableOpacity
-                            style={styles.modalCancelButtonSchoolConfig}
+                            style={[styles.modalCancelButtonSchoolConfig, { backgroundColor: colors.modalButtonSecondary }]}
                             onPress={() => setCityModalVisible(false)}
                         >
-                            <Text style={styles.modalCancelButtonTextSchoolConfig}>Cancelar</Text>
+                            <Text style={[styles.modalCancelButtonTextSchoolConfig, { color: colors.modalButtonSecondaryText }]}>
+                                Cancelar
+                            </Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -731,42 +842,54 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                 animationType="fade"
                 onRequestClose={() => setShowConfirmModal(false)}
             >
-                <View style={styles.modalOverlaySchoolConfig}>
-                    <View style={styles.modalSheetSchoolConfig}>
-                        <Text style={styles.modalTitleSchoolConfig}>Confirmar Cambios</Text>
-                        <Text style={styles.modalSubtitleSchoolConfig}>
-                            ¿Estás seguro de que deseas guardar todos los cambios?
-                        </Text>
-                        <View style={styles.modalMessageSchoolConfig}>
-                            <Text style={{ fontSize: 13, color: '#555555' }}>
-                                Los cambios se aplicarán a toda la institución y podrían afectar el funcionamiento del sistema.
-                            </Text>
-                        </View>
-                        {isLoading ? (
-                            <View style={styles.loadingOverlaySchoolConfig}>
-                                <ActivityIndicator size="large" color="#FFFFFF" />
-                                <Text style={styles.loadingTextSchoolConfig}>Guardando cambios...</Text>
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                    <View style={[styles.modalOverlaySchoolConfig, { backgroundColor: colors.modalOverlay }]}>
+                        <TouchableWithoutFeedback>
+                            <View style={[styles.modalSheetSchoolConfig, { backgroundColor: colors.modalBackground }]}>
+                                <Text style={[styles.modalTitleSchoolConfig, { color: colors.modalText }]}>
+                                    Confirmar Cambios
+                                </Text>
+                                <Text style={[styles.modalSubtitleSchoolConfig, { color: colors.modalTextSecondary }]}>
+                                    ¿Estás seguro de que deseas guardar todos los cambios?
+                                </Text>
+                                <View style={styles.modalMessageSchoolConfig}>
+                                    <Text style={{ fontSize: 13, color: colors.modalTextSecondary }}>
+                                        Los cambios se aplicarán a toda la institución y podrían afectar el funcionamiento del sistema.
+                                    </Text>
+                                </View>
+                                {isLoading ? (
+                                    <View style={styles.loadingOverlaySchoolConfig}>
+                                        <ActivityIndicator size="large" color={colors.modalButtonText} />
+                                        <Text style={[styles.loadingTextSchoolConfig, { color: colors.modalButtonText }]}>
+                                            Guardando cambios...
+                                        </Text>
+                                    </View>
+                                ) : (
+                                    <View style={styles.modalActionsSchoolConfig}>
+                                        <TouchableOpacity
+                                            style={[styles.modalConfirmButtonSchoolConfig, { backgroundColor: colors.modalButton }]}
+                                            onPress={handleSaveChanges}
+                                            disabled={isLoading}
+                                        >
+                                            <Text style={[styles.modalConfirmButtonTextSchoolConfig, { color: colors.modalButtonText }]}>
+                                                Confirmar y Guardar
+                                            </Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            style={[styles.modalCancelButtonSchoolConfig, { backgroundColor: colors.modalButtonSecondary }]}
+                                            onPress={() => setShowConfirmModal(false)}
+                                            disabled={isLoading}
+                                        >
+                                            <Text style={[styles.modalCancelButtonTextSchoolConfig, { color: colors.modalButtonSecondaryText }]}>
+                                                Cancelar
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                )}
                             </View>
-                        ) : (
-                            <View style={styles.modalActionsSchoolConfig}>
-                                <TouchableOpacity
-                                    style={styles.modalConfirmButtonSchoolConfig}
-                                    onPress={handleSaveChanges}
-                                    disabled={isLoading}
-                                >
-                                    <Text style={styles.modalConfirmButtonTextSchoolConfig}>Confirmar y Guardar</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={styles.modalCancelButtonSchoolConfig}
-                                    onPress={() => setShowConfirmModal(false)}
-                                    disabled={isLoading}
-                                >
-                                    <Text style={styles.modalCancelButtonTextSchoolConfig}>Cancelar</Text>
-                                </TouchableOpacity>
-                            </View>
-                        )}
+                        </TouchableWithoutFeedback>
                     </View>
-                </View>
+                </TouchableWithoutFeedback>
             </Modal>
         </SafeAreaView>
     );

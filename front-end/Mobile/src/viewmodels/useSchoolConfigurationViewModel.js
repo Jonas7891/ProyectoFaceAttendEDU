@@ -2,7 +2,8 @@ import {Alert, Platform, Switch, Text, TextInput, TouchableOpacity, View} from "
 import React, {useState, useCallback, useEffect} from 'react';
 import { validateEmail, validatePhone } from "../utils/validators";
 import { CountryService } from "../services/CountryService";
-import { getSchoolById } from "../services/SchoolService";
+// ⚠️ Ajusta el nombre real de la función de actualización en tu SchoolService
+import { getSchoolById, updateSchool } from "../services/SchoolService";
 import { SchoolResponse,
     GeneralInfo,
     ContactInfo,
@@ -25,18 +26,30 @@ export function useSchoolConfigurationViewModel() {
     const [academicConfig, setAcademicConfig] = useState(null);
     const [attendanceConfig, setAttendanceConfig] = useState(null);
 
+    // Id del colegio y copia de los datos originales (para guardar y para descartar cambios)
+    const [schoolId, setSchoolId] = useState(null);
+    const [originalData, setOriginalData] = useState(null);
+
     const loadSchoolInfo = async () => {
         try {
             const userInfo = await getCurrentUser();
             const email = userInfo?.email;
-            const user = getUserByEmail(email);
+            const user = await getUserByEmail(email);
 
-            const schoolResponse = getSchoolById(user.school_id);
+            const schoolResponse = await getSchoolById(user.school_id);
 
-            setGeneralInfo(GeneralInfo.fromApi(schoolResponse));
-            setContactInfo(ContactInfo.fromApi(schoolResponse));
-            setAcademicConfig(AcademicConfig.fromApi(schoolResponse));
-            setAttendanceConfig(AttendanceConfig.fromApi(schoolResponse));
+            const general    = GeneralInfo.fromApi(schoolResponse);
+            const contact    = ContactInfo.fromApi(schoolResponse);
+            const academic   = AcademicConfig.fromApi(schoolResponse);
+            const attendance = AttendanceConfig.fromApi(schoolResponse);
+
+            setGeneralInfo(general);
+            setContactInfo(contact);
+            setAcademicConfig(academic);
+            setAttendanceConfig(attendance);
+
+            setSchoolId(user.school_id);
+            setOriginalData({ general, contact, academic, attendance });
         } catch (error) {
             console.error('Error cargando datos de usuario:', error);
         }
@@ -106,14 +119,40 @@ export function useSchoolConfigurationViewModel() {
     };
 
     const handleSaveChanges = async () => {
+        if (!schoolId) {
+            Alert.alert('Error', 'No se pudo identificar el colegio a actualizar');
+            return;
+        }
+
         try {
             setIsLoading(true);
-            // Simular envío al servidor
-            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            const payload = {
+                ...generalInfo,
+                ...contactInfo,
+                ...academicConfig,
+                ...attendanceConfig,
+            };
+
+            // ⚠️ Ajusta esta llamada al nombre/firma real de tu SchoolService
+            const updatedSchool = await updateSchool(schoolId, payload);
+
+            const general    = GeneralInfo.fromApi(updatedSchool);
+            const contact    = ContactInfo.fromApi(updatedSchool);
+            const academic   = AcademicConfig.fromApi(updatedSchool);
+            const attendance = AttendanceConfig.fromApi(updatedSchool);
+
+            setGeneralInfo(general);
+            setContactInfo(contact);
+            setAcademicConfig(academic);
+            setAttendanceConfig(attendance);
+            setOriginalData({ general, contact, academic, attendance });
+
             setHasChanges(false);
             setShowConfirmModal(false);
             Alert.alert('Éxito', 'Configuración del colegio actualizada correctamente');
         } catch (error) {
+            console.error('Error guardando configuración del colegio:', error);
             Alert.alert('Error', 'No se pudo guardar los cambios');
         } finally {
             setIsLoading(false);
@@ -123,29 +162,13 @@ export function useSchoolConfigurationViewModel() {
     const handleDiscardChanges = () => {
         setHasChanges(false);
         setValidationErrors({});
-        setGeneralInfo({
-            /*
-            schoolName: 'Colegio Municipal San Antonio',
-            schoolCode: 'COL-2024-001',
-            district:   'Distrito Educativo 5',
-            zone:       'Zona Urbana Centro',
-            level:      'Primaria y Secundaria',
-            modality:   'Presencial',
-            status:     true,
-             */
-        });
-        const colombia = countryOptions.find(
-            (c) => c.name.toLowerCase() === 'colombia'
-        );
-        setContactInfo({
-            email:      'admin@colegiosanantonio.edu',
-            phone:      '',
-            address:    'Calle Principal 123, Bogotá',
-            city:       '',
-            postalCode: '',
-            country:    colombia?.name     || 'Colombia',
-            dialCode:   colombia?.dialCode || '+57',
-        });
+
+        if (originalData) {
+            setGeneralInfo(originalData.general);
+            setContactInfo(originalData.contact);
+            setAcademicConfig(originalData.academic);
+            setAttendanceConfig(originalData.attendance);
+        }
     };
 
     // ── Estados de modales ─────────────────────

@@ -12,7 +12,7 @@
     },
     "orientation": "portrait",
     "icon": "./src/assets/images/logoFaceAttend.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": false,
     "splash": {
       "resizeMode": "contain",
@@ -26,11 +26,16 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.faceattendedu"
+      "package": "com.anonymous.faceattendedu",
+      "statusBar": {
+        "translucent": true,
+        "backgroundColor": "#00000000"
+      }
     },
     "plugins": [
       "expo-localization",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-secure-store"
     ]
   }
 }
