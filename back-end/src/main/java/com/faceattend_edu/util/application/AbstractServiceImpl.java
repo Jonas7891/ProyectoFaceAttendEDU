@@ -1,6 +1,6 @@
 package com.faceattend_edu.util.application;
 
-import com.faceattend_edu.newModule.domain.exception.NotFoundException;
+import com.faceattend_edu.security.domain.exception.NotFoundException;
 import com.faceattend_edu.util.domain.AbstractRepositoryPort;
 import jakarta.transaction.Transactional;
 
