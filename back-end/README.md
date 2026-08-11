@@ -64,11 +64,11 @@ El proyecto implementa **Clean Architecture** con separación clara de responsab
 | **Config** | `config/` | Configuración global |
 
 Para más detalles sobre cada capa, consulta:
-- 📖 [Domain Layer](./src/main/java/com/faceattend_edu/newModule/domain/README.md)
-- 📖 [Application Layer](./src/main/java/com/faceattend_edu/newModule/application/README.md)
-- 📖 [Infrastructure Layer](./src/main/java/com/faceattend_edu/newModule/infrastructure/README.md)
-- 📖 [Presentation Layer](./src/main/java/com/faceattend_edu/newModule/presentation/README.md)
-- 📖 [Config Layer](./src/main/java/com/faceattend_edu/newModule/config/README.md)
+- 📖 [Domain Layer](./src/main/java/com/faceattend_edu/security/domain/README.md)
+- 📖 [Application Layer](./src/main/java/com/faceattend_edu/security/application/README.md)
+- 📖 [Infrastructure Layer](./src/main/java/com/faceattend_edu/security/infrastructure/README.md)
+- 📖 [Presentation Layer](./src/main/java/com/faceattend_edu/security/presentation/README.md)
+- 📖 [Config Layer](./src/main/java/com/faceattend_edu/security/config/README.md)
 
 ## 🚀 Inicio Rápido
 

@@ -1,0 +1,11 @@
+package com.faceattend_edu.security.application.service;
+
+import com.faceattend_edu.security.domain.dto.patch.SchoolPatch;
+import com.faceattend_edu.security.domain.dto.request.SchoolRequest;
+import com.faceattend_edu.security.domain.dto.response.SchoolResponse;
+import com.faceattend_edu.util.application.AbstractService;
+
+import java.util.UUID;
+
+public interface SchoolService extends AbstractService<SchoolRequest, SchoolResponse, SchoolPatch, UUID> {
+}
