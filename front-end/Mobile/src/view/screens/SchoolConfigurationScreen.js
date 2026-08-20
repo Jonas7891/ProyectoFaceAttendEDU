@@ -258,7 +258,6 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                     <Text style={[styles.quickInfoLabelSchoolConfig, { color: colors.textSecondary }]}>
                                         {t('schoolConfig.labels.courses')}
                                     </Text>
-                                    </Text>
                                 </View>
                             </View>
                         </View>
