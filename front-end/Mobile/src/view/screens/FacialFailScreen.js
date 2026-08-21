@@ -51,7 +51,7 @@ export default function FacialFail() {
                     keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
                 >
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                        <View style={styles.container} marginHorizontal={10}>
+                        <View style={styles.container} marginHorizontal={20}>
                             <View style={styles.headerContainer}>
                                 <Text style={[styles.mainTitle, { color: colors.text }]}>
                                     {t('facialFail.title')}
@@ -89,7 +89,6 @@ export default function FacialFail() {
                                 </Text>
                             </TouchableOpacity>
 
-                            {/* Tarjeta de Actualización Facial */}
                             <TouchableOpacity
                                 style={[
                                     styles.optionCard,
@@ -110,8 +109,6 @@ export default function FacialFail() {
                                 </Text>
                             </TouchableOpacity>
 
-                            <View style={[styles.separator, { backgroundColor: colors.separator }]} />
-
                             <Text style={[styles.recommendationsTitle, { color: colors.text }]}>
                                 {t('facialFail.recommendations')}
                             </Text>
@@ -125,7 +122,7 @@ export default function FacialFail() {
                                 </Text>
                             </View>
 
-                            <View style={[styles.buttonContainer, { marginTop: 30 }]}>
+                            <View style={[styles.buttonContainer, { marginTop: 10 }]}>
                                 <PrimaryButton
                                     title={t('consultJustify.back')}
                                     onPress={handleBack}

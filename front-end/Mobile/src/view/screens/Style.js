@@ -1,4 +1,4 @@
-import {StyleSheet, Platform} from 'react-native';
+import {Platform, StyleSheet} from 'react-native';
 
 const styles = StyleSheet.create({
     safeArea: {
@@ -20,6 +20,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         paddingTop: 15,
+        marginHorizontal: 20
     },
     containerDefault: {
         flex: 1,
@@ -601,80 +602,84 @@ const styles = StyleSheet.create({
         opacity: 0.5,
     },
 
-    // ========== FACIAL FAIL SCREEN styleS ==========
+    // ========== FACIAL FAIL SCREEN STYLES ==========
     headerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 20,
+        marginBottom: 24,
         marginTop: 10,
     },
     mainTitle: {
-        fontSize: 30,
-        fontWeight: "bold",
-        color: "#1a1a1a",
+        fontSize: 28,
+        fontWeight: "800",
         flex: 1,
-        textAlign: "center",
+        textAlign: "left",
     },
     subtitle: {
         fontSize: 16,
-        fontWeight: "600",
-        color: "#333",
-        marginBottom: 20,
+        fontWeight: "400",
+        lineHeight: 24,
+        marginBottom: 24,
+        opacity: 0.8,
     },
     optionCard: {
-        backgroundColor: "#FFF",
-        borderRadius: 10,
-        padding: 16,
+        borderRadius: 16,
+        padding: 20,
         marginBottom: 16,
         borderWidth: 1,
-        borderColor: "#E0E0E0",
+        shadowColor: "#000",
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 3,
     },
     optionTitle: {
-        fontSize: 16,
-        fontWeight: "bold",
-        color: "#1a1a1a",
+        fontSize: 18,
+        fontWeight: "700",
         marginBottom: 8,
+        letterSpacing: 0.3,
     },
     optionDescription: {
         fontSize: 14,
-        color: "#666",
-        lineHeight: 20,
-        fontstyle: "italic",
+        lineHeight: 22,
+        fontStyle: "italic",
     },
     separator: {
-        borderTopWidth: 1,
-        borderTopColor: "#E0E0E0",
-        marginVertical: 20,
+        height: 1,
+        marginVertical: 32,
+        opacity: 0.1,
     },
     recommendationsTitle: {
         fontSize: 20,
-        fontWeight: "bold",
-        color: "#1a1a1a",
-        marginBottom: 20,
-        textAlign: "center",
+        fontWeight: "700",
+        marginBottom: 16,
+        marginTop: 20,
+        textAlign: "left",
     },
     recommendationCard: {
-        backgroundColor: "#FFF",
-        borderRadius: 10,
+        borderRadius: 12,
         padding: 16,
-        borderWidth: 1,
-        borderColor: "#E0E0E0",
         marginBottom: 20,
+        borderLeftWidth: 4,
     },
     recommendationSubtitle: {
-        fontSize: 15,
+        fontSize: 16,
         fontWeight: "600",
-        color: "#333",
-        marginBottom: 10,
-        marginHorizontal: 10,
+        marginBottom: 8,
     },
     recommendationText: {
         fontSize: 14,
-        color: "#666",
-        lineHeight: 20,
-        textAlign: "justify",
-        marginHorizontal: 10,
+        lineHeight: 22,
+        textAlign: "left",
+    },
+    buttonContainerFixed: {
+        position: 'absolute',
+        bottom: 20,
+        left: 20,
+        right: 20,
+        zIndex: 100,
+        alignItems: 'center',
     },
 
     // ========== HISTORICAL SCREEN styleS ==========
@@ -823,13 +828,11 @@ const styles = StyleSheet.create({
         color: "#FFF",
     },
 
-    // Lista containers
     listContainer: {
         marginTop: 10,
         marginBottom: 20,
     },
 
-    // Usamos el mismo sectionTitle que ya existe, pero necesitamos también sectionTitleAdmin
     sectionTitleAdmin: {
         fontSize: 18,
         fontWeight: "bold",
@@ -838,7 +841,6 @@ const styles = StyleSheet.create({
         paddingLeft: 4,
     },
 
-    // Tarjetas de justificaciones
     justificationCard: {
         backgroundColor: "#FFF",
         borderRadius: 12,

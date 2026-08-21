@@ -41,7 +41,6 @@ export function useMenuJustifyViewModel() {
 
     // Navegación
     const handleBack = useCallback(() => navigation.goBack(), [navigation]);
-    const handleConsultJustify = useCallback(() => navigation.navigate('ConsultJustify'), [navigation]);
     const handleValidJustifications = useCallback(() => navigation.navigate('ValidJustifications'), [navigation]);
     const handlePendingJustificationScreen = useCallback(() => navigation.navigate('PendingJustificationScreen'), [navigation]);
 
@@ -55,7 +54,6 @@ export function useMenuJustifyViewModel() {
         pendingCount,
         updateKey,
         handleBack,
-        handleConsultJustify,
         handleAddOrEditJustify,
         handleValidJustifications,
         handlePendingJustificationScreen

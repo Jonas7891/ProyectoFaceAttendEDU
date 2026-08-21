@@ -14,7 +14,7 @@ import {getCurrentUser, getUserByEmail} from "../services/UserService";
 import UserResponse from "../model/UserResponse";
 
 
-export function useSchoolConfigurationViewModel() {
+export function useSchoolConfigurationViewModel({ isAdmin = false } = {}) {
     const [activeTab, setActiveTab] = useState('general');
     const [isLoading, setIsLoading] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -95,30 +95,35 @@ export function useSchoolConfigurationViewModel() {
     };
 
     const handleGeneralInfoChange = (field, value) => {
+        if (!isAdmin) return;
         setGeneralInfo(prev => ({ ...prev, [field]: value }));
         setHasChanges(true);
         validateField(field, value);
     };
 
     const handleContactInfoChange = (field, value) => {
+        if (!isAdmin) return;
         setContactInfo(prev => ({ ...prev, [field]: value }));
         setHasChanges(true);
         validateField(field, value);
     };
 
     const handleAcademicConfigChange = (field, value) => {
+        if (!isAdmin) return;
         setAcademicConfig(prev => ({ ...prev, [field]: value }));
         setHasChanges(true);
         validateField(field, value);
     };
 
     const handleAttendanceConfigChange = (field, value) => {
+        if (!isAdmin) return;
         setAttendanceConfig(prev => ({ ...prev, [field]: value }));
         setHasChanges(true);
         validateField(field, value);
     };
 
     const handleSaveChanges = async () => {
+        if (!isAdmin) return;
         if (!schoolId) {
             Alert.alert('Error', 'No se pudo identificar el colegio a actualizar');
             return;
@@ -160,6 +165,7 @@ export function useSchoolConfigurationViewModel() {
     };
 
     const handleDiscardChanges = () => {
+        if (!isAdmin) return;
         setHasChanges(false);
         setValidationErrors({});
 
@@ -257,6 +263,7 @@ export function useSchoolConfigurationViewModel() {
     // ─────────────────────────────────────────────
 
     const handleCountryChange = (option) => {
+        if (!isAdmin) return; // 👈 AGREGAR PROTECCIÓN
         setContactInfo((prev) => ({
             ...prev,
             country:    option.name,
@@ -268,7 +275,7 @@ export function useSchoolConfigurationViewModel() {
         setCountrySearch('');
         setHasChanges(true);
         setCountryModalVisible(false);
-        loadAllCountries(option.name);
+        loadCities(option.name);
     };
 
     const handleCityChange = (cityName) => {

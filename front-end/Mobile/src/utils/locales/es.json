@@ -67,7 +67,13 @@
     "logout": "Cerrar Sesión",
     "loggingOut": "Cerrando Sesión...",
     "logoutConfirmMessage": "¿Estás seguro de que deseas cerrar sesión?",
-    "logoutConfirmTitle": "Cerrar Sesión"
+    "logoutConfirmTitle": "Cerrar Sesión",
+    "adminName": "Administrador",
+    "teacherName": "Docente",
+    "studentName": "Estudiante",
+    "teacherJustificationInfo": "Justificaciones de Estudiantes",
+    "studentJustificationInfo": "Información de mis Justificaciones",
+    "schoolConfiguration": "Configuración de Colegio"
   },
   "logout": {
     "title": "Cerrar Sesión",
@@ -293,12 +299,10 @@
     "question": "Pregunta {{currentStep}} de {{totalSteps}}"
   },
   "teacher": {
-    "greeting": "Bienvenido profesor",
     "professorName": "Prof. Rodríguez",
     "classAttendance": "Asistencia de la clase",
     "studentsPresent": "estudiantes presentes",
     "nextClass": "Próxima clase",
-    "quickActions": "Acciones rápidas",
     "takeAttendance": "Tomar asistencia",
     "takeAttendanceDesc": "Registro facial de alumnos",
     "myGroups": "Mis grupos",
@@ -306,7 +310,13 @@
     "seeAll": "Ver todos",
     "present": "Presente",
     "late": "Tarde",
-    "systemNews": "Novedades del sistema"
+    "systemNews": "Novedades del sistema",
+    "greeting": "Bienvenido de nuevo, Profesor",
+    "teacherName": "Docente",
+    "quickActions": "Acciones Rápidas",
+    "recentAttendance": "Asistencias a tus Clases",
+    "studentsAttending": "estudiantes totales",
+    "notifications": "Notificaciones del Instituto"
   },
   "student": {
     "greeting": "Hola estudiante",

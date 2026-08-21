@@ -16,12 +16,10 @@ import {
     Alert,
     Image,
 } from 'react-native';
-import { useCustomAlert } from '../components/common/useCustomAlert';
-import CustomAlert from '../components/common/CustomAlert';
 import styles from './Style';
 import { useSchoolConfigurationViewModel } from "../../viewmodels/useSchoolConfigurationViewModel";
-// ⚠️ Ajusta esta ruta a donde realmente esté tu ThemeContext.js
 import { useTheme } from '../../view/components/common/ThemeContext';
+import { useUser } from '../../utils/UserContext';
 import { useTranslation } from 'react-i18next';
 
 // ─────────────────────────────────────────────
@@ -81,24 +79,10 @@ const FormField = ({
                     editable={editable}
                 />
                 {!hasError && value && editable && (
-                    <Text
-                        style={[
-                            styles.validationCheckmarkSchoolConfig,
-                            { color: colors.novedadSuccess },
-                        ]}
-                    >
-                        ✓
-                    </Text>
+                    <Text style={[ styles.validationCheckmarkSchoolConfig, { color: colors.novedadSuccess },]}>✓</Text>
                 )}
                 {hasError && (
-                    <Text
-                        style={[
-                            styles.validationErrorIconSchoolConfig,
-                            { color: colors.danger },
-                        ]}
-                    >
-                        ✗
-                    </Text>
+                    <Text style={[ styles.validationErrorIconSchoolConfig, { color: colors.danger },]}>✗</Text>
                 )}
             </View>
             {hasError && (
@@ -149,6 +133,9 @@ const SchoolConfigurationScreen = ({ navigation }) => {
     const { colors, isDark, toggleTheme } = useTheme();
     const { t } = useTranslation();
 
+    const { isAdmin } = useUser();
+    const isAdminUser = isAdmin();
+
     const {
         activeTab,
         isLoading,
@@ -185,7 +172,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
         setCountryModalVisible,
         setCityModalVisible,
         setShowConfirmModal
-    } = useSchoolConfigurationViewModel();
+    } = useSchoolConfigurationViewModel({ isAdminUser });
 
     // ─────────────────────────────────────────────
     // Render
@@ -303,6 +290,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                 <Text style={[styles.formSectionTitleSchoolConfig, { color: colors.text }]}>
                                     Información General
                                 </Text>
+
                                 <FormField
                                     label="Nombre del Colegio"
                                     value={generalInfo?.name}
@@ -310,7 +298,9 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                     placeholder="Nombre del colegio"
                                     required
                                     validationErrors={validationErrors}
+                                    editable={isAdminUser}
                                 />
+
                                 <FormField
                                     label="NIT del Colegio"
                                     value={generalInfo?.code}
@@ -319,6 +309,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                     editable={false}
                                     validationErrors={validationErrors}
                                 />
+
                                 <FormField
                                     label="Distrito Educativo"
                                     value={generalInfo?.district}
@@ -326,6 +317,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                     placeholder="Nombre del distrito"
                                     required
                                     validationErrors={validationErrors}
+                                    editable={isAdminUser}
                                 />
                             </View>
                         )}
@@ -347,6 +339,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                     placeholder="admin@colegio.edu"
                                     required
                                     validationErrors={validationErrors}
+                                    editable={isAdminUser}
                                 />
 
                                 {/* País */}
@@ -366,13 +359,16 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                                 justifyContent: 'space-between',
                                                 backgroundColor: colors.inputBackground,
                                                 borderColor: colors.border,
+                                                opacity: isAdminUser ? 1 : 0.6,
                                             },
                                         ]}
                                         onPress={() => {
-                                            setCountrySearch('');
-                                            setCountryModalVisible(true);
+                                            if (isAdminUser) {
+                                                setCountrySearch('');
+                                                setCountryModalVisible(true);
+                                            }
                                         }}
-                                        disabled={loadingCountries}
+                                        disabled={loadingCountries || !isAdminUser} // 👈 Bloqueo táctil
                                     >
                                         {loadingCountries ? (
                                             <ActivityIndicator size="small" color={colors.primary} />
@@ -444,6 +440,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                             placeholder="300 123 4567"
                                             placeholderTextColor={colors.textMuted}
                                             keyboardType="phone-pad"
+                                            editable={isAdminUser}
                                         />
                                     </View>
                                     {validationErrors['phone'] && (
@@ -461,6 +458,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                     placeholder="Calle y número"
                                     required
                                     validationErrors={validationErrors}
+                                    editable={isAdminUser}
                                 />
 
                                 {/* Ciudad — selector desplegable */}
@@ -480,9 +478,11 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                                 justifyContent: 'space-between',
                                                 backgroundColor: colors.inputBackground,
                                                 borderColor: colors.border,
+                                                opacity: isAdminUser ? 1 : 0.6,
                                             },
                                         ]}
                                         onPress={() => {
+                                            if (!isAdminUser) return;
                                             if (!contactInfo.country) {
                                                 Alert.alert('Selecciona un país primero');
                                                 return;
@@ -493,6 +493,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                             setCitySearch('');
                                             setCityModalVisible(true);
                                         }}
+                                        disabled={!isAdminUser} // 👈 Bloqueo táctil
                                     >
                                         {loadingCities ? (
                                             <ActivityIndicator size="small" color={colors.primary} />
@@ -537,6 +538,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                     onChangeText={(value) => handleAcademicConfigChange('startDate', value)}
                                     placeholder="DD/MM/YYYY"
                                     validationErrors={validationErrors}
+                                    editable={isAdminUser}
                                 />
                                 <FormField
                                     label="Fecha de Fin"
@@ -544,6 +546,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                     onChangeText={(value) => handleAcademicConfigChange('endDate', value)}
                                     placeholder="DD/MM/YYYY"
                                     validationErrors={validationErrors}
+                                    editable={isAdminUser}
                                 />
                             </View>
                         )}
@@ -562,6 +565,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                     onChangeText={(value) => handleAttendanceConfigChange('toleranceMinutes', value)}
                                     placeholder="5"
                                     validationErrors={validationErrors}
+                                    editable={isAdminUser}
                                 />
                                 <FormField
                                     label="Máx. Inasistencias"
@@ -569,6 +573,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                     onChangeText={(value) => handleAttendanceConfigChange('maxAbsences', value)}
                                     placeholder="15"
                                     validationErrors={validationErrors}
+                                    editable={isAdminUser}
                                 />
                                 <FormField
                                     label="Máx. Retardos"
@@ -576,6 +581,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                     onChangeText={(value) => handleAttendanceConfigChange('maxLatenesses', value)}
                                     placeholder="10"
                                     validationErrors={validationErrors}
+                                    editable={isAdminUser}
                                 />
                                 <FormField
                                     label="Límite de Justificación (días)"
@@ -583,6 +589,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                     onChangeText={(value) => handleAttendanceConfigChange('justificationDaysLimit', value)}
                                     placeholder="30"
                                     validationErrors={validationErrors}
+                                    editable={isAdminUser}
                                 />
                             </View>
                         )}
@@ -590,7 +597,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                 </ScrollView>
 
                 {/* ── Botones de Acción ── */}
-                {hasChanges && (
+                {hasChanges && isAdminUser && (
                     <View style={[styles.actionButtonsContainerSchoolConfig, { marginHorizontal: 20 }]}>
                         <TouchableOpacity
                             style={[styles.saveButtonSchoolConfig, { backgroundColor: colors.primary }]}

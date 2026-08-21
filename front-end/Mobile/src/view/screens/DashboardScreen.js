@@ -8,13 +8,15 @@ import ScrollViewWrapper from '../components/common/ScrollView';
 import CustomTabs from '../components/common/CustomTabs';
 import styles from './Style';
 import { useDashboardViewModel } from '../../viewmodels/useDashboardViewModel';
+import { useUser } from '../../utils/UserContext';
 
 export default function Dashboard({ onLogout, userRole: propUserRole }) {
     const navigation = useNavigation();
     const { t } = useTranslation();
     const { colors } = useTheme();
 
-    // ViewModel: toda la lógica aquí
+    const { isTeacher, isStudent } = useUser();
+
     const {
         userRole,
         isAdmin,
@@ -27,12 +29,15 @@ export default function Dashboard({ onLogout, userRole: propUserRole }) {
         attendanceLabel,
         adminStats,
         studentStats,
+        teacherStats,
         asistenciasRecientes,
         misRegistrosRecientes,
         handleLogoutPress,
         toggleTheme,
         theme,
     } = useDashboardViewModel({ onLogout, userRole: propUserRole });
+
+    const recentRecordsList = (isAdmin || isTeacher) ? asistenciasRecientes : misRegistrosRecientes;
 
     return (
         <SafeAreaView
@@ -47,10 +52,10 @@ export default function Dashboard({ onLogout, userRole: propUserRole }) {
                         <View style={styles.dataBar}>
                             <View style={styles.leftContent}>
                                 <Text style={[styles.greeting, { color: colors.textSecondary }]}>
-                                    {isAdmin ? t('dashboard.greeting') : t('student.greeting')}
+                                    {isAdmin ? t('dashboard.greeting') : isTeacher ? t('teacher.greeting') : t('student.greeting')}
                                 </Text>
                                 <Text style={[styles.adminName, { color: colors.text }]}>
-                                    {isAdmin ? t('dashboard.admin') : t('student.studentName')}
+                                    {isAdmin ? t('dashboard.admin') : isTeacher ? t('teacher.teacherName') : t('student.studentName')}
                                 </Text>
                                 <Text style={[styles.date, { color: colors.textSecondary }]}>
                                     {formattedDate}
@@ -74,7 +79,6 @@ export default function Dashboard({ onLogout, userRole: propUserRole }) {
                             </Text>
                         </View>
 
-
                         <View style={[styles.progressBar, { backgroundColor: colors.progressBackground }]}>
                             <View
                                 style={[
@@ -91,14 +95,17 @@ export default function Dashboard({ onLogout, userRole: propUserRole }) {
                             <Text style={[styles.indicatorText, { color: colors.textSecondary }]}>
                                 {isAdmin
                                     ? `${adminStats.presentesHoy} ${t('dashboard.employeesPresent')} ${adminStats.totalEmpleados} ${t('dashboard.employeesAttending')}`
-                                    : `${studentStats.clasesAsistidas} / ${studentStats.totalClases} ${t('student.classesAttended')}`}
+                                    : isTeacher
+                                        ? `${teacherStats?.presentesHoy ?? 0} ${t('teacher.studentsPresent')} ${teacherStats?.totalEstudiantes ?? 0} ${t('teacher.studentsAttending')}`
+                                        : `${studentStats.clasesAsistidas} / ${studentStats.totalClases} ${t('student.classesAttended')}`}
                             </Text>
                         </View>
                     </View>
 
                     <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                        {isAdmin ? t('dashboard.quickActions') : t('student.quickActions')}
+                        {isAdmin ? t('dashboard.quickActions') : isTeacher ? t('teacher.quickActions') : t('student.quickActions')}
                     </Text>
+
                     <View style={styles.quickActionsContainer}>
                         {menuAcciones.map((item) => (
                             <TouchableOpacity
@@ -121,22 +128,24 @@ export default function Dashboard({ onLogout, userRole: propUserRole }) {
                     <View style={styles.recentSection}>
                         <View style={styles.sectionHeader}>
                             <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                                {isAdmin ? t('dashboard.recentAttendance') : t('student.myRecentRecords')}
+                                {isAdmin ? t('dashboard.recentAttendance') : isTeacher ? t('teacher.recentAttendance') : t('student.myRecentRecords')}
                             </Text>
                             <TouchableOpacity onPress={() => navigation.navigate('DisplayingAttendance')}>
                                 <Text style={[styles.seeAllText, { color: colors.primary }]}>
-                                    {isAdmin ? 'Ver todos' : t('student.seeAll')}
+                                    {(isAdmin || isTeacher) ? 'Ver todos' : t('student.seeAll')}
                                 </Text>
                             </TouchableOpacity>
                         </View>
-                        {(isAdmin ? asistenciasRecientes : misRegistrosRecientes).map((item) => (
+
+                        {recentRecordsList.map((item) => (
                             <View key={item.id} style={[styles.recentItem, { backgroundColor: colors.card }]}>
                                 <View style={styles.recentInfo}>
                                     <Text style={[styles.recentName, { color: colors.text }]}>
-                                        {isAdmin ? item.nombre : item.materia}
+                                        {/* Admin y Teacher ven nombres de personas, Student ve materias */}
+                                        {(isAdmin || isTeacher) ? item.nombre : item.materia}
                                     </Text>
                                     <Text style={[styles.recentTime, { color: colors.textSecondary }]}>
-                                        {isAdmin ? item.hora : `${item.fecha} - ${item.hora}`}
+                                        {(isAdmin || isTeacher) ? item.hora : `${item.fecha} - ${item.hora}`}
                                     </Text>
                                 </View>
                                 <View
@@ -156,12 +165,8 @@ export default function Dashboard({ onLogout, userRole: propUserRole }) {
                                         ]}
                                     >
                                         {item.estado === 'presente'
-                                            ? isAdmin
-                                                ? 'Presente'
-                                                : t('student.present')
-                                            : isAdmin
-                                                ? 'Tarde'
-                                                : t('student.late')}
+                                            ? (isAdmin || isTeacher) ? 'Presente' : t('student.present')
+                                            : (isAdmin || isTeacher) ? 'Tarde' : t('student.late')}
                                     </Text>
                                 </View>
                             </View>
@@ -170,23 +175,11 @@ export default function Dashboard({ onLogout, userRole: propUserRole }) {
 
                     <View style={styles.novedadesSection}>
                         <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                            {isAdmin ? t('dashboard.recentNews') : t('student.notifications')}
+                            {isAdmin ? t('dashboard.recentNews') : isTeacher ? t('teacher.notifications') : t('student.notifications')}
                         </Text>
                         {novedades.map((item) => (
                             <View key={item.id} style={[styles.novedadCard, { backgroundColor: colors.card }]}>
-                                <View
-                                    style={[
-                                        styles.novedadIcon,
-                                        {
-                                            backgroundColor:
-                                                item.tipo === 'success'
-                                                    ? colors.novedadSuccess
-                                                    : item.tipo === 'warning'
-                                                        ? colors.novedadWarning
-                                                        : colors.novedadInfo,
-                                        },
-                                    ]}
-                                />
+                                <View style={[styles.novedadIcon, {backgroundColor: item.tipo === 'success' ? colors.novedadSuccess : item.tipo === 'warning' ? colors.novedadWarning : colors.novedadInfo,},]}/>
                                 <View style={styles.novedadContent}>
                                     <Text style={[styles.novedadTitle, { color: colors.text }]}>{item.titulo}</Text>
                                     <Text style={[styles.novedadDescripcion, { color: colors.textSecondary }]}>

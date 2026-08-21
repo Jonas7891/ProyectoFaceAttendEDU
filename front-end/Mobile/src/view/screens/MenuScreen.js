@@ -17,10 +17,14 @@ import CustomAlert from '../components/common/CustomAlert';
 import { useCustomAlert } from '../components/common/useCustomAlert';
 import styles from "./Style";
 import { useMenuViewModel } from '../../viewmodels/useMenuViewModel';
+import { useUser } from '../../utils/UserContext';
 
 export default function MenuScreen({ onLogout }) {
     const { t } = useTranslation();
     const { colors } = useTheme();
+
+    // 👈 NUEVO: Obtenemos el usuario actual y las validaciones de rol
+    const { currentUser, isTeacher, isStudent } = useUser();
 
     const {
         alertConfig,
@@ -33,17 +37,15 @@ export default function MenuScreen({ onLogout }) {
         isLoading,
         isAdmin,
         updateKey,
-        handleLogout: originalHandleLogout, // este es del ViewModel, hace la lógica final
+        handleLogout: originalHandleLogout,
         navigateTo,
     } = useMenuViewModel({ onLogout });
 
-    // Única confirmación de cierre de sesión
     const handleLogout = () => {
         showConfirm(
             t('menu.logoutConfirmTitle', { defaultValue: 'Cerrar Sesión' }),
             t('menu.logoutConfirmMessage', { defaultValue: '¿Estás seguro de que deseas cerrar sesión?' }),
             async () => {
-                // Confirmado: ejecuta la lógica del ViewModel (que ya limpia storage y llama a onLogout si existe)
                 try {
                     await originalHandleLogout();
                 } catch (error) {
@@ -84,6 +86,9 @@ export default function MenuScreen({ onLogout }) {
         </>
     );
 
+    // 🔄 ACTUALIZADO: Lógica para obtener el nombre a mostrar de forma dinámica y segura
+    const displayName = currentUser?.name || (isAdmin ? t('menu.adminName', { defaultValue: 'Administrador' }) : isTeacher ? t('menu.teacherName', { defaultValue: 'Docente' }) : t('menu.studentName', { defaultValue: 'Estudiante' }));
+
     return (
         <>
             <SafeAreaView
@@ -116,11 +121,16 @@ export default function MenuScreen({ onLogout }) {
                                     marginBottom={15}
                                 />
 
+                                {/* 🔄 ACTUALIZADO: Muestra el nombre real del usuario o un fallback por rol */}
                                 <Text style={[styles.userText, { color: colors.text }]}>
-                                    {isAdmin ? "Jonattan Rizo" : "The Jonas"}
+                                    {displayName}
                                 </Text>
 
-                                {!isAdmin && (
+                                {/* 🔄 ACTUALIZADO: Lógica de visibilidad.
+                                    Pregunta académica: ¿Los profesores también deben actualizar sus parámetros faciales aquí?
+                                    Si es solo para estudiantes, usa `isStudent`. Si es para todos los no-admin, usa `!isAdmin`.
+                                    Aquí asumo que es solo para estudiantes por seguridad. */}
+                                {isStudent && (
                                     <MenuItem
                                         label={t('menu.updateFacialParams')}
                                         onPress={handleUpdatePhoto}
@@ -131,9 +141,9 @@ export default function MenuScreen({ onLogout }) {
                                     label={
                                         isAdmin
                                             ? t('menu.justificationConfig')
-                                            : t('menu.justificationInfo', {
-                                                defaultValue: 'Información de las Justificaciones',
-                                            })
+                                            : isTeacher
+                                                ? t('menu.teacherJustificationInfo', { defaultValue: 'Justificaciones de Estudiantes' })
+                                                : t('menu.studentJustificationInfo', { defaultValue: 'Información de mis Justificaciones' })
                                     }
                                     onPress={handleMenuJustify}
                                 />
@@ -146,11 +156,10 @@ export default function MenuScreen({ onLogout }) {
                                 />
 
                                 <MenuItem
-                                    label={"Configuración de Colegio"}
+                                    label={t('menu.schoolConfiguration', { defaultValue: 'Configuración de Colegio' })}
                                     onPress={handleSchool}
                                 />
 
-                                {/* Pasamos handleLogout (que ya tiene la confirmación) como onLogout */}
                                 <DangerButton
                                     title={isLoading ? t('menu.loggingOut') : t('menu.logout')}
                                     onLogout={handleLogout}
