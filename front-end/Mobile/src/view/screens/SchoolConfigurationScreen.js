@@ -1,26 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
-    SafeAreaView,
-    View,
-    Text,
-    ScrollView,
-    TextInput,
-    Switch,
-    TouchableOpacity,
-    Modal,
     ActivityIndicator,
-    Platform,
-    KeyboardAvoidingView,
-    Keyboard,
-    TouchableWithoutFeedback,
     Alert,
     Image,
+    Keyboard,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    Switch,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View,
 } from 'react-native';
 import styles from './Style';
-import { useSchoolConfigurationViewModel } from "../../viewmodels/useSchoolConfigurationViewModel";
-import { useTheme } from '../../view/components/common/ThemeContext';
-import { useUser } from '../../utils/UserContext';
-import { useTranslation } from 'react-i18next';
+import {useSchoolConfigurationViewModel} from "../../viewmodels/useSchoolConfigurationViewModel";
+import {useTheme} from '../../view/components/common/ThemeContext';
+import {useUser} from '../../utils/UserContext';
+import {useTranslation} from 'react-i18next';
 
 // ─────────────────────────────────────────────
 // Sub-componentes FUERA del componente principal

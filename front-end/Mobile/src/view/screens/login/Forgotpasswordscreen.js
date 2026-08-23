@@ -1,21 +1,21 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
+    ActivityIndicator,
+    Keyboard,
+    KeyboardAvoidingView,
+    LayoutAnimation,
+    Platform,
     SafeAreaView,
-    View,
+    ScrollView,
     Text,
     TextInput,
     TouchableOpacity,
-    KeyboardAvoidingView,
     TouchableWithoutFeedback,
-    Keyboard,
-    Platform,
-    ActivityIndicator,
-    ScrollView,
-    LayoutAnimation,
     UIManager,
+    View,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from '../../components/common/ThemeContext';
+import {useTranslation} from 'react-i18next';
+import {useTheme} from '../../components/common/ThemeContext';
 import styles from './style/Style';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -85,9 +85,9 @@ async function sendRecoveryEmail(email) {
 const isValidEmail = (value) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 
-export default function ForgotPasswordScreen({ navigation }) {
-    const { t } = useTranslation();
-    const { colors } = useTheme();
+export default function ForgotPasswordScreen({navigation}) {
+    const {t} = useTranslation();
+    const {colors} = useTheme();
 
     const emailInputRef = useRef(null);
     const lastSendAttemptRef = useRef(0);
@@ -148,11 +148,11 @@ export default function ForgotPasswordScreen({ navigation }) {
         setIsSuccess(false);
 
         if (!email.trim()) {
-            setError(t('forgotPassword.errorRequired', { defaultValue: 'Ingresa tu correo electrónico.' }));
+            setError(t('forgotPassword.errorRequired', {defaultValue: 'Ingresa tu correo electrónico.'}));
             return;
         }
         if (!isEmailValid) {
-            setError(t('forgotPassword.errorInvalidEmail', { defaultValue: 'El formato del correo no es válido.' }));
+            setError(t('forgotPassword.errorInvalidEmail', {defaultValue: 'El formato del correo no es válido.'}));
             return;
         }
 
@@ -180,7 +180,7 @@ export default function ForgotPasswordScreen({ navigation }) {
 
             // Navegar después de mostrar el mensaje de éxito
             setTimeout(() => {
-                navigation.navigate('VerifyCodeScreen', { email: email.trim().toLowerCase() });
+                navigation.navigate('VerifyCodeScreen', {email: email.trim().toLowerCase()});
             }, 1500);
         } catch (err) {
             setIsLoading(false);
@@ -189,55 +189,55 @@ export default function ForgotPasswordScreen({ navigation }) {
             if (err.message === 'not_found') {
                 // ⚠️ SEGURIDAD: En producción cambiar a mensaje genérico:
                 // "Si tu correo está registrado, te enviaremos un código."
-                setError(t('forgotPassword.errorNotFound', { defaultValue: 'No encontramos una cuenta con ese correo.' }));
+                setError(t('forgotPassword.errorNotFound', {defaultValue: 'No encontramos una cuenta con ese correo.'}));
             } else if (err.message === 'timeout') {
                 setError('La petición tardó demasiado. Verifica tu conexión e intenta nuevamente.');
             } else {
-                setError(t('forgotPassword.errorGeneric', { defaultValue: 'Ocurrió un error. Intenta de nuevo.' }));
+                setError(t('forgotPassword.errorGeneric', {defaultValue: 'Ocurrió un error. Intenta de nuevo.'}));
             }
         }
     }, [email, isEmailValid, navigation, t]);
 
     return (
-        <SafeAreaView style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}>
+        <SafeAreaView style={[styles.safeAreaWhite, {backgroundColor: colors.backgroundWhite}]}>
             {/* ✅ KeyboardAvoidingView PRIMERO (fix del scroll en Android) */}
             <KeyboardAvoidingView
-                style={{ flex: 1 }}
+                style={{flex: 1}}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
             >
                 {/* ✅ ScrollView DENTRO del KeyboardAvoidingView */}
                 <ScrollView
-                    contentContainerStyle={{ flexGrow: 1 }}
+                    contentContainerStyle={{flexGrow: 1}}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
                     showsVerticalScrollIndicator={false}
                     bounces={false}
                 >
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                        <View style={[styles.container, { backgroundColor: colors.backgroundWhite }]}>
+                        <View style={[styles.container, {backgroundColor: colors.backgroundWhite}]}>
 
                             {/* Botón volver: se deshabilita mientras carga */}
                             <TouchableOpacity
                                 onPress={() => navigation.goBack()}
-                                style={[styles.backButton, isLoading && { opacity: 0.5 }]}
+                                style={[styles.backButton, isLoading && {opacity: 0.5}]}
                                 disabled={isLoading}
                                 activeOpacity={0.7}
                                 accessibilityLabel="Volver a la pantalla anterior"
                                 accessibilityRole="button"
                             >
-                                <Text style={[styles.backButtonText, { color: colors.primary }]}>
-                                    ‹ {t('common.back', { defaultValue: 'Volver' })}
+                                <Text style={[styles.backButtonText, {color: colors.primary}]}>
+                                    ‹ {t('common.back', {defaultValue: 'Volver'})}
                                 </Text>
                             </TouchableOpacity>
 
                             <View style={styles.contentContainer}>
 
-                                <Text style={[styles.textoSesion, { color: colors.text }]}>
-                                    {t('forgotPassword.title', { defaultValue: 'Recuperar contraseña' })}
+                                <Text style={[styles.textoSesion, {color: colors.text}]}>
+                                    {t('forgotPassword.title', {defaultValue: 'Recuperar contraseña'})}
                                 </Text>
 
-                                <Text style={[styles.textoCredenciales, { color: colors.textSecondary ?? '#666666' }]}>
+                                <Text style={[styles.textoCredenciales, {color: colors.textSecondary ?? '#666666'}]}>
                                     {t('forgotPassword.description', {
                                         defaultValue: 'Ingresa tu correo y te enviaremos un código para restablecer tu contraseña.',
                                     })}
@@ -245,8 +245,8 @@ export default function ForgotPasswordScreen({ navigation }) {
 
                                 {/* Input con validación visual en tiempo real */}
                                 <View style={styles.inputContainer}>
-                                    <Text style={[styles.inputTitulo, { color: colors.text }]}>
-                                        {t('forgotPassword.emailLabel', { defaultValue: 'Correo electrónico' })}
+                                    <Text style={[styles.inputTitulo, {color: colors.text}]}>
+                                        {t('forgotPassword.emailLabel', {defaultValue: 'Correo electrónico'})}
                                     </Text>
                                     <TextInput
                                         ref={emailInputRef}
@@ -262,7 +262,7 @@ export default function ForgotPasswordScreen({ navigation }) {
                                         onChangeText={handleEmailChange}
                                         onBlur={() => setEmailTouched(true)}
                                         value={email}
-                                        placeholder={t('forgotPassword.emailPlaceholder', { defaultValue: 'tucorreo@ejemplo.com' })}
+                                        placeholder={t('forgotPassword.emailPlaceholder', {defaultValue: 'tucorreo@ejemplo.com'})}
                                         placeholderTextColor={colors.textMuted}
                                         keyboardType="email-address"
                                         autoCapitalize="none"
@@ -281,7 +281,7 @@ export default function ForgotPasswordScreen({ navigation }) {
                                         backgroundColor: (colors.error ?? '#E53E3E') + '12',
                                         borderColor: (colors.error ?? '#E53E3E') + '35',
                                     }]}>
-                                        <Text style={[styles.recoveryErrorText, { color: colors.error ?? '#E53E3E' }]}>
+                                        <Text style={[styles.recoveryErrorText, {color: colors.error ?? '#E53E3E'}]}>
                                             {error}
                                         </Text>
                                     </View>
@@ -293,7 +293,7 @@ export default function ForgotPasswordScreen({ navigation }) {
                                         backgroundColor: '#10B98112',
                                         borderColor: '#10B98135',
                                     }]}>
-                                        <Text style={[styles.recoveryErrorText, { color: '#10B981' }]}>
+                                        <Text style={[styles.recoveryErrorText, {color: '#10B981'}]}>
                                             ✓ Código enviado correctamente. Redirigiendo...
                                         </Text>
                                     </View>
@@ -318,17 +318,17 @@ export default function ForgotPasswordScreen({ navigation }) {
                                                 : "Enviar código de recuperación"
                                     }
                                     accessibilityRole="button"
-                                    accessibilityState={{ disabled: isButtonDisabled, busy: isLoading }}
+                                    accessibilityState={{disabled: isButtonDisabled, busy: isLoading}}
                                 >
                                     {isLoading ? (
-                                        <ActivityIndicator color="#FFFFFF" size="small" />
+                                        <ActivityIndicator color="#FFFFFF" size="small"/>
                                     ) : cooldownRemaining > 0 ? (
                                         <Text style={styles.recoveryPrimaryButtonText}>
                                             Reintentar en {cooldownRemaining}s
                                         </Text>
                                     ) : (
                                         <Text style={styles.recoveryPrimaryButtonText}>
-                                            {t('forgotPassword.sendButton', { defaultValue: 'Enviar código' })}
+                                            {t('forgotPassword.sendButton', {defaultValue: 'Enviar código'})}
                                         </Text>
                                     )}
                                 </TouchableOpacity>

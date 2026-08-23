@@ -1,16 +1,16 @@
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { restoreLanguageForRole } from "../view/components/common/languageByRole";
-import { useTheme } from "../view/components/common/ThemeContext";
-import { login } from "../services/AuthService";
-import { getToken, saveToken, removeToken } from "../storage/TokenStorage";
-import { getHighestRole } from "../utils/getHighestRole";
+import {useState} from "react";
+import {useTranslation} from "react-i18next";
+import {restoreLanguageForRole} from "../view/components/common/languageByRole";
+import {useTheme} from "../view/components/common/ThemeContext";
+import {login} from "../services/AuthService";
+import {removeToken, saveToken} from "../storage/TokenStorage";
+import {getHighestRole} from "../utils/getHighestRole";
 import LoginRequest from "../model/LoginRequest";
 import AuthResponse from "../model/AuthResponse";
 
 const MAX_FAILED_ATTEMPTS = 3;
 
-export function useLoginViewModel({ onLogin }) {
+export function useLoginViewModel({onLogin}) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [terms, setTerms] = useState(false);
@@ -19,8 +19,8 @@ export function useLoginViewModel({ onLogin }) {
     const [errorTimestamp, setErrorTimestamp] = useState(0);
     const [failedAttempts, setFailedAttempts] = useState(0);
 
-    const { t } = useTranslation();
-    const { loadThemeForRole } = useTheme();
+    const {t} = useTranslation();
+    const {loadThemeForRole} = useTheme();
 
     const setErrorWithTimestamp = (message) => {
         setError(message);
@@ -30,13 +30,13 @@ export function useLoginViewModel({ onLogin }) {
     const validate = () => {
         if (!email.trim() || !password.trim()) {
             setErrorWithTimestamp(
-                t("login.invalidCredentials", { defaultValue: "Credenciales incorrectas" })
+                t("login.invalidCredentials", {defaultValue: "Credenciales incorrectas"})
             );
             return false;
         }
         if (!terms) {
             setErrorWithTimestamp(
-                t("Acepta los términos y condiciones", { defaultValue: "Debes aceptar los términos y condiciones" })
+                t("Acepta los términos y condiciones", {defaultValue: "Debes aceptar los términos y condiciones"})
             );
             return false;
         }
@@ -54,7 +54,7 @@ export function useLoginViewModel({ onLogin }) {
         console.log(`❌ Intento fallido ${newCount}/${MAX_FAILED_ATTEMPTS}`);
 
         setErrorWithTimestamp(
-            t("login.invalidCredentials", { defaultValue: "Credenciales incorrectas" })
+            t("login.invalidCredentials", {defaultValue: "Credenciales incorrectas"})
         );
     };
 

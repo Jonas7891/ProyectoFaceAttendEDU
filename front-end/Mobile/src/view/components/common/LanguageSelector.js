@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal } from 'react-native';
-import { useTranslation } from 'react-i18next';
+import React, {useState} from 'react';
+import {Modal, Text, TouchableOpacity, View} from 'react-native';
+import {useTranslation} from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { saveLanguageForRole } from './languageByRole';
+import {saveLanguageForRole} from './languageByRole';
 import stylescommon from './style/Style';
 
 const languages = [

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { View, TouchableOpacity, Image } from "react-native";
+import React, {useEffect, useState} from "react";
+import {Image, TouchableOpacity, View} from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation, useRoute } from "@react-navigation/native";
-import { useTheme } from './ThemeContext';
+import {useNavigation, useRoute} from "@react-navigation/native";
+import {useTheme} from './ThemeContext';
 import stylescommon from "./style/Style";
 
 export default function BottomBar({ onPressSettings, onPressProfile, onPressSearch, screenNames = {} }) {

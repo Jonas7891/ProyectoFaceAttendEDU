@@ -1,23 +1,23 @@
 import React from "react";
 import {
-    Text,
-    View,
-    SafeAreaView,
-    KeyboardAvoidingView,
-    TouchableOpacity,
-    Platform,
     Image,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
     ScrollView,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { useTranslation } from "react-i18next";
-import { useTheme } from '../components/common/ThemeContext';
+import {useTranslation} from "react-i18next";
+import {useTheme} from '../components/common/ThemeContext';
 import DangerButton from "../components/auth/DangerButton";
 import CustomLogo from "../components/common/logo";
 import CustomAlert from '../components/common/CustomAlert';
-import { useCustomAlert } from '../components/common/useCustomAlert';
+import {useCustomAlert} from '../components/common/useCustomAlert';
 import styles from "./Style";
-import { useMenuViewModel } from '../../viewmodels/useMenuViewModel';
-import { useUser } from '../../utils/UserContext';
+import {useMenuViewModel} from '../../viewmodels/useMenuViewModel';
+import {useUser} from '../../utils/UserContext';
 
 export default function MenuScreen({ onLogout }) {
     const { t } = useTranslation();

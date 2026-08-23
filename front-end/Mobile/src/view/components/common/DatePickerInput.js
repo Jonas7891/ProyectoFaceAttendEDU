@@ -1,13 +1,7 @@
-import React, { useState } from 'react';
-import {
-    View,
-    Text,
-    TouchableOpacity,
-    Platform,
-    StyleSheet,
-} from 'react-native';
+import React, {useState} from 'react';
+import {Platform, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useTheme } from './ThemeContext';
+import {useTheme} from './ThemeContext';
 
 export const DatePickerInput = ({ value, onChange, placeholder, hint }) => {
     const { colors } = useTheme();

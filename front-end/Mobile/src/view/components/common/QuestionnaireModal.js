@@ -1,24 +1,15 @@
-import React, { useState, useRef } from 'react';
-import {
-    View,
-    Text,
-    Modal,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    Keyboard,
-    Pressable,
-    StyleSheet,
-} from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from './ThemeContext';
-import { DocumentSelector } from './DocumentSelector';
-import { RHSelector } from './RHSelector';
-import { QuestionInput } from './QuestionInput';
-import { DatePickerInput } from './DatePickerInput';
-import { ProgressBar } from './ProgressBar';
+import React, {useRef, useState} from 'react';
+import {Keyboard, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
+import {useTranslation} from 'react-i18next';
+import {useTheme} from './ThemeContext';
+import {DocumentSelector} from './DocumentSelector';
+import {RHSelector} from './RHSelector';
+import {QuestionInput} from './QuestionInput';
+import {DatePickerInput} from './DatePickerInput';
+import {ProgressBar} from './ProgressBar';
 import stylescommon from './style/Style';
 import CustomAlert from './CustomAlert';
-import { useCustomAlert } from './useCustomAlert';
+import {useCustomAlert} from './useCustomAlert';
 
 export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
     const { t } = useTranslation();

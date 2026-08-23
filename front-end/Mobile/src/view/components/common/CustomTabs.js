@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import { useTranslation } from 'react-i18next';
+import React, {useEffect, useState} from "react";
+import {Text, TouchableOpacity, View} from "react-native";
+import {useNavigation, useRoute} from "@react-navigation/native";
+import {useTranslation} from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useLanguageRefresh } from '../../../utils/useLanguageRefresh';
-import { useTheme } from './ThemeContext';
+import {useLanguageRefresh} from '../../../utils/useLanguageRefresh';
+import {useTheme} from './ThemeContext';
 import stylescommon from './style/Style';
 
 const screens = {

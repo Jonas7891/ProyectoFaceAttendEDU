@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import {useCallback, useState} from 'react';
 
 /**
  * Hook universal para gestionar alertas/notificaciones.

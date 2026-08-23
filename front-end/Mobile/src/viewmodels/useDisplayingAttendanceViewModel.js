@@ -1,22 +1,22 @@
-import { useState, useEffect } from "react";
-import { Platform } from "react-native";
-import { useTranslation } from "react-i18next";
-import { useLanguageRefresh } from "../utils/useLanguageRefresh";
-import { useTheme } from "../view/components/common/ThemeContext";
-import { getCurrentUserRole } from "../services/UserService";
+import {useEffect, useState} from "react";
+import {Platform} from "react-native";
+import {useTranslation} from "react-i18next";
+import {useLanguageRefresh} from "../utils/useLanguageRefresh";
+import {useTheme} from "../view/components/common/ThemeContext";
+import {getCurrentUserRole} from "../services/UserService";
 
 // CONSTANTES
 export const STATUS_CONFIG = {
-    presente: { color: "#22C55E", bg: "#DCFCE7", darkBg: "#14532D", label: "attendance.present" },
-    tarde:   { color: "#F59E0B", bg: "#FEF3C7", darkBg: "#451A03", label: "attendance.late" },
-    ausente: { color: "#EF4444", bg: "#FEE2E2", darkBg: "#450A0A", label: "attendance.absent" },
-    justificado: { color: "#8B5CF6", bg: "#EDE9FE", darkBg: "#2E1065", label: "attendance.justified" },
+    presente: {color: "#22C55E", bg: "#DCFCE7", darkBg: "#14532D", label: "attendance.present"},
+    tarde: {color: "#F59E0B", bg: "#FEF3C7", darkBg: "#451A03", label: "attendance.late"},
+    ausente: {color: "#EF4444", bg: "#FEE2E2", darkBg: "#450A0A", label: "attendance.absent"},
+    justificado: {color: "#8B5CF6", bg: "#EDE9FE", darkBg: "#2E1065", label: "attendance.justified"},
 };
 
 export const APPROVAL_CONFIG = {
-    Pending:  { color: "#F59E0B", label: "attendance.pending" },
-    Approved: { color: "#22C55E", label: "attendance.approved" },
-    Rejected: { color: "#EF4444", label: "attendance.rejected" },
+    Pending: {color: "#F59E0B", label: "attendance.pending"},
+    Approved: {color: "#22C55E", label: "attendance.approved"},
+    Rejected: {color: "#EF4444", label: "attendance.rejected"},
 };
 
 // DATOS MOCK (copiar igual que antes, omitidos por brevedad)
@@ -160,14 +160,14 @@ export function formatDateKey(date) {
 }
 
 export function formatDateDisplay(date, t) {
-    if (!date) return t("attendance.filterByDate", { defaultValue: "Filtrar fecha" });
-    return date.toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
+    if (!date) return t("attendance.filterByDate", {defaultValue: "Filtrar fecha"});
+    return date.toLocaleDateString("es-ES", {day: "2-digit", month: "short", year: "numeric"});
 }
 
 // VIEW MODEL
 export function useAttendanceViewModel() {
-    const { t, i18n } = useTranslation();
-    const { colors, loadThemeForRole, theme } = useTheme();
+    const {t, i18n} = useTranslation();
+    const {colors, loadThemeForRole, theme} = useTheme();
     const refreshKey = useLanguageRefresh();
     const updateKey = refreshKey; // Sincronizar con cambios de idioma
     const isDark = theme === "dark";

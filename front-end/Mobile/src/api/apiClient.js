@@ -1,5 +1,5 @@
 // services/apiClient.js
-import { getToken } from "../storage/TokenStorage";
+import {getToken} from "../storage/TokenStorage";
 
 export async function request({
   method,

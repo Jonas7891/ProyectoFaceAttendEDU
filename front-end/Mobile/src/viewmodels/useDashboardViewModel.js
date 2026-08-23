@@ -135,9 +135,27 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
     ];
 
     const menuAccionesEstudiante = [
-        {id: 1, title: t('student.registerFace'), description: t('student.registerFaceDesc'), color: '#4CAF50'},
-        {id: 2, title: t('student.myAttendance'), description: t('student.myAttendanceDesc'), color: '#2196F3'},
-        {id: 3, title: t('student.UpdateFace'), description: t('student.UpdateFaceDesc'), color: '#2196F3'},
+        {
+            id: 1,
+            title: t('student.registerFace'),
+            description: t('student.registerFaceDesc'),
+            color: '#4CAF50',
+            screen: 'RegisterFace'
+        },
+        {
+            id: 2,
+            title: t('student.myAttendance'),
+            description: t('student.myAttendanceDesc'),
+            color: '#2196F3',
+            screen: 'DisplayingAttendance'
+        },
+        {
+            id: 3,
+            title: t('student.UpdateFace'),
+            description: t('student.UpdateFaceDesc'),
+            color: '#f32152',
+            screen: 'UpdatePhoto'
+        },
     ];
 
     const menuAccionesDocente = [
@@ -161,6 +179,13 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
             description: t('teacher.pendingJustificationsDesc', 'Revisa y gestiona las justificaciones de tus estudiantes'),
             color: '#FF9800',
             screen: 'PendingJustificationScreen'
+        },
+        {
+            id: 1,
+            title: t('student.registerFace'),
+            description: t('student.registerFaceDesc'),
+            color: '#4CAF50',
+            screen: 'RegisterFace'
         },
     ];
 

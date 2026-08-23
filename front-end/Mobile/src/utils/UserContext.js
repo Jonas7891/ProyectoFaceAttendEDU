@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, {createContext, useCallback, useContext, useEffect, useState} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getCurrentUserRole, getCurrentUser } from '../services/UserService';
+import {getCurrentUser, getCurrentUserRole} from '../services/UserService';
 
 /**
  * Contexto global para gestionar el estado del usuario autenticado.
@@ -37,9 +37,11 @@ export const UserProvider = ({ children }) => {
     }, [loadUserData]);
 
     // Métodos útiles
-    const isAdmin = useCallback(() => userRole === 'admin', [userRole]);
-    const isTeacher = useCallback(() => userRole === 'teacher', [userRole]);
-    const isStudent = useCallback(() => userRole === 'student', [userRole]);
+    const normalizedRole = (userRole || '').toLowerCase().trim();
+
+    const isAdmin = normalizedRole === 'admin' || normalizedRole === 'administrador';
+    const isTeacher = normalizedRole === 'teacher' || normalizedRole === 'docente';
+    const isStudent = normalizedRole === 'student' || normalizedRole === 'Aprendiz';
 
     const value = {
         // Estado

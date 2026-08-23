@@ -1,7 +1,7 @@
 import {useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useNavigation} from '@react-navigation/native';
-import { useLanguageRefresh } from '../utils/useLanguageRefresh';
+import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 
 export function useAddJustificationViewModel() {
     const navigation = useNavigation();

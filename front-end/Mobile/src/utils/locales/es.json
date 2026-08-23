@@ -124,7 +124,7 @@
     "quickActions": "Acciones Rápidas",
     "registerAttendance": "Actualizar Parametros",
     "registerAttendanceDesc": "Actualización de parámetros faciales",
-    "employeeManagement": "Gestión de Profesores",
+    "employeeManagement": "Gestión de Docentes",
     "employeeManagementDesc": "Agregar, editar o eliminar profesores",
     "manageEnvironmentDesc": "Agregar, editar o Eliminar Ambientes",
     "reports": "Reportes",
@@ -311,7 +311,7 @@
     "present": "Presente",
     "late": "Tarde",
     "systemNews": "Novedades del sistema",
-    "greeting": "Bienvenido de nuevo, Profesor",
+    "greeting": "Bienvenido de nuevo",
     "teacherName": "Docente",
     "quickActions": "Acciones Rápidas",
     "recentAttendance": "Asistencias a tus Clases",
@@ -319,14 +319,14 @@
     "notifications": "Notificaciones del Instituto"
   },
   "student": {
-    "greeting": "Hola estudiante",
+    "greeting": "Hola Estudiante",
     "studentName": "Ana Martínez",
     "myAttendance": "Mi asistencia",
     "classesAttended": "clases asistidas",
     "lastRegister": "Último registro",
     "quickActions": "Mis acciones",
     "registerFace": "Registrar rostro",
-    "registerFaceDesc": "Marcar asistencia facial",
+    "registerFaceDesc": "Registrar tu rostro en el sistema FaceAttend EDU",
     "myAttendanceDesc": "Ver mi historial",
     "mySchedule": "Mi horario",
     "facialSetup": "Configurar rostro",
@@ -421,7 +421,7 @@
   "manageUsers": {
     "title": "Gestión de Usuarios",
     "students": "Estudiantes",
-    "teachers": "Profesores",
+    "teachers": "Docentes",
     "addStudent": "Agregar estudiante",
     "noRecords": "Sin registros",
     "searchStudent": "Buscar estudiante",
@@ -510,7 +510,7 @@
     "title": "Reporte de Asistencia",
     "tabs": {
       "students": "Estudiantes",
-      "teachers": "Profesores"
+      "teachers": "Docentes"
     },
     "types": {
       "absences": "Inasistencias",
@@ -569,6 +569,6 @@
   "userRoles": {
     "administrator": "Administrador",
     "student": "Estudiante",
-    "teacher": "Profesor"
+    "teacher": "Docente"
   }
 }

@@ -1,18 +1,26 @@
 // DisplayingAttendance.js (simplificado)
 import React from "react";
 import {
-    Text, View, SafeAreaView, TextInput, TouchableOpacity,
-    FlatList, Image, Platform, Modal, ScrollView,
+    FlatList,
+    Image,
+    Modal,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import styles from "./Style";
 import BottomBar from "../components/common/NavigationBar";
 import CustomTabs from "../components/common/CustomTabs";
 import {
-    useAttendanceViewModel,
-    STATUS_CONFIG,
     APPROVAL_CONFIG,
-    formatDateDisplay
+    formatDateDisplay,
+    STATUS_CONFIG,
+    useAttendanceViewModel
 } from "../../viewmodels/useDisplayingAttendanceViewModel";
 
 // ─────────────────────────────────────────────────────────────────────────────

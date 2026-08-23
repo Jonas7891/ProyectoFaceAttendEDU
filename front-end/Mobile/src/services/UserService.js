@@ -1,7 +1,3 @@
-import { request } from "../api/apiClient";
-import { GET, POST, PUT, DELETE } from "./constants/httpMethod";
-import { loginUrl } from "./constants/urls";
-
 /*
 export const getUserByEmail = (data) =>
     request({
@@ -11,10 +7,9 @@ export const getUserByEmail = (data) =>
         requiresAuth: true
     });
 */
-
-import { users } from "./constants/users";
-import { jwtDecode } from "jwt-decode";
-import { getToken } from "../storage/TokenStorage";
+import {users} from "./constants/users";
+import {jwtDecode} from "jwt-decode";
+import {getToken} from "../storage/TokenStorage";
 
 export const getUserByEmail = (email) => {
     switch (email) {

@@ -1,19 +1,19 @@
 import React from 'react';
 import {
-    View,
-    Text,
-    ScrollView,
-    TouchableOpacity,
-    TextInput,
+    ActivityIndicator,
     Modal,
     SafeAreaView,
+    ScrollView,
     StatusBar,
-    ActivityIndicator,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { useTheme } from '../components/common/ThemeContext';
+import {useTheme} from '../components/common/ThemeContext';
 import CustomAlert from '../components/common/CustomAlert';
 import styles from './Style';
-import { useAttendanceReportViewModel } from '../../viewmodels/useAttendanceReportViewModel';
+import {useAttendanceReportViewModel} from '../../viewmodels/useAttendanceReportViewModel';
 
 // ===========================================================================
 // HELPERS

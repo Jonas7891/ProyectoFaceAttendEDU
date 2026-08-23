@@ -1,4 +1,5 @@
-import { useState, useCallback, useMemo } from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
+import {getCurrentUserRole} from '../services/UserService';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // JSON simulado — como si viniese de una API REST
@@ -119,10 +120,7 @@ const MOCK_JUSTIFICATIONS = [
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Returns initials from a full name (up to 2 characters).
- */
+/** Devuelve las iniciales de un nombre completo (máx. 2 caracteres). */
 export const getInitials = (name = '') =>
     name
         .split(' ')
@@ -130,9 +128,7 @@ export const getInitials = (name = '') =>
         .map((w) => w[0]?.toUpperCase() ?? '')
         .join('');
 
-/**
- * Returns a deterministic avatar color based on the name string.
- */
+/** Devuelve un color de avatar determinístico según el nombre. */
 const AVATAR_COLORS = ['#2563EB', '#7C3AED', '#DB2777', '#059669', '#D97706', '#DC2626'];
 export const getAvatarColor = (name = '') => {
     const index =
@@ -140,10 +136,7 @@ export const getAvatarColor = (name = '') => {
     return AVATAR_COLORS[index];
 };
 
-/**
- * Formats an ISO date string to a human-readable Spanish date.
- * e.g.  "2025-05-20" → "20 may. 2025"
- */
+/** Formatea una fecha ISO a texto legible en español. "2025-05-20" → "20 may. 2025" */
 export const formatDate = (isoDate = '') => {
     if (!isoDate) return '—';
     const [year, month, day] = isoDate.split('-');
@@ -151,9 +144,7 @@ export const formatDate = (isoDate = '') => {
     return `${Number(day)} ${months[Number(month) - 1]}. ${year}`;
 };
 
-/**
- * Returns a file-type emoji based on mime type.
- */
+/** Devuelve un emoji según el tipo de archivo (mime). */
 export const getFileIcon = (mime = '') => {
     if (mime.includes('pdf')) return '📄';
     if (mime.includes('image')) return '🖼️';
@@ -162,22 +153,73 @@ export const getFileIcon = (mime = '') => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Rol de sesión
+// ─────────────────────────────────────────────────────────────────────────────
+/** Normaliza el rol devuelto por el servicio a las claves internas de la app. */
+const normalizeRole = (role = '') => {
+    const r = String(role).toLowerCase();
+    if (r.includes('admin')) return 'admin';
+    if (r.includes('docen') || r.includes('profesor') || r.includes('teacher')) return 'teacher';
+    if (r.includes('estud') || r.includes('student')) return 'student';
+    return 'admin';
+};
+
+/**
+ * ⚠️ Código del estudiante con sesión activa.
+ * Reemplázalo por tu servicio real (getCurrentUser(), AsyncStorage, etc.).
+ */
+const CURRENT_STUDENT_CODE = 'EST-20241';
+
+// ─────────────────────────────────────────────────────────────────────────────
 // ViewModel
 // ─────────────────────────────────────────────────────────────────────────────
-
 export const usePendingJustificationViewModel = () => {
     const [justifications, setJustifications] = useState(MOCK_JUSTIFICATIONS);
+    const [userRole, setUserRole] = useState(null); // 'admin' | 'teacher' | 'student'
     const [activeFilter, setActiveFilter] = useState('all'); // 'all' | 'student' | 'teacher'
     const [selectedItem, setSelectedItem] = useState(null);
     const [isModalVisible, setModalVisible] = useState(false);
 
-    // ── Filtrado ──────────────────────────────────────────────────────────────
-    const filtered = useMemo(() => {
-        if (activeFilter === 'all') return justifications;
-        return justifications.filter((j) => j.role === activeFilter);
-    }, [justifications, activeFilter]);
+    // ── Carga del rol al montar ─────────────────────────────────────────────
+    useEffect(() => {
+        const init = async () => {
+            try {
+                const role = await getCurrentUserRole();
+                setUserRole(normalizeRole(role));
+            } catch (error) {
+                console.error('Error cargando rol:', error);
+                setUserRole('admin'); // define tu política de fallback
+            }
+        };
+        init();
+    }, []);
 
-    // ── Abrir / cerrar modal de detalle ───────────────────────────────────────
+    // ── Dataset visible según el rol (antes de aplicar chips) ───────────────
+    //  admin   → todo
+    //  teacher → solo estudiantes (sin registros docentes)
+    //  student → solo las justificaciones propias
+    const baseJustifications = useMemo(() => {
+        if (!userRole) return []; // no mostrar nada hasta conocer el rol
+        if (userRole === 'teacher') {
+            return justifications.filter((j) => j.role === 'student');
+        }
+        if (userRole === 'student') {
+            return justifications.filter(
+                (j) => j.role === 'student' && j.userCode === CURRENT_STUDENT_CODE
+            );
+        }
+        return justifications;
+    }, [justifications, userRole]);
+
+    // ── Filtrado por chips (solo aplica para admin) ─────────────────────────
+    const filtered = useMemo(() => {
+        if (userRole === 'admin' && activeFilter !== 'all') {
+            return baseJustifications.filter((j) => j.role === activeFilter);
+        }
+        return baseJustifications;
+    }, [baseJustifications, activeFilter, userRole]);
+
+    // ── Abrir / cerrar modal de detalle ─────────────────────────────────────
     const openDetail = useCallback((item) => {
         setSelectedItem(item);
         setModalVisible(true);
@@ -189,50 +231,55 @@ export const usePendingJustificationViewModel = () => {
         setTimeout(() => setSelectedItem(null), 300);
     }, []);
 
-    // ── Aprobar justificación ─────────────────────────────────────────────────
+    // ── Aprobar justificación (bloqueado para estudiantes) ──────────────────
     const approveJustification = useCallback(
         (id) => {
+            if (userRole === 'student') return;
             setJustifications((prev) =>
                 prev.map((j) => (j.id === id ? { ...j, status: 'approved' } : j))
             );
             closeDetail();
         },
-        [closeDetail]
+        [closeDetail, userRole]
     );
 
-    // ── Rechazar justificación ────────────────────────────────────────────────
+    // ── Rechazar justificación (bloqueado para estudiantes) ─────────────────
     const rejectJustification = useCallback(
         (id) => {
+            if (userRole === 'student') return;
             setJustifications((prev) =>
                 prev.map((j) => (j.id === id ? { ...j, status: 'rejected' } : j))
             );
             closeDetail();
         },
-        [closeDetail]
+        [closeDetail, userRole]
     );
 
-    // ── Contadores por filtro ─────────────────────────────────────────────────
-    const counts = useMemo(
-        () => ({
+    // ── Contadores según el rol ─────────────────────────────────────────────
+    //  teacher → "Todos" suma SOLO estudiantes; no existe clave teacher
+    //  student → "Todos" suma solo las propias
+    //  admin   → contadores globales
+    const counts = useMemo(() => {
+        if (userRole === 'teacher') {
+            return {all: baseJustifications.length, student: baseJustifications.length};
+        }
+        if (userRole === 'student') {
+            return {all: baseJustifications.length};
+        }
+        return {
             all: justifications.length,
             student: justifications.filter((j) => j.role === 'student').length,
             teacher: justifications.filter((j) => j.role === 'teacher').length,
-        }),
-        [justifications]
-    );
+        };
+    }, [justifications, baseJustifications, userRole]);
 
-    // ── Labels de tipo ────────────────────────────────────────────────────────
-    const getTypeLabel = (type) =>
-        type === 'inasistencia' ? 'Inasistencia' : 'Retardo';
-
+    // ── Labels de tipo y rol ────────────────────────────────────────────────
+    const getTypeLabel = (type) => (type === 'inasistencia' ? 'Inasistencia' : 'Retardo');
     const getTypeColors = (type) =>
         type === 'inasistencia'
             ? { bg: '#FEF3C7', text: '#92400E' }
             : { bg: '#DBEAFE', text: '#1E40AF' };
-
-    const getRoleLabel = (role) =>
-        role === 'student' ? 'Estudiante' : 'Docente';
-
+    const getRoleLabel = (role) => (role === 'student' ? 'Estudiante' : 'Docente');
     const getRoleColors = (role) =>
         role === 'student'
             ? { bg: '#F3E8FF', text: '#6B21A8' }
@@ -244,6 +291,8 @@ export const usePendingJustificationViewModel = () => {
         selectedItem,
         counts,
         activeFilter,
+        userRole,
+        loadingRole: !userRole,
 
         // Modal
         isModalVisible,

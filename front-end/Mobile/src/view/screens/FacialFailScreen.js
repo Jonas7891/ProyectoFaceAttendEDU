@@ -1,24 +1,24 @@
 import React from 'react';
 import {
-    Text,
-    View,
-    SafeAreaView,
-    TouchableOpacity,
-    ScrollView,
+    Keyboard,
     KeyboardAvoidingView,
     Platform,
+    SafeAreaView,
+    ScrollView,
+    Text,
+    TouchableOpacity,
     TouchableWithoutFeedback,
-    Keyboard,
+    View,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from '../components/common/ThemeContext';
+import {useTranslation} from 'react-i18next';
+import {useTheme} from '../components/common/ThemeContext';
 import PrimaryButton from '../components/auth/PrimaryButton';
-import { QuestionnaireModal } from '../components/common/QuestionnaireModal';
-import { FacialUpdateModal } from '../components/common/FacialUpdateModal';
+import {QuestionnaireModal} from '../components/common/QuestionnaireModal';
+import {FacialUpdateModal} from '../components/common/FacialUpdateModal';
 import CustomLogo from '../components/common/logo';
 import CustomAlert from '../components/common/CustomAlert';
 import styles from './Style';
-import { useFacialFailViewModel } from '../../viewmodels/useFacialFailScreenViewModel';
+import {useFacialFailViewModel} from '../../viewmodels/useFacialFailScreenViewModel';
 
 export default function FacialFail() {
     const { t } = useTranslation();

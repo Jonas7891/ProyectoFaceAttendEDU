@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
-    Modal,
-    Text,
-    View,
-    TextInput,
-    ScrollView,
-    KeyboardAvoidingView,
-    TouchableWithoutFeedback,
     Keyboard,
-    TouchableOpacity,
+    KeyboardAvoidingView,
+    Modal,
     Platform,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from './ThemeContext';
-import { useCustomAlert } from './useCustomAlert';
+import {useTranslation} from 'react-i18next';
+import {useTheme} from './ThemeContext';
+import {useCustomAlert} from './useCustomAlert';
 import CustomAlert from './CustomAlert';
 import PrimaryButton from '../auth/PrimaryButton';
 import stylesCommon from './style/Style';
@@ -149,17 +149,8 @@ export default function ProfileUpdateModal({ userInfo = {} }) {
                                     ]} />
 
                                     {/* Inputs */}
-                                    <TextInput
-                                        style={[stylesCommon.passwordModalInput, {
-                                            borderColor: colors.border ?? colors.textSecondary + '50',
-                                            color: colors.text,
-                                            backgroundColor: colors.background,
-                                        }]}
-                                        placeholder={t('profile.profileModal.namePlaceholder', 'Nombre completo')}
-                                        placeholderTextColor={colors.textSecondary}
-                                        value={name}
-                                        onChangeText={setName}
-                                    />
+                                    <Text style={{marginBottom: 10, color: colors.text}}>Ingrese su Correo
+                                        Electronico</Text>
                                     <TextInput
                                         style={[stylesCommon.passwordModalInput, {
                                             borderColor: colors.border ?? colors.textSecondary + '50',
@@ -169,9 +160,10 @@ export default function ProfileUpdateModal({ userInfo = {} }) {
                                         placeholder={t('profile.profileModal.emailPlaceholder', 'Correo electrónico')}
                                         placeholderTextColor={colors.textSecondary}
                                         keyboardType="email-address"
-                                        value={email}
                                         onChangeText={setEmail}
                                     />
+                                    <Text style={{marginBottom: 10, color: colors.text, marginTop: 20}}>Ingrese su
+                                        numero Telefonico</Text>
                                     <TextInput
                                         style={[stylesCommon.passwordModalInput, {
                                             borderColor: colors.border ?? colors.textSecondary + '50',
@@ -181,7 +173,6 @@ export default function ProfileUpdateModal({ userInfo = {} }) {
                                         placeholder={t('profile.profileModal.phonePlaceholder', 'Teléfono')}
                                         placeholderTextColor={colors.textSecondary}
                                         keyboardType="phone-pad"
-                                        value={phone}
                                         onChangeText={setPhone}
                                     />
 

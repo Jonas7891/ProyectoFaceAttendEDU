@@ -1,11 +1,5 @@
 import React, {useState} from 'react';
-import {
-    View,
-    Text,
-    Modal,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-} from 'react-native';
+import {Modal, Text, TouchableOpacity, TouchableWithoutFeedback, View,} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from './ThemeContext';
 import stylescommon from './style/Style';

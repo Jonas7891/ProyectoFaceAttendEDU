@@ -1,19 +1,10 @@
-import React, {useState, useEffect} from 'react';
-import {
-    SafeAreaView,
-    View,
-    Text,
-    FlatList,
-    TouchableOpacity,
-    Modal,
-    TextInput,
-} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {FlatList, Modal, SafeAreaView, Text, TextInput, TouchableOpacity, View,} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
-import { useCustomAlert } from '../components/common/useCustomAlert';
+import {useCustomAlert} from '../components/common/useCustomAlert';
 import CustomAlert from '../components/common/CustomAlert';
 import PrimaryButton from '../components/auth/PrimaryButton';
-import BottomBar from '../components/common/NavigationBar';
 import styles from "./Style";
 import {useManageUsersViewModel} from '../../viewmodels/useManageUsersViewModel';
 

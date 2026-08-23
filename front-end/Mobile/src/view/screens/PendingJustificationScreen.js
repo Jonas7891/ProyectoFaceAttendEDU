@@ -1,20 +1,21 @@
 import React from 'react';
 import {
-    SafeAreaView,
-    View,
-    Text,
+    ActivityIndicator,
     FlatList,
-    TouchableOpacity,
     Modal,
-    ScrollView,
     Pressable,
+    SafeAreaView,
+    ScrollView,
     StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
+import {useTranslation} from 'react-i18next';
 import styles from './Style';
-import { useTheme } from '../components/common/ThemeContext';
+import {useTheme} from '../components/common/ThemeContext';
 import PrimaryButton from '../components/auth/PrimaryButton';
-import { usePendingJustificationViewModel } from '../../viewmodels/usePendingJustificationViewModel';
+import {usePendingJustificationViewModel} from '../../viewmodels/usePendingJustificationViewModel';
 
 /** Chip de filtro (Todos / Estudiantes / Docentes) */
 const FilterChip = ({ label, count, active, onPress, colors }) => (
@@ -149,6 +150,7 @@ const JustificationCard = ({
 const DetailModal = ({
                          visible,
                          item,
+                         userRole,
                          onClose,
                          onApprove,
                          onReject,
@@ -179,7 +181,6 @@ const DetailModal = ({
             <View style={styles.modalOverlayPending}>
                 {/* Backdrop — cerrar al tocar fuera */}
                 <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-
                 <View
                     style={[
                         styles.modalSheetPending,
@@ -278,7 +279,6 @@ const DetailModal = ({
                                     {getTypeLabel(item.type)}
                                 </Text>
                             </View>
-
                             {/* Fecha */}
                             <View
                                 style={[
@@ -292,7 +292,6 @@ const DetailModal = ({
                                     {formatDate(item.date)}
                                 </Text>
                             </View>
-
                             {/* Hora — solo para retardo */}
                             {item.type === 'retardo' && item.time && (
                                 <View
@@ -310,7 +309,6 @@ const DetailModal = ({
                                     </Text>
                                 </View>
                             )}
-
                             {/* Enviado */}
                             <View style={[styles.detailRowPending, styles.detailRowLastPending]}>
                                 <Text style={styles.detailIconPending}>🕐</Text>
@@ -393,30 +391,32 @@ const DetailModal = ({
                         )}
                     </ScrollView>
 
-                    {/* ── Botones de acción ── */}
-                    <View
-                        style={[
-                            styles.actionRowPending,
-                            { borderTopWidth: 1, borderTopColor: colors.border },
-                        ]}
-                    >
-                        <TouchableOpacity
-                            style={styles.rejectBtnPending}
-                            onPress={() => onReject(item.id)}
-                            activeOpacity={0.8}
+                    {/* ── Botones de acción (ocultos para estudiantes) ── */}
+                    {userRole !== 'student' && (
+                        <View
+                            style={[
+                                styles.actionRowPending,
+                                {borderTopWidth: 1, borderTopColor: colors.border},
+                            ]}
                         >
-                            <Text style={{ fontSize: 16 }}>✕</Text>
-                            <Text style={styles.rejectBtnTextPending}>Rechazar</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.approveBtnPending}
-                            onPress={() => onApprove(item.id)}
-                            activeOpacity={0.8}
-                        >
-                            <Text style={{ fontSize: 16 }}>✓</Text>
-                            <Text style={styles.approveBtnTextPending}>Aprobar</Text>
-                        </TouchableOpacity>
-                    </View>
+                            <TouchableOpacity
+                                style={styles.rejectBtnPending}
+                                onPress={() => onReject(item.id)}
+                                activeOpacity={0.8}
+                            >
+                                <Text style={{fontSize: 16}}>✕</Text>
+                                <Text style={styles.rejectBtnTextPending}>Rechazar</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.approveBtnPending}
+                                onPress={() => onApprove(item.id)}
+                                activeOpacity={0.8}
+                            >
+                                <Text style={{fontSize: 16}}>✓</Text>
+                                <Text style={styles.approveBtnTextPending}>Aprobar</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
                 </View>
             </View>
         </Modal>
@@ -426,11 +426,9 @@ const DetailModal = ({
 // ─────────────────────────────────────────────────────────────────────────────
 // Screen principal
 // ─────────────────────────────────────────────────────────────────────────────
-
 export default function PendingJustificationScreen({ navigation }) {
     const { colors } = useTheme();
     const { t } = useTranslation();
-
     const handleBack = () => navigation.goBack();
 
     const {
@@ -439,6 +437,8 @@ export default function PendingJustificationScreen({ navigation }) {
         counts,
         activeFilter,
         isModalVisible,
+        userRole,
+        loadingRole,
         openDetail,
         closeDetail,
         approveJustification,
@@ -454,11 +454,26 @@ export default function PendingJustificationScreen({ navigation }) {
         getRoleColors,
     } = usePendingJustificationViewModel();
 
-    const FILTERS = [
-        { key: 'all', label: 'Todos', count: counts.all },
-        { key: 'student', label: 'Estudiantes', count: counts.student },
-        { key: 'teacher', label: 'Docentes', count: counts.teacher },
-    ];
+    // Chips según rol: el profesor nunca ve "Docentes"; el estudiante no ve chips
+    const FILTERS =
+        userRole === 'teacher'
+            ? [
+                {key: 'all', label: 'Todos', count: counts.all},
+                {key: 'student', label: 'Estudiantes', count: counts.student},
+            ]
+            : [
+                {key: 'all', label: 'Todos', count: counts.all},
+                {key: 'student', label: 'Estudiantes', count: counts.student},
+                {key: 'teacher', label: 'Docentes', count: counts.teacher},
+            ];
+
+    // Subtítulo del header según rol
+    const headerSubtitle =
+        userRole === 'student'
+            ? 'Mis justificaciones enviadas'
+            : userRole === 'teacher'
+                ? 'Pendientes de estudiantes'
+                : 'Pendientes de revisión';
 
     const renderItem = ({ item }) => (
         <JustificationCard
@@ -479,13 +494,28 @@ export default function PendingJustificationScreen({ navigation }) {
         <View style={styles.emptyContainerPending}>
             <Text style={styles.emptyIconPending}>📭</Text>
             <Text style={[styles.emptyTitlePending, { color: colors.text }]}>
-                Sin justificaciones pendientes
+                {userRole === 'student'
+                    ? 'Aún no has enviado justificaciones'
+                    : 'Sin justificaciones pendientes'}
             </Text>
             <Text style={[styles.emptySubtitlePending, { color: colors.textSecondary }]}>
-                No hay justificaciones para este filtro en este momento.
+                {userRole === 'student'
+                    ? 'Cuando envíes una justificación aparecerá aquí.'
+                    : 'No hay justificaciones para este filtro en este momento.'}
             </Text>
         </View>
     );
+
+    // Puerta de carga: no mostrar datos hasta conocer el rol (privacidad)
+    if (loadingRole) {
+        return (
+            <SafeAreaView style={[styles.safeAreaPending, {backgroundColor: colors.background}]}>
+                <View style={styles.emptyContainerPending}>
+                    <ActivityIndicator color={colors.primary} size="large"/>
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView style={[styles.safeAreaPending, { backgroundColor: colors.background }]}>
@@ -494,23 +524,25 @@ export default function PendingJustificationScreen({ navigation }) {
                 <View style={[styles.headerPending, { backgroundColor: colors.background }]}>
                     <Text style={[styles.headerTitlePending, { color: colors.text }]}>Justificaciones</Text>
                     <Text style={[styles.headerSubtitlePending, { color: colors.textSecondary }]}>
-                        Pendientes de revisión
+                        {headerSubtitle}
                     </Text>
                 </View>
 
-                {/* Filtros */}
-                <View style={styles.filterRowPending}>
-                    {FILTERS.map((f) => (
-                        <FilterChip
-                            key={f.key}
-                            label={f.label}
-                            count={f.count}
-                            active={activeFilter === f.key}
-                            onPress={() => setActiveFilter(f.key)}
-                            colors={colors}
-                        />
-                    ))}
-                </View>
+                {/* Filtros — ocultos para estudiantes */}
+                {userRole !== 'student' && (
+                    <View style={styles.filterRowPending}>
+                        {FILTERS.map((f) => (
+                            <FilterChip
+                                key={f.key}
+                                label={f.label}
+                                count={f.count}
+                                active={activeFilter === f.key}
+                                onPress={() => setActiveFilter(f.key)}
+                                colors={colors}
+                            />
+                        ))}
+                    </View>
+                )}
 
                 {/* Contador */}
                 <View style={styles.resultsRowPending}>
@@ -543,6 +575,7 @@ export default function PendingJustificationScreen({ navigation }) {
             <DetailModal
                 visible={isModalVisible}
                 item={selectedItem}
+                userRole={userRole}
                 onClose={closeDetail}
                 onApprove={approveJustification}
                 onReject={rejectJustification}

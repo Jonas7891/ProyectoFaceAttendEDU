@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { useLanguageRefresh } from '../utils/useLanguageRefresh';
+import {useCallback, useState} from 'react';
+import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 
 // Datos iniciales en JSON dentro del archivo (punto único de verdad para demo)
 const initialData = {

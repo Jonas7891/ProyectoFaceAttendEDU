@@ -1,23 +1,22 @@
 import React, {useState} from 'react';
 import {
-    SafeAreaView,
-    View,
-    Text,
     FlatList,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    Modal,
-    TextInput,
     Keyboard,
     KeyboardAvoidingView,
+    Modal,
     Platform,
+    SafeAreaView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View,
 } from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import {useCustomAlert} from '../components/common/useCustomAlert';
 import CustomAlert from '../components/common/CustomAlert';
 import PrimaryButton from '../components/auth/PrimaryButton';
-import BottomBar from '../components/common/NavigationBar';
 import styles from "./Style";
 import {useManageEnvironmentViewModel} from '../../viewmodels/useManageEnvironmentViewModel';
 

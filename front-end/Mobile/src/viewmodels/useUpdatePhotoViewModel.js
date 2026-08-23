@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useNavigation } from '@react-navigation/native';
-import { useTheme } from '../view/components/common/ThemeContext';
+import {useCallback, useEffect, useState} from 'react';
+import {useTranslation} from 'react-i18next';
+import {useNavigation} from '@react-navigation/native';
+import {useTheme} from '../view/components/common/ThemeContext';
 import {getCurrentUserRole} from "../services/UserService";
-import { useLanguageRefresh } from '../utils/useLanguageRefresh';
+import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 
 export function useUpdatePhotoViewModel() {
     const navigation = useNavigation();

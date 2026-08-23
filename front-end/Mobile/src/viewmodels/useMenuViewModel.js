@@ -1,12 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
+import {useCallback, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useTheme } from '../view/components/common/ThemeContext';
-import { getHighestRole } from '../utils/getHighestRole';
-import { removeToken } from '../storage/TokenStorage';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { getCurrentUserRole, getCurrentUser } from "../services/UserService";
-import { useLanguageRefresh } from '../utils/useLanguageRefresh';
+import {useTheme} from '../view/components/common/ThemeContext';
+import {getHighestRole} from '../utils/getHighestRole';
+import {removeToken} from '../storage/TokenStorage';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import {getCurrentUserRole} from "../services/UserService";
+import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 
 export function useMenuViewModel({ onLogout }) {
     const navigation = useNavigation();

@@ -1,21 +1,21 @@
 import React from 'react';
-import { Text, View, SafeAreaView, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from '../components/common/ThemeContext';
+import {SafeAreaView, Text, TouchableOpacity, View} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
+import {useTranslation} from 'react-i18next';
+import {useTheme} from '../components/common/ThemeContext';
 import BottomBar from '../components/common/NavigationBar';
 import ScrollViewWrapper from '../components/common/ScrollView';
 import CustomTabs from '../components/common/CustomTabs';
 import styles from './Style';
-import { useDashboardViewModel } from '../../viewmodels/useDashboardViewModel';
-import { useUser } from '../../utils/UserContext';
+import {useDashboardViewModel} from '../../viewmodels/useDashboardViewModel';
+import {useUser} from '../../utils/UserContext';
 
 export default function Dashboard({ onLogout, userRole: propUserRole }) {
     const navigation = useNavigation();
     const { t } = useTranslation();
     const { colors } = useTheme();
 
-    const { isTeacher, isStudent } = useUser();
+    const {isTeacher, isStudent, currentUser} = useUser();
 
     const {
         userRole,
@@ -52,11 +52,23 @@ export default function Dashboard({ onLogout, userRole: propUserRole }) {
                         <View style={styles.dataBar}>
                             <View style={styles.leftContent}>
                                 <Text style={[styles.greeting, { color: colors.textSecondary }]}>
-                                    {isAdmin ? t('dashboard.greeting') : isTeacher ? t('teacher.greeting') : t('student.greeting')}
+                                    {isAdmin
+                                        ? t('dashboard.greeting')
+                                        : isTeacher
+                                            ? `${t('teacher.greeting')}`
+                                            : `${t('student.greeting')}`
+                                    }
                                 </Text>
+
                                 <Text style={[styles.adminName, { color: colors.text }]}>
-                                    {isAdmin ? t('dashboard.admin') : isTeacher ? t('teacher.teacherName') : t('student.studentName')}
+                                    {isAdmin
+                                        ? t('dashboard.admin')
+                                        : isTeacher
+                                            ? (currentUser?.name || currentUser?.firstName || t('teacher.teacherName'))
+                                            : (currentUser?.name || currentUser?.firstName || t('student.studentName'))
+                                    }
                                 </Text>
+
                                 <Text style={[styles.date, { color: colors.textSecondary }]}>
                                     {formattedDate}
                                 </Text>

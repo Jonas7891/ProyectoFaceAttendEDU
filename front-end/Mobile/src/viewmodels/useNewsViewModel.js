@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from '../view/components/common/ThemeContext';
+import {useEffect, useState} from 'react';
+import {useTranslation} from 'react-i18next';
+import {useTheme} from '../view/components/common/ThemeContext';
 import {getCurrentUserRole} from "../services/UserService";
-import { useLanguageRefresh } from '../utils/useLanguageRefresh';
+import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 
 export function useNewsViewModel() {
     const { i18n } = useTranslation();

@@ -1,29 +1,29 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
+    ActivityIndicator,
+    Alert,
+    Animated,
+    Image,
+    Keyboard,
+    KeyboardAvoidingView,
+    LayoutAnimation,
+    Modal,
+    Platform,
     SafeAreaView,
-    View,
+    ScrollView,
     Text,
     TextInput,
     TouchableOpacity,
-    KeyboardAvoidingView,
     TouchableWithoutFeedback,
-    Keyboard,
-    Platform,
-    ActivityIndicator,
-    Modal,
-    ScrollView,
-    Image,
-    Animated,
-    Vibration,
-    Alert,
     UIManager,
-    LayoutAnimation,
+    Vibration,
+    View,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from '../../components/common/ThemeContext';
+import {useTranslation} from 'react-i18next';
+import {useTheme} from '../../components/common/ThemeContext';
 import PrimaryButton from '../../components/auth/PrimaryButton';
 import styles from './style/Style';
-import { devCodeStore } from './Forgotpasswordscreen';
+import {devCodeStore} from './Forgotpasswordscreen';
 
 // Habilitar LayoutAnimation en Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -106,13 +106,13 @@ const isCommonPassword = (pwd) =>
 // ─────────────────────────────────────────────────────────────────────────────
 // Componente: requisito de contraseña con animación
 // ─────────────────────────────────────────────────────────────────────────────
-function PasswordRequirement({ met, label, colors }) {
+function PasswordRequirement({met, label, colors}) {
     const scaleAnim = useRef(new Animated.Value(1)).current;
 
     useEffect(() => {
         Animated.sequence([
-            Animated.timing(scaleAnim, { toValue: 1.15, duration: 150, useNativeDriver: true }),
-            Animated.timing(scaleAnim, { toValue: 1, duration: 150, useNativeDriver: true }),
+            Animated.timing(scaleAnim, {toValue: 1.15, duration: 150, useNativeDriver: true}),
+            Animated.timing(scaleAnim, {toValue: 1, duration: 150, useNativeDriver: true}),
         ]).start();
     }, [met]);
 
@@ -124,13 +124,13 @@ function PasswordRequirement({ met, label, colors }) {
             <Animated.Text
                 style={[
                     styles.passwordReqIcon,
-                    { color: iconColor, transform: [{ scale: scaleAnim }] },
+                    {color: iconColor, transform: [{scale: scaleAnim}]},
                 ]}
             >
                 {icon}
             </Animated.Text>
             <Text
-                style={[styles.passwordReqText, { color: iconColor }]}
+                style={[styles.passwordReqText, {color: iconColor}]}
                 accessibilityLabel={`${label}, ${met ? 'cumplido' : 'pendiente'}`}
             >
                 {label}
@@ -142,18 +142,18 @@ function PasswordRequirement({ met, label, colors }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Componente: Input de código con 6 cajitas separadas
 // ─────────────────────────────────────────────────────────────────────────────
-function CodeInput({ value, onChange, error, colors, codeRefs, onVerify, disabled }) {
+function CodeInput({value, onChange, error, colors, codeRefs, onVerify, disabled}) {
     const shakeAnim = useRef(new Animated.Value(0)).current;
 
     // Exponer la función de shake para que el padre la use
     useEffect(() => {
         if (error) {
             Animated.sequence([
-                Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
-                Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
-                Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
-                Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
-                Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
+                Animated.timing(shakeAnim, {toValue: 10, duration: 50, useNativeDriver: true}),
+                Animated.timing(shakeAnim, {toValue: -10, duration: 50, useNativeDriver: true}),
+                Animated.timing(shakeAnim, {toValue: 10, duration: 50, useNativeDriver: true}),
+                Animated.timing(shakeAnim, {toValue: -10, duration: 50, useNativeDriver: true}),
+                Animated.timing(shakeAnim, {toValue: 0, duration: 50, useNativeDriver: true}),
             ]).start();
         }
     }, [error]);
@@ -198,7 +198,7 @@ function CodeInput({ value, onChange, error, colors, codeRefs, onVerify, disable
     };
 
     return (
-        <Animated.View style={{ transform: [{ translateX: shakeAnim }] }}>
+        <Animated.View style={{transform: [{translateX: shakeAnim}]}}>
             <View style={styles.codeInputRow}>
                 {[0, 1, 2, 3, 4, 5].map((i) => {
                     const hasValue = !!value[i];
@@ -242,10 +242,10 @@ function CodeInput({ value, onChange, error, colors, codeRefs, onVerify, disable
 // ─────────────────────────────────────────────────────────────────────────────
 // Pantalla principal
 // ─────────────────────────────────────────────────────────────────────────────
-export default function VerifyCodeScreen({ route, navigation }) {
-    const { email } = route?.params ?? {};
-    const { t } = useTranslation();
-    const { colors } = useTheme();
+export default function VerifyCodeScreen({route, navigation}) {
+    const {email} = route?.params ?? {};
+    const {t} = useTranslation();
+    const {colors} = useTheme();
 
     // ── Refs para inputs ──
     const codeRefs = useRef([0, 1, 2, 3, 4, 5].map(() => React.createRef()));
@@ -347,8 +347,8 @@ export default function VerifyCodeScreen({ route, navigation }) {
         setPasswordLoading(false);
         setPasswordModalVisible(true);
         Animated.parallel([
-            Animated.spring(modalScale, { toValue: 1, useNativeDriver: true, tension: 120, friction: 8 }),
-            Animated.timing(modalOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
+            Animated.spring(modalScale, {toValue: 1, useNativeDriver: true, tension: 120, friction: 8}),
+            Animated.timing(modalOpacity, {toValue: 1, duration: 220, useNativeDriver: true}),
         ]).start(() => {
             setTimeout(() => newPasswordRef.current?.focus(), 200);
         });
@@ -358,22 +358,22 @@ export default function VerifyCodeScreen({ route, navigation }) {
         const hasUnsavedChanges = newPassword.trim() || confirmPassword.trim();
         if (hasUnsavedChanges) {
             Alert.alert(
-                t('common.discardTitle', { defaultValue: '¿Descartar cambios?' }),
+                t('common.discardTitle', {defaultValue: '¿Descartar cambios?'}),
                 t('passwordUpdate.discardMessage', {
                     defaultValue: 'Si sales, perderás la contraseña que escribiste.',
                 }),
                 [
                     {
-                        text: t('common.cancel', { defaultValue: 'Cancelar' }),
+                        text: t('common.cancel', {defaultValue: 'Cancelar'}),
                         style: 'cancel',
                     },
                     {
-                        text: t('common.discard', { defaultValue: 'Descartar' }),
+                        text: t('common.discard', {defaultValue: 'Descartar'}),
                         style: 'destructive',
                         onPress: () => {
                             Animated.parallel([
-                                Animated.spring(modalScale, { toValue: 0.92, useNativeDriver: true }),
-                                Animated.timing(modalOpacity, { toValue: 0, duration: 180, useNativeDriver: true }),
+                                Animated.spring(modalScale, {toValue: 0.92, useNativeDriver: true}),
+                                Animated.timing(modalOpacity, {toValue: 0, duration: 180, useNativeDriver: true}),
                             ]).start(() => setPasswordModalVisible(false));
                         },
                     },
@@ -381,8 +381,8 @@ export default function VerifyCodeScreen({ route, navigation }) {
             );
         } else {
             Animated.parallel([
-                Animated.spring(modalScale, { toValue: 0.92, useNativeDriver: true }),
-                Animated.timing(modalOpacity, { toValue: 0, duration: 180, useNativeDriver: true }),
+                Animated.spring(modalScale, {toValue: 0.92, useNativeDriver: true}),
+                Animated.timing(modalOpacity, {toValue: 0, duration: 180, useNativeDriver: true}),
             ]).start(() => setPasswordModalVisible(false));
         }
     }, [newPassword, confirmPassword, modalScale, modalOpacity, t]);
@@ -400,7 +400,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
 
         const trimmed = code.replace(/ /g, '').toUpperCase();
         if (trimmed.length !== 6) {
-            setCodeError(t('verifyCode.errorLength', { defaultValue: 'El código debe tener 6 caracteres.' }));
+            setCodeError(t('verifyCode.errorLength', {defaultValue: 'El código debe tener 6 caracteres.'}));
             if (Platform.OS === 'ios') Vibration.vibrate(200);
             return;
         }
@@ -463,7 +463,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
             } else if (err.message === 'timeout') {
                 setCodeError('La verificación tardó demasiado. Revisa tu conexión.');
             } else {
-                setCodeError(t('verifyCode.errorGeneric', { defaultValue: 'Ocurrió un error. Intenta de nuevo.' }));
+                setCodeError(t('verifyCode.errorGeneric', {defaultValue: 'Ocurrió un error. Intenta de nuevo.'}));
             }
         }
     }, [code, email, attempts, lockoutUntil, lockoutRemaining, codeGeneratedAt, openPasswordModal, t]);
@@ -481,7 +481,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
 
             // Aquí iría la llamada real al backend para reenviar
             // Por ahora simulamos generando un nuevo código
-            const { generateCode } = await import('./Forgotpasswordscreen').catch(() => ({
+            const {generateCode} = await import('./Forgotpasswordscreen').catch(() => ({
                 generateCode: () => {
                     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
                     let code = '';
@@ -504,7 +504,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
             Alert.alert(
                 'Código reenviado',
                 'Revisa tu correo para ver el nuevo código.',
-                [{ text: 'OK' }]
+                [{text: 'OK'}]
             );
 
             setTimeout(() => codeRefs.current[0]?.current?.focus(), 300);
@@ -520,15 +520,15 @@ export default function VerifyCodeScreen({ route, navigation }) {
         setPasswordError('');
 
         if (!newPassword || !confirmPassword) {
-            setPasswordError(t('passwordUpdate.errorRequired', { defaultValue: 'Completa todos los campos.' }));
+            setPasswordError(t('passwordUpdate.errorRequired', {defaultValue: 'Completa todos los campos.'}));
             return;
         }
         if (!allReqsMet) {
-            setPasswordError(t('passwordUpdate.errorRequirements', { defaultValue: 'La contraseña no cumple todos los requisitos.' }));
+            setPasswordError(t('passwordUpdate.errorRequirements', {defaultValue: 'La contraseña no cumple todos los requisitos.'}));
             return;
         }
         if (newPassword !== confirmPassword) {
-            setPasswordError(t('passwordUpdate.errorMatch', { defaultValue: 'Las contraseñas no coinciden.' }));
+            setPasswordError(t('passwordUpdate.errorMatch', {defaultValue: 'Las contraseñas no coinciden.'}));
             return;
         }
 
@@ -550,7 +550,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
             if (err.message === 'timeout') {
                 setPasswordError('La operación tardó demasiado. Intenta de nuevo.');
             } else {
-                setPasswordError(t('passwordUpdate.errorGeneric', { defaultValue: 'No se pudo actualizar. Intenta de nuevo.' }));
+                setPasswordError(t('passwordUpdate.errorGeneric', {defaultValue: 'No se pudo actualizar. Intenta de nuevo.'}));
             }
         }
     }, [newPassword, confirmPassword, allReqsMet, email, closePasswordModal, t]);
@@ -558,25 +558,29 @@ export default function VerifyCodeScreen({ route, navigation }) {
     // ── Pantalla de éxito ──
     if (successVisible) {
         return (
-            <SafeAreaView style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}>
+            <SafeAreaView style={[styles.safeAreaWhite, {backgroundColor: colors.backgroundWhite}]}>
                 <View style={styles.successContainer}>
-                    <Text style={[styles.successTitle, { color: colors.text }]}>
-                        {t('passwordUpdate.successTitle', { defaultValue: '¡Contraseña actualizada!' })}
+                    <Text style={[styles.successTitle, {color: colors.text}]}>
+                        {t('passwordUpdate.successTitle', {defaultValue: '¡Contraseña actualizada!'})}
                     </Text>
-                    <Text style={[styles.successMessage, { color: colors.textSecondary ?? '#666' }]}>
+                    <Text style={[styles.successMessage, {color: colors.textSecondary ?? '#666'}]}>
                         {t('passwordUpdate.successMessage', {
                             defaultValue: 'Tu contraseña ha sido restablecida correctamente. Ya puedes iniciar sesión.',
                         })}
                     </Text>
                     <TouchableOpacity
-                        style={[styles.recoveryPrimaryButton, { backgroundColor: colors.primary, marginTop: 32, padding: 10 }]}
+                        style={[styles.recoveryPrimaryButton, {
+                            backgroundColor: colors.primary,
+                            marginTop: 32,
+                            padding: 10
+                        }]}
                         onPress={() => navigation.navigate('HomesScreen')}
                         activeOpacity={0.8}
                         accessibilityLabel="Ir al inicio de sesión"
                         accessibilityRole="button"
                     >
                         <Text style={styles.recoveryPrimaryButtonText}>
-                            {t('passwordUpdate.goToLogin', { defaultValue: 'Ir al inicio de sesión' })}
+                            {t('passwordUpdate.goToLogin', {defaultValue: 'Ir al inicio de sesión'})}
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -588,32 +592,32 @@ export default function VerifyCodeScreen({ route, navigation }) {
     const isButtonDisabled = codeLoading || code.replace(/ /g, '').length !== 6 || isLockedOut;
 
     return (
-        <SafeAreaView style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}>
+        <SafeAreaView style={[styles.safeAreaWhite, {backgroundColor: colors.backgroundWhite}]}>
             <KeyboardAvoidingView
-                style={{ flex: 1 }}
+                style={{flex: 1}}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
             >
                 <ScrollView
-                    contentContainerStyle={{ flexGrow: 1 }}
+                    contentContainerStyle={{flexGrow: 1}}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
                     showsVerticalScrollIndicator={false}
                     bounces={false}
                 >
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                        <View style={[styles.container, { backgroundColor: colors.backgroundWhite }]}>
+                        <View style={[styles.container, {backgroundColor: colors.backgroundWhite}]}>
 
                             <TouchableOpacity
                                 onPress={() => navigation.goBack()}
-                                style={[styles.backButton, codeLoading && { opacity: 0.5 }]}
+                                style={[styles.backButton, codeLoading && {opacity: 0.5}]}
                                 disabled={codeLoading}
                                 activeOpacity={0.7}
                                 accessibilityLabel="Volver a la pantalla anterior"
                                 accessibilityRole="button"
                             >
-                                <Text style={[styles.backButtonText, { color: colors.primary }]}>
-                                    ‹ {t('common.back', { defaultValue: 'Volver' })}
+                                <Text style={[styles.backButtonText, {color: colors.primary}]}>
+                                    ‹ {t('common.back', {defaultValue: 'Volver'})}
                                 </Text>
                             </TouchableOpacity>
 
@@ -622,21 +626,25 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                     <Text style={styles.recoveryIcon}>📧</Text>
                                 </View>
 
-                                <Text style={[styles.textoSesion, { color: colors.text }]}>
-                                    {t('verifyCode.title', { defaultValue: 'Revisa tu correo' })}
+                                <Text style={[styles.textoSesion, {color: colors.text}]}>
+                                    {t('verifyCode.title', {defaultValue: 'Revisa tu correo'})}
                                 </Text>
 
-                                <Text style={[styles.textoCredenciales, { color: colors.textSecondary ?? '#666' }]}>
-                                    {t('verifyCode.description', { defaultValue: 'Enviamos un código de 6 caracteres a' })}{' '}
-                                    <Text style={{ fontWeight: '600', color: colors.text }}>{email}</Text>.
+                                <Text style={[styles.textoCredenciales, {color: colors.textSecondary ?? '#666'}]}>
+                                    {t('verifyCode.description', {defaultValue: 'Enviamos un código de 6 caracteres a'})}{' '}
+                                    <Text style={{fontWeight: '600', color: colors.text}}>{email}</Text>.
                                     {'\n'}
-                                    {t('verifyCode.descriptionSub', { defaultValue: 'Ingrésalo a continuación.' })}
+                                    {t('verifyCode.descriptionSub', {defaultValue: 'Ingrésalo a continuación.'})}
                                 </Text>
 
                                 {/* Label del código */}
-                                <View style={[styles.inputContainer, { marginTop: 16 }]}>
-                                    <Text style={[styles.inputTitulo, { color: colors.text, textAlign: 'center', marginBottom: 12 }]}>
-                                        {t('verifyCode.codeLabel', { defaultValue: 'Código de verificación' })}
+                                <View style={[styles.inputContainer, {marginTop: 16}]}>
+                                    <Text style={[styles.inputTitulo, {
+                                        color: colors.text,
+                                        textAlign: 'center',
+                                        marginBottom: 12
+                                    }]}>
+                                        {t('verifyCode.codeLabel', {defaultValue: 'Código de verificación'})}
                                     </Text>
 
                                     {/* 6 cajitas separadas */}
@@ -657,7 +665,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                         backgroundColor: (colors.error ?? '#E53E3E') + '12',
                                         borderColor: (colors.error ?? '#E53E3E') + '35',
                                     }]}>
-                                        <Text style={[styles.recoveryErrorText, { color: colors.error ?? '#E53E3E' }]}>
+                                        <Text style={[styles.recoveryErrorText, {color: colors.error ?? '#E53E3E'}]}>
                                             {codeError}
                                         </Text>
                                     </View>
@@ -680,24 +688,24 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                                 : "Verificar código de recuperación"
                                     }
                                     accessibilityRole="button"
-                                    accessibilityState={{ disabled: isButtonDisabled, busy: codeLoading }}
+                                    accessibilityState={{disabled: isButtonDisabled, busy: codeLoading}}
                                 >
                                     {codeLoading ? (
-                                        <ActivityIndicator color="#FFFFFF" size="small" />
+                                        <ActivityIndicator color="#FFFFFF" size="small"/>
                                     ) : isLockedOut ? (
                                         <Text style={styles.recoveryPrimaryButtonText}>
                                             Espera {lockoutRemaining}s
                                         </Text>
                                     ) : (
                                         <Text style={styles.recoveryPrimaryButtonText}>
-                                            {t('verifyCode.verifyButton', { defaultValue: 'Verificar código' })}
+                                            {t('verifyCode.verifyButton', {defaultValue: 'Verificar código'})}
                                         </Text>
                                     )}
                                 </TouchableOpacity>
 
                                 {/* Reenviar código */}
-                                <View style={{ alignItems: 'center', marginTop: 16 }}>
-                                    <Text style={[styles.textoCredenciales, { color: colors.textSecondary }]}>
+                                <View style={{alignItems: 'center', marginTop: 16}}>
+                                    <Text style={[styles.textoCredenciales, {color: colors.textSecondary}]}>
                                         ¿No recibiste el código?
                                     </Text>
                                     <TouchableOpacity
@@ -718,7 +726,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                         }}>
                                             {resendCooldown > 0
                                                 ? `Reenviar en ${resendCooldown}s`
-                                                : t('verifyCode.resendButton', { defaultValue: 'Reenviar código' })}
+                                                : t('verifyCode.resendButton', {defaultValue: 'Reenviar código'})}
                                         </Text>
                                     </TouchableOpacity>
                                 </View>
@@ -737,7 +745,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
             >
                 <TouchableWithoutFeedback onPress={closePasswordModal}>
                     <KeyboardAvoidingView
-                        style={{ flex: 1 }}
+                        style={{flex: 1}}
                         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                     >
                         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -752,19 +760,20 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                         {
                                             backgroundColor: colors.card,
                                             borderColor: colors.border ?? colors.textSecondary + '50',
-                                            transform: [{ scale: modalScale }],
+                                            transform: [{scale: modalScale}],
                                             opacity: modalOpacity,
                                         },
                                     ]}>
                                         {/* Encabezado */}
-                                        <Text style={[styles.passwordModalTitle, { color: colors.text }]}>
-                                            {t('passwordUpdate.title', { defaultValue: 'Nueva contraseña' })}
+                                        <Text style={[styles.passwordModalTitle, {color: colors.text}]}>
+                                            {t('passwordUpdate.title', {defaultValue: 'Nueva contraseña'})}
                                         </Text>
-                                        <Text style={[styles.passwordModalDescription, { color: colors.textSecondary }]}>
-                                            {t('passwordUpdate.description', { defaultValue: 'Crea una contraseña segura para tu cuenta.' })}
+                                        <Text style={[styles.passwordModalDescription, {color: colors.textSecondary}]}>
+                                            {t('passwordUpdate.description', {defaultValue: 'Crea una contraseña segura para tu cuenta.'})}
                                         </Text>
 
-                                        <View style={[styles.passwordModalDivider, { backgroundColor: colors.border ?? colors.textSecondary + '30' }]} />
+                                        <View
+                                            style={[styles.passwordModalDivider, {backgroundColor: colors.border ?? colors.textSecondary + '30'}]}/>
 
                                         {/* Campo nueva contraseña */}
                                         <View style={styles.passwordFieldWrapper}>
@@ -776,11 +785,14 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                                     backgroundColor: colors.background,
                                                     paddingRight: 48,
                                                 }]}
-                                                placeholder={t('passwordUpdate.newPassword', { defaultValue: 'Nueva contraseña' })}
+                                                placeholder={t('passwordUpdate.newPassword', {defaultValue: 'Nueva contraseña'})}
                                                 placeholderTextColor={colors.textSecondary}
                                                 secureTextEntry={!showNew}
                                                 value={newPassword}
-                                                onChangeText={(v) => { setNewPassword(v); setPasswordError(''); }}
+                                                onChangeText={(v) => {
+                                                    setNewPassword(v);
+                                                    setPasswordError('');
+                                                }}
                                                 returnKeyType="next"
                                                 onSubmitEditing={() => confirmPasswordRef.current?.focus()}
                                                 accessibilityLabel="Nueva contraseña"
@@ -799,7 +811,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                                             ? require('../../../assets/images/lupa.png')
                                                             : require('../../../assets/images/esconder.png')
                                                     }
-                                                    style={{ width: 24, height: 24, resizeMode: 'contain' }}
+                                                    style={{width: 24, height: 24, resizeMode: 'contain'}}
                                                 />
                                             </TouchableOpacity>
                                         </View>
@@ -811,9 +823,9 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                                     <View style={[styles.strengthBarFill, {
                                                         width: `${(strengthScore / 5) * 100}%`,
                                                         backgroundColor: strengthColor,
-                                                    }]} />
+                                                    }]}/>
                                                 </View>
-                                                <Text style={[styles.strengthLabel, { color: strengthColor }]}>
+                                                <Text style={[styles.strengthLabel, {color: strengthColor}]}>
                                                     {strengthLabel}
                                                 </Text>
                                             </View>
@@ -823,42 +835,42 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                         <View style={styles.passwordReqContainer}>
                                             <PasswordRequirement
                                                 met={reqs.length}
-                                                label={t('passwordUpdate.reqLength', { defaultValue: 'Mínimo 8 caracteres' })}
+                                                label={t('passwordUpdate.reqLength', {defaultValue: 'Mínimo 8 caracteres'})}
                                                 colors={colors}
                                             />
                                             <PasswordRequirement
                                                 met={reqs.uppercase}
-                                                label={t('passwordUpdate.reqUppercase', { defaultValue: 'Al menos una mayúscula' })}
+                                                label={t('passwordUpdate.reqUppercase', {defaultValue: 'Al menos una mayúscula'})}
                                                 colors={colors}
                                             />
                                             <PasswordRequirement
                                                 met={reqs.lowercase}
-                                                label={t('passwordUpdate.reqLowercase', { defaultValue: 'Al menos una minúscula' })}
+                                                label={t('passwordUpdate.reqLowercase', {defaultValue: 'Al menos una minúscula'})}
                                                 colors={colors}
                                             />
                                             <PasswordRequirement
                                                 met={reqs.number}
-                                                label={t('passwordUpdate.reqNumber', { defaultValue: 'Al menos un número' })}
+                                                label={t('passwordUpdate.reqNumber', {defaultValue: 'Al menos un número'})}
                                                 colors={colors}
                                             />
                                             <PasswordRequirement
                                                 met={reqs.special}
-                                                label={t('passwordUpdate.reqSpecial', { defaultValue: 'Al menos un carácter especial (!@#$...)' })}
+                                                label={t('passwordUpdate.reqSpecial', {defaultValue: 'Al menos un carácter especial (!@#$...)'})}
                                                 colors={colors}
                                             />
                                             <PasswordRequirement
                                                 met={reqs.notCommon}
-                                                label={t('passwordUpdate.reqNotCommon', { defaultValue: 'No es una contraseña común' })}
+                                                label={t('passwordUpdate.reqNotCommon', {defaultValue: 'No es una contraseña común'})}
                                                 colors={colors}
                                             />
                                             <PasswordRequirement
                                                 met={reqs.noSequential}
-                                                label={t('passwordUpdate.reqNoSequential', { defaultValue: 'Sin patrones secuenciales (123, abc)' })}
+                                                label={t('passwordUpdate.reqNoSequential', {defaultValue: 'Sin patrones secuenciales (123, abc)'})}
                                                 colors={colors}
                                             />
                                             <PasswordRequirement
                                                 met={reqs.noRepeated}
-                                                label={t('passwordUpdate.reqNoRepeated', { defaultValue: 'Sin caracteres repetidos (aaa, 111)' })}
+                                                label={t('passwordUpdate.reqNoRepeated', {defaultValue: 'Sin caracteres repetidos (aaa, 111)'})}
                                                 colors={colors}
                                             />
                                         </View>
@@ -875,11 +887,14 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                                     backgroundColor: colors.background,
                                                     paddingRight: 48,
                                                 }]}
-                                                placeholder={t('passwordUpdate.confirmPassword', { defaultValue: 'Confirmar contraseña' })}
+                                                placeholder={t('passwordUpdate.confirmPassword', {defaultValue: 'Confirmar contraseña'})}
                                                 placeholderTextColor={colors.textSecondary}
                                                 secureTextEntry={!showConfirm}
                                                 value={confirmPassword}
-                                                onChangeText={(v) => { setConfirmPassword(v); setPasswordError(''); }}
+                                                onChangeText={(v) => {
+                                                    setConfirmPassword(v);
+                                                    setPasswordError('');
+                                                }}
                                                 returnKeyType="done"
                                                 onSubmitEditing={handlePasswordUpdate}
                                                 accessibilityLabel="Confirmar contraseña"
@@ -897,7 +912,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                                             ? require('../../../assets/images/lupa.png')
                                                             : require('../../../assets/images/esconder.png')
                                                     }
-                                                    style={{ width: 24, height: 24, resizeMode: 'contain' }}
+                                                    style={{width: 24, height: 24, resizeMode: 'contain'}}
                                                 />
                                             </TouchableOpacity>
                                         </View>
@@ -910,8 +925,8 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                                     : (colors.error ?? '#E53E3E'),
                                             }]} accessibilityLiveRegion="polite">
                                                 {newPassword === confirmPassword
-                                                    ? t('passwordUpdate.passwordsMatch', { defaultValue: '✓ Las contraseñas coinciden' })
-                                                    : t('passwordUpdate.passwordsNoMatch', { defaultValue: '✗ Las contraseñas no coinciden' })}
+                                                    ? t('passwordUpdate.passwordsMatch', {defaultValue: '✓ Las contraseñas coinciden'})
+                                                    : t('passwordUpdate.passwordsNoMatch', {defaultValue: '✗ Las contraseñas no coinciden'})}
                                             </Text>
                                         )}
 
@@ -921,7 +936,8 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                                 backgroundColor: (colors.error ?? '#E53E3E') + '12',
                                                 borderColor: (colors.error ?? '#E53E3E') + '35',
                                             }]}>
-                                                <Text style={[styles.passwordModalError, { color: colors.error ?? '#E53E3E' }]}>
+                                                <Text
+                                                    style={[styles.passwordModalError, {color: colors.error ?? '#E53E3E'}]}>
                                                     {passwordError}
                                                 </Text>
                                             </View>
@@ -929,12 +945,12 @@ export default function VerifyCodeScreen({ route, navigation }) {
 
                                         {/* Botones */}
                                         <View style={styles.passwordModalButtons}>
-                                            <View style={{ width: '100%' }}>
+                                            <View style={{width: '100%'}}>
                                                 <PrimaryButton
                                                     title={
                                                         passwordLoading
-                                                            ? t('passwordUpdate.saving', { defaultValue: 'Guardando...' })
-                                                            : t('passwordUpdate.saveButton', { defaultValue: 'Guardar contraseña' })
+                                                            ? t('passwordUpdate.saving', {defaultValue: 'Guardando...'})
+                                                            : t('passwordUpdate.saveButton', {defaultValue: 'Guardar contraseña'})
                                                     }
                                                     onPress={handlePasswordUpdate}
                                                     disabled={passwordLoading || !allReqsMet}
@@ -946,8 +962,8 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                                 accessibilityLabel="Cancelar y descartar cambios"
                                                 accessibilityRole="button"
                                             >
-                                                <Text style={[styles.passwordModalCancelText, { color: colors.primary }]}>
-                                                    {t('common.cancel', { defaultValue: 'Cancelar' })}
+                                                <Text style={[styles.passwordModalCancelText, {color: colors.primary}]}>
+                                                    {t('common.cancel', {defaultValue: 'Cancelar'})}
                                                 </Text>
                                             </TouchableOpacity>
                                         </View>

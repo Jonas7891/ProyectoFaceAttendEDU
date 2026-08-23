@@ -1,19 +1,12 @@
 ﻿import React from 'react';
-import {
-    Text,
-    View,
-    SafeAreaView,
-    TouchableOpacity,
-    ScrollView,
-    Platform,
-} from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from '../components/common/ThemeContext';
+import {Platform, SafeAreaView, ScrollView, Text, TouchableOpacity, View,} from 'react-native';
+import {useTranslation} from 'react-i18next';
+import {useTheme} from '../components/common/ThemeContext';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import PasswordUpdateModal from '../components/common/PasswordUpdateModal';
 import ProfileUpdateModal from '../components/common/ProfileUpdateModal';
 import styles from './Style';
-import { useProfileViewModel } from '../../viewmodels/useProfileViewModel';
+import {useProfileViewModel} from '../../viewmodels/useProfileViewModel';
 
 /** Fila de información clave → valor */
 const InfoField = ({ label, value, colors }) => (

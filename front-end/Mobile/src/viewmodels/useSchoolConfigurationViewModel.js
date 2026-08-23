@@ -1,17 +1,11 @@
-import {Alert, Platform, Switch, Text, TextInput, TouchableOpacity, View} from "react-native";
-import React, {useState, useCallback, useEffect} from 'react';
-import { validateEmail, validatePhone } from "../utils/validators";
-import { CountryService } from "../services/CountryService";
+import {Alert} from "react-native";
+import {useEffect, useState} from 'react';
+import {validateEmail, validatePhone} from "../utils/validators";
+import {CountryService} from "../services/CountryService";
 // ⚠️ Ajusta el nombre real de la función de actualización en tu SchoolService
-import { getSchoolById, updateSchool } from "../services/SchoolService";
-import { SchoolResponse,
-    GeneralInfo,
-    ContactInfo,
-    AcademicConfig,
-    AttendanceConfig} from "../model/SchoolResponse";
-import styles from "../view/screens/Style";
+import {getSchoolById, updateSchool} from "../services/SchoolService";
+import {AcademicConfig, AttendanceConfig, ContactInfo, GeneralInfo, SchoolResponse} from "../model/SchoolResponse";
 import {getCurrentUser, getUserByEmail} from "../services/UserService";
-import UserResponse from "../model/UserResponse";
 
 
 export function useSchoolConfigurationViewModel({ isAdmin = false } = {}) {

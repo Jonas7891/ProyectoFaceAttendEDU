@@ -1,23 +1,23 @@
 import React from 'react';
 import {
-  Text,
-  View,
-  SafeAreaView,
-  KeyboardAvoidingView,
-  TouchableOpacity,
-  Platform,
   Image,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
+import {useTranslation} from 'react-i18next';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import CustomLogo from '../components/common/logo';
 import Separador from '../components/common/Separador';
 import styles from './Style';
-import { useTheme } from '../components/common/ThemeContext';
-import { useMenuJustifyViewModel } from '../../viewmodels/useMenuJustifyViewModel';
-import { useUser } from '../../utils/UserContext';
+import {useTheme} from '../components/common/ThemeContext';
+import {useMenuJustifyViewModel} from '../../viewmodels/useMenuJustifyViewModel';
+import {useUser} from '../../utils/UserContext';
 
 export default function MenuJustifyScreen() {
   const { t } = useTranslation();
@@ -34,7 +34,7 @@ export default function MenuJustifyScreen() {
     }
   });
 
-  const { isAdmin, isStudent } = useUser();
+  const {isAdmin, isStudent, isTeacher} = useUser();
 
   const {
     updateKey,
@@ -90,7 +90,7 @@ export default function MenuJustifyScreen() {
               <View style={styles.mainContent}>
                 <Header title={isStudent ? t('justify.title') : t('admin.justificationManagement')} />
 
-                {isStudent ? (
+                {isStudent || isTeacher ? (
                     <>
                       <MenuItem label={t('consultJustify.mainTitle')} onPress={handleValidJustifications} />
                       <MenuItem label={t('admin.pendingJustifications')} onPress={handlePendingJustificationScreen} />
@@ -99,9 +99,7 @@ export default function MenuJustifyScreen() {
                     <>
                       <MenuItem label={t('admin.validJustifications')} onPress={handleValidJustifications} />
                       <MenuItem label={t('admin.pendingJustifications')} onPress={handlePendingJustificationScreen} />
-                      {isAdmin && (
-                          <MenuItem label={t('admin.addNewJustification')} onPress={handleAddOrEditJustify} />
-                      )}
+                      <MenuItem label={t('admin.addNewJustification')} onPress={handleAddOrEditJustify}/>
                     </>
                 )}
               </View>

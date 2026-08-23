@@ -1,23 +1,23 @@
 import React from 'react';
 import {
-  Text,
-  TouchableOpacity,
-  SafeAreaView,
-  ScrollView,
-  View,
-  Modal,
-  Switch,
-  Platform,
-  KeyboardAvoidingView,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    Switch,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
-import { useTranslation } from 'react-i18next';
-import { useTheme } from '../components/common/ThemeContext';
-import { useAlertsConfig } from '../../utils/AlertsConfigContext';
+import {useTranslation} from 'react-i18next';
+import {useTheme} from '../components/common/ThemeContext';
+import {useAlertsConfig} from '../../utils/AlertsConfigContext';
 import ScrollViewWrapper from '../components/common/ScrollView';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import styles from './Style';
-import { useLanguageSettingsViewModel } from '../../viewmodels/useLanguageSettingsViewModel';
+import {useLanguageSettingsViewModel} from '../../viewmodels/useLanguageSettingsViewModel';
 
 export default function LanguageSettingsScreen() {
   const { t } = useTranslation();

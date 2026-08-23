@@ -1,12 +1,12 @@
-import { useState, useMemo, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
+import {useCallback, useMemo, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
-import { useLanguageRefresh } from '../utils/useLanguageRefresh';
+import {useNavigation} from '@react-navigation/native';
+import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 
 export function useAddValidJustificationViewModel() {
     const navigation = useNavigation();
-    const { t } = useTranslation();
+    const {t} = useTranslation();
 
     // Estados del formulario
     const [type, setType] = useState('');
@@ -25,7 +25,7 @@ export function useAddValidJustificationViewModel() {
         timestamp: 0,
     });
 
-    const clearAlert = () => setAlertData({ message: null, type: 'warning', timestamp: 0 });
+    const clearAlert = () => setAlertData({message: null, type: 'warning', timestamp: 0});
 
     // Listas de categorías y tipos
     const categories = useMemo(() => [

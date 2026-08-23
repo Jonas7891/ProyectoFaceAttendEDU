@@ -1,19 +1,19 @@
-import React, { useEffect, useRef } from "react";
+import React, {useEffect, useRef} from "react";
 import {
-    Text,
-    View,
-    TextInput,
-    SafeAreaView,
+    Animated,
+    Keyboard,
     KeyboardAvoidingView,
     Platform,
-    TouchableWithoutFeedback,
-    Keyboard,
+    SafeAreaView,
+    Text,
+    TextInput,
     TouchableOpacity,
-    Animated,
+    TouchableWithoutFeedback,
+    View,
 } from "react-native";
-import { useTranslation } from "react-i18next";
-import { useLanguageRefresh } from '../../../utils/useLanguageRefresh';
-import { useTheme } from '../../components/common/ThemeContext';
+import {useTranslation} from "react-i18next";
+import {useLanguageRefresh} from '../../../utils/useLanguageRefresh';
+import {useTheme} from '../../components/common/ThemeContext';
 import PrimaryButton from "../../components/auth/PrimaryButton";
 import SelectableButton from "../../components/common/SelectableButton";
 import CustomLogo from "../../components/common/logo";
@@ -21,18 +21,18 @@ import RegisterModal from '../../components/auth/RegisterModal';
 import TerminosModal from "../../components/common/TerminosModal";
 import ScrollView from "../../components/common/ScrollView";
 import CustomAlert from '../../components/common/CustomAlert';
-import { useCustomAlert } from '../../components/common/useCustomAlert';
+import {useCustomAlert} from '../../components/common/useCustomAlert';
 import styles from "./style/Style";
-import { useLoginViewModel } from '../../../viewmodels/useLoginViewModel';
+import {useLoginViewModel} from '../../../viewmodels/useLoginViewModel';
 
 // Número de intentos fallidos antes de mostrar el enlace de recuperación
 const MAX_FAILED_ATTEMPTS = 3;
 
-export default function HomesScreen({ onLogin, navigation }) {
+export default function HomesScreen({onLogin, navigation}) {
     const refreshKey = useLanguageRefresh();
-    const { t } = useTranslation();
-    const { colors } = useTheme();
-    const { alertConfig, hideAlert, showError } = useCustomAlert();
+    const {t} = useTranslation();
+    const {colors} = useTheme();
+    const {alertConfig, hideAlert, showError} = useCustomAlert();
 
     const emailInputRef = useRef(null);
     const passwordInputRef = useRef(null);
@@ -47,7 +47,7 @@ export default function HomesScreen({ onLogin, navigation }) {
     const {
         email, password, terms, isLoading, error, errorTimestamp,
         setEmail, setPassword, setTerms, submit,
-    } = useLoginViewModel({ onLogin });
+    } = useLoginViewModel({onLogin});
 
     useEffect(() => {
         if (error) {
@@ -55,15 +55,15 @@ export default function HomesScreen({ onLogin, navigation }) {
             setFailedAttempts(newCount);
 
             showError(
-                t('login.errorTitle', { defaultValue: 'Error de inicio de sesión' }),
+                t('login.errorTitle', {defaultValue: 'Error de inicio de sesión'}),
                 error,
                 hideAlert
             );
 
             if (newCount >= MAX_FAILED_ATTEMPTS) {
                 Animated.parallel([
-                    Animated.timing(forgotLinkOpacity, { toValue: 1, duration: 350, useNativeDriver: true }),
-                    Animated.timing(forgotLinkTranslateY, { toValue: 0, duration: 350, useNativeDriver: true }),
+                    Animated.timing(forgotLinkOpacity, {toValue: 1, duration: 350, useNativeDriver: true}),
+                    Animated.timing(forgotLinkTranslateY, {toValue: 0, duration: 350, useNativeDriver: true}),
                 ]).start();
             }
         }
@@ -78,25 +78,25 @@ export default function HomesScreen({ onLogin, navigation }) {
     return (
         <>
             <SafeAreaView
-                style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}
+                style={[styles.safeAreaWhite, {backgroundColor: colors.backgroundWhite}]}
                 key={refreshKey}
             >
                 {/* ⬇️ KeyboardAvoidingView PRIMERO */}
                 <KeyboardAvoidingView
-                    style={{ flex: 1 }}
+                    style={{flex: 1}}
                     behavior={Platform.OS === "ios" ? "padding" : "height"}
                     keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
                 >
                     {/* ⬇️ ScrollView DENTRO del KeyboardAvoidingView */}
                     <ScrollView
-                        contentContainerStyle={{ flexGrow: 1 }}
+                        contentContainerStyle={{flexGrow: 1}}
                         keyboardShouldPersistTaps="handled"
                         keyboardDismissMode="on-drag"
                         showsVerticalScrollIndicator={false}
                         bounces={false}
                     >
                         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                            <View style={[styles.container, { backgroundColor: colors.backgroundWhite }]}>
+                            <View style={[styles.container, {backgroundColor: colors.backgroundWhite}]}>
                                 <View style={styles.contentContainer}>
 
                                     <View style={styles.logoContainer}>
@@ -108,13 +108,13 @@ export default function HomesScreen({ onLogin, navigation }) {
                                         />
                                     </View>
 
-                                    <Text style={[styles.textoSesion, { color: colors.text }]}>
+                                    <Text style={[styles.textoSesion, {color: colors.text}]}>
                                         {t('login.title')}
                                     </Text>
 
                                     {/* Campo Email */}
                                     <View style={styles.inputContainer}>
-                                        <Text style={[styles.inputTitulo, { color: colors.text }]}>
+                                        <Text style={[styles.inputTitulo, {color: colors.text}]}>
                                             {t('login.email')}
                                         </Text>
                                         <TextInput
@@ -139,7 +139,7 @@ export default function HomesScreen({ onLogin, navigation }) {
 
                                     {/* Campo Contraseña */}
                                     <View style={styles.inputContainer}>
-                                        <Text style={[styles.inputTitulo, { color: colors.text }]}>
+                                        <Text style={[styles.inputTitulo, {color: colors.text}]}>
                                             {t('login.password')}
                                         </Text>
                                         <TextInput
@@ -165,13 +165,13 @@ export default function HomesScreen({ onLogin, navigation }) {
                                                     styles.forgotPasswordContainer,
                                                     {
                                                         opacity: forgotLinkOpacity,
-                                                        transform: [{ translateY: forgotLinkTranslateY }],
+                                                        transform: [{translateY: forgotLinkTranslateY}],
                                                     },
                                                 ]}
                                             >
                                                 <TouchableOpacity onPress={handleForgotPassword} activeOpacity={0.7}>
-                                                    <Text style={[styles.forgotPasswordText, { color: colors.primary }]}>
-                                                        {t('login.forgotPassword', { defaultValue: '¿Olvidaste tu contraseña?' })}
+                                                    <Text style={[styles.forgotPasswordText, {color: colors.primary}]}>
+                                                        {t('login.forgotPassword', {defaultValue: '¿Olvidaste tu contraseña?'})}
                                                     </Text>
                                                 </TouchableOpacity>
                                             </Animated.View>
@@ -183,10 +183,12 @@ export default function HomesScreen({ onLogin, navigation }) {
                                                 onCheckChange={setTerms}
                                             />
                                             <TouchableOpacity
-                                                onPress={() => { setIsTerminosModalVisible(true); }}
+                                                onPress={() => {
+                                                    setIsTerminosModalVisible(true);
+                                                }}
                                                 activeOpacity={0.7}
                                             >
-                                                <Text style={[styles.terminosText, { color: colors.primary }]}>
+                                                <Text style={[styles.terminosText, {color: colors.primary}]}>
                                                     {t('login.terms')}
                                                 </Text>
                                             </TouchableOpacity>
@@ -205,7 +207,7 @@ export default function HomesScreen({ onLogin, navigation }) {
                                     activeOpacity={0.7}
                                     style={styles.sesionNoRegistro}
                                 >
-                                    <Text style={[styles.noRegistro, { color: colors.textSecondary }]}>
+                                    <Text style={[styles.noRegistro, {color: colors.textSecondary}]}>
                                         {t('login.noAccount')}
                                     </Text>
                                 </TouchableOpacity>

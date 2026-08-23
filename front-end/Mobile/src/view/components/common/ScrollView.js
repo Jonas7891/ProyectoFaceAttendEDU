@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  ScrollView,
-  View,
-  RefreshControl,
-  ActivityIndicator,
-} from "react-native";
+import {ActivityIndicator, RefreshControl, ScrollView, View,} from "react-native";
 import stylescommon from "./style/Style";
 
 export default function ScrollViews({
