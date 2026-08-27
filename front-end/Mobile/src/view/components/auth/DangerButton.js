@@ -1,6 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { TouchableOpacity, Text, View, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import styleAuth from './style/Style';
@@ -15,10 +14,8 @@ export default function DangerButton({ title, disabled = false, onLogout }) {
 
     const handleLogout = async () => {
         try {
-            // Limpiar almacenamiento
             await removeToken();
 
-            // Ejecutar callback (que ya incluye la confirmación desde la pantalla)
             if (onLogout) {
                 await onLogout();
             } else {
@@ -40,16 +37,18 @@ export default function DangerButton({ title, disabled = false, onLogout }) {
 
     return (
         <>
-            <TouchableOpacity
-                style={[styleAuth.dangerButton, disabled && styleAuth.buttonDisabled]}
-                onPress={handleLogout}
-                disabled={disabled}
-                activeOpacity={0.7}
-            >
-                <Text style={styleAuth.dangerButtonText}>{title}</Text>
-            </TouchableOpacity>
+            {/* Contenedor que asegura la posición inferior y márgenes seguros */}
+            <View style={styleAuth.dangerButtonContainer}>
+                <TouchableOpacity
+                    style={[styleAuth.dangerButton, disabled && styleAuth.buttonDisabled]}
+                    onPress={handleLogout}
+                    disabled={disabled}
+                    activeOpacity={0.7}
+                >
+                    <Text style={styleAuth.dangerButtonText}>{title || t('common.logout', { defaultValue: 'Cerrar Sesión' })}</Text>
+                </TouchableOpacity>
+            </View>
 
-            {/* Solo para mostrar errores, sin confirmación */}
             <CustomAlert
                 visible={alertConfig.visible}
                 title={alertConfig.title}

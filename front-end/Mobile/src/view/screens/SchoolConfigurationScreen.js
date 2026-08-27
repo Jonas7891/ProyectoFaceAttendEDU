@@ -133,8 +133,8 @@ const SchoolConfigurationScreen = ({ navigation }) => {
     const { colors, isDark, toggleTheme } = useTheme();
     const { t } = useTranslation();
 
-    const { isAdmin } = useUser();
-    const isAdminUser = isAdmin();
+    const { isAdmin, isStudent, isTeacher } = useUser();
+    const isAdminUser = isAdmin;
 
     const {
         activeTab,
@@ -487,9 +487,6 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                                 Alert.alert('Selecciona un país primero');
                                                 return;
                                             }
-                                            if (citiesOptions.length === 0 && !loadingCities) {
-                                                fetchCitiesByCountry(contactInfo.country);
-                                            }
                                             setCitySearch('');
                                             setCityModalVisible(true);
                                         }}
@@ -693,9 +690,9 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                         No se encontraron países
                                     </Text>
                                 ) : (
-                                    filteredCountries.map((option) => (
+                                    filteredCountries.map((option, index) => (
                                         <TouchableOpacity
-                                            key={`${option.name}-${option.code}`}
+                                            key={`${option.name}-${index}`}
                                             style={[styles.countryOptionSchoolConfig, { borderBottomColor: colors.modalBorder }]}
                                             onPress={() => handleCountryChange(option)}
                                         >
@@ -811,9 +808,9 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                             No se encontraron ciudades
                                         </Text>
                                     ) : (
-                                        displayedCities.map((city) => (
+                                        displayedCities.map((city, index) => (
                                             <TouchableOpacity
-                                                key={city}
+                                                key={`${city}-${index}`}
                                                 style={[styles.countryOptionSchoolConfig, { borderBottomColor: colors.modalBorder }]}
                                                 onPress={() => handleCityChange(city)}
                                             >
