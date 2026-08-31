@@ -1,0 +1,293 @@
+﻿// ============================================================
+//  FaceAttend EDU — Courses View (View Layer)
+//  Toda lógica en useCoursesViewModel.
+//  Gestión (crear, editar) solo visible para admin.
+// ============================================================
+
+import React from "react";
+import {
+    View, Text, ScrollView, TouchableOpacity,
+    TextInput, Modal, ActivityIndicator,
+} from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { Card, Badge, PageHeader, UIButton, ProgressBar, EmptyState } from "../ui/UI";
+import { useAttendanceColor, ATTENDANCE_THRESHOLDS } from "../ui/AttendanceBadge";
+import { useTheme }             from "../hooks/useTheme";
+import { useResponsive }        from "../hooks/useResponsive";
+import { useCoursesViewModel }  from "../../../viewmodels/useCoursesViewModel";
+import { useRolePermissions }   from "../../hooks/useRolePermissions";
+import { useTranslation }       from "../../../i18n/hooks/useTranslation";
+import { Course }          from "../../../models/types";
+
+// ── CourseDetailModal ────────────────────────────────────────
+
+function CourseDetailModal({
+    course,
+    onClose,
+    canManage,
+}: {
+    course) => void;
+    canManage: boolean;
+}) {
+    const { theme } = useTheme();
+    const { t }     = useTranslation();
+    const c         = theme.colors;
+
+    if (!course) return null;
+
+    return (
+        <Modal transparent animationType="fade" onRequestClose={onClose}>
+            <TouchableOpacity
+                style={{ flex: 1, backgroundColor: c.background.overlay,
+                    justifyContent: "center", alignItems: "center", padding,
+                }}
+                onPress={onClose}
+                activeOpacity={1}
+            >
+                <TouchableOpacity activeOpacity={1} onPress={e => e.stopPropagation()}>
+                    <View style={{
+                        backgroundColor: c.background.surface,
+                        borderRadius: 14, width, overflow: "hidden",
+                        shadowColor: "#000", shadowOpacity: 0.15, shadowRadius, elevation,
+                    }}>
+                        <View style={{ height: 5, backgroundColor: course.color }} />
+                        <View style={{ padding: 24 }}>
+                            <View style={{
+                                flexDirection: "row", justifyContent: "space-between",
+                                alignItems: "flex-start", marginBottom,
+                            }}>
+                                
+                                    <Text style={{ fontSize: 10, fontWeight: "700", color: course.color, letterSpacing: 1 }}>
+                                        {course.code}
+                                    </Text>
+                                    <Text style={{ fontSize: 10, fontWeight: "700", color: c.text.primary, marginTop: 4 }}>
+                                        {course.name}
+                                    </Text>
+                                </View>
+                                <TouchableOpacity onPress={onClose}>
+                                    <Feather name="x" size={18} color={c.text.secondary} />
+                                </TouchableOpacity>
+                            </View>
+
+                            <View style={{ flexDirection: "row", flexWrap: "wrap", gap, marginBottom: 20 }}>
+                                {[
+                                    { label: t("Docente"),     value: course.professor },
+                                    { label: t("Semestre"),    value: course.semester  },
+                                    { label: t("Horario"),     value: course.schedule  },
+                                    { label: t("Aula"),        value: course.room      },
+                                    { label: t("Estudiantes"), value: `${course.students} ${t("inscritos")}` },
+                                    { label: t("Asistencia"),  value: `${course.avgAttendance}%`             },
+                                ].map(({ label, value }) => (
+                                    <View key={label} style={{
+                                        width: "47%",
+                                        backgroundColor: c.background.app,
+                                        borderRadius: 14, padding,
+                                    }}>
+                                        <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom: 4 }}>
+                                            {label}
+                                        </Text>
+                                        <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary }}>
+                                            {value}
+                                        </Text>
+                                    </View>
+                                ))}
+                            </View>
+
+                            <View style={{ flexDirection: "row", gap, justifyContent: "flex-end" }}>
+                                <UIButton variant="ghost" onPress={onClose}>{t("Cerrar")}</UIButton>
+                                {canManage && (
+                                    <UIButton variant="primary">{t("Editar curso")}</UIButton>
+                                )}
+                            </View>
+                        </View>
+                    </View>
+                </TouchableOpacity>
+            </TouchableOpacity>
+        </Modal>
+    );
+}
+
+// ── CourseCard ───────────────────────────────────────────────
+
+function CourseCard({ course, onPress }) {
+    const { theme } = useTheme();
+    const { t }     = useTranslation();
+    const c         = theme.colors;
+    const barColor  = useAttendanceColor(course.avgAttendance);
+
+    return (
+        <TouchableOpacity onPress={onPress} style={{ flex: 1, minWidth: 260 }}>
+            <Card padding={0} style={{ overflow: "hidden", height: "100%" }}>
+                <View style={{ height: 5, backgroundColor: course.color }} />
+                <View style={{ padding, flex: 1 }}>
+                    <View style={{
+                        flexDirection: "row", justifyContent: "space-between",
+                        alignItems: "flex-start", marginBottom,
+                    }}>
+                        <Text style={{ fontSize: 10, fontWeight: "700", color: course.color, letterSpacing: 1 }}>
+                            {course.code}
+                        </Text>
+                        <Badge variant="primary">{course.semester}</Badge>
+                    </View>
+                    <Text style={{ fontSize: 10, fontWeight: "700", color: c.text.primary, marginBottom, lineHeight: 20 }}>
+                        {course.name}
+                    </Text>
+                    <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom: 14 }}>
+                        {course.professor}
+                    </Text>
+
+                    <View style={{ gap, marginBottom: 14 }}>
+                        {[
+                            { icon: "users",   text: `${course.students} ${t("estudiantes")}` },
+                            { icon: "clock",   text: course.schedule                           },
+                            { icon: "map-pin", text: course.room                               },
+                        ].map(({ icon, text }) => (
+                            <View key={icon} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                                <Feather name={icon} size={13} color={c.text.secondary} />
+                                <Text style={{ fontSize: 11, color: c.text.secondary }}>{text}</Text>
+                            </View>
+                        ))}
+                    </View>
+
+                    
+                        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 6 }}>
+                            <Text style={{ fontSize: 11, color: c.text.secondary }}>{t("Asistencia promedio")}</Text>
+                            <Text style={{ fontSize: 10, fontWeight: "700", color: barColor }}>
+                                {course.avgAttendance}%
+                            </Text>
+                        </View>
+                        <ProgressBar value={course.avgAttendance} color={barColor} height={5} />
+                    </View>
+                </View>
+
+                <View style={{ flexDirection: "row", borderTopWidth, borderTopColor: c.border.primary }}>
+                    <TouchableOpacity style={{ flex: 1, flexDirection: "row", alignItems: "center",
+                        justifyContent: "center", gap, padding,
+                    }}>
+                        <Feather name="bar-chart-2" size={13} color={c.text.secondary} />
+                        <Text style={{ fontSize: 11, color: c.text.secondary }}>{t("Reportes")}</Text>
+                    </TouchableOpacity>
+                    <View style={{ width, backgroundColor: c.border.primary }} />
+                    <TouchableOpacity style={{ flex: 1, flexDirection: "row", alignItems: "center",
+                        justifyContent: "center", gap, padding,
+                    }}>
+                        <Feather name="users" size={13} color={c.brand.primary} />
+                        <Text style={{ fontSize: 11, color: c.brand.primary, fontWeight: "600" }}>
+                            {t("Estudiantes")}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            </Card>
+        </TouchableOpacity>
+    );
+}
+
+// ── CoursesView ──────────────────────────────────────────────
+
+export default function CoursesView() {
+    const { isSmall } = useResponsive();
+    const { theme }   = useTheme();
+    const c           = theme.colors;
+    const vm          = useCoursesViewModel();
+    const { t }       = useTranslation();
+    const permissions = useRolePermissions();
+
+    if (vm.isLoading) {
+        return (
+            <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+                <ActivityIndicator size="large" color={c.brand.primary} />
+            </View>
+        );
+    }
+
+    return (
+        <View style={{ flex: 1 }}>
+            <ScrollView
+                contentContainerStyle={{ padding: isSmall ? 16, gap: 16 }}
+                showsVerticalScrollIndicator={false}
+            >
+                <PageHeader
+                    title={t("Cursos")}
+                    subtitle={`${vm.filtered.length} ${t("cursos activos este semestre")}`}
+                    actions={
+                        {/* Solo admin puede gestionar cursos */}
+                        {permissions.canManageCourses && (
+                            
+                                <UIButton variant="ghost" size="sm">{t("Importar")}</UIButton>
+                                <UIButton variant="primary" size="sm">+ {t("Nuevo curso")}</UIButton>
+                            </>
+                        )}
+                    </>}
+                />
+
+                {/* Búsqueda */}
+                <View style={{ maxWidth, position: "relative", justifyContent: "center" }}>
+                    <View style={{ position: "absolute", left, zIndex: 1 }}>
+                        <Feather name="search" size={14} color={c.text.secondary} />
+                    </View>
+                    <TextInput
+                        placeholder={t("Buscar curso o código...")}
+                        value={vm.search}
+                        onChangeText={vm.setSearch}
+                        style={{
+                            height, borderWidth, borderColor: c.border.primary,
+                            borderRadius: 14, paddingLeft, paddingRight,
+                            fontSize, backgroundColor: c.background.surface,
+                            color: c.text.primary,
+                        }}
+                        placeholderTextColor={c.text.disabled}
+                    />
+                </View>
+
+                {/* Mini stats */}
+                <View style={{ flexDirection: "row", gap, flexWrap: "wrap" }}>
+                    {[
+                        { label: t("Total cursos"),     value: vm.courses.length,      color: c.brand.primary  },
+                        { label: t("Estudiantes"),      value: vm.totalStudents,       color: c.states.success },
+                        { label: t("Asistencia prom."), value: `${vm.avgAttendance}%`, color: "#8B5CF6"        },
+                        { label: t("Con alerta"),       value: vm.alertCount,          color: c.states.warning },
+                    ].map(({ label, value, color }) => (
+                        <Card key={label} style={{ flex: 1, minWidth, alignItems: "center" }} padding={14}>
+                            <Text style={{
+                                fontSize: 10, fontWeight: "600", color: c.text.secondary,
+                                textTransform: "uppercase", letterSpacing: 0.5,
+                                marginBottom, textAlign: "center",
+                            }}>
+                                {label}
+                            </Text>
+                            <Text style={{ fontSize: 10, fontWeight: "800", color }}>{value}</Text>
+                        </Card>
+                    ))}
+                </View>
+
+                {/* Grid */}
+                {vm.filtered.length === 0 ? (
+                    
+                        <EmptyState
+                            icon={<Feather name="book-open" size={40} color={c.text.secondary} />}
+                            title={t("Sin cursos")}
+                            description={t("No se encontraron cursos con ese criterio")}
+                        />
+                    </Card>
+                ) : (
+                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16 }}>
+                        {vm.filtered.map(course => (
+                            <View key={course.id} style={{ flexBasis: isSmall ? "100%" : "30%", flexGrow: 1 }}>
+                                <CourseCard
+                                    course={course}
+                                    onPress={() => vm.selectCourse(course)}
+                                />
+                            </View>
+                        ))}
+                    </View>
+                )}
+            </ScrollView>
+
+            <CourseDetailModal
+                course={vm.selected}
+                onClose={vm.clearSelection}
+                canManage={permissions.canManageCourses}
+            />
+        </View>
+    );
+}

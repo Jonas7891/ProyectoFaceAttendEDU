@@ -1,0 +1,164 @@
+﻿// ============================================================
+//  FaceAttend EDU — LanguageContext (i18n · Context)
+//
+//  MODO PROVISIONAL — traducciones desde archivos JSON estáticos.
+//
+//  ┌─ Qué cambió respecto a la versión original ──────────────┐
+//  │                                                           │
+//  │  • t() ahora es SÍNCRONO: lee de JsonDictionary que      │
+//  │    tiene los JSON ya en memoria (bundle estático).        │
+//  │    Sin flash de contenido en español, sin re-renders      │
+//  │    asíncronos, sin llamadas HTTP.                         │
+//  │                                                           │
+//  │  • Se eliminó temporalmente el patrón resolvedRef/bump()  │
+//  │    (solo necesario para fuentes asíncronas).              │
+//  │                                                           │
+//  │  • translationService, TranslationCache y                 │
+//  │    TranslationStorage siguen en el proyecto intactos.     │
+//  │                                                           │
+//  └───────────────────────────────────────────────────────────┘
+//
+//  ┌─ Cómo reactivar LibreTranslate en el futuro ─────────────┐
+//  │                                                           │
+//  │  1. Quitar el import de JsonDictionary / lookup().        │
+//  │  2. Descomentar el import de translationService.          │
+//  │  3. Restaurar resolvedRef, bump() y el patrón async       │
+//  │     en t() (ver comentarios inline).                      │
+//  │  4. Sin ningún cambio en la UI ni en useTranslation().    │
+//  │                                                           │
+//  └───────────────────────────────────────────────────────────┘
+//
+//  API pública (sin cambios):
+//    const { t, language, setLanguage, isLoading } = useLanguageContext();
+// ============================================================
+
+import React, {
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
+
+// ── Arquitectura original — mantenida, desacoplada temporalmente ──────────
+//
+//  Descomentar en el futuro para reactivar LibreTranslate:
+//
+// import { translationService } from "../services/TranslationService";
+//
+//  (TranslationService, TranslationCache y TranslationStorage
+//   permanecen en disco intactos, listos para ser reactivados.)
+
+import { LanguageStorage }                   from "../storage/LanguageStorage";
+import { SOURCE_LANGUAGE, DEFAULT_LANGUAGE } from "../constants/SupportedLanguages";
+// ── MODO PROVISIONAL: lookup síncrono desde JSON en bundle ────────────────
+
+import { lookup } from "../translations/JsonDictionary";
+
+// ── Tipos del contexto ────────────────────────────────────────────────────
+
+
+// ── Context ───────────────────────────────────────────────────────────────
+
+const LanguageContext = createContext({
+    language,
+    setLanguage: async () => {},
+    t:           (text) => text,
+    isLoading,
+});
+
+// ── Provider ──────────────────────────────────────────────────────────────
+
+export function LanguageProvider({ children }) {
+    const [language,  setLanguageState] = useState(DEFAULT_LANGUAGE);
+    const [isLoading, setIsLoading]     = useState(true);
+
+    // ── Inicialización ───────────────────────────────────────────────
+    //
+    //  Lee el idioma guardado en storage al arrancar.
+    //
+    //  MODO PRODUCCIÓN (futuro) — descomentar:
+    //    if (saved !== SOURCE_LANGUAGE) {
+    //        await translationService.hydrate(saved);
+    //    }
+
+    useEffect(() => {
+        let cancelled = false;
+
+        (async () => {
+            const saved = await LanguageStorage.load();
+            if (cancelled) return;
+
+            setLanguageState(saved);
+            setIsLoading(false);
+        })();
+
+        return () => { cancelled = true; };
+    }, []);
+
+    // ── Cambio de idioma ─────────────────────────────────────────────
+    //
+    //  MODO PRODUCCIÓN (futuro) — descomentar:
+    //    if (code !== SOURCE_LANGUAGE) {
+    //        await translationService.hydrate(code);
+    //    }
+
+    const setLanguage = useCallback(async (code) => {
+        if (code === language) return;
+        setLanguageState(code);
+        await LanguageStorage.save(code);
+    }, [language]);
+
+    // ── Función t() — SÍNCRONA en modo provisional ───────────────────
+    //
+    //  Lee directamente del objeto JSON importado en bundle.
+    //  O(1), sin efectos secundarios, sin re-renders adicionales.
+    //
+    //  Para TODOS los idiomas (incluido "es") se pasa por lookup() para
+    //  que el JSON sea la fuente de verdad única. Si la key no existe en
+    //  el JSON del idioma activo, se devuelve el texto original (fallback).
+    //
+    //  MODO PRODUCCIÓN (futuro) — restaurar:
+    //    const resolvedRef = useRef(new Map());
+    //    const [tick, setTick] = useState(0);
+    //    const bump = useCallback(() => setTick(n => n + 1), []);
+    //
+    //    const t = useCallback((text)=> {
+    //        if (!text) return text;
+    //        if (language === SOURCE_LANGUAGE) return lookup(text, SOURCE_LANGUAGE) ?? text;
+    //        const key = text;
+    //        if (resolvedRef.current.has(key)) return resolvedRef.current.get(key);
+    //        translationService.translate(text, language).then(translated => {
+    //            resolvedRef.current.set(key, translated);
+    //            bump();
+    //        });
+    //        return text; // fallback al español mientras carga
+    //    }, [language, bump]);
+
+    const t = useCallback((text)=> {
+        if (!text) return text;
+        return lookup(text, language);
+    }, [language]);
+
+    // ── Valor del contexto ───────────────────────────────────────────
+
+    const value = useMemo(
+        () => ({ language, setLanguage, t, isLoading }),
+        [language, setLanguage, t, isLoading],
+    );
+
+    return (
+        <LanguageContext.Provider value={value}>
+            {children}
+        </LanguageContext.Provider>
+    );
+}
+
+// ── Hook de acceso al contexto ────────────────────────────────────────────
+
+export function useLanguageContext() {
+    return useContext(LanguageContext);
+}
+
+export { LanguageContext };
