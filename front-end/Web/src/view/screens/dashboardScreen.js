@@ -11,12 +11,12 @@ import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-
 import { Feather } from "@expo/vector-icons";
 
 import Sidebar          from "../components/layout/Sidebar";
-import DashboardView    from "../components/dashboard/DashboardView";
-import StudentsView     from "../components/students/StudentsView";
-import CoursesView      from "../components/courses/CoursesView";
-import ReportsView      from "../components/reports/ReportsView";
-import SettingsView     from "../components/settings/SettingsView";
-import EnvironmentsView from "../components/environments/EnvironmentsView";
+import DashboardView    from "./DashboardView";
+import StudentsView     from "./StudentsScreen";
+import CoursesView      from "./CoursesScreen";
+import ReportsView      from "./ReportsScreen";
+import SettingsView     from "./SettingsScreen";
+import EnvironmentsView from "./EnvironmentsScreen";
 
 import { useTheme }      from "../components/hooks/useTheme";
 import { useResponsive } from "../components/hooks/useResponsive";

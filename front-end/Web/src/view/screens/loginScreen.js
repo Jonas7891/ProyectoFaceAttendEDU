@@ -6,7 +6,7 @@
 
 import React from "react";
 import { useNavigation } from "@react-navigation/native";
-import LoginView from "../components/auth/LoginView";
+import LoginView from "./LoginView";
 
 export default function LoginScreen() {
     const navigation = useNavigation();
