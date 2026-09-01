@@ -98,21 +98,21 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
     // Acciones rápidas y novedades según rol
     const menuAccionesAdmin = [
         {
-            id: 2,
+            id: 1,
             title: t('dashboard.manageUsers', 'Gestión Usuarios'),
             description: t('dashboard.manageUsersDesc', 'Agregar, editar y eliminar estudiantes y profesores'),
             color: '#E91E63',
             screen: 'ManageUsersScreen'
         },
         {
-            id: 3,
+            id: 2,
             title: t('dashboard.environmentManagement', 'Gestión Ambientes'),
             description: t('dashboard.manageEnvironmentDesc', 'Agregar, editar y eliminar ambientes/salones'),
             color: '#1e58e9',
             screen: 'ManageEnviromentScreen'
         },
         {
-            id: 4,
+            id: 3,
             title: t('dashboard.reports'),
             description: t('dashboard.reportsDesc'),
             color: '#FF9800',
@@ -167,7 +167,7 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
             screen: 'PendingJustificationScreen'
         },
         {
-            id: 1,
+            id: 4,
             title: t('student.registerFace'),
             description: t('student.registerFaceDesc'),
             color: '#4CAF50',

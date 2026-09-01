@@ -52,11 +52,6 @@ export function useSchoolConfigurationViewModel({ isAdmin = false } = {}) {
         loadSchoolInfo();
     }, []);
 
-    // console.log(generalInfo);
-    useEffect(() => {
-        console.log(generalInfo);
-    }, [generalInfo]);
-
     // Validación de campos
     const [validationErrors, setValidationErrors] = useState({});
 

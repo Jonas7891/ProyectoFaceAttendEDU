@@ -331,66 +331,6 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                     Información de Contacto
                                 </Text>
 
-                                {/* Email */}
-                                <FormField
-                                    label="Email Institucional"
-                                    value={contactInfo.email}
-                                    onChangeText={(value) => handleContactInfoChange('email', value)}
-                                    placeholder="admin@colegio.edu"
-                                    required
-                                    validationErrors={validationErrors}
-                                    editable={isAdminUser}
-                                />
-
-                                {/* País */}
-                                <View style={styles.formGroupSchoolConfig}>
-                                    <Text style={[styles.inputLabelSchoolConfig, { color: colors.text }]}>
-                                        País
-                                        <Text style={{ color: colors.danger }}>*</Text>
-                                    </Text>
-                                    <TouchableOpacity
-                                        style={[
-                                            styles.inputFieldSchoolConfig,
-                                            styles.pickerContainerSchoolConfig,
-                                            styles.countryPickerSchoolConfig,
-                                            {
-                                                flexDirection: 'row',
-                                                alignItems: 'center',
-                                                justifyContent: 'space-between',
-                                                backgroundColor: colors.inputBackground,
-                                                borderColor: colors.border,
-                                                opacity: isAdminUser ? 1 : 0.6,
-                                            },
-                                        ]}
-                                        onPress={() => {
-                                            if (isAdminUser) {
-                                                setCountrySearch('');
-                                                setCountryModalVisible(true);
-                                            }
-                                        }}
-                                        disabled={loadingCountries || !isAdminUser} // 👈 Bloqueo táctil
-                                    >
-                                        {loadingCountries ? (
-                                            <ActivityIndicator size="small" color={colors.primary} />
-                                        ) : (
-                                            <Text style={[styles.countryPickerTextSchoolConfig, { color: colors.text }]}>
-                                                {contactInfo?.country
-                                                    ? `${contactInfo?.country}  ${contactInfo?.dialCode}`
-                                                    : 'Selecciona un país'}
-                                            </Text>
-                                        )}
-                                        <Image
-                                            source={require('../../assets/images/flecha.png')}
-                                            style={{
-                                                width: 16,
-                                                height: 16,
-                                                resizeMode: 'contain',
-                                                tintColor: colors.textSecondary,
-                                            }}
-                                        />
-                                    </TouchableOpacity>
-                                </View>
-
                                 {/* Teléfono con prefijo estático */}
                                 <View style={styles.formGroupSchoolConfig}>
                                     <Text style={[styles.inputLabelSchoolConfig, { color: colors.text }]}>
@@ -577,14 +517,6 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                     value={attendanceConfig.maxLatenesses}
                                     onChangeText={(value) => handleAttendanceConfigChange('maxLatenesses', value)}
                                     placeholder="10"
-                                    validationErrors={validationErrors}
-                                    editable={isAdminUser}
-                                />
-                                <FormField
-                                    label="Límite de Justificación (días)"
-                                    value={attendanceConfig.justificationDaysLimit}
-                                    onChangeText={(value) => handleAttendanceConfigChange('justificationDaysLimit', value)}
-                                    placeholder="30"
                                     validationErrors={validationErrors}
                                     editable={isAdminUser}
                                 />
