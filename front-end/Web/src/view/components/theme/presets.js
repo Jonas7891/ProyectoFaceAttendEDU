@@ -3,19 +3,11 @@
 //  Cada preset está curado para ser distinguible con ese tipo
 //  de daltonismo. El usuario elige su modo de visión y luego
 //  el accent color dentro de esa paleta (o lo ajusta con HSL).
+//
+//  VisionMode: "normal" | "deuteranopia" | "protanopia" | "tritanopia" | "achromatopsia"
+//
+//  AccessibilityPreset: { key, label, color (hex), vision }
 // ============================================================
-
-    | "normal"        // visión estándar
-    | "deuteranopia"  // no distingue rojo/verde  (~6 % hombres)
-    | "protanopia"    // no percibe el rojo        (~1 % hombres)
-    | "tritanopia"    // no percibe azul/amarillo  (~0.01 %)
-    | "achromatopsia" // sin percepción de color   (muy raro)
-
-    key:         string;
-    label:       string;
-    color:       string;   // accent en hex
-    vision;
-};
 
 // ── Función auxiliar HSL → HEX ──────────────────────────────
 function hsl(h, s, l) {
@@ -35,7 +27,7 @@ function hsl(h, s, l) {
 
 // ── Paletas por tipo de visión ───────────────────────────────
 
-export const VISION_PRESETS= {
+export const VISION_PRESETS = {
     normal: [
         { key: "azul",    label: "Azul",    color: hsl(217, 76, 52), vision: "normal" },
         { key: "verde",   label: "Verde",   color: hsl(160, 65, 42), vision: "normal" },
@@ -73,7 +65,7 @@ export const VISION_PRESETS= {
     ],
 };
 
-export const VISION_LABELS= {
+export const VISION_LABELS = {
     normal:        "Normal",
     deuteranopia:  "Deuteranopia (rojo/verde)",
     protanopia:    "Protanopia (rojo)",
@@ -81,7 +73,7 @@ export const VISION_LABELS= {
     achromatopsia: "Acromatopsia (sin color)",
 };
 
-export const VISION_DESCRIPTIONS= {
+export const VISION_DESCRIPTIONS = {
     normal:        "Paleta base, optimizada para visión estándar.",
     deuteranopia:  "Tipo más común (~6% hombres). Afecta percepción del verde. Usa azul + dorado + violeta.",
     protanopia:    "Afecta percepción del rojo (~1% hombres). Azul + amarillo son los más distinguibles.",
@@ -89,7 +81,7 @@ export const VISION_DESCRIPTIONS= {
     achromatopsia: "Sin percepción de color (muy raro). Solo contraste de luminosidad es efectivo.",
 };
 
-export const VISION_MODES[] = [
+export const VISION_MODES = [
     "normal",
     "deuteranopia",
     "protanopia",
@@ -97,6 +89,6 @@ export const VISION_MODES[] = [
     "achromatopsia",
 ];
 
-export const DEFAULT_ACCENT= hsl(217, 76, 52);
+export const DEFAULT_ACCENT = hsl(217, 76, 52);
 export const DEFAULT_MODE = "light";
 export const DEFAULT_VISION_MODE = "normal";

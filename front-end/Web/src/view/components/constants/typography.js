@@ -1,6 +1,4 @@
-﻿import { TextStyle } from "react-native";
-
-/**
+﻿/**
  * Sistema tipográfico de FaceAttend EDU.
  * Ahora es una FUNCIÓN que recibe `fs` (font-scaler) del hook useResponsive.
  * Así cada tamaño se adapta al viewport en lugar de ser un valor fijo.
@@ -10,7 +8,7 @@
  *   const T = getTypography(fs);
  *   <Text style={T.displayLG}>...</Text>
  */
-export function getTypography(fs: (n) => number) {
+export function getTypography(fs) {
   return {
     // ── Display / Headings ─────────────────────────────────────────────
     displayXL: {

@@ -17,7 +17,6 @@ import { useResponsive }        from "../hooks/useResponsive";
 import { useCoursesViewModel }  from "../../../viewmodels/useCoursesViewModel";
 import { useRolePermissions }   from "../../hooks/useRolePermissions";
 import { useTranslation }       from "../../../i18n/hooks/useTranslation";
-import { Course }          from "../../../models/types";
 
 // ── CourseDetailModal ────────────────────────────────────────
 
@@ -25,9 +24,6 @@ function CourseDetailModal({
     course,
     onClose,
     canManage,
-}: {
-    course) => void;
-    canManage: boolean;
 }) {
     const { theme } = useTheme();
     const { t }     = useTranslation();
@@ -39,7 +35,7 @@ function CourseDetailModal({
         <Modal transparent animationType="fade" onRequestClose={onClose}>
             <TouchableOpacity
                 style={{ flex: 1, backgroundColor: c.background.overlay,
-                    justifyContent: "center", alignItems: "center", padding,
+                    justifyContent: "center", alignItems: "center", padding: 20,
                 }}
                 onPress={onClose}
                 activeOpacity={1}
@@ -47,16 +43,16 @@ function CourseDetailModal({
                 <TouchableOpacity activeOpacity={1} onPress={e => e.stopPropagation()}>
                     <View style={{
                         backgroundColor: c.background.surface,
-                        borderRadius: 14, width, overflow: "hidden",
-                        shadowColor: "#000", shadowOpacity: 0.15, shadowRadius, elevation,
+                        borderRadius: 14, width: 500, overflow: "hidden",
+                        shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 10, elevation: 5,
                     }}>
                         <View style={{ height: 5, backgroundColor: course.color }} />
                         <View style={{ padding: 24 }}>
                             <View style={{
                                 flexDirection: "row", justifyContent: "space-between",
-                                alignItems: "flex-start", marginBottom,
+                                alignItems: "flex-start", marginBottom: 20,
                             }}>
-                                
+                                <View>
                                     <Text style={{ fontSize: 10, fontWeight: "700", color: course.color, letterSpacing: 1 }}>
                                         {course.code}
                                     </Text>
@@ -69,7 +65,7 @@ function CourseDetailModal({
                                 </TouchableOpacity>
                             </View>
 
-                            <View style={{ flexDirection: "row", flexWrap: "wrap", gap, marginBottom: 20 }}>
+                            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
                                 {[
                                     { label: t("Docente"),     value: course.professor },
                                     { label: t("Semestre"),    value: course.semester  },
@@ -81,7 +77,7 @@ function CourseDetailModal({
                                     <View key={label} style={{
                                         width: "47%",
                                         backgroundColor: c.background.app,
-                                        borderRadius: 14, padding,
+                                        borderRadius: 14, padding: 12,
                                     }}>
                                         <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom: 4 }}>
                                             {label}
@@ -93,7 +89,7 @@ function CourseDetailModal({
                                 ))}
                             </View>
 
-                            <View style={{ flexDirection: "row", gap, justifyContent: "flex-end" }}>
+                            <View style={{ flexDirection: "row", gap: 12, justifyContent: "flex-end" }}>
                                 <UIButton variant="ghost" onPress={onClose}>{t("Cerrar")}</UIButton>
                                 {canManage && (
                                     <UIButton variant="primary">{t("Editar curso")}</UIButton>
@@ -119,24 +115,24 @@ function CourseCard({ course, onPress }) {
         <TouchableOpacity onPress={onPress} style={{ flex: 1, minWidth: 260 }}>
             <Card padding={0} style={{ overflow: "hidden", height: "100%" }}>
                 <View style={{ height: 5, backgroundColor: course.color }} />
-                <View style={{ padding, flex: 1 }}>
+                <View style={{ padding: 16, flex: 1 }}>
                     <View style={{
                         flexDirection: "row", justifyContent: "space-between",
-                        alignItems: "flex-start", marginBottom,
+                        alignItems: "flex-start", marginBottom: 12,
                     }}>
                         <Text style={{ fontSize: 10, fontWeight: "700", color: course.color, letterSpacing: 1 }}>
                             {course.code}
                         </Text>
                         <Badge variant="primary">{course.semester}</Badge>
                     </View>
-                    <Text style={{ fontSize: 10, fontWeight: "700", color: c.text.primary, marginBottom, lineHeight: 20 }}>
+                    <Text style={{ fontSize: 10, fontWeight: "700", color: c.text.primary, marginBottom: 8, lineHeight: 20 }}>
                         {course.name}
                     </Text>
                     <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom: 14 }}>
                         {course.professor}
                     </Text>
 
-                    <View style={{ gap, marginBottom: 14 }}>
+                    <View style={{ gap: 8, marginBottom: 14 }}>
                         {[
                             { icon: "users",   text: `${course.students} ${t("estudiantes")}` },
                             { icon: "clock",   text: course.schedule                           },
@@ -149,7 +145,7 @@ function CourseCard({ course, onPress }) {
                         ))}
                     </View>
 
-                    
+                    <View style={{ marginTop: "auto" }}>
                         <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 6 }}>
                             <Text style={{ fontSize: 11, color: c.text.secondary }}>{t("Asistencia promedio")}</Text>
                             <Text style={{ fontSize: 10, fontWeight: "700", color: barColor }}>
@@ -160,16 +156,16 @@ function CourseCard({ course, onPress }) {
                     </View>
                 </View>
 
-                <View style={{ flexDirection: "row", borderTopWidth, borderTopColor: c.border.primary }}>
+                <View style={{ flexDirection: "row", borderTopWidth: 1, borderTopColor: c.border.primary }}>
                     <TouchableOpacity style={{ flex: 1, flexDirection: "row", alignItems: "center",
-                        justifyContent: "center", gap, padding,
+                        justifyContent: "center", gap: 6, padding: 12,
                     }}>
                         <Feather name="bar-chart-2" size={13} color={c.text.secondary} />
                         <Text style={{ fontSize: 11, color: c.text.secondary }}>{t("Reportes")}</Text>
                     </TouchableOpacity>
-                    <View style={{ width, backgroundColor: c.border.primary }} />
+                    <View style={{ width: 1, backgroundColor: c.border.primary }} />
                     <TouchableOpacity style={{ flex: 1, flexDirection: "row", alignItems: "center",
-                        justifyContent: "center", gap, padding,
+                        justifyContent: "center", gap: 6, padding: 12,
                     }}>
                         <Feather name="users" size={13} color={c.brand.primary} />
                         <Text style={{ fontSize: 11, color: c.brand.primary, fontWeight: "600" }}>
@@ -203,26 +199,27 @@ export default function CoursesView() {
     return (
         <View style={{ flex: 1 }}>
             <ScrollView
-                contentContainerStyle={{ padding: isSmall ? 16, gap: 16 }}
+                contentContainerStyle={{ padding: isSmall ? 16 : 24, gap: 16 }}
                 showsVerticalScrollIndicator={false}
             >
                 <PageHeader
                     title={t("Cursos")}
                     subtitle={`${vm.filtered.length} ${t("cursos activos este semestre")}`}
                     actions={
+                        <React.Fragment>
                         {/* Solo admin puede gestionar cursos */}
                         {permissions.canManageCourses && (
-                            
+                            <React.Fragment>
                                 <UIButton variant="ghost" size="sm">{t("Importar")}</UIButton>
                                 <UIButton variant="primary" size="sm">+ {t("Nuevo curso")}</UIButton>
-                            </>
+                            </React.Fragment>
                         )}
-                    </>}
+                    </React.Fragment>}
                 />
 
                 {/* Búsqueda */}
-                <View style={{ maxWidth, position: "relative", justifyContent: "center" }}>
-                    <View style={{ position: "absolute", left, zIndex: 1 }}>
+                <View style={{ maxWidth: 400, position: "relative", justifyContent: "center" }}>
+                    <View style={{ position: "absolute", left: 14, zIndex: 1 }}>
                         <Feather name="search" size={14} color={c.text.secondary} />
                     </View>
                     <TextInput
@@ -230,9 +227,9 @@ export default function CoursesView() {
                         value={vm.search}
                         onChangeText={vm.setSearch}
                         style={{
-                            height, borderWidth, borderColor: c.border.primary,
-                            borderRadius: 14, paddingLeft, paddingRight,
-                            fontSize, backgroundColor: c.background.surface,
+                            height: 40, borderWidth: 1, borderColor: c.border.primary,
+                            borderRadius: 14, paddingLeft: 40, paddingRight: 14,
+                            fontSize: 13, backgroundColor: c.background.surface,
                             color: c.text.primary,
                         }}
                         placeholderTextColor={c.text.disabled}
@@ -240,18 +237,18 @@ export default function CoursesView() {
                 </View>
 
                 {/* Mini stats */}
-                <View style={{ flexDirection: "row", gap, flexWrap: "wrap" }}>
+                <View style={{ flexDirection: "row", gap: 12, flexWrap: "wrap" }}>
                     {[
                         { label: t("Total cursos"),     value: vm.courses.length,      color: c.brand.primary  },
                         { label: t("Estudiantes"),      value: vm.totalStudents,       color: c.states.success },
                         { label: t("Asistencia prom."), value: `${vm.avgAttendance}%`, color: "#8B5CF6"        },
                         { label: t("Con alerta"),       value: vm.alertCount,          color: c.states.warning },
                     ].map(({ label, value, color }) => (
-                        <Card key={label} style={{ flex: 1, minWidth, alignItems: "center" }} padding={14}>
+                        <Card key={label} style={{ flex: 1, minWidth: 140, alignItems: "center" }} padding={14}>
                             <Text style={{
                                 fontSize: 10, fontWeight: "600", color: c.text.secondary,
                                 textTransform: "uppercase", letterSpacing: 0.5,
-                                marginBottom, textAlign: "center",
+                                marginBottom: 6, textAlign: "center",
                             }}>
                                 {label}
                             </Text>
@@ -262,7 +259,7 @@ export default function CoursesView() {
 
                 {/* Grid */}
                 {vm.filtered.length === 0 ? (
-                    
+                    <Card>
                         <EmptyState
                             icon={<Feather name="book-open" size={40} color={c.text.secondary} />}
                             title={t("Sin cursos")}

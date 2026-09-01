@@ -22,12 +22,11 @@ import { useTheme }      from "../components/hooks/useTheme";
 import { useResponsive } from "../components/hooks/useResponsive";
 import { useAuth }       from "../../context/AuthContext";
 import { useDashboardScreenViewModel } from "../../viewmodels/useDashboardScreenViewModel";
-import { TabKey }   from "../../viewmodels/useDashboardScreenViewModel";
 import { useTranslation } from "../../i18n/hooks/useTranslation";
 
 // ── TabContent ───────────────────────────────────────────────
 
-function TabContent({ tab }: { tab: TabKey }) {
+function TabContent({ tab }) {
     switch (tab) {
         case "dashboard":    return <DashboardView />;
         case "students":     return <StudentsView />;
@@ -35,6 +34,7 @@ function TabContent({ tab }: { tab: TabKey }) {
         case "environments": return <EnvironmentsView />;
         case "reports":      return <ReportsView />;
         case "settings":     return <SettingsView />;
+        default:             return <DashboardView />;
     }
 }
 
@@ -56,7 +56,7 @@ export default function DashboardScreen() {
     }
 
     return (
-        
+        <SafeAreaProvider>
             <SafeAreaView
                 style={{ flex: 1, flexDirection: "row", backgroundColor: c.background.app }}
                 edges={["top", "bottom"]}
@@ -73,7 +73,7 @@ export default function DashboardScreen() {
                 {/* Contenido principal */}
                 <View style={{ flex: 1,
                     overflow: "hidden",
-                    paddingBottom: isSmall ? 64 + insets.bottom,
+                    paddingBottom: isSmall ? 64 + insets.bottom : 0,
                 }}>
                     <TabContent tab={vm.currentTab} />
                 </View>
@@ -82,12 +82,12 @@ export default function DashboardScreen() {
                 {isSmall && (
                     <View style={{
                         position:        "absolute",
-                        bottom, left, right,
+                        bottom: 0, left: 0, right: 0,
                         backgroundColor: c.background.surface,
-                        borderTopWidth,
+                        borderTopWidth: 1,
                         borderTopColor:  c.border.primary,
                         flexDirection:   "row",
-                        paddingTop,
+                        paddingTop: 8,
                         paddingBottom:   Math.max(8, insets.bottom),
                         minHeight:       52 + insets.bottom,
                     }}>
@@ -99,8 +99,8 @@ export default function DashboardScreen() {
                                     onPress={() => vm.setTab(item.key)}
                                     style={{ flex: 1,
                                         alignItems:     "center",
-                                        paddingTop,
-                                        borderTopWidth: isActive ? 2,
+                                        paddingTop: 4,
+                                        borderTopWidth: isActive ? 2 : 0,
                                         borderTopColor: c.brand.primary,
                                     }}
                                 >
@@ -110,8 +110,8 @@ export default function DashboardScreen() {
                                         color={isActive ? c.brand.primary : c.text.secondary}
                                     />
                                     <Text style={{
-                                        fontSize,
-                                        marginTop,
+                                        fontSize: 11,
+                                        marginTop: 2,
                                         color:      isActive ? c.brand.primary : c.text.secondary,
                                         fontWeight: isActive ? "600" : "400",
                                     }}>

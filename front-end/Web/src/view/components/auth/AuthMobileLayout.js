@@ -11,23 +11,22 @@
 
 import React from "react";
 import {
-    View, Text, Image,
-    KeyboardAvoidingView, Platform, ScrollView,
+    View,
+    Text,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
 } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { useTheme } from "../hooks/useTheme";
 
-
-export default function AuthMobileLayout({
-    title,
-    subtitle,
-    children,
-}) {
+export default function AuthMobileLayout({ title, subtitle, children }) {
     const { theme } = useTheme();
-    const c         = theme.colors;
+    const c = theme.colors;
 
     return (
-        
+        <SafeAreaProvider>
             <SafeAreaView style={{ flex: 1, backgroundColor: c.background.surface }}>
                 <KeyboardAvoidingView
                     style={{ flex: 1 }}
@@ -35,38 +34,60 @@ export default function AuthMobileLayout({
                 >
                     <ScrollView
                         contentContainerStyle={{
-                            flexGrow,
+                            flexGrow: 1,
                             justifyContent: "center",
-                            paddingHorizontal: 6, paddingVertical: 2,
+                            paddingHorizontal: 6,
+                            paddingVertical: 2,
                         }}
                         keyboardShouldPersistTaps="handled"
                         showsVerticalScrollIndicator={false}
                     >
                         {/* Logo + nombre */}
-                        <View style={{ flexDirection: "row", alignItems: "center", gap, marginBottom: 36 }}>
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 12,
+                                marginBottom: 36,
+                            }}
+                        >
                             <Image
                                 source={require("../../../assets/images/logoFaceAttend-Minimalista.png")}
-                                style={{ width, height: 44 }}
+                                style={{ width: 44, height: 44 }}
                                 resizeMode="contain"
                             />
-                            <Text style={{ fontSize: 10, fontWeight: "700", color: c.text.primary }}>
+                            <Text
+                                style={{
+                                    fontSize: 10,
+                                    fontWeight: "700",
+                                    color: c.text.primary,
+                                }}
+                            >
                                 FaceAttend{" "}
                                 <Text style={{ color: c.brand.primary }}>EDU</Text>
                             </Text>
                         </View>
 
                         {/* Título + subtítulo */}
-                        <Text style={{
-                            fontSize: 10, fontWeight: "800",
-                            color: c.text.primary,
-                            marginBottom, letterSpacing: -0.5,
-                        }}>
+                        <Text
+                            style={{
+                                fontSize: 10,
+                                fontWeight: "800",
+                                color: c.text.primary,
+                                marginBottom: 8,
+                                letterSpacing: -0.5,
+                            }}
+                        >
                             {title}
                         </Text>
-                        <Text style={{
-                            fontSize: 11, color: c.text.secondary,
-                            marginBottom, lineHeight,
-                        }}>
+                        <Text
+                            style={{
+                                fontSize: 11,
+                                color: c.text.secondary,
+                                marginBottom: 24,
+                                lineHeight: 20,
+                            }}
+                        >
                             {subtitle}
                         </Text>
 

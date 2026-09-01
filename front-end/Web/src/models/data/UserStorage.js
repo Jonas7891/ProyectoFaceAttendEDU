@@ -7,7 +7,6 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { mockAppUsers } from "./mockData";
-import { AppUser } from "../types";
 
 const STORAGE_KEY = "@faceattend_users";
 
@@ -24,7 +23,7 @@ export async function loadUsers() {
         }
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(mockAppUsers));
         return mockAppUsers;
-    } catch {
+    } catch (error) {
         return mockAppUsers;
     }
 }
@@ -32,31 +31,23 @@ export async function loadUsers() {
 export async function saveUsers(users) {
     try {
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(users));
-    } catch { /* fallo silencioso */ }
+    } catch (error) { /* fallo silencioso */ }
 }
 
-export async function addUser(
-    existing,
-    draft) {
+export async function addUser(existing, draft) {
     const newUser = { id: generateId(), ...draft };
     const updated = [...existing, newUser];
     await saveUsers(updated);
     return updated;
 }
 
-export async function updateUser(
-    existing,
-    id,
-    patch) {
-    const updated = existing.map(u => u.id === id ? { ...u, ...patch } );
+export async function updateUser(existing, id, patch) {
+    const updated = existing.map(u => u.id === id ? { ...u, ...patch } : u);
     await saveUsers(updated);
     return updated;
 }
 
-export async function deleteUser(
-    existing,
-    id
-) {
+export async function deleteUser(existing, id) {
     const updated = existing.filter(u => u.id !== id);
     await saveUsers(updated);
     return updated;

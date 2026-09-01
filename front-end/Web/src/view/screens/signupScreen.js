@@ -5,7 +5,6 @@
 import React from "react";
 import { useNavigation } from "@react-navigation/native";
 import SignupView from "../components/auth/SignupView";
-import { SignupForm } from "../../viewmodels/useAuthViewModel";
 
 export default function SignupScreen() {
     const navigation = useNavigation();

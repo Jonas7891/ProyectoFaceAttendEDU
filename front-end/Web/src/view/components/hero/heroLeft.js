@@ -5,20 +5,6 @@ import HeroButtons from "./heroButtons";
 import HeroStats from "./heroStats";
 import { useResponsive } from "../hooks/useResponsive";
 
- label: string };
-
-
-    slideLeft: Animated.Value;
-    title: string;
-    accent: string;
-    end: string;
-    primary: string;
-    secondary: string;
-    stats: Stat[];
-    onPrimary?: () => void;
-    onSecondary?: () => void;
-};
-
 export default function HeroLeft({ fadeLeft, slideLeft, ...props }) {
     const { sp, vp } = useResponsive();
 
@@ -32,7 +18,7 @@ export default function HeroLeft({ fadeLeft, slideLeft, ...props }) {
                     gap: sp(36),
                 },
                 {
-                    opacity,
+                    opacity: fadeLeft,
                     transform: [{ translateX: slideLeft }],
                 },
             ]}

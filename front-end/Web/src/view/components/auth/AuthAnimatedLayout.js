@@ -40,7 +40,7 @@ export default function AuthAnimatedLayout({
     const { height }                = useWindowDimensions();
 
     return (
-        
+        <SafeAreaProvider>
             <SafeAreaView style={[styles.root, { backgroundColor: c.background.app }]}>
                 <View style={styles.row}>
 
@@ -99,22 +99,26 @@ export default function AuthAnimatedLayout({
 }
 
 const styles = StyleSheet.create({
-    root: { flex: 1,
+    root: {
+        flex: 1,
     },
-    row: { flex: 1,
+    row: {
+        flex: 1,
         flexDirection: "row",
     },
 
     // ── Panel de marca ────────────────────────────────────────
-    brandWrapper: { flex: 1,
-        overflow:       "hidden",
+    brandWrapper: {
+        flex: 1,
+        overflow: "hidden",
         justifyContent: "center",
-        alignItems:     "center",
-        padding,
+        alignItems: "center",
+        padding: 24,
     },
 
     // ── Panel de formulario ───────────────────────────────────
-    formWrapper: { flex: 1,
+    formWrapper: {
+        flex: 1,
         overflow: "hidden",
     },
 
@@ -126,13 +130,14 @@ const styles = StyleSheet.create({
     // es el patrón que funciona en RN Web cuando el contenedor
     // padre no tiene altura CSS explícita.
     formScrollContent: {
-        justifyContent:    "center",
-        alignItems:        "center",
-        paddingHorizontal: 6, paddingVertical: 2,
+        justifyContent: "center",
+        alignItems: "center",
+        paddingHorizontal: 6,
+        paddingVertical: 2,
     },
 
     formInner: {
-        width:    "100%",
-        maxWidth,
+        width: "100%",
+        maxWidth: 460,
     },
 });

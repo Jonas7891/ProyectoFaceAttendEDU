@@ -9,11 +9,6 @@ import { useResponsive } from "../hooks/useResponsive";
 import { getTypography } from "../constants/typography";
 import { useTheme }      from "../hooks/useTheme";
 
-
-    variant?: "primary" | "outline";
-    onPress?: () => void;
-};
-
 export default function Button({ label, variant = "primary", onPress }) {
     const { fs, sp }   = useResponsive();
     const { theme }    = useTheme();
@@ -27,14 +22,14 @@ export default function Button({ label, variant = "primary", onPress }) {
         <TouchableOpacity
             onPress={onPress}
             style={{
-                height,
+                height: HEIGHT,
                 paddingHorizontal: sp(28),
-                borderRadius:     sp(12),
-                justifyContent:   "center",
-                alignItems:       "center",
-                backgroundColor:  isPrimary ? c.brand.primary : "transparent",
-                borderWidth:      isPrimary ? 0,
-                borderColor:      isPrimary ? undefined : c.brand.primary,
+                borderRadius: sp(12),
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: isPrimary ? c.brand.primary : "transparent",
+                borderWidth: isPrimary ? 0 : 1,
+                borderColor: isPrimary ? "transparent" : c.brand.primary,
             }}
         >
             <Text style={[

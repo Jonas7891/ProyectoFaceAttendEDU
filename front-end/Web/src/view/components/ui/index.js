@@ -11,5 +11,5 @@ export * from "./FormField";       // exporta InputField + FormField (alias)
 export * from "./AnimatedDropdown";
 export * from "./BaseModal";
 export * from "./AttendanceBadge";
-export { default } from "./button";
-export { default } from "./floatingBadge";
+export { default as Button } from "./button";
+export { default as FloatingBadge } from "./floatingBadge";

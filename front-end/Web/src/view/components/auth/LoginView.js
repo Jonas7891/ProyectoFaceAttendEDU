@@ -30,7 +30,7 @@ const DEV_USERS = [
     { role: "Alumno",   email: "m.garcia@uni.edu",   color: "#10B981" },
 ];
 
-function DevCredentials({ onFill }: { onFill: (email) => void }) {
+function DevCredentials({ onFill }) {
     const { theme } = useTheme();
     const c = theme.colors;
     // __DEV__ es una variable global de React Native / Metro — true en desarrollo
@@ -38,15 +38,15 @@ function DevCredentials({ onFill }: { onFill: (email) => void }) {
 
     return (
         <View style={{
-            marginTop,
-            borderWidth,
+            marginTop: 16,
+            borderWidth: 1,
             borderColor: "#F59E0B",
             borderRadius: 14,
-            padding,
+            padding: 12,
             backgroundColor: "#FFFBEB",
-            gap,
+            gap: 8,
         }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap, marginBottom: 4 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
                 <Feather name="zap" size={12} color="#92400E" />
                 <Text style={{ fontSize: 10, fontWeight: "700", color: "#92400E", textTransform: "uppercase", letterSpacing: 0.5 }}>
                     Dev — acceso rápido
@@ -62,16 +62,16 @@ function DevCredentials({ onFill }: { onFill: (email) => void }) {
                     style={{
                         flexDirection: "row",
                         alignItems: "center",
-                        gap,
-                        paddingVertical,
-                        paddingHorizontal,
+                        gap: 8,
+                        paddingVertical: 8,
+                        paddingHorizontal: 10,
                         borderRadius: 14,
                         backgroundColor: u.color + "15",
-                        borderWidth,
+                        borderWidth: 1,
                         borderColor: u.color + "40",
                     }}
                 >
-                    <View style={{ width, height, borderRadius: 14, backgroundColor: u.color }} />
+                    <View style={{ width: 3, height: 3, borderRadius: 14, backgroundColor: u.color }} />
                     <Text style={{ fontSize: 10, fontWeight: "600", color: "#1a1a2e", flex: 1 }}>
                         {u.role}
                     </Text>
@@ -129,7 +129,7 @@ export default function LoginView({
     );
 
     const formActions = (
-        
+        <React.Fragment>
             <AuthErrorBanner message={vm.error} />
             <TouchableOpacity
                 onPress={onForgotPassword}
@@ -152,7 +152,7 @@ export default function LoginView({
             />
             <DevCredentials onFill={handleDevFill} />
             <AuthCopyright />
-        </>
+        </React.Fragment>
     );
 
     if (isSmall) {
@@ -168,33 +168,33 @@ export default function LoginView({
     }
 
     const brandPanel = (
-        
+        <React.Fragment>
             <BrandPanelCircles />
-            <View style={{ zIndex, alignItems: "center", maxWidth: 400 }}>
+            <View style={{ zIndex: 1, alignItems: "center", maxWidth: 400 }}>
                 <Image
                     source={require("../../../assets/images/logoFaceAttend-BlancoAzul.png")}
-                    style={{ width, height, marginBottom: 24 }}
+                    style={{ width: 180, height: 60, marginBottom: 24 }}
                     resizeMode="contain"
                 />
                 <Text style={{
                     fontSize: 10, fontWeight: "800", color: c.text.onBrand,
-                    textAlign: "center", marginBottom, letterSpacing: -1,
+                    textAlign: "center", marginBottom: 12, letterSpacing: -1,
                 }}>
                     FaceAttend EDU
                 </Text>
                 <Text style={{
                     fontSize: 11, color: "rgba(255,255,255,0.75)",
-                    textAlign: "center", lineHeight, marginBottom,
+                    textAlign: "center", lineHeight: 20, marginBottom: 24,
                 }}>
                     {t("Asistencia inteligente para tu institución")}
                 </Text>
-                <View style={{ gap, width: "100%" }}>
+                <View style={{ gap: 12, width: "100%" }}>
                     {FEATURES.map(f => (
-                        <View key={f.title} style={{ flexDirection: "row", gap, alignItems: "flex-start" }}>
+                        <View key={f.title} style={{ flexDirection: "row", gap: 10, alignItems: "flex-start" }}>
                             <View style={{
-                                width, height, borderRadius: 14,
+                                width: 6, height: 6, borderRadius: 14,
                                 backgroundColor: "rgba(255,255,255,0.6)",
-                                marginTop, flexShrink,
+                                marginTop: 4, flexShrink: 0,
                             }} />
                             <View style={{ flex: 1 }}>
                                 <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.onBrand }}>{f.title}</Text>
@@ -204,20 +204,20 @@ export default function LoginView({
                     ))}
                 </View>
             </View>
-        </>
+        </React.Fragment>
     );
 
     const formContent = (
-        
-            <Text style={{ fontSize: 10, fontWeight: "800", color: c.text.primary, marginBottom, letterSpacing: -0.5 }}>
+        <React.Fragment>
+            <Text style={{ fontSize: 10, fontWeight: "800", color: c.text.primary, marginBottom: 8, letterSpacing: -0.5 }}>
                 {t("Inicio de sesión")}
             </Text>
-            <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom, lineHeight: 24 }}>
+            <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom: 24, lineHeight: 24 }}>
                 {t("Bienvenido de vuelta. Ingresa tus credenciales.")}
             </Text>
             {fields}
             {formActions}
-        </>
+        </React.Fragment>
     );
 
     return (

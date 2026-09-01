@@ -21,9 +21,10 @@
 //    3. Añadir entrada en SUPPORTED_LANGUAGES (SupportedLanguages.ts).
 // ============================================================
 
-import { ITranslationProvider }            from "./ITranslationProvider";
-import { LanguageCode, TranslationResult } from "../models/TranslationEntry";
-import { getDictionary }                        from "../translations/JsonDictionary";
+// Este archivo define la interfaz para proveedores de traducción.
+// Los proveedores concretos (LibreTranslate, Rest, Json) la implementan.
+
+import { getDictionary } from "../translations/JsonDictionary";
 
 // ── Implementación ────────────────────────────────────────────
 
@@ -38,11 +39,7 @@ export class JsonTranslationProvider {
      * están en bundle. Esto mantiene compatibilidad con la interfaz
      * async de ITranslationProvider sin penalización de red.
      */
-    async translate(
-        text,
-        _from,
-        to,
-    ) {
+    async translate(text, _from, to) {
         const dict = getDictionary(to);
 
         if (!dict) {

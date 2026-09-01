@@ -1,10 +1,4 @@
-﻿// ============================================================
-//  FaceAttend EDU — Landing Screen (View Layer)
-//  La pantalla de landing ya estaba bien separada con hooks.
-//  Se mantiene limpia, importando desde las rutas correctas.
-// ============================================================
-
-import React from "react";
+﻿import React from "react";
 import { useNavigation } from "@react-navigation/native";
 import { View, ScrollView, Image, Text } from "react-native";
 import { SafeAreaView, SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -23,7 +17,7 @@ import { useTranslation }  from "../../i18n/hooks/useTranslation";
 
 // ── HeroContent ──────────────────────────────────────────────
 
-function HeroContent(props: ReturnType<typeof useHeroEntrance>) {
+function HeroContent(props) {
     const navigation      = useNavigation();
     const { sp, isSmall } = useResponsive();
     const { t }           = useTranslation();
@@ -36,17 +30,17 @@ function HeroContent(props: ReturnType<typeof useHeroEntrance>) {
     ];
 
     const BADGES = [
-        { label: t("Reconociendo"),  icon: "✅", delay,   style: badgePos.topLeft  },
-        { label: t("Escaneando…"),   icon: "📷", delay, style: badgePos.topRight },
-        { label: t("Asistencia OK"), icon: "📋", delay, style: badgePos.bottom   },
+        { label: t("Reconociendo"),  icon: "✅", delay: 0,   style: badgePos.topLeft  },
+        { label: t("Escaneando…"),   icon: "📷", delay: 0.2, style: badgePos.topRight },
+        { label: t("Asistencia OK"), icon: "📋", delay: 0.4, style: badgePos.bottom   },
     ];
 
     return (
         <View style={{
             flexDirection: isSmall ? "column" : "row",
             alignItems: "center", justifyContent: "center",
-            paddingHorizontal: sp(isSmall ? 24),
-            gap: sp(isSmall ? 80),
+            paddingHorizontal: sp(isSmall ? 24 : 32),
+            gap: sp(isSmall ? 80 : 100),
             width: "100%",
         }}>
             <HeroLeft
@@ -96,7 +90,7 @@ function FeaturesSection() {
         <View style={{
             backgroundColor: c.brand.primary,
             paddingVertical: sp(48),
-            paddingHorizontal: sp(isSmall ? 24),
+            paddingHorizontal: sp(isSmall ? 24 : 40),
             width: "100%",
         }}>
             <View style={{ alignItems: "center", marginBottom: sp(36) }}>
@@ -106,7 +100,7 @@ function FeaturesSection() {
                     borderRadius: 14, marginBottom: sp(12),
                 }}>
                     <Text style={[T.eyebrow, { color: "rgba(255,255,255,0.85)", letterSpacing: 1.2 }]}>
-                        {t("¿Por qué FaceAttend EDU?")}
+                        {t("¿Por que no la puedes olvidar arboleda?")}
                     </Text>
                 </View>
                 <Text style={[T.heading1, { color: c.text.onBrand, textAlign: "center" }]}>
@@ -116,12 +110,12 @@ function FeaturesSection() {
 
             <View style={{
                 flexDirection: isSmall ? "column" : "row",
-                gap: sp(16), maxWidth, alignSelf: "center", width: "100%",
+                gap: sp(16), maxWidth: 1200, alignSelf: "center", width: "100%",
             }}>
                 {FEATURES.map((f) => (
                     <View key={f.title} style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.10)",
                         borderRadius: sp(14), padding: sp(24),
-                        borderWidth, borderColor: "rgba(255,255,255,0.18)", gap: sp(12),
+                        borderWidth: 1, borderColor: "rgba(255,255,255,0.18)", gap: sp(12),
                     }}>
                         <View style={{
                             width: sp(44), height: sp(44), borderRadius: sp(12),
@@ -189,7 +183,7 @@ function Footer() {
         <View style={{
             paddingVertical: insets.bottom + 10,
             alignItems: "center",
-            borderTopWidth, borderTopColor: c.border.primary,
+            borderTopWidth: 1, borderTopColor: c.border.primary,
             backgroundColor: c.background.surface,
         }}>
             <Text style={[T.caption, { color: c.text.secondary }]}>
@@ -208,7 +202,7 @@ export default function LandingScreen() {
     const c           = theme.colors;
 
     return (
-        
+        <SafeAreaProvider>
             <SafeAreaView
                 style={{ flex: 1, backgroundColor: c.background.app }}
                 edges={["top", "bottom"]}
@@ -221,8 +215,8 @@ export default function LandingScreen() {
                     <View style={{
                         minHeight: isSmall ? undefined : sp(560),
                         alignItems: "center", justifyContent: "center",
-                        paddingVertical: sp(isSmall ? 40),
-                        paddingBottom: sp(isSmall ? 24),
+                        paddingVertical: sp(isSmall ? 40 : 60),
+                        paddingBottom: sp(isSmall ? 24 : 32),
                     }}>
                         <HeroContent {...entrance} />
                     </View>

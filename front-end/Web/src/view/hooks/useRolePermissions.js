@@ -6,7 +6,7 @@
 //
 //  Uso:
 //    const { canManageStudents, visibleTabs } = useRolePermissions();
-//    {canManageStudents && + Nuevo</UIButton>}
+//    {canManageStudents && <UIButton>+ Nuevo</UIButton>}
 //
 //  Roles:
 //    admin   → acceso total
@@ -16,8 +16,6 @@
 
 import { useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { AppUserRole } from "../../models/types";
-import { TabKey } from "../../viewmodels/useDashboardScreenViewModel";
 
 // ── Permisos por rol ────────────────────────────────────────
 
@@ -31,44 +29,46 @@ function getVisibleTabs(role) {
             return ["dashboard", "students", "courses", "reports", "settings"];
         case "student":
             return ["dashboard", "courses", "settings"];
+        default:
+            return ["dashboard", "courses", "settings"];
     }
 }
 
 // ── Cálculo de permisos ──────────────────────────────────────
 
 function buildPermissions(role) {
-    const isAdmin   = role === "admin";
+    const isAdmin = role === "admin";
     const isTeacher = role === "teacher";
     const isStudent = role === "student";
 
     return {
         // Estudiantes
-        canViewStudents,
-        canManageStudents,
-        canImportStudents,
-        canRegisterFace,
+        canViewStudents: isAdmin || isTeacher,
+        canManageStudents: isAdmin,
+        canImportStudents: isAdmin,
+        canRegisterFace: isAdmin || isTeacher,
 
         // Cursos
-        canViewCourses,
-        canManageCourses,
+        canViewCourses: true,
+        canManageCourses: isAdmin || isTeacher,
 
         // Ambientes
-        canViewEnvironments,
-        canManageEnvironments,
+        canViewEnvironments: isAdmin || isTeacher,
+        canManageEnvironments: isAdmin,
 
         // Reportes
-        canViewReports,
-        canExportReports,
-        canNotifyAll,
-        canViewAllReports,
+        canViewReports: isAdmin || isTeacher,
+        canExportReports: isAdmin || isTeacher,
+        canNotifyAll: isAdmin,
+        canViewAllReports: isAdmin,
 
         // Configuración
-        canEditAppearance,
-        canManageUsers,
-        canViewSettings,
+        canEditAppearance: true,
+        canManageUsers: isAdmin,
+        canViewSettings: true,
 
         // Navegación
-        visibleTabs:          getVisibleTabs(role),
+        visibleTabs: getVisibleTabs(role),
 
         // Metadatos
         role,
@@ -87,8 +87,5 @@ const GUEST_PERMISSIONS = buildPermissions("student");
 export function useRolePermissions() {
     const { user } = useAuth();
 
-    return useMemo(
-        () => user ? buildPermissions(user.role) : GUEST_PERMISSIONS,
-        [user]
-    );
+    return useMemo(() => (user ? buildPermissions(user.role) : GUEST_PERMISSIONS), [user]);
 }

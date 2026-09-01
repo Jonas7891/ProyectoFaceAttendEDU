@@ -20,34 +20,28 @@ import { Feather } from "@expo/vector-icons";
 import { Badge } from "./UI";
 import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "../../../i18n/hooks/useTranslation";
-import { AttendanceStatus } from "../../../models/types";
-import { ThemeTokens } from "../theme/colourTokens";
 
 // ── Umbrales centralizados ──────────────────────────────────
 // Cambia aquí y se actualiza en toda la app.
 
 export const ATTENDANCE_THRESHOLDS = {
     /** Asistencia mínima aceptable */
-    MIN_ACCEPTABLE,
+    MIN_ACCEPTABLE: 75,
     /** Umbral de "en riesgo" */
-    AT_RISK,
+    AT_RISK: 80,
     /** Umbral de "excelente" */
-    EXCELLENT,
+    EXCELLENT: 85,
 };
 
 // ── Helper de color por asistencia ──────────────────────────
 
-export function attendanceColor(
-    attendance,
-    colors["colors"]
-) {
+export function attendanceColor(attendance, colors) {
     if (attendance >= ATTENDANCE_THRESHOLDS.EXCELLENT) return colors.states.success;
     if (attendance >= ATTENDANCE_THRESHOLDS.AT_RISK)   return colors.states.warning;
     return colors.states.danger;
 }
 
 // ── AttendanceBadge ─────────────────────────────────────────
-
 
 export function AttendanceBadge({ attendance, showIcon = false }) {
     const { theme } = useTheme();
@@ -69,7 +63,6 @@ export function AttendanceBadge({ attendance, showIcon = false }) {
 // ── AttendanceStatusIcon ─────────────────────────────────────
 // Para la actividad reciente (on_time | late | absent)
 
-
 export function AttendanceStatusIcon({ status, size = 16 }) {
     const { theme } = useTheme();
     const c = theme.colors;
@@ -80,7 +73,6 @@ export function AttendanceStatusIcon({ status, size = 16 }) {
 }
 
 // ── AttendanceStatusBadge ────────────────────────────────────
-
 
 export function AttendanceStatusBadge({ status }) {
     const { t } = useTranslation();

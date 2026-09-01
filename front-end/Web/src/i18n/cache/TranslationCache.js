@@ -61,15 +61,15 @@ export class TranslationCache {
      * Exporta todas las traducciones de un idioma como Record plano.
      * Usado por TranslationStorage para persistir en disco.
      */
-    export(language){
+    export(language) {
         const map = this.store.get(language);
         if (!map) return {};
         return Object.fromEntries(map.entries());
     }
 
     /** Exporta todos los idiomas. */
-    exportAll(){
-        const result= {};
+    exportAll() {
+        const result = {};
         for (const [lang, map] of this.store.entries()) {
             result[lang] = Object.fromEntries(map.entries());
         }
@@ -84,7 +84,7 @@ export class TranslationCache {
     }
 
     /** Elimina todas las entradas de un idioma (por ejemplo, al invalidar). */
-    clear(language?) {
+    clear(language) {
         if (language) {
             this.store.delete(language);
         } else {

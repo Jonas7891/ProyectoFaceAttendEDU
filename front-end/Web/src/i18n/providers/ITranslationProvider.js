@@ -6,4 +6,5 @@
 //  El resto de la app NUNCA importa el motor directamente.
 // ============================================================
 
-import { LanguageCode, TranslationResult } from "../models/TranslationEntry";
+// Este archivo define la interfaz para proveedores de traducción.
+// Los proveedores concretos (LibreTranslate, Rest, Json) la implementan.

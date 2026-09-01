@@ -6,7 +6,6 @@
 
 import { Platform } from "react-native";
 import { DEFAULT_ACCENT, DEFAULT_MODE } from "./presets";
-import { ThemeMode } from "./colourTokens";
 
 const KEYS = {
     MODE:   "@faceattend:theme_mode",
@@ -17,7 +16,7 @@ const KEYS = {
 
 async function storageGet(key) {
     if (Platform.OS === "web") {
-        try { return localStorage.getItem(key); } catch { return null; }
+        try { return localStorage.getItem(key); } catch (error) { return null; }
     }
     // React Native — import dinámico para evitar crash en web si no está instalado
     const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
@@ -26,7 +25,7 @@ async function storageGet(key) {
 
 async function storageSet(key, value) {
     if (Platform.OS === "web") {
-        try { localStorage.setItem(key, value); } catch { /* silent */ }
+        try { localStorage.setItem(key, value); } catch (error) { /* silent */ }
         return;
     }
     const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;

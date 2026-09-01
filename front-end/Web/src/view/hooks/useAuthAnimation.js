@@ -26,11 +26,11 @@ import { Animated, Easing } from "react-native";
 export function useAuthAnimation(key) {
     // ── Panel de marca: entra desde la IZQUIERDA (valor negativo) ─
     const brandTranslateX = useRef(new Animated.Value(-80)).current;
-    const brandOpacity    = useRef(new Animated.Value(0)).current;
+    const brandOpacity = useRef(new Animated.Value(0)).current;
 
     // ── Panel de formulario: entra desde arriba ───────────────
     const formTranslateY = useRef(new Animated.Value(-48)).current;
-    const formOpacity    = useRef(new Animated.Value(0)).current;
+    const formOpacity = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
         // Reiniciar valores al cambiar de pantalla
@@ -41,22 +41,22 @@ export function useAuthAnimation(key) {
 
         const EASING = Easing.out(Easing.cubic);
         const DURATION_BRAND = 480;
-        const DURATION_FORM  = 420;
-        const DELAY_FORM     = 60;   // leve desfase para efecto en cascada
+        const DURATION_FORM = 420;
+        const DELAY_FORM = 60; // leve desfase para efecto en cascada
 
         Animated.parallel([
             // Panel de marca
             Animated.timing(brandTranslateX, {
-                toValue,
-                duration,
-                easing,
-                useNativeDriver,
+                toValue: 0,
+                duration: DURATION_BRAND,
+                easing: EASING,
+                useNativeDriver: true,
             }),
             Animated.timing(brandOpacity, {
-                toValue,
-                duration,
-                easing,
-                useNativeDriver,
+                toValue: 1,
+                duration: DURATION_BRAND,
+                easing: EASING,
+                useNativeDriver: true,
             }),
 
             // Panel de formulario (con leve delay)
@@ -64,31 +64,31 @@ export function useAuthAnimation(key) {
                 Animated.delay(DELAY_FORM),
                 Animated.parallel([
                     Animated.timing(formTranslateY, {
-                        toValue,
-                        duration,
-                        easing,
-                        useNativeDriver,
+                        toValue: 0,
+                        duration: DURATION_FORM,
+                        easing: EASING,
+                        useNativeDriver: true,
                     }),
                     Animated.timing(formOpacity, {
-                        toValue,
-                        duration,
-                        easing,
-                        useNativeDriver,
+                        toValue: 1,
+                        duration: DURATION_FORM,
+                        easing: EASING,
+                        useNativeDriver: true,
                     }),
                 ]),
             ]),
         ]).start();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [key]);
 
     return {
         brandStyle: {
-            transform:  [{ translateX: brandTranslateX }],
-            opacity,
+            transform: [{ translateX: brandTranslateX }],
+            opacity: brandOpacity,
         },
         formStyle: {
-            transform:  [{ translateY: formTranslateY }],
-            opacity,
+            transform: [{ translateY: formTranslateY }],
+            opacity: formOpacity,
         },
     };
 }

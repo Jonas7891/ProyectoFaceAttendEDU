@@ -20,9 +20,7 @@ import FaceRegistrationModal      from "./FaceRegistrationModal";
 import {
     EMPTY_FORM,
     validateStudentForm,
-    type StudentFormData,
 } from "../../../viewmodels/useStudentsViewModel";
-import { AppUserRole }       from "../../../models/types";
 
 // ── Roles disponibles ─────────────────────────────────────
 
@@ -55,8 +53,8 @@ export default function RegisterStudentModal({
     const [showFaceModal, setShowFaceModal] = useState(false);
     const pendingFormRef = useRef(null);
 
-    const setField = <K extends keyof StudentFormData>(key, value: StudentFormData[K]) => {
-        setForm(prev => ({ ...prev, [key]: value }));
+    const setField = (key, value) => {
+        setForm((prev) => ({ ...prev, [key]: value }));
         if (showErrors) setError(null);
     };
 
@@ -114,7 +112,7 @@ export default function RegisterStudentModal({
     if (!visible) return null;
 
     return (
-        
+        <React.Fragment>
             <BaseModal
                 visible={visible}
                 onClose={handleClose}
@@ -123,23 +121,29 @@ export default function RegisterStudentModal({
                 icon="user-plus"
                 maxWidth={520}
                 footer={
-                    <UIButton variant="ghost" onPress={handleClose} disabled={saving}>
-                        {t("Cancelar")}
-                    </UIButton>
-                    <UIButton variant="primary" onPress={handleSubmit} disabled={saving || success}>
-                        {saving
-                            ? <ActivityIndicator size="small" color="#fff" />
-                            : success
-                                ? <Feather name="check" size={14} color="#fff" /> {t("¡Guardado!")}</>
-                                : t("Registrar estudiante")}
-                    </UIButton>
-                </>}
+                    <React.Fragment>
+                        <UIButton variant="ghost" onPress={handleClose} disabled={saving}>
+                            {t("Cancelar")}
+                        </UIButton>
+                        <UIButton variant="primary" onPress={handleSubmit} disabled={saving || success}>
+                            {saving
+                                ? <ActivityIndicator size="small" color="#fff" />
+                                : success
+                                    ? <React.Fragment><Feather name="check" size={14} color="#fff" /> {t("¡Guardado!")}</React.Fragment>
+                                    : t("Registrar estudiante")}
+                        </UIButton>
+                    </React.Fragment>
+                }
             >
                 {/* Error global */}
                 {error && (
                     <View style={{
-                        backgroundColor: c.states.dangerLight, borderRadius: 14,
-                        padding, flexDirection: "row", gap, marginBottom,
+                        backgroundColor: c.states.dangerLight,
+                        borderRadius: 14,
+                        padding: 12,
+                        flexDirection: "row",
+                        gap: 8,
+                        marginBottom: 14,
                     }}>
                         <Feather name="alert-circle" size={14} color={c.states.danger} />
                         <Text style={{ fontSize: 11, color: c.states.danger, flex: 1 }}>{error}</Text>
@@ -148,8 +152,12 @@ export default function RegisterStudentModal({
 
                 {success && (
                     <View style={{
-                        backgroundColor: c.states.successLight, borderRadius: 14,
-                        padding, flexDirection: "row", gap, marginBottom,
+                        backgroundColor: c.states.successLight,
+                        borderRadius: 14,
+                        padding: 12,
+                        flexDirection: "row",
+                        gap: 8,
+                        marginBottom: 14,
                     }}>
                         <Feather name="check-circle" size={14} color={c.states.success} />
                         <Text style={{ fontSize: 11, color: "#065F46", flex: 1 }}>
@@ -203,9 +211,10 @@ export default function RegisterStudentModal({
                     </View>
                     <View style={{ flex: 1 }}>
                         <Text style={{
-                            fontSize: 10, fontWeight: "600",
+                            fontSize: 10,
+                            fontWeight: "600",
                             color: showErrors && !form.role ? c.states.danger : c.text.secondary,
-                            marginBottom,
+                            marginBottom: 8,
                         }}>
                             {t("Rol") + " *"}
                         </Text>
@@ -230,19 +239,19 @@ export default function RegisterStudentModal({
                         {t("Estado")}
                     </Text>
                     <View style={{ flexDirection: "row", gap: 8 }}>
-                        {statusItems.map(s => (
+                        {statusItems.map((s) => (
                             <TouchableOpacity
                                 key={s.value}
                                 onPress={() => setField("status", s.value)}
                                 style={{
-                                    flexDirection:     "row",
-                                    alignItems:        "center",
-                                    gap,
-                                    paddingVertical,
-                                    paddingHorizontal,
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    paddingVertical: 10,
+                                    paddingHorizontal: 14,
                                     borderRadius: 14,
-                                    borderWidth:       1.5,
-                                    borderColor:       form.status === s.value
+                                    borderWidth: 1.5,
+                                    borderColor: form.status === s.value
                                         ? c.brand.primary
                                         : c.border.primary,
                                     backgroundColor: form.status === s.value
@@ -251,13 +260,16 @@ export default function RegisterStudentModal({
                                 }}
                             >
                                 <View style={{
-                                    width, height, borderRadius: 14,
+                                    width: 14,
+                                    height: 14,
+                                    borderRadius: 14,
                                     backgroundColor: form.status === s.value
                                         ? c.brand.primary
                                         : c.interactive.disabled,
                                 }} />
                                 <Text style={{
-                                    fontSize: 10, fontWeight: "600",
+                                    fontSize: 10,
+                                    fontWeight: "600",
                                     color: form.status === s.value
                                         ? c.brand.primary
                                         : c.text.secondary,
@@ -271,20 +283,23 @@ export default function RegisterStudentModal({
 
                 {/* Registro facial */}
                 <View style={{
-                    flexDirection: "row", alignItems: "center",
+                    flexDirection: "row",
+                    alignItems: "center",
                     justifyContent: "space-between",
-                    padding, borderWidth,
+                    padding: 12,
+                    borderWidth: 1.5,
                     borderColor: form.registered ? c.states.success : c.border.primary,
-                    borderRadius: 14, marginBottom,
+                    borderRadius: 14,
+                    marginBottom: 14,
                     backgroundColor: c.background.app,
                 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap, flex: 1 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}>
                         <Feather
                             name="aperture"
                             size={18}
                             color={form.registered ? c.states.success : c.brand.primary}
                         />
-                        
+                        <View>
                             <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary }}>
                                 {t("Reconocimiento facial")}
                             </Text>
@@ -296,20 +311,26 @@ export default function RegisterStudentModal({
                     <TouchableOpacity
                         onPress={() => setField("registered", !form.registered)}
                         style={{
-                            width, height, borderRadius: 14,
+                            width: 40,
+                            height: 20,
+                            borderRadius: 14,
                             backgroundColor: form.registered
                                 ? c.states.success
                                 : c.interactive.disabled,
                             justifyContent: "center",
-                            paddingHorizontal,
+                            paddingHorizontal: 2,
                         }}
                     >
                         <View style={{
-                            width, height, borderRadius: 14,
+                            width: 16,
+                            height: 16,
+                            borderRadius: 14,
                             backgroundColor: "#fff",
                             alignSelf: form.registered ? "flex-end" : "flex-start",
-                            shadowColor: "#000", shadowOpacity: 0.2,
-                            shadowRadius, elevation,
+                            shadowColor: "#000",
+                            shadowOpacity: 0.2,
+                            shadowRadius: 2,
+                            elevation: 2,
                         }} />
                     </TouchableOpacity>
                 </View>
@@ -333,6 +354,6 @@ export default function RegisterStudentModal({
                     doSave(formWithFace);
                 }}
             />
-        </>
+        </React.Fragment>
     );
 }

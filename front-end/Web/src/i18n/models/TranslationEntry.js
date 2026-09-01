@@ -1,20 +1,15 @@
 ﻿// ============================================================
 //  FaceAttend EDU — TranslationEntry (i18n · Model Layer)
 //  Tipos del dominio de internacionalización.
-//  No importa React ni RN — puro TypeScript.
+//  No importa React ni RN — puro JavaScript.
 // ============================================================
 
-/** Código BCP-47 del idioma (es, en, fr, de, …) */
+// Este archivo originalmente contenía tipos TypeScript.
+// En JavaScript, los tipos son implícitos y no requieren definición.
 
 /**
- * Una entrada de la caché de traducción.
- * Clave: texto fuente en español.
- * Valor: traducción al idioma destino.
+ * LanguageCode: Código BCP-47 del idioma (es, en, fr, de, …)
+ * TranslationEntry: { [textoFuente]: traducción }
+ * TranslationCache: { [idioma]: TranslationEntry }
+ * TranslationResult: { source, target, translation }
  */
-
-/**
- * Mapa en memoria: idioma → (textoFuente → traducción)
- * Ejemplo: { "en": { "Iniciar sesión": "Sign in" } }
- */
-
-/** Resultado devuelto por ITranslationProvider */

@@ -23,16 +23,10 @@
 //  Solo consume este contrato HTTP.
 // ============================================================
 
-import { ITranslationProvider }            from "./ITranslationProvider";
-import { LanguageCode, TranslationResult } from "../models/TranslationEntry";
+// Este archivo implementa un proveedor REST genérico para traducción.
 
-// ── Configuración ─────────────────────────────────────────────────────────
-//
-//  Cambia BASE_URL a la URL de tu API REST de traducción.
-//  Deja vacío o apunta a localhost durante desarrollo si aún no tienes backend.
-
-const BASE_URL   = "http://localhost:5000"; // URL de tu API de traducción
-const API_KEY    = "";                       // Clave de API si tu backend la requiere
+const BASE_URL = "http://localhost:5000"; // URL de tu API de traducción
+const API_KEY = ""; // Clave de API si tu backend la requiere
 const TIMEOUT_MS = 10_000;
 
 // ── Implementación ────────────────────────────────────────────────────────
@@ -40,31 +34,27 @@ const TIMEOUT_MS = 10_000;
 export class RestTranslationProvider {
     providerName = "RestTranslationProvider";
 
-    constructor(
-        baseUrl= BASE_URL,
-        apiKey= API_KEY,
-    ) {}
+    constructor(baseUrl = BASE_URL, apiKey = API_KEY) {
+        this.baseUrl = baseUrl;
+        this.apiKey = apiKey;
+    }
 
-    async translate(
-        text,
-        from,
-        to,
-    ) {
+    async translate(text, from, to) {
         if (!text.trim()) return { translatedText: text };
 
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
         try {
-            const body= {
-                q,
-                source,
-                target,
+            const body = {
+                q: text,
+                source: from,
+                target: to,
                 format: "text",
             };
             if (this.apiKey) body.api_key = this.apiKey;
 
-            const headers= {
+            const headers = {
                 "Content-Type": "application/json",
             };
             if (this.apiKey) headers["Authorization"] = `Bearer ${this.apiKey}`;

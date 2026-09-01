@@ -21,21 +21,11 @@ import {
     EMPTY_ENV_FORM,
     EMPTY_SCHEDULE_FORM,
     WEEK_DAYS,
-    type EnvironmentFormData,
-    type ScheduleFormData,
 } from "../../../viewmodels/useEnvironmentsViewModel";
-import { Environment, EnvironmentSchedule, AppUser } from "../../../models/types";
 
 // ── InstructorAutocomplete ───────────────────────────────────
 
-function InstructorAutocomplete({ query, onChangeQuery, onSelect, searchFn, error, t }: {
-    query: string;
-    onChangeQuery: (v) => void;
-    onSelect: (u) => void;
-    searchFn: (q) => AppUser[];
-    error?: boolean;
-    t: (s) => string;
-}) {
+function InstructorAutocomplete({ query, onChangeQuery, onSelect, searchFn, error, t }) {
     const { theme } = useTheme();
     const c = theme.colors;
     const [open, setOpen] = useState(false);
@@ -47,7 +37,7 @@ function InstructorAutocomplete({ query, onChangeQuery, onSelect, searchFn, erro
                 {t("Instructor / Docente encargado")} *
             </Text>
             <View style={{ position: "relative" }}>
-                <View style={{ position: "absolute", left, top, zIndex: 1 }}>
+                <View style={{ position: "absolute", left: 12, top: 12, zIndex: 1 }}>
                     <Feather name="search" size={14} color={c.text.secondary} />
                 </View>
                 <TextInput
@@ -57,33 +47,33 @@ function InstructorAutocomplete({ query, onChangeQuery, onSelect, searchFn, erro
                     placeholder={t("Buscar instructor por nombre...")}
                     placeholderTextColor={c.text.disabled}
                     style={{
-                        height, borderWidth,
+                        height: 40, borderWidth: 1,
                         borderColor: error ? c.states.danger : c.border.primary,
-                        borderRadius: 14, paddingLeft, paddingRight,
-                        fontSize, backgroundColor: c.background.app, color: c.text.primary,
+                        borderRadius: 14, paddingLeft: 36, paddingRight: 12,
+                        fontSize: 12, backgroundColor: c.background.app, color: c.text.primary,
                     }}
                 />
             </View>
             {open && results.length > 0 && (
                 <View style={{
-                    borderWidth, borderColor: c.border.primary, borderRadius: 14,
-                    backgroundColor: c.background.elevated, marginTop,
-                    shadowColor: "#000", shadowOpacity: 0.1, shadowRadius, elevation,
-                    zIndex,
+                    borderWidth: 1, borderColor: c.border.primary, borderRadius: 14,
+                    backgroundColor: c.background.elevated, marginTop: 8,
+                    shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
+                    zIndex: 100,
                 }}>
                     {results.map((u, i) => (
                         <TouchableOpacity
                             key={u.id}
                             onPress={() => { onSelect(u); setOpen(false); }}
                             style={{
-                                flexDirection: "row", alignItems: "center", gap,
-                                padding,
-                                borderBottomWidth: i < results.length - 1 ? 1,
+                                flexDirection: "row", alignItems: "center", gap: 10,
+                                padding: 12,
+                                borderBottomWidth: i < results.length - 1 ? 1 : 0,
                                 borderBottomColor: c.border.primary,
                             }}
                         >
                             <View style={{
-                                width, height, borderRadius: 14,
+                                width: 32, height: 32, borderRadius: 14,
                                 backgroundColor: c.brand.primaryLight,
                                 alignItems: "center", justifyContent: "center",
                             }}>
@@ -106,13 +96,7 @@ function InstructorAutocomplete({ query, onChangeQuery, onSelect, searchFn, erro
 
 // ── ScheduleModal ─────────────────────────────────────────────
 
-function ScheduleModal({ visible, mode, editing, envId, searchFn, onClose, onSave, t }: {
-    visible: boolean; mode: "add" | "edit" | "none";
-    editing) => AppUser[];
-    onClose: () => void;
-    onSave: (form) => Promise<string | null>;
-    t: (s) => string;
-}) {
+function ScheduleModal({ visible, mode, editing, envId, searchFn, onClose, onSave, t }) {
     const { theme } = useTheme();
     const { isSmall } = useResponsive();
     const c = theme.colors;
@@ -140,8 +124,7 @@ function ScheduleModal({ visible, mode, editing, envId, searchFn, onClose, onSav
         setError(null); setShowErrors(false); setSaving(false);
     }, [visible, editing]);
 
-    const setField = <K extends keyof ScheduleFormData>(k, v: ScheduleFormData[K]) =>
-        setForm(p => ({ ...p, [k]: v }));
+    const setField = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
     const toggleDay = (d) =>
         setField("days", form.days.includes(d) ? form.days.filter(x => x !== d) : [...form.days, d]);
@@ -164,14 +147,14 @@ function ScheduleModal({ visible, mode, editing, envId, searchFn, onClose, onSav
                     onPress={onClose} activeOpacity={1}
                 >
                     <TouchableOpacity activeOpacity={1} onPress={e => e.stopPropagation()}
-                        style={{ backgroundColor: c.background.surface, borderRadius: 14, width: isSmall ? "100%" : 540, maxHeight: "92%", overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.18, shadowRadius, elevation: 14 }}
+                        style={{ backgroundColor: c.background.surface, borderRadius: 14, width: isSmall ? "100%" : 540, maxHeight: "92%", overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 8, elevation: 14 }}
                     >
-                        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding, borderBottomWidth, borderBottomColor: c.border.primary }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 16, borderBottomWidth: 1, borderBottomColor: c.border.primary }}>
                             <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                                <View style={{ width, height, borderRadius: 14, backgroundColor: c.brand.primaryLight, alignItems: "center", justifyContent: "center" }}>
+                                <View style={{ width: 36, height: 36, borderRadius: 14, backgroundColor: c.brand.primaryLight, alignItems: "center", justifyContent: "center" }}>
                                     <Feather name="clock" size={18} color={c.brand.primary} />
                                 </View>
-                                
+                                <View>
                                     <Text style={{ fontSize: 10, fontWeight: "700", color: c.text.primary }}>
                                         {mode === "add" ? t("Nuevo horario") : t("Editar horario")}
                                     </Text>
@@ -183,7 +166,7 @@ function ScheduleModal({ visible, mode, editing, envId, searchFn, onClose, onSav
 
                         <ScrollView style={{ padding: 20 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                             {error && (
-                                <View style={{ backgroundColor: c.states.dangerLight, borderRadius: 14, padding, flexDirection: "row", gap, marginBottom: 16 }}>
+                                <View style={{ backgroundColor: c.states.dangerLight, borderRadius: 14, padding: 12, flexDirection: "row", gap: 8, marginBottom: 16 }}>
                                     <Feather name="alert-circle" size={14} color={c.states.danger} />
                                     <Text style={{ fontSize: 11, color: c.states.danger, flex: 1 }}>{error}</Text>
                                 </View>
@@ -191,11 +174,11 @@ function ScheduleModal({ visible, mode, editing, envId, searchFn, onClose, onSav
 
                             <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
                                 <View style={{ flex: 1 }}>
-                                    <InputField label={t("N° Ficha / Código") + " *"} value={form.courseCode}
+                                    <FormField label={t("N° Ficha / Código") + " *"} value={form.courseCode}
                                         onChangeText={v => setField("courseCode", v)} placeholder="Ej: 2240001" error={isEmpty(form.courseCode)} />
                                 </View>
                                 <View style={{ flex: 2 }}>
-                                    <InputField label={t("Nombre del programa") + " *"} value={form.courseName}
+                                    <FormField label={t("Nombre del programa") + " *"} value={form.courseName}
                                         onChangeText={v => setField("courseName", v)} placeholder={t("Ej: Tecnología en Sistemas")} error={isEmpty(form.courseName)} />
                                 </View>
                             </View>
@@ -211,11 +194,11 @@ function ScheduleModal({ visible, mode, editing, envId, searchFn, onClose, onSav
 
                             <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
                                 <View style={{ flex: 1 }}>
-                                    <InputField label={t("Hora inicio") + " *"} value={form.startTime}
+                                    <FormField label={t("Hora inicio") + " *"} value={form.startTime}
                                         onChangeText={v => setField("startTime", v)} placeholder="08:00" error={isEmpty(form.startTime)} />
                                 </View>
                                 <View style={{ flex: 1 }}>
-                                    <InputField label={t("Hora fin") + " *"} value={form.endTime}
+                                    <FormField label={t("Hora fin") + " *"} value={form.endTime}
                                         onChangeText={v => setField("endTime", v)} placeholder="10:00" error={isEmpty(form.endTime)} />
                                 </View>
                             </View>
@@ -239,13 +222,13 @@ function ScheduleModal({ visible, mode, editing, envId, searchFn, onClose, onSav
                                 </View>
                             </View>
 
-                            <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom, textAlign: "right" }}>* {t("Campos obligatorios")}</Text>
+                            <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom: 8, textAlign: "right" }}>* {t("Campos obligatorios")}</Text>
                         </ScrollView>
 
-                        <View style={{ flexDirection: "row", gap, justifyContent: "flex-end", padding, borderTopWidth, borderTopColor: c.border.primary }}>
+                        <View style={{ flexDirection: "row", gap: 8, justifyContent: "flex-end", padding: 16, borderTopWidth: 1, borderTopColor: c.border.primary }}>
                             <UIButton variant="ghost" onPress={onClose} disabled={saving}>{t("Cancelar")}</UIButton>
                             <UIButton variant="primary" onPress={handleSave} disabled={saving}>
-                                {saving ? <ActivityIndicator size="small" color="#fff" /> : <Feather name="check" size={14} color="#fff" /> {t("Guardar horario")}</>}
+                                {saving ? <React.Fragment><ActivityIndicator size="small" color="#fff" /></React.Fragment> : <React.Fragment><Feather name="check" size={14} color="#fff" /> {t("Guardar horario")}</React.Fragment>}
                             </UIButton>
                         </View>
                     </TouchableOpacity>
@@ -257,12 +240,7 @@ function ScheduleModal({ visible, mode, editing, envId, searchFn, onClose, onSav
 
 // ── EnvironmentFormModal ──────────────────────────────────────
 
-function EnvironmentFormModal({ visible, mode, environment, onClose, onSubmit, t }: {
-    visible: boolean; mode: "register" | "edit" | "none";
-    environment) => void;
-    onSubmit: (form) => Promise<string | null>;
-    t: (s) => string;
-}) {
+function EnvironmentFormModal({ visible, mode, environment, onClose, onSubmit, t }) {
     const { theme } = useTheme();
     const { isSmall } = useResponsive();
     const c = theme.colors;
@@ -282,8 +260,7 @@ function EnvironmentFormModal({ visible, mode, environment, onClose, onSubmit, t
         setError(null); setSaving(false); setSuccess(false); setShowErrors(false);
     }, [visible, mode, environment]);
 
-    const setField = <K extends keyof EnvironmentFormData>(k, v: EnvironmentFormData[K]) =>
-        setForm(p => ({ ...p, [k]: v }));
+    const setField = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
     const handleSubmit = async () => {
         setShowErrors(true); setSaving(true); setError(null);
@@ -304,14 +281,14 @@ function EnvironmentFormModal({ visible, mode, environment, onClose, onSubmit, t
                 <TouchableOpacity style={{ flex: 1, backgroundColor: c.background.overlay, justifyContent: "center", alignItems: "center", padding: isSmall ? 12 : 24 }}
                     onPress={onClose} activeOpacity={1}>
                     <TouchableOpacity activeOpacity={1} onPress={e => e.stopPropagation()}
-                        style={{ backgroundColor: c.background.surface, borderRadius: 14, width: isSmall ? "100%" : 500, maxHeight: "92%", overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.18, shadowRadius, elevation: 14 }}>
+                        style={{ backgroundColor: c.background.surface, borderRadius: 14, width: isSmall ? "100%" : 500, maxHeight: "92%", overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 8, elevation: 14 }}>
 
-                        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding, borderBottomWidth, borderBottomColor: c.border.primary }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 16, borderBottomWidth: 1, borderBottomColor: c.border.primary }}>
                             <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                                <View style={{ width, height, borderRadius: 14, backgroundColor: c.brand.primaryLight, alignItems: "center", justifyContent: "center" }}>
+                                <View style={{ width: 36, height: 36, borderRadius: 14, backgroundColor: c.brand.primaryLight, alignItems: "center", justifyContent: "center" }}>
                                     <Feather name="home" size={18} color={c.brand.primary} />
                                 </View>
-                                
+                                <View>
                                     <Text style={{ fontSize: 10, fontWeight: "700", color: c.text.primary }}>
                                         {mode === "register" ? t("Nuevo ambiente") : t("Editar ambiente")}
                                     </Text>
@@ -323,13 +300,13 @@ function EnvironmentFormModal({ visible, mode, environment, onClose, onSubmit, t
 
                         <ScrollView style={{ padding: 20 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                             {error && (
-                                <View style={{ backgroundColor: c.states.dangerLight, borderRadius: 14, padding, flexDirection: "row", gap, marginBottom: 16 }}>
+                                <View style={{ backgroundColor: c.states.dangerLight, borderRadius: 14, padding: 12, flexDirection: "row", gap: 8, marginBottom: 16 }}>
                                     <Feather name="alert-circle" size={14} color={c.states.danger} />
                                     <Text style={{ fontSize: 11, color: c.states.danger, flex: 1 }}>{error}</Text>
                                 </View>
                             )}
                             {success && (
-                                <View style={{ backgroundColor: c.states.successLight, borderRadius: 14, padding, flexDirection: "row", gap, marginBottom: 16 }}>
+                                <View style={{ backgroundColor: c.states.successLight, borderRadius: 14, padding: 12, flexDirection: "row", gap: 8, marginBottom: 16 }}>
                                     <Feather name="check-circle" size={14} color={c.states.success} />
                                     <Text style={{ fontSize: 11, color: "#065F46", flex: 1 }}>{t("Ambiente guardado correctamente")}</Text>
                                 </View>
@@ -337,30 +314,30 @@ function EnvironmentFormModal({ visible, mode, environment, onClose, onSubmit, t
 
                             <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
                                 <View style={{ flex: 1 }}>
-                                    <InputField label={t("Número / Nombre del ambiente") + " *"} value={form.number}
+                                    <FormField label={t("Número / Nombre del ambiente") + " *"} value={form.number}
                                         onChangeText={v => setField("number", v)} placeholder={t("Ej: 301")} error={isEmpty(form.number)} />
                                 </View>
                                 <View style={{ flex: 1 }}>
-                                    <InputField label={t("Capacidad (personas)")} value={form.capacity}
+                                    <FormField label={t("Capacidad (personas)")} value={form.capacity}
                                         onChangeText={v => setField("capacity", v)} placeholder="40" keyboardType="numeric"
                                         hint={t("Opcional")} />
                                 </View>
                             </View>
 
-                            <InputField label={t("Descripción / Ubicación") + " *"} value={form.description}
+                            <FormField label={t("Descripción / Ubicación") + " *"} value={form.description}
                                 onChangeText={v => setField("description", v)}
                                 placeholder={t("Ej: Bloque A, piso 3. Aula de teoría con videobeam.")}
                                 error={isEmpty(form.description)} multiline />
 
-                            <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom, textAlign: "right" }}>* {t("Campos obligatorios")}</Text>
+                            <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom: 8, textAlign: "right" }}>* {t("Campos obligatorios")}</Text>
                         </ScrollView>
 
-                        <View style={{ flexDirection: "row", gap, justifyContent: "flex-end", padding, borderTopWidth, borderTopColor: c.border.primary }}>
+                        <View style={{ flexDirection: "row", gap: 8, justifyContent: "flex-end", padding: 16, borderTopWidth: 1, borderTopColor: c.border.primary }}>
                             <UIButton variant="ghost" onPress={onClose} disabled={saving}>{t("Cancelar")}</UIButton>
                             <UIButton variant="primary" onPress={handleSubmit} disabled={saving || success}>
-                                {saving ? <ActivityIndicator size="small" color="#fff" />
-                                    : success ? <Feather name="check" size={14} color="#fff" /> {t("¡Guardado ✓")}</>
-                                    : <Feather name="home" size={14} color="#fff" /> {mode === "register" ? t("Registrar ambiente") : t("Guardar cambios")}</>}
+                                {saving ? <React.Fragment><ActivityIndicator size="small" color="#fff" /></React.Fragment>
+                                    : success ? <React.Fragment><Feather name="check" size={14} color="#fff" /> {t("¡Guardado ✓")}</React.Fragment>
+                                    : <React.Fragment><Feather name="home" size={14} color="#fff" /> {mode === "register" ? t("Registrar ambiente") : t("Guardar cambios")}</React.Fragment>}
                             </UIButton>
                         </View>
                     </TouchableOpacity>
@@ -372,14 +349,11 @@ function EnvironmentFormModal({ visible, mode, environment, onClose, onSubmit, t
 
 // ── ScheduleRow ───────────────────────────────────────────────
 
-function ScheduleRow({ schedule, onEdit, onDelete, isLast, t }: {
-    schedule: EnvironmentSchedule; onEdit: () => void; onDelete: () => void;
-    isLast: boolean; t: (s) => string;
-}) {
+function ScheduleRow({ schedule, onEdit, onDelete, isLast, t }) {
     const { theme } = useTheme();
     const c = theme.colors;
     return (
-        <View style={{ paddingVertical, paddingHorizontal, borderBottomWidth: isLast ? 0, borderBottomColor: c.border.primary, gap: 6 }}>
+        <View style={{ paddingVertical: 10, paddingHorizontal: 12, borderBottomWidth: isLast ? 0 : 1, borderBottomColor: c.border.primary, gap: 6 }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
                 <View style={{ flex: 1, gap: 2 }}>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -388,29 +362,29 @@ function ScheduleRow({ schedule, onEdit, onDelete, isLast, t }: {
                             {schedule.courseName}
                         </Text>
                     </View>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap, marginTop: 4 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 }}>
                         <Feather name="user" size={12} color={c.text.secondary} />
                         <Text style={{ fontSize: 11, color: c.text.secondary }}>{schedule.instructorName}</Text>
                     </View>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap, marginTop: 2 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2 }}>
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                             <Feather name="clock" size={11} color={c.text.secondary} />
                             <Text style={{ fontSize: 11, color: c.text.secondary }}>{schedule.startTime} – {schedule.endTime}</Text>
                         </View>
                         <View style={{ flexDirection: "row", gap: 4 }}>
                             {schedule.days.map(d => (
-                                <View key={d} style={{ backgroundColor: c.brand.primaryLight, borderRadius: 14, paddingHorizontal, paddingVertical: 2 }}>
+                                <View key={d} style={{ backgroundColor: c.brand.primaryLight, borderRadius: 14, paddingHorizontal: 6, paddingVertical: 2 }}>
                                     <Text style={{ fontSize: 10, fontWeight: "700", color: c.brand.primary }}>{t(d)}</Text>
                                 </View>
                             ))}
                         </View>
                     </View>
                 </View>
-                <View style={{ flexDirection: "row", gap, marginLeft: 10 }}>
-                    <TouchableOpacity onPress={onEdit} style={{ padding, borderRadius: 14, backgroundColor: c.brand.primaryLight }}>
+                <View style={{ flexDirection: "row", gap: 6, marginLeft: 10 }}>
+                    <TouchableOpacity onPress={onEdit} style={{ padding: 6, borderRadius: 14, backgroundColor: c.brand.primaryLight }}>
                         <Feather name="edit-2" size={13} color={c.brand.primary} />
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={onDelete} style={{ padding, borderRadius: 14, backgroundColor: c.states.dangerLight }}>
+                    <TouchableOpacity onPress={onDelete} style={{ padding: 6, borderRadius: 14, backgroundColor: c.states.dangerLight }}>
                         <Feather name="trash-2" size={13} color={c.states.danger} />
                     </TouchableOpacity>
                 </View>
@@ -421,14 +395,7 @@ function ScheduleRow({ schedule, onEdit, onDelete, isLast, t }: {
 
 // ── EnvironmentDetailModal ────────────────────────────────────
 
-function EnvironmentDetailModal({ environment, onClose, onEdit, onDelete, onAddSchedule, onEditSchedule, onDeleteSchedule, t }: {
-    environment) => void;
-    onEdit: () => void; onDelete: () => void;
-    onAddSchedule: () => void;
-    onEditSchedule: (s) => void;
-    onDeleteSchedule: (scheduleId) => void;
-    t: (s) => string;
-}) {
+function EnvironmentDetailModal({ environment, onClose, onEdit, onDelete, onAddSchedule, onEditSchedule, onDeleteSchedule, t }) {
     const { theme } = useTheme();
     const { isSmall } = useResponsive();
     const c = theme.colors;
@@ -439,11 +406,11 @@ function EnvironmentDetailModal({ environment, onClose, onEdit, onDelete, onAddS
             <TouchableOpacity style={{ flex: 1, backgroundColor: c.background.overlay, justifyContent: "center", alignItems: "center", padding: isSmall ? 12 : 24 }}
                 onPress={onClose} activeOpacity={1}>
                 <TouchableOpacity activeOpacity={1} onPress={e => e.stopPropagation()}
-                    style={{ backgroundColor: c.background.surface, borderRadius: 14, width: isSmall ? "100%" : 580, maxHeight: "92%", overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.15, shadowRadius, elevation: 12 }}>
+                    style={{ backgroundColor: c.background.surface, borderRadius: 14, width: isSmall ? "100%" : 580, maxHeight: "92%", overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 8, elevation: 12 }}>
 
                     {/* Header */}
-                    <View style={{ padding, borderBottomWidth, borderBottomColor: c.border.primary, flexDirection: "row", alignItems: "flex-start", gap: 14 }}>
-                        <View style={{ width, height, borderRadius: 14, backgroundColor: c.brand.primaryLight, alignItems: "center", justifyContent: "center" }}>
+                    <View style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: c.border.primary, flexDirection: "row", alignItems: "flex-start", gap: 14 }}>
+                        <View style={{ width: 40, height: 40, borderRadius: 14, backgroundColor: c.brand.primaryLight, alignItems: "center", justifyContent: "center" }}>
                             <Feather name="home" size={22} color={c.brand.primary} />
                         </View>
                         <View style={{ flex: 1 }}>
@@ -459,8 +426,8 @@ function EnvironmentDetailModal({ environment, onClose, onEdit, onDelete, onAddS
 
                     <ScrollView style={{ padding: 20 }} showsVerticalScrollIndicator={false}>
                         {/* Descripción */}
-                        <View style={{ backgroundColor: c.background.app, borderRadius: 14, padding, marginBottom: 16 }}>
-                            <View style={{ flexDirection: "row", alignItems: "center", gap, marginBottom: 6 }}>
+                        <View style={{ backgroundColor: c.background.app, borderRadius: 14, padding: 12, marginBottom: 16 }}>
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 }}>
                                 <Feather name="map-pin" size={13} color={c.text.secondary} />
                                 <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.secondary, textTransform: "uppercase", letterSpacing: 0.5 }}>{t("Ubicación / Descripción")}</Text>
                             </View>
@@ -494,13 +461,13 @@ function EnvironmentDetailModal({ environment, onClose, onEdit, onDelete, onAddS
                     </ScrollView>
 
                     {/* Footer */}
-                    <View style={{ padding, borderTopWidth, borderTopColor: c.border.primary, flexDirection: "row", gap, justifyContent: "flex-end" }}>
+                    <View style={{ padding: 16, borderTopWidth: 1, borderTopColor: c.border.primary, flexDirection: "row", gap: 8, justifyContent: "flex-end" }}>
                         <UIButton variant="danger" size="sm" onPress={onDelete}>
-                            <Feather name="trash-2" size={13} color={c.states.danger} /> {"  "}{t("Eliminar")}
+                            <React.Fragment><Feather name="trash-2" size={13} color={c.states.danger} /> {"  "}{t("Eliminar")}</React.Fragment>
                         </UIButton>
                         <UIButton variant="ghost" onPress={onClose}>{t("Cerrar")}</UIButton>
                         <UIButton variant="primary" onPress={onEdit}>
-                            <Feather name="edit-2" size={13} color="#fff" /> {"  "}{t("Editar ambiente")}
+                            <React.Fragment><Feather name="edit-2" size={13} color="#fff" /> {"  "}{t("Editar ambiente")}</React.Fragment>
                         </UIButton>
                     </View>
                 </TouchableOpacity>
@@ -520,14 +487,14 @@ function EnvironmentCard({ environment, onPress }) {
         <TouchableOpacity onPress={onPress} style={{ flex: 1, minWidth: 260 }}>
             <Card padding={0} style={{ overflow: "hidden", height: "100%" }}>
                 <View style={{ height: 5, backgroundColor: c.brand.primary }} />
-                <View style={{ padding, flex: 1 }}>
+                <View style={{ padding: 14, flex: 1 }}>
                     <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 8 }}>
                         <View style={{ flex: 1 }}>
                             <Text style={{ fontSize: 10, fontWeight: "800", color: c.brand.primary }}>{environment.number}</Text>
                             <Text style={{ fontSize: 11, color: c.text.secondary, marginTop: 1 }} numberOfLines={2}>{environment.description}</Text>
                         </View>
                         {environment.capacity && (
-                            <View style={{ flexDirection: "row", alignItems: "center", gap, backgroundColor: c.background.app, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: c.background.app, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
                                 <Feather name="users" size={11} color={c.text.secondary} />
                                 <Text style={{ fontSize: 11, color: c.text.secondary }}>{environment.capacity}</Text>
                             </View>
@@ -543,8 +510,8 @@ function EnvironmentCard({ environment, onPress }) {
                     {environment.schedules.length === 0 ? (
                         <Text style={{ fontSize: 11, color: c.text.disabled, fontStyle: "italic" }}>{t("Sin horarios asignados")}</Text>
                     ) : environment.schedules.slice(0, 3).map(s => (
-                        <View key={s.id} style={{ flexDirection: "row", alignItems: "center", gap, marginBottom: 6 }}>
-                            <View style={{ width, height, borderRadius: 14, backgroundColor: c.brand.primary }} />
+                        <View key={s.id} style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                            <View style={{ width: 4, height: 4, borderRadius: 14, backgroundColor: c.brand.primary }} />
                             <View style={{ flex: 1 }}>
                                 <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary }} numberOfLines={1}>
                                     {s.courseCode} · {s.courseName}
@@ -586,7 +553,7 @@ export default function EnvironmentsView() {
 
     return (
         <View style={{ flex: 1 }}>
-            <ScrollView contentContainerStyle={{ padding: isSmall ? 16, gap: 16 }} showsVerticalScrollIndicator={false}>
+            <ScrollView contentContainerStyle={{ padding: isSmall ? 16 : 24, gap: 16 }} showsVerticalScrollIndicator={false}>
                 <PageHeader
                     title={t("Ambientes")}
                     subtitle={`${vm.filtered.length} ${vm.filtered.length !== 1 ? t("ambientes registrados") : t("ambiente registrado")}`}
@@ -601,14 +568,14 @@ export default function EnvironmentsView() {
                 />
 
                 {/* Mini stats */}
-                <View style={{ flexDirection: "row", gap, flexWrap: "wrap" }}>
+                <View style={{ flexDirection: "row", gap: 12, flexWrap: "wrap" }}>
                     {[
                         { label: t("Total ambientes"), value: vm.environments.length, color: c.brand.primary  },
-                        { label: t("Total horarios"),  value,          color: c.states.success },
+                        { label: t("Total horarios"),  value: totalSchedules,          color: c.states.success },
                         { label: t("Sin horarios"),    value: vm.environments.filter(e => e.schedules.length === 0).length, color: c.states.warning },
                     ].map(({ label, value, color }) => (
-                        <Card key={label} style={{ flex: 1, minWidth, alignItems: "center" }} padding={14}>
-                            <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.secondary, textTransform: "uppercase", letterSpacing: 0.5, marginBottom, textAlign: "center" }}>
+                        <Card key={label} style={{ flex: 1, minWidth: 140, alignItems: "center" }} padding={14}>
+                            <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.secondary, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6, textAlign: "center" }}>
                                 {label}
                             </Text>
                             <Text style={{ fontSize: 10, fontWeight: "800", color }}>{value}</Text>
@@ -617,21 +584,21 @@ export default function EnvironmentsView() {
                 </View>
 
                 {/* Búsqueda */}
-                <View style={{ maxWidth, position: "relative", justifyContent: "center" }}>
-                    <View style={{ position: "absolute", left, zIndex: 1 }}>
+                <View style={{ maxWidth: 480, position: "relative", justifyContent: "center" }}>
+                    <View style={{ position: "absolute", left: 12, zIndex: 1 }}>
                         <Feather name="search" size={14} color={c.text.secondary} />
                     </View>
                     <TextInput
                         placeholder={t("Buscar por ambiente, ficha o instructor...")}
                         value={vm.search} onChangeText={vm.setSearch}
-                        style={{ height, borderWidth, borderColor: c.border.primary, borderRadius: 14, paddingLeft, paddingRight, fontSize, backgroundColor: c.background.surface, color: c.text.primary }}
+                        style={{ height: 44, borderWidth: 1, borderColor: c.border.primary, borderRadius: 14, paddingLeft: 40, paddingRight: 12, fontSize: 14, backgroundColor: c.background.surface, color: c.text.primary }}
                         placeholderTextColor={c.text.disabled}
                     />
                 </View>
 
                 {/* Grid de ambientes */}
                 {vm.filtered.length === 0 ? (
-                    
+                    <Card>
                         <EmptyState
                             icon={<Feather name="home" size={40} color={c.text.secondary} />}
                             title={t("Sin ambientes")}

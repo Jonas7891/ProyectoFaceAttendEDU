@@ -25,7 +25,7 @@ export function hslToHex(h, s, l) {
     );
 }
 
-export function hexToHsl(hex): [number, number, number] {
+export function hexToHsl(hex) {
     const r = parseInt(hex.slice(1, 3), 16) / 255;
     const g = parseInt(hex.slice(3, 5), 16) / 255;
     const b = parseInt(hex.slice(5, 7), 16) / 255;
@@ -38,9 +38,17 @@ export function hexToHsl(hex): [number, number, number] {
         const d = max - min;
         s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
         switch (max) {
-            case r: h = ((g - b) / d + (g < b ? 6)) / 6; break;
-            case g: h = ((b - r) / d + 2) / 6; break;
-            case b: h = ((r - g) / d + 4) / 6; break;
+            case r:
+                h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+                break;
+            case g:
+                h = ((b - r) / d + 2) / 6;
+                break;
+            case b:
+                h = ((r - g) / d + 4) / 6;
+                break;
+            default:
+                break;
         }
     }
     return [Math.round(h * 360), Math.round(s * 100), Math.round(l * 100)];
@@ -52,24 +60,21 @@ export function hexToHsl(hex): [number, number, number] {
 // Recibe un color HEX y un helper de traducción,
 // devuelve un veredicto completo para mostrar en la UI.
 
-export function evaluateColor(
-    hex,
-    t: (s) => string
-) {
+export function evaluateColor(hex, t) {
     const r = parseInt(hex.slice(1, 3), 16) / 255;
     const g = parseInt(hex.slice(3, 5), 16) / 255;
     const b = parseInt(hex.slice(5, 7), 16) / 255;
     const lin = (v) =>
         v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
-    const L   = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+    const L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
     const contrastVsWhite = 1.05 / (L + 0.05);
     const contrastVsBlack = (L + 0.05) / 0.05;
-    const bestContrast    = Math.max(contrastVsWhite, contrastVsBlack);
+    const bestContrast = Math.max(contrastVsWhite, contrastVsBlack);
 
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
-    const lv  = (max + min) / 2;
-    const sv  = max === min
+    const lv = (max + min) / 2;
+    const sv = max === min
         ? 0
         : lv > 0.5
             ? (max - min) / (2 - max - min)
@@ -77,9 +82,17 @@ export function evaluateColor(
     let hv = 0;
     if (max !== min) {
         switch (max) {
-            case r: hv = ((g - b) / (max - min) + (g < b ? 6)) / 6; break;
-            case g: hv = ((b - r) / (max - min) + 2) / 6; break;
-            case b: hv = ((r - g) / (max - min) + 4) / 6; break;
+            case r:
+                hv = ((g - b) / (max - min) + (g < b ? 6 : 0)) / 6;
+                break;
+            case g:
+                hv = ((b - r) / (max - min) + 2) / 6;
+                break;
+            case b:
+                hv = ((r - g) / (max - min) + 4) / 6;
+                break;
+            default:
+                break;
         }
     }
     const hueDeg = Math.round(hv * 360);
@@ -153,15 +166,20 @@ export function evaluateColor(
     let score = "score";
     let scoreColor;
     if (contrastVsWhite >= 4.5 && satPct >= 15 && lumPct >= 20 && lumPct <= 78) {
-        score = "excelente"; scoreColor = "#10B981";
+        score = "excelente";
+        scoreColor = "#10B981";
     } else if (contrastVsWhite >= 3 && satPct >= 10 && lumPct >= 18 && lumPct <= 82) {
-        score = "bueno"; scoreColor = "#10B981";
+        score = "bueno";
+        scoreColor = "#10B981";
     } else if (contrastVsWhite >= 2.5 || contrastVsBlack >= 4.5) {
-        score = "aceptable"; scoreColor = "#F59E0B";
+        score = "aceptable";
+        scoreColor = "#F59E0B";
     } else if (lumPct > 80 || lumPct < 15) {
-        score = "precaución"; scoreColor = "#F59E0B";
+        score = "precaución";
+        scoreColor = "#F59E0B";
     } else {
-        score = "problemático"; scoreColor = "#EF4444";
+        score = "problemático";
+        scoreColor = "#EF4444";
     }
 
     return {

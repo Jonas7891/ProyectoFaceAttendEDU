@@ -1,10 +1,8 @@
 ﻿import React from "react";
 import { Text } from "react-native";
 import { useResponsive } from "../hooks/useResponsive";
-import { getTypography }  from "../constants/typography";
-import { useTheme }       from "../hooks/useTheme";
-
- accent: string; end: string };
+import { getTypography } from "../constants/typography";
+import { useTheme } from "../hooks/useTheme";
 
 export default function HeroTitle({ title, accent, end }) {
     const { fs }    = useResponsive();

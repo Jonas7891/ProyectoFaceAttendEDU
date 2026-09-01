@@ -25,7 +25,6 @@ import React, {
 } from "react";
 
 import { generateTheme }  from "./generateTheme";
-import { ThemeMode, ThemeTokens } from "./colourTokens";
 import { DEFAULT_ACCENT, DEFAULT_MODE } from "./presets";
 import {
     loadAccentColor,
@@ -33,19 +32,6 @@ import {
     saveAccentColor,
     saveThemeMode,
 } from "./storage";
-
-// ── Tipos del contexto ───────────────────────────────────────
-
-    /** ThemeTokens completo — tu única fuente de colores */
-    theme;
-    mode: ThemeMode;
-    accentColor: string;
-    /** true mientras se carga la preferencia guardada */
-    isLoading: boolean;
-    setMode: (mode) => Promise;
-    toggleMode: () => Promise;
-    setAccentColor: (color) => Promise;
-};
 
 // ── Context ──────────────────────────────────────────────────
 
@@ -119,8 +105,8 @@ export function useTheme() {
     const ctx = useContext(ThemeContext);
     if (!ctx) {
         throw new Error(
-            "[FaceAttend] useTheme() debe usarse dentro de . " +
-            "Asegúrate de envolver app.tsx con ."
+            "[FaceAttend] useTheme() debe usarse dentro de <ThemeProvider>. " +
+            "Asegúrate de envolver app.js con <ThemeProvider>."
         );
     }
     return ctx;

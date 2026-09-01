@@ -22,7 +22,7 @@
 import React from "react";
 import {
     Modal, View, Text, TouchableOpacity, ScrollView,
-    KeyboardAvoidingView, Platform, ViewStyle,
+    KeyboardAvoidingView, Platform,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme }     from "../hooks/useTheme";
@@ -62,7 +62,8 @@ export function BaseModal({
                 behavior={Platform.OS === "ios" ? "padding" : undefined}
             >
                 <TouchableOpacity
-                    style={{ flex: 1,
+                    style={{
+                        flex: 1,
                         backgroundColor: c.background.overlay,
                         justifyContent: "center",
                         alignItems: "center",
@@ -77,13 +78,13 @@ export function BaseModal({
                         style={[{
                             backgroundColor: c.background.surface,
                             borderRadius: 14,
-                            width:           isSmall ? ("100%") : maxWidth,
-                            maxHeight:       "92%",
-                            overflow:        "hidden",
-                            shadowColor:     "#000",
-                            shadowOpacity:   0.18,
-                            shadowRadius,
-                            elevation,
+                            width: isSmall ? "100%" : maxWidth,
+                            maxHeight: "92%",
+                            overflow: "hidden",
+                            shadowColor: "#000",
+                            shadowOpacity: 0.18,
+                            shadowRadius: 12,
+                            elevation: 5,
                         }, style]}
                     >
                         {/* Barra de acento opcional */}
@@ -93,35 +94,45 @@ export function BaseModal({
 
                         {/* ── Header ──────────────────────────── */}
                         <View style={{
-                            flexDirection:  "row",
-                            alignItems:     "center",
+                            flexDirection: "row",
+                            alignItems: "center",
                             justifyContent: "space-between",
-                            padding,
-                            borderBottomWidth,
+                            padding: 16,
+                            borderBottomWidth: 1,
                             borderBottomColor: c.border.primary,
                         }}>
-                            <View style={{ flexDirection: "row", alignItems: "center", gap, flex: 1 }}>
+                            <View style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 12,
+                                flex: 1
+                            }}>
                                 {icon && (
                                     <View style={{
-                                        width,
-                                        height,
+                                        width: 36,
+                                        height: 36,
                                         borderRadius: 14,
                                         backgroundColor: resolvedIconColor + "20",
-                                        alignItems:      "center",
-                                        justifyContent:  "center",
+                                        alignItems: "center",
+                                        justifyContent: "center",
                                     }}>
                                         <Feather name={icon} size={18} color={resolvedIconColor} />
                                     </View>
                                 )}
                                 <View style={{ flex: 1 }}>
                                     <Text style={{
-                                        fontSize: 10, fontWeight: "700",
-                                        color:      c.text.primary,
+                                        fontSize: 10,
+                                        fontWeight: "700",
+                                        color: c.text.primary,
                                     }}>
                                         {title}
                                     </Text>
                                     {subtitle && (
-                                        <Text style={{ fontSize: 11, color: c.text.secondary, marginTop: 1 }}>
+                                        <Text style={{
+                                            fontSize: 11,
+                                            color: c.text.secondary,
+                                            marginTop: 1
+                                        }}>
                                             {subtitle}
                                         </Text>
                                     )}
@@ -129,7 +140,12 @@ export function BaseModal({
                             </View>
                             <TouchableOpacity
                                 onPress={onClose}
-                                hitSlop={{ top, bottom, left, right: 8 }}
+                                hitSlop={{
+                                    top: 8,
+                                    bottom: 8,
+                                    left: 8,
+                                    right: 8
+                                }}
                             >
                                 <Feather name="x" size={20} color={c.text.secondary} />
                             </TouchableOpacity>
@@ -147,11 +163,11 @@ export function BaseModal({
                         {/* ── Footer ───────────────────────────── */}
                         {footer && (
                             <View style={{
-                                flexDirection:  "row",
-                                gap,
+                                flexDirection: "row",
+                                gap: 12,
                                 justifyContent: "flex-end",
-                                padding,
-                                borderTopWidth,
+                                padding: 16,
+                                borderTopWidth: 1,
                                 borderTopColor: c.border.primary,
                             }}>
                                 {footer}

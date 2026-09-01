@@ -19,7 +19,7 @@
 // ============================================================
 
 import React from "react";
-import { View, Text, TextInput, ViewStyle } from "react-native";
+import { View, Text, TextInput } from "react-native";
 import { useTheme } from "../hooks/useTheme";
 
 /** @deprecated Usa `InputField` en lugar de `FormField` para componentes de gestión */
@@ -44,9 +44,10 @@ export function InputField({
     return (
         <View style={[{ marginBottom: 14 }, style]}>
             <Text style={{
-                fontSize: 10, fontWeight: "600",
+                fontSize: 10,
+                fontWeight: "600",
                 color: error ? c.states.danger : c.text.secondary,
-                marginBottom,
+                marginBottom: 6,
             }}>
                 {label}
             </Text>
@@ -60,13 +61,13 @@ export function InputField({
                 multiline={multiline}
                 numberOfLines={multiline ? numberOfLines : 1}
                 style={{
-                    minHeight: multiline ? 80,
-                    borderWidth,
+                    minHeight: multiline ? 80 : 40,
+                    borderWidth: 1.5,
                     borderColor: error ? c.states.danger : c.border.primary,
                     borderRadius: 14,
-                    paddingHorizontal,
-                    paddingTop: multiline ? 10,
-                    fontSize,
+                    paddingHorizontal: 14,
+                    paddingTop: multiline ? 10 : 0,
+                    fontSize: 11,
                     backgroundColor: c.background.app,
                     color: c.text.primary,
                     textAlignVertical: multiline ? "top" : "center",

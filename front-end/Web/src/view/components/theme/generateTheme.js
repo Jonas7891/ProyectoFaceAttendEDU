@@ -1,10 +1,6 @@
 ﻿import tinycolor from "tinycolor2";
-import { ThemeMode, ThemeTokens } from "./colourTokens";
 
-export function generateTheme(
-    accentColor,
-    mode
-) {
+export function generateTheme(accentColor, mode) {
     const accent = tinycolor(accentColor);
     const isDark = mode === "dark";
 
@@ -50,8 +46,8 @@ export function generateTheme(
             border: {
                 primary:   isDark ? "#334155" : "#E2E8F0",
                 secondary: isDark ? "#475569" : "#CBD5E1",
-                focus,
-                error,
+                focus: focusColor,
+                error: errorColor,
             },
             states: {
                 success:      "#10B981",
@@ -61,7 +57,7 @@ export function generateTheme(
                 danger:       "#EF4444",
                 dangerLight:  isDark ? "rgba(239,68,68,0.18)"   : "#FEE2E2",
                 info:         accent.toHexString(),
-                infoLight,
+                infoLight:    isDark ? accent.clone().setAlpha(0.18).toRgbString() : primaryLight,
             },
             interactive: {
                 hover:        accent.clone().setAlpha(0.08).toRgbString(),

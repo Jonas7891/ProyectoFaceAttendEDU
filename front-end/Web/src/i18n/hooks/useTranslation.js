@@ -16,7 +16,6 @@
 // ============================================================
 
 import { useLanguageContext } from "../context/LanguageContext";
-import { SupportedLanguage } from "../constants/SupportedLanguages";
 import { SUPPORTED_LANGUAGES, findLanguage } from "../constants/SupportedLanguages";
 
 // ── Tipo del valor devuelto ───────────────────────────────────────────────
@@ -30,8 +29,8 @@ export function useTranslation() {
         t,
         language,
         setLanguage,
-        currentLanguage:    findLanguage(language),
-        supportedLanguages,
+        currentLanguage: findLanguage(language),
+        supportedLanguages: SUPPORTED_LANGUAGES,
         isLoading,
     };
 }

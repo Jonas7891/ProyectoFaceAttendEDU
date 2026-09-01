@@ -15,7 +15,6 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { mockStudents } from "./mockData";
-import { Student } from "../types";
 
 const STORAGE_KEY = "@faceattend_students";
 
@@ -44,7 +43,7 @@ export async function loadStudents() {
         // Primera vez: inicializar con los mocks y persistirlos
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(mockStudents));
         return mockStudents;
-    } catch {
+    } catch (error) {
         return mockStudents;
     }
 }
@@ -55,7 +54,7 @@ export async function loadStudents() {
 export async function saveStudents(students) {
     try {
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(students));
-    } catch {
+    } catch (error) {
         // fallo silencioso — la UI ya tiene el estado en memoria
     }
 }
@@ -64,9 +63,7 @@ export async function saveStudents(students) {
  * Agrega un nuevo estudiante a la lista persistida.
  * Retorna la lista completa actualizada.
  */
-export async function addStudent(
-    existing,
-    draft) {
+export async function addStudent(existing, draft) {
     const newStudent = { id: generateId(), ...draft };
     const updated = [...existing, newStudent];
     await saveStudents(updated);
@@ -77,10 +74,7 @@ export async function addStudent(
  * Agrega múltiples estudiantes de una vez (importación).
  * Retorna la lista completa actualizada.
  */
-export async function addStudentsBulk(
-    existing,
-    drafts[]
-) {
+export async function addStudentsBulk(existing, drafts) {
     const newStudents = drafts.map(d => ({
         id: generateId(),
         ...d,

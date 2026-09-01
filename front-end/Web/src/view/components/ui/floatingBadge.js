@@ -4,17 +4,11 @@
 // ============================================================
 
 import React from "react";
-import { Animated, Text, ViewStyle } from "react-native";
+import { Animated, Text } from "react-native";
 import { useFloatAnimation } from "../hooks/useFloatAnimation";
 import { useResponsive }     from "../hooks/useResponsive";
 import { getTypography }     from "../constants/typography";
 import { useTheme }          from "../hooks/useTheme";
-
-
-    icon:    string;
-    delay?:  number;
-    style?:  ViewStyle;
-};
 
 export default function FloatingBadge({ label, icon, delay = 0, style }) {
     const translateY   = useFloatAnimation(delay);
@@ -34,9 +28,9 @@ export default function FloatingBadge({ label, icon, delay = 0, style }) {
                 paddingHorizontal: sp(12),
                 paddingVertical:  sp(8),
                 borderRadius:     sp(20),
-                elevation,
+                elevation:        4,
                 shadowColor:      "#000",
-                shadowOffset:     { width, height: sp(2) },
+                shadowOffset:     { width: 0, height: sp(2) },
                 shadowOpacity:    0.10,
                 shadowRadius:     sp(8),
             },

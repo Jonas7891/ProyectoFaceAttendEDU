@@ -62,10 +62,10 @@ import { lookup } from "../translations/JsonDictionary";
 // ── Context ───────────────────────────────────────────────────────────────
 
 const LanguageContext = createContext({
-    language,
+    language: DEFAULT_LANGUAGE,
     setLanguage: async () => {},
-    t:           (text) => text,
-    isLoading,
+    t: (text) => text,
+    isLoading: true,
 });
 
 // ── Provider ──────────────────────────────────────────────────────────────

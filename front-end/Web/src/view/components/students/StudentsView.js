@@ -25,7 +25,6 @@ import { useTranslation }         from "../../../i18n/hooks/useTranslation";
 import RegisterStudentModal       from "./RegisterStudentModal";
 import ImportStudentsModal        from "./ImportStudentsModal";
 import StudentDetailModal         from "./StudentDetailModal";
-import { Student }           from "../../../models/types";
 
 // ── StudentRow ───────────────────────────────────────────────
 
@@ -34,11 +33,6 @@ function StudentRow({
     onPress,
     isLast,
     canManage,
-}: {
-    student:   Student;
-    onPress:   () => void;
-    isLast:    boolean;
-    canManage: boolean;
 }) {
     const { t }       = useTranslation();
     const { isSmall } = useResponsive();
@@ -52,16 +46,16 @@ function StudentRow({
             style={{
                 flexDirection:    "row",
                 alignItems:       "center",
-                paddingVertical,
-                paddingHorizontal,
-                borderBottomWidth: isLast ? 0,
+                paddingVertical: 12,
+                paddingHorizontal: 14,
+                borderBottomWidth: isLast ? 0 : 1,
                 borderBottomColor: c.border.primary,
-                gap: isSmall ? 12,
+                gap: isSmall ? 12 : 0,
             }}
         >
-            <View style={{ flex: isSmall ? 1, flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <View style={{ flex: isSmall ? 1 : 2, flexDirection: "row", alignItems: "center", gap: 10 }}>
                 <Avatar name={student.name} size={32} />
-                
+                <View>
                     <Text style={{ fontWeight: "600", fontSize: 11, color: c.text.primary }}>
                         {student.name}
                     </Text>
@@ -70,7 +64,7 @@ function StudentRow({
             </View>
 
             {!isSmall && (
-                
+                <React.Fragment>
                     <Text style={{ flex: 1, fontSize: 11, color: c.text.secondary, paddingHorizontal: 14 }} numberOfLines={1}>
                         {student.email}
                     </Text>
@@ -78,7 +72,7 @@ function StudentRow({
                         {student.course}
                     </Text>
                     <View style={{ flex: 1, paddingHorizontal: 14 }}>
-                        <Text style={{ fontSize: 10, fontWeight: "700", color, marginBottom: 4 }}>
+                        <Text style={{ fontSize: 10, fontWeight: "700", color: attColor, marginBottom: 4 }}>
                             {student.attendance}%
                         </Text>
                         <ProgressBar value={student.attendance} color={attColor} height={4} />
@@ -96,7 +90,7 @@ function StudentRow({
                             {student.status === "active" ? t("Activo") : t("Inactivo")}
                         </Badge>
                     </View>
-                </>
+                </React.Fragment>
             )}
 
             {isSmall && (
@@ -146,13 +140,13 @@ export default function StudentsView() {
     // Ítems del dropdown de cursos
     const courseItems = [
         { value: "", label: t("Todos"), icon: "layers" },
-        ...vm.courses.map(c => ({ value, label, icon: "book-open" })),
+        ...vm.courses.map(c => ({ value: c.value, label: c.label, icon: "book-open" })),
     ];
 
     return (
         <View style={{ flex: 1 }}>
             <ScrollView
-                contentContainerStyle={{ padding: isSmall ? 16, gap: 16 }}
+                contentContainerStyle={{ padding: isSmall ? 16 : 24, gap: 16 }}
                 showsVerticalScrollIndicator={false}
             >
                 <PageHeader
@@ -163,6 +157,7 @@ export default function StudentsView() {
                         vm.filtered.length !== 1 ? t("encontrados") : t("encontrado")
                     }`}
                     actions={
+                        <React.Fragment>
                         {/* Importar — solo admin */}
                         {permissions.canImportStudents && (
                             <UIButton variant="ghost" size="sm" onPress={vm.openImportModal}>
@@ -176,15 +171,15 @@ export default function StudentsView() {
                                 + {t("Nuevo estudiante")}
                             </UIButton>
                         )}
-                    </>}
+                    </React.Fragment>}
                 />
 
                 {/* Filtros */}
                 <Card padding={14}>
-                    <View style={{ flexDirection: isSmall ? "column" : "row", gap, flexWrap: "wrap" }}>
+                    <View style={{ flexDirection: isSmall ? "column" : "row", gap: 12, flexWrap: "wrap" }}>
                         {/* Búsqueda */}
-                        <View style={{ flex: 1, minWidth, position: "relative", justifyContent: "center" }}>
-                            <View style={{ position: "absolute", left, zIndex: 1 }}>
+                        <View style={{ flex: 1, minWidth: 200, position: "relative", justifyContent: "center" }}>
+                            <View style={{ position: "absolute", left: 14, zIndex: 1 }}>
                                 <Feather name="search" size={14} color={c.text.secondary} />
                             </View>
                             <TextInput
@@ -192,9 +187,9 @@ export default function StudentsView() {
                                 value={vm.search}
                                 onChangeText={vm.setSearch}
                                 style={{
-                                    height, borderWidth, borderColor: c.border.primary,
-                                    borderRadius: 14, paddingLeft, paddingRight,
-                                    fontSize, backgroundColor: c.background.surface,
+                                    height: 40, borderWidth: 1, borderColor: c.border.primary,
+                                    borderRadius: 14, paddingLeft: 40, paddingRight: 14,
+                                    fontSize: 13, backgroundColor: c.background.surface,
                                     color: c.text.primary,
                                 }}
                                 placeholderTextColor={c.text.disabled}
@@ -217,15 +212,17 @@ export default function StudentsView() {
                     {!isSmall && (
                         <View style={{
                             flexDirection: "row",
-                            padding: "10px 14px",
-                            borderBottomWidth, borderBottomColor: c.border.primary,
+                            paddingVertical: 10,
+                            paddingHorizontal: 14,
+                            borderBottomWidth: 1,
+                            borderBottomColor: c.border.primary,
                         }}>
                             {columns.map((col, idx) => (
                                 <Text key={col} style={{
-                                    flex: idx === 0 ? 2,
+                                    flex: idx === 0 ? 2 : 1,
                                     fontSize: 10, fontWeight: "600", color: c.text.secondary,
                                     textTransform: "uppercase", letterSpacing: 0.5,
-                                    paddingHorizontal,
+                                    paddingHorizontal: 14,
                                 }}>
                                     {col}
                                 </Text>

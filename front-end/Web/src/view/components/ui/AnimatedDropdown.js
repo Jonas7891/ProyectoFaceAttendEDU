@@ -22,11 +22,10 @@
 import React, { useRef, useState, useCallback } from "react";
 import {
     View, Text, TouchableOpacity, ScrollView,
-    Modal, Animated, Easing, ViewStyle,
+    Modal, Animated, Easing,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../hooks/useTheme";
-
 
 const ITEM_H = 44;
 
@@ -57,20 +56,20 @@ export function AnimatedDropdown({
             setTriggerRect({ x, y, width, height });
             setOpen(true);
             Animated.timing(dropdownAnim, {
-                toValue,
-                duration,
-                easing:   Easing.out(Easing.quad),
-                useNativeDriver,
+                toValue: 1,
+                duration: 280,
+                easing: Easing.out(Easing.quad),
+                useNativeDriver: false,
             }).start();
         });
     }, [dropdownAnim]);
 
     const animateClose = useCallback(() => {
         Animated.timing(dropdownAnim, {
-            toValue,
-            duration,
-            easing:   Easing.in(Easing.quad),
-            useNativeDriver,
+            toValue: 0,
+            duration: 200,
+            easing: Easing.in(Easing.quad),
+            useNativeDriver: false,
         }).start(() => setOpen(false));
     }, [dropdownAnim]);
 
@@ -102,20 +101,20 @@ export function AnimatedDropdown({
                     onPress={handleToggle}
                     activeOpacity={0.8}
                     style={{
-                        height,
+                        height: triggerHeight,
                         flexDirection: "row",
-                        alignItems:   "center",
-                        gap,
-                        paddingHorizontal,
+                        alignItems: "center",
+                        gap: 10,
+                        paddingHorizontal: 12,
                         borderRadius: 14,
-                        borderWidth:  open ? 2,
-                        borderColor,
+                        borderWidth: open ? 2 : 1.5,
+                        borderColor: borderColor,
                         backgroundColor: open
                             ? c.brand.primaryLight
                             : (error ? c.states.dangerLight : c.background.app),
-                        borderBottomLeftRadius:  open ? 0,
-                        borderBottomRightRadius: open ? 0,
-                        opacity: disabled ? 0.5,
+                        borderBottomLeftRadius: open ? 0 : 14,
+                        borderBottomRightRadius: open ? 0 : 14,
+                        opacity: disabled ? 0.5 : 1,
                     }}
                 >
                     {(triggerIcon || selected?.icon) && (
@@ -127,7 +126,8 @@ export function AnimatedDropdown({
                     )}
                     <View style={{ flex: 1 }}>
                         <Text style={{
-                            fontSize: 10, fontWeight: selected ? "600" : "400",
+                            fontSize: 10,
+                            fontWeight: selected ? "600" : "400",
                             color: open
                                 ? c.brand.primary
                                 : (selected ? c.text.primary : c.text.secondary),
@@ -174,25 +174,25 @@ export function AnimatedDropdown({
                         <Animated.View
                             pointerEvents="box-none"
                             style={{
-                                position:  "absolute",
-                                top:       triggerRect.y + triggerRect.height,
-                                left:      triggerRect.x,
-                                width:     triggerRect.width,
-                                height,
-                                opacity,
-                                overflow:  "hidden",
-                                borderWidth,
-                                borderTopWidth,
-                                borderColor:    c.brand.primary,
-                                borderBottomLeftRadius,
-                                borderBottomRightRadius,
+                                position: "absolute",
+                                top: triggerRect.y + triggerRect.height,
+                                left: triggerRect.x,
+                                width: triggerRect.width,
+                                height: panelHeight,
+                                opacity: panelOpacity,
+                                overflow: "hidden",
+                                borderWidth: 2,
+                                borderTopWidth: 0,
+                                borderColor: c.brand.primary,
+                                borderBottomLeftRadius: 14,
+                                borderBottomRightRadius: 14,
                                 backgroundColor: c.background.surface,
                                 shadowColor: "#000",
-                                shadowOffset: { width, height: 4 },
+                                shadowOffset: { width: 0, height: 4 },
                                 shadowOpacity: 0.18,
-                                shadowRadius,
-                                elevation,
-                                zIndex,
+                                shadowRadius: 8,
+                                elevation: 4,
+                                zIndex: 1000,
                             }}
                         >
                             <TouchableOpacity activeOpacity={1}>
@@ -211,13 +211,14 @@ export function AnimatedDropdown({
                                                 activeOpacity={0.7}
                                                 style={{
                                                     flexDirection: "row",
-                                                    alignItems:   "center",
-                                                    gap,
-                                                    paddingHorizontal,
-                                                    height: 5, backgroundColor: active
+                                                    alignItems: "center",
+                                                    gap: 10,
+                                                    paddingHorizontal: 12,
+                                                    height: ITEM_H,
+                                                    backgroundColor: active
                                                         ? c.brand.primaryLight
                                                         : "transparent",
-                                                    borderBottomWidth: isLast ? 0,
+                                                    borderBottomWidth: isLast ? 0 : 1,
                                                     borderBottomColor: c.border.primary,
                                                 }}
                                             >
@@ -230,7 +231,8 @@ export function AnimatedDropdown({
                                                 )}
                                                 <View style={{ flex: 1 }}>
                                                     <Text style={{
-                                                        fontSize: 10, fontWeight: active ? "600" : "400",
+                                                        fontSize: 10,
+                                                        fontWeight: active ? "600" : "400",
                                                         color: active ? c.brand.primary : c.text.primary,
                                                     }} numberOfLines={1}>
                                                         {item.label}

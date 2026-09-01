@@ -7,14 +7,6 @@
 import { useState, useMemo } from "react";
 import { useAuth }           from "../context/AuthContext";
 import { useRolePermissions } from "../view/hooks/useRolePermissions";
-import { Tab }           from "../models/types";
-
-    | "dashboard"
-    | "students"
-    | "courses"
-    | "environments"
-    | "reports"
-    | "settings";
 
 // Definición completa de todos los tabs posibles.
 // Cada View decide si renderiza o no según los permisos.
@@ -52,8 +44,8 @@ export function useDashboardScreenViewModel() {
     }
 
     return {
-        currentTab,
-        bottomTabs,
+        currentTab: safeTab,
+        bottomTabs: visibleTabs,
         setTab,
     };
 }

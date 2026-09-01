@@ -14,30 +14,29 @@ import { useResponsive }         from "../hooks/useResponsive";
 import { useDashboardViewModel } from "../../../viewmodels/useDashboardViewModel";
 import { useRolePermissions }    from "../../hooks/useRolePermissions";
 import { useTranslation }        from "../../../i18n/hooks/useTranslation";
-import { DailyAttendance, WeeklyAttendance } from "../../../models/types";
 
 // ── DailyBarChart ────────────────────────────────────────────
 
-export function DailyBarChart({ data }: { data: DailyAttendance[] }) {
+export function DailyBarChart({ data }) {
     const { theme } = useTheme();
     const c = theme.colors;
     const maxVal = Math.max(...data.flatMap(d => [d.present, d.late, d.absent]));
     const HEIGHT = 100;
 
     return (
-        <View style={{ flexDirection: "row", alignItems: "flex-end", gap, height: HEIGHT + 20 }}>
+        <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 4, height: HEIGHT + 20 }}>
             {data.map((item) => (
                 <View key={item.day} style={{ flex: 1, alignItems: "center", gap: 2 }}>
-                    <View style={{ flexDirection: "row", alignItems: "flex-end", gap, height: HEIGHT }}>
+                    <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 2, height: HEIGHT }}>
                         {[
                             { val: item.present, color: c.states.success },
                             { val: item.late,    color: c.states.warning },
                             { val: item.absent,  color: c.states.danger  },
                         ].map(({ val, color }, i) => (
                             <View key={i} style={{
-                                width,
-                                height:          Math.max(3, (val / maxVal) * HEIGHT),
-                                backgroundColor,
+                                width: 8,
+                                height: Math.max(3, (val / maxVal) * HEIGHT),
+                                backgroundColor: color,
                                 borderRadius: 14,
                             }} />
                         ))}
@@ -51,7 +50,7 @@ export function DailyBarChart({ data }: { data: DailyAttendance[] }) {
 
 // ── WeeklyTrend ──────────────────────────────────────────────
 
-export function WeeklyTrend({ data }: { data: WeeklyAttendance[] }) {
+export function WeeklyTrend({ data }) {
     const { theme } = useTheme();
     const c = theme.colors;
 
@@ -62,15 +61,18 @@ export function WeeklyTrend({ data }: { data: WeeklyAttendance[] }) {
                     <Text style={{ fontSize: 11, color: c.text.secondary, width: 42 }}>{item.week}</Text>
                     <View style={{ flex: 1, height: 5, backgroundColor: c.border.primary, borderRadius: 99 }}>
                         <View style={{
-                            height:          "100%",
-                            width:           `${item.rate}%`,
+                            height: "100%",
+                            width: `${item.rate}%`,
                             backgroundColor: c.brand.primary,
                             borderRadius: 14,
                         }} />
                     </View>
                     <Text style={{
-                        fontSize: 10, fontWeight: "700",
-                        color: c.text.primary, width, textAlign: "right",
+                        fontSize: 10,
+                        fontWeight: "700",
+                        color: c.text.primary,
+                        width: 40,
+                        textAlign: "right",
                     }}>
                         {item.rate}%
                     </Text>
@@ -92,7 +94,7 @@ export default function DashboardView() {
 
     return (
         <ScrollView
-            contentContainerStyle={{ padding: isSmall ? 16, gap: 16 }}
+            contentContainerStyle={{ padding: isSmall ? 16 : 24, gap: 16 }}
             showsVerticalScrollIndicator={false}
         >
             <PageHeader
@@ -143,14 +145,14 @@ export default function DashboardView() {
                             {t("Esta semana · Presentes / Tardanzas / Ausentes")}
                         </Text>
                         <DailyBarChart data={vm.attendanceByDay} />
-                        <View style={{ flexDirection: "row", gap, marginTop: 12 }}>
+                        <View style={{ flexDirection: "row", gap: 12, marginTop: 12 }}>
                             {[
                                 [c.states.success, t("Presentes")],
                                 [c.states.warning, t("Tardanzas")],
                                 [c.states.danger,  t("Ausentes") ],
                             ].map(([color, label]) => (
                                 <View key={label} style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                                    <View style={{ width, height, borderRadius: 14, backgroundColor: color }} />
+                                    <View style={{ width: 8, height: 8, borderRadius: 14, backgroundColor: color }} />
                                     <Text style={{ fontSize: 11, color: c.text.secondary }}>{label}</Text>
                                 </View>
                             ))}
@@ -170,8 +172,10 @@ export default function DashboardView() {
                             <View key={item.course}>
                                 <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 6 }}>
                                     <Text style={{
-                                        fontSize: 10, fontWeight: "500",
-                                        color: c.text.primary, flex,
+                                        fontSize: 10,
+                                        fontWeight: "500",
+                                        color: c.text.primary,
+                                        flex: 1,
                                     }} numberOfLines={1}>
                                         {item.courseName}
                                     </Text>
@@ -210,10 +214,12 @@ export default function DashboardView() {
                     {/* Enlace a reportes completos solo para quienes pueden verlos */}
                     {permissions.canViewAllReports && (
                         <View style={{
-                            marginTop, paddingTop,
-                            borderTopWidth, borderTopColor: c.border.primary,
+                            marginTop: 12,
+                            paddingTop: 12,
+                            borderTopWidth: 1,
+                            borderTopColor: c.border.primary,
                         }}>
-                            
+                            <TouchableOpacity>
                                 <Text style={{ fontSize: 11, color: c.brand.primary, fontWeight: "500" }}>
                                     {t("Ver toda la actividad")} →
                                 </Text>

@@ -70,10 +70,7 @@ export const TranslationStorage = {
      * Persiste el diccionario completo de un idioma.
      * Reemplaza el valor existente (merge lo hace TranslationCache).
      */
-    async save(
-        language,
-        entries,
-    ) {
+    async save(language, entries) {
         try {
             await storageSet(PREFIX + language, JSON.stringify(entries));
         } catch (e) {

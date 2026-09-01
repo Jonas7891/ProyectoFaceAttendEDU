@@ -30,12 +30,12 @@ import ptTranslations from "./pt.json";
 //  Clave = código BCP-47 del idioma.
 //  Valor = Record.
 
-const DICTIONARIES= {
-    es,
-    en,
-    fr,
-    de,
-    pt,
+const DICTIONARIES = {
+    es: esTranslations,
+    en: enTranslations,
+    fr: frTranslations,
+    de: deTranslations,
+    pt: ptTranslations,
 };
 
 // ── API pública ───────────────────────────────────────────────

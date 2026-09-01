@@ -2,14 +2,7 @@
 import { Animated, Image, View } from "react-native";
 import FloatingBadge from "../ui/floatingBadge";
 import { useResponsive } from "../hooks/useResponsive";
-import { ViewStyle }     from "react-native";
 import { useTheme }      from "../hooks/useTheme";
-
- icon: string; delay: number; style: ViewStyle };
-
-    slideRight: Animated.Value;
-    badges:     Badge[];
-};
 
 export default function HeroRight({ fadeRight, slideRight, badges }) {
     const { sp, isSmall } = useResponsive();
@@ -22,14 +15,14 @@ export default function HeroRight({ fadeRight, slideRight, badges }) {
 
     return (
         <Animated.View style={[
-            { width, height, alignItems: "center", justifyContent: "center" },
-            { opacity, transform: [{ translateX: slideRight }] },
+            { width: containerSize, height: containerSize, alignItems: "center", justifyContent: "center" },
+            { opacity: fadeRight, transform: [{ translateX: slideRight }] },
         ]}>
             {/* Círculo decorativo — usa el accent */}
             <View style={{
                 position:        "absolute",
-                width,
-                height,
+                width: circleSize,
+                height: circleSize,
                 borderRadius:    circleSize / 2,
                 backgroundColor: c.brand.primaryLight,
                 opacity:         0.7,
@@ -37,7 +30,7 @@ export default function HeroRight({ fadeRight, slideRight, badges }) {
 
             <Image
                 source={require("../../../assets/images/splash-icon.png")}
-                style={{ width, height, zIndex: 1 }}
+                style={{ width: logoSize, height: logoSize, zIndex: 1 }}
                 resizeMode="contain"
             />
 

@@ -5,7 +5,7 @@
 //  No agregar nuevas referencias a este archivo.
 //  Usar siempre:
 //
-//    import { useTheme } from "../theme/themeContext";
+//    import { useTheme } from "../theme/ThemeContext";
 //    const { theme } = useTheme();
 //    const colors = theme.colors;
 //

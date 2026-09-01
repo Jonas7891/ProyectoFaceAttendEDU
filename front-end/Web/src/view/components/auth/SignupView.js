@@ -15,7 +15,6 @@ import {
 import AuthMobileLayout   from "./AuthMobileLayout";
 import AuthAnimatedLayout from "./AuthAnimatedLayout";
 import { useSignupViewModel } from "../../../viewmodels/useAuthViewModel";
-import { SignupForm }    from "../../../viewmodels/useAuthViewModel";
 import { useTranslation }     from "../../../i18n/hooks/useTranslation";
 
 
@@ -54,7 +53,7 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin }) {
     );
 
     const formActions = (
-        
+        <React.Fragment>
             <AuthErrorBanner message={vm.error} />
             <View style={{ marginTop: 28 }}>
                 <Button
@@ -68,7 +67,7 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin }) {
                 onPress={onGoToLogin}
             />
             <AuthCopyright />
-        </>
+        </React.Fragment>
     );
 
     // ── MÓVIL ─────────────────────────────────────────────────
@@ -86,41 +85,41 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin }) {
 
     // ── DESKTOP — split panel con animaciones de entrada ──────
     const brandPanel = (
-        
+        <React.Fragment>
             <BrandPanelCircles />
-            <View style={{ zIndex, alignItems: "center", maxWidth: 400 }}>
+            <View style={{ zIndex: 1, alignItems: "center", maxWidth: 400 }}>
                 <Image
                     source={require("../../../assets/images/logoFaceAttend-BlancoAzul.png")}
-                    style={{ width, height, marginBottom: 24 }}
+                    style={{ width: 180, height: 60, marginBottom: 24 }}
                     resizeMode="contain"
                 />
                 <Text style={{
                     fontSize: 10, fontWeight: "800", color: c.text.onBrand,
-                    textAlign: "center", marginBottom, letterSpacing: -1,
+                    textAlign: "center", marginBottom: 12, letterSpacing: -1,
                 }}>
                     {t("Únete a FaceAttend EDU")}
                 </Text>
                 <Text style={{
                     fontSize: 11, color: "rgba(255,255,255,0.75)",
-                    textAlign: "center", lineHeight,
+                    textAlign: "center", lineHeight: 20,
                 }}>
                     {t("Registra tu institución y empieza a gestionar la asistencia con reconocimiento facial.")}
                 </Text>
             </View>
-        </>
+        </React.Fragment>
     );
 
     const formContent = (
-        
-            <Text style={{ fontSize: 10, fontWeight: "800", color: c.text.primary, marginBottom, letterSpacing: -0.5 }}>
+        <React.Fragment>
+            <Text style={{ fontSize: 10, fontWeight: "800", color: c.text.primary, marginBottom: 8, letterSpacing: -0.5 }}>
                 {t("Crear cuenta")}
             </Text>
-            <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom, lineHeight: 24 }}>
+            <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom: 24, lineHeight: 24 }}>
                 {t("Completa los datos para registrarte.")}
             </Text>
             {fields}
             {formActions}
-        </>
+        </React.Fragment>
     );
 
     return (

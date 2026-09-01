@@ -11,7 +11,6 @@ import { Badge, Avatar, UIButton, ProgressBar } from "../ui/UI";
 import { useAttendanceColor, ATTENDANCE_THRESHOLDS } from "../ui/AttendanceBadge";
 import { useTheme }       from "../hooks/useTheme";
 import { useTranslation } from "../../../i18n/hooks/useTranslation";
-import { Student }   from "../../../models/types";
 
 
 export default function StudentDetailModal({
@@ -31,22 +30,36 @@ export default function StudentDetailModal({
     return (
         <Modal transparent animationType="fade" onRequestClose={onClose}>
             <TouchableOpacity
-                style={{ flex: 1, backgroundColor: c.background.overlay,
-                    justifyContent: "center", alignItems: "center", padding,
+                style={{
+                    flex: 1,
+                    backgroundColor: c.background.overlay,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    padding: 24,
                 }}
                 onPress={onClose}
                 activeOpacity={1}
             >
-                <TouchableOpacity activeOpacity={1} onPress={e => e.stopPropagation()}>
+                <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
                     <View style={{
                         backgroundColor: c.background.surface,
-                        borderRadius: 14, width, maxHeight, overflow: "hidden",
-                        shadowColor: "#000", shadowOpacity: 0.15, shadowRadius, elevation,
+                        borderRadius: 14,
+                        width: 520,
+                        maxHeight: "90%",
+                        overflow: "hidden",
+                        shadowColor: "#000",
+                        shadowOpacity: 0.15,
+                        shadowRadius: 8,
+                        elevation: 8,
                     }}>
                         {/* Header */}
                         <View style={{
-                            padding, borderBottomWidth, borderBottomColor: c.border.primary,
-                            flexDirection: "row", alignItems: "center", gap,
+                            padding: 20,
+                            borderBottomWidth: 1,
+                            borderBottomColor: c.border.primary,
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 12,
                         }}>
                             <Avatar name={student.name} size={52} />
                             <View style={{ flex: 1 }}>
@@ -69,11 +82,11 @@ export default function StudentDetailModal({
 
                         {/* Body */}
                         <ScrollView style={{ padding: 20 }}>
-                            <View style={{ gap, marginBottom: 16 }}>
+                            <View style={{ gap: 10, marginBottom: 16 }}>
                                 {[
-                                    { label: t("Correo"),   value: student.email,  icon: "mail"        },
-                                    { label: t("Programa"), value: student.course, icon: "book-open"   },
-                                    { label: t("Semestre"), value: student.grade,  icon: "trending-up" },
+                                    { label: t("Correo"), value: student.email, icon: "mail" },
+                                    { label: t("Programa"), value: student.course, icon: "book-open" },
+                                    { label: t("Semestre"), value: student.grade, icon: "trending-up" },
                                 ].map(({ label, value, icon }) => (
                                     <View key={label} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                                         <Feather name={icon} size={14} color={c.text.secondary} />
@@ -87,8 +100,10 @@ export default function StudentDetailModal({
 
                             {/* Bloque de asistencia */}
                             <View style={{
-                                backgroundColor: c.background.app, borderRadius: 14,
-                                padding, marginBottom,
+                                backgroundColor: c.background.app,
+                                borderRadius: 14,
+                                padding: 14,
+                                marginBottom: 16,
                             }}>
                                 <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 10 }}>
                                     <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary }}>
@@ -109,14 +124,18 @@ export default function StudentDetailModal({
                             {/* Bloque facial — solo para quienes pueden registrar */}
                             {canRegisterFace && (
                                 <View style={{
-                                    flexDirection: "row", alignItems: "center",
+                                    flexDirection: "row",
+                                    alignItems: "center",
                                     justifyContent: "space-between",
-                                    padding, borderWidth, borderColor: c.border.primary,
-                                    borderRadius: 14, marginBottom,
+                                    padding: 14,
+                                    borderWidth: 1,
+                                    borderColor: c.border.primary,
+                                    borderRadius: 14,
+                                    marginBottom: 16,
                                 }}>
                                     <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                                         <Feather name="aperture" size={18} color={c.brand.primary} />
-                                        
+                                        <View>
                                             <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary }}>
                                                 {t("Reconocimiento facial")}
                                             </Text>
@@ -137,8 +156,12 @@ export default function StudentDetailModal({
 
                         {/* Footer */}
                         <View style={{
-                            padding, borderTopWidth, borderTopColor: c.border.primary,
-                            flexDirection: "row", gap, justifyContent: "flex-end",
+                            padding: 16,
+                            borderTopWidth: 1,
+                            borderTopColor: c.border.primary,
+                            flexDirection: "row",
+                            gap: 10,
+                            justifyContent: "flex-end",
                         }}>
                             <UIButton variant="ghost" onPress={onClose}>{t("Cerrar")}</UIButton>
                             {/* Editar solo para quienes pueden gestionar */}

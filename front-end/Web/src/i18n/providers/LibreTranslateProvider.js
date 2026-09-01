@@ -24,18 +24,10 @@
 //      const BASE_URL = "https://translate.argosopentech.com";
 // ============================================================
 
-import { ITranslationProvider }            from "./ITranslationProvider";
-import { LanguageCode, TranslationResult } from "../models/TranslationEntry";
+// Este archivo implementa traducción automática vía LibreTranslate.
 
-// ── Configuración ─────────────────────────────────────────────────────────
-//
-//  CAMBIA ESTA URL a tu instancia de LibreTranslate.
-//  La instancia pública de libretranslate.com requiere API key de pago.
-//  Para desarrollo sin key usa translate.argosopentech.com (gratuita, sin garantías).
-//  Para producción despliega tu propia instancia: https://github.com/LibreTranslate/LibreTranslate
-
-const BASE_URL  = "https://translate.argosopentech.com"; // Pública sin key (desarrollo)
-const API_KEY   = "";   // Vacío si tu instancia no requiere key
+const BASE_URL = "https://translate.argosopentech.com"; // Pública sin key (desarrollo)
+const API_KEY = ""; // Vacío si tu instancia no requiere key
 const TIMEOUT_MS = 10_000;
 
 // ── Implementación ────────────────────────────────────────────────────────
@@ -43,26 +35,22 @@ const TIMEOUT_MS = 10_000;
 export class LibreTranslateProvider {
     providerName = "LibreTranslate";
 
-    constructor(
-        baseUrl= BASE_URL,
-        apiKey= API_KEY,
-    ) {}
+    constructor(baseUrl = BASE_URL, apiKey = API_KEY) {
+        this.baseUrl = baseUrl;
+        this.apiKey = apiKey;
+    }
 
-    async translate(
-        text,
-        from,
-        to,
-    ) {
+    async translate(text, from, to) {
         if (!text.trim()) return { translatedText: text };
 
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
         try {
-            const body= {
-                q,
-                source,
-                target,
+            const body = {
+                q: text,
+                source: from,
+                target: to,
                 format: "text",
             };
             if (this.apiKey) body.api_key = this.apiKey;

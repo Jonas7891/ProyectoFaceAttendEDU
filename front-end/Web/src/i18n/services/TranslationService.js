@@ -10,11 +10,12 @@
 //  Solo se cachea si la traducci�n es exitosa.
 // ============================================================
 
-import { translationCache }          from "../cache/TranslationCache";
-import { TranslationStorage }        from "../storage/TranslationStorage";
-import { RestTranslationProvider }   from "../providers/RestTranslationProvider";
-import { ITranslationProvider } from "../providers/ITranslationProvider";
-import { SOURCE_LANGUAGE }           from "../constants/SupportedLanguages";
+// Este archivo define el servicio de traducción que orquesta caché, storage y proveedores.
+
+import { translationCache } from "../cache/TranslationCache";
+import { TranslationStorage } from "../storage/TranslationStorage";
+import { RestTranslationProvider } from "../providers/RestTranslationProvider";
+import { SOURCE_LANGUAGE } from "../constants/SupportedLanguages";
 
 const BATCH_SIZE        = 20;
 const PERSIST_DEBOUNCE_MS = 1_500;
@@ -57,12 +58,9 @@ class TranslationService {
         return this.fetchAndCache(text, language);
     }
 
-    async translateBatch(
-        texts,
-        language,
-    ) {
+    async translateBatch(texts, language) {
         if (language === SOURCE_LANGUAGE) {
-            return Object.fromEntries(texts.map(t => [t, t]));
+            return Object.fromEntries(texts.map((t) => [t, t]));
         }
 
         if (!this.hydratedLanguages.has(language)) {
@@ -110,21 +108,21 @@ class TranslationService {
     //
     async fetchAndCache(text, language) {
         try {
-            const result      = await this.provider.translate(text, SOURCE_LANGUAGE, language);
+            const result = await this.provider.translate(text, SOURCE_LANGUAGE, language);
             const translation = result.translatedText;
 
-            // Solo se cachea si la traducci�n es distinta al original O es un nombre propio v�lido
+            // Solo se cachea si la traducción es distinta al original O es un nombre propio válido
             translationCache.set(language, text, translation);
             this.schedulePersist(language);
 
             return translation;
         } catch (error) {
             console.warn(
-                `[TranslationService] Error al traducir "${text}" ? ${language}:`,
+                `[TranslationService] Error al traducir "${text}" → ${language}:`,
                 error,
             );
-            // FIX: NO cacheamos el fallback. Devolvemos el espa�ol para la UI
-            // pero la pr�xima llamada a t() volver� a intentar la traducci�n.
+            // FIX: NO cacheamos el fallback. Devolvemos el español para la UI
+            // pero la próxima llamada a t() volverá a intentar la traducción.
             return text;
         }
     }

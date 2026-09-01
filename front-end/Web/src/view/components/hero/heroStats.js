@@ -1,17 +1,14 @@
 ﻿import React from "react";
 import { View, Text } from "react-native";
 import { useResponsive } from "../hooks/useResponsive";
-import { getTypography }  from "../constants/typography";
-import { useTheme }       from "../hooks/useTheme";
-
- label: string; color?: string };
-
+import { getTypography } from "../constants/typography";
+import { useTheme } from "../hooks/useTheme";
 
 export default function HeroStats({ stats }) {
-    const { fs, sp }   = useResponsive();
-    const { theme }    = useTheme();
-    const T            = getTypography(fs);
-    const c            = theme.colors;
+    const { fs, sp } = useResponsive();
+    const { theme } = useTheme();
+    const T = getTypography(fs);
+    const c = theme.colors;
 
     return (
         <View style={{ flexDirection: "row", gap: sp(32) }}>

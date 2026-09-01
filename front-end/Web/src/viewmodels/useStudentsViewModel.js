@@ -6,30 +6,29 @@
 // ============================================================
 
 import { useState, useMemo, useCallback } from "react";
-import { useAppData }  from "../context/AppDataContext";
-import { Student, AppUserRole } from "../models/types";
+import { useAppData } from "../context/AppDataContext";
 
 // ── Tipos de formulario ───────────────────────────────────
 
 export const EMPTY_FORM = {
-    name:       "",
-    code:       "",
-    email:      "",
-    course:     "",
-    role:       "student",
-    attendance,
-    registered,
-    status:     "active",
+    name: "",
+    code: "",
+    email: "",
+    course: "",
+    role: "student",
+    attendance: 0,
+    registered: false,
+    status: "active",
 };
 
 // ── Validación básica ─────────────────────────────────────
 
 export function validateStudentForm(form) {
-    if (!form.name.trim())   return "Completa todos los campos";
-    if (!form.code.trim())   return "Completa todos los campos";
-    if (!form.email.trim())  return "Completa todos los campos";
+    if (!form.name.trim()) return "Completa todos los campos";
+    if (!form.code.trim()) return "Completa todos los campos";
+    if (!form.email.trim()) return "Completa todos los campos";
     if (!form.course.trim()) return "Completa todos los campos";
-    if (!form.role)          return "Completa todos los campos";
+    if (!form.role) return "Completa todos los campos";
     return null;
 }
 
@@ -38,52 +37,61 @@ export function validateStudentForm(form) {
 export function useStudentsViewModel() {
     const appData = useAppData();
 
-    const [search,       setSearch]       = useState("");
+    const [search, setSearch] = useState("");
     const [courseFilter, setCourseFilter] = useState("");
-    const [selected,     setSelected]     = useState(null);
+    const [selected, setSelected] = useState(null);
     const [showRegisterModal, setShowRegisterModal] = useState(false);
-    const [showImportModal,   setShowImportModal]   = useState(false);
+    const [showImportModal, setShowImportModal] = useState(false);
 
     // Programas únicos — derivados del contexto global
-    const courses = useMemo(
-        () => appData.programs.map(p => p.name),
-        [appData.programs]
-    );
+    const courses = useMemo(() => appData.programs.map((p) => p.name), [appData.programs]);
 
-    const filtered = useMemo(() =>
-        appData.students.filter(s => {
-            const matchSearch = !search
-                || s.name.toLowerCase().includes(search.toLowerCase())
-                || s.code.toLowerCase().includes(search.toLowerCase());
-            const matchCourse = !courseFilter || s.course === courseFilter;
-            return matchSearch && matchCourse;
-        }),
+    const filtered = useMemo(
+        () =>
+            appData.students.filter((s) => {
+                const matchSearch =
+                    !search ||
+                    s.name.toLowerCase().includes(search.toLowerCase()) ||
+                    s.code.toLowerCase().includes(search.toLowerCase());
+                const matchCourse = !courseFilter || s.course === courseFilter;
+                return matchSearch && matchCourse;
+            }),
         [appData.students, search, courseFilter]
     );
 
-    const registerStudent = useCallback(async (form) => {
-        const err = validateStudentForm(form);
-        if (err) return err;
+    const registerStudent = useCallback(
+        async (form) => {
+            const err = validateStudentForm(form);
+            if (err) return err;
 
-        await appData.addStudent({
-            name:       form.name.trim(),
-            code:       form.code.trim(),
-            email:      form.email.trim(),
-            course:     form.course.trim(),
-            grade:      form.role,
-            attendance: form.attendance,
-            registered: form.registered,
-            status:     form.status,
-        });
-        return null;
-    }, [appData]);
+            await appData.addStudent({
+                name: form.name.trim(),
+                code: form.code.trim(),
+                email: form.email.trim(),
+                course: form.course.trim(),
+                grade: form.role,
+                attendance: form.attendance,
+                registered: form.registered,
+                status: form.status,
+            });
+            return null;
+        },
+        [appData]
+    );
 
-    const importStudents = useCallback(async (drafts[])=> {
-        return appData.importStudents(drafts);
-    }, [appData]);
+    const importStudents = useCallback(
+        async (drafts) => {
+            return appData.importStudents(drafts);
+        },
+        [appData]
+    );
+
+    function selectStudent(student) {
+        setSelected(student);
+    }
 
     return {
-        students:  appData.students,
+        students: appData.students,
         filtered,
         courses,
         selected,
@@ -95,11 +103,11 @@ export function useStudentsViewModel() {
         setSearch,
         setCourseFilter,
         selectStudent,
-        clearSelection:     () => setSelected(null),
-        openRegisterModal:  () => setShowRegisterModal(true),
+        clearSelection: () => setSelected(null),
+        openRegisterModal: () => setShowRegisterModal(true),
         closeRegisterModal: () => setShowRegisterModal(false),
-        openImportModal:    () => setShowImportModal(true),
-        closeImportModal:   () => setShowImportModal(false),
+        openImportModal: () => setShowImportModal(true),
+        closeImportModal: () => setShowImportModal(false),
         registerStudent,
         importStudents,
     };
