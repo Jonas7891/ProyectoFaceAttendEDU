@@ -1,21 +1,37 @@
 // ============================================================
-//  FaceAttend EDU � Signup View Component (View Layer)
-//  Recibe callbacks del Screen. L�gica en useSignupViewModel.
+//  FaceAttend EDU — Signup VIEW
+// ============================================================
+//  RESPONSABILIDAD: Presentación y UI ("cómo se presenta")
+//
+//  Este componente:
+//  ✓ Renderiza toda la interfaz visual
+//  ✓ Maneja estilos, layouts y animaciones
+//  ✓ Coordina hooks de presentación (useSignupViewModel)
+//  ✓ Gestiona el estado visual (mostrar/ocultar contraseña, etc.)
+//
+//  NO debe:
+//  ✗ Manejar navegación directamente
+//  ✗ Conocer rutas o nombres de pantallas
+//  ✗ Acceder a navigation directamente
+//
+//  Recibe callbacks del Screen para delegar acciones de navegación.
 // ============================================================
 
 import React from "react";
 import { View, Text, Image } from "react-native";
-import { useResponsive }  from "../components/hooks/useResponsive";
-import { useTheme }       from "../components/hooks/useTheme";
-import Button             from "../components/common/buttons/Button";
+import { useResponsive }  from "./components/hooks/useResponsive";
+import { useTheme }       from "./components/hooks/useTheme";
+import Button             from "./components/common/buttons/Button";
+import TextInput          from "./components/common/inputs/TextInput";
+import Alert              from "./components/common/feedback/Alert";
 import {
-    FormField, AuthErrorBanner, AuthFooterLink,
+    AuthFooterLink,
     BrandPanelCircles, AuthCopyright,
-} from "../components/auth/AuthComponents";
-import AuthMobileLayout   from "../components/auth/AuthMobileLayout";
-import AuthAnimatedLayout from "../components/auth/AuthAnimatedLayout";
-import { useSignupViewModel } from "../../viewmodels/useAuthViewModel";
-import { useTranslation }     from "../../i18n/hooks/useTranslation";
+} from "./components/auth/AuthComponents";
+import AuthMobileLayout   from "./components/auth/AuthMobileLayout";
+import AuthAnimatedLayout from "./components/auth/AuthAnimatedLayout";
+import { useSignupViewModel } from "../viewmodels/useAuthViewModel";
+import { useTranslation }     from "../i18n/hooks/useTranslation";
 
 
 export default function SignupView({ onRegisterSuccess, onGoToLogin }) {
@@ -25,52 +41,63 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin }) {
     const vm          = useSignupViewModel(onRegisterSuccess);
     const { t }       = useTranslation();
 
-    // -- Secciones compartidas entre mobile y desktop ---------
+    // ── Secciones compartidas entre mobile y desktop ──────────
     const fields = (
         <View style={{ gap: 18 }}>
-            <FormField
+            <TextInput
                 label={t("Usuario")}
                 placeholder={t("Tu nombre de usuario")}
                 onChangeText={vm.setUsername}
-                icon="user"
+                leftIcon={<Feather name="user" size={17} color={c.text.secondary} />}
             />
-            <FormField
-                label={t("Correo electr�nico")}
+            <TextInput
+                label={t("Correo electrónico")}
                 placeholder={t("correo@universidad.edu")}
                 onChangeText={vm.setEmail}
-                icon="mail"
+                type="email"
+                leftIcon={<Feather name="mail" size={17} color={c.text.secondary} />}
             />
-            <FormField
-                label={t("Contrase�a")}
-                placeholder={t("Crea una contrase�a")}
+            <TextInput
+                label={t("Contraseña")}
+                placeholder={t("Crea una contraseña")}
                 onChangeText={vm.setPassword}
+                type="password"
+                leftIcon={<Feather name="lock" size={17} color={c.text.secondary} />}
+                rightIcon={
+                    <TouchableOpacity onPress={vm.togglePassword}>
+                        <Feather name={vm.showPassword ? "eye-off" : "eye"} size={17} color={c.text.secondary} />
+                    </TouchableOpacity>
+                }
                 secureTextEntry={!vm.showPassword}
-                icon="lock"
-                rightIcon={vm.showPassword ? "eye-off" : "eye"}
-                onRightIcon={vm.togglePassword}
             />
         </View>
     );
 
     const formActions = (
         <React.Fragment>
-            <AuthErrorBanner message={vm.error} />
+            {vm.error && (
+                <Alert 
+                    type="error" 
+                    message={vm.error}
+                    style={{ marginTop: 12 }}
+                />
+            )}
             <View style={{ marginTop: 28 }}>
                 <Button
-                    label={vm.loading ? t("Registrando�") : t("Registrarse")}
+                    label={vm.loading ? t("Registrando…") : t("Registrarse")}
                     onPress={vm.handleRegister}
                 />
             </View>
             <AuthFooterLink
-                prompt={t("�Ya tienes cuenta?")}
-                linkLabel={t("Inicia sesi�n")}
+                prompt={t("¿Ya tienes cuenta?")}
+                linkLabel={t("Inicia sesión")}
                 onPress={onGoToLogin}
             />
             <AuthCopyright />
         </React.Fragment>
     );
 
-    // -- M�VIL -------------------------------------------------
+    // ── MÓVIL ─────────────────────────────────────────────────
     if (isSmall) {
         return (
             <AuthMobileLayout
@@ -83,13 +110,13 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin }) {
         );
     }
 
-    // -- DESKTOP � split panel con animaciones de entrada ------
+    // ── DESKTOP — split panel con animaciones de entrada ──────
     const brandPanel = (
         <React.Fragment>
             <BrandPanelCircles />
             <View style={{ zIndex: 1, alignItems: "center", maxWidth: 400 }}>
                 <Image
-                    source={require("../../assets/images/logoFaceAttend-BlancoAzul.png")}
+                    source={require("../assets/images/logoFaceAttend-BlancoAzul.png")}
                     style={{ width: 180, height: 60, marginBottom: 24 }}
                     resizeMode="contain"
                 />
@@ -97,13 +124,13 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin }) {
                     fontSize: 10, fontWeight: "800", color: c.text.onBrand,
                     textAlign: "center", marginBottom: 12, letterSpacing: -1,
                 }}>
-                    {t("�nete a FaceAttend EDU")}
+                    {t("Únete a FaceAttend EDU")}
                 </Text>
                 <Text style={{
                     fontSize: 11, color: "rgba(255,255,255,0.75)",
                     textAlign: "center", lineHeight: 20,
                 }}>
-                    {t("Registra tu instituci�n y empieza a gestionar la asistencia con reconocimiento facial.")}
+                    {t("Registra tu institución y empieza a gestionar la asistencia con reconocimiento facial.")}
                 </Text>
             </View>
         </React.Fragment>

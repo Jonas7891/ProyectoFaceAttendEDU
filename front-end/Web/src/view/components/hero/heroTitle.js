@@ -4,16 +4,43 @@ import { useResponsive } from "../hooks/useResponsive";
 import { getTypography } from "../../../core/constants/typography";
 import { useTheme } from "../hooks/useTheme";
 
-export default function HeroTitle({ title, accent, end }) {
-    const { fs }    = useResponsive();
+/**
+ * HeroTitle - Título destacado con texto de acento
+ * 
+ * Muestra un título grande con una parte destacada en color de acento.
+ * Ideal para hero sections y páginas de landing.
+ * 
+ * @param {string} title - Texto principal del título
+ * @param {string} accent - Texto a destacar en color de acento
+ * @param {string} end - Texto final después del acento
+ * @param {object} style - Estilos adicionales
+ * @param {string} accentColor - Color personalizado para el acento (default: theme.colors.brand.primary)
+ * 
+ * @example
+ * <HeroTitle 
+ *   title="Bienvenido a " 
+ *   accent="FaceAttend" 
+ *   end=" EDU" 
+ * />
+ * 
+ * @example
+ * // Con salto de línea
+ * <HeroTitle 
+ *   title="Asistencia\n" 
+ *   accent="inteligente\n" 
+ *   end="para tu institución" 
+ * />
+ */
+export default function HeroTitle({ title, accent, end, style, accentColor }) {
+    const { fs } = useResponsive();
     const { theme } = useTheme();
-    const T         = getTypography(fs);
-    const c         = theme.colors;
+    const T = getTypography(fs);
+    const c = theme.colors;
 
     return (
-        <Text style={[T.displayLG, { color: c.text.primary }]}>
+        <Text style={[T.displayLG, { color: c.text.primary }, style]}>
             {title}
-            <Text style={{ color: c.brand.primary }}>{accent}</Text>
+            <Text style={{ color: accentColor || c.brand.primary }}>{accent}</Text>
             {end}
         </Text>
     );

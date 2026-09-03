@@ -4,16 +4,33 @@ import { useResponsive } from "../hooks/useResponsive";
 import { getTypography } from "../../../core/constants/typography";
 import { useTheme } from "../hooks/useTheme";
 
-export default function HeroStats({ stats }) {
+/**
+ * HeroStats - Grid de estadísticas para hero sections
+ * 
+ * Muestra valores destacados con labels en un layout horizontal.
+ * Componente genérico que acepta cualquier conjunto de stats.
+ * 
+ * @param {Array} stats - Array de estadísticas [{value, label, color?}]
+ * @param {number} gap - Espaciado entre stats
+ * @param {object} style - Estilos adicionales
+ * 
+ * @example
+ * <HeroStats stats={[
+ *   { value: "99%", label: "Precisión", color: theme.colors.status.success },
+ *   { value: "<1s", label: "Velocidad" },
+ *   { value: "1000+", label: "Usuarios" }
+ * ]} />
+ */
+export default function HeroStats({ stats, gap = 32, style }) {
     const { fs, sp } = useResponsive();
     const { theme } = useTheme();
     const T = getTypography(fs);
     const c = theme.colors;
 
     return (
-        <View style={{ flexDirection: "row", gap: sp(32) }}>
-            {stats.map((s) => (
-                <View key={s.label}>
+        <View style={[{ flexDirection: "row", gap: sp(gap) }, style]}>
+            {stats.map((s, idx) => (
+                <View key={s.label || `stat-${idx}`}>
                     <Text style={[T.statValue, { color: s.color ?? c.text.primary }]}>
                         {s.value}
                     </Text>

@@ -1,28 +1,42 @@
 // ============================================================
-//  FaceAttend EDU � Login View Component (View Layer)
-//  Recibe callbacks del Screen. L�gica en useLoginViewModel.
-//  onLoginSuccess ya no recibe credenciales � el ViewModel
-//  las maneja internamente a trav�s de AuthContext.
+//  FaceAttend EDU — Login VIEW
+// ============================================================
+//  RESPONSABILIDAD: Presentación y UI ("cómo se presenta")
+//
+//  Este componente:
+//  ✓ Renderiza toda la interfaz visual
+//  ✓ Maneja estilos, layouts y animaciones
+//  ✓ Coordina hooks de presentación (useLoginViewModel)
+//  ✓ Gestiona el estado visual (mostrar/ocultar contraseña, etc.)
+//
+//  NO debe:
+//  ✗ Manejar navegación directamente
+//  ✗ Conocer rutas o nombres de pantallas
+//  ✗ Acceder a navigation directamente
+//
+//  Recibe callbacks del Screen para delegar acciones de navegación.
 // ============================================================
 
 import React from "react";
 import { View, Text, TouchableOpacity, Image, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { useResponsive }  from "../components/hooks/useResponsive";
-import { useTheme }       from "../components/hooks/useTheme";
-import Button             from "../components/common/buttons/Button";
+import { useResponsive }  from "./components/hooks/useResponsive";
+import { useTheme }       from "./components/hooks/useTheme";
+import Button             from "./components/common/buttons/Button";
+import TextInput          from "./components/common/inputs/TextInput";
+import Alert              from "./components/common/feedback/Alert";
 import {
-    FormField, AuthErrorBanner, AuthFooterLink,
+    AuthFooterLink,
     BrandPanelCircles, AuthCopyright,
-} from "../components/auth/AuthComponents";
-import AuthMobileLayout   from "../components/auth/AuthMobileLayout";
-import AuthAnimatedLayout from "../components/auth/AuthAnimatedLayout";
-import { useLoginViewModel } from "../../viewmodels/useAuthViewModel";
-import { useTranslation }    from "../../i18n/hooks/useTranslation";
+} from "./components/auth/AuthComponents";
+import AuthMobileLayout   from "./components/auth/AuthMobileLayout";
+import AuthAnimatedLayout from "./components/auth/AuthAnimatedLayout";
+import { useLoginViewModel } from "../viewmodels/useAuthViewModel";
+import { useTranslation }    from "../i18n/hooks/useTranslation";
 
-// -- Credenciales de desarrollo -------------------------------
+// ── Credenciales de desarrollo ───────────────────────────────
 // Solo visible cuando __DEV__ === true (Expo/Metro en desarrollo).
-// En producci�n este bloque nunca se renderiza.
+// En producción este bloque nunca se renderiza.
 
 const DEV_USERS = [
     { role: "Admin",    email: "admin@uni.edu",      color: "#EF4444" },
@@ -33,7 +47,7 @@ const DEV_USERS = [
 function DevCredentials({ onFill }) {
     const { theme } = useTheme();
     const c = theme.colors;
-    // __DEV__ es una variable global de React Native / Metro � true en desarrollo
+    // __DEV__ es una variable global de React Native / Metro — true en desarrollo
     if (typeof __DEV__ === "undefined" || !__DEV__) return null;
 
     return (
@@ -49,11 +63,11 @@ function DevCredentials({ onFill }) {
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
                 <Feather name="zap" size={12} color="#92400E" />
                 <Text style={{ fontSize: 10, fontWeight: "700", color: "#92400E", textTransform: "uppercase", letterSpacing: 0.5 }}>
-                    Dev � acceso r�pido
+                    Dev — acceso rápido
                 </Text>
             </View>
             <Text style={{ fontSize: 11, color: "#92400E", marginBottom: 4 }}>
-                Contrase�a: cualquier texto no vac�o
+                Contraseña: cualquier texto no vacío
             </Text>
             {DEV_USERS.map(u => (
                 <TouchableOpacity
@@ -95,59 +109,71 @@ export default function LoginView({
     const vm          = useLoginViewModel(onLoginSuccess);
     const { t }       = useTranslation();
 
-    // Rellena el email desde el panel dev y pone foco listo para escribir contrase�a
+    // Rellena el email desde el panel dev y pone foco listo para escribir contraseña
     function handleDevFill(email) {
         vm.setEmail(email);
         vm.prefillEmail(email);
     }
 
     const FEATURES = [
-        { title: t("Reconocimiento facial en tiempo real"), desc: t("Registra asistencia autom�ticamente con IA.")  },
-        { title: t("Reportes y estad�sticas detalladas"),   desc: t("Analiza patrones de asistencia por curso.")   },
-        { title: t("Gesti�n completa de estudiantes"),      desc: t("Centraliza toda la informaci�n acad�mica.")   },
+        { title: t("Reconocimiento facial en tiempo real"), desc: t("Registra asistencia automáticamente con IA.")  },
+        { title: t("Reportes y estadísticas detalladas"),   desc: t("Analiza patrones de asistencia por curso.")   },
+        { title: t("Gestión completa de estudiantes"),      desc: t("Centraliza toda la información académica.")   },
     ];
 
     const fields = (
         <View style={{ gap: 18 }}>
-            <FormField
-                label={t("Correo electr�nico")}
+            <TextInput
+                label={t("Correo electrónico")}
                 placeholder={t("correo@universidad.edu")}
                 onChangeText={vm.setEmail}
-                icon="mail"
+                type="email"
                 value={vm.emailDisplay}
+                leftIcon={<Feather name="mail" size={17} color={c.text.secondary} />}
             />
-            <FormField
-                label={t("Contrase�a")}
-                placeholder={t("Tu contrase�a")}
+            <TextInput
+                label={t("Contraseña")}
+                placeholder={t("Tu contraseña")}
                 onChangeText={vm.setPassword}
+                type="password"
+                value={vm.password}
+                leftIcon={<Feather name="lock" size={17} color={c.text.secondary} />}
+                rightIcon={
+                    <TouchableOpacity onPress={vm.togglePassword}>
+                        <Feather name={vm.showPassword ? "eye-off" : "eye"} size={17} color={c.text.secondary} />
+                    </TouchableOpacity>
+                }
                 secureTextEntry={!vm.showPassword}
-                icon="lock"
-                rightIcon={vm.showPassword ? "eye-off" : "eye"}
-                onRightIcon={vm.togglePassword}
             />
         </View>
     );
 
     const formActions = (
         <React.Fragment>
-            <AuthErrorBanner message={vm.error} />
+            {vm.error && (
+                <Alert 
+                    type="error" 
+                    message={vm.error}
+                    style={{ marginTop: 12 }}
+                />
+            )}
             <TouchableOpacity
                 onPress={onForgotPassword}
                 style={{ alignSelf: "flex-end", marginTop: 14 }}
             >
                 <Text style={{ fontSize: 11, color: c.brand.primary, fontWeight: "500" }}>
-                    {t("�Olvidaste tu contrase�a?")}
+                    {t("¿Olvidaste tu contraseña?")}
                 </Text>
             </TouchableOpacity>
             <View style={{ marginTop: 24 }}>
                 <Button
-                    label={vm.loading ? t("Ingresando�") : t("Ingresar")}
+                    label={vm.loading ? t("Ingresando…") : t("Ingresar")}
                     onPress={vm.handleLogin}
                 />
             </View>
             <AuthFooterLink
-                prompt={t("�No tienes cuenta?")}
-                linkLabel={t("Reg�strate aqu�")}
+                prompt={t("¿No tienes cuenta?")}
+                linkLabel={t("Regístrate aquí")}
                 onPress={onGoToRegister}
             />
             <DevCredentials onFill={handleDevFill} />
@@ -158,7 +184,7 @@ export default function LoginView({
     if (isSmall) {
         return (
             <AuthMobileLayout
-                title={t("Inicio de sesi�n")}
+                title={t("Inicio de sesión")}
                 subtitle={t("Bienvenido de vuelta. Ingresa tus credenciales.")}
             >
                 {fields}
@@ -172,7 +198,7 @@ export default function LoginView({
             <BrandPanelCircles />
             <View style={{ zIndex: 1, alignItems: "center", maxWidth: 400 }}>
                 <Image
-                    source={require("../../assets/images/logoFaceAttend-BlancoAzul.png")}
+                    source={require("../assets/images/logoFaceAttend-BlancoAzul.png")}
                     style={{ width: 180, height: 60, marginBottom: 24 }}
                     resizeMode="contain"
                 />
@@ -186,7 +212,7 @@ export default function LoginView({
                     fontSize: 11, color: "rgba(255,255,255,0.75)",
                     textAlign: "center", lineHeight: 20, marginBottom: 24,
                 }}>
-                    {t("Asistencia inteligente para tu instituci�n")}
+                    {t("Asistencia inteligente para tu institución")}
                 </Text>
                 <View style={{ gap: 12, width: "100%" }}>
                     {FEATURES.map(f => (
@@ -210,7 +236,7 @@ export default function LoginView({
     const formContent = (
         <React.Fragment>
             <Text style={{ fontSize: 10, fontWeight: "800", color: c.text.primary, marginBottom: 8, letterSpacing: -0.5 }}>
-                {t("Inicio de sesi�n")}
+                {t("Inicio de sesión")}
             </Text>
             <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom: 24, lineHeight: 24 }}>
                 {t("Bienvenido de vuelta. Ingresa tus credenciales.")}

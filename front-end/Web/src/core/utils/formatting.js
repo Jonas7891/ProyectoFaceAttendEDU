@@ -1,10 +1,16 @@
 /**
- * Funciones de formateo reutilizables
+ * Funciones de formateo reutilizables para datos y texto
  */
 
 /**
  * Formatea número con separadores de miles
- * @example formatNumber(1234567.89) => "1,234,567.89"
+ * @param {number} num - Número a formatear
+ * @param {number} [decimals=0] - Cantidad de decimales
+ * @returns {string} Número formateado con separadores
+ * @example
+ * formatNumber(1234567.89) // "1,234,567.89"
+ * formatNumber(1234567.89, 2) // "1,234,567.89"
+ * formatNumber(1234567, 0) // "1,234,567"
  */
 export function formatNumber(num, decimals = 0) {
   if (num === null || num === undefined || isNaN(num)) return "0";
@@ -16,8 +22,13 @@ export function formatNumber(num, decimals = 0) {
 }
 
 /**
- * Formatea porcentaje
- * @example formatPercentage(0.8523) => "85.23%"
+ * Formatea valor como porcentaje
+ * @param {number} value - Valor decimal (0.8523 = 85.23%)
+ * @param {number} [decimals=2] - Cantidad de decimales
+ * @returns {string} Porcentaje formateado con símbolo %
+ * @example
+ * formatPercentage(0.8523) // "85.23%"
+ * formatPercentage(0.5, 0) // "50%"
  */
 export function formatPercentage(value, decimals = 2) {
   if (value === null || value === undefined || isNaN(value)) return "0%";
@@ -25,8 +36,13 @@ export function formatPercentage(value, decimals = 2) {
 }
 
 /**
- * Formatea moneda
- * @example formatCurrency(1234.56, "USD") => "$1,234.56"
+ * Formatea cantidad monetaria
+ * @param {number} amount - Cantidad a formatear
+ * @param {string} [currency="USD"] - Código de moneda ISO 4217
+ * @returns {string} Cantidad formateada con símbolo de moneda
+ * @example
+ * formatCurrency(1234.56) // "$1,234.56"
+ * formatCurrency(1234.56, "EUR") // "€1,234.56"
  */
 export function formatCurrency(amount, currency = "USD") {
   if (amount === null || amount === undefined || isNaN(amount)) return "$0.00";
@@ -38,8 +54,15 @@ export function formatCurrency(amount, currency = "USD") {
 }
 
 /**
- * Trunca texto con ellipsis
- * @example truncate("Hello World", 5) => "Hello..."
+ * Trunca texto agregando ellipsis (...)
+ * @param {string} text - Texto a truncar
+ * @param {number} maxLength - Longitud máxima del texto
+ * @param {string} [suffix="..."] - Sufijo a agregar al final
+ * @returns {string} Texto truncado con sufijo
+ * @example
+ * truncate("Hello World", 5) // "Hello..."
+ * truncate("Hello", 10) // "Hello"
+ * truncate("Hello World", 8, ">>") // "Hello Wo>>"
  */
 export function truncate(text, maxLength, suffix = "...") {
   if (!text) return "";
@@ -48,8 +71,12 @@ export function truncate(text, maxLength, suffix = "...") {
 }
 
 /**
- * Capitaliza primera letra
- * @example capitalize("hello world") => "Hello world"
+ * Capitaliza la primera letra de un texto
+ * @param {string} text - Texto a capitalizar
+ * @returns {string} Texto con primera letra en mayúscula
+ * @example
+ * capitalize("hello world") // "Hello world"
+ * capitalize("HELLO") // "Hello"
  */
 export function capitalize(text) {
   if (!text) return "";
@@ -57,8 +84,12 @@ export function capitalize(text) {
 }
 
 /**
- * Capitaliza cada palabra
- * @example titleCase("hello world") => "Hello World"
+ * Capitaliza cada palabra del texto (Title Case)
+ * @param {string} text - Texto a transformar
+ * @returns {string} Texto con cada palabra capitalizada
+ * @example
+ * titleCase("hello world") // "Hello World"
+ * titleCase("the quick brown fox") // "The Quick Brown Fox"
  */
 export function titleCase(text) {
   if (!text) return "";
@@ -69,8 +100,12 @@ export function titleCase(text) {
 }
 
 /**
- * Convierte a slug
- * @example slugify("Hello World!") => "hello-world"
+ * Convierte texto a slug (URL-friendly)
+ * @param {string} text - Texto a convertir
+ * @returns {string} Slug en minúsculas con guiones
+ * @example
+ * slugify("Hello World!") // "hello-world"
+ * slugify("Título con Ñ") // "titulo-con-"
  */
 export function slugify(text) {
   if (!text) return "";
@@ -84,8 +119,13 @@ export function slugify(text) {
 }
 
 /**
- * Formatea nombre completo
- * @example formatFullName("john", "doe") => "John Doe"
+ * Formatea nombre completo con capitalización
+ * @param {string} firstName - Nombre
+ * @param {string} lastName - Apellido
+ * @returns {string} Nombre completo formateado
+ * @example
+ * formatFullName("john", "doe") // "John Doe"
+ * formatFullName("MARIA", "GARCIA") // "Maria Garcia"
  */
 export function formatFullName(firstName, lastName) {
   const first = capitalize(firstName || "");
@@ -94,8 +134,13 @@ export function formatFullName(firstName, lastName) {
 }
 
 /**
- * Formatea iniciales
- * @example formatInitials("John", "Doe") => "JD"
+ * Obtiene iniciales de un nombre
+ * @param {string} firstName - Nombre
+ * @param {string} lastName - Apellido
+ * @returns {string} Iniciales en mayúsculas (ej: JD)
+ * @example
+ * formatInitials("John", "Doe") // "JD"
+ * formatInitials("maria", "garcia") // "MG"
  */
 export function formatInitials(firstName, lastName) {
   const first = (firstName || "").charAt(0).toUpperCase();
@@ -104,8 +149,12 @@ export function formatInitials(firstName, lastName) {
 }
 
 /**
- * Formatea teléfono
- * @example formatPhone("1234567890") => "(123) 456-7890"
+ * Formatea número de teléfono (formato US)
+ * @param {string} phone - Número de teléfono (solo dígitos o con formato)
+ * @returns {string} Teléfono formateado como (123) 456-7890
+ * @example
+ * formatPhone("1234567890") // "(123) 456-7890"
+ * formatPhone("555-1234") // "555-1234" (sin cambios si no tiene 10 dígitos)
  */
 export function formatPhone(phone) {
   if (!phone) return "";
@@ -119,8 +168,13 @@ export function formatPhone(phone) {
 }
 
 /**
- * Formatea tamaño de archivo
- * @example formatFileSize(1536) => "1.5 KB"
+ * Formatea tamaño de archivo en formato legible
+ * @param {number} bytes - Tamaño en bytes
+ * @returns {string} Tamaño formateado (ej: 1.5 KB, 2.3 MB)
+ * @example
+ * formatFileSize(1536) // "1.5 KB"
+ * formatFileSize(1048576) // "1 MB"
+ * formatFileSize(0) // "0 Bytes"
  */
 export function formatFileSize(bytes) {
   if (!bytes || bytes === 0) return "0 Bytes";
@@ -133,8 +187,12 @@ export function formatFileSize(bytes) {
 }
 
 /**
- * Oculta parte de un email
- * @example maskEmail("john.doe@example.com") => "j***e@example.com"
+ * Oculta parte de un email para privacidad
+ * @param {string} email - Email a enmascarar
+ * @returns {string} Email parcialmente oculto
+ * @example
+ * maskEmail("john.doe@example.com") // "j***e@example.com"
+ * maskEmail("ab@test.com") // "ab@test.com" (sin cambios si es muy corto)
  */
 export function maskEmail(email) {
   if (!email || !email.includes("@")) return email;
@@ -147,8 +205,12 @@ export function maskEmail(email) {
 }
 
 /**
- * Oculta parte de un número de teléfono
- * @example maskPhone("1234567890") => "******7890"
+ * Oculta parte de un número de teléfono para privacidad
+ * @param {string} phone - Teléfono a enmascarar
+ * @returns {string} Teléfono parcialmente oculto (muestra últimos 4 dígitos)
+ * @example
+ * maskPhone("1234567890") // "******7890"
+ * maskPhone("+1 (555) 123-4567") // "**********4567"
  */
 export function maskPhone(phone) {
   if (!phone) return "";
@@ -159,8 +221,12 @@ export function maskPhone(phone) {
 }
 
 /**
- * Convierte camelCase a Title Case
- * @example camelToTitle("firstName") => "First Name"
+ * Convierte camelCase a Title Case con espacios
+ * @param {string} camelCase - String en formato camelCase
+ * @returns {string} String en Title Case
+ * @example
+ * camelToTitle("firstName") // "First Name"
+ * camelToTitle("userEmailAddress") // "User Email Address"
  */
 export function camelToTitle(camelCase) {
   if (!camelCase) return "";
@@ -170,9 +236,15 @@ export function camelToTitle(camelCase) {
 }
 
 /**
- * Pluraliza palabra según cantidad
- * @example pluralize(1, "item") => "1 item"
- * @example pluralize(2, "item") => "2 items"
+ * Pluraliza palabra según cantidad (español básico)
+ * @param {number} count - Cantidad
+ * @param {string} singular - Palabra en singular
+ * @param {string} [plural] - Palabra en plural (si no se provee, agrega 's')
+ * @returns {string} Texto con cantidad y palabra pluralizada
+ * @example
+ * pluralize(1, "item") // "1 item"
+ * pluralize(2, "item") // "2 items"
+ * pluralize(5, "persona", "personas") // "5 personas"
  */
 export function pluralize(count, singular, plural = null) {
   const word = count === 1 ? singular : (plural || singular + "s");
@@ -180,8 +252,12 @@ export function pluralize(count, singular, plural = null) {
 }
 
 /**
- * Genera color a partir de texto (para avatares, etc)
- * @example getColorFromText("John Doe") => "#3B82F6"
+ * Genera color consistente a partir de texto (útil para avatares)
+ * @param {string} text - Texto base (nombre, email, etc.)
+ * @returns {string} Color hexadecimal (#RRGGBB)
+ * @example
+ * getColorFromText("John Doe") // "#3B82F6" (siempre el mismo para "John Doe")
+ * getColorFromText("Jane Smith") // "#EF4444" (diferente color)
  */
 export function getColorFromText(text) {
   if (!text) return "#64748B";

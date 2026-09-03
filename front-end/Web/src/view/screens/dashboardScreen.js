@@ -1,7 +1,21 @@
 ﻿// ============================================================
-//  FaceAttend EDU — Dashboard Screen (View Layer)
-//  Orquesta tabs. Toda lógica de navegación en useDashboardScreenViewModel.
-//  Los tabs visibles se filtran por rol via useRolePermissions.
+//  FaceAttend EDU — Dashboard SCREEN (Container)
+// ============================================================
+//  RESPONSABILIDAD: Orquestación de tabs y navegación ("qué debe pasar")
+//
+//  Este componente:
+//  ✓ Orquesta la navegación entre tabs (Dashboard, Students, Courses, etc.)
+//  ✓ Maneja el layout principal (Sidebar/BottomTabs)
+//  ✓ Coordina el flujo de logout
+//  ✓ Renderiza las diferentes vistas según el tab activo
+//
+//  NO debe:
+//  ✗ Contener lógica de negocio específica de cada tab
+//  ✗ Renderizar contenido específico de funcionalidades
+//
+//  Actúa como contenedor que delega a Views específicos:
+//  - DashboardView (contenido principal)
+//  - StudentsView, CoursesView, ReportsView, etc.
 // ============================================================
 
 import React from "react";
@@ -10,13 +24,13 @@ import { useNavigation } from "@react-navigation/native";
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 
-import Sidebar          from "../components/common/layout/Sidebar";
-import DashboardView    from "./DashboardView";
-import StudentsView     from "./StudentsScreen";
-import CoursesView      from "./CoursesScreen";
-import ReportsView      from "./ReportsScreen";
-import SettingsView     from "./SettingsScreen";
-import EnvironmentsView from "./EnvironmentsScreen";
+import { Sidebar, SidebarHeader, SidebarNav, SidebarItem, SidebarFooter } from "../components/common/layout";
+import DashboardView    from "../DashboardView";
+import StudentsView     from "../StudentsView";
+import CoursesView      from "../CoursesView";
+import ReportsView      from "../ReportsView";
+import SettingsView     from "../SettingsView";
+import EnvironmentsView from "../EnviromentsView";
 
 import { useTheme }      from "../components/hooks/useTheme";
 import { useResponsive } from "../components/hooks/useResponsive";
@@ -25,6 +39,8 @@ import { useDashboardScreenViewModel } from "../../viewmodels/useDashboardScreen
 import { useTranslation } from "../../i18n/hooks/useTranslation";
 
 // ── TabContent ───────────────────────────────────────────────
+// Renderiza la vista correspondiente según el tab seleccionado.
+// Este componente actúa como un simple switch/router interno.
 
 function TabContent({ tab }) {
     switch (tab) {
@@ -39,6 +55,7 @@ function TabContent({ tab }) {
 }
 
 // ── DashboardScreen ──────────────────────────────────────────
+// Contenedor principal que orquesta tabs y navegación
 
 export default function DashboardScreen() {
     const navigation = useNavigation();
@@ -50,6 +67,7 @@ export default function DashboardScreen() {
     const { t }       = useTranslation();
     const { logout }  = useAuth();
 
+    // ── Manejo de logout ──────────────────────────────────────
     async function handleLogout() {
         await logout();
         navigation.replace("FaceAttendEDU");
@@ -63,14 +81,50 @@ export default function DashboardScreen() {
             >
                 {/* Sidebar — solo desktop/tablet */}
                 {!isSmall && (
-                    <Sidebar
-                        currentTab={vm.currentTab}
-                        onNavigate={(tab) => vm.setTab(tab)}
-                        onLogout={handleLogout}
-                    />
+                    <Sidebar width={240} position="left">
+                        {user && (
+                            <SidebarHeader>
+                                <Text style={{
+                                    fontSize: 14,
+                                    fontWeight: "600",
+                                    color: c.text.primary,
+                                    marginBottom: 4,
+                                }}>
+                                    {user.name}
+                                </Text>
+                                <Text style={{
+                                    fontSize: 12,
+                                    color: c.text.secondary,
+                                }}>
+                                    {user.role}
+                                </Text>
+                            </SidebarHeader>
+                        )}
+                        
+                        <SidebarNav>
+                            {vm.bottomTabs.map((tab) => (
+                                <SidebarItem
+                                    key={tab.key}
+                                    icon={tab.icon}
+                                    label={tab.label}
+                                    active={vm.currentTab === tab.key}
+                                    onPress={() => vm.setTab(tab.key)}
+                                />
+                            ))}
+                        </SidebarNav>
+                        
+                        <SidebarFooter>
+                            <SidebarItem
+                                icon="log-out"
+                                label="Cerrar sesión"
+                                variant="danger"
+                                onPress={handleLogout}
+                            />
+                        </SidebarFooter>
+                    </Sidebar>
                 )}
 
-                {/* Contenido principal */}
+                {/* Contenido principal — renderiza el View del tab activo */}
                 <View style={{ flex: 1,
                     overflow: "hidden",
                     paddingBottom: isSmall ? 64 + insets.bottom : 0,

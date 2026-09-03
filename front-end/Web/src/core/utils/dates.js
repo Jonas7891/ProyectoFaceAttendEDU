@@ -1,9 +1,16 @@
 /**
  * Utilidades para manejo de fechas
+ * Todas las funciones aceptan Date objects o strings parseables
  */
 
 /**
- * Formatea fecha a DD/MM/YYYY
+ * Formatea fecha en el formato especificado
+ * @param {Date|string} date - Fecha a formatear
+ * @param {string} [format="DD/MM/YYYY"] - Formato de salida (DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD)
+ * @returns {string} Fecha formateada o string vacío si es inválida
+ * @example
+ * formatDate(new Date(2026, 8, 3)) // "03/09/2026"
+ * formatDate("2026-09-03", "YYYY-MM-DD") // "2026-09-03"
  */
 export function formatDate(date, format = "DD/MM/YYYY") {
   if (!date) return "";
@@ -28,7 +35,11 @@ export function formatDate(date, format = "DD/MM/YYYY") {
 }
 
 /**
- * Formatea hora a HH:mm
+ * Formatea hora en formato 24 horas (HH:mm)
+ * @param {Date|string} date - Fecha con hora a formatear
+ * @returns {string} Hora formateada (HH:mm) o string vacío si es inválida
+ * @example
+ * formatTime(new Date(2026, 8, 3, 14, 30)) // "14:30"
  */
 export function formatTime(date) {
   if (!date) return "";
@@ -43,7 +54,12 @@ export function formatTime(date) {
 }
 
 /**
- * Formatea fecha y hora
+ * Formatea fecha y hora juntos
+ * @param {Date|string} date - Fecha a formatear
+ * @param {string} [dateFormat="DD/MM/YYYY"] - Formato de la fecha
+ * @returns {string} Fecha y hora formateadas (DD/MM/YYYY HH:mm)
+ * @example
+ * formatDateTime(new Date(2026, 8, 3, 14, 30)) // "03/09/2026 14:30"
  */
 export function formatDateTime(date, dateFormat = "DD/MM/YYYY") {
   if (!date) return "";
@@ -51,7 +67,12 @@ export function formatDateTime(date, dateFormat = "DD/MM/YYYY") {
 }
 
 /**
- * Obtiene fecha relativa (hace 2 días, etc)
+ * Obtiene tiempo relativo en español (hace X minutos/horas/días)
+ * @param {Date|string} date - Fecha a comparar con ahora
+ * @returns {string} Tiempo relativo formateado
+ * @example
+ * getRelativeTime(new Date(Date.now() - 60000)) // "hace 1 minuto"
+ * getRelativeTime(new Date(Date.now() - 86400000)) // "hace 1 día"
  */
 export function getRelativeTime(date) {
   if (!date) return "";
@@ -77,7 +98,12 @@ export function getRelativeTime(date) {
 }
 
 /**
- * Verifica si es hoy
+ * Verifica si una fecha es hoy
+ * @param {Date|string} date - Fecha a verificar
+ * @returns {boolean} true si la fecha es hoy
+ * @example
+ * isToday(new Date()) // true
+ * isToday("2020-01-01") // false
  */
 export function isToday(date) {
   if (!date) return false;
@@ -91,7 +117,11 @@ export function isToday(date) {
 }
 
 /**
- * Verifica si es ayer
+ * Verifica si una fecha fue ayer
+ * @param {Date|string} date - Fecha a verificar
+ * @returns {boolean} true si la fecha fue ayer
+ * @example
+ * isYesterday(new Date(Date.now() - 86400000)) // true
  */
 export function isYesterday(date) {
   if (!date) return false;
@@ -106,7 +136,11 @@ export function isYesterday(date) {
 }
 
 /**
- * Obtiene el inicio del día
+ * Obtiene el inicio del día (00:00:00.000)
+ * @param {Date|string} [date=new Date()] - Fecha base
+ * @returns {Date} Fecha al inicio del día
+ * @example
+ * startOfDay(new Date(2026, 8, 3, 14, 30)) // 2026-09-03 00:00:00.000
  */
 export function startOfDay(date = new Date()) {
   const d = new Date(date);
@@ -115,7 +149,11 @@ export function startOfDay(date = new Date()) {
 }
 
 /**
- * Obtiene el fin del día
+ * Obtiene el fin del día (23:59:59.999)
+ * @param {Date|string} [date=new Date()] - Fecha base
+ * @returns {Date} Fecha al final del día
+ * @example
+ * endOfDay(new Date(2026, 8, 3, 14, 30)) // 2026-09-03 23:59:59.999
  */
 export function endOfDay(date = new Date()) {
   const d = new Date(date);
@@ -125,6 +163,10 @@ export function endOfDay(date = new Date()) {
 
 /**
  * Obtiene el inicio de la semana (lunes)
+ * @param {Date|string} [date=new Date()] - Fecha base
+ * @returns {Date} Primer día (lunes) de la semana
+ * @example
+ * startOfWeek(new Date(2026, 8, 3)) // Lunes de esa semana
  */
 export function startOfWeek(date = new Date()) {
   const d = new Date(date);
@@ -135,6 +177,10 @@ export function startOfWeek(date = new Date()) {
 
 /**
  * Obtiene el fin de la semana (domingo)
+ * @param {Date|string} [date=new Date()] - Fecha base
+ * @returns {Date} Último día (domingo) de la semana
+ * @example
+ * endOfWeek(new Date(2026, 8, 3)) // Domingo de esa semana
  */
 export function endOfWeek(date = new Date()) {
   const start = startOfWeek(date);
@@ -142,7 +188,11 @@ export function endOfWeek(date = new Date()) {
 }
 
 /**
- * Obtiene el inicio del mes
+ * Obtiene el primer día del mes
+ * @param {Date|string} [date=new Date()] - Fecha base
+ * @returns {Date} Primer día del mes
+ * @example
+ * startOfMonth(new Date(2026, 8, 15)) // 2026-09-01
  */
 export function startOfMonth(date = new Date()) {
   const d = new Date(date);
@@ -150,7 +200,11 @@ export function startOfMonth(date = new Date()) {
 }
 
 /**
- * Obtiene el fin del mes
+ * Obtiene el último día del mes
+ * @param {Date|string} [date=new Date()] - Fecha base
+ * @returns {Date} Último día del mes
+ * @example
+ * endOfMonth(new Date(2026, 8, 15)) // 2026-09-30
  */
 export function endOfMonth(date = new Date()) {
   const d = new Date(date);
@@ -158,7 +212,13 @@ export function endOfMonth(date = new Date()) {
 }
 
 /**
- * Añade días a una fecha
+ * Añade días a una fecha (puede ser negativo para restar)
+ * @param {Date|string} date - Fecha base
+ * @param {number} days - Número de días a añadir (negativo para restar)
+ * @returns {Date} Nueva fecha con días añadidos
+ * @example
+ * addDays(new Date(2026, 8, 3), 7) // 2026-09-10
+ * addDays(new Date(2026, 8, 3), -2) // 2026-09-01
  */
 export function addDays(date, days) {
   const d = new Date(date);
@@ -167,7 +227,13 @@ export function addDays(date, days) {
 }
 
 /**
- * Añade meses a una fecha
+ * Añade meses a una fecha (puede ser negativo para restar)
+ * @param {Date|string} date - Fecha base
+ * @param {number} months - Número de meses a añadir (negativo para restar)
+ * @returns {Date} Nueva fecha con meses añadidos
+ * @example
+ * addMonths(new Date(2026, 8, 3), 3) // 2026-12-03
+ * addMonths(new Date(2026, 8, 3), -1) // 2026-08-03
  */
 export function addMonths(date, months) {
   const d = new Date(date);
@@ -176,7 +242,12 @@ export function addMonths(date, months) {
 }
 
 /**
- * Calcula diferencia en días
+ * Calcula la diferencia en días entre dos fechas (valor absoluto)
+ * @param {Date|string} date1 - Primera fecha
+ * @param {Date|string} date2 - Segunda fecha
+ * @returns {number} Número de días entre las fechas (siempre positivo)
+ * @example
+ * daysBetween("2026-09-01", "2026-09-10") // 9
  */
 export function daysBetween(date1, date2) {
   const d1 = new Date(date1);
@@ -186,7 +257,12 @@ export function daysBetween(date1, date2) {
 }
 
 /**
- * Calcula edad a partir de fecha de nacimiento
+ * Calcula la edad actual a partir de fecha de nacimiento
+ * @param {Date|string} birthDate - Fecha de nacimiento
+ * @returns {number} Edad en años
+ * @example
+ * calculateAge("2000-01-01") // 26 (en 2026)
+ * calculateAge("2020-01-01") // 6 (en 2026)
  */
 export function calculateAge(birthDate) {
   if (!birthDate) return 0;
@@ -204,7 +280,13 @@ export function calculateAge(birthDate) {
 }
 
 /**
- * Parsea fecha en múltiples formatos
+ * Parsea fecha en múltiples formatos (YYYY-MM-DD, DD/MM/YYYY, etc.)
+ * @param {string} dateString - String de fecha a parsear
+ * @returns {Date|null} Objeto Date o null si no se puede parsear
+ * @example
+ * parseDate("2026-09-03") // Date object
+ * parseDate("03/09/2026") // Date object
+ * parseDate("invalid") // null
  */
 export function parseDate(dateString) {
   if (!dateString) return null;
@@ -228,7 +310,12 @@ export function parseDate(dateString) {
 }
 
 /**
- * Obtiene array de días de la semana
+ * Obtiene array de nombres de días de la semana en español
+ * @param {boolean} [short=false] - Si es true, devuelve versión corta (Lun, Mar, etc.)
+ * @returns {string[]} Array con nombres de días
+ * @example
+ * getWeekDays() // ["Domingo", "Lunes", "Martes", ...]
+ * getWeekDays(true) // ["Dom", "Lun", "Mar", ...]
  */
 export function getWeekDays(short = false) {
   if (short) {
@@ -238,7 +325,12 @@ export function getWeekDays(short = false) {
 }
 
 /**
- * Obtiene array de meses
+ * Obtiene array de nombres de meses en español
+ * @param {boolean} [short=false] - Si es true, devuelve versión corta (Ene, Feb, etc.)
+ * @returns {string[]} Array con nombres de meses
+ * @example
+ * getMonths() // ["Enero", "Febrero", "Marzo", ...]
+ * getMonths(true) // ["Ene", "Feb", "Mar", ...]
  */
 export function getMonths(short = false) {
   if (short) {
@@ -251,7 +343,14 @@ export function getMonths(short = false) {
 }
 
 /**
- * Verifica si una fecha está en un rango
+ * Verifica si una fecha está dentro de un rango (inclusivo)
+ * @param {Date|string} date - Fecha a verificar
+ * @param {Date|string} startDate - Fecha de inicio del rango
+ * @param {Date|string} endDate - Fecha de fin del rango
+ * @returns {boolean} true si la fecha está en el rango
+ * @example
+ * isDateInRange("2026-09-03", "2026-09-01", "2026-09-30") // true
+ * isDateInRange("2026-08-01", "2026-09-01", "2026-09-30") // false
  */
 export function isDateInRange(date, startDate, endDate) {
   const d = new Date(date);

@@ -12,7 +12,7 @@ import {
 import { Feather } from "@expo/vector-icons";
 import { Card, Badge, Button, EmptyState } from "../components/common";
 import { Navbar as PageHeader } from "../components/common/navigation/Navbar";
-import { TextInput as FormField } from "../components/common/inputs/TextInput";
+import TextInput from "../components/common/inputs/TextInput";
 import { useTheme }        from "../components/hooks/useTheme";
 import { useResponsive }   from "../components/hooks/useResponsive";
 import { useTranslation }  from "../../i18n/hooks/useTranslation";
@@ -175,11 +175,11 @@ function ScheduleModal({ visible, mode, editing, envId, searchFn, onClose, onSav
 
                             <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
                                 <View style={{ flex: 1 }}>
-                                    <FormField label={t("N� Ficha / C�digo") + " *"} value={form.courseCode}
+                                    <TextInput label={t("Nº Ficha / Código") + " *"} value={form.courseCode}
                                         onChangeText={v => setField("courseCode", v)} placeholder="Ej: 2240001" error={isEmpty(form.courseCode)} />
                                 </View>
                                 <View style={{ flex: 2 }}>
-                                    <FormField label={t("Nombre del programa") + " *"} value={form.courseName}
+                                    <TextInput label={t("Nombre del programa") + " *"} value={form.courseName}
                                         onChangeText={v => setField("courseName", v)} placeholder={t("Ej: Tecnolog�a en Sistemas")} error={isEmpty(form.courseName)} />
                                 </View>
                             </View>
@@ -195,11 +195,11 @@ function ScheduleModal({ visible, mode, editing, envId, searchFn, onClose, onSav
 
                             <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
                                 <View style={{ flex: 1 }}>
-                                    <FormField label={t("Hora inicio") + " *"} value={form.startTime}
+                                    <TextInput label={t("Hora inicio") + " *"} value={form.startTime}
                                         onChangeText={v => setField("startTime", v)} placeholder="08:00" error={isEmpty(form.startTime)} />
                                 </View>
                                 <View style={{ flex: 1 }}>
-                                    <FormField label={t("Hora fin") + " *"} value={form.endTime}
+                                    <TextInput label={t("Hora fin") + " *"} value={form.endTime}
                                         onChangeText={v => setField("endTime", v)} placeholder="10:00" error={isEmpty(form.endTime)} />
                                 </View>
                             </View>
@@ -315,17 +315,17 @@ function EnvironmentFormModal({ visible, mode, environment, onClose, onSubmit, t
 
                             <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
                                 <View style={{ flex: 1 }}>
-                                    <FormField label={t("N�mero / Nombre del ambiente") + " *"} value={form.number}
+                                    <TextInput label={t("Número / Nombre del ambiente") + " *"} value={form.number}
                                         onChangeText={v => setField("number", v)} placeholder={t("Ej: 301")} error={isEmpty(form.number)} />
                                 </View>
                                 <View style={{ flex: 1 }}>
-                                    <FormField label={t("Capacidad (personas)")} value={form.capacity}
+                                    <TextInput label={t("Capacidad (personas)")} value={form.capacity}
                                         onChangeText={v => setField("capacity", v)} placeholder="40" keyboardType="numeric"
                                         hint={t("Opcional")} />
                                 </View>
                             </View>
 
-                            <FormField label={t("Descripci�n / Ubicaci�n") + " *"} value={form.description}
+                            <TextInput label={t("Descripción / Ubicación") + " *"} value={form.description}
                                 onChangeText={v => setField("description", v)}
                                 placeholder={t("Ej: Bloque A, piso 3. Aula de teor�a con videobeam.")}
                                 error={isEmpty(form.description)} multiline />

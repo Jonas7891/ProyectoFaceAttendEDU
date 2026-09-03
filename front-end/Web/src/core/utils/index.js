@@ -5,3 +5,4 @@
 export * from './validation';
 export * from './formatting';
 export * from './dates';
+export * from './colorUtils';

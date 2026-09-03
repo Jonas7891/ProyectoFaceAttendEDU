@@ -10,7 +10,7 @@ import {
     VISION_DESCRIPTIONS,
     DEFAULT_VISION_MODE,
 } from "../../../../core/theme/presets";
-import { hslToHex, hexToHsl, evaluateColor } from "../colorUtils";
+import { hslToHex, hexToHsl, evaluateColor } from "../../../../core/utils/colorUtils";
 import { HexInput } from "./HexInput";
 import { WcagBadge } from "./WcagBadge";
 import { ContrastBar } from "./ContrastBar";

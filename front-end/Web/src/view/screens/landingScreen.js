@@ -1,11 +1,12 @@
 ﻿import React from "react";
 import { useNavigation } from "@react-navigation/native";
-import { View, ScrollView, Image, Text } from "react-native";
+import { View, ScrollView, Image, Text, TouchableOpacity } from "react-native";
 import { SafeAreaView, SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 
 import { Navbar } from "../components/common/navigation/Navbar";
-import { HeroLeft, HeroRight } from "../components/hero";
+import { Button } from "../components/common";
+import { HeroSection, HeroMediaSection, HeroStats, HeroTitle } from "../components/hero";
 
 import { useHeroEntrance } from "../components/hooks/useHeroEntrance";
 import { useResponsive }   from "../components/hooks/useResponsive";
@@ -42,18 +43,38 @@ function HeroContent(props) {
             gap: sp(isSmall ? 80 : 100),
             width: "100%",
         }}>
-            <HeroLeft
-                fadeLeft={props.fadeLeft}   slideLeft={props.slideLeft}
-                title={t("Asistencia\n")}
-                accent={t("inteligente\n")}
-                end={t("para tu institución")}
-                primary={t("Registrarse")}
-                secondary={t("Iniciar sesión")}
-                stats={STATS}
-                onPrimary={()  => navigation.navigate("FaceAttendEDU-Register")}
-                onSecondary={() => navigation.navigate("FaceAttendEDU-Login")}
+            <HeroSection 
+                fadeAnim={props.fadeLeft} 
+                slideAnim={props.slideLeft}
+                minWidth={300}
+                maxWidth={600}
+                gap={36}
+            >
+                <HeroTitle 
+                    title={t("Asistencia\n")}
+                    accent={t("inteligente\n")}
+                    end={t("para tu institución")}
+                />
+                <View style={{ flexDirection: "row", gap: sp(12) }}>
+                    <Button 
+                        label={t("Registrarse")} 
+                        onPress={() => navigation.navigate("FaceAttendEDU-Register")} 
+                    />
+                    <Button 
+                        label={t("Iniciar sesión")} 
+                        variant="outline"
+                        onPress={() => navigation.navigate("FaceAttendEDU-Login")} 
+                    />
+                </View>
+                <HeroStats stats={STATS} />
+            </HeroSection>
+
+            <HeroMediaSection 
+                mediaSource={require("../../assets/images/splash-icon.png")}
+                badges={BADGES}
+                fadeAnim={props.fadeRight}
+                slideAnim={props.slideRight}
             />
-            <HeroRight fadeRight={props.fadeRight} slideRight={props.slideRight} badges={BADGES} />
         </View>
     );
 }

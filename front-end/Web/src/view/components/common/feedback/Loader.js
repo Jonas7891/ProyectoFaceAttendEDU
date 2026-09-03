@@ -4,11 +4,31 @@ import { useTheme } from "../../hooks/useTheme";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 
 /**
- * Loader/Spinner reutilizable
+ * Loader/Spinner reutilizable para estados de carga
  * 
- * @param {string} size - Tamaño: 'small' | 'large'
- * @param {string} message - Mensaje opcional
- * @param {boolean} fullScreen - Si ocupa toda la pantalla
+ * Componente de indicador de carga con soporte para mensaje opcional
+ * y modo fullscreen para loading de página completa.
+ * 
+ * @param {('small'|'large')} size - Tamaño del spinner
+ * @param {string} message - Mensaje opcional debajo del spinner
+ * @param {boolean} fullScreen - Si debe ocupar toda la pantalla
+ * @param {object} style - Estilos adicionales del contenedor
+ * 
+ * @example
+ * // Loader básico
+ * <Loader />
+ * 
+ * @example
+ * // Loader con mensaje
+ * <Loader message="Cargando estudiantes..." />
+ * 
+ * @example
+ * // Loader fullscreen
+ * <Loader fullScreen message="Iniciando sesión..." />
+ * 
+ * @example
+ * // Loader pequeño en línea
+ * <Loader size="small" />
  */
 export function Loader({
   size = "large",

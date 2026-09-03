@@ -6,13 +6,43 @@ import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 import { Button } from "../buttons/Button";
 
 /**
- * Estado vacío reutilizable
+ * Estado vacío reutilizable para listas sin datos
  * 
- * @param {string} icon - Nombre del icono (Feather)
- * @param {string} title - Título
- * @param {string} message - Mensaje descriptivo
+ * Componente para mostrar estados vacíos con icono, título, mensaje opcional
+ * y acción opcional (botón) para guiar al usuario.
+ * 
+ * @param {string|ReactNode} icon - Nombre del icono Feather o componente custom
+ * @param {string} title - Título principal del estado vacío
+ * @param {string} message - Mensaje descriptivo opcional
  * @param {string} actionLabel - Texto del botón de acción
- * @param {function} onAction - Callback del botón
+ * @param {function} onAction - Callback al presionar el botón de acción
+ * @param {object} style - Estilos adicionales del contenedor
+ * 
+ * @example
+ * // EmptyState básico
+ * <EmptyState 
+ *   icon="users"
+ *   title="No hay estudiantes"
+ *   message="Comienza agregando tu primer estudiante"
+ * />
+ * 
+ * @example
+ * // EmptyState con acción
+ * <EmptyState 
+ *   icon="file-text"
+ *   title="No hay reportes"
+ *   message="Los reportes aparecerán aquí una vez que registres asistencias"
+ *   actionLabel="Registrar Asistencia"
+ *   onAction={() => navigate('Attendance')}
+ * />
+ * 
+ * @example
+ * // EmptyState de búsqueda sin resultados
+ * <EmptyState 
+ *   icon="search"
+ *   title="Sin resultados"
+ *   message={`No encontramos estudiantes con "${searchQuery}"`}
+ * />
  */
 export function EmptyState({
   icon = "inbox",

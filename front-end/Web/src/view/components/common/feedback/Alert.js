@@ -5,13 +5,49 @@ import { useTheme } from "../../hooks/useTheme";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 
 /**
- * Alert reutilizable
+ * Alert reutilizable para mostrar mensajes contextuales
  * 
- * @param {string} type - Tipo: 'info' | 'success' | 'warning' | 'error'
- * @param {string} title - Título opcional
- * @param {string} message - Mensaje
- * @param {boolean} closable - Si se puede cerrar
- * @param {function} onClose - Callback al cerrar
+ * Componente de alerta para mostrar mensajes de información, éxito, advertencia o error
+ * en contexto. Con soporte para título, icono automático y opción de cerrar.
+ * 
+ * @param {('info'|'success'|'warning'|'error')} type - Tipo de alerta
+ * @param {string} title - Título opcional del alert
+ * @param {string} message - Mensaje principal del alert
+ * @param {boolean} closable - Si se puede cerrar con botón X
+ * @param {function} onClose - Callback al cerrar el alert
+ * @param {object} style - Estilos adicionales del contenedor
+ * 
+ * @example
+ * // Alert de información
+ * <Alert 
+ *   type="info"
+ *   message="Los cambios se guardarán automáticamente"
+ * />
+ * 
+ * @example
+ * // Alert de éxito con título
+ * <Alert 
+ *   type="success"
+ *   title="Guardado exitoso"
+ *   message="El estudiante ha sido registrado correctamente"
+ * />
+ * 
+ * @example
+ * // Alert de advertencia cerrable
+ * <Alert 
+ *   type="warning"
+ *   message="La asistencia mínima requerida es 80%"
+ *   closable
+ *   onClose={() => setShowWarning(false)}
+ * />
+ * 
+ * @example
+ * // Alert de error
+ * <Alert 
+ *   type="error"
+ *   title="Error de conexión"
+ *   message="No se pudo conectar con el servidor. Verifica tu conexión a internet."
+ * />
  */
 export function Alert({
   type = "info",

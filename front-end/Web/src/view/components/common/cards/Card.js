@@ -4,48 +4,131 @@ import { useTheme } from "../../hooks/useTheme";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 
 /**
- * Card reutilizable base
+ * Card reutilizable con variants de estilo y color
  * 
- * @param {string} variant - Estilo: 'default' | 'elevated' | 'outlined'
- * @param {string} padding - Padding: 'none' | 'sm' | 'md' | 'lg'
- * @param {function} onPress - Si es clickeable
- * @param {ReactNode} header - Contenido del header
- * @param {ReactNode} footer - Contenido del footer
+ * Componente de tarjeta flexible con múltiples variantes visuales (estilo y color),
+ * padding configurable, headers/footers opcionales, y soporte para interacción.
+ * 
+ * @param {('default'|'elevated'|'outlined'|'flat')} variant - Variante de estilo visual
+ * @param {('default'|'primary'|'success'|'warning'|'danger'|'info')} color - Variante de color (opcional)
+ * @param {('none'|'sm'|'md'|'lg'|number)} padding - Padding interno del contenido
+ * @param {function} onPress - Callback si la card es clickeable
+ * @param {ReactNode} header - Contenido del header (con borde inferior)
+ * @param {ReactNode} footer - Contenido del footer (con borde superior)
  * @param {ReactNode} children - Contenido principal
+ * @param {object} style - Estilos adicionales del contenedor
+ * @param {object} contentStyle - Estilos adicionales del contenido
+ * 
+ * @example
+ * // Card básica
+ * <Card>
+ *   <Text>Contenido</Text>
+ * </Card>
+ * 
+ * @example
+ * // Card elevada con header y footer
+ * <Card variant="elevated" header={<Text>Header</Text>} footer={<Button>Acción</Button>}>
+ *   <Text>Contenido principal</Text>
+ * </Card>
+ * 
+ * @example
+ * // Card con color
+ * <Card color="success">
+ *   <Text>Operación exitosa</Text>
+ * </Card>
+ * 
+ * @example
+ * // Card clickeable
+ * <Card onPress={() => navigate('Detail')}>
+ *   <Text>Click aquí</Text>
+ * </Card>
+ * 
+ * @example
+ * // Card con padding custom
+ * <Card padding={20}>
+ *   <Text>Padding exacto de 20px</Text>
+ * </Card>
  */
 export function Card({
   variant = "default",
+  color = "default",
   padding = "md",
   onPress,
   header,
   footer,
   children,
   style,
+  contentStyle,
+  ...props
 }) {
   const { theme } = useTheme();
+  const c = theme.colors;
 
+  // Variantes de estilo (apariencia visual)
   const variantStyles = {
     default: {
-      backgroundColor: theme.colors.background.surface,
+      backgroundColor: c.background.surface,
       ...DESIGN_TOKENS.shadows.sm,
     },
     elevated: {
-      backgroundColor: theme.colors.background.elevated,
+      backgroundColor: c.background.elevated,
       ...DESIGN_TOKENS.shadows.md,
     },
     outlined: {
-      backgroundColor: theme.colors.background.surface,
+      backgroundColor: c.background.surface,
       borderWidth: 1,
-      borderColor: theme.colors.border.primary,
+      borderColor: c.border.primary,
+    },
+    flat: {
+      backgroundColor: c.background.surface,
+      // Sin sombra ni borde
     },
   };
 
-  const paddingStyles = {
-    none: { padding: 0 },
-    sm: { padding: DESIGN_TOKENS.spacing.sm },
-    md: { padding: DESIGN_TOKENS.spacing.md },
-    lg: { padding: DESIGN_TOKENS.spacing.lg },
+  // Variantes de color (acento)
+  const colorConfig = {
+    default: {
+      borderLeftWidth: 0,
+      backgroundColor: null, // Usa el del variant
+    },
+    primary: {
+      borderLeftWidth: 4,
+      borderLeftColor: c.brand.primary,
+      backgroundColor: c.brand.primaryLight || variantStyles[variant].backgroundColor,
+    },
+    success: {
+      borderLeftWidth: 4,
+      borderLeftColor: c.states.success,
+      backgroundColor: c.states.successLight || variantStyles[variant].backgroundColor,
+    },
+    warning: {
+      borderLeftWidth: 4,
+      borderLeftColor: c.states.warning,
+      backgroundColor: c.states.warningLight || variantStyles[variant].backgroundColor,
+    },
+    danger: {
+      borderLeftWidth: 4,
+      borderLeftColor: c.states.danger,
+      backgroundColor: c.states.dangerLight || variantStyles[variant].backgroundColor,
+    },
+    info: {
+      borderLeftWidth: 4,
+      borderLeftColor: c.brand.primary,
+      backgroundColor: c.brand.primaryLight || variantStyles[variant].backgroundColor,
+    },
   };
+
+  const currentColorConfig = colorConfig[color] || colorConfig.default;
+
+  // Padding (puede ser string preset o número)
+  const paddingStyles = typeof padding === "number"
+    ? { padding }
+    : {
+        none: { padding: 0 },
+        sm: { padding: DESIGN_TOKENS.spacing.sm },
+        md: { padding: DESIGN_TOKENS.spacing.md },
+        lg: { padding: DESIGN_TOKENS.spacing.lg },
+      }[padding] || { padding: DESIGN_TOKENS.spacing.md };
 
   const Component = onPress ? TouchableOpacity : View;
 
@@ -55,22 +138,30 @@ export function Card({
       style={[
         styles.card,
         variantStyles[variant],
+        currentColorConfig.borderLeftWidth > 0 && {
+          borderLeftWidth: currentColorConfig.borderLeftWidth,
+          borderLeftColor: currentColorConfig.borderLeftColor,
+        },
+        currentColorConfig.backgroundColor && {
+          backgroundColor: currentColorConfig.backgroundColor,
+        },
         style,
       ]}
       activeOpacity={onPress ? 0.7 : 1}
+      {...props}
     >
       {header && (
-        <View style={[styles.header, { borderBottomColor: theme.colors.border.primary }]}>
+        <View style={[styles.header, { borderBottomColor: c.border.primary }]}>
           {header}
         </View>
       )}
       
-      <View style={paddingStyles[padding]}>
+      <View style={[paddingStyles, contentStyle]}>
         {children}
       </View>
       
       {footer && (
-        <View style={[styles.footer, { borderTopColor: theme.colors.border.primary }]}>
+        <View style={[styles.footer, { borderTopColor: c.border.primary }]}>
           {footer}
         </View>
       )}

@@ -6,15 +6,62 @@ import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 /**
  * Botón reutilizable con variantes y tamaños
  * 
- * @param {string} variant - Estilo: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
- * @param {string} size - Tamaño: 'sm' | 'md' | 'lg'
- * @param {boolean} fullWidth - Si debe ocupar todo el ancho
- * @param {boolean} loading - Muestra spinner
+ * Componente de botón flexible con múltiples variantes visuales, tamaños configurables,
+ * estados de loading y disabled, y soporte para iconos izquierdo/derecho.
+ * 
+ * @param {('primary'|'secondary'|'outline'|'ghost'|'danger')} variant - Variante visual del botón
+ * @param {('sm'|'md'|'lg')} size - Tamaño del botón
+ * @param {boolean} fullWidth - Si debe ocupar todo el ancho disponible
+ * @param {boolean} loading - Muestra spinner de carga
  * @param {boolean} disabled - Deshabilita el botón
- * @param {ReactNode} leftIcon - Icono a la izquierda
- * @param {ReactNode} rightIcon - Icono a la derecha
- * @param {function} onPress - Callback al presionar
- * @param {ReactNode} children - Contenido del botón
+ * @param {ReactNode} leftIcon - Icono a la izquierda del texto
+ * @param {ReactNode} rightIcon - Icono a la derecha del texto
+ * @param {function} onPress - Callback al presionar el botón
+ * @param {string|ReactNode} children - Contenido del botón (texto o componente)
+ * @param {object} style - Estilos adicionales del contenedor
+ * @param {object} textStyle - Estilos adicionales del texto
+ * 
+ * @example
+ * // Botón primario básico
+ * <Button variant="primary" onPress={handleSave}>
+ *   Guardar
+ * </Button>
+ * 
+ * @example
+ * // Botón con loading
+ * <Button loading={isSaving} disabled={isSaving}>
+ *   {isSaving ? "Guardando..." : "Guardar"}
+ * </Button>
+ * 
+ * @example
+ * // Botón con iconos
+ * <Button 
+ *   leftIcon={<Feather name="save" size={16} color="#fff" />}
+ *   variant="primary"
+ * >
+ *   Guardar
+ * </Button>
+ * 
+ * @example
+ * // Botón outline con full width
+ * <Button variant="outline" fullWidth onPress={handleCancel}>
+ *   Cancelar
+ * </Button>
+ * 
+ * @example
+ * // Botón peligroso con confirmación
+ * <Button 
+ *   variant="danger" 
+ *   size="sm"
+ *   onPress={() => {
+ *     Alert.alert("Confirmar", "¿Eliminar?", [
+ *       { text: "Cancelar" },
+ *       { text: "Eliminar", onPress: handleDelete }
+ *     ]);
+ *   }}
+ * >
+ *   Eliminar
+ * </Button>
  */
 export function Button({
   variant = "primary",

@@ -3,4 +3,4 @@
  */
 
 export * from './tabs';
-export { default as colorUtils } from './colorUtils';
+// colorUtils moved to src/core/utils/colorUtils.js
