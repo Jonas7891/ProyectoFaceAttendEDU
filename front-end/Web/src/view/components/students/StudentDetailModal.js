@@ -1,14 +1,13 @@
-ï»¿// ============================================================
-//  FaceAttend EDU â€” StudentDetailModal
+// ============================================================
+//  FaceAttend EDU — StudentDetailModal
 //  Modal de detalle de estudiante.
-//  Los botones de gestiÃ³n se muestran segÃºn permisos.
+//  Los botones de gestión se muestran según permisos.
 // ============================================================
 
 import React from "react";
 import { View, Text, ScrollView, TouchableOpacity, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Badge, Avatar, UIButton, ProgressBar } from "../ui/UI";
-import { useAttendanceColor, ATTENDANCE_THRESHOLDS } from "../ui/AttendanceBadge";
+import { Badge, Avatar, Button, ProgressBar, useAttendanceColor, ATTENDANCE_THRESHOLDS } from "../common";
 import { useTheme }       from "../hooks/useTheme";
 import { useTranslation } from "../../../i18n/hooks/useTranslation";
 
@@ -116,12 +115,12 @@ export default function StudentDetailModal({
                                 <ProgressBar value={student.attendance} color={attColor} height={8} />
                                 <Text style={{ fontSize: 11, color: c.text.secondary, marginTop: 8 }}>
                                     {student.attendance >= ATTENDANCE_THRESHOLDS.MIN_ACCEPTABLE
-                                        ? t("Cumple el mÃ­nimo requerido (80%)")
-                                        : t("âš  Por debajo del mÃ­nimo requerido (80%)")}
+                                        ? t("Cumple el mínimo requerido (80%)")
+                                        : t("? Por debajo del mínimo requerido (80%)")}
                                 </Text>
                             </View>
 
-                            {/* Bloque facial â€” solo para quienes pueden registrar */}
+                            {/* Bloque facial — solo para quienes pueden registrar */}
                             {canRegisterFace && (
                                 <View style={{
                                     flexDirection: "row",
@@ -148,7 +147,7 @@ export default function StudentDetailModal({
                                     </View>
                                     {student.registered
                                         ? <Feather name="check-circle" size={16} color={c.states.success} />
-                                        : <UIButton variant="primary" size="sm">{t("Registrar")}</UIButton>
+                                        : <Button variant="primary" size="sm">{t("Registrar")}</Button>
                                     }
                                 </View>
                             )}
@@ -163,10 +162,10 @@ export default function StudentDetailModal({
                             gap: 10,
                             justifyContent: "flex-end",
                         }}>
-                            <UIButton variant="ghost" onPress={onClose}>{t("Cerrar")}</UIButton>
+                            <Button variant="ghost" onPress={onClose}>{t("Cerrar")}</Button>
                             {/* Editar solo para quienes pueden gestionar */}
                             {canManage && (
-                                <UIButton variant="primary">{t("Editar estudiante")}</UIButton>
+                                <Button variant="primary">{t("Editar estudiante")}</Button>
                             )}
                         </View>
                     </View>

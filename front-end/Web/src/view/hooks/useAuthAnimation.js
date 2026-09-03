@@ -1,19 +1,4 @@
-﻿// ============================================================
-//  FaceAttend EDU — useAuthAnimation (ViewModel de animación)
-//  Encapsula los valores Animated para las transiciones de
-//  entrada en las pantallas de autenticación.
-//
-//  Animaciones:
-//    · brandAnim  → panel de marca: desliza desde la derecha
-//    · formAnim   → panel de formulario: desliza desde arriba
-//
-//  Uso:
-//    const { brandStyle, formStyle } = useAuthAnimation();
-//    <Animated.View style={brandStyle}>…</Animated.View>
-//    <Animated.View style={formStyle}>…</Animated.View>
-// ============================================================
-
-import { useEffect, useRef } from "react";
+﻿import { useEffect, useRef } from "react";
 import { Animated, Easing } from "react-native";
 
 /**

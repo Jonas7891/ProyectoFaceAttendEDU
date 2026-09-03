@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
 import Slider from "@react-native-community/slider";
 import { Feather } from "@expo/vector-icons";
-import { Card, PageHeader, UIButton, ToggleRow, Divider } from "../components/ui/UI";
+import { Card, Button, ToggleRow, Divider } from "../components/common";
+import { Navbar as PageHeader } from "../components/common/navigation/Navbar";
 import { useTheme } from "../components/hooks/useTheme";
-import { generateTheme } from "../theme/generateTheme";
+import { generateTheme } from "../../core/theme/generateTheme";
 import { useResponsive } from "../components/hooks/useResponsive";
 import { useTranslation } from "../../i18n/hooks/useTranslation";
 import { useRolePermissions } from "../hooks/useRolePermissions";
@@ -16,7 +17,7 @@ import {
     StatsRow,
     SecurityMeter,
     ConfidenceGuide,
-} from "../components/settings/components";
+} from "../components/settings/tabs";
 
 export default function SettingsView() {
     const { isSmall } = useResponsive();
@@ -54,10 +55,10 @@ export default function SettingsView() {
 
     const activeNotifications = [emailAlert, weeklyReport, atRiskAlert, dailySummary].filter(Boolean).length;
 
-    // Secciones visibles según el rol
+    // Secciones visibles segï¿½n el rol
     const ALL_SECTIONS = [
-        { id: "general", label: t("General"), icon: "globe", desc: t("Institución y semestre"), adminOnly: true },
-        { id: "facial", label: t("Reconocimiento"), icon: "aperture", desc: t("Umbral y cámara"), adminOnly: true },
+        { id: "general", label: t("General"), icon: "globe", desc: t("Instituciï¿½n y semestre"), adminOnly: true },
+        { id: "facial", label: t("Reconocimiento"), icon: "aperture", desc: t("Umbral y cï¿½mara"), adminOnly: true },
         { id: "notifications", label: t("Notificaciones"), icon: "bell", desc: t("Alertas y reportes"), adminOnly: false },
         { id: "security", label: t("Seguridad"), icon: "shield", desc: t("Acceso y sesiones"), adminOnly: true },
         { id: "appearance", label: t("Apariencia"), icon: "sliders", desc: t("Tema y colores"), adminOnly: false },
@@ -93,7 +94,7 @@ export default function SettingsView() {
     };
     const sectionTitle = { fontSize: 10, fontWeight: "700", color: c.text.primary };
 
-    // Badge de notificaciones activas por sección
+    // Badge de notificaciones activas por secciï¿½n
     function SectionBadge({ id }) {
         if (id === "notifications" && activeNotifications > 0) {
             return (
@@ -123,8 +124,8 @@ export default function SettingsView() {
             showsVerticalScrollIndicator={false}
         >
             <PageHeader
-                title={t("Configuración")}
-                subtitle={t("Personaliza FaceAttend EDU a tu institución")}
+                title={t("Configuraciï¿½n")}
+                subtitle={t("Personaliza FaceAttend EDU a tu instituciï¿½n")}
                 actions={
                     <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
                         {hasUnsaved && (
@@ -152,14 +153,14 @@ export default function SettingsView() {
                                         {t("Sin guardar")}
                                     </Text>
                                 </View>
-                                <UIButton variant="ghost" size="sm" onPress={handleDiscard}>
+                                <Button variant="ghost" size="sm" onPress={handleDiscard}>
                                     {t("Descartar")}
-                                </UIButton>
+                                </Button>
                             </React.Fragment>
                         )}
-                        <UIButton variant="primary" onPress={handleSave} size="sm">
-                            {saved ? t("¡Guardado ?") : t("Guardar cambios")}
-                        </UIButton>
+                        <Button variant="primary" onPress={handleSave} size="sm">
+                            {saved ? t("ï¿½Guardado ?") : t("Guardar cambios")}
+                        </Button>
                     </View>
                 }
             />
@@ -259,7 +260,7 @@ export default function SettingsView() {
                             <Text style={sectionTitle}>{t("General")}</Text>
 
                             <View>
-                                <Text style={labelStyle}>{t("Nombre de la institución")}</Text>
+                                <Text style={labelStyle}>{t("Nombre de la instituciï¿½n")}</Text>
                                 <TextInput
                                     value={institutionName}
                                     onChangeText={setInstitutionName}
@@ -280,7 +281,7 @@ export default function SettingsView() {
                                     style={inputStyle}
                                 />
                                 <Text style={descStyle}>
-                                    {t("Formato recomendado: AÑO-PERÍODO (ej. 2025-1). Se usa para agrupar los registros de asistencia.")}
+                                    {t("Formato recomendado: Aï¿½O-PERï¿½ODO (ej. 2025-1). Se usa para agrupar los registros de asistencia.")}
                                 </Text>
                             </View>
 
@@ -293,7 +294,7 @@ export default function SettingsView() {
                                 }}>
                                     <View>
                                         <Text style={labelStyle}>
-                                            {t("Asistencia mínima requerida")}
+                                            {t("Asistencia mï¿½nima requerida")}
                                         </Text>
                                         <Text style={[descStyle, { marginTop: 0 }]}>
                                             {t("Umbral para marcar estudiantes \"en riesgo\"")}
@@ -335,7 +336,7 @@ export default function SettingsView() {
                                         </Text>
                                     ))}
                                 </View>
-                                {/* Guía contextual */}
+                                {/* Guï¿½a contextual */}
                                 <View style={{
                                     marginTop: 10,
                                     backgroundColor: minAttendance >= 90 ? c.states.warningLight : c.brand.primaryLight,
@@ -357,9 +358,9 @@ export default function SettingsView() {
                                         lineHeight: 18
                                     }}>
                                         {minAttendance >= 90
-                                            ? t("Umbral muy alto — muchos estudiantes podrían quedar en riesgo aunque asistan con regularidad.")
+                                            ? t("Umbral muy alto ï¿½ muchos estudiantes podrï¿½an quedar en riesgo aunque asistan con regularidad.")
                                             : minAttendance <= 60
-                                            ? t("Umbral bajo — los estudiantes tendrán mucha flexibilidad de faltar. Asegúrate de que sea intencional.")
+                                            ? t("Umbral bajo ï¿½ los estudiantes tendrï¿½n mucha flexibilidad de faltar. Asegï¿½rate de que sea intencional.")
                                             : `${t("Con este umbral, un estudiante puede faltar hasta")} ${Math.floor((100 - minAttendance))} ${t("clases de cada 100 sin quedar en riesgo.")}`
                                         }
                                     </Text>
@@ -368,7 +369,7 @@ export default function SettingsView() {
 
                             <Divider />
 
-                            {/* Idioma de la aplicación */}
+                            {/* Idioma de la aplicaciï¿½n */}
                             <View style={{
                                 flexDirection: "row",
                                 alignItems: "flex-start",
@@ -378,10 +379,10 @@ export default function SettingsView() {
                                 {/* Texto a la izquierda */}
                                 <View style={{ flex: 1 }}>
                                     <Text style={labelStyle}>
-                                        {t("Idioma de la aplicación")}
+                                        {t("Idioma de la aplicaciï¿½n")}
                                     </Text>
                                     <Text style={[descStyle, { marginTop: 0 }]}>
-                                        {t("Traduce toda la interfaz automáticamente. El español es el idioma original de FaceAttend EDU.")}
+                                        {t("Traduce toda la interfaz automï¿½ticamente. El espaï¿½ol es el idioma original de FaceAttend EDU.")}
                                     </Text>
                                 </View>
                                 {/* Selector a la derecha */}
@@ -390,7 +391,7 @@ export default function SettingsView() {
 
                             <Divider />
 
-                            {/* Resumen rápido */}
+                            {/* Resumen rï¿½pido */}
                             <Text style={{
                                 fontSize: 10,
                                 fontWeight: "600",
@@ -402,7 +403,7 @@ export default function SettingsView() {
                             </Text>
                             <View style={{ gap: 0 }}>
                                 <StatsRow
-                                    label={t("Institución")}
+                                    label={t("Instituciï¿½n")}
                                     value={institutionName || t("Sin definir")}
                                     icon="home"
                                     color={c.brand.primary}
@@ -416,7 +417,7 @@ export default function SettingsView() {
                                 />
                                 <Divider />
                                 <StatsRow
-                                    label={t("Mínimo de asistencia")}
+                                    label={t("Mï¿½nimo de asistencia")}
                                     value={`${minAttendance}%`}
                                     icon="bar-chart-2"
                                     color="#10B981"
@@ -424,7 +425,7 @@ export default function SettingsView() {
                                 <Divider />
                                 <StatsRow
                                     label={t("Idioma")}
-                                    value={currentLanguage?.labelES ?? t("Español")}
+                                    value={currentLanguage?.labelES ?? t("Espaï¿½ol")}
                                     icon="globe"
                                     color="#3B82F6"
                                 />
@@ -451,7 +452,7 @@ export default function SettingsView() {
                                             {t("Umbral de confianza")}
                                         </Text>
                                         <Text style={[descStyle, { marginTop: 0 }]}>
-                                            {t("Qué tan seguro debe estar el modelo para registrar")}
+                                            {t("Quï¿½ tan seguro debe estar el modelo para registrar")}
                                         </Text>
                                     </View>
                                     <Text style={{
@@ -477,7 +478,7 @@ export default function SettingsView() {
                                     justifyContent: "space-between",
                                     marginTop: 4
                                 }}>
-                                    {[`60 — ${t("Permisivo")}`, "75", "85 ?", `95 — ${t("Estricto")}`, "99"].map((v, i) => (
+                                    {[`60 ï¿½ ${t("Permisivo")}`, "75", "85 ?", `95 ï¿½ ${t("Estricto")}`, "99"].map((v, i) => (
                                         <Text
                                             key={i}
                                             style={{ fontSize: 11, color: c.text.disabled }}
@@ -494,8 +495,8 @@ export default function SettingsView() {
                             <Divider />
 
                             <ToggleRow
-                                label={t("Registro automático")}
-                                description={t("Registra automáticamente al detectar el rostro sin confirmación manual")}
+                                label={t("Registro automï¿½tico")}
+                                description={t("Registra automï¿½ticamente al detectar el rostro sin confirmaciï¿½n manual")}
                                 value={autoRegister}
                                 onToggle={() => setAutoRegister(v => !v)}
                             />
@@ -521,14 +522,14 @@ export default function SettingsView() {
                                         flex: 1,
                                         lineHeight: 18
                                     }}>
-                                        {t("Con umbral bajo y registro automático habilitado, hay mayor riesgo de registrar asistencia incorrectamente. Considera subir el umbral a al menos 75%.")}
+                                        {t("Con umbral bajo y registro automï¿½tico habilitado, hay mayor riesgo de registrar asistencia incorrectamente. Considera subir el umbral a al menos 75%.")}
                                     </Text>
                                 </View>
                             )}
 
                             <ToggleRow
                                 label={t("Guardar fotos de registro")}
-                                description={t("Almacena la foto tomada al registrar. Útil para auditorías pero consume más espacio.")}
+                                description={t("Almacena la foto tomada al registrar. ï¿½til para auditorï¿½as pero consume mï¿½s espacio.")}
                                 value={savePhotos}
                                 onToggle={() => setSavePhotos(v => !v)}
                             />
@@ -553,7 +554,7 @@ export default function SettingsView() {
                                         flex: 1,
                                         lineHeight: 18
                                     }}>
-                                        {t("Las fotos se almacenan localmente. Asegúrate de tener suficiente espacio y de informar a los estudiantes según tu política de privacidad.")}
+                                        {t("Las fotos se almacenan localmente. Asegï¿½rate de tener suficiente espacio y de informar a los estudiantes segï¿½n tu polï¿½tica de privacidad.")}
                                     </Text>
                                 </View>
                             )}
@@ -590,25 +591,25 @@ export default function SettingsView() {
                             <Divider />
                             <ToggleRow
                                 label={t("Alertas por correo")}
-                                description={t("Envía un correo al docente cuando un estudiante no asiste. Ideal para clases pequeñas o con seguimiento individual.")}
+                                description={t("Envï¿½a un correo al docente cuando un estudiante no asiste. Ideal para clases pequeï¿½as o con seguimiento individual.")}
                                 value={emailAlert}
                                 onToggle={() => setEmailAlert(v => !v)}
                             />
                             <ToggleRow
                                 label={t("Reporte semanal")}
-                                description={t("Resumen automático de asistencia enviado cada lunes a las 8am. Incluye porcentajes por curso.")}
+                                description={t("Resumen automï¿½tico de asistencia enviado cada lunes a las 8am. Incluye porcentajes por curso.")}
                                 value={weeklyReport}
                                 onToggle={() => setWeeklyReport(v => !v)}
                             />
                             <ToggleRow
                                 label={t("Alerta de estudiantes en riesgo")}
-                                description={`${t("Notifica cuando un estudiante cae por debajo del")} ${minAttendance}% ${t("de asistencia mínima configurado en General.")}`}
+                                description={`${t("Notifica cuando un estudiante cae por debajo del")} ${minAttendance}% ${t("de asistencia mï¿½nima configurado en General.")}`}
                                 value={atRiskAlert}
                                 onToggle={() => setAtRiskAlert(v => !v)}
                             />
                             <ToggleRow
                                 label={t("Resumen diario")}
-                                description={t("Resumen automático de asistencia al finalizar el día. Puede generar muchas notificaciones en días de muchas clases.")}
+                                description={t("Resumen automï¿½tico de asistencia al finalizar el dï¿½a. Puede generar muchas notificaciones en dï¿½as de muchas clases.")}
                                 value={dailySummary}
                                 onToggle={() => setDailySummary(v => !v)}
                             />
@@ -635,7 +636,7 @@ export default function SettingsView() {
                                         flex: 1,
                                         lineHeight: 18
                                     }}>
-                                        {t("No tienes ninguna notificación activa. No recibirás avisos sobre asistencia ni estudiantes en riesgo.")}
+                                        {t("No tienes ninguna notificaciï¿½n activa. No recibirï¿½s avisos sobre asistencia ni estudiantes en riesgo.")}
                                     </Text>
                                 </View>
                             )}
@@ -684,8 +685,8 @@ export default function SettingsView() {
                             <Divider />
 
                             <ToggleRow
-                                label={t("Autenticación de dos factores")}
-                                description={t("Requiere un código adicional al iniciar sesión. Protege la cuenta aunque alguien obtenga tu contraseña.")}
+                                label={t("Autenticaciï¿½n de dos factores")}
+                                description={t("Requiere un cï¿½digo adicional al iniciar sesiï¿½n. Protege la cuenta aunque alguien obtenga tu contraseï¿½a.")}
                                 value={twoFactor}
                                 onToggle={() => setTwoFactor(v => !v)}
                             />
@@ -710,14 +711,14 @@ export default function SettingsView() {
                                         flex: 1,
                                         lineHeight: 18
                                     }}>
-                                        {t("Sin 2FA, la cuenta queda vulnerable si la contraseña se compromete. Se recomienda activarlo.")}
+                                        {t("Sin 2FA, la cuenta queda vulnerable si la contraseï¿½a se compromete. Se recomienda activarlo.")}
                                     </Text>
                                 </View>
                             )}
 
                             <View>
                                 <Text style={labelStyle}>
-                                    {t("Tiempo de sesión (minutos)")}
+                                    {t("Tiempo de sesiï¿½n (minutos)")}
                                 </Text>
                                 <TextInput
                                     keyboardType="numeric"
@@ -726,11 +727,11 @@ export default function SettingsView() {
                                     style={[inputStyle, { width: 140 }]}
                                 />
                                 <Text style={descStyle}>
-                                    {t("La sesión se cerrará automáticamente tras este tiempo de inactividad.")}
+                                    {t("La sesiï¿½n se cerrarï¿½ automï¿½ticamente tras este tiempo de inactividad.")}
                                     {parseInt(sessionTime) > 120
                                         ? t(" ? Sesiones largas aumentan el riesgo si el dispositivo queda desbloqueado.")
                                         : parseInt(sessionTime) <= 15
-                                        ? t(" Sesión muy corta — el usuario deberá iniciar sesión con frecuencia.")
+                                        ? t(" Sesiï¿½n muy corta ï¿½ el usuario deberï¿½ iniciar sesiï¿½n con frecuencia.")
                                         : t(" Tiempo razonable para uso normal en aula.")}
                                 </Text>
                             </View>
@@ -744,10 +745,10 @@ export default function SettingsView() {
                                 {t("Apariencia")}
                             </Text>
 
-                            {/* Modo de visualización */}
+                            {/* Modo de visualizaciï¿½n */}
                             <View style={{ gap: 8 }}>
                                 <Text style={labelStyle}>
-                                    {t("Modo de visualización")}
+                                    {t("Modo de visualizaciï¿½n")}
                                 </Text>
                                 <Text style={descStyle}>
                                     {t("Elige el tema base de la interfaz. Afecta fondos, textos y superficies de toda la app.")}
@@ -764,7 +765,7 @@ export default function SettingsView() {
                                         {t("Color de acento")}
                                     </Text>
                                     <Text style={descStyle}>
-                                        {t("Este color se aplica a botones principales, tabs activos, barras de progreso, bordes de foco y todos los elementos interactivos. Los cambios se previsualizan abajo — presiona \"Guardar cambios\" para aplicarlos en toda la app.")}
+                                        {t("Este color se aplica a botones principales, tabs activos, barras de progreso, bordes de foco y todos los elementos interactivos. Los cambios se previsualizan abajo ï¿½ presiona \"Guardar cambios\" para aplicarlos en toda la app.")}
                                     </Text>
                                 </View>
                                 <AccentColorSelector
@@ -803,7 +804,7 @@ export default function SettingsView() {
                                     flex: 1,
                                     lineHeight: 18
                                 }}>
-                                    {t("La preview muestra cómo se verá el color en botones, badges y elementos activos. Presiona \"Guardar cambios\" para aplicarlo en toda la app.")}
+                                    {t("La preview muestra cï¿½mo se verï¿½ el color en botones, badges y elementos activos. Presiona \"Guardar cambios\" para aplicarlo en toda la app.")}
                                 </Text>
                             </View>
                         </View>

@@ -1,11 +1,4 @@
-﻿// ============================================================
-//  FaceAttend EDU — Environments ViewModel
-//
-//  Consume AppDataContext como única fuente de verdad.
-//  Ya no carga environments ni users de forma independiente.
-// ============================================================
-
-import { useState, useMemo, useCallback } from "react";
+﻿import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
 
 // ── Formulario de ambiente ────────────────────────────────

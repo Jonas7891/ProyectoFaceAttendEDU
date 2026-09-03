@@ -1,19 +1,19 @@
 // ============================================================
-//  FaceAttend EDU — Signup View Component (View Layer)
-//  Recibe callbacks del Screen. Lógica en useSignupViewModel.
+//  FaceAttend EDU ï¿½ Signup View Component (View Layer)
+//  Recibe callbacks del Screen. Lï¿½gica en useSignupViewModel.
 // ============================================================
 
 import React from "react";
 import { View, Text, Image } from "react-native";
 import { useResponsive }  from "../components/hooks/useResponsive";
 import { useTheme }       from "../components/hooks/useTheme";
-import Button             from "../components/ui/button";
+import Button             from "../components/common/buttons/Button";
 import {
     FormField, AuthErrorBanner, AuthFooterLink,
     BrandPanelCircles, AuthCopyright,
 } from "../components/auth/AuthComponents";
 import AuthMobileLayout   from "../components/auth/AuthMobileLayout";
-import AuthAnimatedLayout from "./AuthAnimatedLayout";
+import AuthAnimatedLayout from "../components/auth/AuthAnimatedLayout";
 import { useSignupViewModel } from "../../viewmodels/useAuthViewModel";
 import { useTranslation }     from "../../i18n/hooks/useTranslation";
 
@@ -35,14 +35,14 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin }) {
                 icon="user"
             />
             <FormField
-                label={t("Correo electrónico")}
+                label={t("Correo electrï¿½nico")}
                 placeholder={t("correo@universidad.edu")}
                 onChangeText={vm.setEmail}
                 icon="mail"
             />
             <FormField
-                label={t("Contraseña")}
-                placeholder={t("Crea una contraseña")}
+                label={t("Contraseï¿½a")}
+                placeholder={t("Crea una contraseï¿½a")}
                 onChangeText={vm.setPassword}
                 secureTextEntry={!vm.showPassword}
                 icon="lock"
@@ -57,20 +57,20 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin }) {
             <AuthErrorBanner message={vm.error} />
             <View style={{ marginTop: 28 }}>
                 <Button
-                    label={vm.loading ? t("Registrando…") : t("Registrarse")}
+                    label={vm.loading ? t("Registrandoï¿½") : t("Registrarse")}
                     onPress={vm.handleRegister}
                 />
             </View>
             <AuthFooterLink
-                prompt={t("¿Ya tienes cuenta?")}
-                linkLabel={t("Inicia sesión")}
+                prompt={t("ï¿½Ya tienes cuenta?")}
+                linkLabel={t("Inicia sesiï¿½n")}
                 onPress={onGoToLogin}
             />
             <AuthCopyright />
         </React.Fragment>
     );
 
-    // -- MÓVIL -------------------------------------------------
+    // -- Mï¿½VIL -------------------------------------------------
     if (isSmall) {
         return (
             <AuthMobileLayout
@@ -83,13 +83,13 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin }) {
         );
     }
 
-    // -- DESKTOP — split panel con animaciones de entrada ------
+    // -- DESKTOP ï¿½ split panel con animaciones de entrada ------
     const brandPanel = (
         <React.Fragment>
             <BrandPanelCircles />
             <View style={{ zIndex: 1, alignItems: "center", maxWidth: 400 }}>
                 <Image
-                    source={require("../../../assets/images/logoFaceAttend-BlancoAzul.png")}
+                    source={require("../../assets/images/logoFaceAttend-BlancoAzul.png")}
                     style={{ width: 180, height: 60, marginBottom: 24 }}
                     resizeMode="contain"
                 />
@@ -97,13 +97,13 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin }) {
                     fontSize: 10, fontWeight: "800", color: c.text.onBrand,
                     textAlign: "center", marginBottom: 12, letterSpacing: -1,
                 }}>
-                    {t("Únete a FaceAttend EDU")}
+                    {t("ï¿½nete a FaceAttend EDU")}
                 </Text>
                 <Text style={{
                     fontSize: 11, color: "rgba(255,255,255,0.75)",
                     textAlign: "center", lineHeight: 20,
                 }}>
-                    {t("Registra tu institución y empieza a gestionar la asistencia con reconocimiento facial.")}
+                    {t("Registra tu instituciï¿½n y empieza a gestionar la asistencia con reconocimiento facial.")}
                 </Text>
             </View>
         </React.Fragment>

@@ -9,12 +9,12 @@ import {
     VISION_MODES,
     VISION_DESCRIPTIONS,
     DEFAULT_VISION_MODE,
-} from "../../theme/presets";
+} from "../../../../core/theme/presets";
 import { hslToHex, hexToHsl, evaluateColor } from "../colorUtils";
 import { HexInput } from "./HexInput";
 import { WcagBadge } from "./WcagBadge";
 import { ContrastBar } from "./ContrastBar";
-import { Divider } from "../../ui/UI";
+import { Divider } from "../../common";
 
 export function AccentColorSelector({ previewHex, onPreviewChange }) {
     const { theme } = useTheme();

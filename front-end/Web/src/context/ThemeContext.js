@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU — ThemeContext
 //  Proveedor central del sistema de temas.
 //
@@ -24,14 +24,14 @@ import React, {
     useState,
 } from "react";
 
-import { generateTheme }  from "./generateTheme";
-import { DEFAULT_ACCENT, DEFAULT_MODE } from "./presets";
+import { generateTheme }  from "../core/theme/generateTheme";
+import { DEFAULT_ACCENT, DEFAULT_MODE } from "../core/theme/presets";
 import {
     loadAccentColor,
     loadThemeMode,
     saveAccentColor,
     saveThemeMode,
-} from "./storage";
+} from "../core/storage/themeStorage";
 
 // ── Context ──────────────────────────────────────────────────
 

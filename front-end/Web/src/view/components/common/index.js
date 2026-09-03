@@ -38,3 +38,8 @@ export * from './feedback';
 
 // Animation
 export * from './animation';
+
+// Otros componentes comunes
+export { Avatar } from './Avatar';
+export { Divider } from './Divider';
+export { ToggleRow } from './ToggleRow';

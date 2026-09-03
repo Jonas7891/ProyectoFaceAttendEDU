@@ -1,7 +1,7 @@
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 
-import { ThemeProvider }    from "./src/view/components/theme/themeContext";
+import { ThemeProvider }    from "./src/context/ThemeContext";
 import { LanguageProvider } from "./src/i18n/context/LanguageContext";
 import { AppDataProvider }  from "./src/context/AppDataContext";
 import { AuthProvider }     from "./src/context/AuthContext";

@@ -3,5 +3,12 @@
  */
 
 export { Badge } from './Badge';
-export { StatusBadge, AttendanceBadge, AttendanceStatusBadge } from './StatusBadge';
+export { 
+  StatusBadge, 
+  AttendanceBadge, 
+  AttendanceStatusBadge,
+  useAttendanceColor,
+  AttendanceStatusIcon,
+  ATTENDANCE_THRESHOLDS,
+} from './StatusBadge';
 export { FloatingBadge } from './FloatingBadge';

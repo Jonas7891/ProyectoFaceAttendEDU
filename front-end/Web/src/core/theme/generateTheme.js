@@ -1,4 +1,4 @@
-﻿import tinycolor from "tinycolor2";
+import tinycolor from "tinycolor2";
 
 export function generateTheme(accentColor, mode) {
     const accent = tinycolor(accentColor);

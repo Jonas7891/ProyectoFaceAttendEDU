@@ -1,10 +1,10 @@
 ﻿import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import LandingPage from "../view/screens/landingScreen";
-import LoginScreen from "../view/screens/loginScreen";
-import SignupScreen from "../view/screens/signupScreen";
-import DashboardScreen from "../view/screens/dashboardScreen";
+import LandingScreen from "../view/screens/LandingScreen";
+import LoginScreen from "../view/screens/LoginScreen";
+import SignupScreen from "../view/screens/SignupScreen";
+import DashboardScreen from "../view/screens/DashboardScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -17,7 +17,7 @@ export default function AppNavigator() {
         >
             <Stack.Screen
                 name="FaceAttendEDU"
-                component={LandingPage}
+                component={LandingScreen}
             />
 
             <Stack.Screen

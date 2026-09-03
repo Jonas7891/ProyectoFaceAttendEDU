@@ -1,11 +1,11 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU — Theme Persistence
 //  Persiste el modo y el accent color del usuario.
 //  Funciona en React Native (AsyncStorage) y web (localStorage).
 // ============================================================
 
 import { Platform } from "react-native";
-import { DEFAULT_ACCENT, DEFAULT_MODE } from "./presets";
+import { DEFAULT_ACCENT, DEFAULT_MODE } from "../theme/presets";
 
 const KEYS = {
     MODE:   "@faceattend:theme_mode",

@@ -1,10 +1,4 @@
-﻿// ============================================================
-//  FaceAttend EDU — Dashboard Screen ViewModel
-//  Controla qué tab está activo y filtra los tabs según el
-//  rol del usuario autenticado via AuthContext.
-// ============================================================
-
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
 import { useAuth }           from "../context/AuthContext";
 import { useRolePermissions } from "../view/hooks/useRolePermissions";
 

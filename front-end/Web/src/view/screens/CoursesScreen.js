@@ -1,7 +1,7 @@
-﻿// ============================================================
-//  FaceAttend EDU — Courses View (View Layer)
-//  Toda lógica en useCoursesViewModel.
-//  Gestión (crear, editar) solo visible para admin.
+// ============================================================
+//  FaceAttend EDU � Courses View (View Layer)
+//  Toda l�gica en useCoursesViewModel.
+//  Gesti�n (crear, editar) solo visible para admin.
 // ============================================================
 
 import React from "react";
@@ -10,15 +10,15 @@ import {
     TextInput, Modal, ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Card, Badge, PageHeader, UIButton, ProgressBar, EmptyState } from "../components/ui/UI";
-import { useAttendanceColor, ATTENDANCE_THRESHOLDS } from "../components/ui/AttendanceBadge";
+import { Card, Badge, Button, ProgressBar, EmptyState, useAttendanceColor, ATTENDANCE_THRESHOLDS } from "../components/common";
+import { Navbar as PageHeader } from "../components/common/navigation/Navbar";
 import { useTheme }             from "../components/hooks/useTheme";
 import { useResponsive }        from "../components/hooks/useResponsive";
 import { useCoursesViewModel }  from "../../viewmodels/useCoursesViewModel";
 import { useRolePermissions }   from "../hooks/useRolePermissions";
 import { useTranslation }       from "../../i18n/hooks/useTranslation";
 
-// ── CourseDetailModal ────────────────────────────────────────
+// -- CourseDetailModal ----------------------------------------
 
 function CourseDetailModal({
     course,
@@ -90,9 +90,9 @@ function CourseDetailModal({
                             </View>
 
                             <View style={{ flexDirection: "row", gap: 12, justifyContent: "flex-end" }}>
-                                <UIButton variant="ghost" onPress={onClose}>{t("Cerrar")}</UIButton>
+                                <Button variant="ghost" onPress={onClose}>{t("Cerrar")}</Button>
                                 {canManage && (
-                                    <UIButton variant="primary">{t("Editar curso")}</UIButton>
+                                    <Button variant="primary">{t("Editar curso")}</Button>
                                 )}
                             </View>
                         </View>
@@ -103,7 +103,7 @@ function CourseDetailModal({
     );
 }
 
-// ── CourseCard ───────────────────────────────────────────────
+// -- CourseCard -----------------------------------------------
 
 function CourseCard({ course, onPress }) {
     const { theme } = useTheme();
@@ -178,7 +178,7 @@ function CourseCard({ course, onPress }) {
     );
 }
 
-// ── CoursesView ──────────────────────────────────────────────
+// -- CoursesView ----------------------------------------------
 
 export default function CoursesView() {
     const { isSmall } = useResponsive();
@@ -210,20 +210,20 @@ export default function CoursesView() {
                         {/* Solo admin puede gestionar cursos */}
                         {permissions.canManageCourses && (
                             <React.Fragment>
-                                <UIButton variant="ghost" size="sm">{t("Importar")}</UIButton>
-                                <UIButton variant="primary" size="sm">+ {t("Nuevo curso")}</UIButton>
+                                <Button variant="ghost" size="sm">{t("Importar")}</Button>
+                                <Button variant="primary" size="sm">+ {t("Nuevo curso")}</Button>
                             </React.Fragment>
                         )}
                     </React.Fragment>}
                 />
 
-                {/* Búsqueda */}
+                {/* B�squeda */}
                 <View style={{ maxWidth: 400, position: "relative", justifyContent: "center" }}>
                     <View style={{ position: "absolute", left: 14, zIndex: 1 }}>
                         <Feather name="search" size={14} color={c.text.secondary} />
                     </View>
                     <TextInput
-                        placeholder={t("Buscar curso o código...")}
+                        placeholder={t("Buscar curso o c�digo...")}
                         value={vm.search}
                         onChangeText={vm.setSearch}
                         style={{

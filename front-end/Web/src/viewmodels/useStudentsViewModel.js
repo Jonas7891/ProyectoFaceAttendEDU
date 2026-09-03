@@ -1,11 +1,4 @@
-﻿// ============================================================
-//  FaceAttend EDU — Students ViewModel
-//
-//  Consume AppDataContext como única fuente de verdad.
-//  Ya no carga datos propios: lee students del contexto global.
-// ============================================================
-
-import { useState, useMemo, useCallback } from "react";
+﻿import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
 
 // ── Tipos de formulario ───────────────────────────────────
@@ -20,8 +13,6 @@ export const EMPTY_FORM = {
     registered: false,
     status: "active",
 };
-
-// ── Validación básica ─────────────────────────────────────
 
 export function validateStudentForm(form) {
     if (!form.name.trim()) return "Completa todos los campos";

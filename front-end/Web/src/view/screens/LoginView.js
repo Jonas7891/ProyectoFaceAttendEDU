@@ -1,8 +1,8 @@
 // ============================================================
-//  FaceAttend EDU — Login View Component (View Layer)
-//  Recibe callbacks del Screen. Lógica en useLoginViewModel.
-//  onLoginSuccess ya no recibe credenciales — el ViewModel
-//  las maneja internamente a través de AuthContext.
+//  FaceAttend EDU ï¿½ Login View Component (View Layer)
+//  Recibe callbacks del Screen. Lï¿½gica en useLoginViewModel.
+//  onLoginSuccess ya no recibe credenciales ï¿½ el ViewModel
+//  las maneja internamente a travï¿½s de AuthContext.
 // ============================================================
 
 import React from "react";
@@ -10,19 +10,19 @@ import { View, Text, TouchableOpacity, Image, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useResponsive }  from "../components/hooks/useResponsive";
 import { useTheme }       from "../components/hooks/useTheme";
-import Button             from "../components/ui/button";
+import Button             from "../components/common/buttons/Button";
 import {
     FormField, AuthErrorBanner, AuthFooterLink,
     BrandPanelCircles, AuthCopyright,
 } from "../components/auth/AuthComponents";
-import AuthMobileLayout   from "./AuthMobileLayout";
+import AuthMobileLayout   from "../components/auth/AuthMobileLayout";
 import AuthAnimatedLayout from "../components/auth/AuthAnimatedLayout";
 import { useLoginViewModel } from "../../viewmodels/useAuthViewModel";
 import { useTranslation }    from "../../i18n/hooks/useTranslation";
 
 // -- Credenciales de desarrollo -------------------------------
 // Solo visible cuando __DEV__ === true (Expo/Metro en desarrollo).
-// En producción este bloque nunca se renderiza.
+// En producciï¿½n este bloque nunca se renderiza.
 
 const DEV_USERS = [
     { role: "Admin",    email: "admin@uni.edu",      color: "#EF4444" },
@@ -33,7 +33,7 @@ const DEV_USERS = [
 function DevCredentials({ onFill }) {
     const { theme } = useTheme();
     const c = theme.colors;
-    // __DEV__ es una variable global de React Native / Metro — true en desarrollo
+    // __DEV__ es una variable global de React Native / Metro ï¿½ true en desarrollo
     if (typeof __DEV__ === "undefined" || !__DEV__) return null;
 
     return (
@@ -49,11 +49,11 @@ function DevCredentials({ onFill }) {
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
                 <Feather name="zap" size={12} color="#92400E" />
                 <Text style={{ fontSize: 10, fontWeight: "700", color: "#92400E", textTransform: "uppercase", letterSpacing: 0.5 }}>
-                    Dev — acceso rápido
+                    Dev ï¿½ acceso rï¿½pido
                 </Text>
             </View>
             <Text style={{ fontSize: 11, color: "#92400E", marginBottom: 4 }}>
-                Contraseña: cualquier texto no vacío
+                Contraseï¿½a: cualquier texto no vacï¿½o
             </Text>
             {DEV_USERS.map(u => (
                 <TouchableOpacity
@@ -95,30 +95,30 @@ export default function LoginView({
     const vm          = useLoginViewModel(onLoginSuccess);
     const { t }       = useTranslation();
 
-    // Rellena el email desde el panel dev y pone foco listo para escribir contraseña
+    // Rellena el email desde el panel dev y pone foco listo para escribir contraseï¿½a
     function handleDevFill(email) {
         vm.setEmail(email);
         vm.prefillEmail(email);
     }
 
     const FEATURES = [
-        { title: t("Reconocimiento facial en tiempo real"), desc: t("Registra asistencia automáticamente con IA.")  },
-        { title: t("Reportes y estadísticas detalladas"),   desc: t("Analiza patrones de asistencia por curso.")   },
-        { title: t("Gestión completa de estudiantes"),      desc: t("Centraliza toda la información académica.")   },
+        { title: t("Reconocimiento facial en tiempo real"), desc: t("Registra asistencia automï¿½ticamente con IA.")  },
+        { title: t("Reportes y estadï¿½sticas detalladas"),   desc: t("Analiza patrones de asistencia por curso.")   },
+        { title: t("Gestiï¿½n completa de estudiantes"),      desc: t("Centraliza toda la informaciï¿½n acadï¿½mica.")   },
     ];
 
     const fields = (
         <View style={{ gap: 18 }}>
             <FormField
-                label={t("Correo electrónico")}
+                label={t("Correo electrï¿½nico")}
                 placeholder={t("correo@universidad.edu")}
                 onChangeText={vm.setEmail}
                 icon="mail"
                 value={vm.emailDisplay}
             />
             <FormField
-                label={t("Contraseña")}
-                placeholder={t("Tu contraseña")}
+                label={t("Contraseï¿½a")}
+                placeholder={t("Tu contraseï¿½a")}
                 onChangeText={vm.setPassword}
                 secureTextEntry={!vm.showPassword}
                 icon="lock"
@@ -136,18 +136,18 @@ export default function LoginView({
                 style={{ alignSelf: "flex-end", marginTop: 14 }}
             >
                 <Text style={{ fontSize: 11, color: c.brand.primary, fontWeight: "500" }}>
-                    {t("¿Olvidaste tu contraseña?")}
+                    {t("ï¿½Olvidaste tu contraseï¿½a?")}
                 </Text>
             </TouchableOpacity>
             <View style={{ marginTop: 24 }}>
                 <Button
-                    label={vm.loading ? t("Ingresando…") : t("Ingresar")}
+                    label={vm.loading ? t("Ingresandoï¿½") : t("Ingresar")}
                     onPress={vm.handleLogin}
                 />
             </View>
             <AuthFooterLink
-                prompt={t("¿No tienes cuenta?")}
-                linkLabel={t("Regístrate aquí")}
+                prompt={t("ï¿½No tienes cuenta?")}
+                linkLabel={t("Regï¿½strate aquï¿½")}
                 onPress={onGoToRegister}
             />
             <DevCredentials onFill={handleDevFill} />
@@ -158,7 +158,7 @@ export default function LoginView({
     if (isSmall) {
         return (
             <AuthMobileLayout
-                title={t("Inicio de sesión")}
+                title={t("Inicio de sesiï¿½n")}
                 subtitle={t("Bienvenido de vuelta. Ingresa tus credenciales.")}
             >
                 {fields}
@@ -172,7 +172,7 @@ export default function LoginView({
             <BrandPanelCircles />
             <View style={{ zIndex: 1, alignItems: "center", maxWidth: 400 }}>
                 <Image
-                    source={require("../../../assets/images/logoFaceAttend-BlancoAzul.png")}
+                    source={require("../../assets/images/logoFaceAttend-BlancoAzul.png")}
                     style={{ width: 180, height: 60, marginBottom: 24 }}
                     resizeMode="contain"
                 />
@@ -186,7 +186,7 @@ export default function LoginView({
                     fontSize: 11, color: "rgba(255,255,255,0.75)",
                     textAlign: "center", lineHeight: 20, marginBottom: 24,
                 }}>
-                    {t("Asistencia inteligente para tu institución")}
+                    {t("Asistencia inteligente para tu instituciï¿½n")}
                 </Text>
                 <View style={{ gap: 12, width: "100%" }}>
                     {FEATURES.map(f => (
@@ -210,7 +210,7 @@ export default function LoginView({
     const formContent = (
         <React.Fragment>
             <Text style={{ fontSize: 10, fontWeight: "800", color: c.text.primary, marginBottom: 8, letterSpacing: -0.5 }}>
-                {t("Inicio de sesión")}
+                {t("Inicio de sesiï¿½n")}
             </Text>
             <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom: 24, lineHeight: 24 }}>
                 {t("Bienvenido de vuelta. Ingresa tus credenciales.")}

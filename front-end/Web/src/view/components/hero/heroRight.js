@@ -1,6 +1,6 @@
 ﻿import React from "react";
 import { Animated, Image, View } from "react-native";
-import FloatingBadge from "../ui/floatingBadge";
+import FloatingBadge from "../common/badges/FloatingBadge";
 import { useResponsive } from "../hooks/useResponsive";
 import { useTheme }      from "../hooks/useTheme";
 

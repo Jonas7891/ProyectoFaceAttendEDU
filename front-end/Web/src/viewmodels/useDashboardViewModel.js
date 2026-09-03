@@ -1,8 +1,4 @@
-﻿// ============================================================
-//  FaceAttend EDU — Dashboard ViewModel
-// ============================================================
-
-import { useMemo } from "react";
+﻿import { useMemo } from "react";
 import { useTheme } from "../view/components/hooks/useTheme";
 import { useTranslation } from "../i18n/hooks/useTranslation";
 import {

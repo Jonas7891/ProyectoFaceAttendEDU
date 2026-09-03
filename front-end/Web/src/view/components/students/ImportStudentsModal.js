@@ -1,5 +1,5 @@
-﻿// ============================================================
-//  FaceAttend EDU — ImportStudentsModal
+// ============================================================
+//  FaceAttend EDU � ImportStudentsModal
 //
 //  Modal para importar estudiantes desde CSV o Excel.
 //  Sin dependencias externas: parseo manual de CSV y uso de
@@ -8,7 +8,7 @@
 //  Columnas esperadas (en cualquier orden, case-insensitive):
 //    name | code | email | course | grade | attendance | registered | status
 //
-//  Las columnas mínimas requeridas son, code, email, course, grade.
+//  Las columnas m�nimas requeridas son, code, email, course, grade.
 // ============================================================
 
 import React, { useState, useRef } from "react";
@@ -17,15 +17,15 @@ import {
     ActivityIndicator, Platform,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { UIButton, Badge } from "../ui/UI";
+import { Button, Badge } from "../common";
 import { useTheme }       from "../hooks/useTheme";
 import { useResponsive }  from "../hooks/useResponsive";
 import { useTranslation } from "../../../i18n/hooks/useTranslation";
 
-// ── Tipos ─────────────────────────────────────────────────
+// -- Tipos -------------------------------------------------
 
 
-// ── Helpers de parseo ─────────────────────────────────────
+// -- Helpers de parseo -------------------------------------
 
 const ALIAS = {
     // name
@@ -35,12 +35,12 @@ const ALIAS = {
     // code
     code: "code",
     codigo: "code",
-    "código": "code",
+    "c�digo": "code",
     id: "code",
     // email
     email: "email",
     correo: "email",
-    "correo electrónico": "email",
+    "correo electr�nico": "email",
     // course
     course: "course",
     programa: "course",
@@ -81,7 +81,7 @@ function rowToStudent(headers, cells) {
         if (key === "attendance") {
             obj.attendance = Math.min(100, Math.max(0, parseInt(val, 10) || 100));
         } else if (key === "registered") {
-            obj.registered = val === "true" || val === "1" || val === "sí" || val === "si";
+            obj.registered = val === "true" || val === "1" || val === "s�" || val === "si";
         } else if (key === "status") {
             obj.status = val === "inactive" || val === "inactivo" ? "inactive" : "active";
         } else {
@@ -113,12 +113,12 @@ function parseFileContent(text) {
     return { rows: parsed, errors };
 }
 
-// ── Template CSV descargable ──────────────────────────────
+// -- Template CSV descargable ------------------------------
 
 const CSV_TEMPLATE =
     "name,code,email,course,grade,attendance,registered,status\n" +
-    "Ana García López,2024001,a.garcia@uni.edu,Ingeniería de Sistemas,3er semestre,95,false,active\n" +
-    "Carlos Pérez,2024002,c.perez@uni.edu,Matemáticas,2do semestre,88,true,active\n";
+    "Ana Garc�a L�pez,2024001,a.garcia@uni.edu,Ingenier�a de Sistemas,3er semestre,95,false,active\n" +
+    "Carlos P�rez,2024002,c.perez@uni.edu,Matem�ticas,2do semestre,88,true,active\n";
 
 function downloadTemplate() {
     if (Platform.OS !== "web") return;
@@ -131,7 +131,7 @@ function downloadTemplate() {
     URL.revokeObjectURL(url);
 }
 
-// ── Selector de archivo (Web only) ───────────────────────
+// -- Selector de archivo (Web only) -----------------------
 
 function pickFile() {
     return new Promise((resolve) => {
@@ -159,7 +159,7 @@ function pickFile() {
     });
 }
 
-// ── Componente principal ──────────────────────────────────
+// -- Componente principal ----------------------------------
 
 export default function ImportStudentsModal({
     visible, onClose, onImport,
@@ -193,7 +193,7 @@ export default function ImportStudentsModal({
         setFileName(result.name);
         setParseErrors(errors);
         if (rows.length === 0) {
-            setErrorMsg(t("El archivo no contiene filas válidas"));
+            setErrorMsg(t("El archivo no contiene filas v�lidas"));
             setStep("error");
             return;
         }
@@ -280,10 +280,10 @@ export default function ImportStudentsModal({
 
                     <ScrollView style={{ padding: 20 }} showsVerticalScrollIndicator={false}>
 
-                        {/* ── STEP: idle ── */}
+                        {/* -- STEP: idle -- */}
                         {step === "idle" && (
                             <View style={{ gap: 16 }}>
-                                {/* Zona de arrastre / botón */}
+                                {/* Zona de arrastre / bot�n */}
                                 <TouchableOpacity
                                     onPress={handlePickFile}
                                     style={{
@@ -317,16 +317,16 @@ export default function ImportStudentsModal({
                                 }}>
                                     <View style={{ flex: 1 }}>
                                         <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary }}>
-                                            {t("¿Primera vez?")}
+                                            {t("�Primera vez?")}
                                         </Text>
                                         <Text style={{ fontSize: 11, color: c.text.secondary, marginTop: 2 }}>
                                             {t("Descarga la plantilla con las columnas requeridas")}
                                         </Text>
                                     </View>
-                                    <UIButton variant="ghost" size="sm" onPress={downloadTemplate}>
+                                    <Button variant="ghost" size="sm" onPress={downloadTemplate}>
                                         <Feather name="download" size={12} color={c.text.secondary} />
                                         {"  "}{t("Plantilla CSV")}
-                                    </UIButton>
+                                    </Button>
                                 </View>
 
                                 {/* Columnas requeridas */}
@@ -361,7 +361,7 @@ export default function ImportStudentsModal({
                             </View>
                         )}
 
-                        {/* ── STEP: preview ── */}
+                        {/* -- STEP: preview -- */}
                         {step === "preview" && (
                             <View style={{ gap: 14 }}>
                                 {/* Resumen */}
@@ -380,7 +380,7 @@ export default function ImportStudentsModal({
                                         </Text>
                                         <Text style={{ fontSize: 11, color: "#065F46", marginTop: 2 }}>
                                             {preview.length} {t("estudiantes listos para importar")}
-                                            {parseErrors > 0 && ` · ${parseErrors} ${t("filas con errores omitidas")}`}
+                                            {parseErrors > 0 && ` � ${parseErrors} ${t("filas con errores omitidas")}`}
                                         </Text>
                                     </View>
                                     <TouchableOpacity onPress={() => setStep("idle")}>
@@ -463,17 +463,17 @@ export default function ImportStudentsModal({
                             </View>
                         )}
 
-                        {/* ── STEP: importing ── */}
+                        {/* -- STEP: importing -- */}
                         {step === "importing" && (
                             <View style={{ alignItems: "center", padding: 24, gap: 16 }}>
                                 <ActivityIndicator size="large" color={c.brand.primary} />
                                 <Text style={{ fontSize: 11, color: c.text.secondary }}>
-                                    {t("Importando estudiantes…")}
+                                    {t("Importando estudiantes�")}
                                 </Text>
                             </View>
                         )}
 
-                        {/* ── STEP: done ── */}
+                        {/* -- STEP: done -- */}
                         {step === "done" && (
                             <View style={{ alignItems: "center", padding: 24, gap: 14 }}>
                                 <View style={{
@@ -487,7 +487,7 @@ export default function ImportStudentsModal({
                                     <Feather name="check-circle" size={32} color={c.states.success} />
                                 </View>
                                 <Text style={{ fontSize: 10, fontWeight: "700", color: c.text.primary }}>
-                                    {t("¡Importación exitosa!")}
+                                    {t("�Importaci�n exitosa!")}
                                 </Text>
                                 <Text style={{ fontSize: 11, color: c.text.secondary, textAlign: "center" }}>
                                     {imported} {t("estudiantes agregados al sistema")}
@@ -495,7 +495,7 @@ export default function ImportStudentsModal({
                             </View>
                         )}
 
-                        {/* ── STEP: error ── */}
+                        {/* -- STEP: error -- */}
                         {step === "error" && (
                             <View style={{ alignItems: "center", padding: 24, gap: 14 }}>
                                 <View style={{
@@ -514,9 +514,9 @@ export default function ImportStudentsModal({
                                 <Text style={{ fontSize: 11, color: c.text.secondary, textAlign: "center" }}>
                                     {errorMsg}
                                 </Text>
-                                <UIButton variant="ghost" onPress={() => setStep("idle")}>
+                                <Button variant="ghost" onPress={() => setStep("idle")}>
                                     {t("Intentar de nuevo")}
-                                </UIButton>
+                                </Button>
                             </View>
                         )}
 
@@ -531,20 +531,20 @@ export default function ImportStudentsModal({
                         borderTopWidth: 1,
                         borderTopColor: c.border.primary,
                     }}>
-                        <UIButton variant="ghost" onPress={handleClose}>
+                        <Button variant="ghost" onPress={handleClose}>
                             {step === "done" ? t("Cerrar") : t("Cancelar")}
-                        </UIButton>
+                        </Button>
                         {step === "preview" && (
-                            <UIButton variant="primary" onPress={handleImport}>
+                            <Button variant="primary" onPress={handleImport}>
                                 <Feather name="upload" size={14} color="#fff" />
                                 {"  "}{t("Importar")} {preview.length} {t("estudiantes")}
-                            </UIButton>
+                            </Button>
                         )}
                         {step === "idle" && (
-                            <UIButton variant="primary" onPress={handlePickFile}>
+                            <Button variant="primary" onPress={handlePickFile}>
                                 <Feather name="folder" size={14} color="#fff" />
                                 {"  "}{t("Seleccionar archivo")}
-                            </UIButton>
+                            </Button>
                         )}
                     </View>
                 </TouchableOpacity>

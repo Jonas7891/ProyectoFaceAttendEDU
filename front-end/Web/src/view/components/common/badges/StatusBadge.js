@@ -84,3 +84,23 @@ export function AttendanceStatusBadge({ status, label }) {
 }
 
 export default StatusBadge;
+
+// Hook para obtener color basado en porcentaje de asistencia
+export function useAttendanceColor(attendance) {
+  if (attendance >= 85) return "#10B981"; // success
+  if (attendance >= 75) return "#F59E0B"; // warning
+  return "#EF4444"; // danger
+}
+
+// Iconos de estado de asistencia
+export function AttendanceStatusIcon({ status }) {
+  // TODO: Implementar
+  return null;
+}
+
+// Umbrales de asistencia
+export const ATTENDANCE_THRESHOLDS = {
+  excellent: 85,
+  good: 75,
+  warning: 60,
+};

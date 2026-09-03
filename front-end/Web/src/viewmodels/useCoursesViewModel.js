@@ -1,13 +1,4 @@
-﻿// ============================================================
-//  FaceAttend EDU — Courses ViewModel
-//
-//  Consume AppDataContext como única fuente de verdad.
-//  Los "cursos/programas" se derivan de los estudiantes
-//  registrados — si existe un estudiante con course = "X",
-//  el programa "X" existe automáticamente aquí.
-// ============================================================
-
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
 import { useAppData } from "../context/AppDataContext";
 
 // ── Tipo derivado para la vista de cursos ─────────────────

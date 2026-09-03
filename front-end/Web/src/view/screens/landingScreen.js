@@ -4,15 +4,14 @@ import { View, ScrollView, Image, Text } from "react-native";
 import { SafeAreaView, SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 
-import Navbar    from "../components/layout/navBar";
-import HeroLeft  from "../components/hero/heroLeft";
-import HeroRight from "../components/hero/heroRight";
+import { Navbar } from "../components/common/navigation/Navbar";
+import { HeroLeft, HeroRight } from "../components/hero";
 
 import { useHeroEntrance } from "../components/hooks/useHeroEntrance";
 import { useResponsive }   from "../components/hooks/useResponsive";
 import { useTheme }        from "../components/hooks/useTheme";
-import { getTypography }   from "../components/constants/typography";
-import BadgePositions, { BadgePositionsMobile } from "../components/constants/badgePositions";
+import { getTypography }   from "../../core/constants/typography";
+import BadgePositions, { BadgePositionsMobile } from "../../core/constants/badgePositions";
 import { useTranslation }  from "../../i18n/hooks/useTranslation";
 
 // ── HeroContent ──────────────────────────────────────────────

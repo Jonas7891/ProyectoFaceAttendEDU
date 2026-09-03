@@ -1,12 +1,13 @@
 // ============================================================
-//  FaceAttend EDU — Reports View (View Layer)
+//  FaceAttend EDU ï¿½ Reports View (View Layer)
 //  Exportar y "Notificar a todos" condicionados por permisos.
 // ============================================================
 
 import React from "react";
 import { View, Text, ScrollView, TouchableOpacity, Modal, Switch } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Card, Badge, PageHeader, UIButton, ProgressBar, StatCard, Avatar } from "../components/ui/UI";
+import { Card, Badge, Button, ProgressBar, StatCard, Avatar } from "../components/common";
+import { Navbar as PageHeader } from "../components/common/navigation/Navbar";
 import { useTheme }        from "../components/hooks/useTheme";
 import { useResponsive }   from "../components/hooks/useResponsive";
 import { useRolePermissions } from "../hooks/useRolePermissions";
@@ -59,7 +60,7 @@ function DailyBars({ data }) {
                         <View style={{ flex: item.absent,  backgroundColor: c.states.danger  }} />
                     </View>
                     <Text style={{ fontSize: 11, color: c.text.secondary, width: 80, textAlign: "right" }}>
-                        {item.present}P · {item.absent}A
+                        {item.present}P ï¿½ {item.absent}A
                     </Text>
                 </View>
             ))}
@@ -135,8 +136,8 @@ function FiltersPanel({ visible, filters, onApply, onReset, onClose, availableCo
                     </View>
                 </ScrollView>
                 <View style={{ flexDirection: "row", gap: 8, paddingTop: 12, borderTopWidth: 1, borderTopColor: c.border.primary }}>
-                    <UIButton variant="ghost" size="sm" style={{ flex: 1 }} onPress={() => { setDraft({ ...DEFAULT_FILTERS }); onReset(); }}>{t("Limpiar")}</UIButton>
-                    <UIButton variant="primary" size="sm" style={{ flex: 1 }} onPress={() => { onApply(draft); onClose(); }}>{t("Aplicar")}</UIButton>
+                    <Button variant="ghost" size="sm" style={{ flex: 1 }} onPress={() => { setDraft({ ...DEFAULT_FILTERS }); onReset(); }}>{t("Limpiar")}</Button>
+                    <Button variant="primary" size="sm" style={{ flex: 1 }} onPress={() => { onApply(draft); onClose(); }}>{t("Aplicar")}</Button>
                 </View>
             </View>
         </Modal>
@@ -166,10 +167,10 @@ export default function ReportsView() {
         <React.Fragment>
             <ScrollView contentContainerStyle={{ padding: isSmall ? 16 : 24, gap: 16 }} showsVerticalScrollIndicator={false}>
                 <PageHeader
-                    title={t("Reportes y estadísticas")}
-                    subtitle={t("Análisis de asistencia por período académico")}
+                    title={t("Reportes y estadï¿½sticas")}
+                    subtitle={t("Anï¿½lisis de asistencia por perï¿½odo acadï¿½mico")}
                     actions={<React.Fragment>
-                        {/* Filtros — todos los roles con acceso a reportes */}
+                        {/* Filtros ï¿½ todos los roles con acceso a reportes */}
                         <TouchableOpacity onPress={vm.openFilters} style={{
                             height: 36, paddingHorizontal: 12, borderRadius: 14,
                             alignItems: "center", justifyContent: "center",
@@ -183,7 +184,7 @@ export default function ReportsView() {
                             </Text>
                         </TouchableOpacity>
 
-                        {/* Exportar PDF — admin y teacher */}
+                        {/* Exportar PDF ï¿½ admin y teacher */}
                         {permissions.canExportReports && (
                             <TouchableOpacity onPress={vm.exportPDF} style={{
                                 height: 36, paddingHorizontal: 12, borderRadius: 14,
@@ -197,7 +198,7 @@ export default function ReportsView() {
                             </TouchableOpacity>
                         )}
 
-                        {/* Exportar Excel — admin y teacher */}
+                        {/* Exportar Excel ï¿½ admin y teacher */}
                         {permissions.canExportReports && (
                             <TouchableOpacity onPress={vm.exportExcel} style={{
                                 height: 36, paddingHorizontal: 12, borderRadius: 14,
@@ -211,12 +212,12 @@ export default function ReportsView() {
                     </React.Fragment>}
                 />
 
-                {/* Selector de período */}
+                {/* Selector de perï¿½odo */}
                 <Card padding={14}>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                             <Feather name="calendar" size={14} color={c.text.secondary} />
-                            <Text style={{ fontSize: 10, fontWeight: "500", color: c.text.secondary }}>{t("Período:")}</Text>
+                            <Text style={{ fontSize: 10, fontWeight: "500", color: c.text.secondary }}>{t("Perï¿½odo:")}</Text>
                         </View>
                         {PERIOD_OPTIONS.map(opt => (
                             <TouchableOpacity key={opt.value} onPress={() => vm.setPeriod(opt.value)} style={{
@@ -246,15 +247,15 @@ export default function ReportsView() {
                     ))}
                 </View>
 
-                {/* Evolución + Distribución */}
+                {/* Evoluciï¿½n + Distribuciï¿½n */}
                 <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
                     <Card style={{ flex: 2 }}>
-                        <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary, marginBottom: 4 }}>{t("Evolución de asistencia")}</Text>
+                        <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary, marginBottom: 4 }}>{t("Evoluciï¿½n de asistencia")}</Text>
                         <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom: 16 }}>{t("Porcentaje por semana")}</Text>
                         <WeeklySparkline data={vm.attendanceByWeek} />
                     </Card>
                     <Card style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary, marginBottom: 4 }}>{t("Distribución")}</Text>
+                        <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary, marginBottom: 4 }}>{t("Distribuciï¿½n")}</Text>
                         <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom: 16 }}>{t("Estado de asistencia")}</Text>
                         <View style={{ gap: 14 }}>
                             {vm.distribution.map(item => (
@@ -276,7 +277,7 @@ export default function ReportsView() {
                 {/* Asistencia diaria + Ranking */}
                 <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
                     <Card style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary, marginBottom: 4 }}>{t("Asistencia por día")}</Text>
+                        <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary, marginBottom: 4 }}>{t("Asistencia por dï¿½a")}</Text>
                         <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom: 16 }}>{t("Esta semana")}</Text>
                         <DailyBars data={vm.attendanceByDay} />
                     </Card>
@@ -309,14 +310,14 @@ export default function ReportsView() {
                             <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary }}>{t("Estudiantes en riesgo")}</Text>
                             <Text style={{ fontSize: 11, color: c.text.secondary }}>{t("Asistencia por debajo del 75%")}</Text>
                         </View>
-                        {/* Notificar a todos — solo admin */}
+                        {/* Notificar a todos ï¿½ solo admin */}
                         {permissions.canNotifyAll && (
-                            <UIButton variant="danger" size="sm">{t("Notificar a todos")}</UIButton>
+                            <Button variant="danger" size="sm">{t("Notificar a todos")}</Button>
                         )}
                     </View>
                     {vm.atRiskStudents.length === 0 ? (
                         <Text style={{ fontSize: 11, color: c.text.secondary, textAlign: "center", paddingVertical: 24 }}>
-                            {vm.filtersActive ? t("Ningún estudiante coincide con los filtros aplicados") : t("No hay estudiantes en riesgo actualmente")}
+                            {vm.filtersActive ? t("Ningï¿½n estudiante coincide con los filtros aplicados") : t("No hay estudiantes en riesgo actualmente")}
                         </Text>
                     ) : (
                         <View style={{ gap: 10 }}>
@@ -325,12 +326,12 @@ export default function ReportsView() {
                                     <Avatar name={student.name} size={36} color={c.states.danger} />
                                     <View style={{ flex: 1 }}>
                                         <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary }}>{student.name}</Text>
-                                        <Text style={{ fontSize: 11, color: c.text.secondary }}>{student.course} · {student.grade}</Text>
+                                        <Text style={{ fontSize: 11, color: c.text.secondary }}>{student.course} ï¿½ {student.grade}</Text>
                                     </View>
                                     <Badge variant="danger">{student.attendance}%</Badge>
-                                    {/* Notificar individual — admin y teacher */}
+                                    {/* Notificar individual ï¿½ admin y teacher */}
                                     {permissions.canExportReports && (
-                                        <UIButton variant="ghost" size="sm">{t("Notificar")}</UIButton>
+                                        <Button variant="ghost" size="sm">{t("Notificar")}</Button>
                                     )}
                                 </View>
                             ))}
@@ -344,7 +345,7 @@ export default function ReportsView() {
                         <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary }}>{t("Todos los aprendices")}</Text>
                         <Text style={{ fontSize: 11, color: c.text.secondary }}>
                             {vm.filteredStudents.length}{" "}
-                            {vm.filtersActive ? t("resultado(s) con filtros aplicados") : `${t("aprendices registrados")} · ${vm.availableCourses.length} ${t("programa(s)")}`}
+                            {vm.filtersActive ? t("resultado(s) con filtros aplicados") : `${t("aprendices registrados")} ï¿½ ${vm.availableCourses.length} ${t("programa(s)")}`}
                         </Text>
                     </View>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>

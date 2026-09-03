@@ -1,7 +1,7 @@
-﻿// ============================================================
-//  FaceAttend EDU — RegisterStudentModal
+// ============================================================
+//  FaceAttend EDU � RegisterStudentModal
 //  Usa InputField y AnimatedDropdown reutilizables.
-//  La validación se hace en el ViewModel, no aquí.
+//  La validaci�n se hace en el ViewModel, no aqu�.
 // ============================================================
 
 import React, { useState, useRef } from "react";
@@ -9,10 +9,8 @@ import {
     View, Text, TouchableOpacity, ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { UIButton }               from "../ui/UI";
-import { FormField } from "../ui/FormField";
-import { AnimatedDropdown }       from "../ui/AnimatedDropdown";
-import { BaseModal }              from "../ui/BaseModal";
+import { Button, AnimatedDropdown, BaseModal } from "../common";
+import { TextInput as FormField } from "../common/inputs/TextInput";
 import { useTheme }               from "../hooks/useTheme";
 import { useResponsive }          from "../hooks/useResponsive";
 import { useTranslation }         from "../../../i18n/hooks/useTranslation";
@@ -22,7 +20,7 @@ import {
     validateStudentForm,
 } from "../../../viewmodels/useStudentsViewModel";
 
-// ── Roles disponibles ─────────────────────────────────────
+// -- Roles disponibles -------------------------------------
 
 const ROLE_ITEMS = [
     { value: "admin",   label: "Administrador", description: "Admin",    icon: "shield"    },
@@ -30,10 +28,10 @@ const ROLE_ITEMS = [
     { value: "student", label: "Estudiante",    description: "Student",  icon: "user"      },
 ];
 
-// ── Props ─────────────────────────────────────────────────
+// -- Props -------------------------------------------------
 
 
-// ── Componente principal ───────────────────────────────────
+// -- Componente principal -----------------------------------
 
 export default function RegisterStudentModal({
     visible,
@@ -70,7 +68,7 @@ export default function RegisterStudentModal({
         setShowErrors(true);
         setError(null);
 
-        // Validación sin import dinámico — la función es importada estáticamente
+        // Validaci�n sin import din�mico � la funci�n es importada est�ticamente
         const validationErr = validateStudentForm(form);
         if (validationErr) return;
 
@@ -103,7 +101,7 @@ export default function RegisterStudentModal({
 
     const isEmpty = (v) => showErrors && !v.trim();
 
-    // Ítems de estado
+    // �tems de estado
     const statusItems = [
         { value: "active", label: t("Activo"),   icon: "check-circle" },
         { value: "inactive", label: t("Inactivo"), icon: "x-circle"     },
@@ -122,16 +120,16 @@ export default function RegisterStudentModal({
                 maxWidth={520}
                 footer={
                     <React.Fragment>
-                        <UIButton variant="ghost" onPress={handleClose} disabled={saving}>
+                        <Button variant="ghost" onPress={handleClose} disabled={saving}>
                             {t("Cancelar")}
-                        </UIButton>
-                        <UIButton variant="primary" onPress={handleSubmit} disabled={saving || success}>
+                        </Button>
+                        <Button variant="primary" onPress={handleSubmit} disabled={saving || success}>
                             {saving
                                 ? <ActivityIndicator size="small" color="#fff" />
                                 : success
-                                    ? <React.Fragment><Feather name="check" size={14} color="#fff" /> {t("¡Guardado!")}</React.Fragment>
+                                    ? <React.Fragment><Feather name="check" size={14} color="#fff" /> {t("�Guardado!")}</React.Fragment>
                                     : t("Registrar estudiante")}
-                        </UIButton>
+                        </Button>
                     </React.Fragment>
                 }
             >
@@ -166,20 +164,20 @@ export default function RegisterStudentModal({
                     </View>
                 )}
 
-                {/* Fila 1 — Nombre y Código */}
+                {/* Fila 1 � Nombre y C�digo */}
                 <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
                     <View style={{ flex: 1 }}>
                         <InputField
                             label={t("Nombre completo") + " *"}
                             value={form.name}
                             onChangeText={v => setField("name", v)}
-                            placeholder={t("Ej: Ana García López")}
+                            placeholder={t("Ej: Ana Garc�a L�pez")}
                             error={isEmpty(form.name)}
                         />
                     </View>
                     <View style={{ flex: 1 }}>
                         <InputField
-                            label={t("Código estudiantil") + " *"}
+                            label={t("C�digo estudiantil") + " *"}
                             value={form.code}
                             onChangeText={v => setField("code", v)}
                             placeholder={t("Ej: 2024001")}
@@ -190,7 +188,7 @@ export default function RegisterStudentModal({
 
                 {/* Correo */}
                 <InputField
-                    label={t("Correo electrónico") + " *"}
+                    label={t("Correo electr�nico") + " *"}
                     value={form.email}
                     onChangeText={v => setField("email", v)}
                     placeholder={t("correo@universidad.edu")}
@@ -198,14 +196,14 @@ export default function RegisterStudentModal({
                     error={isEmpty(form.email)}
                 />
 
-                {/* Fila 2 — Programa y Rol */}
+                {/* Fila 2 � Programa y Rol */}
                 <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
                     <View style={{ flex: 1 }}>
                         <InputField
                             label={t("Programa") + " *"}
                             value={form.course}
                             onChangeText={v => setField("course", v)}
-                            placeholder={t("Ej: Ingeniería de Sistemas")}
+                            placeholder={t("Ej: Ingenier�a de Sistemas")}
                             error={isEmpty(form.course)}
                         />
                     </View>

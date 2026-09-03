@@ -1,10 +1,4 @@
-﻿// ============================================================
-//  FaceAttend EDU — Reports ViewModel
-//  Incluye lógica de filtros y exportación PDF / Excel.
-//  Consume AppDataContext como única fuente de verdad.
-// ============================================================
-
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
 import { Platform } from "react-native";
 import { useTheme } from "../view/components/hooks/useTheme";
 import { useTranslation } from "../i18n/hooks/useTranslation";

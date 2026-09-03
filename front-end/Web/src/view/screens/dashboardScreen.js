@@ -10,7 +10,7 @@ import { useNavigation } from "@react-navigation/native";
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 
-import Sidebar          from "../components/layout/Sidebar";
+import Sidebar          from "../components/common/layout/Sidebar";
 import DashboardView    from "./DashboardView";
 import StudentsView     from "./StudentsScreen";
 import CoursesView      from "./CoursesScreen";

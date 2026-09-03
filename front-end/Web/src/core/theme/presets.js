@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU — Presets de accesibilidad por tipo de visión
 //  Cada preset está curado para ser distinguible con ese tipo
 //  de daltonismo. El usuario elige su modo de visión y luego

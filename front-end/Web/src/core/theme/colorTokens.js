@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU — Design System Tokens
 //  Fuente de verdad para TODOS los colores del sistema.
 //  Nunca importar Colors directamente — siempre usar ThemeTokens.

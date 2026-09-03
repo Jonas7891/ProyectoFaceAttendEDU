@@ -1,8 +1,8 @@
-﻿// ============================================================
-//  FaceAttend EDU — Students View (View Layer)
-//  Toda lógica en useStudentsViewModel.
-//  Las acciones de gestión (crear, importar, editar) se
-//  muestran condicionalmente según useRolePermissions.
+// ============================================================
+//  FaceAttend EDU � Students View (View Layer)
+//  Toda l�gica en useStudentsViewModel.
+//  Las acciones de gesti�n (crear, importar, editar) se
+//  muestran condicionalmente seg�n useRolePermissions.
 // ============================================================
 
 import React from "react";
@@ -12,11 +12,10 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import {
-    Card, Badge, Avatar, PageHeader,
-    UIButton, ProgressBar, EmptyState,
-} from "../components/ui/UI";
-import { AnimatedDropdown }       from "../components/ui/AnimatedDropdown";
-import { useAttendanceColor }     from "../components/ui/AttendanceBadge";
+    Card, Badge, Avatar, ProgressBar, EmptyState,
+    Button, AnimatedDropdown, useAttendanceColor,
+} from "../components/common";
+import { Navbar as PageHeader } from "../components/common/navigation/Navbar";
 import { useTheme }               from "../components/hooks/useTheme";
 import { useResponsive }          from "../components/hooks/useResponsive";
 import { useStudentsViewModel }   from "../../viewmodels/useStudentsViewModel";
@@ -26,7 +25,7 @@ import RegisterStudentModal       from "../components/students/RegisterStudentMo
 import ImportStudentsModal        from "../components/students/ImportStudentsModal";
 import StudentDetailModal         from "../components/students/StudentDetailModal";
 
-// ── StudentRow ───────────────────────────────────────────────
+// -- StudentRow -----------------------------------------------
 
 function StudentRow({
     student,
@@ -77,7 +76,7 @@ function StudentRow({
                         </Text>
                         <ProgressBar value={student.attendance} color={attColor} height={4} />
                     </View>
-                    {/* Columna Facial — solo para quienes pueden gestionar */}
+                    {/* Columna Facial � solo para quienes pueden gestionar */}
                     {canManage && (
                         <View style={{ flex: 1, paddingHorizontal: 14 }}>
                             <Badge variant={student.registered ? "success" : "warning"}>
@@ -109,7 +108,7 @@ function StudentRow({
     );
 }
 
-// ── StudentsView ─────────────────────────────────────────────
+// -- StudentsView ---------------------------------------------
 
 export default function StudentsView() {
     const { isSmall } = useResponsive();
@@ -127,7 +126,7 @@ export default function StudentsView() {
         );
     }
 
-    // Columnas de la tabla según permisos
+    // Columnas de la tabla seg�n permisos
     const columns = [
         t("Estudiante"),
         t("Correo"),
@@ -137,7 +136,7 @@ export default function StudentsView() {
         t("Estado"),
     ];
 
-    // Ítems del dropdown de cursos
+    // �tems del dropdown de cursos
     const courseItems = [
         { value: "", label: t("Todos"), icon: "layers" },
         ...vm.courses.map(c => ({ value: c.value, label: c.label, icon: "book-open" })),
@@ -158,18 +157,18 @@ export default function StudentsView() {
                     }`}
                     actions={
                         <React.Fragment>
-                        {/* Importar — solo admin */}
+                        {/* Importar � solo admin */}
                         {permissions.canImportStudents && (
-                            <UIButton variant="ghost" size="sm" onPress={vm.openImportModal}>
+                            <Button variant="ghost" size="sm" onPress={vm.openImportModal}>
                                 <Feather name="upload" size={13} color={c.text.secondary} />
                                 {"  "}{t("Importar")}
-                            </UIButton>
+                            </Button>
                         )}
-                        {/* Nuevo estudiante — solo admin */}
+                        {/* Nuevo estudiante � solo admin */}
                         {permissions.canManageStudents && (
-                            <UIButton variant="primary" size="sm" onPress={vm.openRegisterModal}>
+                            <Button variant="primary" size="sm" onPress={vm.openRegisterModal}>
                                 + {t("Nuevo estudiante")}
-                            </UIButton>
+                            </Button>
                         )}
                     </React.Fragment>}
                 />
@@ -177,13 +176,13 @@ export default function StudentsView() {
                 {/* Filtros */}
                 <Card padding={14}>
                     <View style={{ flexDirection: isSmall ? "column" : "row", gap: 12, flexWrap: "wrap" }}>
-                        {/* Búsqueda */}
+                        {/* B�squeda */}
                         <View style={{ flex: 1, minWidth: 200, position: "relative", justifyContent: "center" }}>
                             <View style={{ position: "absolute", left: 14, zIndex: 1 }}>
                                 <Feather name="search" size={14} color={c.text.secondary} />
                             </View>
                             <TextInput
-                                placeholder={t("Buscar por nombre o código...")}
+                                placeholder={t("Buscar por nombre o c�digo...")}
                                 value={vm.search}
                                 onChangeText={vm.setSearch}
                                 style={{

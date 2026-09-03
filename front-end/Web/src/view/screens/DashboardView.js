@@ -1,14 +1,14 @@
 // ============================================================
-//  FaceAttend EDU — Dashboard View (View Layer)
-//  Toda lógica en useDashboardViewModel.
-//  El botón "Tomar asistencia" solo lo ven admin y teacher.
+//  FaceAttend EDU ï¿½ Dashboard View (View Layer)
+//  Toda lï¿½gica en useDashboardViewModel.
+//  El botï¿½n "Tomar asistencia" solo lo ven admin y teacher.
 // ============================================================
 
 import React from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Card, StatCard, Badge, PageHeader, UIButton, ProgressBar } from "../components/ui/UI";
-import { AttendanceStatusIcon, AttendanceStatusBadge } from "../components/ui/AttendanceBadge";
+import { Card, StatCard, Badge, Button, ProgressBar, AttendanceStatusIcon, AttendanceStatusBadge } from "../components/common";
+import { Navbar as PageHeader } from "../components/common/navigation/Navbar";
 import { useTheme }              from "../components/hooks/useTheme";
 import { useResponsive }         from "../components/hooks/useResponsive";
 import { useDashboardViewModel } from "../../viewmodels/useDashboardViewModel";
@@ -103,7 +103,7 @@ export default function DashboardView() {
                 actions={
                     /* Solo admin y teacher pueden tomar asistencia */
                     permissions.canRegisterFace
-                        ? <UIButton variant="primary" size="sm">{t("Tomar asistencia")}</UIButton>
+                        ? <Button variant="primary" size="sm">{t("Tomar asistencia")}</Button>
                         : undefined
                 }
             />
@@ -124,7 +124,7 @@ export default function DashboardView() {
                 ))}
             </View>
 
-            {/* Gráficas — solo si puede ver reportes */}
+            {/* Grï¿½ficas ï¿½ solo si puede ver reportes */}
             {permissions.canViewReports && (
                 <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
                     <Card style={{ flex: 1 }}>
@@ -132,17 +132,17 @@ export default function DashboardView() {
                             {t("Tendencia semanal")}
                         </Text>
                         <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom: 16 }}>
-                            {t("Últimas 5 semanas")}
+                            {t("ï¿½ltimas 5 semanas")}
                         </Text>
                         <WeeklyTrend data={vm.attendanceByWeek} />
                     </Card>
 
                     <Card style={{ flex: 1 }}>
                         <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary, marginBottom: 4 }}>
-                            {t("Asistencia por día")}
+                            {t("Asistencia por dï¿½a")}
                         </Text>
                         <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom: 16 }}>
-                            {t("Esta semana · Presentes / Tardanzas / Ausentes")}
+                            {t("Esta semana ï¿½ Presentes / Tardanzas / Ausentes")}
                         </Text>
                         <DailyBarChart data={vm.attendanceByDay} />
                         <View style={{ flexDirection: "row", gap: 12, marginTop: 12 }}>
@@ -204,7 +204,7 @@ export default function DashboardView() {
                                         {item.student}
                                     </Text>
                                     <Text style={{ fontSize: 11, color: c.text.secondary }}>
-                                        {item.course} · {item.time}
+                                        {item.course} ï¿½ {item.time}
                                     </Text>
                                 </View>
                                 <AttendanceStatusBadge status={item.status} />

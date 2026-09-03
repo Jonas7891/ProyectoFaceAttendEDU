@@ -1,12 +1,4 @@
-﻿// ============================================================
-//  FaceAttend EDU — Auth ViewModel
-//
-//  Encapsula la lógica de formulario de autenticación.
-//  Usa AuthContext como fuente de verdad para la sesión.
-//  Las Views solo llaman funciones y leen estado de aquí.
-// ============================================================
-
-import { useState, useRef } from "react";
+﻿import { useState, useRef } from "react";
 import { useTranslation } from "../i18n/hooks/useTranslation";
 import { useAuth } from "../context/AuthContext";
 

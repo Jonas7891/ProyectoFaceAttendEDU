@@ -1,6 +1,6 @@
 ﻿import React from "react";
 import { View } from "react-native";
-import Button from "../ui/button";
+import { Button } from "../common";
 import { useResponsive } from "../hooks/useResponsive";
 
 export default function HeroButtons({ primary, secondary, onPrimary, onSecondary }) {
