@@ -4,10 +4,8 @@ import { DatePicker } from "./DatePicker";
 /**
  * TimePicker component para selección de hora
  * 
- * NOTA: Este es un wrapper de DatePicker en mode='time'.
- * Para funcionalidad completa, instalar:
- * 
- * npm install @react-native-community/datetimepicker
+ * Wrapper de DatePicker en mode='time'. Proporciona una API específica
+ * para selección de horas con formato optimizado.
  * 
  * @param {Date} value - Hora seleccionada
  * @param {function} onChange - Callback al cambiar hora

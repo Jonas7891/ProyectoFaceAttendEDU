@@ -146,7 +146,7 @@ export default function StudentDetailModal({
                                         </View>
                                     </View>
                                     {student.registered
-                                        ? <Feather name="check-circle" size={16} color={c.states.success} />
+                                        ? <Feather name="check-circle" size={16} color={c.status.success} />
                                         : <Button variant="primary" size="sm">{t("Registrar")}</Button>
                                     }
                                 </View>
@@ -174,3 +174,4 @@ export default function StudentDetailModal({
         </Modal>
     );
 }
+

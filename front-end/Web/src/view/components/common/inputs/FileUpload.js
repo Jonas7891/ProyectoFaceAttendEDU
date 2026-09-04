@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Image, FlatList, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, Image, FlatList, StyleSheet, Alert } from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import * as DocumentPicker from "expo-document-picker";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
@@ -7,16 +9,14 @@ import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 /**
  * FileUpload component para subir archivos e imágenes
  * 
- * NOTA: Este es un placeholder UI. Para funcionalidad completa, instalar:
- * 
- * npm install expo-document-picker expo-image-picker
- * 
- * Y implementar la lógica de selección/upload con estas librerías.
+ * Implementación nativa usando expo-image-picker y expo-document-picker.
+ * Soporta selección de imágenes (cámara/galería) y documentos, con preview,
+ * validación de tamaño y múltiples archivos.
  * 
  * @param {Array} value - Array de archivos seleccionados [{ uri, name, size, type }]
  * @param {function} onChange - Callback al cambiar archivos
  * @param {string} label - Etiqueta
- * @param {string} accept - Tipos aceptados: 'image/*', 'application/pdf', etc
+ * @param {string} accept - Tipos aceptados: 'image/*', 'application/pdf',
  * @param {boolean} multiple - Permitir múltiples archivos
  * @param {number} maxSize - Tamaño máximo en bytes (default: 5MB)
  * @param {number} maxFiles - Máximo número de archivos
@@ -73,26 +73,96 @@ export function FileUpload({
 }) {
   const { theme } = useTheme();
 
-  const handlePress = () => {
+  const handlePress = async () => {
     if (disabled) return;
     
-    console.warn(
-      "FileUpload: Instalar expo-document-picker y expo-image-picker para funcionalidad completa.\n" +
-      "npm install expo-document-picker expo-image-picker"
-    );
+    try {
+      if (accept === "image/*" || accept.startsWith("image/")) {
+        // Image Picker
+        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        
+        if (!permissionResult.granted) {
+          Alert.alert(
+            "Permiso requerido",
+            "Necesitamos permiso para acceder a tus fotos"
+          );
+          return;
+        }
 
-    // Placeholder: Simular selección
-    const mockFile = {
-      uri: "https://via.placeholder.com/150",
-      name: "archivo-ejemplo.jpg",
-      size: 1024000,
-      type: "image/jpeg",
-    };
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsMultipleSelection: multiple,
+          quality: 0.8,
+        });
 
-    if (multiple) {
-      onChange([...value, mockFile]);
-    } else {
-      onChange([mockFile]);
+        if (!result.canceled) {
+          const newFiles = result.assets.map((asset) => ({
+            uri: asset.uri,
+            name: asset.fileName || `image_${Date.now()}.jpg`,
+            size: asset.fileSize || 0,
+            type: asset.type || "image/jpeg",
+          }));
+
+          // Validar tamaño
+          const validFiles = newFiles.filter((file) => {
+            if (file.size > maxSize) {
+              Alert.alert(
+                "Archivo muy grande",
+                `${file.name} excede el tamaño máximo de ${formatSize(maxSize)}`
+              );
+              return false;
+            }
+            return true;
+          });
+
+          if (validFiles.length > 0) {
+            const updatedFiles = multiple 
+              ? [...value, ...validFiles].slice(0, maxFiles)
+              : validFiles;
+            onChange(updatedFiles);
+          }
+        }
+      } else {
+        // Document Picker
+        const result = await DocumentPicker.getDocumentAsync({
+          type: accept === "*/*" ? "*/*" : accept,
+          multiple,
+          copyToCacheDirectory: true,
+        });
+
+        if (result.type === "success" || !result.canceled) {
+          const files = result.canceled ? [] : (Array.isArray(result) ? result : [result]);
+          
+          const newFiles = files.map((file) => ({
+            uri: file.uri,
+            name: file.name,
+            size: file.size || 0,
+            type: file.mimeType || "application/octet-stream",
+          }));
+
+          // Validar tamaño
+          const validFiles = newFiles.filter((file) => {
+            if (file.size > maxSize) {
+              Alert.alert(
+                "Archivo muy grande",
+                `${file.name} excede el tamaño máximo de ${formatSize(maxSize)}`
+              );
+              return false;
+            }
+            return true;
+          });
+
+          if (validFiles.length > 0) {
+            const updatedFiles = multiple 
+              ? [...value, ...validFiles].slice(0, maxFiles)
+              : validFiles;
+            onChange(updatedFiles);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error selecting file:", error);
+      Alert.alert("Error", "No se pudo seleccionar el archivo");
     }
   };
 
@@ -237,14 +307,6 @@ export function FileUpload({
           {errorMessage}
         </Text>
       )}
-
-      {/* Warning badge */}
-      <View style={[styles.warning, { backgroundColor: theme.colors.status.warningLight }]}>
-        <Feather name="alert-triangle" size={12} color={theme.colors.status.warning} />
-        <Text style={[styles.warningText, { color: theme.colors.status.warning }]}>
-          Placeholder: Instalar expo-document-picker y expo-image-picker
-        </Text>
-      </View>
     </View>
   );
 }
@@ -316,19 +378,6 @@ const styles = StyleSheet.create({
   message: {
     fontSize: 12,
     marginTop: DESIGN_TOKENS.spacing.xs,
-  },
-  warning: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: DESIGN_TOKENS.spacing.sm,
-    paddingHorizontal: DESIGN_TOKENS.spacing.sm,
-    paddingVertical: DESIGN_TOKENS.spacing.xs,
-    borderRadius: DESIGN_TOKENS.borderRadius.sm,
-    gap: DESIGN_TOKENS.spacing.xs,
-  },
-  warningText: {
-    fontSize: 10,
-    flex: 1,
   },
 });
 

@@ -136,28 +136,28 @@ export default function RegisterStudentModal({
                 {/* Error global */}
                 {error && (
                     <View style={{
-                        backgroundColor: c.states.dangerLight,
+                        backgroundColor: c.status.dangerLight,
                         borderRadius: 14,
                         padding: 12,
                         flexDirection: "row",
                         gap: 8,
                         marginBottom: 14,
                     }}>
-                        <Feather name="alert-circle" size={14} color={c.states.danger} />
-                        <Text style={{ fontSize: 11, color: c.states.danger, flex: 1 }}>{error}</Text>
+                        <Feather name="alert-circle" size={14} color={c.status.danger} />
+                        <Text style={{ fontSize: 11, color: c.status.danger, flex: 1 }}>{error}</Text>
                     </View>
                 )}
 
                 {success && (
                     <View style={{
-                        backgroundColor: c.states.successLight,
+                        backgroundColor: c.status.successLight,
                         borderRadius: 14,
                         padding: 12,
                         flexDirection: "row",
                         gap: 8,
                         marginBottom: 14,
                     }}>
-                        <Feather name="check-circle" size={14} color={c.states.success} />
+                        <Feather name="check-circle" size={14} color={c.status.success} />
                         <Text style={{ fontSize: 11, color: "#065F46", flex: 1 }}>
                             {t("Estudiante registrado correctamente")}
                         </Text>
@@ -211,7 +211,7 @@ export default function RegisterStudentModal({
                         <Text style={{
                             fontSize: 10,
                             fontWeight: "600",
-                            color: showErrors && !form.role ? c.states.danger : c.text.secondary,
+                            color: showErrors && !form.role ? c.status.danger : c.text.secondary,
                             marginBottom: 8,
                         }}>
                             {t("Rol") + " *"}
@@ -286,7 +286,7 @@ export default function RegisterStudentModal({
                     justifyContent: "space-between",
                     padding: 12,
                     borderWidth: 1.5,
-                    borderColor: form.registered ? c.states.success : c.border.primary,
+                    borderColor: form.registered ? c.status.success : c.border.primary,
                     borderRadius: 14,
                     marginBottom: 14,
                     backgroundColor: c.background.app,
@@ -295,13 +295,13 @@ export default function RegisterStudentModal({
                         <Feather
                             name="aperture"
                             size={18}
-                            color={form.registered ? c.states.success : c.brand.primary}
+                            color={form.registered ? c.status.success : c.brand.primary}
                         />
                         <View>
                             <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary }}>
                                 {t("Reconocimiento facial")}
                             </Text>
-                            <Text style={{ fontSize: 11, color: form.registered ? c.states.success : c.text.secondary }}>
+                            <Text style={{ fontSize: 11, color: form.registered ? c.status.success : c.text.secondary }}>
                                 {form.registered ? t("Rostro registrado") : t("Sin registro facial")}
                             </Text>
                         </View>
@@ -313,7 +313,7 @@ export default function RegisterStudentModal({
                             height: 20,
                             borderRadius: 14,
                             backgroundColor: form.registered
-                                ? c.states.success
+                                ? c.status.success
                                 : c.interactive.disabled,
                             justifyContent: "center",
                             paddingHorizontal: 2,
@@ -355,3 +355,4 @@ export default function RegisterStudentModal({
         </React.Fragment>
     );
 }
+

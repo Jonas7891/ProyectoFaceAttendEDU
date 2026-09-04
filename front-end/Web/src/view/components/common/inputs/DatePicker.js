@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Platform, StyleSheet } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
@@ -7,19 +8,16 @@ import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 /**
  * DatePicker component para selección de fechas
  * 
- * NOTA: Este es un placeholder que muestra un input de texto con formato de fecha.
- * Para funcionalidad completa de DatePicker, instalar:
- * 
- * npm install @react-native-community/datetimepicker
- * 
- * Y reemplazar la implementación con el picker nativo.
+ * Wrapper del DateTimePicker nativo de @react-native-community con API
+ * consistente y theme integration. Soporta iOS y Android con presentación
+ * adaptada a cada plataforma.
  * 
  * @param {Date} value - Fecha seleccionada
  * @param {function} onChange - Callback al cambiar fecha (recibe Date object)
  * @param {string} label - Etiqueta del picker
  * @param {string} placeholder - Placeholder
- * @param {Date} minDate - Fecha mínima permitida
- * @param {Date} maxDate - Fecha máxima permitida
+ * @param {Date} minimumDate - Fecha mínima permitida
+ * @param {Date} maximumDate - Fecha máxima permitida
  * @param {('date'|'datetime'|'time')} mode - Modo del picker
  * @param {boolean} error - Si hay error
  * @param {string} errorMessage - Mensaje de error
@@ -61,8 +59,8 @@ export function DatePicker({
   onChange,
   label,
   placeholder = "Seleccionar fecha",
-  minDate,
-  maxDate,
+  minimumDate,
+  maximumDate,
   mode = "date",
   error = false,
   errorMessage,
@@ -94,17 +92,24 @@ export function DatePicker({
 
   const handlePress = () => {
     if (disabled) return;
-    
-    // TODO: Abrir picker nativo cuando esté instalado
-    // Por ahora, solo log de warning
-    console.warn(
-      "DatePicker: Instalar @react-native-community/datetimepicker para funcionalidad completa.\n" +
-      "npm install @react-native-community/datetimepicker"
-    );
-    
-    // Simular selección con fecha actual (placeholder behavior)
-    if (!value) {
-      onChange(new Date());
+    setShowPicker(true);
+  };
+
+  const handleChange = (event, selectedDate) => {
+    // En Android, el picker se cierra automáticamente
+    if (Platform.OS === "android") {
+      setShowPicker(false);
+    }
+
+    if (event.type === "set" && selectedDate) {
+      onChange(selectedDate);
+      
+      // En iOS, cerramos manualmente después de seleccionar
+      if (Platform.OS === "ios") {
+        setShowPicker(false);
+      }
+    } else if (event.type === "dismissed") {
+      setShowPicker(false);
     }
   };
 
@@ -136,6 +141,9 @@ export function DatePicker({
               : theme.colors.background.surface,
           },
         ]}
+        accessibilityRole="button"
+        accessibilityLabel={label || "Seleccionar fecha"}
+        accessibilityHint="Abre el selector de fecha"
       >
         <Feather
           name="calendar"
@@ -168,13 +176,19 @@ export function DatePicker({
         </Text>
       )}
 
-      {/* Warning badge */}
-      <View style={[styles.warning, { backgroundColor: theme.colors.status.warningLight }]}>
-        <Feather name="alert-triangle" size={12} color={theme.colors.status.warning} />
-        <Text style={[styles.warningText, { color: theme.colors.status.warning }]}>
-          Placeholder: Instalar @react-native-community/datetimepicker
-        </Text>
-      </View>
+      {/* Native DateTimePicker */}
+      {showPicker && (
+        <DateTimePicker
+          value={value || new Date()}
+          mode={mode}
+          display={Platform.OS === "ios" ? "spinner" : "default"}
+          onChange={handleChange}
+          minimumDate={minimumDate}
+          maximumDate={maximumDate}
+          textColor={theme.colors.text.primary}
+          accentColor={theme.colors.brand.primary}
+        />
+      )}
     </View>
   );
 }
@@ -207,19 +221,6 @@ const styles = StyleSheet.create({
   message: {
     fontSize: 12,
     marginTop: DESIGN_TOKENS.spacing.xs,
-  },
-  warning: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: DESIGN_TOKENS.spacing.xs,
-    paddingHorizontal: DESIGN_TOKENS.spacing.sm,
-    paddingVertical: DESIGN_TOKENS.spacing.xs,
-    borderRadius: DESIGN_TOKENS.borderRadius.sm,
-    gap: DESIGN_TOKENS.spacing.xs,
-  },
-  warningText: {
-    fontSize: 10,
-    flex: 1,
   },
 });
 

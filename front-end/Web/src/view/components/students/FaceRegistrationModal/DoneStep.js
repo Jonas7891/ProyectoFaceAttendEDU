@@ -17,12 +17,12 @@ export default function DoneStep({ c, t, descriptor, onDownload, onConfirm }) {
                     width: 64,
                     height: 64,
                     borderRadius: 14,
-                    backgroundColor: c.states.successLight,
+                    backgroundColor: c.status.successLight,
                     alignItems: "center",
                     justifyContent: "center",
                     marginBottom: 16,
                 }}>
-                    <Feather name="check-circle" size={32} color={c.states.success} />
+                    <Feather name="check-circle" size={32} color={c.status.success} />
                 </View>
                 <Text style={{
                     fontSize: 10,
@@ -75,18 +75,18 @@ export default function DoneStep({ c, t, descriptor, onDownload, onConfirm }) {
                 padding: 12,
                 borderRadius: 14,
                 marginBottom: 16,
-                backgroundColor: hasRealDesc ? c.states.successLight : c.states.dangerLight,
+                backgroundColor: hasRealDesc ? c.status.successLight : c.status.dangerLight,
                 borderWidth: 1,
-                borderColor: hasRealDesc ? c.states.success : c.states.danger,
+                borderColor: hasRealDesc ? c.status.success : c.status.danger,
             }}>
                 <Feather
                     name={hasRealDesc ? "shield" : "alert-triangle"}
                     size={12}
-                    color={hasRealDesc ? c.states.success : c.states.danger}
+                    color={hasRealDesc ? c.status.success : c.status.danger}
                 />
                 <Text style={{
                     fontSize: 11,
-                    color: hasRealDesc ? c.states.success : c.states.danger,
+                    color: hasRealDesc ? c.status.success : c.status.danger,
                     flex: 1,
                 }}>
                     {hasRealDesc
@@ -153,3 +153,4 @@ export default function DoneStep({ c, t, descriptor, onDownload, onConfirm }) {
         </View>
     );
 }
+

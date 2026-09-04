@@ -13,10 +13,18 @@ import { ScrollView, View } from "react-native";
  * @param {object} contentContainerStyle - Estilos del contenedor interno
  * 
  * @example
+ * // Navegación básica
  * <SidebarNav>
- *   <SidebarItem icon="home" label="Inicio" />
+ *   <SidebarItem icon="home" label="Inicio" active />
  *   <SidebarItem icon="users" label="Usuarios" />
  *   <SidebarItem icon="settings" label="Configuración" />
+ * </SidebarNav>
+ * 
+ * @example
+ * // Sin scroll (pocos items)
+ * <SidebarNav scrollable={false}>
+ *   <SidebarItem icon="home" label="Inicio" />
+ *   <SidebarItem icon="users" label="Usuarios" />
  * </SidebarNav>
  */
 export default function SidebarNav({

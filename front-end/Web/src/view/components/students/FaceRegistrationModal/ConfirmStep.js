@@ -28,7 +28,7 @@ export default function ConfirmStep({ c, t, capturedUrl, processing, onRetake, o
                 overflow: "hidden",
                 marginBottom: 16,
                 borderWidth: 2,
-                borderColor: c.states.success,
+                borderColor: c.status.success,
                 backgroundColor: "transparent",
                 alignItems: "center",
                 justifyContent: "center",
@@ -57,10 +57,10 @@ export default function ConfirmStep({ c, t, capturedUrl, processing, onRetake, o
                     paddingHorizontal: 10,
                     paddingVertical: 6,
                     borderWidth: 1,
-                    borderColor: c.states.success,
+                    borderColor: c.status.success,
                 }}>
-                    <Feather name="check" size={10} color={c.states.success} />
-                    <Text style={{ fontSize: 11, color: c.states.success, fontWeight: "700" }}>
+                    <Feather name="check" size={10} color={c.status.success} />
+                    <Text style={{ fontSize: 11, color: c.status.success, fontWeight: "700" }}>
                         OK
                     </Text>
                 </View>
@@ -125,3 +125,4 @@ export default function ConfirmStep({ c, t, capturedUrl, processing, onRetake, o
         </View>
     );
 }
+

@@ -145,13 +145,13 @@ export default function OptionsStep({ c, t, onCamera, onFileLoad, loadError }) {
                         marginTop: 16,
                         padding: 12,
                         borderRadius: 14,
-                        backgroundColor: c.states.dangerLight,
+                        backgroundColor: c.status.dangerLight,
                         width: "100%",
                     }}>
-                        <Feather name="alert-circle" size={13} color={c.states.danger} />
+                        <Feather name="alert-circle" size={13} color={c.status.danger} />
                         <Text style={{
                             fontSize: 11,
-                            color: c.states.danger,
+                            color: c.status.danger,
                             flex: 1,
                         }}>
                             {loadError}
@@ -195,3 +195,4 @@ export default function OptionsStep({ c, t, onCamera, onFileLoad, loadError }) {
         </ScrollView>
     );
 }
+

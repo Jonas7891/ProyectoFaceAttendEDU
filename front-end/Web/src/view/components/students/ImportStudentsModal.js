@@ -366,14 +366,14 @@ export default function ImportStudentsModal({
                             <View style={{ gap: 14 }}>
                                 {/* Resumen */}
                                 <View style={{
-                                    backgroundColor: c.states.successLight,
+                                    backgroundColor: c.status.successLight,
                                     borderRadius: 14,
                                     padding: 12,
                                     flexDirection: "row",
                                     alignItems: "center",
                                     gap: 8,
                                 }}>
-                                    <Feather name="file" size={18} color={c.states.success} />
+                                    <Feather name="file" size={18} color={c.status.success} />
                                     <View style={{ flex: 1 }}>
                                         <Text style={{ fontSize: 10, fontWeight: "600", color: "#065F46" }}>
                                             {fileName}
@@ -390,14 +390,14 @@ export default function ImportStudentsModal({
 
                                 {parseErrors > 0 && (
                                     <View style={{
-                                        backgroundColor: c.states.warningLight,
+                                        backgroundColor: c.status.warningLight,
                                         borderRadius: 14,
                                         padding: 12,
                                         flexDirection: "row",
                                         alignItems: "center",
                                         gap: 8,
                                     }}>
-                                        <Feather name="alert-triangle" size={14} color={c.states.warning} />
+                                        <Feather name="alert-triangle" size={14} color={c.status.warning} />
                                         <Text style={{ fontSize: 11, color: "#92400E", flex: 1 }}>
                                             {parseErrors} {t("filas con errores omitidas")}
                                             {". "}{t("Verifica que tengan name, code, email, course y grade")}
@@ -480,11 +480,11 @@ export default function ImportStudentsModal({
                                     width: 64,
                                     height: 64,
                                     borderRadius: 14,
-                                    backgroundColor: c.states.successLight,
+                                    backgroundColor: c.status.successLight,
                                     alignItems: "center",
                                     justifyContent: "center",
                                 }}>
-                                    <Feather name="check-circle" size={32} color={c.states.success} />
+                                    <Feather name="check-circle" size={32} color={c.status.success} />
                                 </View>
                                 <Text style={{ fontSize: 10, fontWeight: "700", color: c.text.primary }}>
                                     {t("¡Importación exitosa!")}
@@ -502,11 +502,11 @@ export default function ImportStudentsModal({
                                     width: 64,
                                     height: 64,
                                     borderRadius: 14,
-                                    backgroundColor: c.states.dangerLight,
+                                    backgroundColor: c.status.dangerLight,
                                     alignItems: "center",
                                     justifyContent: "center",
                                 }}>
-                                    <Feather name="x-circle" size={32} color={c.states.danger} />
+                                    <Feather name="x-circle" size={32} color={c.status.danger} />
                                 </View>
                                 <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary }}>
                                     {t("Error al importar")}
@@ -552,3 +552,4 @@ export default function ImportStudentsModal({
         </Modal>
     );
 }
+

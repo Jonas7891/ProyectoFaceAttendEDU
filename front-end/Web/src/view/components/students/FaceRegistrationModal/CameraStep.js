@@ -61,10 +61,10 @@ export default function CameraStep({
                     padding: 12,
                     borderRadius: 14,
                     marginBottom: 16,
-                    backgroundColor: c.states.dangerLight,
+                    backgroundColor: c.status.dangerLight,
                 }}>
-                    <Feather name="alert-triangle" size={13} color={c.states.danger} />
-                    <Text style={{ fontSize: 11, color: c.states.danger, flex: 1 }}>
+                    <Feather name="alert-triangle" size={13} color={c.status.danger} />
+                    <Text style={{ fontSize: 11, color: c.status.danger, flex: 1 }}>
                         {t("No se pudieron cargar los modelos. Verifica la conexión.")}
                     </Text>
                 </View>
@@ -80,7 +80,7 @@ export default function CameraStep({
                 marginBottom: 16,
                 borderWidth: 2,
                 borderColor: allQOk
-                    ? c.states.success
+                    ? c.status.success
                     : quality.faceFound
                         ? c.brand.primary
                         : c.border.primary,
@@ -151,11 +151,11 @@ export default function CameraStep({
                         gap: 12,
                         padding: 24,
                     }}>
-                        <Feather name="camera-off" size={32} color={c.states.danger} />
+                        <Feather name="camera-off" size={32} color={c.status.danger} />
                         <Text style={{
                             fontSize: 10,
                             fontWeight: "600",
-                            color: c.states.danger,
+                            color: c.status.danger,
                             textAlign: "center",
                         }}>
                             {t("Permiso de cámara requerido")}
@@ -179,7 +179,7 @@ export default function CameraStep({
                         <View style={{
                             width: `${stableProgress * 100}%`,
                             height: 5,
-                            backgroundColor: c.states.success,
+                            backgroundColor: c.status.success,
                         }} />
                     </View>
                 )}
@@ -200,8 +200,8 @@ export default function CameraStep({
                     }}>
                         {allQOk ? (
                             <React.Fragment>
-                                <Feather name="check-circle" size={11} color={c.states.success} />
-                                <Text style={{ fontSize: 11, color: c.states.success, fontWeight: "600" }}>
+                                <Feather name="check-circle" size={11} color={c.status.success} />
+                                <Text style={{ fontSize: 11, color: c.status.success, fontWeight: "600" }}>
                                     {t("Capturando…")}
                                 </Text>
                             </React.Fragment>
@@ -239,23 +239,23 @@ export default function CameraStep({
                                 flexDirection: "row",
                                 alignItems: "center",
                                 gap: 6,
-                                backgroundColor: cr.ok ? c.states.successLight : c.background.app,
+                                backgroundColor: cr.ok ? c.status.successLight : c.background.app,
                                 borderRadius: 14,
                                 paddingHorizontal: 10,
                                 paddingVertical: 6,
                                 borderWidth: 1,
-                                borderColor: cr.ok ? c.states.success : c.border.primary,
+                                borderColor: cr.ok ? c.status.success : c.border.primary,
                             }}
                         >
                             <Feather
                                 name={cr.ok ? "check-circle" : "circle"}
                                 size={11}
-                                color={cr.ok ? c.states.success : c.text.disabled}
+                                color={cr.ok ? c.status.success : c.text.disabled}
                             />
                             <Text style={{
                                 fontSize: 10,
                                 fontWeight: "600",
-                                color: cr.ok ? c.states.success : c.text.disabled,
+                                color: cr.ok ? c.status.success : c.text.disabled,
                             }}>
                                 {cr.label}
                             </Text>
@@ -300,7 +300,7 @@ export default function CameraStep({
                         borderRadius: 14,
                         backgroundColor: camState === "analyzing"
                             ? allQOk
-                                ? c.states.success
+                                ? c.status.success
                                 : c.brand.primary
                             : c.interactive.disabled,
                     }}
@@ -325,3 +325,4 @@ export default function CameraStep({
         </View>
     );
 }
+

@@ -49,12 +49,15 @@ export function generateTheme(accentColor, mode) {
                 focus: focusColor,
                 error: errorColor,
             },
-            states: {
+            // Cambio: states → status (para match con componentes)
+            status: {
                 success:      "#10B981",
                 successLight: isDark ? "rgba(16,185,129,0.18)" : "#D1FAE5",
                 warning:      "#F59E0B",
                 warningLight: isDark ? "rgba(245,158,11,0.18)"  : "#FEF3C7",
-                danger:       "#EF4444",
+                error:        "#EF4444",
+                errorLight:   isDark ? "rgba(239,68,68,0.18)"   : "#FEE2E2",
+                danger:       "#EF4444", // Alias de error
                 dangerLight:  isDark ? "rgba(239,68,68,0.18)"   : "#FEE2E2",
                 info:         accent.toHexString(),
                 infoLight:    isDark ? accent.clone().setAlpha(0.18).toRgbString() : primaryLight,

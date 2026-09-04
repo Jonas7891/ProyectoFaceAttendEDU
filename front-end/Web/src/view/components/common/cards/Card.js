@@ -98,18 +98,18 @@ export function Card({
     },
     success: {
       borderLeftWidth: 4,
-      borderLeftColor: c.states.success,
-      backgroundColor: c.states.successLight || variantStyles[variant].backgroundColor,
+      borderLeftColor: c.status.success,
+      backgroundColor: c.status.successLight || variantStyles[variant].backgroundColor,
     },
     warning: {
       borderLeftWidth: 4,
-      borderLeftColor: c.states.warning,
-      backgroundColor: c.states.warningLight || variantStyles[variant].backgroundColor,
+      borderLeftColor: c.status.warning,
+      backgroundColor: c.status.warningLight || variantStyles[variant].backgroundColor,
     },
     danger: {
       borderLeftWidth: 4,
-      borderLeftColor: c.states.danger,
-      backgroundColor: c.states.dangerLight || variantStyles[variant].backgroundColor,
+      borderLeftColor: c.status.error,
+      backgroundColor: c.status.errorLight || variantStyles[variant].backgroundColor,
     },
     info: {
       borderLeftWidth: 4,
