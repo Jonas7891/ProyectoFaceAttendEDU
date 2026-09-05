@@ -1,8 +1,3 @@
-// ============================================================
-//  FaceAttend EDU — Landing View
-//  Vista principal de la landing page con arquitectura moderna
-// ============================================================
-
 import React from "react";
 import { View, ScrollView, Image, Text, StyleSheet, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -122,10 +117,12 @@ function FeaturesSection() {
     return (
         <View
             style={{
+                minHeight: "100vh",
                 backgroundColor: c.brand.primary,
                 paddingVertical: sp(isSmall ? 60 : 80),
                 paddingHorizontal: sp(isSmall ? 24 : 40),
                 width: "100%",
+                justifyContent: "center",
             }}
         >
             {/* Header */}
@@ -251,9 +248,11 @@ function TestimonialsSection() {
     return (
         <View
             style={{
+                minHeight: "90vh",
                 backgroundColor: c.background.app,
                 paddingVertical: sp(isSmall ? 60 : 80),
                 paddingHorizontal: sp(isSmall ? 24 : 40),
+                justifyContent: "center",
             }}
         >
             {/* Header */}
@@ -270,7 +269,7 @@ function TestimonialsSection() {
                     <Text
                         style={[
                             T.eyebrow,
-                            { color: c.brand.primary, letterSpacing: 1.5 },
+                            { color: c.brand.primary, letterSpacing: 4},
                         ]}
                     >
                         {t("TESTIMONIOS")}
@@ -379,9 +378,9 @@ function CTASection({ onNavigate }) {
     return (
         <View
             style={{
-                backgroundColor: c.brand.primary,
-                paddingVertical: sp(isSmall ? 60 : 80),
+                paddingVertical: sp(isSmall ? 40 : 60),
                 paddingHorizontal: sp(isSmall ? 24 : 40),
+                justifyContent: "center",
             }}
         >
             <View
@@ -394,7 +393,7 @@ function CTASection({ onNavigate }) {
             >
                 <Text
                     style={[
-                        T.display,
+                        T.displayLG,
                         {
                             color: c.text.onBrand,
                             textAlign: "center",
@@ -484,8 +483,7 @@ function Footer() {
         <View
             style={{
                 backgroundColor: c.background.surface,
-                borderTopWidth: 1,
-                borderTopColor: c.border.primary,
+                paddingTop: sp(32),
             }}
         >
             <View
@@ -494,15 +492,15 @@ function Footer() {
                     alignSelf: "center",
                     width: "100%",
                     paddingHorizontal: sp(isSmall ? 24 : 40),
-                    paddingVertical: sp(isSmall ? 40 : 60),
+                    paddingBottom: sp(isSmall ? 12 : 24),
                 }}
             >
                 {/* Footer Content */}
                 <View
                     style={{
                         flexDirection: isSmall ? "column" : "row",
-                        gap: sp(isSmall ? 40 : 60),
-                        marginBottom: sp(40),
+                        gap: sp(isSmall ? 24 : 40),
+                        marginBottom: sp(20),
                     }}
                 >
                     {/* Brand */}
@@ -512,11 +510,11 @@ function Footer() {
                                 flexDirection: "row",
                                 alignItems: "center",
                                 gap: sp(12),
-                                marginBottom: sp(16),
+                                marginBottom: sp(12),
                             }}
                         >
                             <Image
-                                source={require("../assets/images/logoFaceAttend-Minimalista.png")}
+                                source={require("../assets/images/logo(Antiguo)FaceAttend.png")}
                                 style={{ width: 40, height: 40 }}
                             />
                             <Text style={[T.brandName, { color: c.text.primary }]}>
@@ -539,7 +537,7 @@ function Footer() {
                                         {
                                             fontWeight: "600",
                                             color: c.text.primary,
-                                            marginBottom: sp(16),
+                                            marginBottom: sp(12),
                                         },
                                     ]}
                                 >
@@ -552,7 +550,7 @@ function Footer() {
                                             T.bodySM,
                                             {
                                                 color: c.text.secondary,
-                                                marginBottom: sp(8),
+                                                marginBottom: sp(6),
                                             },
                                         ]}
                                     >
@@ -568,7 +566,7 @@ function Footer() {
                                         {
                                             fontWeight: "600",
                                             color: c.text.primary,
-                                            marginBottom: sp(16),
+                                            marginBottom: sp(12),
                                         },
                                     ]}
                                 >
@@ -581,7 +579,7 @@ function Footer() {
                                             T.bodySM,
                                             {
                                                 color: c.text.secondary,
-                                                marginBottom: sp(8),
+                                                marginBottom: sp(6),
                                             },
                                         ]}
                                     >
@@ -597,7 +595,7 @@ function Footer() {
                                         {
                                             fontWeight: "600",
                                             color: c.text.primary,
-                                            marginBottom: sp(16),
+                                            marginBottom: sp(12),
                                         },
                                     ]}
                                 >
@@ -610,7 +608,7 @@ function Footer() {
                                             T.bodySM,
                                             {
                                                 color: c.text.secondary,
-                                                marginBottom: sp(8),
+                                                marginBottom: sp(6),
                                             },
                                         ]}
                                     >
@@ -625,13 +623,13 @@ function Footer() {
                 {/* Bottom Bar */}
                 <View
                     style={{
-                        paddingTop: sp(24),
+                        paddingTop: sp(16),
                         borderTopWidth: 1,
                         borderTopColor: c.border.primary,
                         flexDirection: isSmall ? "column" : "row",
                         justifyContent: "space-between",
                         alignItems: isSmall ? "flex-start" : "center",
-                        gap: sp(16),
+                        gap: sp(12),
                     }}
                 >
                     <Text style={[T.caption, { color: c.text.tertiary }]}>
@@ -640,14 +638,14 @@ function Footer() {
                     </Text>
 
                     {/* Social Links */}
-                    <View style={{ flexDirection: "row", gap: sp(16) }}>
+                    <View style={{ flexDirection: "row", gap: sp(12) }}>
                         {["github", "twitter", "linkedin"].map((social) => (
                             <View
                                 key={social}
                                 style={{
-                                    width: 36,
-                                    height: 36,
-                                    borderRadius: 18,
+                                    width: 32,
+                                    height: 32,
+                                    borderRadius: 16,
                                     backgroundColor: c.background.elevated,
                                     alignItems: "center",
                                     justifyContent: "center",
@@ -655,7 +653,7 @@ function Footer() {
                             >
                                 <Feather
                                     name={social}
-                                    size={16}
+                                    size={14}
                                     color={c.text.secondary}
                                 />
                             </View>
@@ -687,27 +685,55 @@ export default function LandingView({ onNavigate }) {
                 {/* Hero Section - Pantalla completa */}
                 <View
                     style={{
-                        minHeight: "95vh", // Fuerza altura de viewport
+                        minHeight: "95vh",
                         alignItems: "center",
                         justifyContent: "center",
                         paddingVertical: sp(isSmall ? 40 : 60),
-                        backgroundColor: c.background.app, // Fondo blanco explícito
+                        backgroundColor: c.background.app,
                     }}
                 >
                     <HeroContent {...entrance} onNavigate={onNavigate} />
                 </View>
 
-                {/* Features Section - Comienza DESPUÉS del scroll */}
+                {/* Features Section - 100vh */}
                 <FeaturesSection />
 
-                {/* Testimonials Section */}
+                <View
+                    style={{
+                        minHeight: "80vh",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        paddingVertical: sp(isSmall ? 40 : 60),
+                        backgroundColor: c.background.app,
+                    }}
+                >
+                    {/* Testimonials Section - 100vh */}
                 <TestimonialsSection />
+                </View>  
+                
 
-                {/* CTA Section */}
-                <CTASection onNavigate={onNavigate} />
-
-                {/* Footer */}
-                <Footer />
+                {/* CTA Section con Footer incluido - 100vh */}
+                <View
+                    style={{
+                        minHeight: "95vh",
+                        justifyContent: "space-between",
+                        overflow: "hidden",
+                    }}
+                >
+                    {/* CTA con fondo azul */}
+                    <View
+                        style={{
+                            backgroundColor: c.brand.primary,
+                            flex: 1,
+                            justifyContent: "center",
+                        }}
+                    >
+                        <CTASection onNavigate={onNavigate} />
+                    </View>
+                    
+                    {/* Footer con fondo blanco */}
+                    <Footer />
+                </View>
             </ScrollView>
         </SafeAreaView>
     );

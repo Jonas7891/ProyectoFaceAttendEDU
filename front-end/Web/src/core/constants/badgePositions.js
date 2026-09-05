@@ -4,8 +4,8 @@
 
 // Posiciones desktop (contenedor ~400x400)
 export const BadgePositions = {
-  topLeft: { position: "absolute", top: "30%", left: "5%" },
-  topRight: { position: "absolute", top: "10%", right: "5%" },
+  topLeft: { position: "absolute", top: "33.5%", left: "-12.5%" },
+  topRight: { position: "absolute", top: "15%", right: "5%" },
   bottom: { position: "absolute", bottom: "15%", right: "5%" },
 };
 

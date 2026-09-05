@@ -26,8 +26,8 @@ function AppNavbar() {
             left={
                 <View style={{ flexDirection: "row", alignItems: "center", gap: sp(12) }}>
                     <Image
-                        source={require("../../assets/images/logoFaceAttend-Minimalista.png")}
-                        style={{ width: sp(44), height: sp(44) }}
+                        source={require("../../assets/images/logo(Antiguo)FaceAttend.png")}
+                        style={{ width: sp(40), height: sp(40) }}
                     />
                     <Text style={[T.brandName, { color: c.text.primary }]}>
                         FaceAttend{" "}
