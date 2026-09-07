@@ -26,7 +26,7 @@ import {
 } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { useTheme }         from "../hooks/useTheme";
-import { useAuthAnimation } from "../../hooks/useAuthAnimation";
+import { useAuthAnimation } from "../hooks/useAuthAnimation";
 
 
 export default function AuthAnimatedLayout({

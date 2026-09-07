@@ -49,6 +49,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: DESIGN_TOKENS.spacing.md,
     paddingVertical: DESIGN_TOKENS.spacing.sm,
     borderRadius: DESIGN_TOKENS.borderRadius.round,
+    zIndex: 10, // Por encima de todo el contenido del hero
   },
   icon: {
     fontSize: 14,

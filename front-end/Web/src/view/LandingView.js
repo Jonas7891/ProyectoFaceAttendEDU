@@ -3,7 +3,7 @@ import { View, ScrollView, Image, Text, StyleSheet, Animated } from "react-nativ
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 
-import { Button } from "./components/common";
+import { Button, BackgroundImage } from "./components/common";
 import { Card } from "./components/common";
 import { HeroSection, HeroMediaSection, HeroStats, HeroTitle } from "./components/hero";
 
@@ -14,6 +14,10 @@ import { getTypography } from "../core/constants/typography";
 import BadgePositions, { BadgePositionsMobile } from "../core/constants/badgePositions";
 import { useTranslation } from "../i18n/hooks/useTranslation";
 import { DESIGN_TOKENS } from "../core/config/theme.config";
+import { 
+    getSectionBackground, 
+    getInstitutionalImage 
+} from "../core/config/landing.config";
 
 // ── Hero Section ─────────────────────────────────────────────
 
@@ -78,7 +82,7 @@ function HeroContent({ fadeLeft, slideLeft, fadeRight, slideRight, onNavigate })
             </HeroSection>
 
             <HeroMediaSection
-                mediaSource={require("../assets/images/splash-icon.png")}
+                mediaSource={getInstitutionalImage()}
                 badges={BADGES}
                 fadeAnim={fadeRight}
                 slideAnim={slideRight}
@@ -89,7 +93,7 @@ function HeroContent({ fadeLeft, slideLeft, fadeRight, slideRight, onNavigate })
 
 // ── Features Section ─────────────────────────────────────────
 
-function FeaturesSection() {
+function FeaturesContent() {
     const { sp, fs, isSmall } = useResponsive();
     const { theme } = useTheme();
     const { t } = useTranslation();
@@ -117,9 +121,6 @@ function FeaturesSection() {
     return (
         <View
             style={{
-                minHeight: "100vh",
-                backgroundColor: c.brand.primary,
-                paddingVertical: sp(isSmall ? 60 : 80),
                 paddingHorizontal: sp(isSmall ? 24 : 40),
                 width: "100%",
                 justifyContent: "center",
@@ -214,7 +215,7 @@ function FeaturesSection() {
 
 // ── Testimonials Section ─────────────────────────────────────
 
-function TestimonialsSection() {
+function TestimonialsContent() {
     const { sp, fs, isSmall } = useResponsive();
     const { theme } = useTheme();
     const { t } = useTranslation();
@@ -224,23 +225,23 @@ function TestimonialsSection() {
     const TESTIMONIALS = [
         {
             quote: t("FaceAttend transformó completamente nuestra gestión de asistencia. Ahorramos horas de trabajo manual cada semana."),
-            author: "María González",
+            author: t("María González"),
             role: t("Coordinadora Académica"),
-            institution: "SENA - Centro Industrial",
+            institution: t("SENA - Centro Industrial"),
             rating: 5,
         },
         {
             quote: t("La precisión del reconocimiento facial es impresionante. Nunca más problemas con falsificación de asistencia."),
-            author: "Carlos Ramírez",
+            author: t("Carlos Ramírez"),
             role: t("Instructor SENA"),
-            institution: "Centro de Manufactura",
+            institution: t("Centro de Manufactura"),
             rating: 5,
         },
         {
             quote: t("Los reportes detallados nos ayudan a identificar estudiantes en riesgo temprano. Excelente herramienta."),
-            author: "Ana Martínez",
+            author: t("Ana Martínez"),
             role: t("Directora de Formación"),
-            institution: "SENA Regional",
+            institution: t("SENA Regional"),
             rating: 5,
         },
     ];
@@ -248,10 +249,8 @@ function TestimonialsSection() {
     return (
         <View
             style={{
-                minHeight: "90vh",
-                backgroundColor: c.background.app,
-                paddingVertical: sp(isSmall ? 60 : 80),
                 paddingHorizontal: sp(isSmall ? 24 : 40),
+                width: "100%",
                 justifyContent: "center",
             }}
         >
@@ -269,7 +268,7 @@ function TestimonialsSection() {
                     <Text
                         style={[
                             T.eyebrow,
-                            { color: c.brand.primary, letterSpacing: 4},
+                            { color: c.brand.primary, letterSpacing: 1.5 },
                         ]}
                     >
                         {t("TESTIMONIOS")}
@@ -368,7 +367,7 @@ function TestimonialsSection() {
 
 // ── CTA Section ──────────────────────────────────────────────
 
-function CTASection({ onNavigate }) {
+function CTAContent({ onNavigate }) {
     const { sp, fs, isSmall } = useResponsive();
     const { theme } = useTheme();
     const { t } = useTranslation();
@@ -378,8 +377,8 @@ function CTASection({ onNavigate }) {
     return (
         <View
             style={{
-                paddingVertical: sp(isSmall ? 40 : 60),
                 paddingHorizontal: sp(isSmall ? 24 : 40),
+                width: "100%",
                 justifyContent: "center",
             }}
         >
@@ -425,11 +424,11 @@ function CTASection({ onNavigate }) {
                 >
                     <Button
                         onPress={() => onNavigate("FaceAttendEDU-Register")}
-                        variant="secondary"
                         size="lg"
                         style={{
                             backgroundColor: c.background.surface,
                             borderColor: c.background.surface,
+                            borderWidth: 2,
                         }}
                         textStyle={{ color: c.brand.primary }}
                     >
@@ -439,9 +438,10 @@ function CTASection({ onNavigate }) {
                         variant="outline"
                         size="lg"
                         style={{
-                            borderColor: "rgba(255,255,255,0.5)",
+                            borderColor: c.background.surface,
+                            backgroundColor: "transparent",
                         }}
-                        textStyle={{ color: c.text.onBrand }}
+                        textStyle={{ color: c.background.surface }}
                         onPress={() => onNavigate("FaceAttendEDU-Login")}
                     >
                         {t("Ver demo")}
@@ -514,7 +514,7 @@ function Footer() {
                             }}
                         >
                             <Image
-                                source={require("../assets/images/logo(Antiguo)FaceAttend.png")}
+                                source={require("../assets/images/logoFaceAttend.png")}
                                 style={{ width: 40, height: 40 }}
                             />
                             <Text style={[T.brandName, { color: c.text.primary }]}>
@@ -673,6 +673,13 @@ export default function LandingView({ onNavigate }) {
     const { theme } = useTheme();
     const c = theme.colors;
 
+    // Altura estandarizada para todas las secciones
+    const SECTION_HEIGHT = "95vh";
+
+    // Obtener configuraciones de fondo personalizadas
+    const heroBg = getSectionBackground("hero");
+    const testimonialsBg = getSectionBackground("testimonials");
+
     return (
         <SafeAreaView
             style={{ flex: 1, backgroundColor: c.background.app }}
@@ -682,42 +689,120 @@ export default function LandingView({ onNavigate }) {
                 contentContainerStyle={{ flexGrow: 1 }}
                 showsVerticalScrollIndicator={false}
             >
-                {/* Hero Section - Pantalla completa */}
+                {/* Sección 1: Hero */}
                 <View
                     style={{
-                        minHeight: "95vh",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        paddingVertical: sp(isSmall ? 40 : 60),
-                        backgroundColor: c.background.app,
+                        minHeight: SECTION_HEIGHT,
+                        overflow: "hidden",
                     }}
                 >
-                    <HeroContent {...entrance} onNavigate={onNavigate} />
+                    {heroBg ? (
+                        <BackgroundImage
+                            source={heroBg.source}
+                            blur={heroBg.blur}
+                            opacity={heroBg.opacity}
+                            pattern={heroBg.pattern}
+                            flipHorizontal={heroBg.flipHorizontal}
+                            flipVertical={heroBg.flipVertical}
+                            position={heroBg.position}
+                            overlayColor={c.background.app}
+                            overlayOpacity={heroBg.overlayOpacity}
+                            style={{
+                                minHeight: SECTION_HEIGHT,
+                            }}
+                        >
+                            <View
+                                style={{
+                                    flex: 1,
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    paddingVertical: sp(isSmall ? 40 : 60),
+                                }}
+                            >
+                                <HeroContent {...entrance} onNavigate={onNavigate} />
+                            </View>
+                        </BackgroundImage>
+                    ) : (
+                        <View
+                            style={{
+                                flex: 1,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                paddingVertical: sp(isSmall ? 40 : 60),
+                                backgroundColor: c.background.app,
+                            }}
+                        >
+                            <HeroContent {...entrance} onNavigate={onNavigate} />
+                        </View>
+                    )}
                 </View>
 
-                {/* Features Section - 100vh */}
-                <FeaturesSection />
-
+                {/* Sección 2: Features */}
                 <View
                     style={{
-                        minHeight: "80vh",
+                        minHeight: SECTION_HEIGHT,
                         alignItems: "center",
                         justifyContent: "center",
                         paddingVertical: sp(isSmall ? 40 : 60),
-                        backgroundColor: c.background.app,
+                        backgroundColor: c.brand.primary,
                     }}
                 >
-                    {/* Testimonials Section - 100vh */}
-                <TestimonialsSection />
-                </View>  
-                
+                    <FeaturesContent />
+                </View>
 
-                {/* CTA Section con Footer incluido - 100vh */}
+                {/* Sección 3: Testimonials */}
                 <View
                     style={{
-                        minHeight: "95vh",
-                        justifyContent: "space-between",
+                        minHeight: SECTION_HEIGHT,
                         overflow: "hidden",
+                    }}
+                >
+                    {testimonialsBg ? (
+                        <BackgroundImage
+                            source={testimonialsBg.source}
+                            blur={testimonialsBg.blur}
+                            opacity={testimonialsBg.opacity}
+                            pattern={testimonialsBg.pattern}
+                            flipHorizontal={testimonialsBg.flipHorizontal}
+                            flipVertical={testimonialsBg.flipVertical}
+                            position={testimonialsBg.position}
+                            overlayColor={c.background.app}
+                            overlayOpacity={testimonialsBg.overlayOpacity}
+                            style={{
+                                minHeight: SECTION_HEIGHT,
+                            }}
+                        >
+                            <View
+                                style={{
+                                    flex: 1,
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    paddingVertical: sp(isSmall ? 40 : 60),
+                                }}
+                            >
+                                <TestimonialsContent />
+                            </View>
+                        </BackgroundImage>
+                    ) : (
+                        <View
+                            style={{
+                                flex: 1,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                paddingVertical: sp(isSmall ? 40 : 60),
+                                backgroundColor: c.background.app,
+                            }}
+                        >
+                            <TestimonialsContent />
+                        </View>
+                    )}
+                </View>
+
+                {/* Sección 4: CTA + Footer */}
+                <View
+                    style={{
+                        minHeight: SECTION_HEIGHT,
+                        justifyContent: "space-between",
                     }}
                 >
                     {/* CTA con fondo azul */}
@@ -725,10 +810,12 @@ export default function LandingView({ onNavigate }) {
                         style={{
                             backgroundColor: c.brand.primary,
                             flex: 1,
+                            alignItems: "center",
                             justifyContent: "center",
+                            paddingVertical: sp(isSmall ? 40 : 60),
                         }}
                     >
-                        <CTASection onNavigate={onNavigate} />
+                        <CTAContent onNavigate={onNavigate} />
                     </View>
                     
                     {/* Footer con fondo blanco */}

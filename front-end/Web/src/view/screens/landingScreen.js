@@ -7,6 +7,8 @@ import React from "react";
 import { useNavigation } from "@react-navigation/native";
 import { View, Image, Text } from "react-native";
 import { Navbar } from "../components/common/navigation/Navbar";
+import { ThemeToggle } from "../components/common/navigation/ThemeToggle";
+import { LanguageSelector } from "../components/common/navigation/LanguageSelector";
 import LandingView from "../LandingView";
 import { useResponsive } from "../components/hooks/useResponsive";
 import { useTheme } from "../components/hooks/useTheme";
@@ -26,8 +28,8 @@ function AppNavbar() {
             left={
                 <View style={{ flexDirection: "row", alignItems: "center", gap: sp(12) }}>
                     <Image
-                        source={require("../../assets/images/logo(Antiguo)FaceAttend.png")}
-                        style={{ width: sp(40), height: sp(40) }}
+                        source={require("../../assets/images/logoFaceAttend.png")}
+                        style={{ width: sp(45), height: sp(45) }}
                     />
                     <Text style={[T.brandName, { color: c.text.primary }]}>
                         FaceAttend{" "}
@@ -36,10 +38,10 @@ function AppNavbar() {
                 </View>
             }
             right={
-                <Image
-                    source={require("../../assets/images/logo(Antiguo)FaceAttend.png")}
-                    style={{ width: sp(42), height: sp(42) }}
-                />
+                <View style={{ flexDirection: "row", alignItems: "center", gap: sp(12) }}>
+                    <ThemeToggle />
+                    <LanguageSelector />
+                </View>
             }
         />
     );

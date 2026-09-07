@@ -48,17 +48,17 @@ export default function AuthMobileLayout({ title, subtitle, children }) {
                                 flexDirection: "row",
                                 alignItems: "center",
                                 gap: 12,
-                                marginBottom: 36,
+                                marginBottom: 40,
                             }}
                         >
                             <Image
-                                source={require("../../../assets/images/logoFaceAttend-Minimalista.png")}
-                                style={{ width: 44, height: 44 }}
+                                source={require("../../../assets/images/logoFaceAttend.png")}
+                                style={{ width: 48, height: 48 }}
                                 resizeMode="contain"
                             />
                             <Text
                                 style={{
-                                    fontSize: 10,
+                                    fontSize: 22,
                                     fontWeight: "700",
                                     color: c.text.primary,
                                 }}
@@ -71,10 +71,10 @@ export default function AuthMobileLayout({ title, subtitle, children }) {
                         {/* Título + subtítulo */}
                         <Text
                             style={{
-                                fontSize: 10,
+                                fontSize: 28,
                                 fontWeight: "800",
                                 color: c.text.primary,
-                                marginBottom: 8,
+                                marginBottom: 12,
                                 letterSpacing: -0.5,
                             }}
                         >
@@ -82,10 +82,10 @@ export default function AuthMobileLayout({ title, subtitle, children }) {
                         </Text>
                         <Text
                             style={{
-                                fontSize: 11,
+                                fontSize: 16,
                                 color: c.text.secondary,
-                                marginBottom: 24,
-                                lineHeight: 20,
+                                marginBottom: 32,
+                                lineHeight: 24,
                             }}
                         >
                             {subtitle}

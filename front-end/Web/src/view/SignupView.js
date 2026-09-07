@@ -18,15 +18,18 @@
 // ============================================================
 
 import React from "react";
-import { View, Text, Image } from "react-native";
+import { View, Text, Image, TouchableOpacity, ScrollView } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { useResponsive }  from "./components/hooks/useResponsive";
 import { useTheme }       from "./components/hooks/useTheme";
 import Button             from "./components/common/buttons/Button";
 import TextInput          from "./components/common/inputs/TextInput";
 import Alert              from "./components/common/feedback/Alert";
+import PasswordStrengthIndicator from "./components/auth/PasswordStrengthIndicator";
 import {
     AuthFooterLink,
-    BrandPanelCircles, AuthCopyright,
+    BrandPanelCircles,
+    AuthCopyright,
 } from "./components/auth/AuthComponents";
 import AuthMobileLayout   from "./components/auth/AuthMobileLayout";
 import AuthAnimatedLayout from "./components/auth/AuthAnimatedLayout";
@@ -34,7 +37,7 @@ import { useSignupViewModel } from "../viewmodels/useAuthViewModel";
 import { useTranslation }     from "../i18n/hooks/useTranslation";
 
 
-export default function SignupView({ onRegisterSuccess, onGoToLogin }) {
+export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLanding }) {
     const { isSmall } = useResponsive();
     const { theme }   = useTheme();
     const c           = theme.colors;
@@ -42,58 +45,92 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin }) {
     const { t }       = useTranslation();
 
     // ── Secciones compartidas entre mobile y desktop ──────────
+    // Detectar si debe mostrarse el indicador de contraseña
+    const showPasswordIndicator = vm.password.length > 0;
+    
+    // Espaciados centralizados del formulario
+    const FORM_SPACING = {
+        fieldGap: 8,              // Gap entre campos del formulario
+        errorMarginTop: -5,         // Margen entre campo y mensaje de error
+    };
+    
     const fields = (
-        <View style={{ gap: 18 }}>
+        <View style={{ gap: FORM_SPACING.fieldGap }}>
             <TextInput
                 label={t("Usuario")}
                 placeholder={t("Tu nombre de usuario")}
+                value={vm.username}
                 onChangeText={vm.setUsername}
-                leftIcon={<Feather name="user" size={17} color={c.text.secondary} />}
+                onBlur={() => vm.handleBlur('username')}
+                leftIcon={<Feather name="user" size={20} color={c.text.secondary} />}
+                error={!!vm.usernameError}
+                errorMessage={vm.usernameError}
+                success={vm.usernameValid && !vm.usernameError}
+                shake={vm.shakeFields.username}
             />
             <TextInput
                 label={t("Correo electrónico")}
                 placeholder={t("correo@universidad.edu")}
+                value={vm.email}
                 onChangeText={vm.setEmail}
+                onBlur={() => vm.handleBlur('email')}
                 type="email"
-                leftIcon={<Feather name="mail" size={17} color={c.text.secondary} />}
+                leftIcon={<Feather name="mail" size={20} color={c.text.secondary} />}
+                error={!!vm.emailError}
+                errorMessage={vm.emailError}
+                success={vm.emailValid && !vm.emailError}
+                shake={vm.shakeFields.email}
             />
-            <TextInput
-                label={t("Contraseña")}
-                placeholder={t("Crea una contraseña")}
-                onChangeText={vm.setPassword}
-                type="password"
-                leftIcon={<Feather name="lock" size={17} color={c.text.secondary} />}
-                rightIcon={
-                    <TouchableOpacity onPress={vm.togglePassword}>
-                        <Feather name={vm.showPassword ? "eye-off" : "eye"} size={17} color={c.text.secondary} />
-                    </TouchableOpacity>
-                }
-                secureTextEntry={!vm.showPassword}
-            />
+            <View>
+                <TextInput
+                    label={t("Contraseña")}
+                    placeholder={t("Crea una contraseña")}
+                    value={vm.password}
+                    onChangeText={vm.setPassword}
+                    onBlur={() => vm.handleBlur('password')}
+                    type="password"
+                    leftIcon={<Feather name="lock" size={20} color={c.text.secondary} />}
+                    rightIcon={
+                        <TouchableOpacity onPress={vm.togglePassword}>
+                            <Feather name={vm.showPassword ? "eye-off" : "eye"} size={20} color={c.text.secondary} />
+                        </TouchableOpacity>
+                    }
+                    secureTextEntry={!vm.showPassword}
+                    error={!!vm.passwordError && vm.password.length === 0}
+                    errorMessage={vm.password.length === 0 ? vm.passwordError : null}
+                    success={vm.passwordValid && !vm.passwordError}
+                    shake={vm.shakeFields.password}
+                />
+                {/* Indicador siempre visible cuando hay contraseña */}
+                <PasswordStrengthIndicator 
+                    password={vm.password} 
+                    show={showPasswordIndicator}
+                />
+            </View>
         </View>
     );
 
     const formActions = (
         <React.Fragment>
-            {vm.error && (
-                <Alert 
-                    type="error" 
-                    message={vm.error}
-                    style={{ marginTop: 12 }}
-                />
-            )}
-            <View style={{ marginTop: 28 }}>
+            <View style={{ marginTop: 20 }}>
                 <Button
-                    label={vm.loading ? t("Registrando…") : t("Registrarse")}
                     onPress={vm.handleRegister}
+                    disabled={vm.loading}
+                    loading={vm.loading}
+                >
+                    {vm.loading ? t("Registrando…") : t("Registrarse")}
+                </Button>
+            </View>
+            <View style={{ marginTop: 16 }}>
+                <AuthFooterLink
+                    prompt={t("¿Ya tienes cuenta?")}
+                    linkLabel={t("Inicia sesión")}
+                    onPress={onGoToLogin}
                 />
             </View>
-            <AuthFooterLink
-                prompt={t("¿Ya tienes cuenta?")}
-                linkLabel={t("Inicia sesión")}
-                onPress={onGoToLogin}
-            />
-            <AuthCopyright />
+            <View style={{ marginTop: 12 }}>
+                <AuthCopyright />
+            </View>
         </React.Fragment>
     );
 
@@ -114,21 +151,53 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin }) {
     const brandPanel = (
         <React.Fragment>
             <BrandPanelCircles />
-            <View style={{ zIndex: 1, alignItems: "center", maxWidth: 400 }}>
+            
+            {/* Botón de volver al inicio - posicionado arriba a la izquierda */}
+            {onGoToLanding && (
+                <TouchableOpacity
+                    onPress={onGoToLanding}
+                    style={{
+                        position: "absolute",
+                        top: 20,
+                        left: 32,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 8,
+                        zIndex: 10,
+                    }}
+                >
+                    <Feather name="arrow-left" size={20} color="rgba(255,255,255,0.9)" />
+                    <Text style={{
+                        fontSize: 15,
+                        color: "rgba(255,255,255,0.9)",
+                        fontWeight: "500",
+                    }}>
+                        {t("Volver al inicio")}
+                    </Text>
+                </TouchableOpacity>
+            )}
+            
+            <View style={{ zIndex: 1, alignItems: "center", maxWidth: 440, paddingHorizontal: 32 }}>
                 <Image
-                    source={require("../assets/images/logoFaceAttend-BlancoAzul.png")}
-                    style={{ width: 180, height: 60, marginBottom: 24 }}
+                    source={require("../assets/images/logoFaceAttend.png")}
+                    style={{ width: 160, height: 56, marginBottom: 24 }}
                     resizeMode="contain"
                 />
                 <Text style={{
-                    fontSize: 10, fontWeight: "800", color: c.text.onBrand,
-                    textAlign: "center", marginBottom: 12, letterSpacing: -1,
+                    fontSize: 24,
+                    fontWeight: "800",
+                    color: c.text.onBrand,
+                    textAlign: "center",
+                    marginBottom: 12,
+                    letterSpacing: -0.5,
                 }}>
                     {t("Únete a FaceAttend EDU")}
                 </Text>
                 <Text style={{
-                    fontSize: 11, color: "rgba(255,255,255,0.75)",
-                    textAlign: "center", lineHeight: 20,
+                    fontSize: 15,
+                    color: "rgba(255,255,255,0.85)",
+                    textAlign: "center",
+                    lineHeight: 22,
                 }}>
                     {t("Registra tu institución y empieza a gestionar la asistencia con reconocimiento facial.")}
                 </Text>
@@ -137,16 +206,56 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin }) {
     );
 
     const formContent = (
-        <React.Fragment>
-            <Text style={{ fontSize: 10, fontWeight: "800", color: c.text.primary, marginBottom: 8, letterSpacing: -0.5 }}>
-                {t("Crear cuenta")}
-            </Text>
-            <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom: 24, lineHeight: 24 }}>
-                {t("Completa los datos para registrarte.")}
-            </Text>
-            {fields}
-            {formActions}
-        </React.Fragment>
+        <View style={{ width: '100%', minHeight: 600, justifyContent: 'center', paddingTop: 35 }}>
+            {/* Header - compacto */}
+            <View style={{ marginBottom: 18 }}>
+                <Text style={{
+                    fontSize: 28,
+                    fontWeight: "800",
+                    color: c.text.primary,
+                    marginBottom: 6,
+                    letterSpacing: -0.5,
+                }}>
+                    {t("Crear cuenta")}
+                </Text>
+                <Text style={{
+                    fontSize: 15,
+                    color: c.text.secondary,
+                    lineHeight: 16,
+                }}>
+                    {t("Completa los datos para registrarte.")}
+                </Text>
+            </View>
+
+            {/* Campos del formulario - ALTURA FIJA para que no mueva nada */}
+            <View style={{ height: 270, flexDirection: 'row-reverse',  marginTop: -5}}>
+                <ScrollView 
+                    showsVerticalScrollIndicator={true}
+                    contentContainerStyle={{ 
+                        paddingVertical: 0,
+                        ...(typeof window !== 'undefined' && {
+                            direction: 'ltr', // Contenido en dirección normal
+                        }),
+                    }}
+                    bounces={false}
+                    style={{
+                        flex: 1,
+                        ...(typeof window !== 'undefined' && {
+                            // Estilos CSS para web - scrollbar personalizado del lado izquierdo
+                            direction: 'ltr',
+                        }),
+                    }}
+                    
+                >
+                    {fields}
+                </ScrollView>
+            </View>
+
+            {/* Botón y footer - compacto, cerca del formulario */}
+            <View style={{ marginTop: -18}}>
+                {formActions}
+            </View>
+        </View>
     );
 
     return (

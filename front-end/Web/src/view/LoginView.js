@@ -17,103 +17,38 @@
 //  Recibe callbacks del Screen para delegar acciones de navegación.
 // ============================================================
 
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useResponsive }  from "./components/hooks/useResponsive";
 import { useTheme }       from "./components/hooks/useTheme";
 import Button             from "./components/common/buttons/Button";
 import TextInput          from "./components/common/inputs/TextInput";
-import Alert              from "./components/common/feedback/Alert";
 import {
     AuthFooterLink,
-    BrandPanelCircles, AuthCopyright,
+    BrandPanelCircles,
+    AuthCopyright,
 } from "./components/auth/AuthComponents";
+import { PasswordPolicyModal } from "./components/auth/PasswordPolicyModal";
 import AuthMobileLayout   from "./components/auth/AuthMobileLayout";
 import AuthAnimatedLayout from "./components/auth/AuthAnimatedLayout";
 import { useLoginViewModel } from "../viewmodels/useAuthViewModel";
 import { useTranslation }    from "../i18n/hooks/useTranslation";
-
-// ── Credenciales de desarrollo ───────────────────────────────
-// Solo visible cuando __DEV__ === true (Expo/Metro en desarrollo).
-// En producción este bloque nunca se renderiza.
-
-const DEV_USERS = [
-    { role: "Admin",    email: "admin@uni.edu",      color: "#EF4444" },
-    { role: "Docente",  email: "f.torres@uni.edu",   color: "#F59E0B" },
-    { role: "Alumno",   email: "m.garcia@uni.edu",   color: "#10B981" },
-];
-
-function DevCredentials({ onFill }) {
-    const { theme } = useTheme();
-    const c = theme.colors;
-    // __DEV__ es una variable global de React Native / Metro — true en desarrollo
-    if (typeof __DEV__ === "undefined" || !__DEV__) return null;
-
-    return (
-        <View style={{
-            marginTop: 16,
-            borderWidth: 1,
-            borderColor: "#F59E0B",
-            borderRadius: 14,
-            padding: 12,
-            backgroundColor: "#FFFBEB",
-            gap: 8,
-        }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                <Feather name="zap" size={12} color="#92400E" />
-                <Text style={{ fontSize: 10, fontWeight: "700", color: "#92400E", textTransform: "uppercase", letterSpacing: 0.5 }}>
-                    Dev — acceso rápido
-                </Text>
-            </View>
-            <Text style={{ fontSize: 11, color: "#92400E", marginBottom: 4 }}>
-                Contraseña: cualquier texto no vacío
-            </Text>
-            {DEV_USERS.map(u => (
-                <TouchableOpacity
-                    key={u.role}
-                    onPress={() => onFill(u.email)}
-                    style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 8,
-                        paddingVertical: 8,
-                        paddingHorizontal: 10,
-                        borderRadius: 14,
-                        backgroundColor: u.color + "15",
-                        borderWidth: 1,
-                        borderColor: u.color + "40",
-                    }}
-                >
-                    <View style={{ width: 3, height: 3, borderRadius: 14, backgroundColor: u.color }} />
-                    <Text style={{ fontSize: 10, fontWeight: "600", color: "#1a1a2e", flex: 1 }}>
-                        {u.role}
-                    </Text>
-                    <Text style={{ fontSize: 11, color: "#64748B" }}>{u.email}</Text>
-                    <Feather name="arrow-right" size={11} color="#64748B" />
-                </TouchableOpacity>
-            ))}
-        </View>
-    );
-}
 
 
 export default function LoginView({
     onLoginSuccess,
     onForgotPassword,
     onGoToRegister,
+    onGoToLanding,
 }) {
     const { isSmall } = useResponsive();
     const { theme }   = useTheme();
     const c           = theme.colors;
     const vm          = useLoginViewModel(onLoginSuccess);
     const { t }       = useTranslation();
-
-    // Rellena el email desde el panel dev y pone foco listo para escribir contraseña
-    function handleDevFill(email) {
-        vm.setEmail(email);
-        vm.prefillEmail(email);
-    }
+    
+    const [showPasswordPolicy, setShowPasswordPolicy] = useState(false);
 
     const FEATURES = [
         { title: t("Reconocimiento facial en tiempo real"), desc: t("Registra asistencia automáticamente con IA.")  },
@@ -121,63 +56,91 @@ export default function LoginView({
         { title: t("Gestión completa de estudiantes"),      desc: t("Centraliza toda la información académica.")   },
     ];
 
+    // Espaciados centralizados del formulario
+    const FORM_SPACING = {
+        fieldGap: 10,              // Gap entre campos del formulario
+        errorMarginTop: 3,         // Margen entre campo y mensaje de error
+    };
+    
     const fields = (
-        <View style={{ gap: 18 }}>
+        <View style={{ gap: FORM_SPACING.fieldGap }}>
             <TextInput
                 label={t("Correo electrónico")}
                 placeholder={t("correo@universidad.edu")}
-                onChangeText={vm.setEmail}
-                type="email"
                 value={vm.emailDisplay}
-                leftIcon={<Feather name="mail" size={17} color={c.text.secondary} />}
+                onChangeText={vm.setEmail}
+                onBlur={() => vm.handleBlur('email')}
+                type="email"
+                leftIcon={<Feather name="mail" size={20} color={c.text.secondary} />}
+                error={!!vm.emailError}
+                errorMessage={vm.emailError}
+                success={vm.emailValid && !vm.emailError}
+                progress={vm.emailProgress}
+                shake={vm.shakeFields.email}
             />
-            <TextInput
-                label={t("Contraseña")}
-                placeholder={t("Tu contraseña")}
-                onChangeText={vm.setPassword}
-                type="password"
-                value={vm.password}
-                leftIcon={<Feather name="lock" size={17} color={c.text.secondary} />}
-                rightIcon={
-                    <TouchableOpacity onPress={vm.togglePassword}>
-                        <Feather name={vm.showPassword ? "eye-off" : "eye"} size={17} color={c.text.secondary} />
-                    </TouchableOpacity>
-                }
-                secureTextEntry={!vm.showPassword}
-            />
+            <View>
+                <TextInput
+                    label={t("Contraseña")}
+                    placeholder={t("Tu contraseña")}
+                    value={vm.password}
+                    onChangeText={vm.setPassword}
+                    onBlur={() => vm.handleBlur('password')}
+                    type="password"
+                    leftIcon={<Feather name="lock" size={20} color={c.text.secondary} />}
+                    rightIcon={
+                        <TouchableOpacity onPress={vm.togglePassword}>
+                            <Feather name={vm.showPassword ? "eye-off" : "eye"} size={20} color={c.text.secondary} />
+                        </TouchableOpacity>
+                    }
+                    secureTextEntry={!vm.showPassword}
+                    error={!!vm.passwordError}
+                    errorMessage={vm.passwordError}
+                    warning={vm.passwordWarning}
+                    success={vm.passwordValid && !vm.passwordError && !vm.passwordWarning}
+                    progress={vm.passwordProgress}
+                    shake={vm.shakeFields.password}
+                />
+                {/* "¿Olvidaste tu contraseña?" con distancia fija */}
+                <TouchableOpacity
+                    onPress={() => setShowPasswordPolicy(true)}
+                    style={{ alignSelf: "flex-end", marginTop: 10 }}
+                >
+                    <Text style={{ fontSize: 14, color: c.brand.primary, fontWeight: "500" }}>
+                        {t("¿Olvidaste tu contraseña?")}
+                    </Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 
     const formActions = (
         <React.Fragment>
-            {vm.error && (
-                <Alert 
-                    type="error" 
-                    message={vm.error}
-                    style={{ marginTop: 12 }}
-                />
-            )}
-            <TouchableOpacity
-                onPress={onForgotPassword}
-                style={{ alignSelf: "flex-end", marginTop: 14 }}
-            >
-                <Text style={{ fontSize: 11, color: c.brand.primary, fontWeight: "500" }}>
-                    {t("¿Olvidaste tu contraseña?")}
-                </Text>
-            </TouchableOpacity>
-            <View style={{ marginTop: 24 }}>
+            <View style={{ marginTop: 20 }}>
                 <Button
-                    label={vm.loading ? t("Ingresando…") : t("Ingresar")}
                     onPress={vm.handleLogin}
+                    disabled={vm.loading}
+                    loading={vm.loading}
+                >
+                    {vm.loading ? t("Ingresando…") : t("Ingresar")}
+                </Button>
+            </View>
+            <View style={{ marginTop: 16 }}>
+                <AuthFooterLink
+                    prompt={t("¿No tienes cuenta?")}
+                    linkLabel={t("Regístrate aquí")}
+                    onPress={onGoToRegister}
                 />
             </View>
-            <AuthFooterLink
-                prompt={t("¿No tienes cuenta?")}
-                linkLabel={t("Regístrate aquí")}
-                onPress={onGoToRegister}
+            <View style={{ marginTop: 12 }}>
+                <AuthCopyright />
+            </View>
+            
+            {/* Modal de políticas de contraseña */}
+            <PasswordPolicyModal
+                visible={showPasswordPolicy}
+                onClose={() => setShowPasswordPolicy(false)}
+                onResetPassword={onForgotPassword}
             />
-            <DevCredentials onFill={handleDevFill} />
-            <AuthCopyright />
         </React.Fragment>
     );
 
@@ -196,35 +159,71 @@ export default function LoginView({
     const brandPanel = (
         <React.Fragment>
             <BrandPanelCircles />
-            <View style={{ zIndex: 1, alignItems: "center", maxWidth: 400 }}>
+            
+            {/* Botón de volver al inicio - posicionado arriba a la izquierda */}
+            {onGoToLanding && (
+                <TouchableOpacity
+                    onPress={onGoToLanding}
+                    style={{
+                        position: "absolute",
+                        top: 20,
+                        left: 32,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 8,
+                        zIndex: 10,
+                    }}
+                >
+                    <Feather name="arrow-left" size={20} color="rgba(255,255,255,0.9)" />
+                    <Text style={{
+                        fontSize: 15,
+                        color: "rgba(255,255,255,0.9)",
+                        fontWeight: "500",
+                    }}>
+                        {t("Volver al inicio")}
+                    </Text>
+                </TouchableOpacity>
+            )}
+            
+            <View style={{ zIndex: 1, alignItems: "center", maxWidth: 480, paddingHorizontal: 32 }}>
                 <Image
-                    source={require("../assets/images/logoFaceAttend-BlancoAzul.png")}
-                    style={{ width: 180, height: 60, marginBottom: 24 }}
+                    source={require("../assets/images/logoFaceAttend.png")}
+                    style={{ width: 200, height: 70, marginBottom: 32 }}
                     resizeMode="contain"
                 />
                 <Text style={{
-                    fontSize: 10, fontWeight: "800", color: c.text.onBrand,
-                    textAlign: "center", marginBottom: 12, letterSpacing: -1,
+                    fontSize: 28,
+                    fontWeight: "800",
+                    color: c.text.onBrand,
+                    textAlign: "center",
+                    marginBottom: 16,
+                    letterSpacing: -0.5,
                 }}>
                     FaceAttend EDU
                 </Text>
                 <Text style={{
-                    fontSize: 11, color: "rgba(255,255,255,0.75)",
-                    textAlign: "center", lineHeight: 20, marginBottom: 24,
+                    fontSize: 16,
+                    color: "rgba(255,255,255,0.85)",
+                    textAlign: "center",
+                    lineHeight: 24,
+                    marginBottom: 32,
                 }}>
                     {t("Asistencia inteligente para tu institución")}
                 </Text>
-                <View style={{ gap: 12, width: "100%" }}>
+                <View style={{ gap: 16, width: "100%" }}>
                     {FEATURES.map(f => (
-                        <View key={f.title} style={{ flexDirection: "row", gap: 10, alignItems: "flex-start" }}>
+                        <View key={f.title} style={{ flexDirection: "row", gap: 12, alignItems: "flex-start" }}>
                             <View style={{
-                                width: 6, height: 6, borderRadius: 14,
-                                backgroundColor: "rgba(255,255,255,0.6)",
-                                marginTop: 4, flexShrink: 0,
+                                width: 8,
+                                height: 8,
+                                borderRadius: 4,
+                                backgroundColor: "rgba(255,255,255,0.7)",
+                                marginTop: 6,
+                                flexShrink: 0,
                             }} />
                             <View style={{ flex: 1 }}>
-                                <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.onBrand }}>{f.title}</Text>
-                                <Text style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", marginTop: 2 }}>{f.desc}</Text>
+                                <Text style={{ fontSize: 15, fontWeight: "600", color: c.text.onBrand }}>{f.title}</Text>
+                                <Text style={{ fontSize: 14, color: "rgba(255,255,255,0.75)", marginTop: 4 }}>{f.desc}</Text>
                             </View>
                         </View>
                     ))}
@@ -234,16 +233,55 @@ export default function LoginView({
     );
 
     const formContent = (
-        <React.Fragment>
-            <Text style={{ fontSize: 10, fontWeight: "800", color: c.text.primary, marginBottom: 8, letterSpacing: -0.5 }}>
-                {t("Inicio de sesión")}
-            </Text>
-            <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom: 24, lineHeight: 24 }}>
-                {t("Bienvenido de vuelta. Ingresa tus credenciales.")}
-            </Text>
-            {fields}
-            {formActions}
-        </React.Fragment>
+        <View style={{ width: '100%', minHeight: 600, justifyContent: 'center', paddingTop: 60 }}>
+            {/* Header - compacto */}
+            <View style={{ marginBottom: 18 }}>
+                <Text style={{
+                    fontSize: 28,
+                    fontWeight: "800",
+                    color: c.text.primary,
+                    marginBottom: 6,
+                    letterSpacing: -0.5,
+                }}>
+                    {t("Inicio de sesión")}
+                </Text>
+                <Text style={{
+                    fontSize: 15,
+                    color: c.text.secondary,
+                    lineHeight: 22,
+                }}>
+                    {t("Bienvenido de vuelta. Ingresa tus credenciales.")}
+                </Text>
+            </View>
+
+            {/* Campos del formulario - ALTURA FIJA para que no mueva nada */}
+            <View style={{ height: 235}}>
+                <ScrollView 
+                    showsVerticalScrollIndicator={true}
+                    contentContainerStyle={{ 
+                        paddingVertical: 4,
+                        ...(typeof window !== 'undefined' && {
+                            direction: 'ltr', // Contenido en dirección normal
+                        }),
+                    }}
+                    bounces={false}
+                    style={{
+                        flex: 1,
+                        ...(typeof window !== 'undefined' && {
+                            // Estilos CSS para web - scrollbar personalizado del lado izquierdo
+                            direction: 'ltr',
+                        }),
+                    }}
+                >
+                    {fields}
+                </ScrollView>
+            </View>
+
+            {/* Botón y footer - compacto, cerca del formulario */}
+            <View style={{ marginTop: -18 }}>
+                {formActions}
+            </View>
+        </View>
     );
 
     return (

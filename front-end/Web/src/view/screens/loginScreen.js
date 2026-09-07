@@ -39,12 +39,18 @@ export default function LoginScreen() {
         navigation.navigate("FaceAttendEDU-Register");
     }
 
+    // ── Navegación de regreso al landing ──────────────────────
+    function onGoToLanding() {
+        navigation.navigate("FaceAttendEDU");
+    }
+
     // ── Delegación completa a View ────────────────────────────
     return (
         <LoginView
             onLoginSuccess={onLoginSuccess}
             onForgotPassword={onForgotPassword}
             onGoToRegister={onGoToRegister}
+            onGoToLanding={onGoToLanding}
         />
     );
 }

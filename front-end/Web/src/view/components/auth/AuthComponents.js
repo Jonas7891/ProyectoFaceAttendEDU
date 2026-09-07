@@ -18,15 +18,15 @@ export function AuthFooterLink({ prompt, linkLabel, onPress }) {
         <View style={{
             flexDirection: "row",
             justifyContent: "center",
-            gap: 8,
-            marginTop: 20
+            gap: 6,
+            alignItems: "center",
         }}>
-            <Text style={{ fontSize: 11, color: c.text.secondary }}>
+            <Text style={{ fontSize: 14, color: c.text.secondary }}>
                 {prompt}
             </Text>
             <TouchableOpacity onPress={onPress}>
                 <Text style={{
-                    fontSize: 11,
+                    fontSize: 14,
                     color: c.brand.primary,
                     fontWeight: "600"
                 }}>
@@ -74,10 +74,9 @@ export function AuthCopyright() {
     const c = theme.colors;
     return (
         <Text style={{
-            fontSize: 11,
-            color: c.text.secondary,
+            fontSize: 12,
+            color: c.text.tertiary,
             textAlign: "center",
-            marginTop: 12,
         }}>
             {`© FaceAttend EDU ${new Date().getFullYear()} — ${t("Derechos reservados")}`}
         </Text>

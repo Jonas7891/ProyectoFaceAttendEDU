@@ -2,6 +2,13 @@
  * Funciones de validación reutilizables
  */
 
+import { 
+  validatePassword, 
+  getPasswordStrength, 
+  getPasswordStrengthLevel,
+  getPasswordSuggestions 
+} from "./passwordValidation";
+
 /**
  * Valida formato de email
  * @param {string} email - Email a validar
@@ -156,22 +163,49 @@ export function isAdult(birthDate) {
 }
 
 /**
- * Valida contraseña segura (mínimo 8 caracteres, mayúsculas, minúsculas y números)
+ * Valida contraseña segura delegando a passwordValidation.js
  * @param {string} password - Contraseña a validar
+ * @param {Object} userInfo - Información del usuario (opcional)
  * @returns {boolean} true si la contraseña es segura
  * @example
- * isStrongPassword("Password123") // true
+ * isStrongPassword("MyS3cur3P@ss!") // true
  * isStrongPassword("weak") // false
+ * isStrongPassword("password123", { username: "john", email: "john@example.com" }) // false si usa info del usuario
  */
-export function isStrongPassword(password) {
-  if (!password || password.length < 8) return false;
-  
-  const hasUppercase = /[A-Z]/.test(password);
-  const hasLowercase = /[a-z]/.test(password);
-  const hasNumber = /\d/.test(password);
-  
-  return hasUppercase && hasLowercase && hasNumber;
+export function isStrongPassword(password, userInfo = {}) {
+  const validation = validatePassword(password, userInfo);
+  return validation.isValid;
 }
+
+/**
+ * Valida contraseña y retorna resultados detallados
+ * @param {string} password - Contraseña a validar
+ * @param {Object} userInfo - Información del usuario (opcional)
+ * @returns {{isValid: boolean, errors: string[], strength: number, level: string}} Resultado detallado
+ * @example
+ * const result = validatePasswordDetailed("MyP@ss123", { username: "john" });
+ * // result = { isValid: true, errors: [], strength: 85, level: "Fuerte" }
+ */
+export function validatePasswordDetailed(password, userInfo = {}) {
+  const validation = validatePassword(password, userInfo);
+  const strength = getPasswordStrength(password);
+  const { level } = getPasswordStrengthLevel(strength);
+  
+  return {
+    isValid: validation.isValid,
+    errors: validation.errors,
+    strength,
+    level,
+  };
+}
+
+// Re-exportar funciones útiles de passwordValidation para acceso directo
+export { 
+  validatePassword as checkPassword,
+  getPasswordStrength,
+  getPasswordStrengthLevel,
+  getPasswordSuggestions,
+};
 
 /**
  * Valida código de estudiante (letras y números, 6-12 caracteres)
@@ -304,14 +338,20 @@ export const validators = {
   }),
   
   /**
-   * Validador de contraseña segura
+   * Validador de contraseña segura (usa passwordValidation.js)
    * @param {string} [message] - Mensaje de error personalizado
+   * @param {Object} [userInfo] - Información del usuario para validación contextual
    * @returns {{fn: Function, message: string}} Validador
    * @example
    * validate(password, [validators.strongPassword()])
+   * validate(password, [validators.strongPassword("Contraseña muy débil", { username, email })])
    */
-  strongPassword: (message = "Contraseña débil: mínimo 8 caracteres, mayúsculas, minúsculas y números") => ({
-    fn: isStrongPassword,
-    message,
-  }),
+  strongPassword: (message, userInfo = {}) => {
+    const defaultMessage = "Contraseña débil: debe cumplir con los requisitos de seguridad";
+    
+    return {
+      fn: (value) => isStrongPassword(value, userInfo),
+      message: message || defaultMessage,
+    };
+  },
 };

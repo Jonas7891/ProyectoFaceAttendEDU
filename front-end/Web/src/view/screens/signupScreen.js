@@ -34,11 +34,17 @@ export default function SignupScreen() {
         navigation.navigate("FaceAttendEDU-Login");
     }
 
+    // ── Navegación al landing ─────────────────────────────────
+    function onGoToLanding() {
+        navigation.navigate("FaceAttendEDU");
+    }
+
     // ── Delegación completa a View ────────────────────────────
     return (
         <SignupView
             onRegisterSuccess={onRegisterSuccess}
             onGoToLogin={onGoToLogin}
+            onGoToLanding={onGoToLanding}
         />
     );
 }

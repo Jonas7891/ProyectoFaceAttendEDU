@@ -43,3 +43,4 @@ export * from './animation';
 export { Avatar } from './Avatar';
 export { Divider } from './Divider';
 export { ToggleRow } from './ToggleRow';
+export { BackgroundImage } from './BackgroundImage';

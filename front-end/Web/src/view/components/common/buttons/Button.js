@@ -120,19 +120,19 @@ export function Button({
   // Estilos por tamaño
   const sizeStyles = {
     sm: {
-      paddingVertical: DESIGN_TOKENS.spacing.xs,
+      paddingVertical: DESIGN_TOKENS.spacing.xs + 2,
       paddingHorizontal: DESIGN_TOKENS.spacing.md,
-      minHeight: 32,
+      minHeight: 36,
     },
     md: {
-      paddingVertical: DESIGN_TOKENS.spacing.sm,
+      paddingVertical: DESIGN_TOKENS.spacing.sm + 4,
       paddingHorizontal: DESIGN_TOKENS.spacing.lg,
-      minHeight: 40,
+      minHeight: 48,
     },
     lg: {
       paddingVertical: DESIGN_TOKENS.spacing.md,
       paddingHorizontal: DESIGN_TOKENS.spacing.xl,
-      minHeight: 48,
+      minHeight: 52,
     },
   };
 
@@ -140,7 +140,7 @@ export function Button({
   const textSizeStyles = {
     sm: { fontSize: 13, fontWeight: "600" },
     md: { fontSize: 15, fontWeight: "700" },
-    lg: { fontSize: 16, fontWeight: "700" },
+    lg: { fontSize: 17, fontWeight: "700" },
   };
 
   const isDisabled = disabled || loading;

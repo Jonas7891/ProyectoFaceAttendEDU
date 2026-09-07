@@ -94,7 +94,7 @@ export function Alert({
     >
       <Feather
         name={alertConfig.icon}
-        size={20}
+        size={22}
         color={alertConfig.color}
         style={styles.icon}
       />
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "flex-start",
-    padding: DESIGN_TOKENS.spacing.md,
+    padding: DESIGN_TOKENS.spacing.md + 2,
     borderRadius: DESIGN_TOKENS.borderRadius.md,
     borderLeftWidth: 4,
   },
@@ -135,17 +135,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "700",
-    marginBottom: DESIGN_TOKENS.spacing.xs,
+    marginBottom: DESIGN_TOKENS.spacing.xs + 2,
   },
   message: {
-    fontSize: 13,
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 22,
   },
   closeButton: {
     marginLeft: DESIGN_TOKENS.spacing.md,
-    padding: DESIGN_TOKENS.spacing.xs,
+    padding: DESIGN_TOKENS.spacing.xs + 2,
   },
 });
 
