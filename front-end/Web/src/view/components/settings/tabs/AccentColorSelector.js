@@ -431,13 +431,13 @@ export function AccentColorSelector({ previewHex, onPreviewChange }) {
                         gap: 8,
                         padding: 12,
                         margin: 8,
-                        backgroundColor: c.states.warningLight,
+                        backgroundColor: c.status.warningLight,
                         borderRadius: 14,
                     }}>
                         <Feather
                             name="info"
                             size={13}
-                            color={c.states.warning}
+                            color={c.status.warning}
                             style={{ marginTop: 1 }}
                         />
                         <Text style={{
@@ -455,7 +455,7 @@ export function AccentColorSelector({ previewHex, onPreviewChange }) {
                         gap: 8,
                         padding: 12,
                         margin: 8,
-                        backgroundColor: c.states.successLight,
+                        backgroundColor: c.status.successLight,
                         borderRadius: 14,
                     }}>
                         <Feather

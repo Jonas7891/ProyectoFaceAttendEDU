@@ -199,9 +199,9 @@ export function useReportsViewModel() {
         if (students.length === 0) {
             return [
                 { label: t("Asistencia global"), value: "—", color: c.brand.primary, icon: "trending-up" },
-                { label: t("Total aprendices"), value: "0", color: c.states.success, icon: "users" },
-                { label: t("En riesgo"), value: "0", color: c.states.danger, icon: "alert-circle" },
-                { label: t("Programas"), value: "0", color: c.states.warning, icon: "book-open" },
+                { label: t("Total aprendices"), value: "0", color: c.status.success, icon: "users" },
+                { label: t("En riesgo"), value: "0", color: c.status.danger, icon: "alert-circle" },
+                { label: t("Programas"), value: "0", color: c.status.warning, icon: "book-open" },
             ];
         }
 
@@ -231,19 +231,19 @@ export function useReportsViewModel() {
                 label: t("Total aprendices"),
                 value: students.length,
                 change: 0,
-                color: c.states.success,
+                color: c.status.success,
                 icon: "users",
             },
             {
                 label: t("En riesgo"),
                 value: atRiskCount,
-                color: c.states.danger,
+                color: c.status.danger,
                 icon: "alert-circle",
             },
             {
                 label: t("Programas"),
                 value: programCount,
-                color: c.states.warning,
+                color: c.status.warning,
                 icon: "book-open",
             },
         ];
@@ -252,9 +252,9 @@ export function useReportsViewModel() {
     const distribution = useMemo(() => {
         if (students.length === 0)
             return [
-                { name: t("A tiempo"), value: 0, color: c.states.success },
-                { name: t("Tardanzas"), value: 0, color: c.states.warning },
-                { name: t("Ausentes"), value: 0, color: c.states.danger },
+                { name: t("A tiempo"), value: 0, color: c.status.success },
+                { name: t("Tardanzas"), value: 0, color: c.status.warning },
+                { name: t("Ausentes"), value: 0, color: c.status.danger },
             ];
 
         const onTime = students.filter((s) => s.attendance >= 85).length;
@@ -263,9 +263,9 @@ export function useReportsViewModel() {
         const total = students.length;
 
         return [
-            { name: t("A tiempo"), value: Math.round((onTime / total) * 100), color: c.states.success },
-            { name: t("Tardanzas"), value: Math.round((late / total) * 100), color: c.states.warning },
-            { name: t("Ausentes"), value: Math.round((absent / total) * 100), color: c.states.danger },
+            { name: t("A tiempo"), value: Math.round((onTime / total) * 100), color: c.status.success },
+            { name: t("Tardanzas"), value: Math.round((late / total) * 100), color: c.status.warning },
+            { name: t("Ausentes"), value: Math.round((absent / total) * 100), color: c.status.danger },
         ];
     }, [c, t, students]);
 
@@ -292,7 +292,7 @@ export function useReportsViewModel() {
             .map((item, idx) => ({
                 ...item,
                 rank: idx + 1,
-                barColor: item.rate >= 85 ? c.states.success : c.states.warning,
+                barColor: item.rate >= 85 ? c.status.success : c.status.warning,
             }));
     }, [c, students]);
 

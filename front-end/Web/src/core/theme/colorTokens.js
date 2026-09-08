@@ -11,7 +11,7 @@
 //      background: { app, surface, elevated, overlay },
 //      text: { primary, secondary, disabled, inverse, onBrand },
 //      border: { primary, secondary, focus, error },
-//      states: { success, successLight, warning, warningLight, danger, dangerLight, info, infoLight },
+//      status: { success, successLight, warning, warningLight, danger, dangerLight, error, errorLight, info, infoLight },
 //      interactive: { hover, pressed, disabled, disabledText }
 //    }
 //  }

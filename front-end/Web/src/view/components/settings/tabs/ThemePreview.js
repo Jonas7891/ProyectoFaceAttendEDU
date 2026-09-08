@@ -143,9 +143,9 @@ export function ThemePreview({ previewTheme }) {
                 }}>
                     {[
                         { labelKey: "Activo", bg: c.brand.primaryLight, color: c.brand.primary },
-                        { labelKey: "Éxito", bg: c.states.successLight, color: "#065F46" },
-                        { labelKey: "Advertencia", bg: c.states.warningLight, color: "#92400E" },
-                        { labelKey: "Peligro", bg: c.states.dangerLight, color: "#991B1B" },
+                        { labelKey: "Éxito", bg: c.status.successLight, color: "#065F46" },
+                        { labelKey: "Advertencia", bg: c.status.warningLight, color: "#92400E" },
+                        { labelKey: "Peligro", bg: c.status.dangerLight, color: "#991B1B" },
                     ].map(b => (
                         <View
                             key={b.labelKey}

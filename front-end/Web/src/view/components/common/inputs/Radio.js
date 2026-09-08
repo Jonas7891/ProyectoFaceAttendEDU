@@ -67,19 +67,19 @@ export function Radio({
   const variantColors = {
     default: c.brand.primary,
     primary: c.brand.primary,
-    success: c.states.success,
-    warning: c.states.warning,
-    danger: c.states.danger,
+    success: c.status.success,
+    warning: c.status.warning,
+    danger: c.status.danger,
   };
 
   const activeColor = error 
-    ? c.states.danger 
+    ? c.status.danger 
     : variantColors[variant] || variantColors.default;
 
   const borderColor = disabled
     ? c.border.primary
     : error
-    ? c.states.danger
+    ? c.status.danger
     : selected
     ? activeColor
     : c.border.primary;
@@ -141,7 +141,7 @@ export function Radio({
                     color: disabled
                       ? c.text.disabled
                       : error
-                      ? c.states.danger
+                      ? c.status.danger
                       : c.text.primary,
                     fontWeight: "500",
                   },

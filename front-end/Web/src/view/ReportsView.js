@@ -55,9 +55,9 @@ function DailyBars({ data }) {
                         {item.day}
                     </Text>
                     <View style={{ flex: 1, flexDirection: "row", height: 18, borderRadius: 14, overflow: "hidden", backgroundColor: c.border.primary }}>
-                        <View style={{ flex: item.present, backgroundColor: c.states.success }} />
-                        <View style={{ flex: item.late,    backgroundColor: c.states.warning }} />
-                        <View style={{ flex: item.absent,  backgroundColor: c.states.danger  }} />
+                        <View style={{ flex: item.present, backgroundColor: c.status.success }} />
+                        <View style={{ flex: item.late,    backgroundColor: c.status.warning }} />
+                        <View style={{ flex: item.absent,  backgroundColor: c.status.danger  }} />
                     </View>
                     <Text style={{ fontSize: 11, color: c.text.secondary, width: 80, textAlign: "right" }}>
                         {item.present}P � {item.absent}A
@@ -65,7 +65,7 @@ function DailyBars({ data }) {
                 </View>
             ))}
             <View style={{ flexDirection: "row", gap: 8, marginTop: 4 }}>
-                {[[c.states.success, t("Presentes")],[c.states.warning, t("Tardanzas")],[c.states.danger, t("Ausentes")]].map(([color, label]) => (
+                {[[c.status.success, t("Presentes")],[c.status.warning, t("Tardanzas")],[c.status.danger, t("Ausentes")]].map(([color, label]) => (
                     <View key={label} style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
                         <View style={{ width: 10, height: 10, borderRadius: 14, backgroundColor: color }} />
                         <Text style={{ fontSize: 11, color: c.text.secondary }}>{label}</Text>
@@ -230,9 +230,9 @@ export default function ReportsView() {
                             </TouchableOpacity>
                         ))}
                         {vm.filtersActive && (
-                            <TouchableOpacity onPress={vm.resetFilters} style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 14, backgroundColor: c.states.dangerLight }}>
-                                <Text style={{ fontSize: 11, color: c.states.danger }}>{t("Filtros activos")}</Text>
-                                <Feather name="x" size={11} color={c.states.danger} />
+                            <TouchableOpacity onPress={vm.resetFilters} style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 14, backgroundColor: c.status.dangerLight }}>
+                                <Text style={{ fontSize: 11, color: c.status.danger }}>{t("Filtros activos")}</Text>
+                                <Feather name="x" size={11} color={c.status.danger} />
                             </TouchableOpacity>
                         )}
                     </View>
@@ -287,7 +287,7 @@ export default function ReportsView() {
                         <View style={{ gap: 14 }}>
                             {vm.courseRanking.map(item => (
                                 <View key={item.code} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                                    <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: item.rank === 1 ? c.states.warning : c.interactive.disabled, alignItems: "center", justifyContent: "center" }}>
+                                    <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: item.rank === 1 ? c.status.warning : c.interactive.disabled, alignItems: "center", justifyContent: "center" }}>
                                         <Text style={{ fontSize: 10, fontWeight: "700", color: item.rank === 1 ? c.text.onBrand : c.text.secondary }}>{item.rank}</Text>
                                     </View>
                                     <View style={{ flex: 1 }}>
@@ -322,8 +322,8 @@ export default function ReportsView() {
                     ) : (
                         <View style={{ gap: 10 }}>
                             {vm.atRiskStudents.map(student => (
-                                <View key={student.id} style={{ flexDirection: "row", alignItems: "center", gap: 8, padding: 12, backgroundColor: c.states.dangerLight, borderRadius: 8 }}>
-                                    <Avatar name={student.name} size={36} color={c.states.danger} />
+                                <View key={student.id} style={{ flexDirection: "row", alignItems: "center", gap: 8, padding: 12, backgroundColor: c.status.dangerLight, borderRadius: 8 }}>
+                                    <Avatar name={student.name} size={36} color={c.status.danger} />
                                     <View style={{ flex: 1 }}>
                                         <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary }}>{student.name}</Text>
                                         <Text style={{ fontSize: 11, color: c.text.secondary }}>{student.course} � {student.grade}</Text>
@@ -360,7 +360,7 @@ export default function ReportsView() {
                                     <Text style={{ width: 160, fontSize: 11, color: c.text.primary }} numberOfLines={1}>{s.name}</Text>
                                     <Text style={{ width: 160, fontSize: 11, color: c.text.secondary }} numberOfLines={1}>{s.course}</Text>
                                     <Text style={{ width: 100, fontSize: 11, color: c.text.secondary }} numberOfLines={1}>{s.grade}</Text>
-                                    <Text style={{ width: 100, fontSize: 10, fontWeight: "700", color: s.attendance < 75 ? c.states.danger : c.states.success }}>{s.attendance}%</Text>
+                                    <Text style={{ width: 100, fontSize: 10, fontWeight: "700", color: s.attendance < 75 ? c.status.danger : c.status.success }}>{s.attendance}%</Text>
                                     <Text style={{ width: 90, fontSize: 11, color: c.text.secondary }}>{s.status === "active" ? t("Activo") : t("Inactivo")}</Text>
                                 </View>
                             ))}

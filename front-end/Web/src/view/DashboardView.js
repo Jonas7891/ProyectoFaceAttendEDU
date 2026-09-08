@@ -5,101 +5,548 @@
 //
 //  Este componente:
 //  ✓ Renderiza el contenido del tab principal del Dashboard
-//  ✓ Muestra estadísticas, gráficas y actividad reciente
+//  ✓ Muestra dashboards diferenciados por rol (Admin/Teacher/Student)
 //  ✓ Maneja la presentación visual de datos del dashboard
 //  ✓ Coordina hooks de presentación (useDashboardViewModel)
 //
-//  NO debe:
-//  ✗ Manejar navegación entre tabs (eso es DashboardScreen)
-//  ✗ Conocer sobre otros tabs o vistas
-//  ✗ Acceder a navigation directamente
-//
-//  Este es UNO de los tabs que DashboardScreen renderiza.
-//  Otros tabs: StudentsView, CoursesView, ReportsView, etc.
+//  Dashboard por rol:
+//  - ADMIN: Vista completa del sistema (instructores, fichas, estudiantes)
+//  - TEACHER: Vista de sus cursos y estudiantes
+//  - STUDENT: Vista personal
 // ============================================================
 
 import React from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Card, StatCard, Badge, Button, ProgressBar, AttendanceStatusIcon, AttendanceStatusBadge } from "./components/common";
+import {
+    Card,
+    StatCard,
+    Button,
+    ProgressBar,
+    AttendanceStatusIcon,
+    AttendanceStatusBadge,
+} from "./components/common";
 import { Navbar as PageHeader } from "./components/common/navigation/Navbar";
+import {
+    DailyBarChart,
+    WeeklyTrend,
+    InstructorAttendanceList,
+    TopPerformingGroups,
+    AtRiskStudentsList,
+    PerfectAttendanceList,
+} from "./components/dashboard";
 import { useTheme }              from "./components/hooks/useTheme";
 import { useResponsive }         from "./components/hooks/useResponsive";
 import { useDashboardViewModel } from "../viewmodels/useDashboardViewModel";
 import { useRolePermissions }    from "./hooks/useRolePermissions";
 import { useTranslation }        from "../i18n/hooks/useTranslation";
 
-// ── DailyBarChart ────────────────────────────────────────────
-// Componente de presentación para gráfico de barras diarias
+// ──────────────────────────────────────────────────────────────
+// ADMIN DASHBOARD — Vista completa del sistema
+// ──────────────────────────────────────────────────────────────
 
-export function DailyBarChart({ data }) {
-    const { theme } = useTheme();
-    const c = theme.colors;
-    const maxVal = Math.max(...data.flatMap(d => [d.present, d.late, d.absent]));
-    const HEIGHT = 100;
+function AdminDashboard({ vm, permissions, isSmall, c, t }) {
+    if (!vm.adminData) return null;
 
     return (
-        <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 4, height: HEIGHT + 20 }}>
-            {data.map((item) => (
-                <View key={item.day} style={{ flex: 1, alignItems: "center", gap: 2 }}>
-                    <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 2, height: HEIGHT }}>
-                        {[
-                            { val: item.present, color: c.states.success },
-                            { val: item.late,    color: c.states.warning },
-                            { val: item.absent,  color: c.states.danger  },
-                        ].map(({ val, color }, i) => (
-                            <View key={i} style={{
-                                width: 8,
-                                height: Math.max(3, (val / maxVal) * HEIGHT),
-                                backgroundColor: color,
-                                borderRadius: 14,
-                            }} />
+        <>
+            {/* Stats principales */}
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+                {vm.stats.map((stat) => (
+                    <View key={stat.label} style={{ 
+                        flexBasis: isSmall ? "47%" : "30%", 
+                        flexGrow: 1,
+                        minWidth: 160,
+                    }}>
+                        <StatCard
+                            label={stat.label}
+                            value={stat.value}
+                            icon={<Feather name={stat.icon} size={20} color={stat.color} />}
+                            trend={stat.change ? (stat.change > 0 ? "up" : "down") : undefined}
+                            trendValue={stat.change ? `${Math.abs(stat.change)}%` : undefined}
+                            color={stat.color}
+                        />
+                        {stat.subtitle && (
+                            <Text style={{
+                                fontSize: 11,
+                                color: c.text.secondary,
+                                marginTop: 4,
+                                marginLeft: 16,
+                            }}>
+                                {stat.subtitle}
+                            </Text>
+                        )}
+                    </View>
+                ))}
+            </View>
+
+            {/* Sección: Asistencia de Instructores */}
+            <View>
+                <View style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: 12,
+                }}>
+                    <View>
+                        <Text style={{
+                            fontSize: 16,
+                            fontWeight: "700",
+                            color: c.text.primary,
+                        }}>
+                            {t("Asistencia de Instructores")}
+                        </Text>
+                        <Text style={{
+                            fontSize: 13,
+                            color: c.text.secondary,
+                            marginTop: 2,
+                        }}>
+                            {t("Resumen de asistencia del personal docente")}
+                        </Text>
+                    </View>
+                    <Button variant="ghost" size="sm">
+                        {t("Ver todos")} →
+                    </Button>
+                </View>
+                
+                <InstructorAttendanceList
+                    instructors={vm.adminData.instructorAttendance}
+                    maxItems={5}
+                    onInstructorPress={(instructor) => {
+                        console.log("Ver detalle instructor:", instructor);
+                    }}
+                />
+            </View>
+
+            {/* Sección: Top Fichas */}
+            <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
+                <View style={{ flex: 1 }}>
+                    <View style={{ marginBottom: 12 }}>
+                        <Text style={{
+                            fontSize: 16,
+                            fontWeight: "700",
+                            color: c.text.primary,
+                        }}>
+                            {t("Mejores Fichas")} 🏆
+                        </Text>
+                        <Text style={{
+                            fontSize: 13,
+                            color: c.text.secondary,
+                            marginTop: 2,
+                        }}>
+                            {t("Grupos con mejor asistencia")}
+                        </Text>
+                    </View>
+                    
+                    <TopPerformingGroups
+                        fichas={vm.adminData.fichas}
+                        mode="top"
+                        maxItems={5}
+                        onFichaPress={(ficha) => {
+                            console.log("Ver detalle ficha:", ficha);
+                        }}
+                    />
+                </View>
+
+                <View style={{ flex: 1 }}>
+                    <View style={{ marginBottom: 12 }}>
+                        <Text style={{
+                            fontSize: 16,
+                            fontWeight: "700",
+                            color: c.text.primary,
+                        }}>
+                            {t("Fichas que Necesitan Atención")} ⚠️
+                        </Text>
+                        <Text style={{
+                            fontSize: 13,
+                            color: c.text.secondary,
+                            marginTop: 2,
+                        }}>
+                            {t("Grupos con menor asistencia")}
+                        </Text>
+                    </View>
+                    
+                    <TopPerformingGroups
+                        fichas={vm.adminData.fichas}
+                        mode="bottom"
+                        maxItems={3}
+                        onFichaPress={(ficha) => {
+                            console.log("Ver detalle ficha:", ficha);
+                        }}
+                    />
+                </View>
+            </View>
+
+            {/* Gráficas de tendencias */}
+            <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
+                <Card style={{ flex: 1 }}>
+                    <Text style={{
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: c.text.primary,
+                        marginBottom: 4,
+                    }}>
+                        {t("Tendencia semanal")}
+                    </Text>
+                    <Text style={{
+                        fontSize: 12,
+                        color: c.text.secondary,
+                        marginBottom: 16,
+                    }}>
+                        {t("Últimas 5 semanas")}
+                    </Text>
+                    <WeeklyTrend data={vm.attendanceByWeek} maxWeeks={5} />
+                </Card>
+
+                <Card style={{ flex: 1 }}>
+                    <Text style={{
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: c.text.primary,
+                        marginBottom: 4,
+                    }}>
+                        {t("Asistencia por día")}
+                    </Text>
+                    <Text style={{
+                        fontSize: 12,
+                        color: c.text.secondary,
+                        marginBottom: 16,
+                    }}>
+                        {t("Esta semana")}
+                    </Text>
+                    <DailyBarChart data={vm.attendanceByDay} height={100} />
+                </Card>
+            </View>
+
+            {/* Sección: Estudiantes en Riesgo y Destacados */}
+            <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
+                <View style={{ flex: 1 }}>
+                    <View style={{ marginBottom: 12 }}>
+                        <Text style={{
+                            fontSize: 16,
+                            fontWeight: "700",
+                            color: c.text.primary,
+                        }}>
+                            {t("Estudiantes en Riesgo")} 🚨
+                        </Text>
+                        <Text style={{
+                            fontSize: 13,
+                            color: c.text.secondary,
+                            marginTop: 2,
+                        }}>
+                            {t("Requieren intervención urgente")}
+                        </Text>
+                    </View>
+                    
+                    <AtRiskStudentsList
+                        students={vm.adminData.atRiskStudents}
+                        maxItems={5}
+                        onStudentPress={(student) => {
+                            console.log("Ver detalle estudiante:", student);
+                        }}
+                    />
+                </View>
+
+                <View style={{ flex: 1 }}>
+                    <View style={{ marginBottom: 12 }}>
+                        <Text style={{
+                            fontSize: 16,
+                            fontWeight: "700",
+                            color: c.text.primary,
+                        }}>
+                            {t("Estudiantes Destacados")} ⭐
+                        </Text>
+                        <Text style={{
+                            fontSize: 13,
+                            color: c.text.secondary,
+                            marginTop: 2,
+                        }}>
+                            {t("Excelencia en asistencia")}
+                        </Text>
+                    </View>
+                    
+                    <PerfectAttendanceList
+                        students={vm.adminData.perfectAttendanceStudents}
+                        maxItems={5}
+                        onStudentPress={(student) => {
+                            console.log("Ver detalle estudiante:", student);
+                        }}
+                    />
+                </View>
+            </View>
+        </>
+    );
+}
+
+// ──────────────────────────────────────────────────────────────
+// TEACHER DASHBOARD — Vista de cursos del instructor
+// ──────────────────────────────────────────────────────────────
+
+function TeacherDashboard({ vm, permissions, isSmall, c, t }) {
+    if (!vm.teacherData) return null;
+
+    return (
+        <>
+            {/* Stats del teacher */}
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+                {vm.stats.map((stat) => (
+                    <View key={stat.label} style={{ 
+                        flexBasis: isSmall ? "47%" : "23%", 
+                        flexGrow: 1 
+                    }}>
+                        <StatCard
+                            label={stat.label}
+                            value={stat.value}
+                            icon={<Feather name={stat.icon} size={20} color={stat.color} />}
+                            trend={stat.change ? (stat.change > 0 ? "up" : "down") : undefined}
+                            trendValue={stat.change ? `${Math.abs(stat.change)}%` : undefined}
+                            color={stat.color}
+                        />
+                    </View>
+                ))}
+            </View>
+
+            {/* Mis fichas */}
+            <View>
+                <Text style={{
+                    fontSize: 16,
+                    fontWeight: "700",
+                    color: c.text.primary,
+                    marginBottom: 12,
+                }}>
+                    {t("Mis Fichas")}
+                </Text>
+                
+                <TopPerformingGroups
+                    fichas={vm.teacherData.myFichas}
+                    mode="top"
+                    maxItems={10}
+                    onFichaPress={(ficha) => {
+                        console.log("Ver detalle ficha:", ficha);
+                    }}
+                />
+            </View>
+
+            {/* Gráficas */}
+            <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
+                <Card style={{ flex: 1 }}>
+                    <Text style={{
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: c.text.primary,
+                        marginBottom: 16,
+                    }}>
+                        {t("Asistencia por día")}
+                    </Text>
+                    <DailyBarChart data={vm.attendanceByDay} height={100} />
+                </Card>
+
+                <Card style={{ flex: 1 }}>
+                    <Text style={{
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: c.text.primary,
+                        marginBottom: 16,
+                    }}>
+                        {t("Asistencia por curso")}
+                    </Text>
+                    <View style={{ gap: 14 }}>
+                        {vm.courseAttendance.map(item => (
+                            <View key={item.course}>
+                                <View style={{
+                                    flexDirection: "row",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: 8,
+                                }}>
+                                    <Text style={{
+                                        fontSize: 13,
+                                        fontWeight: "500",
+                                        color: c.text.primary,
+                                        flex: 1,
+                                    }} numberOfLines={1}>
+                                        {item.courseName}
+                                    </Text>
+                                    <Text style={{
+                                        fontSize: 13,
+                                        fontWeight: "700",
+                                        color: item.barColor,
+                                        marginLeft: 8,
+                                    }}>
+                                        {item.rate}%
+                                    </Text>
+                                </View>
+                                <ProgressBar
+                                    value={item.rate}
+                                    color={item.barColor}
+                                    size="md"
+                                />
+                            </View>
                         ))}
                     </View>
-                    <Text style={{ fontSize: 11, color: c.text.secondary }}>{item.day}</Text>
-                </View>
-            ))}
-        </View>
-    );
-}
+                </Card>
+            </View>
 
-// ── WeeklyTrend ──────────────────────────────────────────────
-// Componente de presentación para tendencia semanal
-
-export function WeeklyTrend({ data }) {
-    const { theme } = useTheme();
-    const c = theme.colors;
-
-    return (
-        <View style={{ gap: 6 }}>
-            {data.slice(-5).map((item, i) => (
-                <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                    <Text style={{ fontSize: 11, color: c.text.secondary, width: 42 }}>{item.week}</Text>
-                    <View style={{ flex: 1, height: 5, backgroundColor: c.border.primary, borderRadius: 99 }}>
-                        <View style={{
-                            height: "100%",
-                            width: `${item.rate}%`,
-                            backgroundColor: c.brand.primary,
-                            borderRadius: 14,
-                        }} />
-                    </View>
+            {/* Estudiantes en riesgo del teacher */}
+            {vm.teacherData.myAtRiskStudents.length > 0 && (
+                <View>
                     <Text style={{
-                        fontSize: 10,
+                        fontSize: 16,
                         fontWeight: "700",
                         color: c.text.primary,
-                        width: 40,
-                        textAlign: "right",
+                        marginBottom: 12,
                     }}>
-                        {item.rate}%
+                        {t("Mis Estudiantes en Riesgo")}
                     </Text>
+                    
+                    <AtRiskStudentsList
+                        students={vm.teacherData.myAtRiskStudents}
+                        maxItems={10}
+                        onStudentPress={(student) => {
+                            console.log("Ver detalle estudiante:", student);
+                        }}
+                    />
                 </View>
-            ))}
-        </View>
+            )}
+        </>
     );
 }
 
-// ── DashboardView ────────────────────────────────────────────
-// Vista principal del tab Dashboard
+// ──────────────────────────────────────────────────────────────
+// STUDENT DASHBOARD — Vista personal del estudiante
+// ──────────────────────────────────────────────────────────────
+
+function StudentDashboard({ vm, permissions, isSmall, c, t }) {
+    if (!vm.studentData) return null;
+
+    return (
+        <>
+            {/* Stats personales */}
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+                {vm.stats.map((stat) => (
+                    <View key={stat.label} style={{ 
+                        flexBasis: isSmall ? "47%" : "23%", 
+                        flexGrow: 1 
+                    }}>
+                        <StatCard
+                            label={stat.label}
+                            value={stat.value}
+                            icon={<Feather name={stat.icon} size={20} color={stat.color} />}
+                            trend={stat.change ? (stat.change > 0 ? "up" : "down") : undefined}
+                            trendValue={stat.change ? `${Math.abs(stat.change)}%` : undefined}
+                            color={stat.color}
+                        />
+                    </View>
+                ))}
+            </View>
+
+            {/* Gráficas personales */}
+            <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
+                <Card style={{ flex: 1 }}>
+                    <Text style={{
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: c.text.primary,
+                        marginBottom: 16,
+                    }}>
+                        {t("Mi asistencia semanal")}
+                    </Text>
+                    <WeeklyTrend data={vm.attendanceByWeek} maxWeeks={5} />
+                </Card>
+
+                <Card style={{ flex: 1 }}>
+                    <Text style={{
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: c.text.primary,
+                        marginBottom: 16,
+                    }}>
+                        {t("Asistencia por curso")}
+                    </Text>
+                    <View style={{ gap: 14 }}>
+                        {vm.courseAttendance.map(item => (
+                            <View key={item.course}>
+                                <View style={{
+                                    flexDirection: "row",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: 8,
+                                }}>
+                                    <Text style={{
+                                        fontSize: 13,
+                                        fontWeight: "500",
+                                        color: c.text.primary,
+                                        flex: 1,
+                                    }} numberOfLines={1}>
+                                        {item.courseName}
+                                    </Text>
+                                    <Text style={{
+                                        fontSize: 13,
+                                        fontWeight: "700",
+                                        color: item.barColor,
+                                        marginLeft: 8,
+                                    }}>
+                                        {item.rate}%
+                                    </Text>
+                                </View>
+                                <ProgressBar
+                                    value={item.rate}
+                                    color={item.barColor}
+                                    size="md"
+                                />
+                            </View>
+                        ))}
+                    </View>
+                </Card>
+            </View>
+
+            {/* Actividad reciente */}
+            <Card>
+                <Text style={{
+                    fontSize: 14,
+                    fontWeight: "600",
+                    color: c.text.primary,
+                    marginBottom: 16,
+                }}>
+                    {t("Actividad reciente")}
+                </Text>
+                <View style={{ gap: 12 }}>
+                    {vm.recentActivity.slice(0, 5).map(item => (
+                        <View key={item.id} style={{
+                            flexDirection: "row",
+                            alignItems: "flex-start",
+                            gap: 10,
+                        }}>
+                            <View style={{ marginTop: 2 }}>
+                                <AttendanceStatusIcon status={item.status} />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{
+                                    fontSize: 13,
+                                    fontWeight: "600",
+                                    color: c.text.primary,
+                                }}>
+                                    {item.student}
+                                </Text>
+                                <Text style={{
+                                    fontSize: 12,
+                                    color: c.text.secondary,
+                                }}>
+                                    {item.course} — {item.time}
+                                </Text>
+                            </View>
+                            <AttendanceStatusBadge status={item.status} />
+                        </View>
+                    ))}
+                </View>
+            </Card>
+        </>
+    );
+}
+
+// ──────────────────────────────────────────────────────────────
+// DASHBOARD VIEW PRINCIPAL
+// ──────────────────────────────────────────────────────────────
 
 export default function DashboardView() {
     const { isSmall } = useResponsive();
@@ -109,147 +556,67 @@ export default function DashboardView() {
     const { t }       = useTranslation();
     const permissions = useRolePermissions();
 
+    // Determinar título según rol
+    const dashboardTitle = {
+        admin: t("Panel de Administración"),
+        teacher: t("Mi Panel de Instructor"),
+        student: t("Mi Panel Personal"),
+    }[vm.userRole] || t("Dashboard");
+
+    const dashboardSubtitle = {
+        admin: t("Vista completa del sistema"),
+        teacher: t("Gestión de tus fichas y estudiantes"),
+        student: t("Tu progreso y asistencia"),
+    }[vm.userRole] || vm.todayLabel;
+
     return (
         <ScrollView
-            contentContainerStyle={{ padding: isSmall ? 16 : 24, gap: 16 }}
+            contentContainerStyle={{ padding: isSmall ? 16 : 24, gap: 24 }}
             showsVerticalScrollIndicator={false}
         >
             {/* Header del Dashboard */}
             <PageHeader
-                title={t("Dashboard")}
-                subtitle={vm.todayLabel}
+                title={dashboardTitle}
+                subtitle={dashboardSubtitle}
                 actions={
-                    /* Solo admin y teacher pueden tomar asistencia */
                     permissions.canRegisterFace
-                        ? <Button variant="primary" size="sm">{t("Tomar asistencia")}</Button>
+                        ? <Button variant="primary" size="sm">
+                            <Feather name="camera" size={16} color="#fff" /> {t("Tomar asistencia")}
+                          </Button>
                         : undefined
                 }
             />
 
-            {/* Stat cards — métricas principales */}
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
-                {vm.stats.map((stat) => (
-                    <View key={stat.label} style={{ flexBasis: isSmall ? "47%" : "23%", flexGrow: 1 }}>
-                        <StatCard
-                            label={stat.label}
-                            value={stat.value}
-                            change={stat.change}
-                            changeLabel={stat.changeLabel}
-                            color={stat.color}
-                            icon={<Feather name={stat.icon} size={20} color={stat.color} />}
-                        />
-                    </View>
-                ))}
-            </View>
-
-            {/* Gráficas — solo si puede ver reportes */}
-            {permissions.canViewReports && (
-                <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
-                    {/* Tendencia semanal */}
-                    <Card style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary, marginBottom: 4 }}>
-                            {t("Tendencia semanal")}
-                        </Text>
-                        <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom: 16 }}>
-                            {t("Últimas 5 semanas")}
-                        </Text>
-                        <WeeklyTrend data={vm.attendanceByWeek} />
-                    </Card>
-
-                    {/* Asistencia por día */}
-                    <Card style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary, marginBottom: 4 }}>
-                            {t("Asistencia por día")}
-                        </Text>
-                        <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom: 16 }}>
-                            {t("Esta semana — Presentes / Tardanzas / Ausentes")}
-                        </Text>
-                        <DailyBarChart data={vm.attendanceByDay} />
-                        <View style={{ flexDirection: "row", gap: 12, marginTop: 12 }}>
-                            {[
-                                [c.states.success, t("Presentes")],
-                                [c.states.warning, t("Tardanzas")],
-                                [c.states.danger,  t("Ausentes") ],
-                            ].map(([color, label]) => (
-                                <View key={label} style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                                    <View style={{ width: 8, height: 8, borderRadius: 14, backgroundColor: color }} />
-                                    <Text style={{ fontSize: 11, color: c.text.secondary }}>{label}</Text>
-                                </View>
-                            ))}
-                        </View>
-                    </Card>
-                </View>
+            {/* Renderizar dashboard según rol */}
+            {vm.userRole === "admin" && (
+                <AdminDashboard 
+                    vm={vm} 
+                    permissions={permissions}
+                    isSmall={isSmall}
+                    c={c}
+                    t={t}
+                />
             )}
 
-            {/* Asistencia por curso + Actividad reciente */}
-            <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
-                {/* Asistencia por curso */}
-                <Card style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary, marginBottom: 16 }}>
-                        {t("Asistencia por curso")}
-                    </Text>
-                    <View style={{ gap: 14 }}>
-                        {vm.courseAttendance.map(item => (
-                            <View key={item.course}>
-                                <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 6 }}>
-                                    <Text style={{
-                                        fontSize: 10,
-                                        fontWeight: "500",
-                                        color: c.text.primary,
-                                        flex: 1,
-                                    }} numberOfLines={1}>
-                                        {item.courseName}
-                                    </Text>
-                                    <Text style={{ fontSize: 10, fontWeight: "700", color: item.barColor, marginLeft: 8 }}>
-                                        {item.rate}%
-                                    </Text>
-                                </View>
-                                <ProgressBar value={item.rate} color={item.barColor} />
-                            </View>
-                        ))}
-                    </View>
-                </Card>
+            {vm.userRole === "teacher" && (
+                <TeacherDashboard 
+                    vm={vm} 
+                    permissions={permissions}
+                    isSmall={isSmall}
+                    c={c}
+                    t={t}
+                />
+            )}
 
-                {/* Actividad reciente */}
-                <Card style={isSmall ? undefined : { width: 300 }}>
-                    <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary, marginBottom: 16 }}>
-                        {t("Actividad reciente")}
-                    </Text>
-                    <View style={{ gap: 12 }}>
-                        {vm.recentActivity.map(item => (
-                            <View key={item.id} style={{ flexDirection: "row", alignItems: "flex-start", gap: 10 }}>
-                                <View style={{ marginTop: 2 }}>
-                                    <AttendanceStatusIcon status={item.status} />
-                                </View>
-                                <View style={{ flex: 1 }}>
-                                    <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary }}>
-                                        {item.student}
-                                    </Text>
-                                    <Text style={{ fontSize: 11, color: c.text.secondary }}>
-                                        {item.course} — {item.time}
-                                    </Text>
-                                </View>
-                                <AttendanceStatusBadge status={item.status} />
-                            </View>
-                        ))}
-                    </View>
-                    {/* Enlace a reportes completos solo para quienes pueden verlos */}
-                    {permissions.canViewAllReports && (
-                        <View style={{
-                            marginTop: 12,
-                            paddingTop: 12,
-                            borderTopWidth: 1,
-                            borderTopColor: c.border.primary,
-                        }}>
-                            <TouchableOpacity>
-                                <Text style={{ fontSize: 11, color: c.brand.primary, fontWeight: "500" }}>
-                                    {t("Ver toda la actividad")} →
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    )}
-                </Card>
-            </View>
+            {vm.userRole === "student" && (
+                <StudentDashboard 
+                    vm={vm} 
+                    permissions={permissions}
+                    isSmall={isSmall}
+                    c={c}
+                    t={t}
+                />
+            )}
         </ScrollView>
     );
 }

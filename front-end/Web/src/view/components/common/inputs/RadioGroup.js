@@ -109,7 +109,7 @@ export function RadioGroup({
           style={[
             styles.groupLabel,
             {
-              color: error ? c.states.danger : c.text.primary,
+              color: error ? c.status.danger : c.text.primary,
               fontSize: 14,
               fontWeight: "600",
               marginBottom: DESIGN_TOKENS.spacing.sm,
@@ -160,7 +160,7 @@ export function RadioGroup({
             styles.errorMessage,
             {
               fontSize: 13,
-              color: c.states.danger,
+              color: c.status.danger,
               marginTop: DESIGN_TOKENS.spacing.xs,
             },
           ]}

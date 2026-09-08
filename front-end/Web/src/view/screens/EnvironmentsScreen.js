@@ -34,7 +34,7 @@ function InstructorAutocomplete({ query, onChangeQuery, onSelect, searchFn, erro
 
     return (
         <View style={{ marginBottom: 14 }}>
-            <Text style={{ fontSize: 10, fontWeight: "600", color: error ? c.states.danger : c.text.secondary, marginBottom: 6 }}>
+            <Text style={{ fontSize: 10, fontWeight: "600", color: error ? c.status.danger : c.text.secondary, marginBottom: 6 }}>
                 {t("Instructor / Docente encargado")} *
             </Text>
             <View style={{ position: "relative" }}>
@@ -49,7 +49,7 @@ function InstructorAutocomplete({ query, onChangeQuery, onSelect, searchFn, erro
                     placeholderTextColor={c.text.disabled}
                     style={{
                         height: 40, borderWidth: 1,
-                        borderColor: error ? c.states.danger : c.border.primary,
+                        borderColor: error ? c.status.danger : c.border.primary,
                         borderRadius: 14, paddingLeft: 36, paddingRight: 12,
                         fontSize: 12, backgroundColor: c.background.app, color: c.text.primary,
                     }}
@@ -167,9 +167,9 @@ function ScheduleModal({ visible, mode, editing, envId, searchFn, onClose, onSav
 
                         <ScrollView style={{ padding: 20 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                             {error && (
-                                <View style={{ backgroundColor: c.states.dangerLight, borderRadius: 14, padding: 12, flexDirection: "row", gap: 8, marginBottom: 16 }}>
-                                    <Feather name="alert-circle" size={14} color={c.states.danger} />
-                                    <Text style={{ fontSize: 11, color: c.states.danger, flex: 1 }}>{error}</Text>
+                                <View style={{ backgroundColor: c.status.dangerLight, borderRadius: 14, padding: 12, flexDirection: "row", gap: 8, marginBottom: 16 }}>
+                                    <Feather name="alert-circle" size={14} color={c.status.danger} />
+                                    <Text style={{ fontSize: 11, color: c.status.danger, flex: 1 }}>{error}</Text>
                                 </View>
                             )}
 
@@ -205,7 +205,7 @@ function ScheduleModal({ visible, mode, editing, envId, searchFn, onClose, onSav
                             </View>
 
                             <View style={{ marginBottom: 14 }}>
-                                <Text style={{ fontSize: 10, fontWeight: "600", color: showErrors && form.days.length === 0 ? c.states.danger : c.text.secondary, marginBottom: 8 }}>
+                                <Text style={{ fontSize: 10, fontWeight: "600", color: showErrors && form.days.length === 0 ? c.status.danger : c.text.secondary, marginBottom: 8 }}>
                                     {t("D�as de clase")} *
                                 </Text>
                                 <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
@@ -301,14 +301,14 @@ function EnvironmentFormModal({ visible, mode, environment, onClose, onSubmit, t
 
                         <ScrollView style={{ padding: 20 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                             {error && (
-                                <View style={{ backgroundColor: c.states.dangerLight, borderRadius: 14, padding: 12, flexDirection: "row", gap: 8, marginBottom: 16 }}>
-                                    <Feather name="alert-circle" size={14} color={c.states.danger} />
-                                    <Text style={{ fontSize: 11, color: c.states.danger, flex: 1 }}>{error}</Text>
+                                <View style={{ backgroundColor: c.status.dangerLight, borderRadius: 14, padding: 12, flexDirection: "row", gap: 8, marginBottom: 16 }}>
+                                    <Feather name="alert-circle" size={14} color={c.status.danger} />
+                                    <Text style={{ fontSize: 11, color: c.status.danger, flex: 1 }}>{error}</Text>
                                 </View>
                             )}
                             {success && (
-                                <View style={{ backgroundColor: c.states.successLight, borderRadius: 14, padding: 12, flexDirection: "row", gap: 8, marginBottom: 16 }}>
-                                    <Feather name="check-circle" size={14} color={c.states.success} />
+                                <View style={{ backgroundColor: c.status.successLight, borderRadius: 14, padding: 12, flexDirection: "row", gap: 8, marginBottom: 16 }}>
+                                    <Feather name="check-circle" size={14} color={c.status.success} />
                                     <Text style={{ fontSize: 11, color: "#065F46", flex: 1 }}>{t("Ambiente guardado correctamente")}</Text>
                                 </View>
                             )}
@@ -385,8 +385,8 @@ function ScheduleRow({ schedule, onEdit, onDelete, isLast, t }) {
                     <TouchableOpacity onPress={onEdit} style={{ padding: 6, borderRadius: 14, backgroundColor: c.brand.primaryLight }}>
                         <Feather name="edit-2" size={13} color={c.brand.primary} />
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={onDelete} style={{ padding: 6, borderRadius: 14, backgroundColor: c.states.dangerLight }}>
-                        <Feather name="trash-2" size={13} color={c.states.danger} />
+                    <TouchableOpacity onPress={onDelete} style={{ padding: 6, borderRadius: 14, backgroundColor: c.status.dangerLight }}>
+                        <Feather name="trash-2" size={13} color={c.status.danger} />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -464,7 +464,7 @@ function EnvironmentDetailModal({ environment, onClose, onEdit, onDelete, onAddS
                     {/* Footer */}
                     <View style={{ padding: 16, borderTopWidth: 1, borderTopColor: c.border.primary, flexDirection: "row", gap: 8, justifyContent: "flex-end" }}>
                         <Button variant="danger" size="sm" onPress={onDelete}>
-                            <React.Fragment><Feather name="trash-2" size={13} color={c.states.danger} /> {"  "}{t("Eliminar")}</React.Fragment>
+                            <React.Fragment><Feather name="trash-2" size={13} color={c.status.danger} /> {"  "}{t("Eliminar")}</React.Fragment>
                         </Button>
                         <Button variant="ghost" onPress={onClose}>{t("Cerrar")}</Button>
                         <Button variant="primary" onPress={onEdit}>
@@ -572,8 +572,8 @@ export default function EnvironmentsView() {
                 <View style={{ flexDirection: "row", gap: 12, flexWrap: "wrap" }}>
                     {[
                         { label: t("Total ambientes"), value: vm.environments.length, color: c.brand.primary  },
-                        { label: t("Total horarios"),  value: totalSchedules,          color: c.states.success },
-                        { label: t("Sin horarios"),    value: vm.environments.filter(e => e.schedules.length === 0).length, color: c.states.warning },
+                        { label: t("Total horarios"),  value: totalSchedules,          color: c.status.success },
+                        { label: t("Sin horarios"),    value: vm.environments.filter(e => e.schedules.length === 0).length, color: c.status.warning },
                     ].map(({ label, value, color }) => (
                         <Card key={label} style={{ flex: 1, minWidth: 140, alignItems: "center" }} padding={14}>
                             <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.secondary, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6, textAlign: "center" }}>

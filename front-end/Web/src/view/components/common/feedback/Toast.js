@@ -202,20 +202,20 @@ function ToastItem({ toast, onDismiss }) {
   const typeConfig = {
     success: {
       icon: "check-circle",
-      bgColor: c.states.successLight || "#D1FAE5",
-      iconColor: c.states.success,
+      bgColor: c.status.successLight || "#D1FAE5",
+      iconColor: c.status.success,
       textColor: "#065F46",
     },
     error: {
       icon: "x-circle",
-      bgColor: c.states.dangerLight || "#FEE2E2",
-      iconColor: c.states.danger,
+      bgColor: c.status.dangerLight || "#FEE2E2",
+      iconColor: c.status.danger,
       textColor: "#991B1B",
     },
     warning: {
       icon: "alert-triangle",
-      bgColor: c.states.warningLight || "#FEF3C7",
-      iconColor: c.states.warning,
+      bgColor: c.status.warningLight || "#FEF3C7",
+      iconColor: c.status.warning,
       textColor: "#92400E",
     },
     info: {

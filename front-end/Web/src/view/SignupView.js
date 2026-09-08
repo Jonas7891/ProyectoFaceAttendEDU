@@ -180,7 +180,7 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLandi
             <View style={{ zIndex: 1, alignItems: "center", maxWidth: 440, paddingHorizontal: 32 }}>
                 <Image
                     source={require("../assets/images/logoFaceAttend.png")}
-                    style={{ width: 160, height: 56, marginBottom: 24 }}
+                    style={{ width: 250, height: 100, marginBottom: 32 }}
                     resizeMode="contain"
                 />
                 <Text style={{
@@ -194,12 +194,12 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLandi
                     {t("Únete a FaceAttend EDU")}
                 </Text>
                 <Text style={{
-                    fontSize: 15,
+                    fontSize: 16,
                     color: "rgba(255,255,255,0.85)",
                     textAlign: "center",
                     lineHeight: 22,
                 }}>
-                    {t("Registra tu institución y empieza a gestionar la asistencia con reconocimiento facial.")}
+                    {t("Registrate para que puedas aplicar al sistema de registro de asistencias con reconocimiento facial del mañana.")}
                 </Text>
             </View>
         </React.Fragment>

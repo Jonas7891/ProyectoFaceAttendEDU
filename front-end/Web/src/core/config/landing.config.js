@@ -68,7 +68,7 @@ export function getInstitutionalImage() {
         return INSTITUTIONAL_IMAGE.source;
     }
     // Fallback por defecto
-    return require("../../assets/images/splash-icon.png");
+    return require("../../assets/images/logoSena.png");
 }
 
 /**

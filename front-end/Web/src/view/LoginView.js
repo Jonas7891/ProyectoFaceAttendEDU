@@ -188,7 +188,7 @@ export default function LoginView({
             <View style={{ zIndex: 1, alignItems: "center", maxWidth: 480, paddingHorizontal: 32 }}>
                 <Image
                     source={require("../assets/images/logoFaceAttend.png")}
-                    style={{ width: 200, height: 70, marginBottom: 32 }}
+                    style={{ width: 250, height: 100, marginBottom: 32 }}
                     resizeMode="contain"
                 />
                 <Text style={{

@@ -89,13 +89,13 @@ export function Switch({
   const variantColors = {
     default: c.brand.primary,
     primary: c.brand.primary,
-    success: c.states.success,
-    warning: c.states.warning,
-    danger: c.states.danger,
+    success: c.status.success,
+    warning: c.status.warning,
+    danger: c.status.danger,
   };
 
   const activeColor = error 
-    ? c.states.danger 
+    ? c.status.danger 
     : variantColors[variant] || variantColors.default;
 
   // Colores del switch según plataforma
@@ -143,7 +143,7 @@ export function Switch({
                     color: disabled
                       ? c.text.disabled
                       : error
-                      ? c.states.danger
+                      ? c.status.danger
                       : c.text.primary,
                     fontWeight: "500",
                   },
@@ -178,7 +178,7 @@ export function Switch({
             styles.errorMessage,
             {
               fontSize: currentSize.labelSize - 1,
-              color: c.states.danger,
+              color: c.status.danger,
               marginTop: 4,
               marginLeft: 56, // Ancho aproximado del switch + gap
             },

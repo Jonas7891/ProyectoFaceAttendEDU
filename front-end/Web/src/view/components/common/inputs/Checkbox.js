@@ -101,13 +101,13 @@ export function Checkbox({
   const variantColors = {
     default: c.brand.primary,
     primary: c.brand.primary,
-    success: c.states.success,
-    warning: c.states.warning,
-    danger: c.states.danger,
+    success: c.status.success,
+    warning: c.status.warning,
+    danger: c.status.danger,
   };
 
   const activeColor = error 
-    ? c.states.danger 
+    ? c.status.danger 
     : variantColors[variant] || variantColors.default;
 
   // Estados del checkbox
@@ -121,7 +121,7 @@ export function Checkbox({
   const borderColor = disabled
     ? c.border.primary
     : error
-    ? c.states.danger
+    ? c.status.danger
     : isChecked
     ? activeColor
     : c.border.primary;
@@ -190,7 +190,7 @@ export function Checkbox({
                     color: disabled
                       ? c.text.disabled
                       : error
-                      ? c.states.danger
+                      ? c.status.danger
                       : c.text.primary,
                     fontWeight: "500",
                   },
@@ -225,7 +225,7 @@ export function Checkbox({
             styles.errorMessage,
             {
               fontSize: currentSize.labelSize - 1,
-              color: c.states.danger,
+              color: c.status.danger,
               marginTop: 4,
               marginLeft: currentSize.box + 8,
             },

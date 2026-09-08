@@ -41,6 +41,7 @@ export default function SettingsView() {
     // Estados de settings
     const [institutionName, setInstitutionName] = useState("Universidad Nacional");
     const [minAttendance, setMinAttendance] = useState(80);
+    const [daysUntilSanction, setDaysUntilSanction] = useState(15);
     const [semester, setSemester] = useState("2024-2");
     const [confidence, setConfidence] = useState(85);
     const [autoRegister, setAutoRegister] = useState(true);
@@ -134,7 +135,7 @@ export default function SettingsView() {
                                     flexDirection: "row",
                                     alignItems: "center",
                                     gap: 6,
-                                    backgroundColor: c.states.warningLight,
+                                    backgroundColor: c.status.warningLight,
                                     paddingHorizontal: 6,
                                     paddingVertical: 2,
                                     borderRadius: 14,
@@ -143,11 +144,11 @@ export default function SettingsView() {
                                         width: 6,
                                         height: 6,
                                         borderRadius: 14,
-                                        backgroundColor: c.states.warning
+                                        backgroundColor: c.status.warning
                                     }} />
                                     <Text style={{
                                         fontSize: 11,
-                                        color: c.states.warning,
+                                        color: c.status.warning,
                                         fontWeight: "600"
                                     }}>
                                         {t("Sin guardar")}
@@ -339,7 +340,7 @@ export default function SettingsView() {
                                 {/* Gu�a contextual */}
                                 <View style={{
                                     marginTop: 10,
-                                    backgroundColor: minAttendance >= 90 ? c.states.warningLight : c.brand.primaryLight,
+                                    backgroundColor: minAttendance >= 90 ? c.status.warningLight : c.brand.primaryLight,
                                     borderRadius: 14,
                                     padding: 12,
                                     flexDirection: "row",
@@ -348,7 +349,7 @@ export default function SettingsView() {
                                     <Feather
                                         name={minAttendance >= 90 ? "alert-triangle" : "info"}
                                         size={13}
-                                        color={minAttendance >= 90 ? c.states.warning : c.brand.primary}
+                                        color={minAttendance >= 90 ? c.status.warning : c.brand.primary}
                                         style={{ marginTop: 1 }}
                                     />
                                     <Text style={{
@@ -389,6 +390,88 @@ export default function SettingsView() {
                                 <LanguageSelector />
                             </View>
 
+                            <View>
+                                <View style={{
+                                    flexDirection: "row",
+                                    justifyContent: "space-between",
+                                    alignItems: "flex-end",
+                                    marginBottom: 8
+                                }}>
+                                    <View>
+                                        <Text style={labelStyle}>
+                                            {t("Días de inasistencia para sanción")}
+                                        </Text>
+                                        <Text style={[descStyle, { marginTop: 0 }]}>
+                                            {t("Número de días de ausencia que activa alerta de sanción")}
+                                        </Text>
+                                    </View>
+                                    <Text style={{
+                                        fontSize: 10,
+                                        fontWeight: "800",
+                                        color: c.brand.primary
+                                    }}>
+                                        {daysUntilSanction} {t("días")}
+                                    </Text>
+                                </View>
+                                <Slider
+                                    minimumValue={5}
+                                    maximumValue={30}
+                                    step={1}
+                                    value={daysUntilSanction}
+                                    onValueChange={setDaysUntilSanction}
+                                    minimumTrackTintColor={c.brand.primary}
+                                    maximumTrackTintColor={c.border.primary}
+                                />
+                                {/* Marcas de referencia */}
+                                <View style={{
+                                    flexDirection: "row",
+                                    justifyContent: "space-between",
+                                    marginTop: 4
+                                }}>
+                                    {[5, 10, 15, 20, 25, 30].map(v => (
+                                        <Text
+                                            key={v}
+                                            style={{
+                                                fontSize: 11,
+                                                color: v === daysUntilSanction ? c.brand.primary : c.text.disabled,
+                                                fontWeight: v === daysUntilSanction ? "700" : "400",
+                                            }}
+                                        >
+                                            {v}
+                                        </Text>
+                                    ))}
+                                </View>
+                                {/* Guía contextual */}
+                                <View style={{
+                                    marginTop: 10,
+                                    backgroundColor: daysUntilSanction <= 7 ? c.status.dangerLight : daysUntilSanction <= 15 ? c.status.warningLight : c.brand.primaryLight,
+                                    borderRadius: 14,
+                                    padding: 12,
+                                    flexDirection: "row",
+                                    gap: 8,
+                                }}>
+                                    <Feather
+                                        name={daysUntilSanction <= 7 ? "alert-circle" : daysUntilSanction <= 15 ? "alert-triangle" : "info"}
+                                        size={13}
+                                        color={daysUntilSanction <= 7 ? c.status.danger : daysUntilSanction <= 15 ? c.status.warning : c.brand.primary}
+                                        style={{ marginTop: 1 }}
+                                    />
+                                    <Text style={{
+                                        fontSize: 11,
+                                        color: daysUntilSanction <= 7 ? "#991B1B" : daysUntilSanction <= 15 ? "#92400E" : c.brand.primary,
+                                        flex: 1,
+                                        lineHeight: 18
+                                    }}>
+                                        {daysUntilSanction <= 7
+                                            ? t("Umbral muy estricto — Los estudiantes podrían quedar en riesgo de sanción rápidamente. Recomendado para programas con asistencia obligatoria diaria.")
+                                            : daysUntilSanction <= 15
+                                            ? t("Umbral moderado — Balance entre seguimiento temprano y flexibilidad. Valor recomendado para la mayoría de instituciones.")
+                                            : t("Umbral flexible — Los estudiantes tienen más margen antes de recibir alerta. Útil para programas con clases semanales o menor frecuencia.")
+                                        }
+                                    </Text>
+                                </View>
+                            </View>
+
                             <Divider />
 
                             {/* Resumen r�pido */}
@@ -421,6 +504,13 @@ export default function SettingsView() {
                                     value={`${minAttendance}%`}
                                     icon="bar-chart-2"
                                     color="#10B981"
+                                />
+                                <Divider />
+                                <StatsRow
+                                    label={t("Días para sanción")}
+                                    value={`${daysUntilSanction} días`}
+                                    icon="alert-triangle"
+                                    color="#EF4444"
                                 />
                                 <Divider />
                                 <StatsRow
@@ -496,7 +586,7 @@ export default function SettingsView() {
 
                             <ToggleRow
                                 label={t("Registro autom�tico")}
-                                description={t("Registra autom�ticamente al detectar el rostro sin confirmaci�n manual")}
+                                description={t("Registra automáticamente al detectar el rostro sin confirmación manual")}
                                 value={autoRegister}
                                 onToggle={() => setAutoRegister(v => !v)}
                             />
@@ -504,7 +594,7 @@ export default function SettingsView() {
                             {/* Advertencia contextual */}
                             {autoRegister && confidence < 75 && (
                                 <View style={{
-                                    backgroundColor: c.states.warningLight,
+                                    backgroundColor: c.status.warningLight,
                                     borderRadius: 14,
                                     padding: 12,
                                     flexDirection: "row",
@@ -513,7 +603,7 @@ export default function SettingsView() {
                                     <Feather
                                         name="alert-triangle"
                                         size={13}
-                                        color={c.states.warning}
+                                        color={c.status.warning}
                                         style={{ marginTop: 1 }}
                                     />
                                     <Text style={{
@@ -522,14 +612,14 @@ export default function SettingsView() {
                                         flex: 1,
                                         lineHeight: 18
                                     }}>
-                                        {t("Con umbral bajo y registro autom�tico habilitado, hay mayor riesgo de registrar asistencia incorrectamente. Considera subir el umbral a al menos 75%.")}
+                                        {t("Con umbral bajo y registro automático habilitado, hay mayor riesgo de registrar asistencia incorrectamente. Considera subir el umbral a al menos 75%.")}
                                     </Text>
                                 </View>
                             )}
 
                             <ToggleRow
                                 label={t("Guardar fotos de registro")}
-                                description={t("Almacena la foto tomada al registrar. �til para auditor�as pero consume m�s espacio.")}
+                                description={t("Almacena la foto tomada al registrar. útil para auditorías pero consume m�s espacio.")}
                                 value={savePhotos}
                                 onToggle={() => setSavePhotos(v => !v)}
                             />
@@ -554,7 +644,7 @@ export default function SettingsView() {
                                         flex: 1,
                                         lineHeight: 18
                                     }}>
-                                        {t("Las fotos se almacenan localmente. Aseg�rate de tener suficiente espacio y de informar a los estudiantes seg�n tu pol�tica de privacidad.")}
+                                        {t("Las fotos se almacenan localmente. Asegurate de tener suficiente espacio y de informar a los estudiantes seg�n tu pol�tica de privacidad.")}
                                     </Text>
                                 </View>
                             )}
@@ -591,13 +681,13 @@ export default function SettingsView() {
                             <Divider />
                             <ToggleRow
                                 label={t("Alertas por correo")}
-                                description={t("Env�a un correo al docente cuando un estudiante no asiste. Ideal para clases peque�as o con seguimiento individual.")}
+                                description={t("Envía un correo al docente cuando un estudiante no asiste. Ideal para clases peque�as o con seguimiento individual.")}
                                 value={emailAlert}
                                 onToggle={() => setEmailAlert(v => !v)}
                             />
                             <ToggleRow
                                 label={t("Reporte semanal")}
-                                description={t("Resumen autom�tico de asistencia enviado cada lunes a las 8am. Incluye porcentajes por curso.")}
+                                description={t("Resumen automático de asistencia enviado cada lunes a las 8am. Incluye porcentajes por curso.")}
                                 value={weeklyReport}
                                 onToggle={() => setWeeklyReport(v => !v)}
                             />
@@ -609,7 +699,7 @@ export default function SettingsView() {
                             />
                             <ToggleRow
                                 label={t("Resumen diario")}
-                                description={t("Resumen autom�tico de asistencia al finalizar el d�a. Puede generar muchas notificaciones en d�as de muchas clases.")}
+                                description={t("Resumen automático de asistencia al finalizar el día. Puede generar muchas notificaciones en d�as de muchas clases.")}
                                 value={dailySummary}
                                 onToggle={() => setDailySummary(v => !v)}
                             />
@@ -618,7 +708,7 @@ export default function SettingsView() {
                             {activeNotifications === 0 && (
                                 <View style={{
                                     marginTop: 10,
-                                    backgroundColor: c.states.warningLight,
+                                    backgroundColor: c.status.warningLight,
                                     borderRadius: 14,
                                     padding: 12,
                                     flexDirection: "row",
@@ -627,7 +717,7 @@ export default function SettingsView() {
                                     <Feather
                                         name="bell-off"
                                         size={14}
-                                        color={c.states.warning}
+                                        color={c.status.warning}
                                         style={{ marginTop: 1 }}
                                     />
                                     <Text style={{
@@ -636,7 +726,7 @@ export default function SettingsView() {
                                         flex: 1,
                                         lineHeight: 18
                                     }}>
-                                        {t("No tienes ninguna notificaci�n activa. No recibir�s avisos sobre asistencia ni estudiantes en riesgo.")}
+                                        {t("No tienes ninguna notificación activa. No recibirás avisos sobre asistencia ni estudiantes en riesgo.")}
                                     </Text>
                                 </View>
                             )}
@@ -686,14 +776,14 @@ export default function SettingsView() {
 
                             <ToggleRow
                                 label={t("Autenticaci�n de dos factores")}
-                                description={t("Requiere un c�digo adicional al iniciar sesi�n. Protege la cuenta aunque alguien obtenga tu contrase�a.")}
+                                description={t("Requiere un código adicional al iniciar sesión. Protege la cuenta aunque alguien obtenga tu contrase�a.")}
                                 value={twoFactor}
                                 onToggle={() => setTwoFactor(v => !v)}
                             />
 
                             {!twoFactor && (
                                 <View style={{
-                                    backgroundColor: c.states.warningLight,
+                                    backgroundColor: c.status.warningLight,
                                     borderRadius: 14,
                                     padding: 12,
                                     flexDirection: "row",
@@ -702,7 +792,7 @@ export default function SettingsView() {
                                     <Feather
                                         name="shield"
                                         size={13}
-                                        color={c.states.warning}
+                                        color={c.status.warning}
                                         style={{ marginTop: 1 }}
                                     />
                                     <Text style={{
@@ -711,14 +801,14 @@ export default function SettingsView() {
                                         flex: 1,
                                         lineHeight: 18
                                     }}>
-                                        {t("Sin 2FA, la cuenta queda vulnerable si la contrase�a se compromete. Se recomienda activarlo.")}
+                                        {t("Sin 2FA, la cuenta queda vulnerable si la contraseña se compromete. Se recomienda activarlo.")}
                                     </Text>
                                 </View>
                             )}
 
                             <View>
                                 <Text style={labelStyle}>
-                                    {t("Tiempo de sesi�n (minutos)")}
+                                    {t("Tiempo de sesión (minutos)")}
                                 </Text>
                                 <TextInput
                                     keyboardType="numeric"
@@ -727,11 +817,11 @@ export default function SettingsView() {
                                     style={[inputStyle, { width: 140 }]}
                                 />
                                 <Text style={descStyle}>
-                                    {t("La sesi�n se cerrar� autom�ticamente tras este tiempo de inactividad.")}
+                                    {t("La sesión se cerrará automáticamente tras este tiempo de inactividad.")}
                                     {parseInt(sessionTime) > 120
                                         ? t(" ? Sesiones largas aumentan el riesgo si el dispositivo queda desbloqueado.")
                                         : parseInt(sessionTime) <= 15
-                                        ? t(" Sesi�n muy corta � el usuario deber� iniciar sesi�n con frecuencia.")
+                                        ? t(" Sesión muy corta el usuario deberá iniciar sesión con frecuencia.")
                                         : t(" Tiempo razonable para uso normal en aula.")}
                                 </Text>
                             </View>
@@ -748,7 +838,7 @@ export default function SettingsView() {
                             {/* Modo de visualizaci�n */}
                             <View style={{ gap: 8 }}>
                                 <Text style={labelStyle}>
-                                    {t("Modo de visualizaci�n")}
+                                    {t("Modo de visualización")}
                                 </Text>
                                 <Text style={descStyle}>
                                     {t("Elige el tema base de la interfaz. Afecta fondos, textos y superficies de toda la app.")}
@@ -804,7 +894,7 @@ export default function SettingsView() {
                                     flex: 1,
                                     lineHeight: 18
                                 }}>
-                                    {t("La preview muestra c�mo se ver� el color en botones, badges y elementos activos. Presiona \"Guardar cambios\" para aplicarlo en toda la app.")}
+                                    {t("La preview muestra como se ver el color en botones, badges y elementos activos. Presiona \"Guardar cambios\" para aplicarlo en toda la app.")}
                                 </Text>
                             </View>
                         </View>

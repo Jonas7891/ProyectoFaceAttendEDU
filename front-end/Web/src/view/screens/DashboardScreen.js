@@ -30,7 +30,7 @@ import StudentsView     from "../StudentsView";
 import CoursesView      from "../CoursesView";
 import ReportsView      from "../ReportsView";
 import SettingsView     from "../SettingsView";
-import EnvironmentsView from "../EnviromentsView";
+import EnvironmentsView from "../EnvironmentsView";
 
 import { useTheme }      from "../components/hooks/useTheme";
 import { useResponsive } from "../components/hooks/useResponsive";
@@ -65,7 +65,7 @@ export default function DashboardScreen() {
     const c           = theme.colors;
     const vm          = useDashboardScreenViewModel();
     const { t }       = useTranslation();
-    const { logout }  = useAuth();
+    const { logout, user }  = useAuth();
 
     // ── Manejo de logout ──────────────────────────────────────
     async function handleLogout() {

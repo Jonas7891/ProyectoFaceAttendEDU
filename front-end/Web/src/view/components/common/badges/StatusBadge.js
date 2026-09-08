@@ -1,4 +1,6 @@
 import React from "react";
+import { View } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { Badge } from "./Badge";
 import { useTheme } from "../../hooks/useTheme";
 
@@ -92,10 +94,58 @@ export function useAttendanceColor(attendance) {
   return "#EF4444"; // danger
 }
 
-// Iconos de estado de asistencia
-export function AttendanceStatusIcon({ status }) {
-  // TODO: Implementar
-  return null;
+/**
+ * Icono circular para estado de asistencia
+ * 
+ * @param {string} status - Estado: 'on_time', 'late', 'absent', 'present'
+ * @param {number} size - Tamaño del contenedor (default: 32)
+ */
+export function AttendanceStatusIcon({ status, size = 32 }) {
+  const { theme } = useTheme();
+  
+  const configMap = {
+    on_time: {
+      icon: "check",
+      backgroundColor: theme.colors.status.success,
+      color: "#FFFFFF",
+    },
+    present: {
+      icon: "check",
+      backgroundColor: theme.colors.status.success,
+      color: "#FFFFFF",
+    },
+    late: {
+      icon: "clock",
+      backgroundColor: theme.colors.status.warning,
+      color: "#FFFFFF",
+    },
+    absent: {
+      icon: "x",
+      backgroundColor: theme.colors.status.danger,
+      color: "#FFFFFF",
+    },
+  };
+
+  const config = configMap[status] || {
+    icon: "help-circle",
+    backgroundColor: theme.colors.border.primary,
+    color: theme.colors.text.secondary,
+  };
+
+  return (
+    <View
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: config.backgroundColor,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Feather name={config.icon} size={size * 0.5} color={config.color} />
+    </View>
+  );
 }
 
 // Umbrales de asistencia

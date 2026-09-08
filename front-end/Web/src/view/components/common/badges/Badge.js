@@ -74,16 +74,16 @@ export function Badge({
       color: c.brand.primary,
     },
     success: {
-      backgroundColor: c.states.successLight || "#D1FAE5",
-      color: c.states.success,
+      backgroundColor: c.status.successLight || "#D1FAE5",
+      color: c.status.success,
     },
     warning: {
-      backgroundColor: c.states.warningLight || "#FEF3C7",
-      color: c.states.warning,
+      backgroundColor: c.status.warningLight || "#FEF3C7",
+      color: c.status.warning,
     },
     danger: {
-      backgroundColor: c.states.dangerLight || "#FEE2E2",
-      color: c.states.danger,
+      backgroundColor: c.status.dangerLight || "#FEE2E2",
+      color: c.status.danger,
     },
     info: {
       backgroundColor: c.brand.primaryLight || "#DBEAFE",
