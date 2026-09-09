@@ -41,7 +41,7 @@ export const UserProvider = ({ children }) => {
 
     const isAdmin = normalizedRole === 'admin' || normalizedRole === 'administrador';
     const isTeacher = normalizedRole === 'teacher' || normalizedRole === 'docente';
-    const isStudent = normalizedRole === 'student' || normalizedRole === 'Aprendiz';
+    const isStudent = normalizedRole === 'student' || normalizedRole === 'aprendiz';
 
     const value = {
         // Estado

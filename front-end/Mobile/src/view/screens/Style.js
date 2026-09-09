@@ -1,6 +1,7 @@
 import {Platform, StyleSheet} from 'react-native';
+import {appFontFamily, normalizeTypography} from '../../utils/typography';
 
-const styles = StyleSheet.create({
+const styleDefinitions = {
     safeArea: {
         flex: 1,
         backgroundColor: "#F5F5F5",
@@ -32,6 +33,18 @@ const styles = StyleSheet.create({
     ScrollViewContent: {
         flexGrow: 1,
         paddingBottom: 30,
+    },
+    menuScreen: {
+        flex: 1,
+    },
+    menuScrollContent: {
+        paddingBottom: 24,
+    },
+    menuFooter: {
+        paddingHorizontal: 20,
+        paddingTop: 12,
+        paddingBottom: Platform.OS === 'ios' ? 24 : 16,
+        backgroundColor: '#FFFFFF',
     },
     bottomSpace: {
         height: 90,
@@ -575,7 +588,7 @@ const styles = StyleSheet.create({
     },
     sectionTitleMenu: {
         fontSize: 18,
-        fontFamily: "Bold",
+        fontFamily: appFontFamily,
         textAlign: "justify",
         marginBottom: 15,
         color: "#000000",
@@ -4463,35 +4476,51 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 15,
         fontWeight: '700',
-    },cameraContainer: {
-        flex: 1
+    },
+    cameraContainer: {
+        flex: 1,
+        position: 'relative',
+        backgroundColor: '#000',
+    },
+    cameraOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        zIndex: 1,
     },
     overlayContainer: {
-        ...StyleSheet.absoluteFillObject,
-        justifyContent: 'center',
-        alignItems: 'center'
+        position: 'absolute',
+        top: 200,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
     },
     ovalContainer: {
-        width: 280,
-        height: 380,
-        borderRadius: 200,
+        width: '76%',
+        maxWidth: 320,
+        aspectRatio: 0.74,
+        borderRadius: 999,
         borderWidth: 4,
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
     },
     ovalInner: {
-        width: 260,
-        height: 360,
-        borderRadius: 190,
+        width: '92%',
+        height: '94%',
+        borderRadius: 999,
         borderWidth: 2,
-        borderStyle: 'dashed'
+        borderStyle: 'dashed',
     },
     cameraHeader: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingTop: Platform.OS === 'ios' ? 60 : 40,
-        paddingHorizontal: 20
+        paddingBottom: 12,
+        paddingHorizontal: 20,
+        zIndex: 3,
     },
     previewHeader: {
         position: 'absolute',
@@ -4508,49 +4537,54 @@ const styles = StyleSheet.create({
     },
     previewHeaderTitle: {
         color: '#fff',
-        fontSize: 18,
-        fontWeight: '600'
+        fontSize: 24,
+        fontWeight: '700',
     },
     closeButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: 'rgba(255,255,255,0.2)',
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: 'rgba(0,0,0,0.55)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.45)',
         justifyContent: 'center',
         alignItems: 'center',
     },
     closeButtonText: {
         color: '#fff',
-        fontSize: 20,
-        fontWeight: 'bold'
+        fontSize: 30,
+        fontWeight: '700',
     },
     flipButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: 'rgba(255,255,255,0.2)',
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: 'rgba(0,0,0,0.55)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.45)',
         justifyContent: 'center',
         alignItems: 'center',
     },
     flipButtonText: {
-        fontSize: 20
+        fontSize: 28,
     },
     cameraTitle: {
         color: '#fff',
-        fontSize: 18,
-        fontWeight: '600'},
+        fontSize: 24,
+        fontWeight: '700',
+        textShadowColor: 'rgba(0,0,0,0.7)',
+        textShadowOffset: {width: 0, height: 2},
+        textShadowRadius: 4,
+    },
     statusOverlay: {
-        position: 'absolute',
-        bottom: 220,
-        left: 0,
-        right: 0,
+        marginTop: 28,
         alignItems: 'center',
-        paddingHorizontal: 20
+        paddingHorizontal: 20,
     },
     statusContainer: {
         backgroundColor: 'rgba(0,0,0,0.6)',
         paddingHorizontal: 20,
-        paddingVertical: 10,
+        paddingVertical: 12,
         borderRadius: 20
     },
     statusTextUpdate: {
@@ -4561,10 +4595,12 @@ const styles = StyleSheet.create({
     },
     captureContainer: {
         position: 'absolute',
-        bottom: 60,
+        bottom: Platform.OS === 'ios' ? 36 : 24,
         left: 0,
         right: 0,
-        alignItems: 'center'
+        alignItems: 'center',
+        zIndex: 20,
+        elevation: 20,
     },
     captureButton: {
         width: 80,
@@ -4572,30 +4608,32 @@ const styles = StyleSheet.create({
         borderRadius: 40,
         borderWidth: 4,
         borderColor: '#fff',
+        backgroundColor: 'rgba(0,0,0,0.25)',
         justifyContent: 'center',
         alignItems: 'center',
+        zIndex: 20,
+        elevation: 20,
     },
     captureButtonInner: {
         width: 64,
         height: 64,
         borderRadius: 32,
-        backgroundColor: '#fff'
+        backgroundColor: '#fff',
     },
     previewOverlayWrapper: {
         position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
-        shadowColor: '#000',
         shadowOffset: {width: 0, height: -10},
         shadowOpacity: 0.5,
         shadowRadius: 20,
         elevation: 20,
     },
     previewOverlay: {
-        backgroundColor: 'rgba(0, 0, 0, 0.82)',
-        paddingTop: 30,
-        paddingBottom: Platform.OS === 'ios' ? 50 : 30,
+        backgroundColor: 'rgba(0, 0, 0, 0.32)',
+        paddingTop: 20,
+        paddingBottom: Platform.OS === 'ios' ? 30 : 30,
         paddingHorizontal: 24,
         borderTopLeftRadius: 28,
         borderTopRightRadius: 28,
@@ -4797,6 +4835,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         paddingHorizontal: 50,
     },
-});
+};
+
+const styles = StyleSheet.create(normalizeTypography(styleDefinitions));
 
 export default styles;

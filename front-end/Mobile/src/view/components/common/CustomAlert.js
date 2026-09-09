@@ -1,5 +1,6 @@
 import React from "react";
 import {Dimensions, Modal, StyleSheet, Text, TouchableOpacity, View,} from "react-native";
+import {normalizeTypography} from '../../../utils/typography';
 
 const {width} = Dimensions.get("window");
 
@@ -120,7 +121,7 @@ export default function CustomAlert({
     );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create(normalizeTypography({
     overlay: {
         flex: 1,
         backgroundColor: "rgba(0, 0, 0, 0.4)",
@@ -199,4 +200,4 @@ const styles = StyleSheet.create({
     cancelButtonText: {
         fontWeight: "500",
     },
-});
+}));

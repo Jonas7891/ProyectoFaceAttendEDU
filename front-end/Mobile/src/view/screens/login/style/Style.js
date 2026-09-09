@@ -1,6 +1,7 @@
 import {Platform, StyleSheet} from 'react-native';
+import {normalizeTypography} from '../../../../utils/typography';
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create(normalizeTypography({
     safeArea: {
         flex: 1,
         backgroundColor: "#F5F5F5",
@@ -371,6 +372,6 @@ const styles = StyleSheet.create({
         fontSize: 22,
         fontWeight: '700',
     },
-});
+}));
 
 export default styles;

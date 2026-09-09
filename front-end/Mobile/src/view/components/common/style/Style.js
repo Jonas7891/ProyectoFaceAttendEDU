@@ -1,6 +1,7 @@
 import { StyleSheet, Platform } from 'react-native';
+import {normalizeTypography} from '../../../../utils/typography';
 
-const stylescommon = StyleSheet.create({
+const stylescommon = StyleSheet.create(normalizeTypography({
     container: {
         alignSelf: "center",
         overflow: "hidden",
@@ -625,6 +626,6 @@ const stylescommon = StyleSheet.create({
         fontSize: 12,
         lineHeight: 17,
     },
-});
+}));
 
 export default stylescommon;

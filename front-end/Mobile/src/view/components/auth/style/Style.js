@@ -1,6 +1,7 @@
 import {Platform, StyleSheet} from 'react-native';
+import {normalizeTypography} from '../../../../utils/typography';
 
-const styleAuth = StyleSheet.create({
+const styleAuth = StyleSheet.create(normalizeTypography({
     /* ── CodeInput ───────────────────────────────────────────── */
     codeInputRow: {
         flexDirection: 'row',
@@ -174,18 +175,20 @@ const styleAuth = StyleSheet.create({
 
     dangerButton: {
         backgroundColor: '#ff0000',
-        paddingVertical: 12,
+        paddingVertical: 14,
         paddingHorizontal: 24,
         borderRadius: 8,
         alignItems: 'center',
         justifyContent: 'center',
-        marginVertical: 10,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
-        marginTop: 70,
+        width: '100%',
+    },
+    dangerButtonContainer: {
+        width: '100%',
     },
     dangerButtonText: {
         color: '#FFFFFF',
@@ -260,6 +263,6 @@ const styleAuth = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
     },
-});
+}));
 
 export default styleAuth;

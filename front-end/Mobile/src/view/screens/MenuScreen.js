@@ -97,11 +97,11 @@ export default function MenuScreen({ onLogout }) {
             >
                 <KeyboardAvoidingView
                     behavior={Platform.OS === "ios" ? "padding" : "height"}
-                    style={styles.keyboardview}
+                    style={styles.menuScreen}
                 >
                     <ScrollView
                         style={styles.ScrollView}
-                        contentContainerStyle={styles.ScrollViewContent}
+                        contentContainerStyle={styles.menuScrollContent}
                     >
                         <View style={[styles.container, {marginTop: Platform.OS === "ios" ? 0 : 15}]} marginHorizontal={10}>
                             <TouchableOpacity onPress={handleBack} activeOpacity={0.2}>
@@ -162,14 +162,16 @@ export default function MenuScreen({ onLogout }) {
                                     onPress={handleSchool}
                                 />
 
-                                <DangerButton
-                                    title={isLoading ? t('menu.loggingOut') : t('menu.logout')}
-                                    onLogout={handleLogout}
-                                    disabled={isLoading}
-                                />
                             </View>
                         </View>
                     </ScrollView>
+                    <View style={styles.menuFooter}>
+                        <DangerButton
+                            title={isLoading ? t('menu.loggingOut') : t('menu.logout')}
+                            onLogout={handleLogout}
+                            disabled={isLoading}
+                        />
+                    </View>
                 </KeyboardAvoidingView>
             </SafeAreaView>
 
