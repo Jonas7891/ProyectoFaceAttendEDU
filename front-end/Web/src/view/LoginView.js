@@ -18,12 +18,13 @@
 // ============================================================
 
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Image, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, Image } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useResponsive }  from "./components/hooks/useResponsive";
 import { useTheme }       from "./components/hooks/useTheme";
 import Button             from "./components/common/buttons/Button";
 import TextInput          from "./components/common/inputs/TextInput";
+import CustomScrollBar    from "./components/common/CustomScrollBar";
 import {
     AuthFooterLink,
     BrandPanelCircles,
@@ -256,25 +257,37 @@ export default function LoginView({
 
             {/* Campos del formulario - ALTURA FIJA para que no mueva nada */}
             <View style={{ height: 235}}>
-                <ScrollView 
+                <CustomScrollBar
                     showsVerticalScrollIndicator={true}
                     contentContainerStyle={{ 
                         paddingVertical: 4,
-                        ...(typeof window !== 'undefined' && {
-                            direction: 'ltr', // Contenido en dirección normal
-                        }),
                     }}
                     bounces={false}
-                    style={{
-                        flex: 1,
-                        ...(typeof window !== 'undefined' && {
-                            // Estilos CSS para web - scrollbar personalizado del lado izquierdo
-                            direction: 'ltr',
-                        }),
+                    scrollbarStyle={{
+                        variant: 'pill',
+                    }}
+                    effects={{
+                        fadeEdges: {
+                            enabled: true,
+                            size: 18,
+                            color: c.background.surface,
+                            edges: ['top', 'bottom'],
+                        },
+                        smoothElastic: {
+                            enabled: true,
+                            tension: 45,
+                            friction: 9,
+                        },
+                        progressIndicator: {
+                            enabled: true,
+                            position: 'right',
+                            color: c.brand.primary,
+                            thickness: 2,
+                        },
                     }}
                 >
                     {fields}
-                </ScrollView>
+                </CustomScrollBar>
             </View>
 
             {/* Botón y footer - compacto, cerca del formulario */}

@@ -1,10 +1,11 @@
 import React from "react";
-import { View, ScrollView, Image, Text, StyleSheet, Animated } from "react-native";
+import { View, Image, Text, StyleSheet, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 
 import { Button, BackgroundImage } from "./components/common";
 import { Card } from "./components/common";
+import CustomScrollBar from "./components/common/CustomScrollBar";
 import { HeroSection, HeroMediaSection, HeroStats, HeroTitle } from "./components/hero";
 
 import { useHeroEntrance } from "./components/hooks/useHeroEntrance";
@@ -685,9 +686,41 @@ export default function LandingView({ onNavigate }) {
             style={{ flex: 1, backgroundColor: c.background.app }}
             edges={["top", "bottom"]}
         >
-            <ScrollView
+            <CustomScrollBar
                 contentContainerStyle={{ flexGrow: 1 }}
-                showsVerticalScrollIndicator={false}
+                showsVerticalScrollIndicator={true}
+                scrollbarStyle={{
+                    variant: 'minimal',
+                }}
+                effects={{
+                    autoSlide: {
+                        enabled: true,
+                        interval: 4000,
+                        distance: 150,
+                        direction: 'vertical',
+                        pauseOnInteraction: true,
+                        target: 'loop',
+                    },
+                    fadeEdges: {
+                        enabled: true,
+                        size: 40,
+                        color: c.background.app,
+                        edges: ['top', 'bottom'],
+                    },
+                    smoothElastic: {
+                        enabled: true,
+                        tension: 45,
+                        friction: 7,
+                    },
+                    progressIndicator: {
+                        enabled: false,
+                    },
+                    momentumBounce: {
+                        enabled: true,
+                        intensity: 60,
+                        duration: 450,
+                    },
+                }}
             >
                 {/* Sección 1: Hero */}
                 <View
@@ -821,7 +854,7 @@ export default function LandingView({ onNavigate }) {
                     {/* Footer con fondo blanco */}
                     <Footer />
                 </View>
-            </ScrollView>
+            </CustomScrollBar>
         </SafeAreaView>
     );
 }

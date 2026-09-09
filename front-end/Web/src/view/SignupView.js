@@ -17,14 +17,15 @@
 //  Recibe callbacks del Screen para delegar acciones de navegación.
 // ============================================================
 
-import React from "react";
-import { View, Text, Image, TouchableOpacity, ScrollView } from "react-native";
+import React, { useRef, useState } from "react";
+import { View, Text, Image, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useResponsive }  from "./components/hooks/useResponsive";
 import { useTheme }       from "./components/hooks/useTheme";
 import Button             from "./components/common/buttons/Button";
 import TextInput          from "./components/common/inputs/TextInput";
 import Alert              from "./components/common/feedback/Alert";
+import CustomScrollBar    from "./components/common/CustomScrollBar";
 import PasswordStrengthIndicator from "./components/auth/PasswordStrengthIndicator";
 import {
     AuthFooterLink,
@@ -43,10 +44,32 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLandi
     const c           = theme.colors;
     const vm          = useSignupViewModel(onRegisterSuccess);
     const { t }       = useTranslation();
+    
+    // Ref para el trigger del autoSlide
+    const [autoSlideTrigger, setAutoSlideTrigger] = useState(null);
+    const scrollTriggered = useRef(false);
 
     // ── Secciones compartidas entre mobile y desktop ──────────
     // Detectar si debe mostrarse el indicador de contraseña
     const showPasswordIndicator = vm.password.length > 0;
+    
+    // Handler para cuando el usuario empiece a escribir la contraseña
+    const handlePasswordChange = (text) => {
+        vm.setPassword(text);
+        
+        // Disparar scroll automático al primer carácter
+        if (text.length === 1 && !scrollTriggered.current) {
+            scrollTriggered.current = true;
+            if (autoSlideTrigger) {
+                autoSlideTrigger();
+            }
+        }
+        
+        // Reset si borra todo
+        if (text.length === 0) {
+            scrollTriggered.current = false;
+        }
+    };
     
     // Espaciados centralizados del formulario
     const FORM_SPACING = {
@@ -86,7 +109,7 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLandi
                     label={t("Contraseña")}
                     placeholder={t("Crea una contraseña")}
                     value={vm.password}
-                    onChangeText={vm.setPassword}
+                    onChangeText={handlePasswordChange}
                     onBlur={() => vm.handleBlur('password')}
                     type="password"
                     leftIcon={<Feather name="lock" size={20} color={c.text.secondary} />}
@@ -228,27 +251,44 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLandi
             </View>
 
             {/* Campos del formulario - ALTURA FIJA para que no mueva nada */}
-            <View style={{ height: 270, flexDirection: 'row-reverse',  marginTop: -5}}>
-                <ScrollView 
+            <View style={{ height: 270, marginTop: -5}}>
+                <CustomScrollBar
                     showsVerticalScrollIndicator={true}
                     contentContainerStyle={{ 
                         paddingVertical: 0,
-                        ...(typeof window !== 'undefined' && {
-                            direction: 'ltr', // Contenido en dirección normal
-                        }),
                     }}
                     bounces={false}
-                    style={{
-                        flex: 1,
-                        ...(typeof window !== 'undefined' && {
-                            // Estilos CSS para web - scrollbar personalizado del lado izquierdo
-                            direction: 'ltr',
-                        }),
+                    scrollbarStyle={{
+                        variant: 'pill',
                     }}
-                    
+                    effects={{
+                        autoSlide: {
+                            enabled: true,
+                            target: 'end',
+                            triggerDelay: 200,
+                            trigger: (callback) => setAutoSlideTrigger(() => callback),
+                        },
+                        fadeEdges: {
+                            enabled: true,
+                            size: 18,
+                            color: c.background.surface,
+                            edges: ['top', 'bottom'],
+                        },
+                        smoothElastic: {
+                            enabled: true,
+                            tension: 45,
+                            friction: 9,
+                        },
+                        progressIndicator: {
+                            enabled: true,
+                            position: 'right',
+                            color: c.brand.primary,
+                            thickness: 2,
+                        },
+                    }}
                 >
                     {fields}
-                </ScrollView>
+                </CustomScrollBar>
             </View>
 
             {/* Botón y footer - compacto, cerca del formulario */}
