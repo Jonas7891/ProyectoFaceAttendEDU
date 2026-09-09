@@ -99,9 +99,7 @@ export default function MenuJustifyScreen() {
                     <>
                       <MenuItem label={t('admin.validJustifications')} onPress={handleValidJustifications} />
                       <MenuItem label={t('admin.pendingJustifications')} onPress={handlePendingJustificationScreen} />
-                        {isAdmin && (
-                          <MenuItem label={t('admin.addNewJustification')} onPress={handleAddOrEditJustify}/>
-                        )}
+                      <MenuItem label={t('admin.addNewJustification')} onPress={handleAddOrEditJustify}/>
                     </>
                 )}
               </View>

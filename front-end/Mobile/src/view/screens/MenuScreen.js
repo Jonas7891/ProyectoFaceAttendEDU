@@ -162,16 +162,14 @@ export default function MenuScreen({ onLogout }) {
                                     onPress={handleSchool}
                                 />
 
+                                <DangerButton
+                                    title={isLoading ? t('menu.loggingOut') : t('menu.logout')}
+                                    onLogout={handleLogout}
+                                    disabled={isLoading}
+                                />
                             </View>
                         </View>
                     </ScrollView>
-                    <View style={styles.menuFooter}>
-                        <DangerButton
-                            title={isLoading ? t('menu.loggingOut') : t('menu.logout')}
-                            onLogout={handleLogout}
-                            disabled={isLoading}
-                        />
-                    </View>
                 </KeyboardAvoidingView>
             </SafeAreaView>
 

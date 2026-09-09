@@ -14,8 +14,10 @@ export default function DangerButton({ title, disabled = false, onLogout }) {
 
     const handleLogout = async () => {
         try {
+            // Limpiar almacenamiento
             await removeToken();
 
+            // Ejecutar callback (que ya incluye la confirmación desde la pantalla)
             if (onLogout) {
                 await onLogout();
             } else {
@@ -48,6 +50,7 @@ export default function DangerButton({ title, disabled = false, onLogout }) {
                 </TouchableOpacity>
             </View>
 
+            {/* Solo para mostrar errores, sin confirmación */}
             <CustomAlert
                 visible={alertConfig.visible}
                 title={alertConfig.title}

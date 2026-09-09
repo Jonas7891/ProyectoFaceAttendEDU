@@ -128,8 +128,7 @@ export default function PasswordUpdateModal() {
                                         { backgroundColor: colors.border ?? colors.textSecondary + '30' },
                                     ]} />
 
-                                    <Text style={{marginBottom: 10, color: colors.text}}>Ingrese su contraseña
-                                        actual</Text>
+                                    {/* Inputs — sin labels uppercase, solo placeholder */}
                                     <TextInput
                                         style={[stylesCommon.passwordModalInput, {
                                             borderColor: colors.border ?? colors.textSecondary + '50',
