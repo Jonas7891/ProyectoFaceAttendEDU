@@ -1,24 +1,24 @@
 import React from 'react';
 import {
-    Text,
-    View,
-    SafeAreaView,
-    TouchableOpacity,
-    ScrollView,
+    Keyboard,
     KeyboardAvoidingView,
     Platform,
+    SafeAreaView,
+    ScrollView,
+    Text,
+    TouchableOpacity,
     TouchableWithoutFeedback,
-    Keyboard,
+    View,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from '../components/common/ThemeContext';
+import {useTranslation} from 'react-i18next';
+import {useTheme} from '../components/common/ThemeContext';
 import PrimaryButton from '../components/auth/PrimaryButton';
-import { QuestionnaireModal } from '../components/common/QuestionnaireModal';
-import { FacialUpdateModal } from '../components/common/FacialUpdateModal';
+import {QuestionnaireModal} from '../components/common/QuestionnaireModal';
+import {FacialUpdateModal} from '../components/common/FacialUpdateModal';
 import CustomLogo from '../components/common/logo';
 import CustomAlert from '../components/common/CustomAlert';
 import styles from './Style';
-import { useFacialFailViewModel } from '../../viewmodels/useFacialFailScreenViewModel';
+import {useFacialFailViewModel} from '../../viewmodels/useFacialFailScreenViewModel';
 
 export default function FacialFail() {
     const { t } = useTranslation();
@@ -51,7 +51,7 @@ export default function FacialFail() {
                     keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
                 >
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                        <View style={styles.container} marginHorizontal={10}>
+                        <View style={styles.container} marginHorizontal={20}>
                             <View style={styles.headerContainer}>
                                 <Text style={[styles.mainTitle, { color: colors.text }]}>
                                     {t('facialFail.title')}
@@ -89,7 +89,6 @@ export default function FacialFail() {
                                 </Text>
                             </TouchableOpacity>
 
-                            {/* Tarjeta de Actualización Facial */}
                             <TouchableOpacity
                                 style={[
                                     styles.optionCard,
@@ -110,8 +109,6 @@ export default function FacialFail() {
                                 </Text>
                             </TouchableOpacity>
 
-                            <View style={[styles.separator, { backgroundColor: colors.separator }]} />
-
                             <Text style={[styles.recommendationsTitle, { color: colors.text }]}>
                                 {t('facialFail.recommendations')}
                             </Text>
@@ -125,9 +122,9 @@ export default function FacialFail() {
                                 </Text>
                             </View>
 
-                            <View style={[styles.buttonContainer, { marginTop: 30 }]}>
+                            <View style={[styles.buttonContainer, { marginTop: 10 }]}>
                                 <PrimaryButton
-                                    title={t('consultJustify.back')}
+                                    title={t('common.back')}
                                     onPress={handleBack}
                                 />
                             </View>

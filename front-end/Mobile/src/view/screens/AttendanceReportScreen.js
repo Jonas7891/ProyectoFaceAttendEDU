@@ -1,19 +1,20 @@
 import React from 'react';
 import {
-    View,
-    Text,
-    ScrollView,
-    TouchableOpacity,
-    TextInput,
+    ActivityIndicator,
     Modal,
     SafeAreaView,
+    ScrollView,
     StatusBar,
-    ActivityIndicator,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { useTheme } from '../components/common/ThemeContext';
+import {useTheme} from '../components/common/ThemeContext';
+import {useTranslation} from 'react-i18next';
 import CustomAlert from '../components/common/CustomAlert';
 import styles from './Style';
-import { useAttendanceReportViewModel } from '../../viewmodels/useAttendanceReportViewModel';
+import {useAttendanceReportViewModel} from '../../viewmodels/useAttendanceReportViewModel';
 
 // ===========================================================================
 // HELPERS
@@ -58,7 +59,7 @@ function ProgressRow({ label, value, limit, type, colors }) {
 // ===========================================================================
 // SUB-COMPONENTE: Tarjeta de persona
 // ===========================================================================
-function PersonCard({ person, onGenerateReport, ABSENCE_LIMIT, LATENESS_LIMIT, colors }) {
+function PersonCard({person, onGenerateReport, ABSENCE_LIMIT, LATENESS_LIMIT, colors, t}) {
     const level = getAlertLevel(person, ABSENCE_LIMIT, LATENESS_LIMIT);
     const isCrit = level === 'critical';
 
@@ -79,7 +80,7 @@ function PersonCard({ person, onGenerateReport, ABSENCE_LIMIT, LATENESS_LIMIT, c
                 </View>
                 <View style={[styles.alertBadgeReport, isCrit ? styles.alertBadgeCriticalReport : styles.alertBadgeWarningReport]}>
                     <Text style={[styles.alertBadgeTextReport, isCrit ? styles.alertBadgeTextCriticalReport : styles.alertBadgeTextWarningReport]}>
-                        {isCrit ? 'CRÍTICO' : 'EN LÍMITE'}
+                        {isCrit ? t('attendanceReport.statusLabels.critical') : t('attendanceReport.statusLabels.warning')}
                     </Text>
                 </View>
             </View>
@@ -94,7 +95,8 @@ function PersonCard({ person, onGenerateReport, ABSENCE_LIMIT, LATENESS_LIMIT, c
                     >
                         {person.absences}
                     </Text>
-                    <Text style={[styles.counterLabelReport, { color: colors.textSecondary }]}>Inasistencias</Text>
+                    <Text
+                        style={[styles.counterLabelReport, {color: colors.textSecondary}]}>{t('attendanceReport.types.absences')}</Text>
                 </View>
                 <View style={[styles.counterDividerReport, { backgroundColor: colors.border }]} />
                 <View style={styles.counterItemReport}>
@@ -106,7 +108,8 @@ function PersonCard({ person, onGenerateReport, ABSENCE_LIMIT, LATENESS_LIMIT, c
                     >
                         {person.lateness}
                     </Text>
-                    <Text style={[styles.counterLabelReport, { color: colors.textSecondary }]}>Retardos</Text>
+                    <Text
+                        style={[styles.counterLabelReport, {color: colors.textSecondary}]}>{t('attendanceReport.types.lateness')}</Text>
                 </View>
             </View>
 
@@ -116,7 +119,7 @@ function PersonCard({ person, onGenerateReport, ABSENCE_LIMIT, LATENESS_LIMIT, c
                 activeOpacity={0.75}
             >
                 <Text style={[styles.generateButtonTextReport, isCrit ? styles.generateButtonTextAbsenceReport : styles.generateButtonTextLatenessReport]}>
-                    Generar reporte individual
+                    {t('attendanceReport.individualReport')}
                 </Text>
             </TouchableOpacity>
         </View>
@@ -128,6 +131,7 @@ function PersonCard({ person, onGenerateReport, ABSENCE_LIMIT, LATENESS_LIMIT, c
 // ===========================================================================
 export default function AttendanceReportScreen({ navigation }) {
     const { colors, isDark } = useTheme();
+    const {t} = useTranslation();
 
     // Los estilos "activos" de Style.js (fondo rosado/celeste pálido) están pensados
     // solo para tema claro. En oscuro generamos un tinte translúcido del mismo color
@@ -218,7 +222,7 @@ export default function AttendanceReportScreen({ navigation }) {
                 >
                     <Text style={[styles.headerBackTextReport, { color: colors.text }]}>‹</Text>
                 </TouchableOpacity>
-                <Text style={[styles.headerTitleReport, { color: colors.text }]}>Reportes de Asistencia</Text>
+                <Text style={[styles.headerTitleReport, {color: colors.text}]}>{t('attendanceReport.title')}</Text>
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContentReport} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
@@ -226,7 +230,10 @@ export default function AttendanceReportScreen({ navigation }) {
 
                     {/* ── SELECTOR ROL ── */}
                     <View style={[styles.roleSelectorReport, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }]}>
-                        {[{ key: 'student', label: 'Estudiantes' }, { key: 'teacher', label: 'Profesores' }].map(tab => (
+                        {[{key: 'student', label: t('attendanceReport.tabs.students')}, {
+                            key: 'teacher',
+                            label: t('attendanceReport.tabs.teachers')
+                        }].map(tab => (
                             <TouchableOpacity
                                 key={tab.key}
                                 style={[
@@ -283,7 +290,7 @@ export default function AttendanceReportScreen({ navigation }) {
                                     activeType === 'absence' && { fontWeight: '700' },
                                 ]}
                             >
-                                Inasistencias (tope: {ABSENCE_LIMIT})
+                                {t('attendanceReport.absenceLabel', {limit: ABSENCE_LIMIT}).replace(/\n/g, ' ')}
                             </Text>
                         </TouchableOpacity>
                         <TouchableOpacity
@@ -307,7 +314,7 @@ export default function AttendanceReportScreen({ navigation }) {
                                     activeType === 'absence' && { fontWeight: '700' },
                                 ]}
                             >
-                                Retardos (tope: {LATENESS_LIMIT})
+                                {t('attendanceReport.latenessLabel', {limit: LATENESS_LIMIT}).replace(/\n/g, ' ')}
                             </Text>
                         </TouchableOpacity>
                     </View>
@@ -316,7 +323,7 @@ export default function AttendanceReportScreen({ navigation }) {
                     <View style={[styles.searchBarContainerReport, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }]}>
                         <TextInput
                             style={[styles.searchInputReport, { color: colors.text }]}
-                            placeholder="Buscar por nombre, código o materia…"
+                            placeholder={t('attendanceReport.searchPlaceholder')}
                             placeholderTextColor={colors.textSecondary}
                             value={searchText}
                             onChangeText={setSearchText}
@@ -331,9 +338,24 @@ export default function AttendanceReportScreen({ navigation }) {
                     {/* ── CHIPS DE FILTRO ── */}
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipsRowReport}>
                         {[
-                            { key: 'all', label: 'Todos', activeBg: allChipActive, activeText: allChipActiveText },
-                            { key: 'critical', label: 'Críticos', activeBg: criticalChipActive, activeText: criticalChipActiveText },
-                            { key: 'warning', label: 'En límite', activeBg: warningChipActive, activeText: warningChipActiveText },
+                            {
+                                key: 'all',
+                                label: t('attendanceReport.filters.all'),
+                                activeBg: allChipActive,
+                                activeText: allChipActiveText
+                            },
+                            {
+                                key: 'critical',
+                                label: t('attendanceReport.filters.critical'),
+                                activeBg: criticalChipActive,
+                                activeText: criticalChipActiveText
+                            },
+                            {
+                                key: 'warning',
+                                label: t('attendanceReport.filters.warning'),
+                                activeBg: warningChipActive,
+                                activeText: warningChipActiveText
+                            },
                         ].map(chip => (
                             <TouchableOpacity
                                 key={chip.key}
@@ -363,20 +385,30 @@ export default function AttendanceReportScreen({ navigation }) {
                         <View style={styles.loadingContainerReport}>
                             <ActivityIndicator size="large" color={colors.primary} />
                             <Text style={[styles.loadingTextReport, { color: colors.textSecondary }]}>
-                                Generando reportes…
+                                {t('common.loading')}
                             </Text>
                         </View>
                     ) : filteredData.length === 0 ? (
                         <View style={[styles.emptyStateReport, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }]}>
-                            <Text style={[styles.emptyStateTitleReport, { color: colors.text }]}>Sin alertas</Text>
+                            <Text
+                                style={[styles.emptyStateTitleReport, {color: colors.text}]}>{t('attendanceReport.noResults', {
+                                role: activeRole === 'student' ? t('attendanceReport.tabs.students').toLowerCase() : t('attendanceReport.tabs.teachers').toLowerCase(),
+                                type: activeType === 'absence' ? t('attendanceReport.types.absences').toLowerCase() : t('attendanceReport.types.lateness').toLowerCase()
+                            })}</Text>
                             <Text style={[styles.emptyStateDescriptionReport, { color: colors.textSecondary }]}>
-                                {'No hay ' + (activeRole === 'student' ? 'estudiantes' : 'profesores') + ' que superen el tope de ' + (activeType === 'absence' ? 'inasistencias' : 'retardos') + ' con los filtros actuales.'}
+                                {t('attendanceReport.noResults', {
+                                    role: activeRole === 'student' ? t('attendanceReport.tabs.students').toLowerCase() : t('attendanceReport.tabs.teachers').toLowerCase(),
+                                    type: activeType === 'absence' ? t('attendanceReport.types.absences').toLowerCase() : t('attendanceReport.types.lateness').toLowerCase()
+                                })}
                             </Text>
                         </View>
                     ) : (
                         <>
                             <Text style={[styles.sectionTitleReport, { color: colors.text }]}>
-                                {filteredData.length + ' ' + (activeRole === 'student' ? 'estudiante(s)' : 'docente(s)') + ' encontrado(s)'}
+                                {t('attendanceReport.resultsCount', {
+                                    count: filteredData.length,
+                                    role: activeRole === 'student' ? t('attendanceReport.tabs.students').toLowerCase() : t('attendanceReport.tabs.teachers').toLowerCase()
+                                })}
                             </Text>
                             {filteredData.map(person => (
                                 <PersonCard
@@ -386,6 +418,7 @@ export default function AttendanceReportScreen({ navigation }) {
                                     ABSENCE_LIMIT={ABSENCE_LIMIT}
                                     LATENESS_LIMIT={LATENESS_LIMIT}
                                     colors={colors}
+                                    t={t}
                                 />
                             ))}
                         </>
@@ -395,7 +428,7 @@ export default function AttendanceReportScreen({ navigation }) {
                     {!isLoading && filteredData.length > 0 && (
                         <TouchableOpacity style={styles.mainGenerateButtonReport} onPress={handleGenerateAll} activeOpacity={0.85}>
                             <Text style={styles.mainGenerateButtonTextReport}>
-                                {'Generar reporte general (' + filteredData.length + ')'}
+                                {t('attendanceReport.generateReport', {count: filteredData.length})}
                             </Text>
                         </TouchableOpacity>
                     )}
@@ -413,9 +446,10 @@ export default function AttendanceReportScreen({ navigation }) {
                         style={[styles.modalSheetReport, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }]}
                     >
                         <View style={[styles.modalHandleReport, { backgroundColor: colors.border }]} />
-                        <Text style={[styles.modalTitleReport, { color: colors.text }]}>Generar reporte</Text>
+                        <Text
+                            style={[styles.modalTitleReport, {color: colors.text}]}>{t('attendanceReport.modalTitle')}</Text>
                         <Text style={[styles.modalSubtitleReport, { color: colors.textSecondary }]}>
-                            {'Se notificará al ' + (activeRole === 'student' ? 'acudiente' : 'coordinador') + ' sobre el\nestado de asistencia de '}
+                            {t('attendanceReport.notificationMessage', {recipient: activeRole === 'student' ? t('attendanceReport.recipients.guardian') : t('attendanceReport.recipients.coordinator')}) + '\n'}
                             <Text style={{ fontWeight: '700', color: colors.text }}>{selectedPerson?.name}</Text>
                         </Text>
 
@@ -431,7 +465,7 @@ export default function AttendanceReportScreen({ navigation }) {
                                         {selectedPerson.absences}
                                     </Text>
                                     <Text style={[styles.modalInfoLabelReport, { color: colors.textSecondary }]}>
-                                        {'Inasistencias\n(tope ' + ABSENCE_LIMIT + ')'}
+                                        {t('attendanceReport.absenceLabel', {limit: ABSENCE_LIMIT})}
                                     </Text>
                                 </View>
                                 <View style={[styles.modalInfoDividerReport, { backgroundColor: colors.border }]} />
@@ -445,7 +479,7 @@ export default function AttendanceReportScreen({ navigation }) {
                                         {selectedPerson.lateness}
                                     </Text>
                                     <Text style={[styles.modalInfoLabelReport, { color: colors.textSecondary }]}>
-                                        {'Retardos\n(tope ' + LATENESS_LIMIT + ')'}
+                                        {t('attendanceReport.latenessLabel', {limit: LATENESS_LIMIT})}
                                     </Text>
                                 </View>
                             </View>
@@ -453,7 +487,8 @@ export default function AttendanceReportScreen({ navigation }) {
 
                         <View style={styles.modalActionsReport}>
                             <TouchableOpacity style={styles.modalConfirmButtonReport} onPress={handleConfirmReport} activeOpacity={0.85}>
-                                <Text style={styles.modalConfirmButtonTextReport}>✓ Confirmar y enviar reporte</Text>
+                                <Text
+                                    style={styles.modalConfirmButtonTextReport}>✓ {t('attendanceReport.modalConfirm')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[styles.modalCancelButtonReport, { borderWidth: 1, borderColor: colors.border }]}
@@ -461,7 +496,7 @@ export default function AttendanceReportScreen({ navigation }) {
                                 activeOpacity={0.7}
                             >
                                 <Text style={[styles.modalCancelButtonTextReport, { color: colors.textSecondary }]}>
-                                    Cancelar
+                                    {t('common.cancel')}
                                 </Text>
                             </TouchableOpacity>
                         </View>

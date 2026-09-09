@@ -1,6 +1,6 @@
-import { request } from "../api/apiClient";
-import { GET, POST, PUT, DELETE } from "./constants/httpMethod";
-import { attendancesUrl } from "./constants/urls";
+import {request} from "../api/apiClient";
+import {DELETE, GET, POST, PUT} from "./constants/httpMethod";
+import {attendancesUrl} from "./constants/urls";
 
 export const getAttendanceById = (id) =>
     request({

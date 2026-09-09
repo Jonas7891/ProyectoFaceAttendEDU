@@ -1,20 +1,20 @@
 import React from 'react';
 import {
-    Text,
-    View,
-    SafeAreaView,
-    KeyboardAvoidingView,
-    TouchableOpacity,
-    Platform,
-    ScrollView,
     FlatList,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
+import {useTranslation} from 'react-i18next';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import Separador from '../components/common/Separador';
 import styles from './Style';
-import { useTheme } from '../components/common/ThemeContext';
-import { useValidJustificationsViewModel } from '../../viewmodels/useConsultJustifyViewModel';
+import {useTheme} from '../components/common/ThemeContext';
+import {useValidJustificationsViewModel} from '../../viewmodels/useConsultJustifyViewModel';
 
 export default function ValidJustificationsScreen() {
     const { t } = useTranslation();
@@ -224,7 +224,7 @@ export default function ValidJustificationsScreen() {
                         )}
 
                         <View style={styles.buttonContainer}>
-                            <PrimaryButton title={t('consultJustify.back')} onPress={handleBack} />
+                            <PrimaryButton title={t('common.back')} onPress={handleBack}/>
                         </View>
                     </View>
                 </ScrollView>

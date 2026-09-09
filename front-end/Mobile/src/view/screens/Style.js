@@ -1,4 +1,4 @@
-import {StyleSheet, Platform} from 'react-native';
+import {Platform, StyleSheet} from 'react-native';
 
 const styles = StyleSheet.create({
     safeArea: {
@@ -20,6 +20,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         paddingTop: 15,
+        marginHorizontal: 20
     },
     containerDefault: {
         flex: 1,
@@ -601,80 +602,84 @@ const styles = StyleSheet.create({
         opacity: 0.5,
     },
 
-    // ========== FACIAL FAIL SCREEN styleS ==========
+    // ========== FACIAL FAIL SCREEN STYLES ==========
     headerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 20,
+        marginBottom: 24,
         marginTop: 10,
     },
     mainTitle: {
-        fontSize: 30,
-        fontWeight: "bold",
-        color: "#1a1a1a",
+        fontSize: 28,
+        fontWeight: "800",
         flex: 1,
-        textAlign: "center",
+        textAlign: "left",
     },
     subtitle: {
         fontSize: 16,
-        fontWeight: "600",
-        color: "#333",
-        marginBottom: 20,
+        fontWeight: "400",
+        lineHeight: 24,
+        marginBottom: 24,
+        opacity: 0.8,
     },
     optionCard: {
-        backgroundColor: "#FFF",
-        borderRadius: 10,
-        padding: 16,
+        borderRadius: 16,
+        padding: 20,
         marginBottom: 16,
         borderWidth: 1,
-        borderColor: "#E0E0E0",
+        shadowColor: "#000",
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 3,
     },
     optionTitle: {
-        fontSize: 16,
-        fontWeight: "bold",
-        color: "#1a1a1a",
+        fontSize: 18,
+        fontWeight: "700",
         marginBottom: 8,
+        letterSpacing: 0.3,
     },
     optionDescription: {
         fontSize: 14,
-        color: "#666",
-        lineHeight: 20,
-        fontstyle: "italic",
+        lineHeight: 22,
+        fontStyle: "italic",
     },
     separator: {
-        borderTopWidth: 1,
-        borderTopColor: "#E0E0E0",
-        marginVertical: 20,
+        height: 1,
+        marginVertical: 32,
+        opacity: 0.1,
     },
     recommendationsTitle: {
         fontSize: 20,
-        fontWeight: "bold",
-        color: "#1a1a1a",
-        marginBottom: 20,
-        textAlign: "center",
+        fontWeight: "700",
+        marginBottom: 16,
+        marginTop: 20,
+        textAlign: "left",
     },
     recommendationCard: {
-        backgroundColor: "#FFF",
-        borderRadius: 10,
+        borderRadius: 12,
         padding: 16,
-        borderWidth: 1,
-        borderColor: "#E0E0E0",
         marginBottom: 20,
+        borderLeftWidth: 4,
     },
     recommendationSubtitle: {
-        fontSize: 15,
+        fontSize: 16,
         fontWeight: "600",
-        color: "#333",
-        marginBottom: 10,
-        marginHorizontal: 10,
+        marginBottom: 8,
     },
     recommendationText: {
         fontSize: 14,
-        color: "#666",
-        lineHeight: 20,
-        textAlign: "justify",
-        marginHorizontal: 10,
+        lineHeight: 22,
+        textAlign: "left",
+    },
+    buttonContainerFixed: {
+        position: 'absolute',
+        bottom: 20,
+        left: 20,
+        right: 20,
+        zIndex: 100,
+        alignItems: 'center',
     },
 
     // ========== HISTORICAL SCREEN styleS ==========
@@ -823,13 +828,11 @@ const styles = StyleSheet.create({
         color: "#FFF",
     },
 
-    // Lista containers
     listContainer: {
         marginTop: 10,
         marginBottom: 20,
     },
 
-    // Usamos el mismo sectionTitle que ya existe, pero necesitamos también sectionTitleAdmin
     sectionTitleAdmin: {
         fontSize: 18,
         fontWeight: "bold",
@@ -838,7 +841,6 @@ const styles = StyleSheet.create({
         paddingLeft: 4,
     },
 
-    // Tarjetas de justificaciones
     justificationCard: {
         backgroundColor: "#FFF",
         borderRadius: 12,
@@ -1910,47 +1912,349 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
 
-    // --- ManageUsersScreen specific styles (moved) ---
-    headerManage: {
-        padding: 16,
+    // ========== MANAGE ENVIRONMENT SCREEN STYLES ==========
+    manageEnvironmentContainer: {
+        flex: 1,
+    },
+    manageEnvironmentHeader: {
+        paddingHorizontal: 20,
+        paddingTop: 20,
+        paddingBottom: 10,
+    },
+    manageEnvironmentTitle: {
+        fontSize: 28,
+        fontWeight: '700',
+    },
+    manageEnvironmentSearchContainer: {
+        marginHorizontal: 20,
+        marginTop: 15,
+    },
+    manageEnvironmentActionsRow: {
+        marginHorizontal: 20,
+        marginTop: 15,
+        marginBottom: 10,
+    },
+    manageEnvironmentList: {
+        paddingHorizontal: 20,
+        paddingBottom: 20,
+    },
+    manageEnvironmentEmpty: {
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: Platform.OS === 'android' ? 25 : 5
+        paddingVertical: 60,
     },
-    titleManage: {
+    manageEnvironmentEmptyText: {
+        fontSize: 14,
+    },
+    manageEnvironmentButtonContainer: {
+        paddingHorizontal: 20,
+        paddingVertical: 15,
+    },
+    manageEnvironmentItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 12,
+    },
+    manageEnvironmentItemInfo: {
+        flex: 1,
+    },
+    manageEnvironmentItemName: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 4,
+    },
+    manageEnvironmentItemMeta: {
+        fontSize: 13,
+    },
+    manageEnvironmentItemActions: {
+        flexDirection: 'row',
+        marginLeft: 10,
+    },
+    manageEnvironmentActionButton: {
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+        borderRadius: 8,
+        borderWidth: 1,
+        marginLeft: 8,
+    },
+    manageEnvironmentActionText: {
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    manageEnvironmentKav: {
+        flex: 1,
+    },
+    manageEnvironmentOverlay: {
+        flex: 1,
+        justifyContent: 'flex-end',
+    },
+    manageEnvironmentBackdrop: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    manageEnvironmentSheet: {
+        maxHeight: '85%',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+    },
+    manageEnvironmentSheetContent: {
+        padding: 24,
+        paddingBottom: 40,
+    },
+    manageEnvironmentSheetHandle: {
+        width: 40,
+        height: 4,
+        borderRadius: 2,
+        alignSelf: 'center',
+        marginBottom: 14,
+        opacity: 0.6,
+    },
+    manageEnvironmentModalTitle: {
         fontSize: 20,
         fontWeight: '700',
-        textAlign: 'center',
+        marginBottom: 12,
     },
-    title: {fontSize: 20, fontWeight: '700'},
-    tabs: {flexDirection: 'row', paddingHorizontal: 16, marginLeft: 10,},
-    tabButton: {flex: 1, paddingVertical: 12, alignItems: 'center'},
-    actionsRow: {padding: 16},
-    list: {paddingHorizontal: 16, paddingBottom: 40},
-    item: {flexDirection: 'row', padding: 12, borderRadius: 8, marginBottom: 10, alignItems: 'center'},
-    itemInfo: {flex: 1},
-    itemName: {fontSize: 16, fontWeight: '600'},
-    itemMeta: {fontSize: 12, marginTop: 4},
-    itemActions: {flexDirection: 'row'},
-    actionButton: {marginLeft: 12},
-    actionText: {fontSize: 14},
-    empty: {padding: 30, alignItems: 'center'},
-
-    modalWrapper: {flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.68)'},
-    modal: {width: '90%', borderRadius: 8, padding: 16},
-    modalTitle: {fontSize: 20, fontWeight: '700', marginBottom: 10, textAlign: 'center'},
-    input: {borderWidth: 0.2, borderRadius: 6, padding: 10, marginBottom: 10},
-    modalActions: {alignItems: 'center', marginTop: 5, width: '100%', textAlign: "center"},
-    sectionTitleContainer: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 18, marginBottom: 10},
-    sectionBadge: {borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4},
-    sectionBadgeText: {fontSize: 12, fontWeight: '700'},
-    searchItem: {
-        flexDirection: 'row',
-        padding: 10,
-        borderWidth: 1,
-        borderRadius: 6,
+    manageEnvironmentDivider: {
+        height: 1,
         marginBottom: 8,
-        alignItems: 'center'
+        opacity: 0.5,
+    },
+    manageEnvironmentFieldLabel: {
+        fontSize: 13,
+        fontWeight: '600',
+        marginBottom: 6,
+        marginTop: 12,
+        letterSpacing: 0.2,
+    },
+    manageEnvironmentInput: {
+        minHeight: 50,
+        borderWidth: 1.5,
+        borderRadius: 10,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        fontSize: 15,
+        marginBottom: 2,
+    },
+    manageEnvironmentModalActions: {
+        marginTop: 24,
+    },
+    manageEnvironmentSaveButton: {
+        marginTop: 10,
+        paddingVertical: 14,
+        borderRadius: 10,
+        borderWidth: 2,
+        alignItems: 'center',
+    },
+    manageEnvironmentSaveButtonText: {
+        fontSize: 15,
+        fontWeight: '600',
+    },
+    manageEnvironmentCancelButton: {
+        marginTop: 20,
+        paddingVertical: 14,
+        borderRadius: 8,
+        borderWidth: 1,
+        alignItems: 'center',
+        width: '100%',
+        justifyContent: 'center',
+    },
+    manageEnvironmentCancelButtonText: {
+        color: '#FFFFFF',
+        fontSize: 15,
+        fontWeight: '600',
+    },
+
+    // ========== MANAGE USERS SCREEN STYLES ==========
+    manageUsersContainer: {
+        flex: 1,
+    },
+    manageUsersHeader: {
+        paddingHorizontal: 20,
+        paddingTop: 20,
+        paddingBottom: 10,
+    },
+    manageUsersTitle: {
+        fontSize: 28,
+        fontWeight: '700',
+    },
+    manageUsersTabs: {
+        flexDirection: 'row',
+        marginHorizontal: 20,
+        marginTop: 15,
+        marginBottom: 5,
+    },
+    manageUsersTabButton: {
+        flex: 1,
+        paddingVertical: 12,
+        alignItems: 'center',
+        borderBottomWidth: 0,
+        borderBottomColor: 'transparent',
+    },
+    manageUsersTabText: {
+        fontSize: 15,
+        fontWeight: '600',
+    },
+    manageUsersActionsRow: {
+        marginHorizontal: 20,
+        marginTop: 15,
+        marginBottom: 10,
+    },
+    manageUsersList: {
+        paddingHorizontal: 20,
+        paddingBottom: 20,
+    },
+    manageUsersEmpty: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 60,
+    },
+    manageUsersEmptyText: {
+        fontSize: 14,
+    },
+    manageUsersButtonContainer: {
+        paddingHorizontal: 20,
+        paddingVertical: 15,
+    },
+    manageEnviromentButtonContainer: {
+        paddingHorizontal: 20,
+    },
+    manageUsersItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 12,
+    },
+    manageUsersItemInfo: {
+        flex: 1,
+    },
+    manageUsersItemName: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 4,
+    },
+    manageUsersItemMeta: {
+        fontSize: 13,
+    },
+    manageUsersItemActions: {
+        flexDirection: 'row',
+        marginLeft: 10,
+    },
+    manageUsersActionButton: {
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+        borderRadius: 8,
+        borderWidth: 1,
+        marginLeft: 8,
+    },
+    manageUsersActionText: {
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    manageUsersKav: {
+        flex: 1,
+    },
+    manageUsersOverlay: {
+        flex: 1,
+        justifyContent: 'flex-end',
+    },
+    manageUsersBackdrop: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    manageUsersSheet: {
+        maxHeight: '85%',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+    },
+    manageUsersSheetContent: {
+        padding: 24,
+        paddingBottom: 40,
+    },
+    manageUsersSheetHandle: {
+        width: 40,
+        height: 4,
+        borderRadius: 2,
+        alignSelf: 'center',
+        marginBottom: 14,
+        opacity: 0.6,
+    },
+    manageUsersModalTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        marginBottom: 12,
+    },
+    manageUsersDivider: {
+        height: 1,
+        marginBottom: 8,
+        opacity: 0.5,
+    },
+    manageUsersFieldLabel: {
+        fontSize: 13,
+        fontWeight: '600',
+        marginBottom: 6,
+        marginTop: 12,
+        letterSpacing: 0.2,
+    },
+    manageUsersInput: {
+        minHeight: 50,
+        borderWidth: 1.5,
+        borderRadius: 10,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        fontSize: 15,
+        marginBottom: 2,
+    },
+    manageUsersResultsList: {
+        maxHeight: 260,
+        marginTop: 12,
+    },
+    manageUsersSearchItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 12,
+        borderWidth: 1,
+        borderRadius: 10,
+        marginBottom: 8,
+    },
+    manageUsersSearchItemName: {
+        fontSize: 15,
+        fontWeight: '600',
+        marginBottom: 4,
+    },
+    manageUsersSearchItemMeta: {
+        fontSize: 13,
+    },
+    manageUsersAddButtonText: {
+        fontSize: 14,
+        fontWeight: '600',
+        marginLeft: 10,
+    },
+    manageUsersEmptySearch: {
+        padding: 20,
+        alignItems: 'center',
+    },
+    manageUsersEmptySearchText: {
+        fontSize: 13,
+    },
+    manageUsersModalActions: {
+        marginTop: 24,
+    },
+    manageUsersCancelButton: {
+        marginTop: 20,
+        paddingVertical: 14,
+        borderRadius: 8,
+        borderWidth: 1,
+        alignItems: 'center',
+        width: '100%',
+        justifyContent: 'center',
+    },
+    manageUsersCancelButtonText: {
+        color: '#FFFFFF',
+        fontSize: 15,
+        fontWeight: '600',
     },
     // ========== PROFILE styles (mejorados) ==========
     avatarRingProfile: {
@@ -3725,6 +4029,7 @@ const styles = StyleSheet.create({
     safeAreaPending: {
         flex: 1,
         backgroundColor: '#F4F6FB',
+        margin: Platform.OS === 'ios' ? 0 : 30,
     },
     containerPending: {
         flex: 1,
@@ -3947,6 +4252,7 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.45)',
         justifyContent: 'flex-end',
+        margin: Platform.OS === 'ios' ? 0 : 30,
     },
     modalSheetPending: {
         backgroundColor: '#F4F6FB',
@@ -4393,6 +4699,103 @@ const styles = StyleSheet.create({
     alreadyRegisteredText: {
         fontSize: 13,
         fontWeight: '500'
+    },
+
+    /* ========== RegisterFace ========== */
+    safeAreaRegisterFace: {
+        flex: 1,
+        backgroundColor: '#FFFFFF',
+    },
+    registerFaceContainer: {
+        flex: 1,
+        paddingHorizontal: 20,
+    },
+    registerFaceHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 16,
+    },
+    registerFaceTitle: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: '#1E293B',
+    },
+    registerFaceSubtitle: {
+        fontSize: 14,
+        color: '#64748B',
+        textAlign: 'center',
+        marginVertical: 14,
+    },
+    cameraWrapper: {
+        width: '100%',
+        aspectRatio: 3 / 4,
+        borderRadius: 24,
+        overflow: 'hidden',
+        backgroundColor: '#0F172A',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    cameraPreview: {
+        width: '100%',
+        height: '100%',
+    },
+    faceOval: {
+        position: 'absolute',
+        left: '16%',
+        top: '11%',
+        width: '68%',
+        height: '78%',
+        borderRadius: '50%',
+        borderWidth: 2,
+        borderColor: 'rgba(255, 255, 255, 0.9)',
+    },
+    registerFacePermissionText: {
+        color: '#F8FAFC',
+        textAlign: 'center',
+        paddingHorizontal: 24,
+        marginBottom: 12,
+    },
+    registerFacePermissionButton: {
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 999,
+        backgroundColor: '#2563EB',
+    },
+    registerFacePermissionButtonText: {
+        color: '#FFFFFF',
+        fontWeight: '600',
+    },
+    registerFaceActions: {
+        marginTop: 25,
+        gap: 10,
+    },
+    secondaryButtonRegister: {
+        paddingVertical: 12,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#2563EB',
+        alignItems: 'center',
+    },
+    secondaryButtonText: {
+        color: '#2563EB',
+        fontWeight: '600',
+    },
+    registerFaceFooter: {
+        paddingBottom: 20,
+    },
+    captureButtonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    captureButtonRegister: {
+        backgroundColor: '#10B981',
+        borderRadius: 12,
+        paddingVertical: 14,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 50,
     },
 });
 

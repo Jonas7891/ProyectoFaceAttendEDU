@@ -1,11 +1,5 @@
 import React, {useState} from 'react';
-import {
-    View,
-    Text,
-    Modal,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-} from 'react-native';
+import {Modal, Text, TouchableOpacity, TouchableWithoutFeedback, View,} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from './ThemeContext';
 import stylescommon from './style/Style';
@@ -37,16 +31,16 @@ export const FacialUpdateModal = ({visible, onClose, onSuccess}) => {
     const handleUpdate = () => {
         if (!selectedChange) {
             showWarning(
-                t('facialUpdate.selectOption', {defaultValue: 'Opción requerida'}),
-                t('facialUpdate.selectOptionMessage', {defaultValue: 'Por favor selecciona un cambio facial.'}),
+                t('facialUpdate.selectOption'),
+                t('facialUpdate.selectOptionMessage'),
                 [{text: 'OK', onPress: hideAlert}]
             );
             return;
         }
 
         showConfirm(
-            t('facialUpdate.updateParams', {defaultValue: 'Actualizar parámetros'}),
-            t('facialUpdate.confirmUpdate', {defaultValue: '¿Confirmas la actualización?'}),
+            t('facialUpdate.updateParams'),
+            t('facialUpdate.confirmUpdate'),
             () => {
                 // Confirmado: encontrar el cambio seleccionado y pasar los datos
                 const selectedItem = facialChanges.find(change => change.id === selectedChange);

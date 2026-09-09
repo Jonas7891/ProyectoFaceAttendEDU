@@ -1,6 +1,6 @@
-import { useState, useMemo, useCallback } from 'react';
-import { Alert } from 'react-native';
-import { useCustomAlert } from '../view/components/common/useCustomAlert';
+import {useCallback, useMemo, useState} from 'react';
+import {Alert} from 'react-native';
+import {useCustomAlert} from '../view/components/common/useCustomAlert';
 
 // ===========================================================================
 // CONSTANTES DE TOPE
@@ -10,13 +10,9 @@ import { useCustomAlert } from '../view/components/common/useCustomAlert';
 // ===========================================================================
 // DATOS DE EJEMPLO  (reemplazar por llamadas a tu API/contexto)
 // ===========================================================================
-const MOCK_STUDENTS = [
+const MOCK_STUDENTS = [];
 
-];
-
-const MOCK_TEACHERS = [
-
-];
+const MOCK_TEACHERS = [];
 
 export function useAttendanceReportViewModel() {
     const ABSENCE_LIMIT = 3;
@@ -30,7 +26,7 @@ export function useAttendanceReportViewModel() {
         return 'ok';
     }, [ABSENCE_LIMIT, LATENESS_LIMIT]);
 
-    const { alertConfig, hideAlert, showSuccess, showConfirm } = useCustomAlert();
+    const {alertConfig, hideAlert, showSuccess, showConfirm} = useCustomAlert();
     const [activeRole, setActiveRole] = useState('student');
     const [activeType, setActiveType] = useState('absence');
     const [activeFilter, setActiveFilter] = useState('all');
@@ -89,7 +85,7 @@ export function useAttendanceReportViewModel() {
             Alert.alert(
                 'Reporte generado',
                 'El reporte de ' + selectedPerson?.name + ' fue enviado correctamente.',
-                [{ text: 'Aceptar' }],
+                [{text: 'Aceptar'}],
             );
         }, 1800);
     }, [selectedPerson]);
@@ -102,7 +98,7 @@ export function useAttendanceReportViewModel() {
             'Generar reporte general',
             'Se generará un reporte para ' + filteredData.length + ' ' + roleLabel + ' con ' + typeLabel + ' superiores al tope. ¿Continuar?',
             [
-                { text: 'Cancelar', style: 'cancel' },
+                {text: 'Cancelar', style: 'cancel'},
                 {
                     text: 'Confirmar',
                     onPress: () => {

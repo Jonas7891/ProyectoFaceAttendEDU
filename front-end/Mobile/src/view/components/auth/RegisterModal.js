@@ -35,7 +35,7 @@ export default function RegisterModal({ isVisible, onClose }) {
           </ScrollView>
 
           <TouchableOpacity style={[styleAuth.buttonRegister, { backgroundColor: colors.modalButton }]} onPress={onClose}>
-            <Text style={[styleAuth.buttonTextRegister, { color: colors.modalButtonText }]}>{t('registerModal.close')}</Text>
+            <Text style={[styleAuth.buttonTextRegister, { color: colors.modalButtonText }]}>{t('common.close')}</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -1,19 +1,19 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
-    Modal,
-    Text,
-    View,
-    TextInput,
-    ScrollView,
-    KeyboardAvoidingView,
-    TouchableWithoutFeedback,
-    Keyboard,
-    TouchableOpacity,
     Alert,
+    Keyboard,
+    KeyboardAvoidingView,
+    Modal,
     Platform,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from './ThemeContext';
+import {useTranslation} from 'react-i18next';
+import {useTheme} from './ThemeContext';
 import PrimaryButton from '../auth/PrimaryButton';
 import stylesCommon from './style/Style';
 
@@ -129,6 +129,8 @@ export default function PasswordUpdateModal() {
                                     ]} />
 
                                     {/* Inputs — sin labels uppercase, solo placeholder */}
+                                    <Text style={{marginBottom: 10, color: colors.text}}>Ingrese su contraseña
+                                        actual</Text>
                                     <TextInput
                                         style={[stylesCommon.passwordModalInput, {
                                             borderColor: colors.border ?? colors.textSecondary + '50',
@@ -138,9 +140,10 @@ export default function PasswordUpdateModal() {
                                         placeholder={t('profile.passwordModal.currentPassword', 'Contraseña actual')}
                                         placeholderTextColor={colors.textSecondary}
                                         secureTextEntry
-                                        value={currentPassword}
                                         onChangeText={setCurrentPassword}
                                     />
+                                    <Text style={{marginBottom: 10, color: colors.text, marginTop: 20}}>Ingrese su nueva
+                                        contraseña</Text>
                                     <TextInput
                                         style={[stylesCommon.passwordModalInput, {
                                             borderColor: colors.border ?? colors.textSecondary + '50',
@@ -150,9 +153,10 @@ export default function PasswordUpdateModal() {
                                         placeholder={t('profile.passwordModal.newPassword', 'Nueva contraseña (mín. 6 caracteres)')}
                                         placeholderTextColor={colors.textSecondary}
                                         secureTextEntry
-                                        value={newPassword}
                                         onChangeText={setNewPassword}
                                     />
+                                    <Text style={{marginBottom: 10, color: colors.text, marginTop: 20}}>Confirme la
+                                        contraseña ingresada</Text>
                                     <TextInput
                                         style={[stylesCommon.passwordModalInput, {
                                             borderColor: colors.border ?? colors.textSecondary + '50',
@@ -162,7 +166,6 @@ export default function PasswordUpdateModal() {
                                         placeholder={t('profile.passwordModal.confirmPassword', 'Confirmar nueva contraseña')}
                                         placeholderTextColor={colors.textSecondary}
                                         secureTextEntry
-                                        value={confirmPassword}
                                         onChangeText={setConfirmPassword}
                                     />
 

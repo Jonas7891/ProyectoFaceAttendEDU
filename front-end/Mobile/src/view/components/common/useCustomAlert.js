@@ -1,5 +1,4 @@
-import {useState, useCallback} from "react";
-import { useAlertsConfig } from "../../../utils/AlertsConfigContext";
+import {useCallback, useState} from "react";
 
 export const useCustomAlert = () => {
     const isAlertEnabled = (type) => {

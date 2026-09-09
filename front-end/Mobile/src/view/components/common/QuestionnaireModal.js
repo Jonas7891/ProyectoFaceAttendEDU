@@ -1,24 +1,15 @@
-import React, { useState, useRef } from 'react';
-import {
-    View,
-    Text,
-    Modal,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    Keyboard,
-    Pressable,
-    StyleSheet,
-} from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from './ThemeContext';
-import { DocumentSelector } from './DocumentSelector';
-import { RHSelector } from './RHSelector';
-import { QuestionInput } from './QuestionInput';
-import { DatePickerInput } from './DatePickerInput';
-import { ProgressBar } from './ProgressBar';
+﻿import React, {useRef, useState} from 'react';
+import {Keyboard, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
+import {useTranslation} from 'react-i18next';
+import {useTheme} from './ThemeContext';
+import {DocumentSelector} from './DocumentSelector';
+import {RHSelector} from './RHSelector';
+import {QuestionInput} from './QuestionInput';
+import {DatePickerInput} from './DatePickerInput';
+import {ProgressBar} from './ProgressBar';
 import stylescommon from './style/Style';
 import CustomAlert from './CustomAlert';
-import { useCustomAlert } from './useCustomAlert';
+import {useCustomAlert} from './useCustomAlert';
 
 export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
     const { t } = useTranslation();
@@ -95,16 +86,16 @@ export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
         if (currentQuestion.type === 'selector') {
             if (currentQuestion.selectorType === 'document' && !selectedDocument) {
                 showWarning(
-                    t('common.requiredField', { defaultValue: 'Campo requerido' }),
-                    t('questionnaire.selectDocument', { defaultValue: 'Por favor selecciona tu tipo de documento' }),
+                    t('common.requiredField'),
+                    t('questionnaire.selectDocument'),
                     [{ text: 'OK', onPress: hideAlert }]
                 );
                 return;
             }
             if (currentQuestion.selectorType === 'rh' && !selectedRH) {
                 showWarning(
-                    t('common.requiredField', { defaultValue: 'Campo requerido' }),
-                    t('questionnaire.selectRH', { defaultValue: 'Por favor selecciona tu tipo de RH' }),
+                    t('common.requiredField'),
+                    t('questionnaire.selectRH'),
                     [{ text: 'OK', onPress: hideAlert }]
                 );
                 return;
@@ -112,10 +103,8 @@ export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
         } else {
             if (!answers[currentQuestion.id]) {
                 showWarning(
-                    t('common.requiredField', { defaultValue: 'Campo requerido' }),
-                    t('questionnaire.answerRequired', {
-                        defaultValue: 'Por favor responde la pregunta antes de continuar',
-                    }),
+                    t('common.requiredField'),
+                    t('questionnaire.answerRequired'),
                     [{ text: 'OK', onPress: hideAlert }]
                 );
                 return;
@@ -238,7 +227,7 @@ export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
                                 { color: colors.modalText },
                             ]}
                         >
-                            {t('questionnaire.title', { defaultValue: 'Cuestionario' })}
+                            {t('questionnaire.title')}
                         </Text>
                         <Text
                             style={[
@@ -246,10 +235,7 @@ export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
                                 { color: colors.modalTextSecondary },
                             ]}
                         >
-                            {t('questionnaire.description', {
-                                defaultValue:
-                                    'Se debe realizar un cuestionario en el que se pregunten por cosas específicas las cuales solo conozca un usuario',
-                            })}
+                            {t('questionnaire.description')}
                         </Text>
 
                         <ProgressBar currentStep={step} totalSteps={questions.length} />
@@ -284,7 +270,7 @@ export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
                                             { color: colors.modalButtonSecondaryText },
                                         ]}
                                     >
-                                        {t('common.previous', { defaultValue: 'Anterior' })}
+                                        {t('common.previous')}
                                     </Text>
                                 </TouchableOpacity>
                             )}
@@ -315,8 +301,8 @@ export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
                                     ]}
                                 >
                                     {step === questions.length
-                                        ? t('common.send', { defaultValue: 'Enviar' })
-                                        : t('common.next', { defaultValue: 'Siguiente' })}
+                                        ? t('common.send')
+                                        : t('common.next')}
                                 </Text>
                             </TouchableOpacity>
                         </View>

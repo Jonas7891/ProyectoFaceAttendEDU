@@ -1,12 +1,11 @@
-import {useState, useEffect, useCallback} from 'react';
+import {useCallback, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {useNavigation, useFocusEffect} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {saveLanguageForRole} from '../view/components/common/languageByRole';
 import {useTheme} from '../view/components/common/ThemeContext';
-import {getUserByEmail} from "../services/UserService";
-import { getCurrentUser } from "../services/UserService";
-import { useLanguageRefresh } from '../utils/useLanguageRefresh';
+import {getCurrentUser, getUserByEmail} from "../services/UserService";
+import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 
 export function useProfileViewModel() {
     const navigation = useNavigation();

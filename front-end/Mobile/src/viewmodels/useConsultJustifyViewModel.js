@@ -1,29 +1,80 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useNavigation } from '@react-navigation/native';
-import { useLanguageRefresh } from '../utils/useLanguageRefresh';
+import {useCallback, useMemo, useState} from 'react';
+import {useTranslation} from 'react-i18next';
+import {useNavigation} from '@react-navigation/native';
+import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 
 export function useValidJustificationsViewModel() {
     const navigation = useNavigation();
-    const { t, i18n } = useTranslation();
+    const {t, i18n} = useTranslation();
 
     const [activeSection, setActiveSection] = useState('inasistencias');
     const updateKey = useLanguageRefresh();
-    const [isLoading, setIsLoading] = useState(false); // por si más adelante cargas datos
+    const [isLoading, setIsLoading] = useState(false);
 
-    // Datos mock (quemados, pero se pueden mover a servicios después)
+
+    const JUSTIFICATION_STATUS = {
+        APPROVED: 'approved',
+        PENDING: 'pending',
+        REJECTED: 'rejected',
+    };
+
+    // Datos mock con motivos traducidos y estados como constantes
     const inasistenciasData = useMemo(() => [
-        { id: 1, fecha: "2024-03-15", motivo: "Incapacidad médica", estado: t('consultJustify.statusApproved') },
-        { id: 2, fecha: "2024-03-10", motivo: "Emergencia familiar", estado: t('consultJustify.statusApproved') },
-        { id: 3, fecha: "2024-03-05", motivo: "Cita médica", estado: t('consultJustify.statusPending') },
-        { id: 4, fecha: "2024-02-28", motivo: "Problemas de transporte", estado: t('consultJustify.statusApproved') },
+        {
+            id: 1,
+            fecha: "2024-03-15",
+            motivo: t('justificationReasons.medicalDisability'),
+            estado: JUSTIFICATION_STATUS.APPROVED
+        },
+        {
+            id: 2,
+            fecha: "2024-03-10",
+            motivo: t('justificationReasons.familyEmergency'),
+            estado: JUSTIFICATION_STATUS.APPROVED
+        },
+        {
+            id: 3,
+            fecha: "2024-03-05",
+            motivo: t('justificationReasons.medicalAppointment'),
+            estado: JUSTIFICATION_STATUS.PENDING
+        },
+        {
+            id: 4,
+            fecha: "2024-02-28",
+            motivo: t('justificationReasons.transportIssues'),
+            estado: JUSTIFICATION_STATUS.APPROVED
+        },
     ], [t]);
 
     const retardosData = useMemo(() => [
-        { id: 1, fecha: "2024-03-18", hora: "08:35 AM", motivo: "Tránsito pesado", estado: t('consultJustify.statusApproved') },
-        { id: 2, fecha: "2024-03-12", hora: "08:45 AM", motivo: "Cita médica", estado: t('consultJustify.statusApproved') },
-        { id: 3, fecha: "2024-03-08", hora: "08:28 AM", motivo: "Problemas mecánicos", estado: t('consultJustify.statusApproved') },
-        { id: 4, fecha: "2024-03-01", hora: "08:50 AM", motivo: "Emergencia personal", estado: t('consultJustify.statusPending') },
+        {
+            id: 1,
+            fecha: "2024-03-18",
+            hora: "08:35 AM",
+            motivo: t('justificationReasons.heavyTraffic'),
+            estado: JUSTIFICATION_STATUS.APPROVED
+        },
+        {
+            id: 2,
+            fecha: "2024-03-12",
+            hora: "08:45 AM",
+            motivo: t('justificationReasons.medicalAppointment'),
+            estado: JUSTIFICATION_STATUS.APPROVED
+        },
+        {
+            id: 3,
+            fecha: "2024-03-08",
+            hora: "08:28 AM",
+            motivo: t('justificationReasons.mechanicalIssues'),
+            estado: JUSTIFICATION_STATUS.APPROVED
+        },
+        {
+            id: 4,
+            fecha: "2024-03-01",
+            hora: "08:50 AM",
+            motivo: t('justificationReasons.personalEmergency'),
+            estado: JUSTIFICATION_STATUS.PENDING
+        },
     ], [t]);
 
     // Datos a mostrar según sección activa
@@ -31,10 +82,10 @@ export function useValidJustificationsViewModel() {
 
     const handleBack = useCallback(() => navigation.goBack(), [navigation]);
 
-    // Color para el badge de estado
+    // Color para el badge de estado (ahora compara constantes, no strings traducidos)
     const getEstadoColor = useCallback((estado) => {
-        return estado === t('consultJustify.statusApproved') ? "#4CAF50" : "#FF9800";
-    }, [t]);
+        return estado === JUSTIFICATION_STATUS.APPROVED ? "#4CAF50" : "#FF9800";
+    }, []);
 
     return {
         activeSection,

@@ -1,19 +1,13 @@
 import React from 'react';
-import {
-    Text,
-    View,
-    SafeAreaView,
-    Image,
-    Platform,
-} from 'react-native';
-import { useTranslation } from 'react-i18next';
+import {Image, Platform, SafeAreaView, Text, View,} from 'react-native';
+import {useTranslation} from 'react-i18next';
 import BottomBar from '../components/common/NavigationBar';
 import ScrollViewWrapper from '../components/common/ScrollView';
 import CustomTabs from '../components/common/CustomTabs';
 import Separador from '../components/common/Separador';
 import styles from './Style';
-import { useTheme } from '../components/common/ThemeContext';
-import { useNewsViewModel } from '../../viewmodels/useNewsViewModel';
+import {useTheme} from '../components/common/ThemeContext';
+import {useNewsViewModel} from '../../viewmodels/useNewsViewModel';
 
 export default function NewsScreen() {
     const { t } = useTranslation();

@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { useTheme } from '../view/components/common/ThemeContext';
-import { getCurrentUserRole } from '../services/UserService';
+import {useEffect, useState} from 'react';
+import {useTheme} from '../view/components/common/ThemeContext';
+import {getCurrentUserRole} from '../services/UserService';
 
 /**
  * Hook para inicializar el tema del usuario basado en su rol.

@@ -1,7 +1,3 @@
-import { request } from "../api/apiClient";
-import { GET, POST, PUT, DELETE } from "./constants/httpMethod";
-import { loginUrl } from "./constants/urls";
-
 /*
 export const login = (data) =>
     request({
@@ -11,8 +7,7 @@ export const login = (data) =>
         requiresAuth: true
     });
 */
-
-import { auths } from "./constants/auths";
+import {auths} from "./constants/auths";
 
 export const login = (data) => {
 

@@ -1,19 +1,12 @@
 ﻿import React from 'react';
-import {
-    Text,
-    View,
-    SafeAreaView,
-    TouchableOpacity,
-    ScrollView,
-    Platform,
-} from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from '../components/common/ThemeContext';
+import {Platform, SafeAreaView, ScrollView, Text, TouchableOpacity, View,} from 'react-native';
+import {useTranslation} from 'react-i18next';
+import {useTheme} from '../components/common/ThemeContext';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import PasswordUpdateModal from '../components/common/PasswordUpdateModal';
 import ProfileUpdateModal from '../components/common/ProfileUpdateModal';
 import styles from './Style';
-import { useProfileViewModel } from '../../viewmodels/useProfileViewModel';
+import {useProfileViewModel} from '../../viewmodels/useProfileViewModel';
 
 /** Fila de información clave → valor */
 const InfoField = ({ label, value, colors }) => (
@@ -302,7 +295,6 @@ export default function ProfileScreen() {
                     />
                     <InfoField label={t('profile.email',      'Correo electrónico')} value={userInfo?.email}          colors={colors} />
                     <InfoField label={t('profile.phone',      'Teléfono')}           value={userInfo?.phone}          colors={colors} />
-                    <InfoField label={t('profile.employeeId', 'Identificación')}     value={userInfo?.identification} colors={colors} />
                     <InfoField label={t('profile.joinDate',   'Fecha de ingreso')}   value={userInfo?.joinDate}       colors={colors} />
                     <InfoField label={t('profile.school',     'Colegio')}            value={userInfo?.school}         colors={colors} />
 
@@ -498,7 +490,7 @@ export default function ProfileScreen() {
                     {/* ══ BOTÓN VOLVER ══ */}
                     <View style={{ marginTop: Platform.OS === 'ios' ? 5 : 0 }}>
                         <View style={styles.buttonContainer}>
-                            <PrimaryButton title={t('consultJustify.back', 'Volver')} onPress={handleBack} />
+                            <PrimaryButton title={t('common.back')} onPress={handleBack}/>
                         </View>
                     </View>
 

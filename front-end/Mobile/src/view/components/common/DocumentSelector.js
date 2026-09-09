@@ -1,11 +1,7 @@
 import React from 'react';
-import {
-    View,
-    Text,
-    TouchableOpacity,
-} from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from './ThemeContext';
+import {Text, TouchableOpacity, View,} from 'react-native';
+import {useTranslation} from 'react-i18next';
+import {useTheme} from './ThemeContext';
 import stylescommon from './style/Style';
 
 const documentosColombia = [

@@ -20,8 +20,21 @@
     "email": "Email",
     "phone": "Phone",
     "edit": "Edit",
-    "saving": "Guardando...",
-    "ok": "OK"
+    "saving": "Saving...",
+    "ok": "OK",
+    "date": "Date",
+    "time": "Time",
+    "approve": "Approve",
+    "reject": "Reject",
+    "present": "Present",
+    "late": "Late",
+    "seeAll": "See all",
+    "discardTitle": "Discard changes?",
+    "logout": "Log out",
+    "next": "Next",
+    "previous": "Previous",
+    "requiredField": "Required field",
+    "send": "Send"
   },
   "login": {
     "title": "Login",
@@ -35,28 +48,79 @@
     "errorEmail": "Please enter your email",
     "errorPassword": "Please enter your password",
     "invalidCredentials": "Invalid credentials",
-    "loginError": "An error occurred while logging in"
+    "loginError": "An error occurred while logging in",
+    "acceptTerms": "Accept the terms and conditions",
+    "forgotPassword": "Forgot password?"
   },
   "tabs": {
     "home": "Home",
     "news": "News",
-    "history": "History"
+    "history": "Attendance"
   },
   "attendance": {
     "searchByName": "Search by name...",
     "searchByDate": "Search by date (YYYY-MM-DD)...",
     "title": "Registered Attendances",
-    "noResults": "No results"
+    "noResults": "No results",
+    "sectionAttendance": "Attendance record",
+    "sectionCourse": "Subject",
+    "sectionPeriod": "Academic period",
+    "sectionClass": "Class information",
+    "date": "Date",
+    "time": "Entry time",
+    "day": "Class day",
+    "schedule": "Schedule",
+    "subject": "Subject",
+    "courseCode": "Course code",
+    "classroom": "Classroom",
+    "period": "Period",
+    "periodStart": "Start",
+    "periodEnd": "End",
+    "teacher": "Teacher",
+    "approvalStatus": "Approval status",
+    "justificationText": "Justification",
+    "justified": "Justified",
+    "noJustification": "No justification",
+    "noJustificationHint": "No justification was recorded",
+    "reviewedAt": "Reviewed on",
+    "reviewedBy": "Reviewed by",
+    "filterByDate": "Filter by date",
+    "present": "Present",
+    "late": "Late",
+    "absent": "Absent",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "justifiedStatus": "Justified",
+    "sectionJustification": "Justification"
   },
   "settings": {
-    "language": "Language",
-    "selectLanguage": "Select your preferred language",
     "languageChanged": "Language changed successfully",
     "errorChangingLanguage": "Could not change language",
-    "theme": "Theme",
     "lightTheme": "Light",
     "darkTheme": "Dark",
-    "changeTheme": "Change Theme"
+    "changeTheme": "Change Theme",
+    "language": "Language",
+    "selectLanguage": "Select your preferred language",
+    "theme": "Appearance",
+    "selectTheme": "Select the application theme",
+    "alertsConfiguration": "Alerts Configuration",
+    "alertsConfigDesc": "Customize which types of alerts you want to receive",
+    "configureAlerts": "Configure Alerts",
+    "selectAlertTypes": "Select which types of alerts you want to see",
+    "successAlerts": "Success Alerts",
+    "successAlertsDesc": "Confirmation of successful operations",
+    "errorAlerts": "Error Alerts",
+    "errorAlertsDesc": "Notifications of errors and problems",
+    "warningAlerts": "Warning Alerts",
+    "warningAlertsDesc": "Warnings and important notifications",
+    "confirmAlerts": "Confirmation Alerts",
+    "confirmAlertsDesc": "Action confirmation requests",
+    "defaultAlerts": "General Alerts",
+    "defaultAlertsDesc": "General informational messages",
+    "iotAlerts": "IoT Device Alerts",
+    "iotAlertsDesc": "Messages about facial scanning devices",
+    "noRoleError": "Unable to determine the user's role"
   },
   "menu": {
     "facialParams": "Enter Facial Parameters",
@@ -68,14 +132,20 @@
     "loggingOut": "Logging out...",
     "logoutConfirmTitle": "Logout",
     "logoutConfirmMessage": "Are you sure you want to logout?",
-    "logoutCancel": "Logout cancelado por el usuario",
-    "userInfo": "Información de las Justificaciones"
+    "adminName": "Administrator",
+    "teacherName": "Teacher",
+    "studentName": "Student",
+    "teacherJustificationInfo": "Student Justifications",
+    "studentJustificationInfo": "My Justifications",
+    "schoolConfiguration": "School Configuration",
+    "logoutError": "Could not log out"
   },
   "logout": {
     "title": "Logout",
     "message": "Are you sure you want to logout?",
     "cancel": "Cancel",
-    "confirm": "Yes, logout"
+    "confirm": "Yes, logout",
+    "error": "An error occurred"
   },
   "updatePhoto": {
     "title": "Photo for Facial Recognition",
@@ -88,7 +158,7 @@
     "phoneNumber": "Phone Number",
     "phonePlaceholder": "Example: 3001234567",
     "registerAttendance": "Update Parameters",
-    "attendanceRegistered": "✓ Parameters Updated",
+    "attendanceRegistered": "Parameters Updated",
     "completeFields": "Please complete all fields",
     "settings": "Settings"
   },
@@ -96,7 +166,7 @@
     "title": "Photo for Initial Facial Recognition",
     "instructions": "Center your face so that it covers most of the camera for better scanning and recognition speed.",
     "registerFacialParams": "Register Facial Parameters",
-    "facialParamsRegistered": "✓ Parameters Registered"
+    "facialParamsRegistered": "☏ Parameters Registered"
   },
   "facialFail": {
     "title": "Facial Recognition Failed",
@@ -109,7 +179,8 @@
     "cameraQuality": "Camera Quality or Angle",
     "cameraQualityDescription": "Another reason for system failures is the lighting of the place, the camera quality, or the angle at which the device is placed for scanning.",
     "backToMenu": "Back",
-    "returningToMenu": "Returning to Menu..."
+    "returningToMenu": "Returning to Menu...",
+    "success": "Success"
   },
   "dashboard": {
     "greeting": "Good day",
@@ -139,7 +210,13 @@
     "hoursAgo": "hours",
     "ago": "ago",
     "environmentManagement": "Environment Management",
-    "manageEnvironmentDesc": "Add, edit or Delete Environments"
+    "viewAttendance": "View Detailed Attendance",
+    "manageEnvironmentDesc": "Add, edit or Delete Environments",
+    "seeAll": "See all",
+    "statusPresent": "Present",
+    "statusLate": "Late",
+    "manageUsers": "User Management",
+    "manageUsersDesc": "Add or remove users from your school."
   },
   "consultJustify": {
     "mainTitle": "Approved Justifications",
@@ -155,7 +232,36 @@
     "statusPending": "Pending",
     "dateLabel": "Date",
     "timeLabel": "Time",
-    "reasonLabel": "Reason"
+    "reasonLabel": "Reason",
+    "noAttachment": "No attachment",
+    "viewDetail": "View detail",
+    "sent": "Sent",
+    "detailTitle": "Justification Detail",
+    "caseInfo": "Case information",
+    "case": "Case",
+    "date": "Date",
+    "time": "Time",
+    "submittedAt": "Submitted",
+    "descriptionTitle": "Justification description",
+    "attachmentTitle": "Attached document",
+    "noDocumentAttached": "No document was attached.",
+    "reject": "Reject",
+    "approve": "Approve",
+    "filterAll": "All",
+    "filterStudents": "Students",
+    "filterTeachers": "Teachers",
+    "subtitleMySubmissions": "My submitted justifications",
+    "subtitleStudentPending": "Pending from students",
+    "subtitleReviewPending": "Pending review",
+    "emptyStudentTitle": "You haven't sent any justifications yet",
+    "emptyAdminTitle": "No pending justifications",
+    "emptyStudentSubtitle": "When you send a justification, it will appear here.",
+    "emptyAdminSubtitle": "There are no justifications for this filter at this time.",
+    "headerTitle": "Justifications",
+    "showing": "Showing",
+    "result_one": "result",
+    "result_other": "results",
+    "result": "result"
   },
   "justify": {
     "title": "Justification Configuration",
@@ -170,7 +276,7 @@
     "descriptionLabel": "Justification Description",
     "reasonPlaceholder": "Describe the reason for your absence or delay...",
     "submit": "Submit Justification",
-    "successMessage": "✓ Justification sent successfully!",
+    "successMessage": "Justification sent successfully!",
     "dateFormat": "YYYY-MM-DD",
     "timeFormat": "HH:MM AM/PM",
     "descriptionPlaceholder": "Write the description of the reason here...",
@@ -179,7 +285,10 @@
     "supportedFormats": "Supported formats: PDF, Image (JPG, PNG), Word (DOC, DOCX)",
     "upload": "Upload",
     "missingTimeError": "Please enter the delay time",
-    "missingAttachmentError": "Please upload an attachment"
+    "missingAttachmentError": "Please upload an attachment",
+    "confirmMessage": "Are you sure you want to submit this justification?",
+    "confirmTitle": "Confirm submission",
+    "submitError": "Could not submit the justification"
   },
   "menuJustify": {
     "backToDashboard": "Back to Dashboard"
@@ -256,19 +365,30 @@
     "acceptanceFinalText": "The user declares that they have read, understood and accepted all of these Terms and Conditions, as well as the Personal Data Processing Policy, authorizing the use of their data as established herein."
   },
   "questionnaire": {
-    "documentQuestion": "Select your identification document type:",
-    "documentPlaceholder": "Example: 12345678",
-    "rhQuestion": "Select your blood type (Rh Factor):",
-    "relativeDocumentQuestion": "Associated relative's document?",
-    "birthDateQuestion": "What is your date of birth?",
+    "title": "Questionnaire",
+    "description": "A questionnaire with specific questions only the user would know must be completed.",
+    "answerRequired": "Please answer the question before continuing",
+    "selectDocument": "Please select your document type",
+    "selectRH": "Please select your blood type",
+    "document": "Document type",
+    "number": "Document number",
+    "rhType": "Blood type",
+    "relativeDocument": "Relative's document",
+    "birthDate": "Birth date",
+    "address": "Address",
+    "phone": "Phone",
+    "addressHint": "Enter your full address",
+    "addressPlaceholder": "Street and number",
+    "addressQuestion": "What is your address?",
+    "birthDateHint": "Use the format DD/MM/YYYY",
     "birthDatePlaceholder": "DD/MM/YYYY",
-    "birthDateHint": "Format: 15/08/1990",
-    "addressQuestion": "What is your residential address?",
-    "addressPlaceholder": "Street, number, city",
-    "addressHint": "Example: 123 Main St #45-67, Bogota",
-    "phoneQuestion": "What is your contact phone number?",
-    "phonePlaceholder": "Example: 3001234567",
-    "phoneHint": "Enter your number without spaces"
+    "birthDateQuestion": "What is your birth date?",
+    "documentPlaceholder": "Enter your document number",
+    "documentQuestion": "What is your document number?",
+    "phoneHint": "Enter a valid phone number",
+    "phonePlaceholder": "300 123 4567",
+    "phoneQuestion": "What is your phone number?",
+    "relativeDocumentQuestion": "What is your relative's document number?"
   },
   "facialUpdate": {
     "beardChange": "Beard/mustache change",
@@ -282,7 +402,8 @@
     "updateParams": "Update",
     "confirmUpdate": "Are you sure you want to update your facial parameters?",
     "success": "Success",
-    "paramsUpdated": "Your facial parameters have been updated"
+    "paramsUpdated": "Your facial parameters have been updated",
+    "changeType": "Change type"
   },
   "documentSelector": {
     "label": "Document type:"
@@ -307,7 +428,22 @@
     "seeAll": "See all",
     "present": "Present",
     "late": "Late",
-    "systemNews": "System news"
+    "systemNews": "System news",
+    "teacherName": "Teacher",
+    "recentAttendance": "Attendance in Your Classes",
+    "studentsAttending": "total students",
+    "notifications": "Institute Notifications",
+    "updateFace": "Face Update",
+    "updateFaceDesc": "Update your facial recognition parameters",
+    "myAttendance": "Attendance in My Classes",
+    "myAttendanceDesc": "Review the attendance records of your groups",
+    "pendingJustifications": "Pending Justifications",
+    "pendingJustificationsDesc": "Review and manage your students' justifications",
+    "justificationMathMsg": "Juan Perez has submitted a justification for the Mathematics class.",
+    "attendanceGroupMsg": "Attendance for group 10-A was successfully recorded.",
+    "attendanceLabel": "Attendance for my groups",
+    "attendanceRecorded": "Attendance Recorded",
+    "newJustification": "New Justification"
   },
   "student": {
     "greeting": "Hello student",
@@ -333,7 +469,23 @@
     "recognitionSuccessRate": "Success rate",
     "times": "times to date",
     "UpdateFace": "Face Update",
-    "UpdateFaceDesc": "Update your biometric data"
+    "UpdateFaceDesc": "Update your biometric data",
+    "faceRecognizedMsg": "Your face was successfully recognized today at 08:15 AM",
+    "attendanceReminderDesc": "Don't forget to register your attendance by facial recognition."
+  },
+  "subjects": {
+    "math": "Math",
+    "physics": "Physics",
+    "history": "History",
+    "programming": "Programming",
+    "science": "Science",
+    "spanish": "Spanish",
+    "english": "English",
+    "physicalEducation": "Physical Education"
+  },
+  "time": {
+    "today": "Today",
+    "yesterday": "Yesterday"
   },
   "admin": {
     "justificationManagement": "Justification Management",
@@ -406,8 +558,58 @@
     "logout": "Logout",
     "logoutConfirm": "Are you sure you want to logout?",
     "school": "School",
-    "pending": "Pendiente",
-    "active": "Activo"
+    "pending": "Pending",
+    "active": "Active",
+    "absent": "Absent",
+    "activePeriod": "Active period",
+    "address": "Address",
+    "approved": "Approved",
+    "attendanceStats": "Attendance statistics",
+    "classes": "Classes",
+    "courseAttendance": "Course attendance",
+    "enrolledCourses": "Enrolled courses",
+    "iotDevices": "IoT devices",
+    "justified": "Justified",
+    "noName": "No name",
+    "noRole": "No role",
+    "passwordModal": {
+      "cancel": "Cancel",
+      "confirmPassword": "Confirm password",
+      "currentPassword": "Current password",
+      "errorGeneric": "Could not update password",
+      "errorLength": "Password must be at least 8 characters",
+      "errorMatch": "Passwords do not match",
+      "errorRequired": "Password is required",
+      "help": "Use at least 8 characters",
+      "newPassword": "New password",
+      "saveButton": "Save password",
+      "saving": "Saving...",
+      "successMessage": "Password updated successfully",
+      "successTitle": "Password updated",
+      "title": "Change password"
+    },
+    "pendingJustifications": "pendingJustifications",
+    "phone": "phone",
+    "present": "present",
+    "profileModal": {
+      "cancel": "Cancel",
+      "editTitle": "Edit profile",
+      "emailPlaceholder": "Enter your email",
+      "errorEmail": "Enter a valid email",
+      "errorGeneric": "Could not update profile",
+      "errorPhone": "Enter a valid phone number",
+      "errorRequired": "This field is required",
+      "help": "Update your personal information",
+      "phonePlaceholder": "Enter your phone number",
+      "saveButton": "Save changes",
+      "saving": "Saving...",
+      "successMessage": "Profile updated successfully",
+      "successTitle": "Profile updated"
+    },
+    "schoolInfo": "School information",
+    "schoolName": "School name",
+    "teacherSchedule": "Teacher schedule",
+    "total": "Total"
   },
   "manageUsers": {
     "title": "User Management",
@@ -427,59 +629,62 @@
     "confirm": "Confirm",
     "deleteQuestion": "Delete record?",
     "accessDenied": "Access denied",
-    "onlyAdmins": "Only administrators can access this screen."
+    "onlyAdmins": "Only administrators can access this screen.",
+    "addTeacher": "Add teacher",
+    "enterTeacherName": "Enter teacher name",
+    "searchTeacher": "Search teacher"
   },
   "schoolConfig": {
-    "title": "Configuración del Colegio",
+    "title": "School Configuration",
     "tabs": {
       "general": "General",
-      "contact": "Contacto",
-      "academic": "Académica",
-      "attendance": "Asistencia"
+      "contact": "Contact",
+      "academic": "Academic",
+      "attendance": "Attendance"
     },
     "sections": {
-      "generalInfo": "Información General",
-      "contactInfo": "Información de Contacto",
-      "academicConfig": "Configuración Académica",
-      "attendanceConfig": "Configuración de Asistencia"
+      "generalInfo": "General Information",
+      "contactInfo": "Contact Information",
+      "academicConfig": "Academic Configuration",
+      "attendanceConfig": "Attendance Configuration"
     },
     "fields": {
-      "schoolName": "Nombre del Colegio",
-      "schoolNamePlaceholder": "Nombre del colegio",
-      "schoolCode": "NIT del Colegio",
+      "schoolName": "School Name",
+      "schoolNamePlaceholder": "School name",
+      "schoolCode": "School Tax ID",
       "schoolCodePlaceholder": "COL-XXXX-XXX",
-      "district": "Distrito Educativo",
-      "districtPlaceholder": "Nombre del distrito",
-      "email": "Email Institucional",
+      "district": "School District",
+      "districtPlaceholder": "District name",
+      "email": "Institutional Email",
       "emailPlaceholder": "admin@colegio.edu",
-      "country": "País",
-      "selectCountry": "Selecciona un país",
-      "dialCode": "Código",
-      "phone": "Teléfono",
+      "country": "Country",
+      "selectCountry": "Select a country",
+      "dialCode": "Code",
+      "phone": "Phone",
       "phonePlaceholder": "300 123 4567",
-      "address": "Dirección",
-      "addressPlaceholder": "Calle y número",
-      "city": "Ciudad",
-      "selectCity": "Selecciona una ciudad",
-      "academicYear": "Año Académico",
+      "address": "Address",
+      "addressPlaceholder": "Street and number",
+      "city": "City",
+      "selectCity": "Select a city",
+      "academicYear": "Academic Year",
       "academicYearPlaceholder": "YYYY-YYYY",
-      "startDate": "Fecha de Inicio",
+      "startDate": "Start Date",
       "startDatePlaceholder": "DD/MM/YYYY",
-      "endDate": "Fecha de Fin",
+      "endDate": "End Date",
       "endDatePlaceholder": "DD/MM/YYYY",
-      "tolerance": "Tolerancia (minutos)",
+      "tolerance": "Tolerance (minutes)",
       "tolerancePlaceholder": "5",
-      "maxAbsences": "Máx. Inasistencias",
+      "maxAbsences": "Max. Absences",
       "maxAbsencesPlaceholder": "15",
-      "maxLateness": "Máx. Retardos",
+      "maxLateness": "Max. Lateness",
       "maxLatenessPlaceholder": "10",
-      "justificationLimit": "Límite de Justificación (días)",
+      "justificationLimit": "Justification Limit (days)",
       "justificationLimitPlaceholder": "30"
     },
     "labels": {
-      "students": "Estudiantes",
-      "teachers": "Docentes",
-      "courses": "Cursos"
+      "students": "Students",
+      "teachers": "Teachers",
+      "courses": "Courses"
     },
     "modals": {
       "selectCountry": "Select Country",
@@ -494,49 +699,66 @@
       "confirmAndSave": "Confirm and Save",
       "cancel": "Cancel",
       "saveChanges": "Save Changes",
-      "selectCountryFirst": "Select a country first"
+      "selectCountryFirst": "Select a country first",
+      "cityAvailableFor": "Cities available for {{country}}",
+      "noCountries": "No countries found",
+      "noCities": "No cities found",
+      "showingCities": "Showing {{shown}} of {{total}} cities. Search to see more.",
+      "changesImpact": "Changes will apply to the entire institution and may affect system operation.",
+      "savingChanges": "Saving changes..."
+    },
+    "validation": {
+      "required": "This field is required",
+      "invalidEmail": "Invalid email",
+      "invalidPhone": "Invalid phone number",
+      "mustBeNumber": "Must be a number"
+    },
+    "errors": {
+      "schoolNotFound": "The school to update could not be identified",
+      "saveFailed": "The changes could not be saved"
+    },
+    "success": {
+      "updated": "School configuration updated successfully"
     }
   },
   "attendanceReport": {
-    "title": "Reporte de Asistencia",
+    "title": "Attendance Report",
     "tabs": {
-      "students": "Estudiantes",
-      "teachers": "Profesores"
+      "students": "Students",
+      "teachers": "Teachers"
     },
     "types": {
-      "absences": "Inasistencias",
-      "lateness": "Retardos"
+      "absences": "Absences",
+      "lateness": "Lateness"
     },
     "filters": {
-      "all": "Todos",
-      "critical": "Críticos",
-      "warning": "En límite"
+      "all": "All",
+      "critical": "Critical",
+      "warning": "At limit"
     },
-    "searchPlaceholder": "Buscar por nombre, código o materia…",
-    "noResults": "No hay {{role}} que superen el tope de {{type}} con los filtros actuales.",
-    "resultsCount": "{{count}} {{role}} encontrado(s)",
-    "generateReport": "Generar reporte general ({{count}})",
-    "individualReport": "Generar reporte individual",
-    "modalTitle": "Generar reporte",
-    "notificationMessage": "Se notificará al {{recipient}} sobre el estado de asistencia de",
+    "searchPlaceholder": "Search by name, code or subject⬦",
+    "noResults": "No {{role}} exceed the {{type}} limit with the current filters.",
+    "resultsCount": "{{count}} {{role}} found",
+    "generateReport": "Generate general report ({{count}})",
+    "individualReport": "Generate individual report",
+    "modalTitle": "Generate report",
+    "modalConfirm": "Confirm and send report",
+    "notificationMessage": "The {{recipient}} will be notified about the attendance status of",
     "recipients": {
-      "guardian": "acudiente",
-      "coordinator": "coordinador"
+      "guardian": "guardian",
+      "coordinator": "coordinator"
     },
     "statusLabels": {
-      "critical": "CRÍTICO",
-      "warning": "EN LÍMITE"
+      "critical": "CRITICAL",
+      "warning": "AT LIMIT"
     },
-    "absenceLabel": "Inasistencias\n(tope {{limit}})",
-    "latenessLabel": "Retardos\n(tope {{limit}})"
+    "absenceLabel": "Absences\n(limit {{limit}})",
+    "latenessLabel": "Lateness\n(limit {{limit}})"
   },
   "validation": {
-    "incompleteFields": "Campos incompletos",
-    "selectCategoryAndType": "Debes seleccionar categoría y tipo.",
-    "descriptionRequired": "Ingresa una descripción para la justificación.",
-    "confirmTitle": "Guardar justificación",
-    "confirmMessage": "¿Deseas guardar esta justificación?",
-    "cancelSave": "Guardado cancelado por el usuario"
+    "title": "Incomplete fields",
+    "descriptionRequired": "descriptionRequired",
+    "selectCategoryAndType": "selectCategoryAndType"
   },
   "languageSettings": {
     "appearance": "Apariencia",
@@ -558,8 +780,93 @@
     "closeButton": "Cerrar"
   },
   "userRoles": {
-    "administrator": "Administrador",
-    "student": "Estudiante",
-    "teacher": "Profesor"
+    "administrator": "Administrator",
+    "student": "Student",
+    "teacher": "Teacher"
+  },
+  "justificationReasons": {
+    "medicalDisability": "Medical disability",
+    "familyEmergency": "Family emergency",
+    "medicalAppointment": "Medical appointment",
+    "transportIssues": "Transport issues",
+    "heavyTraffic": "Heavy traffic",
+    "mechanicalIssues": "Mechanical issues",
+    "personalEmergency": "Personal emergency"
+  },
+  "justificationType": {
+    "absence": "Absence",
+    "late": "Late"
+  },
+  "userRole": {
+    "administrator": "Administrator",
+    "student": "Student",
+    "teacher": "Teacher"
+  },
+  "forgotPassword": {
+    "title": "Recover password",
+    "description": "Enter your email and we will send you a code to reset your password.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "youremail@example.com",
+    "sendButton": "Send code",
+    "errorRequired": "Enter your email.",
+    "errorInvalidEmail": "The email format is invalid.",
+    "errorNotFound": "No account was found with that email.",
+    "errorTimeout": "The request took too long. Check your connection and try again.",
+    "errorGeneric": "An error occurred. Try again.",
+    "successMessage": "Code sent successfully. Redirecting..."
+  },
+  "passwordUpdate": {
+    "title": "New password",
+    "description": "Create a secure password for your account.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "reqLength": "At least 8 characters",
+    "reqUppercase": "At least one uppercase letter",
+    "reqLowercase": "At least one lowercase letter",
+    "reqNumber": "At least one number",
+    "reqSpecial": "At least one special character (!@#$...)",
+    "reqNotCommon": "Not a common password",
+    "reqNoSequential": "No sequential patterns (123, abc)",
+    "reqNoRepeated": "No repeated characters (aaa, 111)",
+    "passwordsMatch": "☏ Passwords match",
+    "passwordsNoMatch": "☓ Passwords do not match",
+    "saving": "Saving...",
+    "saveButton": "Save password",
+    "successTitle": "Password updated!",
+    "successMessage": "Your password was reset successfully. You can now log in.",
+    "goToLogin": "Go to login",
+    "discardMessage": "If you leave, you will lose the password you entered."
+  },
+  "verifyCode": {
+    "title": "Check your email",
+    "description": "We sent a 6-character code to",
+    "descriptionSub": "Enter it below.",
+    "codeLabel": "Verification code",
+    "verifyButton": "Verify code",
+    "resendButton": "Resend code",
+    "errorInvalid": "Incorrect code. Attempts remaining: {{attempts}}",
+    "errorExpired": "The code has expired. Request a new one.",
+    "errorNoCode": "There is no active code. Go back and request a new one."
+  },
+  "manageAmbientes": {
+    "title": "Environment management",
+    "addAmbiente": "Add environment",
+    "newAmbiente": "New environment",
+    "editAmbiente": "Edit environment",
+    "name": "Name",
+    "namePlaceholder": "e.g. Room 101",
+    "location": "Location",
+    "locationPlaceholder": "e.g. Building A, 2nd floor",
+    "capacity": "Capacity",
+    "capacityPlaceholder": "e.g. 30",
+    "type": "Type",
+    "typePlaceholder": "e.g. Classroom, lab…",
+    "searchPlaceholder": "Search environments…",
+    "noRecords": "No environments registered",
+    "validation": "Validation",
+    "nameRequired": "Name is required.",
+    "locationRequired": "Location is required.",
+    "confirm": "Confirm",
+    "deleteQuestion": "Are you sure you want to delete this environment?"
   }
 }

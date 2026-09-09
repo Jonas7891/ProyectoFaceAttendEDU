@@ -1,20 +1,14 @@
-import {Alert, Platform, Switch, Text, TextInput, TouchableOpacity, View} from "react-native";
-import React, {useState, useCallback, useEffect} from 'react';
-import { validateEmail, validatePhone } from "../utils/validators";
-import { CountryService } from "../services/CountryService";
+import {Alert} from "react-native";
+import {useEffect, useState} from 'react';
+import {validateEmail, validatePhone} from "../utils/validators";
+import {CountryService} from "../services/CountryService";
 // ⚠️ Ajusta el nombre real de la función de actualización en tu SchoolService
-import { getSchoolById, updateSchool } from "../services/SchoolService";
-import { SchoolResponse,
-    GeneralInfo,
-    ContactInfo,
-    AcademicConfig,
-    AttendanceConfig} from "../model/SchoolResponse";
-import styles from "../view/screens/Style";
+import {getSchoolById, updateSchool} from "../services/SchoolService";
+import {AcademicConfig, AttendanceConfig, ContactInfo, GeneralInfo, SchoolResponse} from "../model/SchoolResponse";
 import {getCurrentUser, getUserByEmail} from "../services/UserService";
-import UserResponse from "../model/UserResponse";
 
 
-export function useSchoolConfigurationViewModel() {
+export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => key} = {}) {
     const [activeTab, setActiveTab] = useState('general');
     const [isLoading, setIsLoading] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -58,11 +52,6 @@ export function useSchoolConfigurationViewModel() {
         loadSchoolInfo();
     }, []);
 
-    // console.log(generalInfo);
-    useEffect(() => {
-        console.log(generalInfo);
-    }, [generalInfo]);
-
     // Validación de campos
     const [validationErrors, setValidationErrors] = useState({});
 
@@ -70,11 +59,11 @@ export function useSchoolConfigurationViewModel() {
         const errors = { ...validationErrors };
 
         if (!value || String(value).trim() === '') {
-            errors[fieldName] = 'Este campo es requerido';
+            errors[fieldName] = t('schoolConfig.validation.required');
         } else if (fieldName === 'email' && !validateEmail(value)) {
-            errors[fieldName] = 'Email inválido';
+            errors[fieldName] = t('schoolConfig.validation.invalidEmail');
         } else if (fieldName === 'phone' && !validatePhone(value)) {
-            errors[fieldName] = 'Teléfono inválido';
+            errors[fieldName] = t('schoolConfig.validation.invalidPhone');
         } else if (
             fieldName === 'toleranceMinutes' ||
             fieldName === 'maxAbsences'      ||
@@ -82,7 +71,7 @@ export function useSchoolConfigurationViewModel() {
             fieldName === 'minimumGrade'
         ) {
             if (isNaN(value)) {
-                errors[fieldName] = 'Debe ser un número';
+                errors[fieldName] = t('schoolConfig.validation.mustBeNumber');
             } else {
                 delete errors[fieldName];
             }
@@ -95,32 +84,37 @@ export function useSchoolConfigurationViewModel() {
     };
 
     const handleGeneralInfoChange = (field, value) => {
+        if (!isAdmin) return;
         setGeneralInfo(prev => ({ ...prev, [field]: value }));
         setHasChanges(true);
         validateField(field, value);
     };
 
     const handleContactInfoChange = (field, value) => {
+        if (!isAdmin) return;
         setContactInfo(prev => ({ ...prev, [field]: value }));
         setHasChanges(true);
         validateField(field, value);
     };
 
     const handleAcademicConfigChange = (field, value) => {
+        if (!isAdmin) return;
         setAcademicConfig(prev => ({ ...prev, [field]: value }));
         setHasChanges(true);
         validateField(field, value);
     };
 
     const handleAttendanceConfigChange = (field, value) => {
+        if (!isAdmin) return;
         setAttendanceConfig(prev => ({ ...prev, [field]: value }));
         setHasChanges(true);
         validateField(field, value);
     };
 
     const handleSaveChanges = async () => {
+        if (!isAdmin) return;
         if (!schoolId) {
-            Alert.alert('Error', 'No se pudo identificar el colegio a actualizar');
+            Alert.alert(t('common.error'), t('schoolConfig.errors.schoolNotFound'));
             return;
         }
 
@@ -150,16 +144,17 @@ export function useSchoolConfigurationViewModel() {
 
             setHasChanges(false);
             setShowConfirmModal(false);
-            Alert.alert('Éxito', 'Configuración del colegio actualizada correctamente');
+            Alert.alert(t('common.success'), t('schoolConfig.success.updated'));
         } catch (error) {
             console.error('Error guardando configuración del colegio:', error);
-            Alert.alert('Error', 'No se pudo guardar los cambios');
+            Alert.alert(t('common.error'), t('schoolConfig.errors.saveFailed'));
         } finally {
             setIsLoading(false);
         }
     };
 
     const handleDiscardChanges = () => {
+        if (!isAdmin) return;
         setHasChanges(false);
         setValidationErrors({});
 
@@ -257,6 +252,7 @@ export function useSchoolConfigurationViewModel() {
     // ─────────────────────────────────────────────
 
     const handleCountryChange = (option) => {
+        if (!isAdmin) return; // 👈 AGREGAR PROTECCIÓN
         setContactInfo((prev) => ({
             ...prev,
             country:    option.name,
@@ -268,7 +264,7 @@ export function useSchoolConfigurationViewModel() {
         setCountrySearch('');
         setHasChanges(true);
         setCountryModalVisible(false);
-        loadAllCountries(option.name);
+        loadCities(option.name);
     };
 
     const handleCityChange = (cityName) => {

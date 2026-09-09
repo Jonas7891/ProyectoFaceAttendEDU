@@ -1,24 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, {useEffect, useState} from "react";
 import {
-    Text,
-    View,
-    SafeAreaView,
-    TouchableOpacity,
-    TextInput,
-    ScrollView,
-    Platform,
+    FlatList,
     KeyboardAvoidingView,
     Modal,
-    FlatList,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { useTranslation } from "react-i18next";
-import { useNavigation } from "@react-navigation/native";
+import {useTranslation} from "react-i18next";
+import {useNavigation} from "@react-navigation/native";
 import PrimaryButton from "../components/auth/PrimaryButton";
-import { useTheme } from "../components/common/ThemeContext";
+import {useTheme} from "../components/common/ThemeContext";
 import styles from "./Style";
-import { useAddValidJustificationViewModel } from "../../viewmodels/useAddValidJustificationViewModel";
+import {useAddValidJustificationViewModel} from "../../viewmodels/useAddValidJustificationViewModel";
 import CustomAlert from "../components/common/CustomAlert";
-import { useCustomAlert } from "../components/common/useCustomAlert";
+import {useCustomAlert} from "../components/common/useCustomAlert";
 
 // ─── Selector desplegable reutilizable (sin cambios) ─────────────────────────────
 function DropdownSelector({ label, placeholder, value, options, onSelect, colors }) {
@@ -248,7 +248,7 @@ export default function AddValidJustificationScreen() {
     useEffect(() => {
         if (error) {
             showError(
-                t("common.error", { defaultValue: "Error" }),
+                t("common.error"),
                 error,
                 hideAlert
             );
@@ -263,20 +263,16 @@ export default function AddValidJustificationScreen() {
         // Validar campos obligatorios
         if (!category || !type) {
             showWarning(
-                t("validation.title", { defaultValue: "Campos incompletos" }),
-                t("validation.selectCategoryAndType", {
-                    defaultValue: "Debes seleccionar categoría y tipo.",
-                }),
+                t("validation.title"),
+                t("validation.selectCategoryAndType"),
                 [{ text: "OK", onPress: hideAlert }]
             );
             return;
         }
         if (!description.trim()) {
             showWarning(
-                t("validation.title", { defaultValue: "Descripción requerida" }),
-                t("validation.descriptionRequired", {
-                    defaultValue: "Ingresa una descripción para la justificación.",
-                }),
+                t("validation.title"),
+                t("validation.descriptionRequired"),
                 [{ text: "OK", onPress: hideAlert }]
             );
             return;
@@ -284,10 +280,8 @@ export default function AddValidJustificationScreen() {
 
         // Confirmación antes de guardar
         showConfirm(
-            t("justify.confirmTitle", { defaultValue: "Guardar justificación" }),
-            t("justify.confirmMessage", {
-                defaultValue: "¿Deseas guardar esta justificación?",
-            }),
+            t("justify.confirmTitle"),
+            t("justify.confirmMessage"),
             () => {
                 // Confirmado: ejecutar guardado
                 handleSave();

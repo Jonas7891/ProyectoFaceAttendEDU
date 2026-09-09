@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
+import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
-import { useTheme } from '../view/components/common/ThemeContext';
+import {useNavigation} from '@react-navigation/native';
+import {useTheme} from '../view/components/common/ThemeContext';
 import {getCurrentUserRole} from "../services/UserService";
-import { useLanguageRefresh } from '../utils/useLanguageRefresh';
+import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 
 const DEFAULT_JUSTIFICATIONS = [
     { id: "1", type: "Médica", description: "Ausencia por cita médica con especialista", requiresDocument: true, category: "Salud" },
