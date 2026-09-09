@@ -692,35 +692,6 @@ export default function LandingView({ onNavigate }) {
                 scrollbarStyle={{
                     variant: 'minimal',
                 }}
-                effects={{
-                    autoSlide: {
-                        enabled: true,
-                        interval: 4000,
-                        distance: 150,
-                        direction: 'vertical',
-                        pauseOnInteraction: true,
-                        target: 'loop',
-                    },
-                    fadeEdges: {
-                        enabled: true,
-                        size: 40,
-                        color: c.background.app,
-                        edges: ['top', 'bottom'],
-                    },
-                    smoothElastic: {
-                        enabled: true,
-                        tension: 45,
-                        friction: 7,
-                    },
-                    progressIndicator: {
-                        enabled: false,
-                    },
-                    momentumBounce: {
-                        enabled: true,
-                        intensity: 60,
-                        duration: 450,
-                    },
-                }}
             >
                 {/* Sección 1: Hero */}
                 <View

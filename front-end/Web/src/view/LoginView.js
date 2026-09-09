@@ -267,12 +267,6 @@ export default function LoginView({
                         variant: 'pill',
                     }}
                     effects={{
-                        fadeEdges: {
-                            enabled: true,
-                            size: 18,
-                            color: c.background.surface,
-                            edges: ['top', 'bottom'],
-                        },
                         smoothElastic: {
                             enabled: true,
                             tension: 45,

@@ -1,20 +1,8 @@
 // ============================================================
 //  FaceAttend EDU — CustomScrollBar Component
 // ============================================================
-//  RESPONSABILIDAD: Componente genérico de ScrollBar personalizado
-//
-//  Este componente:
-//  ✓ Proporciona scrollbars con diseño personalizado y moderno
-//  ✓ Soporta 5 efectos parametrizables para mejorar UX
-//  ✓ Funciona en web con estilos CSS y en móvil nativo
-//  ✓ Es completamente configurable y reutilizable
-//
-//  Efectos disponibles:
-//  1. autoSlide - Desplazamiento automático suave
-//  2. smoothElastic - Scroll elástico con efecto de rebote suave
-//  3. progressIndicator - Indicador visual del progreso del scroll
-//  4. fadeEdges - Degradado en los bordes para indicar más contenido
-//  5. momentumBounce - Efecto de rebote con inercia mejorada
+//  Componente genérico de ScrollBar con estilos personalizados
+//  y efectos de UX configurables para web y móvil
 // ============================================================
 
 import React, { useRef, useEffect, useState, useCallback } from "react";
@@ -98,9 +86,8 @@ const CustomScrollBar = ({
 }) => {
     const { theme } = useTheme();
     const scrollViewRef = useRef(null);
-    const autoSlideTimer = useRef(null);
     const scrollProgress = useRef(new Animated.Value(0)).current;
-    const [webScrollProgress, setWebScrollProgress] = useState(0); // Para web
+    const [webScrollProgress, setWebScrollProgress] = useState(0);
     const [scrollMetrics, setScrollMetrics] = useState({
         contentHeight: 0,
         layoutHeight: 0,
@@ -108,7 +95,6 @@ const CustomScrollBar = ({
     });
     const [isUserScrolling, setIsUserScrolling] = useState(false);
     const userScrollTimeout = useRef(null);
-    const autoSlideTriggered = useRef(false);
 
     // Configuración por defecto de efectos
     const defaultEffects = {
@@ -146,51 +132,36 @@ const CustomScrollBar = ({
         },
     };
 
-    // Variantes de scrollbar predefinidas - CADA UNA CON DISEÑO ÚNICO
+    // Variantes de scrollbar predefinidas
     const scrollbarVariants = {
-        // Scrollbar nativa horrible por defecto
         default: {
             width: 12,
             thumbRadius: 0,
-            trackPadding: 0,
             showTrack: true,
             trackColor: '#f0f0f0',
             thumbColor: '#c0c0c0',
             thumbOpacity: 1,
             thumbHoverOpacity: 1,
             thumbHoverColor: '#a0a0a0',
-            shadow: false,
-            gradient: false,
-            border: false,
-            thumbWidthPercent: 100, // Thumb ocupa 100% del track
         },
         
-        // Scrollbar fina tipo ribbon para uso interno
         horizontal: {
             width: 6,
             thumbRadius: 3,
-            trackPadding: 0,
             showTrack: false,
-            trackColor: 'transparent',
             thumbColor: theme.colors.brand.primary,
             thumbOpacity: 0.4,
             thumbHoverOpacity: 0.7,
             thumbHoverColor: theme.colors.brand.primary,
-            shadow: false,
-            gradient: false,
-            border: false,
-            thumbWidthPercent: 100,
         },
         
-        // PILL - Scrollbar moderna con thumb más pequeño que el track
         pill: {
             width: 14,
-            thumbWidth: 8,  // Thumb más delgado que el track
+            thumbWidth: 8,
             thumbRadius: 4,
-            trackPadding: 0,
+            trackRadius: 7,
             showTrack: true,
             trackColor: 'rgba(0, 0, 0, 0.06)',
-            trackRadius: 7,
             thumbColor: theme.colors.brand.primary,
             thumbOpacity: 0.75,
             thumbHoverOpacity: 1,
@@ -199,19 +170,13 @@ const CustomScrollBar = ({
             shadowColor: 'rgba(0, 0, 0, 0.15)',
             gradient: true,
             gradientColors: [theme.colors.brand.primary, theme.colors.brand.primaryDark || theme.colors.brand.primary],
-            border: false,
-            thumbWidthPercent: 57, // 8/14 = 57%
         },
         
-        // MINIMAL (PHANTOM) - Igual que pill pero sin track y se desvanece
         minimal: {
-            width: 14,
-            thumbWidth: 8,
-            thumbRadius: 4,
-            trackPadding: 0,
+            width: 12,
+            thumbWidth: 6,
+            thumbRadius: 3,
             showTrack: false,
-            trackColor: 'transparent',
-            trackRadius: 7,
             thumbColor: theme.colors.brand.primary,
             thumbOpacity: 0.6,
             thumbHoverOpacity: 0.9,
@@ -220,42 +185,34 @@ const CustomScrollBar = ({
             shadowColor: 'rgba(0, 0, 0, 0.12)',
             gradient: true,
             gradientColors: [theme.colors.brand.primary, theme.colors.brand.primaryDark || theme.colors.brand.primary],
-            border: false,
-            thumbWidthPercent: 57,
-            autoHide: true, // Esta SÍ desaparece
+            autoHide: true,
         },
         
-        // GLASSMORPHISM - Efecto cristal esmerilado moderno
         glass: {
             width: 16,
             thumbWidth: 10,
             thumbRadius: 5,
-            trackPadding: 0,
+            trackRadius: 8,
             showTrack: true,
             trackColor: 'rgba(255, 255, 255, 0.1)',
-            trackRadius: 8,
             thumbColor: 'rgba(255, 255, 255, 0.25)',
             thumbOpacity: 1,
             thumbHoverOpacity: 1,
             thumbHoverColor: 'rgba(255, 255, 255, 0.35)',
             shadow: true,
             shadowColor: 'rgba(0, 0, 0, 0.1)',
-            gradient: false,
             border: true,
             borderColor: 'rgba(255, 255, 255, 0.3)',
             backdropBlur: true,
-            thumbWidthPercent: 62.5,
         },
         
-        // NEON - Estilo cyberpunk con glow
         neon: {
             width: 14,
             thumbWidth: 9,
             thumbRadius: 4.5,
-            trackPadding: 0,
+            trackRadius: 7,
             showTrack: true,
             trackColor: 'rgba(0, 0, 0, 0.3)',
-            trackRadius: 7,
             thumbColor: theme.colors.brand.primary,
             thumbOpacity: 0.9,
             thumbHoverOpacity: 1,
@@ -264,29 +221,22 @@ const CustomScrollBar = ({
             shadowColor: theme.colors.brand.primary,
             gradient: true,
             gradientColors: [theme.colors.brand.primary, theme.colors.brand.primaryDark || theme.colors.brand.primary],
-            border: false,
             glow: true,
-            thumbWidthPercent: 64,
         },
         
-        // MACOS STYLE - Estilo macOS
         macos: {
             width: 12,
             thumbWidth: 8,
             thumbRadius: 4,
-            trackPadding: 0,
+            trackRadius: 6,
             showTrack: true,
             trackColor: 'rgba(0, 0, 0, 0.05)',
-            trackRadius: 6,
             thumbColor: 'rgba(0, 0, 0, 0.3)',
             thumbOpacity: 1,
             thumbHoverOpacity: 1,
             thumbHoverColor: 'rgba(0, 0, 0, 0.5)',
-            shadow: false,
-            gradient: false,
             border: true,
             borderColor: 'rgba(0, 0, 0, 0.1)',
-            thumbWidthPercent: 66.6,
         },
     };
 
@@ -295,7 +245,6 @@ const CustomScrollBar = ({
 
     // Configuración por defecto de estilos del scrollbar
     const defaultScrollbarStyle = {
-        variant: 'pill',
         width: variantConfig.width,
         thumbWidth: variantConfig.thumbWidth || variantConfig.width,
         trackColor: variantConfig.trackColor,
@@ -306,9 +255,7 @@ const CustomScrollBar = ({
         thumbHoverOpacity: variantConfig.thumbHoverOpacity,
         thumbHoverColor: variantConfig.thumbHoverColor,
         autoHide: variantConfig.autoHide || false,
-        autoHideDelay: 1000,
         showTrack: variantConfig.showTrack,
-        trackPadding: variantConfig.trackPadding,
         shadow: variantConfig.shadow,
         shadowColor: variantConfig.shadowColor,
         gradient: variantConfig.gradient,
@@ -317,7 +264,6 @@ const CustomScrollBar = ({
         borderColor: variantConfig.borderColor,
         glow: variantConfig.glow,
         backdropBlur: variantConfig.backdropBlur,
-        thumbWidthPercent: variantConfig.thumbWidthPercent || 100,
     };
 
     // Merge configuraciones
@@ -332,165 +278,107 @@ const CustomScrollBar = ({
     const scrollbarConfig = { ...defaultScrollbarStyle, ...scrollbarStyle };
 
     // ── EFECTO 1: Auto Slide ──────────────────────────────────
-    // Trigger externo para activar autoSlide
     useEffect(() => {
-        if (!effectsConfig.autoSlide.enabled || !effectsConfig.autoSlide.trigger) return;
+        if (!effectsConfig.autoSlide.enabled) return;
 
-        const triggerAutoSlide = () => {
-            if (autoSlideTriggered.current) return;
-            
-            autoSlideTriggered.current = true;
-            
-            setTimeout(() => {
-                if (scrollViewRef.current) {
-                    let targetY = 0;
+        // Trigger externo (puede dispararse múltiples veces)
+        if (effectsConfig.autoSlide.trigger) {
+            const triggerAutoSlide = () => {
+                // Ejecutar inmediatamente si el delay es 0
+                if (effectsConfig.autoSlide.triggerDelay === 0) {
+                    if (!scrollViewRef.current) return;
                     
-                    if (effectsConfig.autoSlide.target === 'end') {
-                        targetY = 99999;
-                    } else if (effectsConfig.autoSlide.target === 'start') {
-                        targetY = 0;
-                    } else if (effectsConfig.autoSlide.target === 'custom') {
-                        targetY = effectsConfig.autoSlide.distance;
-                    }
+                    let targetY = effectsConfig.autoSlide.target === 'end' ? 99999 
+                        : effectsConfig.autoSlide.target === 'start' ? 0 
+                        : effectsConfig.autoSlide.distance;
                     
                     if (isWeb) {
-                        // En web, scrollear el div directamente
-                        scrollViewRef.current.scrollTo({
-                            top: targetY,
-                            behavior: 'smooth',
-                        });
+                        scrollViewRef.current.scrollTo({ top: targetY, behavior: 'smooth' });
                     } else {
-                        // En móvil, usar el método de ScrollView
-                        scrollViewRef.current.scrollTo({
-                            y: targetY,
-                            animated: true,
-                        });
+                        scrollViewRef.current.scrollTo({ y: targetY, animated: true });
                     }
-                }
-            }, effectsConfig.autoSlide.triggerDelay);
-        };
-
-        effectsConfig.autoSlide.trigger(triggerAutoSlide);
-    }, [effectsConfig.autoSlide.trigger, effectsConfig.autoSlide.triggerDelay, effectsConfig.autoSlide.target]);
-
-    useEffect(() => {
-        if (!effectsConfig.autoSlide.enabled || effectsConfig.autoSlide.trigger) return;
-
-        const startAutoSlide = () => {
-            autoSlideTimer.current = setInterval(() => {
-                if (effectsConfig.autoSlide.pauseOnInteraction && isUserScrolling) {
-                    return;
-                }
-
-                if (scrollViewRef.current) {
-                    const { scrollY, contentHeight, layoutHeight } = scrollMetrics;
-                    const maxScroll = contentHeight - layoutHeight;
-                    
-                    if (effectsConfig.autoSlide.target === 'end') {
-                        if (scrollY < maxScroll) {
-                            if (isWeb) {
-                                scrollViewRef.current.scrollTo({
-                                    top: maxScroll,
-                                    behavior: 'smooth',
-                                });
-                            } else {
-                                scrollViewRef.current.scrollTo({
-                                    y: maxScroll,
-                                    animated: true,
-                                });
-                            }
-                        }
-                    } else if (effectsConfig.autoSlide.target === 'start') {
-                        if (scrollY > 0) {
-                            if (isWeb) {
-                                scrollViewRef.current.scrollTo({
-                                    top: 0,
-                                    behavior: 'smooth',
-                                });
-                            } else {
-                                scrollViewRef.current.scrollTo({
-                                    y: 0,
-                                    animated: true,
-                                });
-                            }
-                        }
-                    } else {
-                        // Loop
-                        if (effectsConfig.autoSlide.direction === 'vertical') {
-                            let newY = scrollY + effectsConfig.autoSlide.distance;
-                            
-                            if (newY >= maxScroll) {
-                                newY = 0;
-                            }
-                            
-                            if (isWeb) {
-                                scrollViewRef.current.scrollTo({
-                                    top: newY,
-                                    behavior: 'smooth',
-                                });
-                            } else {
-                                scrollViewRef.current.scrollTo({
-                                    y: newY,
-                                    animated: true,
-                                });
-                            }
+                } else {
+                    // Con delay
+                    setTimeout(() => {
+                        if (!scrollViewRef.current) return;
+                        
+                        let targetY = effectsConfig.autoSlide.target === 'end' ? 99999 
+                            : effectsConfig.autoSlide.target === 'start' ? 0 
+                            : effectsConfig.autoSlide.distance;
+                        
+                        if (isWeb) {
+                            scrollViewRef.current.scrollTo({ top: targetY, behavior: 'smooth' });
                         } else {
-                            if (isWeb) {
-                                scrollViewRef.current.scrollTo({
-                                    left: scrollY + effectsConfig.autoSlide.distance,
-                                    behavior: 'smooth',
-                                });
-                            } else {
-                                scrollViewRef.current.scrollTo({
-                                    x: scrollY + effectsConfig.autoSlide.distance,
-                                    animated: true,
-                                });
-                            }
+                            scrollViewRef.current.scrollTo({ y: targetY, animated: true });
                         }
-                    }
+                    }, effectsConfig.autoSlide.triggerDelay);
                 }
-            }, effectsConfig.autoSlide.interval);
-        };
+            };
+            
+            // Registrar el callback (puede ser llamado múltiples veces)
+            effectsConfig.autoSlide.trigger(triggerAutoSlide);
+            return;
+        }
 
-        startAutoSlide();
+        // Auto-slide continuo con intervalo
+        const timer = setInterval(() => {
+            if (effectsConfig.autoSlide.pauseOnInteraction && isUserScrolling) return;
+            if (!scrollViewRef.current) return;
 
-        return () => {
-            if (autoSlideTimer.current) {
-                clearInterval(autoSlideTimer.current);
+            const { scrollY, contentHeight, layoutHeight } = scrollMetrics;
+            const maxScroll = contentHeight - layoutHeight;
+            
+            let targetY = scrollY;
+            
+            if (effectsConfig.autoSlide.target === 'end' && scrollY < maxScroll) {
+                targetY = maxScroll;
+            } else if (effectsConfig.autoSlide.target === 'start' && scrollY > 0) {
+                targetY = 0;
+            } else {
+                // Loop
+                targetY = scrollY + effectsConfig.autoSlide.distance;
+                if (targetY >= maxScroll) targetY = 0;
             }
-        };
+            
+            if (isWeb) {
+                const prop = effectsConfig.autoSlide.direction === 'horizontal' ? 'left' : 'top';
+                scrollViewRef.current.scrollTo({ [prop]: targetY, behavior: 'smooth' });
+            } else {
+                const prop = effectsConfig.autoSlide.direction === 'horizontal' ? 'x' : 'y';
+                scrollViewRef.current.scrollTo({ [prop]: targetY, animated: true });
+            }
+        }, effectsConfig.autoSlide.interval);
+
+        return () => clearInterval(timer);
     }, [
         effectsConfig.autoSlide.enabled,
+        effectsConfig.autoSlide.trigger,
         effectsConfig.autoSlide.interval,
         effectsConfig.autoSlide.distance,
         effectsConfig.autoSlide.direction,
+        effectsConfig.autoSlide.target,
         effectsConfig.autoSlide.pauseOnInteraction,
+        effectsConfig.autoSlide.triggerDelay,
         isUserScrolling,
         scrollMetrics,
+        isWeb,
     ]);
 
-    // ── EFECTO 3: Progress Indicator ──────────────────────────
+    // ── Handler de Scroll y Progress Tracking ────────────────
     const handleScroll = useCallback((event) => {
         const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
         const scrollY = contentOffset.y;
         const contentHeight = contentSize.height;
         const layoutHeight = layoutMeasurement.height;
 
-        setScrollMetrics({
-            contentHeight,
-            layoutHeight,
-            scrollY,
-        });
+        setScrollMetrics({ contentHeight, layoutHeight, scrollY });
 
-        // Calcular progreso (0 a 1)
         const maxScroll = contentHeight - layoutHeight;
         const progress = maxScroll > 0 ? scrollY / maxScroll : 0;
         
         if (isWeb) {
-            // En web, actualizar estado
             setWebScrollProgress(progress);
         } else {
-            // En móvil, animar con Animated
             Animated.timing(scrollProgress, {
                 toValue: progress,
                 duration: 100,
@@ -498,27 +386,16 @@ const CustomScrollBar = ({
             }).start();
         }
 
-        // Detectar interacción del usuario
         setIsUserScrolling(true);
-        if (userScrollTimeout.current) {
-            clearTimeout(userScrollTimeout.current);
-        }
-        userScrollTimeout.current = setTimeout(() => {
-            setIsUserScrolling(false);
-        }, 150);
+        if (userScrollTimeout.current) clearTimeout(userScrollTimeout.current);
+        userScrollTimeout.current = setTimeout(() => setIsUserScrolling(false), 150);
 
-        // Callback externo
-        if (onScroll) {
-            onScroll(event);
-        }
+        if (onScroll) onScroll(event);
     }, [onScroll, scrollProgress, isWeb]);
 
     // Cleanup
     useEffect(() => {
         return () => {
-            if (autoSlideTimer.current) {
-                clearInterval(autoSlideTimer.current);
-            }
             if (userScrollTimeout.current) {
                 clearTimeout(userScrollTimeout.current);
             }
@@ -534,9 +411,6 @@ const CustomScrollBar = ({
         : 'normal';
 
     // ── Estilos CSS para web (scrollbar personalizado) ───────
-    const scrollbarId = `scrollbar-${scrollbarConfig.variant}-${scrollbarConfig.width}`;
-    
-    // Helper para crear gradientes
     const getThumbBackground = () => {
         if (scrollbarConfig.gradient && scrollbarConfig.gradientColors) {
             return `linear-gradient(180deg, ${scrollbarConfig.gradientColors[0]}, ${scrollbarConfig.gradientColors[1]})`;
@@ -551,119 +425,91 @@ const CustomScrollBar = ({
         return scrollbarConfig.thumbHoverColor;
     };
     
-    const webScrollbarStyles = Platform.OS === 'web' ? `
-        #${scrollbarId}::-webkit-scrollbar {
+    const thumbWidth = scrollbarConfig.thumbWidth || scrollbarConfig.width;
+    const borderOffset = thumbWidth < scrollbarConfig.width 
+        ? (scrollbarConfig.width - thumbWidth) / 2 
+        : 0;
+    
+    const webScrollbarStyles = isWeb ? `
+        .custom-scrollbar-${variant}::-webkit-scrollbar {
             width: ${scrollbarConfig.width}px;
             height: ${scrollbarConfig.width}px;
         }
         
-        ${scrollbarConfig.showTrack ? `
-        #${scrollbarId}::-webkit-scrollbar-track {
-            background: ${scrollbarConfig.trackColor};
+        .custom-scrollbar-${variant}::-webkit-scrollbar-track {
+            background: ${scrollbarConfig.showTrack ? scrollbarConfig.trackColor : 'transparent'};
             border-radius: ${scrollbarConfig.trackRadius}px;
-            ${scrollbarConfig.backdropBlur ? `
-                backdrop-filter: blur(10px);
-                -webkit-backdrop-filter: blur(10px);
-            ` : ''}
+            ${scrollbarConfig.backdropBlur ? 'backdrop-filter: blur(10px);' : ''}
         }
-        ` : `
-        #${scrollbarId}::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        `}
         
-        #${scrollbarId}::-webkit-scrollbar-thumb {
+        .custom-scrollbar-${variant}::-webkit-scrollbar-thumb {
             background: ${getThumbBackground()};
             border-radius: ${scrollbarConfig.thumbRadius}px;
             opacity: ${scrollbarConfig.thumbOpacity};
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            
-            /* Centrar el thumb dentro del track */
-            ${scrollbarConfig.thumbWidthPercent < 100 ? `
-                border-left: ${(scrollbarConfig.width - scrollbarConfig.thumbWidth) / 2}px solid transparent;
-                border-right: ${(scrollbarConfig.width - scrollbarConfig.thumbWidth) / 2}px solid transparent;
+            ${borderOffset > 0 ? `
+                border-left: ${borderOffset}px solid transparent;
+                border-right: ${borderOffset}px solid transparent;
                 background-clip: padding-box;
             ` : ''}
-            
-            ${scrollbarConfig.shadow && !scrollbarConfig.glow ? `
-                box-shadow: 0 2px 8px ${scrollbarConfig.shadowColor || 'rgba(0, 0, 0, 0.15)'};
-            ` : ''}
-            ${scrollbarConfig.border ? `
-                border: 1px solid ${scrollbarConfig.borderColor};
-            ` : ''}
-            ${scrollbarConfig.glow ? `
-                box-shadow: 0 0 12px ${scrollbarConfig.shadowColor},
-                           0 0 24px ${scrollbarConfig.shadowColor}50;
-            ` : ''}
+            ${scrollbarConfig.shadow && !scrollbarConfig.glow ? `box-shadow: 0 2px 8px ${scrollbarConfig.shadowColor};` : ''}
+            ${scrollbarConfig.border ? `border: 1px solid ${scrollbarConfig.borderColor};` : ''}
+            ${scrollbarConfig.glow ? `box-shadow: 0 0 12px ${scrollbarConfig.shadowColor}, 0 0 24px ${scrollbarConfig.shadowColor}50;` : ''}
         }
         
-        #${scrollbarId}::-webkit-scrollbar-thumb:hover {
+        .custom-scrollbar-${variant}::-webkit-scrollbar-thumb:hover {
             opacity: ${scrollbarConfig.thumbHoverOpacity};
             background: ${getThumbHoverBackground()};
             transform: scale(1.1);
-            ${scrollbarConfig.shadow && !scrollbarConfig.glow ? `
-                box-shadow: 0 4px 16px ${scrollbarConfig.shadowColor || 'rgba(0, 0, 0, 0.25)'};
-            ` : ''}
-            ${scrollbarConfig.glow ? `
-                box-shadow: 0 0 16px ${scrollbarConfig.shadowColor},
-                           0 0 32px ${scrollbarConfig.shadowColor}70,
-                           0 0 48px ${scrollbarConfig.shadowColor}40;
-            ` : ''}
+            ${scrollbarConfig.shadow && !scrollbarConfig.glow ? `box-shadow: 0 4px 16px ${scrollbarConfig.shadowColor};` : ''}
+            ${scrollbarConfig.glow ? `box-shadow: 0 0 16px ${scrollbarConfig.shadowColor}, 0 0 32px ${scrollbarConfig.shadowColor}70, 0 0 48px ${scrollbarConfig.shadowColor}40;` : ''}
         }
         
-        #${scrollbarId}::-webkit-scrollbar-thumb:active {
+        .custom-scrollbar-${variant}::-webkit-scrollbar-thumb:active {
             opacity: 1;
             background: ${getThumbHoverBackground()};
             transform: scale(1.05);
         }
         
         ${scrollbarConfig.autoHide ? `
-            #${scrollbarId}::-webkit-scrollbar-thumb {
+            .custom-scrollbar-${variant}::-webkit-scrollbar-thumb {
                 transition: opacity 0.4s ease 0.3s, background 0.25s ease, transform 0.25s ease;
             }
-            
-            #${scrollbarId}:not(:hover)::-webkit-scrollbar-thumb {
+            .custom-scrollbar-${variant}:not(:hover)::-webkit-scrollbar-thumb {
                 opacity: 0;
             }
-            
-            #${scrollbarId}:hover::-webkit-scrollbar-thumb {
+            .custom-scrollbar-${variant}:hover::-webkit-scrollbar-thumb {
                 transition-delay: 0s;
             }
         ` : ''}
         
-        /* Corners para scrollbars que se cruzan */
-        #${scrollbarId}::-webkit-scrollbar-corner {
+        .custom-scrollbar-${variant}::-webkit-scrollbar-corner {
             background: transparent;
         }
     ` : null;
 
     // Inyectar estilos CSS en web
     useEffect(() => {
-        if (Platform.OS === 'web' && webScrollbarStyles) {
-            const styleId = `custom-scrollbar-styles-${scrollbarId}`;
-            
-            // Remover estilo anterior si existe
-            const existingStyle = document.getElementById(styleId);
-            if (existingStyle) {
-                existingStyle.remove();
-            }
-            
-            // Crear nuevo estilo
-            const styleElement = document.createElement('style');
+        if (!isWeb || !webScrollbarStyles) return;
+        
+        const styleId = `scrollbar-${variant}`;
+        let styleElement = document.getElementById(styleId);
+        
+        if (!styleElement) {
+            styleElement = document.createElement('style');
             styleElement.id = styleId;
-            styleElement.innerHTML = webScrollbarStyles;
             document.head.appendChild(styleElement);
-            
-            console.log('Scrollbar styles injected:', scrollbarId);
-            
-            return () => {
-                const style = document.getElementById(styleId);
-                if (style) {
-                    style.remove();
-                }
-            };
         }
-    }, [webScrollbarStyles, scrollbarId]);
+        
+        styleElement.innerHTML = webScrollbarStyles;
+        
+        return () => {
+            const style = document.getElementById(styleId);
+            if (style && !document.querySelector(`.custom-scrollbar-${variant}`)) {
+                style.remove();
+            }
+        };
+    }, [webScrollbarStyles, variant, isWeb]);
 
     // ── Renderizado del indicador de progreso ────────────────
     const renderProgressIndicator = () => {
@@ -677,55 +523,27 @@ const CustomScrollBar = ({
             backgroundColor: color,
             zIndex: 1000,
             pointerEvents: 'none',
-            ...(isVertical ? {
-                width: thickness,
-                [position]: 0,
-                top: 0,
-                bottom: 0,
-            } : {
-                height: thickness,
-                [position]: 0,
-                left: 0,
-                right: 0,
-            }),
+            ...(isVertical 
+                ? { width: thickness, [position]: 0, top: 0, bottom: 0 }
+                : { height: thickness, [position]: 0, left: 0, right: 0 }
+            ),
         };
 
         if (isWeb) {
-            // En web, usar div con progreso desde el estado
-            const progressSize = `${webScrollProgress * 100}%`;
-            
             return (
-                <div
-                    style={{
-                        ...progressStyle,
-                        [isVertical ? 'height' : 'width']: progressSize,
-                        transition: 'height 0.1s ease-out, width 0.1s ease-out',
-                    }}
-                />
+                <div style={{
+                    ...progressStyle,
+                    [isVertical ? 'height' : 'width']: `${webScrollProgress * 100}%`,
+                    transition: 'height 0.1s ease-out, width 0.1s ease-out',
+                }} />
             );
         }
 
-        // En móvil, usar Animated.View
         const animatedStyle = isVertical
-            ? {
-                height: scrollProgress.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ['0%', '100%'],
-                }),
-            }
-            : {
-                width: scrollProgress.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ['0%', '100%'],
-                }),
-            };
+            ? { height: scrollProgress.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }) }
+            : { width: scrollProgress.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }) };
 
-        return (
-            <Animated.View
-                style={[progressStyle, animatedStyle]}
-                pointerEvents="none"
-            />
-        );
+        return <Animated.View style={[progressStyle, animatedStyle]} pointerEvents="none" />;
     };
 
     // ── Renderizado de fade edges ─────────────────────────────
@@ -734,65 +552,34 @@ const CustomScrollBar = ({
 
         const { size, color, edges } = effectsConfig.fadeEdges;
 
-        const fadeStyles = edges.map(edge => {
+        return edges.map(edge => {
             const isVertical = edge === 'top' || edge === 'bottom';
-            const gradientDirection = {
-                top: '180deg',
-                bottom: '0deg',
-                left: '90deg',
-                right: '270deg',
-            }[edge];
-
-            const gradientColor = {
-                top: `rgba(0,0,0,0), ${color}`,
-                bottom: `${color}, rgba(0,0,0,0)`,
-                left: `rgba(0,0,0,0), ${color}`,
-                right: `${color}, rgba(0,0,0,0)`,
-            }[edge];
+            const gradientMap = {
+                top: { dir: '180deg', colors: 'rgba(0,0,0,0), ' + color },
+                bottom: { dir: '0deg', colors: color + ', rgba(0,0,0,0)' },
+                left: { dir: '90deg', colors: 'rgba(0,0,0,0), ' + color },
+                right: { dir: '270deg', colors: color + ', rgba(0,0,0,0)' },
+            };
 
             const fadeStyle = {
                 position: 'absolute',
                 [edge]: 0,
-                ...(isVertical ? {
-                    left: 0,
-                    right: 0,
-                    height: size,
-                } : {
-                    top: 0,
-                    bottom: 0,
-                    width: size,
-                }),
+                ...(isVertical ? { left: 0, right: 0, height: size } : { top: 0, bottom: 0, width: size }),
                 opacity: 0.9,
                 pointerEvents: 'none',
                 zIndex: 999,
             };
 
             if (isWeb) {
-                // En web, usar div nativo con gradiente CSS
-                return (
-                    <div
-                        key={edge}
-                        style={{
-                            ...fadeStyle,
-                            background: `linear-gradient(${gradientDirection}, ${gradientColor})`,
-                        }}
-                    />
-                );
-            } else {
-                // En móvil, usar View de React Native
-                return (
-                    <View
-                        key={edge}
-                        style={fadeStyle}
-                    />
-                );
+                const { dir, colors } = gradientMap[edge];
+                return <div key={edge} style={{ ...fadeStyle, background: `linear-gradient(${dir}, ${colors})` }} />;
             }
-        });
 
-        return <>{fadeStyles}</>;
+            return <View key={edge} style={fadeStyle} />;
+        });
     };
 
-    // En Web, usamos un div nativo para que los estilos CSS se apliquen correctamente
+    // En Web, usamos div nativo para aplicar estilos CSS correctamente
     if (isWeb) {
         const containerStyles = StyleSheet.flatten([styles.container, style]);
         const contentStyles = StyleSheet.flatten(contentContainerStyle) || {};
@@ -803,27 +590,17 @@ const CustomScrollBar = ({
                 position: 'relative',
                 display: 'flex',
                 flexDirection: 'column',
-                overflow: 'hidden', // Importante: evitar scroll en el contenedor
+                overflow: 'hidden',
             }}>
                 {renderProgressIndicator()}
                 <div
-                    id={scrollbarId}
+                    className={`custom-scrollbar-${variant}`}
                     ref={scrollViewRef}
                     onScroll={(e) => {
-                        // Convertir evento DOM a formato React Native
                         const nativeEvent = {
-                            contentOffset: {
-                                x: e.target.scrollLeft,
-                                y: e.target.scrollTop,
-                            },
-                            contentSize: {
-                                height: e.target.scrollHeight,
-                                width: e.target.scrollWidth,
-                            },
-                            layoutMeasurement: {
-                                height: e.target.clientHeight,
-                                width: e.target.clientWidth,
-                            },
+                            contentOffset: { x: e.target.scrollLeft, y: e.target.scrollTop },
+                            contentSize: { height: e.target.scrollHeight, width: e.target.scrollWidth },
+                            layoutMeasurement: { height: e.target.clientHeight, width: e.target.clientWidth },
                         };
                         handleScroll({ nativeEvent });
                     }}
@@ -835,14 +612,13 @@ const CustomScrollBar = ({
                         width: '100%',
                         overflowY: horizontal ? 'hidden' : 'auto',
                         overflowX: horizontal ? 'auto' : 'hidden',
-                        WebkitOverflowScrolling: 'touch', // Smooth scrolling en iOS
+                        WebkitOverflowScrolling: 'touch',
                     }}
                 >
                     <div style={{
                         ...contentStyles,
                         display: 'flex',
                         flexDirection: 'column',
-                        // Respetar flexGrow del contentContainerStyle
                         flexGrow: contentStyles.flexGrow !== undefined ? contentStyles.flexGrow : 0,
                         minHeight: contentStyles.flexGrow ? '100%' : 'min-content',
                     }}>

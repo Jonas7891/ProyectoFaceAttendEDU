@@ -17,7 +17,7 @@
 //  Recibe callbacks del Screen para delegar acciones de navegación.
 // ============================================================
 
-import React, { useRef, useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { View, Text, Image, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useResponsive }  from "./components/hooks/useResponsive";
@@ -36,6 +36,7 @@ import AuthMobileLayout   from "./components/auth/AuthMobileLayout";
 import AuthAnimatedLayout from "./components/auth/AuthAnimatedLayout";
 import { useSignupViewModel } from "../viewmodels/useAuthViewModel";
 import { useTranslation }     from "../i18n/hooks/useTranslation";
+import { useAutoSlideOnContent } from "./hooks/useAutoSlideOnContent";
 
 
 export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLanding }) {
@@ -45,30 +46,48 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLandi
     const vm          = useSignupViewModel(onRegisterSuccess);
     const { t }       = useTranslation();
     
-    // Ref para el trigger del autoSlide
+    // Estado para el trigger del autoSlide
     const [autoSlideTrigger, setAutoSlideTrigger] = useState(null);
-    const scrollTriggered = useRef(false);
+    
+    // Callback estable para registrar el trigger del CustomScrollBar
+    const registerAutoSlideTrigger = useCallback((callback) => {
+        setAutoSlideTrigger(() => callback);
+    }, []);
 
     // ── Secciones compartidas entre mobile y desktop ──────────
     // Detectar si debe mostrarse el indicador de contraseña
     const showPasswordIndicator = vm.password.length > 0;
     
-    // Handler para cuando el usuario empiece a escribir la contraseña
+    // Calcular la cantidad de recomendaciones NO cumplidas (visibles)
+    const visibleRequirementsCount = useMemo(() => {
+        if (!vm.password) return 0;
+        
+        const requirements = [
+            vm.password.length < 8,                                      // Mínimo 8 caracteres
+            !/[A-Z]/.test(vm.password),                                  // 1 mayúscula
+            !/[a-z]/.test(vm.password),                                  // 1 minúscula
+            !/[0-9]/.test(vm.password),                                  // 1 número
+            !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(vm.password), // 1 carácter especial
+        ];
+        
+        // Contar cuántos NO están cumplidos (son true)
+        return requirements.filter(Boolean).length;
+    }, [vm.password]);
+    
+    // Hook que detecta cuando aparecen o cambian las recomendaciones y dispara autoslide
+    // CLAVE: triggerOnAnyChange = true para que dispare SIEMPRE que cambie el count
+    useAutoSlideOnContent(
+        visibleRequirementsCount,
+        autoSlideTrigger,
+        { 
+            triggerOnAnyChange: true,  // Disparar en CUALQUIER cambio de recomendaciones
+            delay: 150,                // Pequeño delay para que la animación sea suave
+        }
+    );
+    
+    // Handler para cuando el usuario cambie la contraseña
     const handlePasswordChange = (text) => {
         vm.setPassword(text);
-        
-        // Disparar scroll automático al primer carácter
-        if (text.length === 1 && !scrollTriggered.current) {
-            scrollTriggered.current = true;
-            if (autoSlideTrigger) {
-                autoSlideTrigger();
-            }
-        }
-        
-        // Reset si borra todo
-        if (text.length === 0) {
-            scrollTriggered.current = false;
-        }
     };
     
     // Espaciados centralizados del formulario
@@ -265,25 +284,13 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLandi
                         autoSlide: {
                             enabled: true,
                             target: 'end',
-                            triggerDelay: 200,
-                            trigger: (callback) => setAutoSlideTrigger(() => callback),
-                        },
-                        fadeEdges: {
-                            enabled: true,
-                            size: 18,
-                            color: c.background.surface,
-                            edges: ['top', 'bottom'],
+                            triggerDelay: 150,
+                            trigger: registerAutoSlideTrigger,
                         },
                         smoothElastic: {
                             enabled: true,
                             tension: 45,
                             friction: 9,
-                        },
-                        progressIndicator: {
-                            enabled: true,
-                            position: 'right',
-                            color: c.brand.primary,
-                            thickness: 2,
                         },
                     }}
                 >
