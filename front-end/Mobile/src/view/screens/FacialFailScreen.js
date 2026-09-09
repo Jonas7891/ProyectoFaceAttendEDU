@@ -124,7 +124,7 @@ export default function FacialFail() {
 
                             <View style={[styles.buttonContainer, { marginTop: 10 }]}>
                                 <PrimaryButton
-                                    title={t('consultJustify.back')}
+                                    title={t('common.back')}
                                     onPress={handleBack}
                                 />
                             </View>

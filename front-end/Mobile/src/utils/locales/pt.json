@@ -20,8 +20,21 @@
     "email": "Email",
     "phone": "Telefone",
     "edit": "Editar",
-    "saving": "Guardando...",
-    "ok": "OK"
+    "saving": "Salvando...",
+    "ok": "OK",
+    "date": "Data",
+    "time": "Hora",
+    "approve": "Aprovar",
+    "reject": "Rejeitar",
+    "present": "Presente",
+    "late": "Atrasado",
+    "seeAll": "Ver todos",
+    "discardTitle": "Descartar alterações?",
+    "logout": "Sair",
+    "next": "Próximo",
+    "previous": "Anterior",
+    "requiredField": "Campo obrigatório",
+    "send": "Enviar"
   },
   "login": {
     "title": "Login",
@@ -35,18 +48,51 @@
     "errorEmail": "Por favor, digite seu e-mail",
     "errorPassword": "Por favor, digite sua senha",
     "invalidCredentials": "Credenciais inválidas",
-    "loginError": "Ocorreu um erro ao fazer login"
+    "loginError": "Ocorreu um erro ao fazer login",
+    "acceptTerms": "Aceite os termos e condições",
+    "forgotPassword": "Esqueceu sua senha?"
   },
   "tabs": {
     "home": "Início",
     "news": "Novidades",
-    "history": "Histórico"
+    "history": "Presença"
   },
   "attendance": {
     "searchByName": "Buscar por nome...",
     "searchByDate": "Buscar por data (AAAA-MM-DD)...",
     "title": "Presenças Registradas",
-    "noResults": "Sem resultados"
+    "noResults": "Sem resultados",
+    "sectionAttendance": "Registro de presença",
+    "sectionCourse": "Disciplina",
+    "sectionPeriod": "Período letivo",
+    "sectionClass": "Informações da aula",
+    "date": "Data",
+    "time": "Horário de entrada",
+    "day": "Dia da aula",
+    "schedule": "Horário",
+    "subject": "Disciplina",
+    "courseCode": "Código da turma",
+    "classroom": "Sala",
+    "period": "Período",
+    "periodStart": "Início",
+    "periodEnd": "Fim",
+    "teacher": "Professor",
+    "approvalStatus": "Status de aprovação",
+    "justificationText": "Justificativa",
+    "justified": "Justificado",
+    "noJustification": "Sem justificativa",
+    "noJustificationHint": "Nenhuma justificativa foi registrada",
+    "reviewedAt": "Revisado em",
+    "reviewedBy": "Revisado por",
+    "filterByDate": "Filtrar por data",
+    "present": "Presente",
+    "late": "Atrasado",
+    "absent": "Ausente",
+    "pending": "Pendente",
+    "approved": "Aprovado",
+    "rejected": "Rejeitado",
+    "justifiedStatus": "Justificado",
+    "sectionJustification": "Justificativa"
   },
   "settings": {
     "language": "Idioma",
@@ -56,7 +102,25 @@
     "theme": "Tema",
     "lightTheme": "Claro",
     "darkTheme": "Escuro",
-    "changeTheme": "Mudar Tema"
+    "changeTheme": "Mudar Tema",
+    "selectTheme": "Selecione o tema da aplicação",
+    "alertsConfiguration": "Configuração de Alertas",
+    "alertsConfigDesc": "Personalize quais tipos de alertas deseja receber",
+    "configureAlerts": "Configurar Alertas",
+    "selectAlertTypes": "Selecione quais tipos de alertas deseja ver",
+    "successAlerts": "Alertas de Sucesso",
+    "successAlertsDesc": "Confirmação de operações bem-sucedidas",
+    "errorAlerts": "Alertas de Erro",
+    "errorAlertsDesc": "Notificações de erros e problemas",
+    "warningAlerts": "Alertas de Aviso",
+    "warningAlertsDesc": "Avisos e notificações importantes",
+    "confirmAlerts": "Alertas de Confirmação",
+    "confirmAlertsDesc": "Solicitações de confirmação de ações",
+    "defaultAlerts": "Alertas Gerais",
+    "defaultAlertsDesc": "Mensagens informativas gerais",
+    "iotAlerts": "Alertas de Dispositivos IoT",
+    "iotAlertsDesc": "Mensagens sobre os dispositivos de escaneamento facial",
+    "noRoleError": "Não foi possível determinar o papel do usuário"
   },
   "menu": {
     "facialParams": "Inserir Parâmetros Faciais",
@@ -68,14 +132,20 @@
     "loggingOut": "Saindo...",
     "logoutConfirmTitle": "Sair",
     "logoutConfirmMessage": "Tem certeza de que deseja sair?",
-    "logoutCancel": "Logout cancelado por el usuario",
-    "userInfo": "Información de las Justificaciones"
+    "adminName": "Administrador",
+    "teacherName": "Professor",
+    "studentName": "Estudante",
+    "teacherJustificationInfo": "Justificativas dos estudantes",
+    "studentJustificationInfo": "Minhas justificativas",
+    "schoolConfiguration": "Configuração da escola",
+    "logoutError": "Não foi possível sair"
   },
   "logout": {
     "title": "Sair",
     "message": "Tem certeza de que deseja sair?",
     "cancel": "Cancelar",
-    "confirm": "Sim, sair"
+    "confirm": "Sim, sair",
+    "error": "Ocorreu um erro"
   },
   "updatePhoto": {
     "title": "Foto para Reconhecimento Facial",
@@ -103,13 +173,14 @@
     "subtitle": "Selecione a opção com base no seu caso:",
     "questionnaire": "1. Questionário",
     "questionnaireDescription": "Um questionário deve ser respondido perguntando sobre coisas específicas que apenas o usuário conhece",
-    "updateParams": "2. Atualizações de Parâmetros Faciais",
+    "updateParams": "2. Atualizações dos Parâmetros Faciais",
     "updateParamsDescription": "Muitas vezes, o Reconhecimento Facial pode falhar devido a certas mudanças no rosto do usuário",
     "recommendations": "Recomendações:",
     "cameraQuality": "Qualidade ou Ângulo da Câmera",
     "cameraQualityDescription": "Outra razão para falhas no sistema é devido à iluminação do local, qualidade da câmera ou ângulo em que o dispositivo é colocado para escanear.",
     "backToMenu": "Voltar",
-    "returningToMenu": "Voltando ao Menu..."
+    "returningToMenu": "Voltando ao Menu...",
+    "success": "Sucesso"
   },
   "dashboard": {
     "greeting": "Bom dia",
@@ -139,7 +210,13 @@
     "hoursAgo": "horas",
     "ago": "atrás",
     "environmentManagement": "Gestão de Ambientes",
-    "manageEnvironmentDesc": "Adicionar, editar ou Excluir Ambientes"
+    "viewAttendance": "Ver presença detalhada",
+    "manageEnvironmentDesc": "Adicionar, editar ou Excluir Ambientes",
+    "seeAll": "Ver todos",
+    "statusPresent": "Presente",
+    "statusLate": "Atrasado",
+    "manageUsers": "Gestão de Usuários",
+    "manageUsersDesc": "Adicione ou remova usuários da sua escola."
   },
   "consultJustify": {
     "mainTitle": "Justificativas Aceitas",
@@ -155,7 +232,36 @@
     "statusPending": "Pendente",
     "dateLabel": "Data",
     "timeLabel": "Hora",
-    "reasonLabel": "Motivo"
+    "reasonLabel": "Motivo",
+    "noAttachment": "Sem anexo",
+    "viewDetail": "Ver detalhe",
+    "sent": "Enviado",
+    "detailTitle": "Detalhe da Justificativa",
+    "caseInfo": "Informações do caso",
+    "case": "Caso",
+    "date": "Data",
+    "time": "Hora",
+    "submittedAt": "Enviado",
+    "descriptionTitle": "Descrição da justificativa",
+    "attachmentTitle": "Documento anexo",
+    "noDocumentAttached": "Nenhum documento foi anexado.",
+    "reject": "Rejeitar",
+    "approve": "Aprovar",
+    "filterAll": "Todos",
+    "filterStudents": "Estudantes",
+    "filterTeachers": "Docentes",
+    "subtitleMySubmissions": "Minhas justificativas enviadas",
+    "subtitleStudentPending": "Pendentes de estudantes",
+    "subtitleReviewPending": "Pendentes de revisão",
+    "emptyStudentTitle": "Você ainda não enviou justificativas",
+    "emptyAdminTitle": "Sem justificativas pendentes",
+    "emptyStudentSubtitle": "Quando você enviar uma justificativa, ela aparecerá aqui.",
+    "emptyAdminSubtitle": "Não há justificativas para este filtro neste momento.",
+    "headerTitle": "Justificativas",
+    "showing": "Mostrando",
+    "result_one": "resultado",
+    "result_other": "resultados",
+    "result": "resultado"
   },
   "justify": {
     "title": "Configuração de Justificativas",
@@ -179,14 +285,17 @@
     "supportedFormats": "Formatos suportados: PDF, Imagem (JPG, PNG), Word (DOC, DOCX)",
     "upload": "Enviar",
     "missingTimeError": "Por favor, digite o horário do atraso",
-    "missingAttachmentError": "Por favor, envie um anexo"
+    "missingAttachmentError": "Por favor, envie um anexo",
+    "confirmMessage": "Tem certeza de que deseja enviar esta justificativa?",
+    "confirmTitle": "Confirmar envio",
+    "submitError": "Não foi possível enviar a justificativa"
   },
   "menuJustify": {
     "backToDashboard": "Voltar ao Dashboard"
   },
   "news": {
     "title": "Novidades",
-    "content": "Imagine que você precisa usar um aplicativo para registrar sua presença com o rosto. Primeiro, o sistema mostra uma caixa na tela para você saber exatamente onde colocar o rosto. Conforme você se ajusta, fica verde para informar que está pronto.\n\nÉ importante estar em um local bem iluminado. Quando o rosto estiver bem visível, o sistema pede um pequeno gesto, como piscar ou mover levemente a cabeça, para garantir que não é uma foto ou algo falso.\n\nO melhor é que a leitura não demora muito, apenas cerca de dois ou três segundos, e imediatamente aparece uma mensagem clara na tela dizendo se a presença foi registrada ou se houve algum problema. Tudo é projetado para ser rápido e simples.",
+    "content": "Imagine que você precisa usar um aplicativo para registrar sua presença com o rosto. Primeiro, o sistema mostra uma caixa na tela para você saber exatamente onde colocar o rosto. Conforme você se ajusta, fica verde para informar que está pronto.\n\nÈ importante estar em um local bem iluminado. Quando o rosto estiver bem visível, o sistema pede um pequeno gesto, como piscar ou mover levemente a cabeça, para garantir que não é uma foto ou algo falso.\n\nO melhor é que a leitura não demora muito, apenas cerca de dois ou três segundos, e imediatamente aparece uma mensagem clara na tela dizendo se a presença foi registrada ou se houve algum problema. Tudo é projetado para ser rápido e simples.",
     "creationDate": "Data de criação",
     "unknownDate": "##/##/####"
   },
@@ -210,7 +319,7 @@
     "objectText": "O aplicativo tem como finalidade gerenciar o registro de presença de usuários em espaços públicos ou privados através de tecnologia de reconhecimento facial, permitindo a validação de identidade de forma automatizada.",
     "authorizationTitle": "3. AUTORIZAÇÃO PARA TRATAMENTO DE DADOS PESSOAIS",
     "authorizationText": "O usuário autoriza prévia, expressa e informadamente o responsável pelo aplicativo a coletar, armazenar, usar, processar e excluir seus dados pessoais, conforme estabelecido pela legislação colombiana vigente.",
-    "sensitiveDataTitle": "4. TRATAMENTO DE DADOS SENSÍVEIS (BIOMÉTRICOS)",
+    "sensitiveDataTitle": "4. TRATAMENTO DE DADOS SENSÍVEIS (BIOMÈTRICOS)",
     "sensitiveDataText": "O usuário autoriza expressamente o tratamento de seus dados biométricos (imagem facial), que são considerados dados sensíveis, para as seguintes finalidades:",
     "purpose1": "4.1 Validar a identidade do usuário.",
     "purpose2": "4.2 Registrar sua presença em locais autorizados.",
@@ -256,19 +365,30 @@
     "acceptanceFinalText": "O usuário declara que leu, compreendeu e aceitou a totalidade destes Termos e Condições, bem como a Política de Tratamento de Dados Pessoais, autorizando o uso de seus dados conforme aqui estabelecido."
   },
   "questionnaire": {
-    "documentQuestion": "Selecione seu tipo de documento de identidade:",
-    "documentPlaceholder": "Exemplo: 12345678",
-    "rhQuestion": "Selecione seu tipo sanguíneo (Fator Rh):",
-    "relativeDocumentQuestion": "Documento do familiar associado?",
-    "birthDateQuestion": "Qual é a sua data de nascimento?",
+    "title": "Questionário",
+    "description": "Um questionário com perguntas específicas que apenas o usuário conheceria deve ser respondido.",
+    "answerRequired": "Responda à pergunta antes de continuar",
+    "selectDocument": "Selecione o tipo de documento",
+    "selectRH": "Selecione seu tipo sanguíneo",
+    "document": "Tipo de documento",
+    "number": "Número do documento",
+    "rhType": "Tipo sanguíneo",
+    "relativeDocument": "Documento do familiar",
+    "birthDate": "Data de nascimento",
+    "address": "Endereço",
+    "phone": "Telefone",
+    "addressHint": "Digite seu endereço completo",
+    "addressPlaceholder": "Rua e número",
+    "addressQuestion": "Qual é o seu endereço?",
+    "birthDateHint": "Use o formato DD/MM/AAAA",
     "birthDatePlaceholder": "DD/MM/AAAA",
-    "birthDateHint": "Formato: 15/08/1990",
-    "addressQuestion": "Qual é o seu endereço residencial?",
-    "addressPlaceholder": "Rua, número, cidade",
-    "addressHint": "Exemplo: Rua das Flores 123, São Paulo",
-    "phoneQuestion": "Qual é o seu número de telefone para contato?",
-    "phonePlaceholder": "Exemplo: 11987654321",
-    "phoneHint": "Digite seu número sem espaços"
+    "birthDateQuestion": "Qual é a sua data de nascimento?",
+    "documentPlaceholder": "Digite o número do seu documento",
+    "documentQuestion": "Qual é o número do seu documento?",
+    "phoneHint": "Digite um número de telefone válido",
+    "phonePlaceholder": "300 123 4567",
+    "phoneQuestion": "Qual é o seu número de telefone?",
+    "relativeDocumentQuestion": "Qual é o número do documento do seu familiar?"
   },
   "facialUpdate": {
     "beardChange": "Mudança de barba/bigode",
@@ -282,7 +402,8 @@
     "updateParams": "Atualizar",
     "confirmUpdate": "Tem certeza de que deseja atualizar seus parâmetros faciais?",
     "success": "Sucesso",
-    "paramsUpdated": "Seus parâmetros faciais foram atualizados"
+    "paramsUpdated": "Seus parâmetros faciais foram atualizados",
+    "changeType": "Tipo de alteração"
   },
   "documentSelector": {
     "label": "Tipo de documento:"
@@ -294,27 +415,39 @@
     "question": "Pergunta {{currentStep}} de {{totalSteps}}"
   },
   "teacher": {
-    "greeting": "Bem-vindo professor",
+    "greeting": "Bem-vindo de volta",
     "professorName": "Prof. Rodrigues",
-    "classAttendance": "Presença na aula",
+    "classAttendance": "Presença da turma",
     "studentsPresent": "alunos presentes",
     "nextClass": "Próxima aula",
-    "quickActions": "Ações rápidas",
     "takeAttendance": "Registrar presença",
-    "takeAttendanceDesc": "Registro facial de alunos",
+    "takeAttendanceDesc": "Registro facial dos alunos",
     "myGroups": "Meus grupos",
     "attendanceReport": "Relatórios",
-    "seeAll": "Ver todos",
-    "present": "Presente",
-    "late": "Atrasado",
-    "systemNews": "Novidades do sistema"
+    "systemNews": "Novidades do sistema",
+    "teacherName": "Professor",
+    "quickActions": "Ações rápidas",
+    "recentAttendance": "Presença das suas turmas",
+    "studentsAttending": "alunos no total",
+    "notifications": "Notificações da instituição",
+    "updateFace": "Atualização facial",
+    "updateFaceDesc": "Atualize seus parâmetros de reconhecimento facial",
+    "myAttendance": "Presença das minhas turmas",
+    "myAttendanceDesc": "Consulte o registro de presença dos seus grupos",
+    "pendingJustifications": "Justificativas pendentes",
+    "pendingJustificationsDesc": "Revise e gerencie as justificativas dos seus alunos",
+    "attendanceLabel": "Presença dos meus grupos",
+    "attendanceRecorded": "Presença registrada",
+    "newJustification": "Nova justificativa",
+    "justificationMathMsg": "Juan Pérez enviou uma justificativa para a aula de Matemática.",
+    "attendanceGroupMsg": "A presença do grupo 10-A foi registrada com sucesso."
   },
   "student": {
     "greeting": "Olá estudante",
     "studentName": "Ana Martins",
     "myAttendance": "Minha presença",
     "classesAttended": "aulas assistidas",
-    "lastRegister": "Último registro",
+    "lastRegister": "Öltimo registro",
     "quickActions": "Minhas ações",
     "registerFace": "Registrar rosto",
     "registerFaceDesc": "Marcar presença facial",
@@ -333,7 +466,23 @@
     "recognitionSuccessRate": "Taxa de sucesso",
     "times": "vezes até o momento",
     "UpdateFace": "Atualização de Rosto",
-    "UpdateFaceDesc": "Atualização dos seus dados biométricos"
+    "UpdateFaceDesc": "Atualização dos seus dados biométricos",
+    "faceRecognizedMsg": "Seu rosto foi reconhecido com sucesso hoje às 08:15",
+    "attendanceReminderDesc": "Não se esqueça de registrar sua presença por reconhecimento facial."
+  },
+  "subjects": {
+    "math": "Matemática",
+    "physics": "Física",
+    "history": "História",
+    "programming": "Programação",
+    "science": "Ciências",
+    "spanish": "Espanhol",
+    "english": "Inglês",
+    "physicalEducation": "Educação Física"
+  },
+  "time": {
+    "today": "Hoje",
+    "yesterday": "Ontem"
   },
   "admin": {
     "justificationManagement": "Gestão de Justificativas",
@@ -406,8 +555,58 @@
     "logout": "Sair",
     "logoutConfirm": "Tem certeza de que deseja sair?",
     "school": "Escola",
-    "pending": "Pendiente",
-    "active": "Activo"
+    "pending": "Pendente",
+    "active": "Ativo",
+    "absent": "Ausente",
+    "activePeriod": "Período ativo",
+    "address": "Endereço",
+    "approved": "Aprovado",
+    "attendanceStats": "Estatísticas de presença",
+    "classes": "Aulas",
+    "courseAttendance": "Presença no curso",
+    "enrolledCourses": "Cursos matriculados",
+    "iotDevices": "Dispositivos IoT",
+    "justified": "Justificado",
+    "noName": "Sem nome",
+    "noRole": "Sem função",
+    "passwordModal": {
+      "cancel": "Cancelar",
+      "confirmPassword": "Confirmar senha",
+      "currentPassword": "Senha atual",
+      "errorGeneric": "Não foi possível atualizar a senha",
+      "errorLength": "A senha deve ter pelo menos 8 caracteres",
+      "errorMatch": "As senhas não coincidem",
+      "errorRequired": "A senha é obrigatória",
+      "help": "Use pelo menos 8 caracteres",
+      "newPassword": "Nova senha",
+      "saveButton": "Salvar senha",
+      "saving": "Salvando...",
+      "successMessage": "Senha atualizada com sucesso",
+      "successTitle": "Senha atualizada",
+      "title": "Alterar senha"
+    },
+    "pendingJustifications": "pendingJustifications",
+    "phone": "phone",
+    "present": "present",
+    "profileModal": {
+      "cancel": "Cancelar",
+      "editTitle": "Editar perfil",
+      "emailPlaceholder": "Digite seu e-mail",
+      "errorEmail": "Digite um e-mail válido",
+      "errorGeneric": "Não foi possível atualizar o perfil",
+      "errorPhone": "Digite um número de telefone válido",
+      "errorRequired": "Este campo é obrigatório",
+      "help": "Atualize suas informações pessoais",
+      "phonePlaceholder": "Digite seu número de telefone",
+      "saveButton": "Salvar alterações",
+      "saving": "Salvando...",
+      "successMessage": "Perfil atualizado com sucesso",
+      "successTitle": "Perfil atualizado"
+    },
+    "schoolInfo": "Informações da escola",
+    "schoolName": "Nome da escola",
+    "teacherSchedule": "Horário do professor",
+    "total": "Total"
   },
   "manageUsers": {
     "title": "Gerenciamento de Usuários",
@@ -427,58 +626,61 @@
     "confirm": "Confirmar",
     "deleteQuestion": "Excluir registro?",
     "accessDenied": "Acesso negado",
-    "onlyAdmins": "Somente administradores podem acessar esta tela."
+    "onlyAdmins": "Somente administradores podem acessar esta tela.",
+    "addTeacher": "Adicionar professor",
+    "enterTeacherName": "Digite o nome do professor",
+    "searchTeacher": "Buscar professor"
   },
   "schoolConfig": {
-    "title": "Configuración del Colegio",
+    "title": "Configuração da escola",
     "tabs": {
-      "general": "General",
-      "contact": "Contacto",
-      "academic": "Académica",
-      "attendance": "Asistencia"
+      "general": "Geral",
+      "contact": "Contato",
+      "academic": "Acadêmica",
+      "attendance": "Presença"
     },
     "sections": {
-      "generalInfo": "Información General",
-      "contactInfo": "Información de Contacto",
-      "academicConfig": "Configuración Académica",
-      "attendanceConfig": "Configuración de Asistencia"
+      "generalInfo": "Informações gerais",
+      "contactInfo": "Informações de contato",
+      "academicConfig": "Configuração acadêmica",
+      "attendanceConfig": "Configuração de presença"
     },
     "fields": {
-      "schoolName": "Nombre del Colegio",
-      "schoolNamePlaceholder": "Nombre del colegio",
-      "schoolCode": "NIT del Colegio",
+      "schoolName": "Nome da escola",
+      "schoolNamePlaceholder": "Nome da escola",
+      "schoolCode": "CNPJ da escola",
       "schoolCodePlaceholder": "COL-XXXX-XXX",
-      "district": "Distrito Educativo",
-      "districtPlaceholder": "Nombre del distrito",
-      "email": "Email Institucional",
+      "district": "Distrito educacional",
+      "districtPlaceholder": "Nome do distrito",
+      "email": "E-mail institucional",
       "emailPlaceholder": "admin@colegio.edu",
       "country": "País",
-      "selectCountry": "Selecciona un país",
+      "selectCountry": "Selecione um país",
       "dialCode": "Código",
-      "phone": "Teléfono",
+      "phone": "Telefone",
       "phonePlaceholder": "300 123 4567",
-      "address": "Dirección",
-      "addressPlaceholder": "Calle y número",
-      "city": "Ciudad",
-      "selectCity": "Selecciona una ciudad",
-      "academicYear": "Año Académico",
+      "address": "Endereço",
+      "addressPlaceholder": "Rua e número",
+      "city": "Cidade",
+      "selectCity": "Selecione uma cidade",
+      "academicYear": "Ano letivo",
       "academicYearPlaceholder": "YYYY-YYYY",
-      "startDate": "Fecha de Inicio",
+      "startDate": "Data de início",
       "startDatePlaceholder": "DD/MM/YYYY",
-      "endDate": "Fecha de Fin",
+      "endDate": "Data de término",
       "endDatePlaceholder": "DD/MM/YYYY",
-      "tolerance": "Tolerancia (minutos)",
+      "tolerance": "Tolerância (minutos)",
       "tolerancePlaceholder": "5",
-      "maxAbsences": "Máx. Inasistencias",
+      "maxAbsences": "Máx. faltas",
       "maxAbsencesPlaceholder": "15",
-      "maxLateness": "Máx. Retardos",
+      "maxLateness": "Máx. atrasos",
       "maxLatenessPlaceholder": "10",
-      "justificationLimit": "Límite de Justificación (días)",
+      "justificationLimit": "Limite de justificativa (dias)",
       "justificationLimitPlaceholder": "30"
     },
     "labels": {
-      "students": "Estudiantes",
-      "teachers": "Docentes",
+      "students": "Estudantes",
+      "teachers": "Professores",
       "courses": "Cursos"
     },
     "modals": {
@@ -494,72 +696,174 @@
       "confirmAndSave": "Confirmar e Salvar",
       "cancel": "Cancelar",
       "saveChanges": "Salvar Alterações",
-      "selectCountryFirst": "Selecione um país primeiro"
+      "selectCountryFirst": "Selecione um país primeiro",
+      "cityAvailableFor": "Cidades disponíveis para {{country}}",
+      "noCountries": "Nenhum país encontrado",
+      "noCities": "Nenhuma cidade encontrada",
+      "showingCities": "Mostrando {{shown}} de {{total}} cidades. Pesquise para ver mais.",
+      "changesImpact": "As alterações serão aplicadas a toda a instituição e podem afetar o funcionamento do sistema.",
+      "savingChanges": "Salvando alterações..."
+    },
+    "validation": {
+      "required": "Este campo é obrigatório",
+      "invalidEmail": "E-mail inválido",
+      "invalidPhone": "Telefone inválido",
+      "mustBeNumber": "Deve ser um número"
+    },
+    "errors": {
+      "schoolNotFound": "Não foi possível identificar a escola a ser atualizada",
+      "saveFailed": "Não foi possível salvar as alterações"
+    },
+    "success": {
+      "updated": "Configuração da escola atualizada com sucesso"
     }
   },
   "attendanceReport": {
-    "title": "Reporte de Asistencia",
+    "title": "Relatório de presença",
     "tabs": {
-      "students": "Estudiantes",
-      "teachers": "Profesores"
+      "students": "Estudantes",
+      "teachers": "Professores"
     },
     "types": {
-      "absences": "Inasistencias",
-      "lateness": "Retardos"
+      "absences": "Faltas",
+      "lateness": "Atrasos"
     },
     "filters": {
       "all": "Todos",
       "critical": "Críticos",
-      "warning": "En límite"
+      "warning": "No limite"
     },
-    "searchPlaceholder": "Buscar por nombre, código o materia…",
-    "noResults": "No hay {{role}} que superen el tope de {{type}} con los filtros actuales.",
+    "searchPlaceholder": "Buscar por nome, código ou matéria⬦",
+    "noResults": "Nenhum {{role}} ultrapassa o limite de {{type}} com os filtros atuais.",
     "resultsCount": "{{count}} {{role}} encontrado(s)",
-    "generateReport": "Generar reporte general ({{count}})",
-    "individualReport": "Generar reporte individual",
-    "modalTitle": "Generar reporte",
-    "notificationMessage": "Se notificará al {{recipient}} sobre el estado de asistencia de",
+    "generateReport": "Gerar relatório geral ({{count}})",
+    "individualReport": "Gerar relatório individual",
+    "modalTitle": "Gerar relatório",
+    "modalConfirm": "Confirmar e enviar relatório",
+    "notificationMessage": "O {{recipient}} será notificado sobre a situação de presença de",
     "recipients": {
-      "guardian": "acudiente",
-      "coordinator": "coordinador"
+      "guardian": "responsável",
+      "coordinator": "coordenador"
     },
     "statusLabels": {
       "critical": "CRÍTICO",
-      "warning": "EN LÍMITE"
+      "warning": "NO LIMITE"
     },
-    "absenceLabel": "Inasistencias\n(tope {{limit}})",
-    "latenessLabel": "Retardos\n(tope {{limit}})"
+    "absenceLabel": "Faltas\n(limite {{limit}})",
+    "latenessLabel": "Atrasos\n(limite {{limit}})"
   },
   "validation": {
-    "incompleteFields": "Campos incompletos",
-    "selectCategoryAndType": "Debes seleccionar categoría y tipo.",
-    "descriptionRequired": "Ingresa una descripción para la justificación.",
-    "confirmTitle": "Guardar justificación",
-    "confirmMessage": "¿Deseas guardar esta justificación?",
-    "cancelSave": "Guardado cancelado por el usuario"
+    "title": "Campos incompletos",
+    "descriptionRequired": "descriptionRequired",
+    "selectCategoryAndType": "selectCategoryAndType"
   },
   "languageSettings": {
-    "appearance": "Apariencia",
-    "themeSelection": "Selecciona el tema de la aplicación",
-    "alertSettings": "Configuración de Alertas",
-    "customizeAlerts": "Personaliza qué tipos de alertas deseas recibir",
-    "configureAlerts": "Configurar Alertas",
-    "alertTypes": "Selecciona qué tipos de alertas deseas ver",
-    "successConfirmations": "Confirmación de operaciones exitosas",
-    "errorAlerts": "Alertas de Error",
-    "errorNotifications": "Notificaciones de errores y problemas",
-    "warningAlerts": "Alertas de Advertencia",
-    "confirmationAlerts": "Alertas de Confirmación",
-    "confirmationRequests": "Solicitudes de confirmación de acciones",
-    "generalAlerts": "Alertas Generales",
-    "generalMessages": "Mensajes informativos generales",
-    "iotAlerts": "Alertas en Dispositivos IoT",
-    "iotMessages": "Mensajes sobre los dispositivos de escaneo facial",
-    "closeButton": "Cerrar"
+    "appearance": "Aparência",
+    "themeSelection": "Selecione o tema do aplicativo",
+    "alertSettings": "Configuração de alertas",
+    "customizeAlerts": "Personalize os tipos de alertas que deseja receber",
+    "configureAlerts": "Configurar alertas",
+    "alertTypes": "Selecione os tipos de alertas que deseja ver",
+    "successConfirmations": "Confirmação de operações bem-sucedidas",
+    "errorAlerts": "Alertas de erro",
+    "errorNotifications": "Notificações de erros e problemas",
+    "warningAlerts": "Alertas de aviso",
+    "confirmationAlerts": "Alertas de confirmação",
+    "confirmationRequests": "Solicitações de confirmação de ações",
+    "generalAlerts": "Alertas gerais",
+    "generalMessages": "Mensagens informativas gerais",
+    "iotAlerts": "Alertas de dispositivos IoT",
+    "iotMessages": "Mensagens sobre os dispositivos de escaneamento facial",
+    "closeButton": "Fechar"
   },
   "userRoles": {
     "administrator": "Administrador",
     "student": "Estudiante",
     "teacher": "Profesor"
+  },
+  "justificationReasons": {
+    "medicalDisability": "Incapacidade médica",
+    "familyEmergency": "Emergência familiar",
+    "medicalAppointment": "Consulta médica",
+    "transportIssues": "Problemas de transporte",
+    "heavyTraffic": "Trânsito intenso",
+    "mechanicalIssues": "Problemas mecânicos",
+    "personalEmergency": "Emergência pessoal"
+  },
+  "justificationType": {
+    "absence": "Falta",
+    "late": "Atraso"
+  },
+  "userRole": {
+    "administrator": "Administrador",
+    "student": "Estudante",
+    "teacher": "Professor"
+  },
+  "forgotPassword": {
+    "title": "Recuperar senha",
+    "description": "Digite seu e-mail e enviaremos um código para redefinir sua senha.",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "seuemail@exemplo.com",
+    "sendButton": "Enviar código",
+    "errorRequired": "Digite seu e-mail.",
+    "errorInvalidEmail": "O formato do e-mail é inválido.",
+    "errorNotFound": "Não encontramos uma conta com esse e-mail.",
+    "errorTimeout": "A solicitação demorou muito. Verifique sua conexão e tente novamente.",
+    "errorGeneric": "Ocorreu um erro. Tente novamente.",
+    "successMessage": "Código enviado com sucesso. Redirecionando..."
+  },
+  "passwordUpdate": {
+    "title": "Nova senha",
+    "description": "Crie uma senha segura para sua conta.",
+    "newPassword": "Nova senha",
+    "confirmPassword": "Confirmar senha",
+    "reqLength": "Pelo menos 8 caracteres",
+    "reqUppercase": "Pelo menos uma letra maiúscula",
+    "reqLowercase": "Pelo menos uma letra minúscula",
+    "reqNumber": "Pelo menos um número",
+    "reqSpecial": "Pelo menos um caractere especial (!@#$...)",
+    "reqNotCommon": "Não é uma senha comum",
+    "reqNoSequential": "Sem padrões sequenciais (123, abc)",
+    "reqNoRepeated": "Sem caracteres repetidos (aaa, 111)",
+    "passwordsMatch": "☏ As senhas coincidem",
+    "passwordsNoMatch": "☓ As senhas não coincidem",
+    "saving": "Salvando...",
+    "saveButton": "Salvar senha",
+    "successTitle": "Senha atualizada!",
+    "successMessage": "Sua senha foi redefinida com sucesso. Agora você pode entrar.",
+    "goToLogin": "Ir para o login",
+    "discardMessage": "Se sair, você perderá a senha digitada."
+  },
+  "verifyCode": {
+    "title": "Verifique seu e-mail",
+    "description": "Enviamos um código de 6 caracteres para",
+    "descriptionSub": "Digite-o abaixo.",
+    "codeLabel": "Código de verificação",
+    "verifyButton": "Verificar código",
+    "resendButton": "Reenviar código",
+    "errorInvalid": "Código incorreto. Tentativas restantes: {{attempts}}",
+    "errorExpired": "O código expirou. Solicite um novo.",
+    "errorNoCode": "Não há código ativo. Volte e solicite um novo."
+  },
+  "manageAmbientes": {
+    "title": "Gestão de ambientes",
+    "addAmbiente": "Adicionar ambiente",
+    "newAmbiente": "Novo ambiente",
+    "editAmbiente": "Editar ambiente",
+    "name": "Nome",
+    "namePlaceholder": "Ex.: Sala 101",
+    "location": "Localização",
+    "locationPlaceholder": "Ex.: Edifício A, 2.º andar",
+    "capacity": "Capacidade",
+    "capacityPlaceholder": "Ex.: 30",
+    "type": "Tipo",
+    "typePlaceholder": "Ex.: Sala de aula, laboratório…",
+    "searchPlaceholder": "Pesquisar ambientes…",
+    "noRecords": "Nenhum ambiente registrado",
+    "validation": "Validação",
+    "nameRequired": "O nome é obrigatório.",
+    "locationRequired": "A localização é obrigatória.",
+    "confirm": "Confirmar",
+    "deleteQuestion": "Tem certeza de que deseja excluir este ambiente?"
   }
 }

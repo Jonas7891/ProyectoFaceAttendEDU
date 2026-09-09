@@ -108,7 +108,7 @@ export default function MenuJustifyScreen() {
 
           <View style={fixedButtonStyles.buttonContainerFixed}>
             <PrimaryButton
-                title={t('consultJustify.back')}
+                title={t('common.back')}
                 onPress={handleBack}
             />
           </View>

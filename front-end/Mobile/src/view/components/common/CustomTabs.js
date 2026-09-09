@@ -151,9 +151,9 @@ export default function CustomTabs({ onChange, userRole, onLogout }) {
           ]}
       >
         {[
-          t('tabs.home', { defaultValue: 'Inicio' }),
-          t('tabs.news', { defaultValue: 'Novedades' }),
-          t('tabs.DisplayingAttendance', { defaultValue: 'Asistencias' }),
+          t('tabs.home'),
+          t('tabs.news'),
+          t('tabs.history')
         ].map((label, index) => (
             <TouchableOpacity
                 key={index}

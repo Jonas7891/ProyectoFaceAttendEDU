@@ -86,12 +86,10 @@ export function PasswordModal({
                                 ]}>
                                     {/* Encabezado */}
                                     <Text style={[styleAuth.passwordModalTitle, { color: colors.text }]}>
-                                        {t('passwordUpdate.title', { defaultValue: 'Nueva contraseña' })}
+                                        {t('passwordUpdate.title')}
                                     </Text>
                                     <Text style={[styleAuth.passwordModalDescription, { color: colors.textSecondary }]}>
-                                        {t('passwordUpdate.description', {
-                                            defaultValue: 'Crea una contraseña segura para tu cuenta.'
-                                        })}
+                                        {t('passwordUpdate.description')}
                                     </Text>
 
                                     <View style={[
@@ -109,9 +107,7 @@ export function PasswordModal({
                                                 backgroundColor: colors.background,
                                                 paddingRight: 48,
                                             }]}
-                                            placeholder={t('passwordUpdate.newPassword', {
-                                                defaultValue: 'Nueva contraseña'
-                                            })}
+                                            placeholder={t('passwordUpdate.newPassword')}
                                             placeholderTextColor={colors.textSecondary}
                                             secureTextEntry={!passwordUpdate.showNewPassword}
                                             value={passwordUpdate.newPassword}
@@ -161,42 +157,42 @@ export function PasswordModal({
                                     <View style={styleAuth.passwordReqContainer}>
                                         <PasswordRequirement
                                             met={passwordUpdate.requirements.length}
-                                            label={t('passwordUpdate.reqLength', { defaultValue: 'Mínimo 8 caracteres' })}
+                                            label={t('passwordUpdate.reqLength')}
                                             colors={colors}
                                         />
                                         <PasswordRequirement
                                             met={passwordUpdate.requirements.uppercase}
-                                            label={t('passwordUpdate.reqUppercase', { defaultValue: 'Al menos una mayúscula' })}
+                                            label={t('passwordUpdate.reqUppercase')}
                                             colors={colors}
                                         />
                                         <PasswordRequirement
                                             met={passwordUpdate.requirements.lowercase}
-                                            label={t('passwordUpdate.reqLowercase', { defaultValue: 'Al menos una minúscula' })}
+                                            label={t('passwordUpdate.reqLowercase')}
                                             colors={colors}
                                         />
                                         <PasswordRequirement
                                             met={passwordUpdate.requirements.number}
-                                            label={t('passwordUpdate.reqNumber', { defaultValue: 'Al menos un número' })}
+                                            label={t('passwordUpdate.reqNumber')}
                                             colors={colors}
                                         />
                                         <PasswordRequirement
                                             met={passwordUpdate.requirements.special}
-                                            label={t('passwordUpdate.reqSpecial', { defaultValue: 'Al menos un carácter especial (!@#$...)' })}
+                                            label={t('passwordUpdate.reqSpecial')}
                                             colors={colors}
                                         />
                                         <PasswordRequirement
                                             met={passwordUpdate.requirements.notCommon}
-                                            label={t('passwordUpdate.reqNotCommon', { defaultValue: 'No es una contraseña común' })}
+                                            label={t('passwordUpdate.reqNotCommon')}
                                             colors={colors}
                                         />
                                         <PasswordRequirement
                                             met={passwordUpdate.requirements.noSequential}
-                                            label={t('passwordUpdate.reqNoSequential', { defaultValue: 'Sin patrones secuenciales (123, abc)' })}
+                                            label={t('passwordUpdate.reqNoSequential')}
                                             colors={colors}
                                         />
                                         <PasswordRequirement
                                             met={passwordUpdate.requirements.noRepeated}
-                                            label={t('passwordUpdate.reqNoRepeated', { defaultValue: 'Sin caracteres repetidos (aaa, 111)' })}
+                                            label={t('passwordUpdate.reqNoRepeated')}
                                             colors={colors}
                                         />
                                     </View>
@@ -213,9 +209,7 @@ export function PasswordModal({
                                                 backgroundColor: colors.background,
                                                 paddingRight: 48,
                                             }]}
-                                            placeholder={t('passwordUpdate.confirmPassword', {
-                                                defaultValue: 'Confirmar contraseña'
-                                            })}
+                                            placeholder={t('passwordUpdate.confirmPassword')}
                                             placeholderTextColor={colors.textSecondary}
                                             secureTextEntry={!passwordUpdate.showConfirmPassword}
                                             value={passwordUpdate.confirmPassword}
@@ -253,8 +247,8 @@ export function PasswordModal({
                                                 : (colors.error ?? '#E53E3E'),
                                         }]} accessibilityLiveRegion="polite">
                                             {passwordUpdate.passwordsMatch
-                                                ? t('passwordUpdate.passwordsMatch', { defaultValue: '✓ Las contraseñas coinciden' })
-                                                : t('passwordUpdate.passwordsNoMatch', { defaultValue: '✗ Las contraseñas no coinciden' })}
+                                                ? t('passwordUpdate.passwordsMatch')
+                                                : t('passwordUpdate.passwordsNoMatch')}
                                         </Text>
                                     )}
 
@@ -276,8 +270,8 @@ export function PasswordModal({
                                             <PrimaryButton
                                                 title={
                                                     passwordUpdate.isLoading
-                                                        ? t('passwordUpdate.saving', { defaultValue: 'Guardando...' })
-                                                        : t('passwordUpdate.saveButton', { defaultValue: 'Guardar contraseña' })
+                                                        ? t('passwordUpdate.saving')
+                                                        : t('passwordUpdate.saveButton')
                                                 }
                                                 onPress={passwordUpdate.updatePassword}
                                                 disabled={!passwordUpdate.canSubmit}
@@ -290,7 +284,7 @@ export function PasswordModal({
                                             accessibilityRole="button"
                                         >
                                             <Text style={[styleAuth.passwordModalCancelText, { color: colors.primary }]}>
-                                                {t('common.cancel', { defaultValue: 'Cancelar' })}
+                                                {t('common.cancel')}
                                             </Text>
                                         </TouchableOpacity>
                                     </View>

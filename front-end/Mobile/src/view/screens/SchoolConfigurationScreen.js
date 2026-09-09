@@ -36,9 +36,11 @@ const FormField = ({
                        required = false,
                        editable = true,
                        validationErrors = {},
+                       validationKey,
                    }) => {
     const { colors } = useTheme();
-    const fieldKey = label.toLowerCase().replace(/\s+/g, '_');
+    const {t} = useTranslation();
+    const fieldKey = validationKey || label.toLowerCase().replace(/\s+/g, '_');
     const hasError = validationErrors[fieldKey];
 
     return (
@@ -172,7 +174,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
         setCountryModalVisible,
         setCityModalVisible,
         setShowConfirmModal
-    } = useSchoolConfigurationViewModel({ isAdminUser });
+    } = useSchoolConfigurationViewModel({isAdminUser, t});
 
     // ─────────────────────────────────────────────
     // Render
@@ -288,33 +290,36 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                         {activeTab === 'general' && (
                             <View style={[styles.formSectionSchoolConfig, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
                                 <Text style={[styles.formSectionTitleSchoolConfig, { color: colors.text }]}>
-                                    Información General
+                                    {t('schoolConfig.sections.generalInfo')}
                                 </Text>
 
                                 <FormField
-                                    label="Nombre del Colegio"
+                                    label={t('schoolConfig.fields.schoolName')}
                                     value={generalInfo?.name}
                                     onChangeText={(value) => handleGeneralInfoChange('schoolName', value)}
-                                    placeholder="Nombre del colegio"
+                                    placeholder={t('schoolConfig.fields.schoolNamePlaceholder')}
+                                    validationKey="schoolName"
                                     required
                                     validationErrors={validationErrors}
                                     editable={isAdminUser}
                                 />
 
                                 <FormField
-                                    label="NIT del Colegio"
+                                    label={t('schoolConfig.fields.schoolCode')}
                                     value={generalInfo?.code}
                                     onChangeText={(value) => handleGeneralInfoChange('schoolCode', value)}
-                                    placeholder="COL-XXXX-XXX"
+                                    placeholder={t('schoolConfig.fields.schoolCodePlaceholder')}
+                                    validationKey="schoolCode"
                                     editable={false}
                                     validationErrors={validationErrors}
                                 />
 
                                 <FormField
-                                    label="Distrito Educativo"
+                                    label={t('schoolConfig.fields.district')}
                                     value={generalInfo?.district}
                                     onChangeText={(value) => handleGeneralInfoChange('district', value)}
-                                    placeholder="Nombre del distrito"
+                                    placeholder={t('schoolConfig.fields.districtPlaceholder')}
+                                    validationKey="district"
                                     required
                                     validationErrors={validationErrors}
                                     editable={isAdminUser}
@@ -328,13 +333,13 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                         {activeTab === 'contacto' && (
                             <View style={[styles.formSectionSchoolConfig, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
                                 <Text style={[styles.formSectionTitleSchoolConfig, { color: colors.text }]}>
-                                    Información de Contacto
+                                    {t('schoolConfig.sections.contactInfo')}
                                 </Text>
 
                                 {/* Teléfono con prefijo estático */}
                                 <View style={styles.formGroupSchoolConfig}>
                                     <Text style={[styles.inputLabelSchoolConfig, { color: colors.text }]}>
-                                        Teléfono
+                                        {t('schoolConfig.fields.phone')}
                                         <Text style={{ color: colors.danger }}>*</Text>
                                     </Text>
                                     <View
@@ -377,7 +382,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                             onChangeText={(value) =>
                                                 handleContactInfoChange('phone', value)
                                             }
-                                            placeholder="300 123 4567"
+                                            placeholder={t('schoolConfig.fields.phonePlaceholder')}
                                             placeholderTextColor={colors.textMuted}
                                             keyboardType="phone-pad"
                                             editable={isAdminUser}
@@ -392,10 +397,11 @@ const SchoolConfigurationScreen = ({ navigation }) => {
 
                                 {/* Dirección */}
                                 <FormField
-                                    label="Dirección"
+                                    label={t('schoolConfig.fields.address')}
                                     value={contactInfo.address}
                                     onChangeText={(value) => handleContactInfoChange('address', value)}
-                                    placeholder="Calle y número"
+                                    placeholder={t('schoolConfig.fields.addressPlaceholder')}
+                                    validationKey="address"
                                     required
                                     validationErrors={validationErrors}
                                     editable={isAdminUser}
@@ -404,7 +410,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                 {/* Ciudad — selector desplegable */}
                                 <View style={styles.formGroupSchoolConfig}>
                                     <Text style={[styles.inputLabelSchoolConfig, { color: colors.text }]}>
-                                        Ciudad
+                                        {t('schoolConfig.fields.city')}
                                         <Text style={{ color: colors.danger }}>*</Text>
                                     </Text>
                                     <TouchableOpacity
@@ -424,7 +430,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                         onPress={() => {
                                             if (!isAdminUser) return;
                                             if (!contactInfo.country) {
-                                                Alert.alert('Selecciona un país primero');
+                                                Alert.alert(t('schoolConfig.modals.selectCountryFirst'));
                                                 return;
                                             }
                                             setCitySearch('');
@@ -436,7 +442,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                             <ActivityIndicator size="small" color={colors.primary} />
                                         ) : (
                                             <Text style={[styles.countryPickerTextSchoolConfig, { color: colors.text }]}>
-                                                {contactInfo.city || 'Selecciona una ciudad'}
+                                                {contactInfo.city || t('schoolConfig.fields.selectCity')}
                                             </Text>
                                         )}
                                         <Image
@@ -459,29 +465,32 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                         {activeTab === 'academica' && (
                             <View style={[styles.formSectionSchoolConfig, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
                                 <Text style={[styles.formSectionTitleSchoolConfig, { color: colors.text }]}>
-                                    Configuración Académica
+                                    {t('schoolConfig.sections.academicConfig')}
                                 </Text>
                                 <FormField
-                                    label="Año Académico"
+                                    label={t('schoolConfig.fields.academicYear')}
                                     value={academicConfig.academicYear}
                                     onChangeText={(value) => handleAcademicConfigChange('academicYear', value)}
-                                    placeholder="YYYY-YYYY"
+                                    placeholder={t('schoolConfig.fields.academicYearPlaceholder')}
+                                    validationKey="academicYear"
                                     editable={false}
                                     validationErrors={validationErrors}
                                 />
                                 <FormField
-                                    label="Fecha de Inicio"
+                                    label={t('schoolConfig.fields.startDate')}
                                     value={academicConfig.startDate}
                                     onChangeText={(value) => handleAcademicConfigChange('startDate', value)}
-                                    placeholder="DD/MM/YYYY"
+                                    placeholder={t('schoolConfig.fields.startDatePlaceholder')}
+                                    validationKey="startDate"
                                     validationErrors={validationErrors}
                                     editable={isAdminUser}
                                 />
                                 <FormField
-                                    label="Fecha de Fin"
+                                    label={t('schoolConfig.fields.endDate')}
                                     value={academicConfig.endDate}
                                     onChangeText={(value) => handleAcademicConfigChange('endDate', value)}
-                                    placeholder="DD/MM/YYYY"
+                                    placeholder={t('schoolConfig.fields.endDatePlaceholder')}
+                                    validationKey="endDate"
                                     validationErrors={validationErrors}
                                     editable={isAdminUser}
                                 />
@@ -494,29 +503,32 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                         {activeTab === 'asistencia' && (
                             <View style={[styles.formSectionSchoolConfig, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
                                 <Text style={[styles.formSectionTitleSchoolConfig, { color: colors.text }]}>
-                                    Configuración de Asistencia
+                                    {t('schoolConfig.sections.attendanceConfig')}
                                 </Text>
                                 <FormField
-                                    label="Tolerancia (minutos)"
+                                    label={t('schoolConfig.fields.tolerance')}
                                     value={attendanceConfig.toleranceMinutes}
                                     onChangeText={(value) => handleAttendanceConfigChange('toleranceMinutes', value)}
-                                    placeholder="5"
+                                    placeholder={t('schoolConfig.fields.tolerancePlaceholder')}
+                                    validationKey="toleranceMinutes"
                                     validationErrors={validationErrors}
                                     editable={isAdminUser}
                                 />
                                 <FormField
-                                    label="Máx. Inasistencias"
+                                    label={t('schoolConfig.fields.maxAbsences')}
                                     value={attendanceConfig.maxAbsences}
                                     onChangeText={(value) => handleAttendanceConfigChange('maxAbsences', value)}
-                                    placeholder="15"
+                                    placeholder={t('schoolConfig.fields.maxAbsencesPlaceholder')}
+                                    validationKey="maxAbsences"
                                     validationErrors={validationErrors}
                                     editable={isAdminUser}
                                 />
                                 <FormField
-                                    label="Máx. Retardos"
+                                    label={t('schoolConfig.fields.maxLateness')}
                                     value={attendanceConfig.maxLatenesses}
                                     onChangeText={(value) => handleAttendanceConfigChange('maxLatenesses', value)}
-                                    placeholder="10"
+                                    placeholder={t('schoolConfig.fields.maxLatenessPlaceholder')}
+                                    validationKey="maxLatenesses"
                                     validationErrors={validationErrors}
                                     editable={isAdminUser}
                                 />
@@ -533,7 +545,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                             onPress={() => setShowConfirmModal(true)}
                         >
                             <Text style={[styles.saveButtonTextSchoolConfig, { color: colors.modalButtonText }]}>
-                                Guardar Cambios
+                                {t('schoolConfig.modals.saveChanges')}
                             </Text>
                         </TouchableOpacity>
                         <TouchableOpacity
@@ -541,7 +553,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                             onPress={handleDiscardChanges}
                         >
                             <Text style={[styles.cancelButtonTextSchoolConfig, { color: colors.modalButtonSecondaryText }]}>
-                                Descartar
+                                {t('common.discard')}
                             </Text>
                         </TouchableOpacity>
                     </View>
@@ -560,7 +572,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                 <View style={[styles.modalOverlaySchoolConfig, { backgroundColor: colors.modalOverlay }]}>
                     <View style={[styles.modalSheetSchoolConfig, { width: '90%', maxHeight: '80%', backgroundColor: colors.modalBackground }]}>
                         <Text style={[styles.modalTitleSchoolConfig, { color: colors.modalText }]}>
-                            Seleccionar País
+                            {t('schoolConfig.modals.selectCountry')}
                         </Text>
 
                         {/* Buscador */}
@@ -582,7 +594,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                     fontSize:          14,
                                     color:             colors.modalInputText,
                                 }}
-                                placeholder="Buscar país o código (+57)..."
+                                placeholder={t('schoolConfig.modals.searchCountry')}
                                 placeholderTextColor={colors.modalInputPlaceholder}
                                 value={countrySearch}
                                 onChangeText={setCountrySearch}
@@ -609,7 +621,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                             <View style={{ paddingVertical: 30, alignItems: 'center' }}>
                                 <ActivityIndicator size="large" color={colors.primary} />
                                 <Text style={{ marginTop: 10, color: colors.modalTextSecondary, fontSize: 13 }}>
-                                    Cargando países...
+                                    {t('schoolConfig.modals.loadingCountries')}
                                 </Text>
                             </View>
                         ) : (
@@ -619,7 +631,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                             >
                                 {filteredCountries.length === 0 ? (
                                     <Text style={{ textAlign: 'center', color: colors.textMuted, padding: 20 }}>
-                                        No se encontraron países
+                                        {t('schoolConfig.modals.noCountries')}
                                     </Text>
                                 ) : (
                                     filteredCountries.map((option, index) => (
@@ -645,7 +657,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                             onPress={() => setCountryModalVisible(false)}
                         >
                             <Text style={[styles.modalCancelButtonTextSchoolConfig, { color: colors.modalButtonSecondaryText }]}>
-                                Cancelar
+                                {t('common.cancel')}
                             </Text>
                         </TouchableOpacity>
                     </View>
@@ -664,10 +676,10 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                 <View style={[styles.modalOverlaySchoolConfig, { backgroundColor: colors.modalOverlay }]}>
                     <View style={[styles.modalSheetSchoolConfig, { width: '90%', maxHeight: '80%', backgroundColor: colors.modalBackground }]}>
                         <Text style={[styles.modalTitleSchoolConfig, { color: colors.modalText }]}>
-                            Seleccionar Ciudad
+                            {t('schoolConfig.modals.selectCity')}
                         </Text>
                         <Text style={[styles.modalSubtitleSchoolConfig, { color: colors.modalTextSecondary }]}>
-                            Ciudades disponibles para {contactInfo?.country}
+                            {t('schoolConfig.modals.cityAvailableFor', {country: contactInfo?.country})}
                         </Text>
 
                         {/* Buscador */}
@@ -689,7 +701,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                     fontSize:          14,
                                     color:             colors.modalInputText,
                                 }}
-                                placeholder="Buscar ciudad..."
+                                placeholder={t('schoolConfig.modals.searchCity')}
                                 placeholderTextColor={colors.modalInputPlaceholder}
                                 value={citySearch}
                                 onChangeText={setCitySearch}
@@ -716,7 +728,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                             <View style={{ paddingVertical: 30, alignItems: 'center' }}>
                                 <ActivityIndicator size="large" color={colors.primary} />
                                 <Text style={{ marginTop: 10, color: colors.modalTextSecondary, fontSize: 13 }}>
-                                    Cargando ciudades...
+                                    {t('schoolConfig.modals.loadingCities')}
                                 </Text>
                             </View>
                         ) : (
@@ -728,7 +740,10 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                         paddingVertical: 10,
                                         fontSize: 13,
                                     }}>
-                                        Mostrando {CITY_LIMIT} de {citiesOptions.length} ciudades. Busca para ver más.
+                                        {t('schoolConfig.modals.showingCities', {
+                                            shown: CITY_LIMIT,
+                                            total: citiesOptions.length
+                                        })}
                                     </Text>
                                 )}
                                 <ScrollView
@@ -737,7 +752,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                 >
                                     {displayedCities.length === 0 ? (
                                         <Text style={{ textAlign: 'center', color: colors.textMuted, padding: 20 }}>
-                                            No se encontraron ciudades
+                                            {t('schoolConfig.modals.noCities')}
                                         </Text>
                                     ) : (
                                         displayedCities.map((city, index) => (
@@ -761,7 +776,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                             onPress={() => setCityModalVisible(false)}
                         >
                             <Text style={[styles.modalCancelButtonTextSchoolConfig, { color: colors.modalButtonSecondaryText }]}>
-                                Cancelar
+                                {t('common.cancel')}
                             </Text>
                         </TouchableOpacity>
                     </View>
@@ -782,21 +797,21 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                         <TouchableWithoutFeedback>
                             <View style={[styles.modalSheetSchoolConfig, { backgroundColor: colors.modalBackground }]}>
                                 <Text style={[styles.modalTitleSchoolConfig, { color: colors.modalText }]}>
-                                    Confirmar Cambios
+                                    {t('schoolConfig.modals.confirmSave')}
                                 </Text>
                                 <Text style={[styles.modalSubtitleSchoolConfig, { color: colors.modalTextSecondary }]}>
-                                    ¿Estás seguro de que deseas guardar todos los cambios?
+                                    {t('schoolConfig.modals.confirmSaveMessage')}
                                 </Text>
                                 <View style={styles.modalMessageSchoolConfig}>
                                     <Text style={{ fontSize: 13, color: colors.modalTextSecondary }}>
-                                        Los cambios se aplicarán a toda la institución y podrían afectar el funcionamiento del sistema.
+                                        {t('schoolConfig.modals.changesImpact')}
                                     </Text>
                                 </View>
                                 {isLoading ? (
                                     <View style={styles.loadingOverlaySchoolConfig}>
                                         <ActivityIndicator size="large" color={colors.modalButtonText} />
                                         <Text style={[styles.loadingTextSchoolConfig, { color: colors.modalButtonText }]}>
-                                            Guardando cambios...
+                                            {t('schoolConfig.modals.savingChanges')}
                                         </Text>
                                     </View>
                                 ) : (
@@ -807,7 +822,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                             disabled={isLoading}
                                         >
                                             <Text style={[styles.modalConfirmButtonTextSchoolConfig, { color: colors.modalButtonText }]}>
-                                                Confirmar y Guardar
+                                                {t('schoolConfig.modals.confirmAndSave')}
                                             </Text>
                                         </TouchableOpacity>
                                         <TouchableOpacity
@@ -816,7 +831,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                             disabled={isLoading}
                                         >
                                             <Text style={[styles.modalCancelButtonTextSchoolConfig, { color: colors.modalButtonSecondaryText }]}>
-                                                Cancelar
+                                                {t('common.cancel')}
                                             </Text>
                                         </TouchableOpacity>
                                     </View>

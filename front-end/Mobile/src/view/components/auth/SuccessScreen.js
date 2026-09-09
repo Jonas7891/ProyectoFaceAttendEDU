@@ -7,12 +7,10 @@ export function SuccessScreen({ colors, t, onNavigateToLogin }) {
         <SafeAreaView style={[styleAuth.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}>
             <View style={styleAuth.successContainer}>
                 <Text style={[styleAuth.successTitle, { color: colors.text }]}>
-                    {t('passwordUpdate.successTitle', { defaultValue: '¡Contraseña actualizada!' })}
+                    {t('passwordUpdate.successTitle')}
                 </Text>
                 <Text style={[styleAuth.successMessage, { color: colors.textSecondary ?? '#666' }]}>
-                    {t('passwordUpdate.successMessage', {
-                        defaultValue: 'Tu contraseña ha sido restablecida correctamente. Ya puedes iniciar sesión.',
-                    })}
+                    {t('passwordUpdate.successMessage')}
                 </Text>
                 <TouchableOpacity
                     style={[styleAuth.recoveryPrimaryButton, {
@@ -26,7 +24,7 @@ export function SuccessScreen({ colors, t, onNavigateToLogin }) {
                     accessibilityRole="button"
                 >
                     <Text style={styleAuth.recoveryPrimaryButtonText}>
-                        {t('passwordUpdate.goToLogin', { defaultValue: 'Ir al inicio de sesión' })}
+                        {t('passwordUpdate.goToLogin')}
                     </Text>
                 </TouchableOpacity>
             </View>

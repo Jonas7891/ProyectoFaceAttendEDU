@@ -62,7 +62,7 @@ export default function Dashboard({ onLogout, userRole: propUserRole }) {
 
                                 <Text style={[styles.adminName, { color: colors.text }]}>
                                     {isAdmin
-                                        ? t('dashboard.admin')
+                                        ? t('userRole.administrator')
                                         : isTeacher
                                             ? (currentUser?.name || currentUser?.firstName || t('teacher.teacherName'))
                                             : (currentUser?.name || currentUser?.firstName || t('student.studentName'))
@@ -144,7 +144,7 @@ export default function Dashboard({ onLogout, userRole: propUserRole }) {
                             </Text>
                             <TouchableOpacity onPress={() => navigation.navigate('DisplayingAttendance')}>
                                 <Text style={[styles.seeAllText, { color: colors.primary }]}>
-                                    {(isAdmin || isTeacher) ? 'Ver todos' : t('student.seeAll')}
+                                    {t('common.seeAll')}
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -177,8 +177,8 @@ export default function Dashboard({ onLogout, userRole: propUserRole }) {
                                         ]}
                                     >
                                         {item.estado === 'presente'
-                                            ? (isAdmin || isTeacher) ? 'Presente' : t('student.present')
-                                            : (isAdmin || isTeacher) ? 'Tarde' : t('student.late')}
+                                            ? t('common.present')
+                                            : t('common.late')}
                                     </Text>
                                 </View>
                             </View>

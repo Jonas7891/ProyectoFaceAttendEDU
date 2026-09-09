@@ -43,16 +43,16 @@ export default function MenuScreen({ onLogout }) {
 
     const handleLogout = () => {
         showConfirm(
-            t('menu.logoutConfirmTitle', { defaultValue: 'Cerrar Sesión' }),
-            t('menu.logoutConfirmMessage', { defaultValue: '¿Estás seguro de que deseas cerrar sesión?' }),
+            t('menu.logoutConfirmTitle'),
+            t('menu.logoutConfirmMessage'),
             async () => {
                 try {
                     await originalHandleLogout();
                 } catch (error) {
                     console.error('Error en logout:', error);
                     showError(
-                        t('common.error', { defaultValue: 'Error' }),
-                        t('menu.logoutError', { defaultValue: 'No se pudo cerrar sesión. Intenta de nuevo.' })
+                        t('common.error'),
+                        t('menu.logoutError')
                     );
                 }
             },
@@ -87,7 +87,7 @@ export default function MenuScreen({ onLogout }) {
     );
 
     // 🔄 ACTUALIZADO: Lógica para obtener el nombre a mostrar de forma dinámica y segura
-    const displayName = currentUser?.name || (isAdmin ? t('menu.adminName', { defaultValue: 'Administrador' }) : isTeacher ? t('menu.teacherName', { defaultValue: 'Docente' }) : t('menu.studentName', { defaultValue: 'Estudiante' }));
+    const displayName = currentUser?.name || (isAdmin ? t('userRole.administrator') : isTeacher ? t('userRole.teacher') : t('userRole.student'));
 
     return (
         <>
@@ -142,8 +142,8 @@ export default function MenuScreen({ onLogout }) {
                                         isAdmin
                                             ? t('menu.justificationConfig')
                                             : isTeacher
-                                                ? t('menu.teacherJustificationInfo', { defaultValue: 'Justificaciones de Estudiantes' })
-                                                : t('menu.studentJustificationInfo', { defaultValue: 'Información de mis Justificaciones' })
+                                                ? t('menu.teacherJustificationInfo')
+                                                : t('menu.studentJustificationInfo')
                                     }
                                     onPress={handleMenuJustify}
                                 />
@@ -158,7 +158,7 @@ export default function MenuScreen({ onLogout }) {
                                 )}
 
                                 <MenuItem
-                                    label={t('menu.schoolConfiguration', { defaultValue: 'Configuración de Colegio' })}
+                                    label={t('menu.schoolConfiguration')}
                                     onPress={handleSchool}
                                 />
 

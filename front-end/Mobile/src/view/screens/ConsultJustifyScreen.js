@@ -224,7 +224,7 @@ export default function ValidJustificationsScreen() {
                         )}
 
                         <View style={styles.buttonContainer}>
-                            <PrimaryButton title={t('consultJustify.back')} onPress={handleBack} />
+                            <PrimaryButton title={t('common.back')} onPress={handleBack}/>
                         </View>
                     </View>
                 </ScrollView>

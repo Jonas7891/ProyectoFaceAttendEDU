@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
     ActivityIndicator,
     Keyboard,
@@ -14,9 +14,9 @@ import {
     UIManager,
     View,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from '../../components/common/ThemeContext';
-import { VerificationService } from '../../../services/verificationService';
+import {useTranslation} from 'react-i18next';
+import {useTheme} from '../../components/common/ThemeContext';
+import {VerificationService} from '../../../services/verificationService';
 import styles from './style/Style';
 
 const COOLDOWN_MS = 60000;
@@ -421,19 +421,17 @@ export default function ForgotPasswordScreen({ navigation }) {
     }, [navigation, recovery.isLoading]);
 
     const labels = useMemo(() => ({
-        title: t('forgotPassword.title', { defaultValue: 'Recuperar contraseña' }),
-        description: t('forgotPassword.description', {
-            defaultValue: 'Ingresa tu correo y te enviaremos un código para restablecer tu contraseña.',
-        }),
-        emailLabel: t('forgotPassword.emailLabel', { defaultValue: 'Correo electrónico' }),
-        emailPlaceholder: t('forgotPassword.emailPlaceholder', { defaultValue: 'tucorreo@ejemplo.com' }),
-        sendButton: t('forgotPassword.sendButton', { defaultValue: 'Enviar código' }),
-        errorRequired: t('forgotPassword.errorRequired', { defaultValue: 'Ingresa tu correo electrónico.' }),
-        errorInvalidEmail: t('forgotPassword.errorInvalidEmail', { defaultValue: 'El formato del correo no es válido.' }),
-        errorNotFound: t('forgotPassword.errorNotFound', { defaultValue: 'No encontramos una cuenta con ese correo.' }),
-        errorTimeout: t('forgotPassword.errorTimeout', { defaultValue: 'La petición tardó demasiado. Verifica tu conexión e intenta nuevamente.' }),
-        errorGeneric: t('forgotPassword.errorGeneric', { defaultValue: 'Ocurrió un error. Intenta de nuevo.' }),
-        successMessage: t('forgotPassword.successMessage', { defaultValue: 'Código enviado correctamente. Redirigiendo...' }),
+        title: t('forgotPassword.title'),
+        description: t('forgotPassword.description'),
+        emailLabel: t('forgotPassword.emailLabel'),
+        emailPlaceholder: t('forgotPassword.emailPlaceholder'),
+        sendButton: t('forgotPassword.sendButton'),
+        errorRequired: t('forgotPassword.errorRequired'),
+        errorInvalidEmail: t('forgotPassword.errorInvalidEmail'),
+        errorNotFound: t('forgotPassword.errorNotFound'),
+        errorTimeout: t('forgotPassword.errorTimeout'),
+        errorGeneric: t('forgotPassword.errorGeneric'),
+        successMessage: t('forgotPassword.successMessage'),
         colors,
     }), [t, colors]);
 
@@ -476,7 +474,7 @@ export default function ForgotPasswordScreen({ navigation }) {
                                 accessibilityRole="button"
                             >
                                 <Text style={[styles.backButtonText, { color: colors.primary }]}>
-                                    ‹ {t('common.back', { defaultValue: 'Volver' })}
+                                    ‹ {t('common.back')}
                                 </Text>
                             </TouchableOpacity>
 

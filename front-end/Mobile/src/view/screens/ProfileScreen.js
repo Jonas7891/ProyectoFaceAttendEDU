@@ -490,7 +490,7 @@ export default function ProfileScreen() {
                     {/* ══ BOTÓN VOLVER ══ */}
                     <View style={{ marginTop: Platform.OS === 'ios' ? 5 : 0 }}>
                         <View style={styles.buttonContainer}>
-                            <PrimaryButton title={t('consultJustify.back', 'Volver')} onPress={handleBack} />
+                            <PrimaryButton title={t('common.back')} onPress={handleBack}/>
                         </View>
                     </View>
 

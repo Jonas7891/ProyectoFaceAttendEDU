@@ -19,6 +19,7 @@ import CustomTabs from "../components/common/CustomTabs";
 import {
     APPROVAL_CONFIG,
     formatDateDisplay,
+    getSubjectLabel,
     STATUS_CONFIG,
     useAttendanceViewModel
 } from "../../viewmodels/useDisplayingAttendanceViewModel";
@@ -109,40 +110,40 @@ function TeacherDetailModal({item, visible, onClose, colors, t, isDark}) {
                                 {item.nombre}
                             </Text>
                             <Text style={{fontSize: 13, color: colors.textSecondary, marginTop: 2}}>
-                                {item.materia} · {item.codigo_curso}
+                                {getSubjectLabel(item.materia, t)} · {item.codigo_curso}
                             </Text>
                         </View>
                     </View>
 
                     {/* Asistencia */}
-                    <SectionLabel text={t("attendance.sectionAttendance", {defaultValue: "Registro de asistencia"})}
+                    <SectionLabel text={t("attendance.sectionAttendance")}
                                   colors={colors}/>
-                    <DetailRow label={t("attendance.date", {defaultValue: "Fecha"})} value={item.fecha}
+                    <DetailRow label={t("attendance.date")} value={item.fecha}
                                colors={colors}/>
-                    <DetailRow label={t("attendance.time", {defaultValue: "Hora de entrada"})}
+                    <DetailRow label={t("attendance.time")}
                                value={item.hora} colors={colors} valueColor={cfg.color}/>
-                    <DetailRow label={t("attendance.day", {defaultValue: "Día de clase"})} value={item.dia}
+                    <DetailRow label={t("attendance.day")} value={item.dia}
                                colors={colors}/>
-                    <DetailRow label={t("attendance.schedule", {defaultValue: "Horario"})}
+                    <DetailRow label={t("attendance.schedule")}
                                value={`${item.hora_inicio} – ${item.hora_fin}`} colors={colors}/>
 
                     {/* Materia */}
-                    <SectionLabel text={t("attendance.sectionCourse", {defaultValue: "Materia"})} colors={colors}/>
-                    <DetailRow label={t("attendance.subject", {defaultValue: "Materia"})} value={item.materia}
+                    <SectionLabel text={t("attendance.sectionCourse")} colors={colors}/>
+                    <DetailRow label={t("attendance.subject")} value={getSubjectLabel(item.materia, t)}
                                colors={colors}/>
-                    <DetailRow label={t("attendance.courseCode", {defaultValue: "Código de curso"})}
+                    <DetailRow label={t("attendance.courseCode")}
                                value={item.codigo_curso} colors={colors}/>
-                    <DetailRow label={t("attendance.classroom", {defaultValue: "Salón"})} value={item.salon}
+                    <DetailRow label={t("attendance.classroom")} value={item.salon}
                                colors={colors}/>
 
                     {/* Período */}
-                    <SectionLabel text={t("attendance.sectionPeriod", {defaultValue: "Período académico"})}
+                    <SectionLabel text={t("attendance.sectionPeriod")}
                                   colors={colors}/>
-                    <DetailRow label={t("attendance.period", {defaultValue: "Período"})} value={item.periodo}
+                    <DetailRow label={t("attendance.period")} value={item.periodo}
                                colors={colors}/>
-                    <DetailRow label={t("attendance.periodStart", {defaultValue: "Inicio"})}
+                    <DetailRow label={t("attendance.periodStart")}
                                value={item.periodo_inicio} colors={colors}/>
-                    <DetailRow label={t("attendance.periodEnd", {defaultValue: "Fin"})}
+                    <DetailRow label={t("attendance.periodEnd")}
                                value={item.periodo_fin} colors={colors}/>
                 </ScrollView>
 
@@ -156,7 +157,7 @@ function TeacherDetailModal({item, visible, onClose, colors, t, isDark}) {
                     }}
                 >
                     <Text style={{fontSize: 15, fontWeight: "600", color: colors.textSecondary, borderWidth: 0.2,}}>
-                        {t("common.close", {defaultValue: "Cerrar"})}
+                        {t("common.close")}
                     </Text>
                 </TouchableOpacity>
             </View>
@@ -207,7 +208,7 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
                     }}>
                         <View style={{flex: 1}}>
                             <Text style={{fontSize: 17, fontWeight: "700", color: cfg.color}}>
-                                {item.materia}
+                                {getSubjectLabel(item.materia, t)}
                             </Text>
                             <Text style={{fontSize: 12, color: cfg.color + "BB", marginTop: 2}}>
                                 {item.codigo_curso}
@@ -216,39 +217,39 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
                     </View>
 
                     {/* Registro */}
-                    <SectionLabel text={t("attendance.sectionAttendance", {defaultValue: "Registro de asistencia"})}
+                    <SectionLabel text={t("attendance.sectionAttendance")}
                                   colors={colors}/>
-                    <DetailRow label={t("attendance.date", {defaultValue: "Fecha"})} value={item.fecha}
+                    <DetailRow label={t("attendance.date")} value={item.fecha}
                                colors={colors}/>
-                    <DetailRow label={t("attendance.time", {defaultValue: "Hora registrada"})}
+                    <DetailRow label={t("attendance.time")}
                                value={item.hora} colors={colors} valueColor={cfg.color}/>
 
                     {/* Clase */}
-                    <SectionLabel text={t("attendance.sectionClass", {defaultValue: "Información de la clase"})}
+                    <SectionLabel text={t("attendance.sectionClass")}
                                   colors={colors}/>
-                    <DetailRow label={t("attendance.teacher", {defaultValue: "Docente"})}
+                    <DetailRow label={t("attendance.teacher")}
                                value={item.docente} colors={colors}/>
-                    <DetailRow label={t("attendance.classroom", {defaultValue: "Salón"})} value={item.salon}
+                    <DetailRow label={t("attendance.classroom")} value={item.salon}
                                colors={colors}/>
-                    <DetailRow label={t("attendance.day", {defaultValue: "Día"})} value={item.dia}
+                    <DetailRow label={t("attendance.day")} value={item.dia}
                                colors={colors}/>
-                    <DetailRow label={t("attendance.schedule", {defaultValue: "Horario"})}
+                    <DetailRow label={t("attendance.schedule")}
                                value={`${item.hora_inicio} – ${item.hora_fin}`} colors={colors}/>
 
                     {/* Período */}
-                    <SectionLabel text={t("attendance.sectionPeriod", {defaultValue: "Período académico"})}
+                    <SectionLabel text={t("attendance.sectionPeriod")}
                                   colors={colors}/>
-                    <DetailRow label={t("attendance.period", {defaultValue: "Período"})} value={item.periodo}
+                    <DetailRow label={t("attendance.period")} value={item.periodo}
                                colors={colors}/>
-                    <DetailRow label={t("attendance.periodStart", {defaultValue: "Inicio"})}
+                    <DetailRow label={t("attendance.periodStart")}
                                value={item.periodo_inicio} colors={colors}/>
-                    <DetailRow label={t("attendance.periodEnd", {defaultValue: "Fin"})}
+                    <DetailRow label={t("attendance.periodEnd")}
                                value={item.periodo_fin} colors={colors}/>
 
                     {/* Justificación */}
                     {item.justificacion && (
                         <>
-                            <SectionLabel text={t("attendance.sectionJustification", {defaultValue: "Justificación"})}
+                            <SectionLabel text={t("attendance.sectionJustification")}
                                           colors={colors}/>
 
                             {/* Badge de aprobación */}
@@ -259,7 +260,7 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
                             }}>
                                 <View style={{flex: 1}}>
                                     <Text style={{fontSize: 11, color: colors.textMuted, marginBottom: 6}}>
-                                        {t("attendance.approvalStatus", {defaultValue: "Estado de aprobación"})}
+                                        {t("attendance.approvalStatus")}
                                     </Text>
                                     <View style={{
                                         alignSelf: "flex-start",
@@ -269,17 +270,17 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
                                         borderWidth: 1, borderColor: justCfg.color + "55",
                                     }}>
                                         <Text style={{fontSize: 13, fontWeight: "700", color: justCfg.color}}>
-                                            {t(justCfg.label, {defaultValue: item.justificacion.estado})}
+                                            {t(justCfg.label)}
                                         </Text>
                                     </View>
                                 </View>
                             </View>
 
-                            <DetailRow label={t("attendance.justificationText", {defaultValue: "Descripción"})}
+                            <DetailRow label={t("attendance.justificationText")}
                                        value={item.justificacion.texto} colors={colors}/>
-                            <DetailRow label={t("attendance.reviewedBy", {defaultValue: "Revisado por"})}
+                            <DetailRow label={t("attendance.reviewedBy")}
                                        value={item.justificacion.revisado_por} colors={colors}/>
-                            <DetailRow label={t("attendance.reviewedAt", {defaultValue: "Fecha revisión"})}
+                            <DetailRow label={t("attendance.reviewedAt")}
                                        value={item.justificacion.revisado_en} colors={colors}/>
                         </>
                     )}
@@ -293,10 +294,10 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
                             borderWidth: 1, borderColor: "#F59E0B55",
                         }}>
                             <Text style={{fontSize: 13, fontWeight: "600", color: "#F59E0B", marginBottom: 4}}>
-                                {t("attendance.noJustification", {defaultValue: "Sin justificación registrada"})}
+                                {t("attendance.noJustification")}
                             </Text>
                             <Text style={{fontSize: 12, color: isDark ? "#FDE68A" : "#92400E"}}>
-                                {t("attendance.noJustificationHint", {defaultValue: "Puedes agregar una desde el menú de justificaciones."})}
+                                {t("attendance.noJustificationHint")}
                             </Text>
                         </View>
                     )}
@@ -312,7 +313,7 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
                     }}
                 >
                     <Text style={{fontSize: 15, fontWeight: "600", color: colors.textSecondary}}>
-                        {t("common.close", {defaultValue: "Cerrar"})}
+                        {t("common.close")}
                     </Text>
                 </TouchableOpacity>
             </View>
@@ -349,7 +350,8 @@ function TeacherCard({item, colors, t, isDark, onInfo}) {
                     {item.nombre}
                 </Text>
                 <Text style={{fontSize: 12, color: colors.textSecondary}}>
-                    {item.materia} · <Text style={{color: colors.textMuted}}>{item.codigo_curso}</Text>
+                    {getSubjectLabel(item.materia, t)} · <Text
+                    style={{color: colors.textMuted}}>{item.codigo_curso}</Text>
                 </Text>
                 <Text style={{fontSize: 11, color: colors.textMuted, marginTop: 2}}>
                     {item.fecha} · {item.estado !== "ausente" ? item.hora : "—"}
@@ -427,13 +429,17 @@ function MyAttendanceCard({item, colors, t, isDark, onInfo}) {
             }}>
                 <View style={{flex: 1}}>
                     <Text style={{fontSize: 11, color: colors.textMuted, marginBottom: 2}}>
-                        {t("attendance.subject", {defaultValue: "Materia"})}
+                        {t("attendance.subject")}
                     </Text>
-                    <Text style={{fontSize: 14, fontWeight: "600", color: colors.text}}>{item.materia}</Text>
+                    <Text style={{
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: colors.text
+                    }}>{getSubjectLabel(item.materia, t)}</Text>
                 </View>
                 <View style={{flex: 1}}>
                     <Text style={{fontSize: 11, color: colors.textMuted, marginBottom: 2}}>
-                        {t("attendance.teacher", {defaultValue: "Docente"})}
+                        {t("attendance.teacher")}
                     </Text>
                     <Text style={{fontSize: 14, color: colors.text}}>{item.docente}</Text>
                 </View>
@@ -444,7 +450,7 @@ function MyAttendanceCard({item, colors, t, isDark, onInfo}) {
                         borderRadius: 20, paddingHorizontal: 8
                     }}>
                         <Text style={{fontSize: 11, fontWeight: "700", color: "#8B5CF6"}}>
-                            {t("attendance.justified", {defaultValue: "Justificado"})}
+                            {t("attendance.justified")}
                         </Text>
                     </View>
                 )}
@@ -504,7 +510,7 @@ export default function DisplayingAttendance() {
                         }}>
                             <TextInput
                                 style={{flex: 1, paddingVertical: 10, color: colors.text, fontSize: 14}}
-                                placeholder={t("attendance.searchByName", {defaultValue: "Buscar docente..."})}
+                                placeholder={t("attendance.searchByName")}
                                 placeholderTextColor={colors.textMuted}
                                 value={searchText}
                                 onChangeText={setSearchText}
@@ -613,7 +619,7 @@ export default function DisplayingAttendance() {
                     ListEmptyComponent={
                         <View style={{alignItems: "center", paddingVertical: 50}}>
                             <Text style={{color: colors.textMuted, fontSize: 14, textAlign: "center"}}>
-                                {t("attendance.noResults", {defaultValue: "Sin resultados para los filtros aplicados"})}
+                                {t("attendance.noResults")}
                             </Text>
                         </View>
                     }

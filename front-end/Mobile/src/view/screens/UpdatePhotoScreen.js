@@ -396,7 +396,7 @@ export default function UpdatePhoto() {
                         </View>
 
                         <View style={styles.backButtonContainerUpdatePhoto}>
-                            <PrimaryButton title={t('consultJustify.back')} onPress={handleBack}/>
+                            <PrimaryButton title={t('common.back')} onPress={handleBack}/>
                         </View>
                     </View>
                 </ScrollView>

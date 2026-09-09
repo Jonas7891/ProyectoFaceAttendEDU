@@ -1,4 +1,4 @@
-import { COMMON_PASSWORDS, SEQUENTIAL_PATTERNS } from '../services/constants/auths';
+import {COMMON_PASSWORDS, SEQUENTIAL_PATTERNS} from '../services/constants/auths';
 
 /**
  * Verifica si la contraseña tiene patrones secuenciales

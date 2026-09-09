@@ -28,8 +28,8 @@ export default function DangerButton({ title, disabled = false, onLogout }) {
         } catch (error) {
             console.error('Error al cerrar sesión:', error);
             showError(
-                t('common.error', { defaultValue: 'Error' }),
-                t('logout.error', { defaultValue: 'No se pudo cerrar sesión' }),
+                t('common.error'),
+                t('logout.error'),
                 hideAlert
             );
         }
@@ -45,7 +45,7 @@ export default function DangerButton({ title, disabled = false, onLogout }) {
                     disabled={disabled}
                     activeOpacity={0.7}
                 >
-                    <Text style={styleAuth.dangerButtonText}>{title || t('common.logout', { defaultValue: 'Cerrar Sesión' })}</Text>
+                    <Text style={styleAuth.dangerButtonText}>{title || t('common.logout')}</Text>
                 </TouchableOpacity>
             </View>
 

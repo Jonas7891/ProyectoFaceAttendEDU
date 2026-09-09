@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, forwardRef } from 'react';
+import React, {forwardRef, useEffect, useRef, useState} from 'react';
 import {
     Animated,
     Keyboard,
@@ -11,9 +11,9 @@ import {
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useLanguageRefresh } from '../../../utils/useLanguageRefresh';
-import { useTheme } from '../../components/common/ThemeContext';
+import {useTranslation} from 'react-i18next';
+import {useLanguageRefresh} from '../../../utils/useLanguageRefresh';
+import {useTheme} from '../../components/common/ThemeContext';
 import PrimaryButton from '../../components/auth/PrimaryButton';
 import SelectableButton from '../../components/common/SelectableButton';
 import CustomLogo from '../../components/common/logo';
@@ -21,9 +21,9 @@ import RegisterModal from '../../components/auth/RegisterModal';
 import TerminosModal from '../../components/common/TerminosModal';
 import ScrollView from '../../components/common/ScrollView';
 import CustomAlert from '../../components/common/CustomAlert';
-import { useCustomAlert } from '../../components/common/useCustomAlert';
+import {useCustomAlert} from '../../components/common/useCustomAlert';
 import styles from './style/Style';
-import { useLoginViewModel } from '../../../viewmodels/useLoginViewModel';
+import {useLoginViewModel} from '../../../viewmodels/useLoginViewModel';
 
 const MAX_FAILED_ATTEMPTS = 3;
 
@@ -53,7 +53,7 @@ function useLoginAttempts(error, errorTimestamp, showError, hideAlert, t) {
         if (!error) return;
 
         showErrorRef.current(
-            tRef.current('login.errorTitle', { defaultValue: 'Error de inicio de sesión' }),
+            tRef.current('login.errorTitle'),
             error,
             hideAlertRef.current
         );
@@ -205,10 +205,10 @@ export default function LoginScreen({ onLogin, navigation }) {
                                                 onPress={handleForgotPassword}
                                                 activeOpacity={0.7}
                                                 accessibilityRole="button"
-                                                accessibilityLabel={t('login.forgotPassword', { defaultValue: '¿Olvidaste tu contraseña?' })}
+                                                accessibilityLabel={t('login.forgotPassword')}
                                             >
                                                 <Text style={[styles.forgotPasswordText, { color: colors.primary }]}>
-                                                    {t('login.forgotPassword', { defaultValue: '¿Olvidaste tu contraseña?' })}
+                                                    {t('login.forgotPassword')}
                                                 </Text>
                                             </TouchableOpacity>
                                         </Animated.View>

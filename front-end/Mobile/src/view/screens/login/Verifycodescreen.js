@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback, useState } from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -6,41 +6,35 @@ import {
     Keyboard,
     KeyboardAvoidingView,
     LayoutAnimation,
-    Modal,
     Platform,
     SafeAreaView,
     ScrollView,
     Text,
-    TextInput,
     TouchableOpacity,
     TouchableWithoutFeedback,
     UIManager,
     Vibration,
     View,
-    Image,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from '../../components/common/ThemeContext';
+import {useTranslation} from 'react-i18next';
+import {useTheme} from '../../components/common/ThemeContext';
 import styles from './style/Style';
 
 // Componentes
-import { CodeInput } from '../../components/auth/CodeInput';
-import { PasswordRequirement } from '../../components/auth/PasswordRequirement';
-import { PasswordModal } from '../../components/auth/PasswordModal';
-import { SuccessScreen } from '../../components/auth/SuccessScreen';
+import {CodeInput} from '../../components/auth/CodeInput';
+import {PasswordModal} from '../../components/auth/PasswordModal';
+import {SuccessScreen} from '../../components/auth/SuccessScreen';
 
 // Hooks
-import { useCodeVerification } from '../../../hooks/useCodeVerification';
-import { usePasswordUpdate } from '../../../hooks/usePasswordUpdate';
-import { useCountdown } from '../../../hooks/useCountdown';
+import {useCodeVerification} from '../../../hooks/useCodeVerification';
+import {usePasswordUpdate} from '../../../hooks/usePasswordUpdate';
+import {useCountdown} from '../../../hooks/useCountdown';
 
 // Servicios y utilidades
-import { VerificationService } from '../../../services/verificationService';
-import { generateRecoveryCode } from '../../../utils/codeGenerator';
-import { calculatePasswordStrength } from '../../../utils/passwordValidator';
+import {VerificationService} from '../../../services/verificationService';
 
 // Constantes
-import { RESEND_COOLDOWN_MS, FOCUS_DELAY_MS, VerificationErrorType } from '../../../services/constants/auths';
+import {FOCUS_DELAY_MS, RESEND_COOLDOWN_MS, VerificationErrorType} from '../../../services/constants/auths';
 
 // Inicialización única
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -138,17 +132,15 @@ export default function VerifyCodeScreen({ route, navigation }) {
 
         if (hasUnsavedChanges) {
             Alert.alert(
-                t('common.discardTitle', { defaultValue: '¿Descartar cambios?' }),
-                t('passwordUpdate.discardMessage', {
-                    defaultValue: 'Si sales, perderás la contraseña que escribiste.',
-                }),
+                t('common.discardTitle'),
+                t('passwordUpdate.discardMessage'),
                 [
                     {
-                        text: t('common.cancel', { defaultValue: 'Cancelar' }),
+                        text: t('common.cancel'),
                         style: 'cancel',
                     },
                     {
-                        text: t('common.discard', { defaultValue: 'Descartar' }),
+                        text: t('common.discard'),
                         style: 'destructive',
                         onPress: () => {
                             Animated.parallel([
@@ -211,17 +203,11 @@ export default function VerifyCodeScreen({ route, navigation }) {
 
         switch (codeVerification.error.type) {
             case VerificationErrorType.INVALID_CODE:
-                return t('verifyCode.errorInvalid', {
-                    defaultValue: `Código incorrecto. Intentos restantes: ${5 - codeVerification.attempts}`,
-                });
+                return t('verifyCode.errorInvalid', {attempts: 5 - codeVerification.attempts});
             case VerificationErrorType.EXPIRED_CODE:
-                return t('verifyCode.errorExpired', {
-                    defaultValue: 'El código ha expirado. Solicita uno nuevo.',
-                });
+                return t('verifyCode.errorExpired');
             case VerificationErrorType.NO_CODE:
-                return t('verifyCode.errorNoCode', {
-                    defaultValue: 'No hay un código activo. Vuelve atrás y solicita uno nuevo.',
-                });
+                return t('verifyCode.errorNoCode');
             default:
                 return codeVerification.error.message;
         }
@@ -256,7 +242,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                 accessibilityRole="button"
                             >
                                 <Text style={[styles.backButtonText, { color: colors.primary }]}>
-                                    ‹ {t('common.back', { defaultValue: 'Volver' })}
+                                    ‹ {t('common.back')}
                                 </Text>
                             </TouchableOpacity>
 
@@ -266,14 +252,14 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                 </View>
 
                                 <Text style={[styles.textoSesion, { color: colors.text }]}>
-                                    {t('verifyCode.title', { defaultValue: 'Revisa tu correo' })}
+                                    {t('verifyCode.title')}
                                 </Text>
 
                                 <Text style={[styles.textoCredenciales, { color: colors.textSecondary ?? '#666' }]}>
-                                    {t('verifyCode.description', { defaultValue: 'Enviamos un código de 6 caracteres a' })}{' '}
+                                    {t('verifyCode.description')}{' '}
                                     <Text style={{ fontWeight: '600', color: colors.text }}>{email}</Text>.
                                     {'\n'}
-                                    {t('verifyCode.descriptionSub', { defaultValue: 'Ingrésalo a continuación.' })}
+                                    {t('verifyCode.descriptionSub')}
                                 </Text>
 
                                 {/* Input de código */}
@@ -283,7 +269,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                         textAlign: 'center',
                                         marginBottom: 12,
                                     }]}>
-                                        {t('verifyCode.codeLabel', { defaultValue: 'Código de verificación' })}
+                                        {t('verifyCode.codeLabel')}
                                     </Text>
 
                                     <CodeInput
@@ -341,7 +327,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                         </Text>
                                     ) : (
                                         <Text style={styles.recoveryPrimaryButtonText}>
-                                            {t('verifyCode.verifyButton', { defaultValue: 'Verificar código' })}
+                                            {t('verifyCode.verifyButton')}
                                         </Text>
                                     )}
                                 </TouchableOpacity>
@@ -371,7 +357,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                         }}>
                                             {resendCooldown.isActive
                                                 ? `Reenviar en ${resendCooldown.remaining}s`
-                                                : t('verifyCode.resendButton', { defaultValue: 'Reenviar código' })}
+                                                : t('verifyCode.resendButton')}
                                         </Text>
                                     </TouchableOpacity>
                                 </View>

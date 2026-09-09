@@ -1,17 +1,31 @@
-import React, {useEffect, useState} from 'react';
-import {FlatList, Modal, SafeAreaView, Text, TextInput, TouchableOpacity, View,} from 'react-native';
+﻿import React, {useEffect, useState} from 'react';
+import {
+    FlatList,
+    Keyboard,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    Pressable,
+    SafeAreaView,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View,
+} from 'react-native';
+import styles from './Style';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import {useCustomAlert} from '../components/common/useCustomAlert';
 import CustomAlert from '../components/common/CustomAlert';
 import PrimaryButton from '../components/auth/PrimaryButton';
-import styles from "./Style";
 import {useManageUsersViewModel} from '../../viewmodels/useManageUsersViewModel';
 
 export default function ManageUsersScreen({navigation, userRole, onLogout}) {
     const {t} = useTranslation();
     const {colors, theme, toggleTheme} = useTheme();
-    const { alertConfig, hideAlert, showError, showConfirm } = useCustomAlert();
+    const {alertConfig, hideAlert, showError, showConfirm} = useCustomAlert();
 
     const {
         allStudents,
@@ -68,7 +82,22 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
         setModalVisible(true);
     };
 
+    const closeModal = () => {
+        Keyboard.dismiss();
+        setModalVisible(false);
+        setModalMode(null);
+    };
+
+    const handleBackdropPress = () => {
+        if (Keyboard.isVisible && Keyboard.isVisible()) {
+            Keyboard.dismiss();
+        } else {
+            closeModal();
+        }
+    };
+
     const handleSave = () => {
+        Keyboard.dismiss();
         if (!form.nombre) {
             showError(t('manageUsers.validation'), t('manageUsers.nameRequired'));
             return;
@@ -80,8 +109,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                 updateTeacher({...editing, ...form});
             }
         }
-        setModalVisible(false);
-        setModalMode(null);
+        closeModal();
     };
 
     const confirmDelete = (id) => {
@@ -106,25 +134,31 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
     const handleBack = () => navigation.goBack();
 
     const renderItem = ({item}) => (
-        <View style={[styles.item, {backgroundColor: colors.card}]}>
-            <View style={styles.itemInfo}>
-                <Text style={[styles.itemName, {color: colors.text}]}>
+        <View style={[styles.manageUsersItem, {backgroundColor: colors.card}]}>
+            <View style={styles.manageUsersItemInfo}>
+                <Text style={[styles.manageUsersItemName, {color: colors.text}]} numberOfLines={1}>
                     {item.nombre}
                 </Text>
-                <Text style={[styles.itemMeta, {color: colors.textSecondary}]}>
+                <Text style={[styles.manageUsersItemMeta, {color: colors.textSecondary}]} numberOfLines={1}>
                     {tab === 'students'
                         ? `${item.grado || ''} • ${item.email || ''}`
                         : `${item.materia || ''} • ${item.email || ''}`}
                 </Text>
             </View>
-            <View style={styles.itemActions}>
-                <TouchableOpacity style={styles.actionButton} onPress={() => openEdit(item)}>
-                    <Text style={[styles.actionText, {color: colors.primary}]}>
+            <View style={styles.manageUsersItemActions}>
+                <TouchableOpacity
+                    style={[styles.manageUsersActionButton, {borderColor: colors.primary}]}
+                    onPress={() => openEdit(item)}
+                >
+                    <Text style={[styles.manageUsersActionText, {color: colors.primary}]}>
                         {t('common.edit')}
                     </Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionButton} onPress={() => confirmDelete(item.id)}>
-                    <Text style={[styles.actionText, {color: '#E53935'}]}>
+                <TouchableOpacity
+                    style={[styles.manageUsersActionButton, {borderColor: '#E53935'}]}
+                    onPress={() => confirmDelete(item.id)}
+                >
+                    <Text style={[styles.manageUsersActionText, {color: '#E53935'}]}>
                         {t('common.delete')}
                     </Text>
                 </TouchableOpacity>
@@ -132,78 +166,80 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
         </View>
     );
 
-    const renderSearchAddModal = () => (
+    const renderSearchAddContent = () => (
         <>
-            <Text style={[styles.modalTitle, {color: colors.text}]}>
+            <View style={[styles.manageUsersSheetHandle, {backgroundColor: colors.border}]}/>
+
+            <Text style={[styles.manageUsersModalTitle, {color: colors.text}]}>
                 {tab === 'students'
                     ? t('manageUsers.searchStudent')
-                    : t('manageUsers.searchTeacher', {defaultValue: 'Buscar profesor'})}
+                    : t('manageUsers.searchTeacher')}
             </Text>
+            <View style={[styles.manageUsersDivider, {backgroundColor: colors.border}]}/>
 
             <TextInput
                 placeholder={
                     tab === 'students'
                         ? t('manageUsers.enterStudentName')
-                        : t('manageUsers.enterTeacherName', {defaultValue: 'Nombre del profesor...'})
+                        : t('manageUsers.enterTeacherName')
                 }
-                placeholderTextColor={colors.textSecondary}
-                style={[styles.input, {color: colors.text, borderColor: colors.border}]}
+                placeholderTextColor={colors.modalInputPlaceholder}
+                style={[styles.manageUsersInput, {
+                    color: colors.text,
+                    backgroundColor: colors.modalInputBackground,
+                    borderColor: colors.modalBorder,
+                }]}
                 value={searchQuery}
                 onChangeText={handleSearch}
+                autoFocus={true}
             />
 
-            <FlatList
-                data={searchResults}
-                keyExtractor={(item) => item.id}
-                renderItem={({item}) => (
-                    <View style={[styles.searchItem, {borderColor: colors.border}]}>
+            <View style={styles.manageUsersResultsList}>
+                {searchResults.length > 0 ? searchResults.map((item) => (
+                    <TouchableOpacity
+                        key={item.id}
+                        style={[styles.manageUsersSearchItem, {borderColor: colors.border}]}
+                        onPress={() => {
+                            if (tab === 'students') {
+                                addStudentById(item.id);
+                            } else {
+                                addTeacher(item);
+                            }
+                            closeModal();
+                        }}
+                    >
                         <View style={{flex: 1}}>
-                            <Text style={{color: colors.text, fontWeight: '600'}}>
+                            <Text style={[styles.manageUsersSearchItemName, {color: colors.text}]}>
                                 {item.nombre}
                             </Text>
-                            <Text style={{color: colors.textSecondary}}>
+                            <Text style={[styles.manageUsersSearchItemMeta, {color: colors.textSecondary}]}>
                                 {tab === 'students'
                                     ? `${item.grado} • ${item.email}`
                                     : `${item.materia} • ${item.email}`}
                             </Text>
                         </View>
-                        <TouchableOpacity
-                            onPress={() => {
-                                if (tab === 'students') {
-                                    addStudentById(item.id);
-                                } else {
-                                    addTeacher(item);
-                                }
-                                setModalVisible(false);
-                                setModalMode(null);
-                            }}
-                        >
-                            <Text style={{color: colors.primary}}>
-                                {t('common.add')}
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
-                ListEmptyComponent={() => (
-                    <View style={{padding: 12}}>
-                        <Text style={{color: colors.textSecondary}}>
-                            {tab === 'students'
-                                ? t('manageUsers.enterNameToSearch')
-                                : t('manageUsers.enterNameToSearch')}
+                        <Text style={[styles.manageUsersAddButtonText, {color: colors.primary}]}>
+                            {t('common.add')}
+                        </Text>
+                    </TouchableOpacity>
+                )) : (
+                    <View style={styles.manageUsersEmptySearch}>
+                        <Text style={[styles.manageUsersEmptySearchText, {color: colors.textSecondary}]}>
+                            {t('manageUsers.enterNameToSearch')}
                         </Text>
                     </View>
                 )}
-            />
+            </View>
 
-            <View style={styles.modalActions}>
+            <View style={styles.manageUsersModalActions}>
                 <TouchableOpacity
-                    style={[styles.cancelButtonManage, {borderColor: colors.border}]}
-                    onPress={() => {
-                        setModalVisible(false);
-                        setModalMode(null);
-                    }}
+                    style={[styles.manageUsersCancelButton, {
+                        backgroundColor: colors.primary,
+                        borderColor: colors.primary,
+                    }]}
+                    onPress={closeModal}
                 >
-                    <Text style={{color: colors.textSecondary}}>
+                    <Text style={styles.manageUsersCancelButtonText}>
                         {t('common.cancel')}
                     </Text>
                 </TouchableOpacity>
@@ -211,26 +247,41 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
         </>
     );
 
-    const renderEditModal = () => (
+    const renderEditContent = () => (
         <>
-            <Text style={[styles.modalTitle, {color: colors.text}]}>
+            <View style={[styles.manageUsersSheetHandle, {backgroundColor: colors.border}]}/>
+
+            <Text style={[styles.manageUsersModalTitle, {color: colors.text}]}>
                 {editing ? t('manageUsers.editStudentInfo') : t('manageUsers.newRecord')}
             </Text>
+            <View style={[styles.manageUsersDivider, {backgroundColor: colors.border}]}/>
 
-            <Text style={{color: colors.text}}>{t('common.name')}</Text>
+            <Text style={[styles.manageUsersFieldLabel, {color: colors.text}]}>
+                {t('common.name')}
+            </Text>
             <TextInput
                 placeholder={t('common.name')}
-                placeholderTextColor={colors.textSecondary}
-                style={[styles.input, {color: colors.text, borderColor: colors.border}]}
+                placeholderTextColor={colors.modalInputPlaceholder}
+                style={[styles.manageUsersInput, {
+                    color: colors.text,
+                    backgroundColor: colors.modalInputBackground,
+                    borderColor: colors.modalBorder,
+                }]}
                 value={form.nombre}
                 onChangeText={(text) => setForm((f) => ({...f, nombre: text}))}
             />
 
-            <Text style={{color: colors.text}}>{t('common.email')}</Text>
+            <Text style={[styles.manageUsersFieldLabel, {color: colors.text}]}>
+                {t('common.email')}
+            </Text>
             <TextInput
                 placeholder={t('common.email')}
-                placeholderTextColor={colors.textSecondary}
-                style={[styles.input, {color: colors.text, borderColor: colors.border}]}
+                placeholderTextColor={colors.modalInputPlaceholder}
+                style={[styles.manageUsersInput, {
+                    color: colors.text,
+                    backgroundColor: colors.modalInputBackground,
+                    borderColor: colors.modalBorder,
+                }]}
                 value={form.email}
                 onChangeText={(text) => setForm((f) => ({...f, email: text}))}
                 keyboardType="email-address"
@@ -238,38 +289,50 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
 
             {tab === 'students' ? (
                 <>
-                    <Text style={{color: colors.text}}>{t('manageUsers.grade')}</Text>
+                    <Text style={[styles.manageUsersFieldLabel, {color: colors.text}]}>
+                        {t('manageUsers.grade')}
+                    </Text>
                     <TextInput
                         placeholder={t('manageUsers.grade')}
-                        placeholderTextColor={colors.textSecondary}
-                        style={[styles.input, {color: colors.text, borderColor: colors.border}]}
+                        placeholderTextColor={colors.modalInputPlaceholder}
+                        style={[styles.manageUsersInput, {
+                            color: colors.text,
+                            backgroundColor: colors.modalInputBackground,
+                            borderColor: colors.modalBorder,
+                        }]}
                         value={form.grado}
                         onChangeText={(text) => setForm((f) => ({...f, grado: text}))}
                     />
                 </>
             ) : (
                 <>
-                    <Text style={{color: colors.text}}>{t('manageUsers.subject')}</Text>
+                    <Text style={[styles.manageUsersFieldLabel, {color: colors.text}]}>
+                        {t('manageUsers.subject')}
+                    </Text>
                     <TextInput
                         placeholder={t('manageUsers.subject')}
-                        placeholderTextColor={colors.textSecondary}
-                        style={[styles.input, {color: colors.text, borderColor: colors.border}]}
+                        placeholderTextColor={colors.modalInputPlaceholder}
+                        style={[styles.manageUsersInput, {
+                            color: colors.text,
+                            backgroundColor: colors.modalInputBackground,
+                            borderColor: colors.modalBorder,
+                        }]}
                         value={form.materia}
                         onChangeText={(text) => setForm((f) => ({...f, materia: text}))}
                     />
                 </>
             )}
 
-            <View style={styles.modalActions}>
+            <View style={styles.manageUsersModalActions}>
                 <PrimaryButton title={t('common.save')} onPress={handleSave}/>
                 <TouchableOpacity
-                    style={[styles.cancelButton, {borderColor: colors.border, marginTop: 5}]}
-                    onPress={() => {
-                        setModalVisible(false);
-                        setModalMode(null);
-                    }}
+                    style={[styles.manageUsersCancelButton, {
+                        backgroundColor: colors.primary,
+                        borderColor: colors.primary,
+                    }]}
+                    onPress={closeModal}
                 >
-                    <Text style={{color: colors.textSecondary}}>
+                    <Text style={styles.manageUsersCancelButtonText}>
                         {t('common.cancel')}
                     </Text>
                 </TouchableOpacity>
@@ -278,81 +341,110 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
     );
 
     return (
-        <SafeAreaView style={[styles.container, {backgroundColor: colors.background}]}>
-
-            <View style={styles.headerManage}>
-                <Text style={[styles.titleManage, {color: colors.text}]}>
-                    {t('manageUsers.title')}
-                </Text>
-            </View>
-
-            <View style={styles.tabs}>
-                <TouchableOpacity
-                    style={[
-                        styles.tabButton,
-                        tab === 'students' && {borderBottomColor: colors.primary, borderBottomWidth: 2},
-                    ]}
-                    onPress={() => setTab('students')}
-                >
-                    <Text style={{color: colors.text}}>{t('manageUsers.students')}</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[
-                        styles.tabButton,
-                        tab === 'teachers' && {borderBottomColor: colors.primary, borderBottomWidth: 2},
-                    ]}
-                    onPress={() => setTab('teachers')}
-                >
-                    <Text style={{color: colors.text}}>{t('manageUsers.teachers')}</Text>
-                </TouchableOpacity>
-            </View>
-
-            <View style={styles.actionsRow}>
-                <PrimaryButton
-                    title={
-                        tab === 'students'
-                            ? t('manageUsers.addStudent')
-                            : t('manageUsers.addTeacher', {defaultValue: 'Agregar Profesor'})
-                    }
-                    onPress={openAdd}
-                />
-            </View>
-
-            <FlatList
-                data={tab === 'students' ? students : teachers}
-                keyExtractor={(item) => item.id}
-                renderItem={renderItem}
-                contentContainerStyle={styles.list}
-                ListEmptyComponent={() => (
-                    <View style={styles.empty}>
-                        <Text style={{color: colors.textSecondary}}>
-                            {t('manageUsers.noRecords')}
-                        </Text>
-                    </View>
-                )}
-            />
-
-            <Modal visible={modalVisible} animationType="slide" transparent>
-                <View style={styles.modalWrapper}>
-                    <View style={[styles.modal, {backgroundColor: colors.card}]}>
-                        {modalMode === 'searchAdd' ? renderSearchAddModal() : renderEditModal()}
-                    </View>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+            <SafeAreaView style={[styles.manageUsersContainer, {backgroundColor: colors.background}]}>
+                <View style={styles.manageUsersHeader}>
+                    <Text style={[styles.manageUsersTitle, {color: colors.text}]}>
+                        {t('manageUsers.title')}
+                    </Text>
                 </View>
-            </Modal>
 
-            <View style={styles.buttonContainer}>
-                <PrimaryButton title={t('consultJustify.back')} onPress={handleBack}/>
-            </View>
-            
-            <CustomAlert
-                visible={alertConfig.visible}
-                title={alertConfig.title}
-                message={alertConfig.message}
-                buttons={alertConfig.buttons}
-                onClose={hideAlert}
-                type={alertConfig.type}
-            />
-        </SafeAreaView>
+                <View style={styles.manageUsersTabs}>
+                    <TouchableOpacity
+                        style={[
+                            styles.manageUsersTabButton,
+                            tab === 'students' && {borderBottomColor: colors.primary, borderBottomWidth: 2},
+                        ]}
+                        onPress={() => setTab('students')}
+                    >
+                        <Text style={[styles.manageUsersTabText, {
+                            color: tab === 'students' ? colors.primary : colors.text
+                        }]}>
+                            {t('manageUsers.students')}
+                        </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[
+                            styles.manageUsersTabButton,
+                            tab === 'teachers' && {borderBottomColor: colors.primary, borderBottomWidth: 2},
+                        ]}
+                        onPress={() => setTab('teachers')}
+                    >
+                        <Text style={[styles.manageUsersTabText, {
+                            color: tab === 'teachers' ? colors.primary : colors.text
+                        }]}>
+                            {t('manageUsers.teachers')}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.manageUsersActionsRow}>
+                    <PrimaryButton
+                        title={
+                            tab === 'students'
+                                ? t('manageUsers.addStudent')
+                                : t('manageUsers.addTeacher')
+                        }
+                        onPress={openAdd}
+                    />
+                </View>
+
+                <FlatList
+                    data={tab === 'students' ? students : teachers}
+                    keyExtractor={(item) => item.id}
+                    renderItem={renderItem}
+                    contentContainerStyle={styles.manageUsersList}
+                    ListEmptyComponent={() => (
+                        <View style={styles.manageUsersEmpty}>
+                            <Text style={[styles.manageUsersEmptyText, {color: colors.textSecondary}]}>
+                                {t('manageUsers.noRecords')}
+                            </Text>
+                        </View>
+                    )}
+                />
+
+                <View style={styles.manageUsersButtonContainer}>
+                    <PrimaryButton title={t('common.back')} onPress={handleBack}/>
+                </View>
+
+                {/* ===== MODAL ===== */}
+                <Modal
+                    visible={modalVisible}
+                    animationType="slide"
+                    transparent
+                    onRequestClose={closeModal}
+                >
+                    <KeyboardAvoidingView
+                        style={styles.manageUsersKav}
+                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    >
+                        <View style={styles.manageUsersOverlay}>
+                            <Pressable style={styles.manageUsersBackdrop} onPress={handleBackdropPress}/>
+
+                            <ScrollView
+                                style={[styles.manageUsersSheet, {backgroundColor: colors.card}]}
+                                contentContainerStyle={styles.manageUsersSheetContent}
+                                keyboardShouldPersistTaps="handled"
+                                showsVerticalScrollIndicator={true}
+                                bounces={false}
+                            >
+                                {modalMode === 'searchAdd' ? renderSearchAddContent() : renderEditContent()}
+                            </ScrollView>
+                        </View>
+                    </KeyboardAvoidingView>
+                </Modal>
+
+                <CustomAlert
+                    visible={alertConfig.visible}
+                    title={alertConfig.title}
+                    message={alertConfig.message}
+                    buttons={alertConfig.buttons}
+                    onClose={hideAlert}
+                    type={alertConfig.type}
+                />
+            </SafeAreaView>
+        </TouchableWithoutFeedback>
     );
 }
+

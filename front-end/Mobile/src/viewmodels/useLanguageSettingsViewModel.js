@@ -37,8 +37,8 @@ export function useLanguageSettingsViewModel() {
     ], []);
 
     const themes = useMemo(() => [
-        {code: 'light', label: t('settings.lightTheme', {defaultValue: 'Tema Claro'}), icon: '☀️'},
-        {code: 'dark', label: t('settings.darkTheme', {defaultValue: 'Tema Oscuro'}), icon: '🌙'},
+        {code: 'light', label: t('settings.lightTheme'), icon: '☀️'},
+        {code: 'dark', label: t('settings.darkTheme'), icon: '🌙'},
     ], [t]);
 
     // Sincronizar idioma cuando cambia externamente
@@ -81,7 +81,7 @@ export function useLanguageSettingsViewModel() {
             const role = await getCurrentUserRole();
             if (!role) {
                 setAlertData({
-                    message: t('settings.noRoleError', {defaultValue: 'No se pudo determinar el rol del usuario'}),
+                    message: t('settings.noRoleError'),
                     type: 'error',
                     timestamp: Date.now(),
                 });
@@ -98,14 +98,14 @@ export function useLanguageSettingsViewModel() {
             await new Promise(resolve => setTimeout(resolve, 100));
 
             setAlertData({
-                message: t('settings.languageChanged', {defaultValue: 'Idioma y tema guardados correctamente'}),
+                message: t('settings.languageChanged'),
                 type: 'success',
                 timestamp: Date.now(),
             });
         } catch (error) {
             console.error('Error guardando:', error);
             setAlertData({
-                message: t('settings.errorChangingLanguage', {defaultValue: 'No se pudo cambiar el idioma/tema'}),
+                message: t('settings.errorChangingLanguage'),
                 type: 'error',
                 timestamp: Date.now(),
             });

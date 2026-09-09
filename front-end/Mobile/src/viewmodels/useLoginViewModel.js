@@ -30,13 +30,13 @@ export function useLoginViewModel({onLogin}) {
     const validate = () => {
         if (!email.trim() || !password.trim()) {
             setErrorWithTimestamp(
-                t("login.invalidCredentials", {defaultValue: "Credenciales incorrectas"})
+                t("login.invalidCredentials")
             );
             return false;
         }
         if (!terms) {
             setErrorWithTimestamp(
-                t("Acepta los términos y condiciones", {defaultValue: "Debes aceptar los términos y condiciones"})
+                t('login.acceptTerms')
             );
             return false;
         }
@@ -54,7 +54,7 @@ export function useLoginViewModel({onLogin}) {
         console.log(`❌ Intento fallido ${newCount}/${MAX_FAILED_ATTEMPTS}`);
 
         setErrorWithTimestamp(
-            t("login.invalidCredentials", {defaultValue: "Credenciales incorrectas"})
+            t("login.invalidCredentials")
         );
     };
 

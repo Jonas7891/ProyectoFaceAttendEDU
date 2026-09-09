@@ -3,6 +3,7 @@ import {
     ActivityIndicator,
     FlatList,
     Modal,
+    Platform,
     Pressable,
     SafeAreaView,
     ScrollView,
@@ -16,6 +17,17 @@ import styles from './Style';
 import {useTheme} from '../components/common/ThemeContext';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import {usePendingJustificationViewModel} from '../../viewmodels/usePendingJustificationViewModel';
+
+/** Helper: Mapea el idioma activo a un locale válido para toLocaleString */
+const getLocaleForLanguage = (lang) => {
+    const localeMap = {
+        es: 'es-CO',
+        en: 'en-US',
+        fr: 'fr-FR',
+        pt: 'pt-BR',
+    };
+    return localeMap[lang?.split('-')[0]] || 'es-CO';
+};
 
 /** Chip de filtro (Todos / Estudiantes / Docentes) */
 const FilterChip = ({ label, count, active, onPress, colors }) => (
@@ -56,6 +68,7 @@ const JustificationCard = ({
                                getRoleColors,
                                colors,
                            }) => {
+    const {t} = useTranslation();
     const typeColors = getTypeColors(item.type);
     const roleColors = getRoleColors(item.role);
     const avatarColor = getAvatarColor(item.userName);
@@ -122,7 +135,7 @@ const JustificationCard = ({
                         </>
                     ) : (
                         <Text style={[styles.attachmentTextPending, { color: colors.textSecondary }]}>
-                            Sin adjunto
+                            {t('consultJustify.noAttachment')}
                         </Text>
                     )}
                 </View>
@@ -134,13 +147,15 @@ const JustificationCard = ({
                     onPress={() => onPress(item)}
                 >
                     <Text style={{ fontSize: 12 }}>👁</Text>
-                    <Text style={[styles.viewButtonTextPending, { color: colors.primary }]}>Ver detalle</Text>
+                    <Text style={[styles.viewButtonTextPending, {color: '#FFFFFF'}]}>
+                        {t('consultJustify.viewDetail')}
+                    </Text>
                 </TouchableOpacity>
             </View>
 
             {/* Fecha de envío */}
             <Text style={[styles.cardDatePending, { marginTop: 6, color: colors.textSecondary }]}>
-                Enviado: {formatDate(item.date)}
+                {t('consultJustify.sent')}: {formatDate(item.date)}
             </Text>
         </TouchableOpacity>
     );
@@ -164,11 +179,14 @@ const DetailModal = ({
                          getRoleColors,
                          colors,
                      }) => {
+    const {t, i18n} = useTranslation();
+
     if (!item) return null;
 
     const typeColors = getTypeColors(item.type);
     const roleColors = getRoleColors(item.role);
     const avatarColor = getAvatarColor(item.userName);
+    const currentLocale = getLocaleForLanguage(i18n.language);
 
     return (
         <Modal
@@ -202,7 +220,7 @@ const DetailModal = ({
                         ]}
                     >
                         <Text style={[styles.modalTitlePending, { color: colors.text }]}>
-                            Detalle de Justificación
+                            {t('consultJustify.detailTitle')}
                         </Text>
                         <TouchableOpacity
                             style={[
@@ -258,7 +276,7 @@ const DetailModal = ({
 
                         {/* ── Información del caso ── */}
                         <Text style={[styles.sectionLabelPending, { color: colors.text }]}>
-                            Información del caso
+                            {t('consultJustify.caseInfo')}
                         </Text>
                         <View
                             style={[
@@ -274,7 +292,9 @@ const DetailModal = ({
                                 ]}
                             >
                                 <Text style={styles.detailIconPending}>📋</Text>
-                                <Text style={[styles.detailKeyPending, { color: colors.textSecondary }]}>Caso</Text>
+                                <Text style={[styles.detailKeyPending, {color: colors.textSecondary}]}>
+                                    {t('consultJustify.case')}
+                                </Text>
                                 <Text style={[styles.detailValuePending, { color: colors.text }]}>
                                     {getTypeLabel(item.type)}
                                 </Text>
@@ -287,7 +307,9 @@ const DetailModal = ({
                                 ]}
                             >
                                 <Text style={styles.detailIconPending}>📅</Text>
-                                <Text style={[styles.detailKeyPending, { color: colors.textSecondary }]}>Fecha</Text>
+                                <Text style={[styles.detailKeyPending, {color: colors.textSecondary}]}>
+                                    {t('common.date')}
+                                </Text>
                                 <Text style={[styles.detailValuePending, { color: colors.text }]}>
                                     {formatDate(item.date)}
                                 </Text>
@@ -302,7 +324,7 @@ const DetailModal = ({
                                 >
                                     <Text style={styles.detailIconPending}>🕐</Text>
                                     <Text style={[styles.detailKeyPending, { color: colors.textSecondary }]}>
-                                        Hora
+                                        {t('common.time')}
                                     </Text>
                                     <Text style={[styles.detailValuePending, { color: colors.text }]}>
                                         {item.time}
@@ -313,10 +335,10 @@ const DetailModal = ({
                             <View style={[styles.detailRowPending, styles.detailRowLastPending]}>
                                 <Text style={styles.detailIconPending}>🕐</Text>
                                 <Text style={[styles.detailKeyPending, { color: colors.textSecondary }]}>
-                                    Enviado
+                                    {t('consultJustify.submittedAt')}
                                 </Text>
                                 <Text style={[styles.detailValuePending, { color: colors.text }]}>
-                                    {new Date(item.submittedAt).toLocaleString('es-CO', {
+                                    {new Date(item.submittedAt).toLocaleString(currentLocale, {
                                         dateStyle: 'medium',
                                         timeStyle: 'short',
                                     })}
@@ -326,7 +348,7 @@ const DetailModal = ({
 
                         {/* ── Descripción ── */}
                         <Text style={[styles.sectionLabelPending, { color: colors.text }]}>
-                            Descripción de la justificación
+                            {t('consultJustify.descriptionTitle')}
                         </Text>
                         <View
                             style={[
@@ -341,7 +363,7 @@ const DetailModal = ({
 
                         {/* ── Documento adjunto ── */}
                         <Text style={[styles.sectionLabelPending, { color: colors.text }]}>
-                            Documento adjunto
+                            {t('consultJustify.attachmentTitle')}
                         </Text>
                         {item.attachment ? (
                             <View
@@ -385,7 +407,7 @@ const DetailModal = ({
                                         { fontStyle: 'italic', color: colors.textSecondary },
                                     ]}
                                 >
-                                    No se adjuntó ningún documento.
+                                    {t('consultJustify.noDocumentAttached')}
                                 </Text>
                             </View>
                         )}
@@ -405,7 +427,9 @@ const DetailModal = ({
                                 activeOpacity={0.8}
                             >
                                 <Text style={{fontSize: 16}}>✕</Text>
-                                <Text style={styles.rejectBtnTextPending}>Rechazar</Text>
+                                <Text style={styles.rejectBtnTextPending}>
+                                    {t('common.reject')}
+                                </Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.approveBtnPending}
@@ -413,7 +437,9 @@ const DetailModal = ({
                                 activeOpacity={0.8}
                             >
                                 <Text style={{fontSize: 16}}>✓</Text>
-                                <Text style={styles.approveBtnTextPending}>Aprobar</Text>
+                                <Text style={styles.approveBtnTextPending}>
+                                    {t('common.approve')}
+                                </Text>
                             </TouchableOpacity>
                         </View>
                     )}
@@ -428,7 +454,7 @@ const DetailModal = ({
 // ─────────────────────────────────────────────────────────────────────────────
 export default function PendingJustificationScreen({ navigation }) {
     const { colors } = useTheme();
-    const { t } = useTranslation();
+    const {t, i18n} = useTranslation();
     const handleBack = () => navigation.goBack();
 
     const {
@@ -458,22 +484,22 @@ export default function PendingJustificationScreen({ navigation }) {
     const FILTERS =
         userRole === 'teacher'
             ? [
-                {key: 'all', label: 'Todos', count: counts.all},
-                {key: 'student', label: 'Estudiantes', count: counts.student},
+                {key: 'all', label: t('consultJustify.filterAll'), count: counts.all},
+                {key: 'student', label: t('consultJustify.filterStudents'), count: counts.student},
             ]
             : [
-                {key: 'all', label: 'Todos', count: counts.all},
-                {key: 'student', label: 'Estudiantes', count: counts.student},
-                {key: 'teacher', label: 'Docentes', count: counts.teacher},
+                {key: 'all', label: t('consultJustify.filterAll'), count: counts.all},
+                {key: 'student', label: t('consultJustify.filterStudents'), count: counts.student},
+                {key: 'teacher', label: t('consultJustify.filterTeachers'), count: counts.teacher},
             ];
 
     // Subtítulo del header según rol
     const headerSubtitle =
         userRole === 'student'
-            ? 'Mis justificaciones enviadas'
+            ? t('consultJustify.subtitleMySubmissions')
             : userRole === 'teacher'
-                ? 'Pendientes de estudiantes'
-                : 'Pendientes de revisión';
+                ? t('consultJustify.subtitleStudentPending')
+                : t('consultJustify.subtitleReviewPending');
 
     const renderItem = ({ item }) => (
         <JustificationCard
@@ -495,13 +521,13 @@ export default function PendingJustificationScreen({ navigation }) {
             <Text style={styles.emptyIconPending}>📭</Text>
             <Text style={[styles.emptyTitlePending, { color: colors.text }]}>
                 {userRole === 'student'
-                    ? 'Aún no has enviado justificaciones'
-                    : 'Sin justificaciones pendientes'}
+                    ? t('consultJustify.emptyStudentTitle')
+                    : t('consultJustify.emptyAdminTitle')}
             </Text>
             <Text style={[styles.emptySubtitlePending, { color: colors.textSecondary }]}>
                 {userRole === 'student'
-                    ? 'Cuando envíes una justificación aparecerá aquí.'
-                    : 'No hay justificaciones para este filtro en este momento.'}
+                    ? t('consultJustify.emptyStudentSubtitle')
+                    : t('consultJustify.emptyAdminSubtitle')}
             </Text>
         </View>
     );
@@ -510,7 +536,10 @@ export default function PendingJustificationScreen({ navigation }) {
     if (loadingRole) {
         return (
             <SafeAreaView style={[styles.safeAreaPending, {backgroundColor: colors.background}]}>
-                <View style={styles.emptyContainerPending}>
+                <View style={[
+                    styles.containerPending,
+                    Platform.OS === 'android' && {margin: 20},
+                ]}>
                     <ActivityIndicator color={colors.primary} size="large"/>
                 </View>
             </SafeAreaView>
@@ -522,7 +551,9 @@ export default function PendingJustificationScreen({ navigation }) {
             <View style={styles.containerPending}>
                 {/* Header */}
                 <View style={[styles.headerPending, { backgroundColor: colors.background }]}>
-                    <Text style={[styles.headerTitlePending, { color: colors.text }]}>Justificaciones</Text>
+                    <Text style={[styles.headerTitlePending, {color: colors.text}]}>
+                        {t('consultJustify.headerTitle')}
+                    </Text>
                     <Text style={[styles.headerSubtitlePending, { color: colors.textSecondary }]}>
                         {headerSubtitle}
                     </Text>
@@ -546,12 +577,14 @@ export default function PendingJustificationScreen({ navigation }) {
 
                 {/* Contador */}
                 <View style={styles.resultsRowPending}>
-                    <Text style={[styles.resultsTextPending, { color: colors.textSecondary }]}>Mostrando</Text>
+                    <Text style={[styles.resultsTextPending, {color: colors.textSecondary}]}>
+                        {t('consultJustify.showing')}
+                    </Text>
                     <View style={[styles.resultsBadgePending, { backgroundColor: colors.primary }]}>
                         <Text style={styles.resultsBadgeTextPending}>{filtered.length}</Text>
                     </View>
                     <Text style={[styles.resultsTextPending, { color: colors.textSecondary }]}>
-                        {filtered.length === 1 ? 'resultado' : 'resultados'}
+                        {t('consultJustify.result', {count: filtered.length})}
                     </Text>
                 </View>
 
@@ -567,7 +600,7 @@ export default function PendingJustificationScreen({ navigation }) {
                 />
 
                 <View style={[styles.buttonContainer, {marginTop: 1, marginBottom: 1}]}>
-                    <PrimaryButton title={t('consultJustify.back')} onPress={handleBack} />
+                    <PrimaryButton title={t('common.back')} onPress={handleBack}/>
                 </View>
             </View>
 

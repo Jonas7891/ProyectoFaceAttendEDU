@@ -99,14 +99,14 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
     const menuAccionesAdmin = [
         {
             id: 1,
-            title: t('dashboard.manageUsers', 'Gestión Usuarios'),
+            title: t('dashboard.manageUsers'),
             description: t('dashboard.manageUsersDesc', 'Agregar, editar y eliminar estudiantes y profesores'),
             color: '#E91E63',
             screen: 'ManageUsersScreen'
         },
         {
             id: 2,
-            title: t('dashboard.environmentManagement', 'Gestión Ambientes'),
+            title: t('dashboard.environmentManagement'),
             description: t('dashboard.manageEnvironmentDesc', 'Agregar, editar y eliminar ambientes/salones'),
             color: '#1e58e9',
             screen: 'ManageEnviromentScreen'
@@ -203,14 +203,14 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
         {
             id: 1,
             titulo: t('student.faceRecognized'),
-            descripcion: 'Tu rostro fue reconocido exitosamente hoy a las 08:15 AM',
+            descripcion: t('student.faceRecognizedMsg'),
             tiempo: `${t('dashboard.ago')} 2 ${t('dashboard.hoursAgo')}`,
             tipo: 'success'
         },
         {
             id: 2,
             titulo: t('student.attendanceReminder'),
-            descripcion: 'No olvides registrar tu asistencia por reconocimiento facial.',
+            descripcion: t('student.attendanceReminderDesc'),
             tiempo: `${t('dashboard.ago')} 5 ${t('dashboard.hoursAgo')}`,
             tipo: 'info'
         },
@@ -220,14 +220,14 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
         {
             id: 1,
             titulo: t('teacher.newJustification', 'Nueva Justificación'),
-            descripcion: 'Juan Pérez ha enviado una justificación para la clase de Matemáticas.',
+            descripcion: t('teacher.justificationMathMsg'),
             tiempo: `${t('dashboard.ago')} 1 ${t('dashboard.hoursAgo')}`,
             tipo: 'warning'
         },
         {
             id: 2,
             titulo: t('teacher.attendanceRecorded', 'Asistencia Registrada'),
-            descripcion: 'Se registró correctamente la asistencia del grupo 10-A.',
+            descripcion: t('teacher.attendanceGroupMsg'),
             tiempo: `${t('dashboard.ago')} 3 ${t('dashboard.hoursAgo')}`,
             tipo: 'success'
         },
@@ -241,10 +241,10 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
     ];
 
     const misRegistrosRecientes = [
-        {id: 1, materia: 'Matemáticas', hora: '08:15 AM', estado: 'presente', fecha: 'Hoy'},
-        {id: 2, materia: 'Física', hora: '10:00 AM', estado: 'presente', fecha: 'Hoy'},
-        {id: 3, materia: 'Historia', hora: '08:20 AM', estado: 'presente', fecha: 'Ayer'},
-        {id: 4, materia: 'Programación', hora: '08:10 AM', estado: 'presente', fecha: 'Ayer'},
+        {id: 1, materia: t('subjects.math'), hora: '08:15 AM', estado: 'presente', fecha: t('time.today')},
+        {id: 2, materia: t('subjects.physics'), hora: '10:00 AM', estado: 'presente', fecha: t('time.today')},
+        {id: 3, materia: t('subjects.history'), hora: '08:20 AM', estado: 'presente', fecha: t('time.yesterday')},
+        {id: 4, materia: t('subjects.programming'), hora: '08:10 AM', estado: 'presente', fecha: t('time.yesterday')},
     ];
 
     const menuAcciones = isAdmin ? menuAccionesAdmin : isTeacher ? menuAccionesDocente : menuAccionesEstudiante;

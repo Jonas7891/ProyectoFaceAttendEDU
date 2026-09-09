@@ -8,7 +8,7 @@ import {AcademicConfig, AttendanceConfig, ContactInfo, GeneralInfo, SchoolRespon
 import {getCurrentUser, getUserByEmail} from "../services/UserService";
 
 
-export function useSchoolConfigurationViewModel({ isAdmin = false } = {}) {
+export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => key} = {}) {
     const [activeTab, setActiveTab] = useState('general');
     const [isLoading, setIsLoading] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -59,11 +59,11 @@ export function useSchoolConfigurationViewModel({ isAdmin = false } = {}) {
         const errors = { ...validationErrors };
 
         if (!value || String(value).trim() === '') {
-            errors[fieldName] = 'Este campo es requerido';
+            errors[fieldName] = t('schoolConfig.validation.required');
         } else if (fieldName === 'email' && !validateEmail(value)) {
-            errors[fieldName] = 'Email inválido';
+            errors[fieldName] = t('schoolConfig.validation.invalidEmail');
         } else if (fieldName === 'phone' && !validatePhone(value)) {
-            errors[fieldName] = 'Teléfono inválido';
+            errors[fieldName] = t('schoolConfig.validation.invalidPhone');
         } else if (
             fieldName === 'toleranceMinutes' ||
             fieldName === 'maxAbsences'      ||
@@ -71,7 +71,7 @@ export function useSchoolConfigurationViewModel({ isAdmin = false } = {}) {
             fieldName === 'minimumGrade'
         ) {
             if (isNaN(value)) {
-                errors[fieldName] = 'Debe ser un número';
+                errors[fieldName] = t('schoolConfig.validation.mustBeNumber');
             } else {
                 delete errors[fieldName];
             }
@@ -114,7 +114,7 @@ export function useSchoolConfigurationViewModel({ isAdmin = false } = {}) {
     const handleSaveChanges = async () => {
         if (!isAdmin) return;
         if (!schoolId) {
-            Alert.alert('Error', 'No se pudo identificar el colegio a actualizar');
+            Alert.alert(t('common.error'), t('schoolConfig.errors.schoolNotFound'));
             return;
         }
 
@@ -144,10 +144,10 @@ export function useSchoolConfigurationViewModel({ isAdmin = false } = {}) {
 
             setHasChanges(false);
             setShowConfirmModal(false);
-            Alert.alert('Éxito', 'Configuración del colegio actualizada correctamente');
+            Alert.alert(t('common.success'), t('schoolConfig.success.updated'));
         } catch (error) {
             console.error('Error guardando configuración del colegio:', error);
-            Alert.alert('Error', 'No se pudo guardar los cambios');
+            Alert.alert(t('common.error'), t('schoolConfig.errors.saveFailed'));
         } finally {
             setIsLoading(false);
         }
