@@ -26,7 +26,6 @@ import {
     AttendanceStatusIcon,
     AttendanceStatusBadge,
 } from "./components/common";
-import { Navbar as PageHeader } from "./components/common/navigation/Navbar";
 import {
     DailyBarChart,
     WeeklyTrend,
@@ -575,17 +574,36 @@ export default function DashboardView() {
             showsVerticalScrollIndicator={false}
         >
             {/* Header del Dashboard */}
-            <PageHeader
-                title={dashboardTitle}
-                subtitle={dashboardSubtitle}
-                actions={
-                    permissions.canRegisterFace
-                        ? <Button variant="primary" size="sm">
+            <View style={{ marginBottom: 8 }}>
+                <View style={{
+                    flexDirection: isSmall ? "column" : "row",
+                    justifyContent: "space-between",
+                    alignItems: isSmall ? "flex-start" : "center",
+                    gap: isSmall ? 12 : 16,
+                }}>
+                    <View style={{ flex: 1 }}>
+                        <Text style={{
+                            fontSize: isSmall ? 20 : 24,
+                            fontWeight: "700",
+                            color: c.text.primary,
+                            marginBottom: 4,
+                        }}>
+                            {dashboardTitle}
+                        </Text>
+                        <Text style={{
+                            fontSize: isSmall ? 13 : 14,
+                            color: c.text.secondary,
+                        }}>
+                            {dashboardSubtitle}
+                        </Text>
+                    </View>
+                    {permissions.canRegisterFace && (
+                        <Button variant="primary" size="sm">
                             <Feather name="camera" size={16} color="#fff" /> {t("Tomar asistencia")}
-                          </Button>
-                        : undefined
-                }
-            />
+                        </Button>
+                    )}
+                </View>
+            </View>
 
             {/* Renderizar dashboard según rol */}
             {vm.userRole === "admin" && (

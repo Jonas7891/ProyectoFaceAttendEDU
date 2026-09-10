@@ -25,6 +25,7 @@ import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-
 import { Feather } from "@expo/vector-icons";
 
 import { Sidebar, SidebarHeader, SidebarNav, SidebarItem, SidebarFooter } from "../components/common/layout";
+import { CollapsibleSidebar } from "../components/common/layout";
 import DashboardView    from "../DashboardView";
 import StudentsView     from "../StudentsView";
 import CoursesView      from "../CoursesView";
@@ -79,9 +80,9 @@ export default function DashboardScreen() {
                 style={{ flex: 1, flexDirection: "row", backgroundColor: c.background.app }}
                 edges={["top", "bottom"]}
             >
-                {/* Sidebar — solo desktop/tablet */}
+                {/* CollapsibleSidebar — solo desktop/tablet */}
                 {!isSmall && (
-                    <Sidebar width={240} position="left">
+                    <CollapsibleSidebar width={240}>
                         {user && (
                             <SidebarHeader>
                                 <Text style={{
@@ -121,11 +122,12 @@ export default function DashboardScreen() {
                                 onPress={handleLogout}
                             />
                         </SidebarFooter>
-                    </Sidebar>
+                    </CollapsibleSidebar>
                 )}
 
                 {/* Contenido principal — renderiza el View del tab activo */}
-                <View style={{ flex: 1,
+                <View style={{ 
+                    flex: 1,
                     overflow: "hidden",
                     paddingBottom: isSmall ? 64 + insets.bottom : 0,
                 }}>
