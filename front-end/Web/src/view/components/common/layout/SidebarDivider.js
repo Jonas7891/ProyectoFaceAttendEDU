@@ -1,6 +1,7 @@
-import React from "react";
+﻿import React from "react";
 import { View } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
+import { SIDEBAR_CONSTANTS } from "./constants";
 
 /**
  * SidebarDivider - Separador visual para Sidebar
@@ -15,7 +16,6 @@ import { useTheme } from "../../hooks/useTheme";
  * @param {object} style - Estilos adicionales
  * 
  * @example
- * // Divider básico
  * <SidebarNav>
  *   <SidebarItem icon="home" label="Inicio" />
  *   <SidebarItem icon="users" label="Usuarios" />
@@ -26,16 +26,14 @@ import { useTheme } from "../../hooks/useTheme";
  * </SidebarNav>
  * 
  * @example
- * // Divider con más spacing
  * <SidebarDivider marginVertical={16} />
  * 
  * @example
- * // Divider custom color
  * <SidebarDivider color="#E0E0E0" />
  */
 export default function SidebarDivider({
-    marginVertical = 8,
-    marginHorizontal = 16,
+    marginVertical = SIDEBAR_CONSTANTS.DIVIDER_MARGIN_V,
+    marginHorizontal = SIDEBAR_CONSTANTS.DIVIDER_MARGIN_H,
     height = 1,
     color,
     style,

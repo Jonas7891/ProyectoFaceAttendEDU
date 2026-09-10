@@ -1,7 +1,8 @@
-import React from "react";
+﻿import React from "react";
 import { View, TouchableOpacity, Text } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
+import { SIDEBAR_CONSTANTS } from "./constants";
 
 /**
  * SidebarHeader - Sección superior del Sidebar
@@ -22,14 +23,12 @@ import { useTheme } from "../../hooks/useTheme";
  * @param {object} style - Estilos adicionales
  * 
  * @example
- * // Header básico con children
  * <SidebarHeader>
  *   <Image source={logo} style={{ width: 40, height: 40 }} />
  *   <Text>Mi App</Text>
  * </SidebarHeader>
  * 
  * @example
- * // Header con título y botón de cierre
  * <SidebarHeader 
  *   title="Menú Principal" 
  *   showClose 
@@ -37,24 +36,17 @@ import { useTheme } from "../../hooks/useTheme";
  * />
  * 
  * @example
- * // Header con toggle collapsed
  * <SidebarHeader 
  *   title="Navegación"
  *   showToggle 
  *   onToggle={handleToggle}
  *   collapsed={isCollapsed}
  * />
- * 
- * @example
- * // Header con user profile y close
- * <SidebarHeader showClose onClose={handleClose} align="space-between">
- *   <UserProfile user={user} />
- * </SidebarHeader>
  */
 export default function SidebarHeader({
     children,
     title,
-    padding = 20,
+    padding = SIDEBAR_CONSTANTS.HEADER_PADDING,
     border = true,
     showClose = false,
     onClose,

@@ -1,22 +1,12 @@
-// ============================================================
-//  CollapsibleSidebar - Sidebar con funcionalidad de colapso
-// ============================================================
-//  Sidebar independiente que puede ocultarse/mostrarse con:
-//  - Click en la pestañita (tab handle)
-//  - Drag/swipe para abrir/cerrar
-//  - Animaciones suaves
-//  - Overlay opcional en móvil
-//
-//  Este componente envuelve el Sidebar básico y agrega la 
-//  funcionalidad de interacción avanzada.
-// ============================================================
-
-import React, { useRef, useState, useEffect } from "react";
-import { View, Animated, TouchableOpacity, PanResponder } from "react-native";
+﻿import React, { useRef, useState, useEffect } from "react";
+import { View, Animated, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import Sidebar from "./Sidebar";
 import { useTheme } from "../../hooks/useTheme";
 import { useResponsive } from "../../hooks/useResponsive";
+import { useSidebarSwipe } from "../../hooks/useSidebarSwipe";
+import { useTabDrag } from "../../hooks/useTabDrag";
+import { SIDEBAR_CONSTANTS } from "./constants";
 
 /**
  * CollapsibleSidebar - Sidebar con funcionalidad completa de colapso
@@ -31,7 +21,7 @@ import { useResponsive } from "../../hooks/useResponsive";
  */
 export default function CollapsibleSidebar({
     children,
-    width = 240,
+    width = SIDEBAR_CONSTANTS.WIDTH,
     defaultOpen,
     onToggle,
     showOverlay = true,
@@ -42,154 +32,70 @@ export default function CollapsibleSidebar({
     const { isSmall } = useResponsive();
     const c = theme.colors;
 
-    // Estado de apertura (defaultOpen depende del tamaño de pantalla si no se especifica)
+    // Estado de apertura
     const [isOpen, setIsOpen] = useState(defaultOpen !== undefined ? defaultOpen : !isSmall);
-    
-    // Ref para el estado actual (para usar en PanResponders)
-    const isOpenRef = useRef(isOpen);
-    useEffect(() => {
-        isOpenRef.current = isOpen;
-    }, [isOpen]);
     
     // Animated values
     const translateX = useRef(new Animated.Value(isOpen ? 0 : -width)).current;
     const animatedWidth = useRef(new Animated.Value(isOpen ? width : 0)).current;
-    const overlayOpacity = useRef(new Animated.Value(isOpen && isSmall ? 0.5 : 0)).current;
+    const overlayOpacity = useRef(new Animated.Value(isOpen && isSmall ? SIDEBAR_CONSTANTS.OVERLAY_OPACITY : 0)).current;
 
     // Toggle función
-    const toggle = () => {
-        const newState = !isOpen;
+    const handleToggle = (newState) => {
         setIsOpen(newState);
         if (onToggle) onToggle(newState);
     };
 
-    // Animar cambios
+    // Hooks de gestos
+    const sidebarPanResponder = useSidebarSwipe({
+        enabled: enableSwipe && isSmall,
+        isOpen,
+        onToggle: handleToggle,
+        width,
+        translateX
+    });
+
+    const tabPanResponder = useTabDrag({
+        enabled: enableSwipe && !isSmall,
+        isOpen,
+        onToggle: handleToggle,
+        width,
+        translateX,
+        animatedWidth
+    });
+
+    // Animar cambios de estado
     useEffect(() => {
         if (isSmall) {
-            // En móvil: translateX con overlay
+            // Móvil: translateX con overlay
             Animated.parallel([
                 Animated.spring(translateX, {
                     toValue: isOpen ? 0 : -width,
                     useNativeDriver: true,
-                    friction: 9,
-                    tension: 60,
+                    ...SIDEBAR_CONSTANTS.SPRING_CONFIG,
                 }),
                 Animated.timing(overlayOpacity, {
-                    toValue: isOpen && showOverlay ? 0.5 : 0,
-                    duration: 250,
+                    toValue: isOpen && showOverlay ? SIDEBAR_CONSTANTS.OVERLAY_OPACITY : 0,
+                    duration: SIDEBAR_CONSTANTS.ANIMATION_DURATION,
                     useNativeDriver: true,
                 }),
             ]).start();
         } else {
-            // En desktop: translateX + animatedWidth en paralelo
+            // Desktop: translateX + animatedWidth
             Animated.parallel([
                 Animated.spring(translateX, {
                     toValue: isOpen ? 0 : -width,
                     useNativeDriver: true,
-                    friction: 9,
-                    tension: 60,
+                    ...SIDEBAR_CONSTANTS.SPRING_CONFIG,
                 }),
                 Animated.spring(animatedWidth, {
                     toValue: isOpen ? width : 0,
                     useNativeDriver: false,
-                    friction: 9,
-                    tension: 60,
+                    ...SIDEBAR_CONSTANTS.SPRING_CONFIG,
                 }),
             ]).start();
         }
     }, [isOpen, width, isSmall, showOverlay]);
-
-    // PanResponder para drag/swipe (móvil: sidebar completo)
-    const sidebarPanResponder = useRef(
-        PanResponder.create({
-            onStartShouldSetPanResponder: () => enableSwipe && isSmall,
-            onMoveShouldSetPanResponder: (_, gestureState) => {
-                return enableSwipe && isSmall && Math.abs(gestureState.dx) > 5;
-            },
-            onPanResponderMove: (_, gestureState) => {
-                if (!isOpen && gestureState.dx > 0) {
-                    const newValue = Math.min(0, -width + gestureState.dx);
-                    translateX.setValue(newValue);
-                } else if (isOpen && gestureState.dx < 0) {
-                    const newValue = Math.max(-width, gestureState.dx);
-                    translateX.setValue(newValue);
-                }
-            },
-            onPanResponderRelease: (_, gestureState) => {
-                const threshold = width * 0.3;
-                
-                if (!isOpen && (gestureState.dx > threshold || gestureState.vx > 0.5)) {
-                    setIsOpen(true);
-                    if (onToggle) onToggle(true);
-                } else if (isOpen && (gestureState.dx < -threshold || gestureState.vx < -0.5)) {
-                    setIsOpen(false);
-                    if (onToggle) onToggle(false);
-                } else {
-                    Animated.spring(translateX, {
-                        toValue: isOpen ? 0 : -width,
-                        useNativeDriver: true,
-                        friction: 9,
-                    }).start();
-                }
-            },
-        })
-    ).current;
-
-    // PanResponder para la pestañita (desktop: arrastrar pestañita)
-    const tabPanResponder = useRef(
-        PanResponder.create({
-            onStartShouldSetPanResponder: () => enableSwipe && !isSmall,
-            onMoveShouldSetPanResponder: (_, gestureState) => {
-                return enableSwipe && !isSmall && Math.abs(gestureState.dx) > 5;
-            },
-            onPanResponderMove: (_, gestureState) => {
-                const currentIsOpen = isOpenRef.current;
-                
-                if (!currentIsOpen && gestureState.dx > 0) {
-                    // Cerrado: arrastrar hacia la derecha para abrir
-                    const newValue = Math.min(0, -width + gestureState.dx);
-                    translateX.setValue(newValue);
-                    
-                    // Actualizar width proporcionalmente
-                    const widthValue = width + newValue;
-                    animatedWidth.setValue(Math.max(0, widthValue));
-                } else if (currentIsOpen && gestureState.dx < 0) {
-                    // Abierto: arrastrar hacia la izquierda para cerrar
-                    const newValue = Math.max(-width, gestureState.dx);
-                    translateX.setValue(newValue);
-                    
-                    // Actualizar width proporcionalmente
-                    const widthValue = width + newValue;
-                    animatedWidth.setValue(Math.max(0, widthValue));
-                }
-            },
-            onPanResponderRelease: (_, gestureState) => {
-                const threshold = width * 0.3;
-                const currentIsOpen = isOpenRef.current;
-                
-                if (!currentIsOpen && (gestureState.dx > threshold || gestureState.vx > 0.5)) {
-                    setIsOpen(true);
-                    if (onToggle) onToggle(true);
-                } else if (currentIsOpen && (gestureState.dx < -threshold || gestureState.vx < -0.5)) {
-                    setIsOpen(false);
-                    if (onToggle) onToggle(false);
-                } else {
-                    Animated.parallel([
-                        Animated.spring(translateX, {
-                            toValue: currentIsOpen ? 0 : -width,
-                            useNativeDriver: true,
-                            friction: 9,
-                        }),
-                        Animated.spring(animatedWidth, {
-                            toValue: currentIsOpen ? width : 0,
-                            useNativeDriver: false,
-                            friction: 9,
-                        }),
-                    ]).start();
-                }
-            },
-        })
-    ).current;
 
     return (
         <Animated.View style={[
@@ -216,13 +122,13 @@ export default function CollapsibleSidebar({
                 >
                     <TouchableOpacity
                         activeOpacity={1}
-                        onPress={toggle}
+                        onPress={() => handleToggle(false)}
                         style={{ flex: 1 }}
                     />
                 </Animated.View>
             )}
 
-            {/* Sidebar Container con pestañita integrada */}
+            {/* Sidebar Container */}
             <Animated.View
                 style={[
                     {
@@ -244,15 +150,15 @@ export default function CollapsibleSidebar({
                     {children}
                 </Sidebar>
 
-                {/* Pestañita (Tab Handle) - Integrada en el sidebar */}
+                {/* Pestañita (Tab Handle) - Solo desktop */}
                 {!isSmall && (
                     <View
                         style={{
                             position: "absolute",
-                            right: -36,
+                            right: -SIDEBAR_CONSTANTS.TAB_WIDTH,
                             top: 0,
                             bottom: 0,
-                            width: 36,
+                            width: SIDEBAR_CONSTANTS.TAB_WIDTH,
                             zIndex: 999,
                         }}
                     >
@@ -262,9 +168,9 @@ export default function CollapsibleSidebar({
                                 position: "absolute",
                                 left: 0,
                                 top: "50%",
-                                marginTop: -98,
+                                marginTop: -216,
                                 width: 30,
-                                height: 52,
+                                height: SIDEBAR_CONSTANTS.TAB_HEIGHT,
                                 backgroundColor: c.background.surface,
                                 borderTopRightRadius: 12,
                                 borderBottomRightRadius: 12,
@@ -282,7 +188,7 @@ export default function CollapsibleSidebar({
                         >
                             <TouchableOpacity
                                 activeOpacity={0.8}
-                                onPress={toggle}
+                                onPress={() => handleToggle(!isOpen)}
                                 style={{
                                     width: "100%",
                                     height: "100%",
@@ -290,13 +196,12 @@ export default function CollapsibleSidebar({
                                     alignItems: "center",
                                 }}
                             >
-                                {/* Icono de la pestañita */}
                                 <View style={{
                                     justifyContent: "center",
                                     alignItems: "center",
                                     gap: 6,
                                 }}>
-                                    {/* Indicador visual (3 líneas horizontales) */}
+                                    {/* Indicador visual (3 líneas) */}
                                     <View style={{ gap: 2.5 }}>
                                         <View style={{
                                             width: 14,
@@ -318,10 +223,10 @@ export default function CollapsibleSidebar({
                                         }} />
                                     </View>
                                     
-                                    {/* Flecha indicadora */}
+                                    {/* Flecha */}
                                     <Feather
                                         name={isOpen ? "chevron-left" : "chevron-right"}
-                                        size={18}
+                                        size={180}
                                         color={c.text.secondary}
                                         style={{ transform: [{ translateY: -8 }] }}
                                     />

@@ -53,7 +53,7 @@ function AdminDashboard({ vm, permissions, isSmall, c, t }) {
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
                 {vm.stats.map((stat) => (
                     <View key={stat.label} style={{ 
-                        flexBasis: isSmall ? "47%" : "30%", 
+                        flexBasis: isSmall ? "47%" : "23%", 
                         flexGrow: 1,
                         minWidth: 160,
                     }}>
@@ -194,7 +194,12 @@ function AdminDashboard({ vm, permissions, isSmall, c, t }) {
                     }}>
                         {t("Últimas 5 semanas")}
                     </Text>
-                    <WeeklyTrend data={vm.attendanceByWeek} maxWeeks={5} />
+                    <WeeklyTrend 
+                        data={vm.attendanceByWeek} 
+                        maxWeeks={5}
+                        showTrend={true}
+                        colorByPerformance={true}
+                    />
                 </Card>
 
                 <Card style={{ flex: 1 }}>
@@ -213,7 +218,12 @@ function AdminDashboard({ vm, permissions, isSmall, c, t }) {
                     }}>
                         {t("Esta semana")}
                     </Text>
-                    <DailyBarChart data={vm.attendanceByDay} height={100} />
+                    <DailyBarChart 
+                        data={vm.attendanceByDay} 
+                        height={100}
+                        showLegend={true}
+                        showSummary={true}
+                    />
                 </Card>
             </View>
 
@@ -326,18 +336,30 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t }) {
                 />
             </View>
 
-            {/* Gráficas */}
+            {/* Gráficas del teacher */}
             <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
                 <Card style={{ flex: 1 }}>
                     <Text style={{
                         fontSize: 14,
                         fontWeight: "600",
                         color: c.text.primary,
-                        marginBottom: 16,
+                        marginBottom: 4,
                     }}>
                         {t("Asistencia por día")}
                     </Text>
-                    <DailyBarChart data={vm.attendanceByDay} height={100} />
+                    <Text style={{
+                        fontSize: 12,
+                        color: c.text.secondary,
+                        marginBottom: 16,
+                    }}>
+                        {t("En mis fichas esta semana")}
+                    </Text>
+                    <DailyBarChart 
+                        data={vm.attendanceByDay} 
+                        height={100}
+                        showLegend={true}
+                        showSummary={true}
+                    />
                 </Card>
 
                 <Card style={{ flex: 1 }}>
@@ -345,9 +367,16 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t }) {
                         fontSize: 14,
                         fontWeight: "600",
                         color: c.text.primary,
+                        marginBottom: 4,
+                    }}>
+                        {t("Asistencia por ficha")}
+                    </Text>
+                    <Text style={{
+                        fontSize: 12,
+                        color: c.text.secondary,
                         marginBottom: 16,
                     }}>
-                        {t("Asistencia por curso")}
+                        {t("Mis fichas asignadas")}
                     </Text>
                     <View style={{ gap: 14 }}>
                         {vm.courseAttendance.map(item => (
@@ -385,6 +414,31 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t }) {
                     </View>
                 </Card>
             </View>
+
+            {/* Tendencia semanal del teacher */}
+            <Card>
+                <Text style={{
+                    fontSize: 14,
+                    fontWeight: "600",
+                    color: c.text.primary,
+                    marginBottom: 4,
+                }}>
+                    {t("Tendencia de mis fichas")}
+                </Text>
+                <Text style={{
+                    fontSize: 12,
+                    color: c.text.secondary,
+                    marginBottom: 16,
+                }}>
+                    {t("Evolución de asistencia (últimas 5 semanas)")}
+                </Text>
+                <WeeklyTrend 
+                    data={vm.attendanceByWeek} 
+                    maxWeeks={5}
+                    showTrend={true}
+                    colorByPerformance={true}
+                />
+            </Card>
 
             {/* Estudiantes en riesgo del teacher */}
             {vm.teacherData.myAtRiskStudents.length > 0 && (
@@ -439,18 +493,30 @@ function StudentDashboard({ vm, permissions, isSmall, c, t }) {
                 ))}
             </View>
 
-            {/* Gráficas personales */}
+            {/* Gráficas personales del estudiante */}
             <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
                 <Card style={{ flex: 1 }}>
                     <Text style={{
                         fontSize: 14,
                         fontWeight: "600",
                         color: c.text.primary,
-                        marginBottom: 16,
+                        marginBottom: 4,
                     }}>
                         {t("Mi asistencia semanal")}
                     </Text>
-                    <WeeklyTrend data={vm.attendanceByWeek} maxWeeks={5} />
+                    <Text style={{
+                        fontSize: 12,
+                        color: c.text.secondary,
+                        marginBottom: 16,
+                    }}>
+                        {t("Últimas 5 semanas")}
+                    </Text>
+                    <WeeklyTrend 
+                        data={vm.attendanceByWeek} 
+                        maxWeeks={5}
+                        showTrend={true}
+                        colorByPerformance={true}
+                    />
                 </Card>
 
                 <Card style={{ flex: 1 }}>
@@ -458,46 +524,78 @@ function StudentDashboard({ vm, permissions, isSmall, c, t }) {
                         fontSize: 14,
                         fontWeight: "600",
                         color: c.text.primary,
+                        marginBottom: 4,
+                    }}>
+                        {t("Mi asistencia diaria")}
+                    </Text>
+                    <Text style={{
+                        fontSize: 12,
+                        color: c.text.secondary,
                         marginBottom: 16,
                     }}>
-                        {t("Asistencia por curso")}
+                        {t("Esta semana")}
                     </Text>
-                    <View style={{ gap: 14 }}>
-                        {vm.courseAttendance.map(item => (
-                            <View key={item.course}>
-                                <View style={{
-                                    flexDirection: "row",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
-                                    marginBottom: 8,
-                                }}>
-                                    <Text style={{
-                                        fontSize: 13,
-                                        fontWeight: "500",
-                                        color: c.text.primary,
-                                        flex: 1,
-                                    }} numberOfLines={1}>
-                                        {item.courseName}
-                                    </Text>
-                                    <Text style={{
-                                        fontSize: 13,
-                                        fontWeight: "700",
-                                        color: item.barColor,
-                                        marginLeft: 8,
-                                    }}>
-                                        {item.rate}%
-                                    </Text>
-                                </View>
-                                <ProgressBar
-                                    value={item.rate}
-                                    color={item.barColor}
-                                    size="md"
-                                />
-                            </View>
-                        ))}
-                    </View>
+                    <DailyBarChart 
+                        data={vm.attendanceByDay} 
+                        height={100}
+                        showLegend={true}
+                        showSummary={true}
+                    />
                 </Card>
             </View>
+
+            {/* Asistencia por curso del estudiante */}
+            <Card>
+                <Text style={{
+                    fontSize: 14,
+                    fontWeight: "600",
+                    color: c.text.primary,
+                    marginBottom: 4,
+                }}>
+                    {t("Asistencia por curso")}
+                </Text>
+                <Text style={{
+                    fontSize: 12,
+                    color: c.text.secondary,
+                    marginBottom: 16,
+                }}>
+                    {t("Mi rendimiento en cada curso")}
+                </Text>
+                <View style={{ gap: 14 }}>
+                    {vm.courseAttendance.map(item => (
+                        <View key={item.course}>
+                            <View style={{
+                                flexDirection: "row",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                marginBottom: 8,
+                            }}>
+                                <Text style={{
+                                    fontSize: 13,
+                                    fontWeight: "500",
+                                    color: c.text.primary,
+                                    flex: 1,
+                                }} numberOfLines={1}>
+                                    {item.courseName}
+                                </Text>
+                                <Text style={{
+                                    fontSize: 13,
+                                    fontWeight: "700",
+                                    color: item.barColor,
+                                    marginLeft: 8,
+                                }}>
+                                    {item.rate}%
+                                </Text>
+                            </View>
+                            <ProgressBar
+                                value={item.rate}
+                                color={item.barColor}
+                                size="md"
+                            />
+                        </View>
+                    ))}
+                </View>
+            </Card>
 
             {/* Actividad reciente */}
             <Card>

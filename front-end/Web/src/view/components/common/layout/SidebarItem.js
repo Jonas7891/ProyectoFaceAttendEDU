@@ -1,7 +1,8 @@
-import React from "react";
+﻿import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
+import { getVariantColors, SIDEBAR_CONSTANTS } from "./constants";
 
 /**
  * SidebarItem - Item individual de navegación
@@ -23,7 +24,6 @@ import { useTheme } from "../../hooks/useTheme";
  * @param {object} style - Estilos adicionales
  * 
  * @example
- * // Item básico
  * <SidebarItem 
  *   icon="home" 
  *   label="Inicio" 
@@ -32,32 +32,19 @@ import { useTheme } from "../../hooks/useTheme";
  * />
  * 
  * @example
- * // Item con badge
  * <SidebarItem 
  *   icon="bell" 
  *   label="Notificaciones" 
  *   badge={5}
  *   onPress={() => navigate('notifications')}
- *   accessibilityHint="Ver 5 notificaciones nuevas"
  * />
  * 
  * @example
- * // Item peligroso (logout)
  * <SidebarItem 
  *   icon="log-out" 
  *   label="Cerrar sesión" 
  *   variant="danger"
  *   onPress={handleLogout}
- *   accessibilityHint="Cerrar sesión de la aplicación"
- * />
- * 
- * @example
- * // Item con elementos custom
- * <SidebarItem 
- *   leftElement={<Avatar size={24} />}
- *   label="Perfil"
- *   rightElement={<Feather name="chevron-right" />}
- *   onPress={() => navigate('profile')}
  * />
  */
 export default function SidebarItem({
@@ -77,65 +64,18 @@ export default function SidebarItem({
     const { theme } = useTheme();
     const c = theme.colors;
 
-    // Colores según variante
-    const getColors = () => {
-        if (disabled) {
-            return {
-                bg: "transparent",
-                text: c.text.disabled,
-                icon: c.text.disabled,
-                border: "transparent",
-            };
-        }
-
-        if (active) {
-            return {
-                bg: c.brand.primaryLight,
-                text: c.brand.primary,
-                icon: c.brand.primary,
-                border: c.brand.primary,
-            };
-        }
-
-        switch (variant) {
-            case "danger":
-                return {
-                    bg: "transparent",
-                    text: c.status.error,
-                    icon: c.status.error,
-                    border: "transparent",
-                };
-            case "success":
-                return {
-                    bg: "transparent",
-                    text: c.status.success,
-                    icon: c.status.success,
-                    border: "transparent",
-                };
-            case "warning":
-                return {
-                    bg: "transparent",
-                    text: c.status.warning,
-                    icon: c.status.warning,
-                    border: "transparent",
-                };
-            case "default":
-            default:
-                return {
-                    bg: "transparent",
-                    text: c.text.primary,
-                    icon: c.text.secondary,
-                    border: "transparent",
-                };
-        }
-    };
-
-    const colors = getColors();
+    // Usar utility centralizada de colores
+    const colors = getVariantColors({
+        variant,
+        active,
+        disabled,
+        colors: c
+    });
 
     // Generar label para accessibility
     const a11yLabel = accessibilityLabel || (
         badge 
-            ? `${label}, ${badge} nuevas` 
+            ? ${label},  nuevas 
             : label
     );
 
@@ -143,7 +83,7 @@ export default function SidebarItem({
     const a11yHint = accessibilityHint || (
         disabled 
             ? undefined 
-            : `Navegar a ${label}`
+            : Navegar a 
     );
 
     return (
@@ -162,7 +102,7 @@ export default function SidebarItem({
                     flexDirection: "row",
                     alignItems: "center",
                     gap: 12,
-                    padding: 16,
+                    padding: SIDEBAR_CONSTANTS.ITEM_PADDING,
                     backgroundColor: colors.bg,
                     borderLeftWidth: active ? 3 : 0,
                     borderLeftColor: colors.border,
@@ -199,7 +139,7 @@ export default function SidebarItem({
                 rightElement
             ) : badge ? (
                 <View
-                    accessibilityLabel={`${badge} notificaciones`}
+                    accessibilityLabel={${badge} notificaciones}
                     accessibilityRole="text"
                     style={{
                         backgroundColor: c.status.error,

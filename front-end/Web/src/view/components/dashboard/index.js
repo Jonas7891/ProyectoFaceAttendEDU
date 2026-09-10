@@ -11,3 +11,4 @@ export { InstructorAttendanceList } from './InstructorAttendanceList';
 export { TopPerformingGroups } from './TopPerformingGroups';
 export { AtRiskStudentsList } from './AtRiskStudentsList';
 export { PerfectAttendanceList } from './PerfectAttendanceList';
+export { MetricsSummary } from './MetricsSummary';
