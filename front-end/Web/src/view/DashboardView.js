@@ -29,6 +29,7 @@ import {
 import {
     DailyBarChart,
     WeeklyTrend,
+    useWeeklyAttendanceController,
     InstructorAttendanceList,
     TopPerformingGroups,
     AtRiskStudentsList,
@@ -39,13 +40,77 @@ import { useResponsive }         from "./components/hooks/useResponsive";
 import { useDashboardViewModel } from "../viewmodels/useDashboardViewModel";
 import { useRolePermissions }    from "./hooks/useRolePermissions";
 import { useTranslation }        from "../i18n/hooks/useTranslation";
+import { 
+    DEFAULT_ACADEMIC_PERIOD,
+    getCurrentPeriod,
+    getAcademicPeriodConfig
+} from "../core/constants/academicPeriods";
+
+// ──────────────────────────────────────────────────────────────
+// HELPERS
+// ──────────────────────────────────────────────────────────────
+
+/**
+ * Genera el subtítulo dinámico para la sección de tendencia semanal
+ * según el período académico configurado (viene de Settings)
+ * 
+ * @param {string} periodType - Tipo de período académico
+ * @param {Function} t - Función de traducción
+ * @returns {string} Subtítulo formateado
+ */
+function getWeeklyTrendSubtitle(periodType, t) {
+    const currentPeriod = getCurrentPeriod(periodType);
+    const config = getAcademicPeriodConfig(periodType);
+    
+    if (!currentPeriod || !config) {
+        return `${t("Selecciona para ver detalles")}`;
+    }
+    
+    // Formatear el label del período según el tipo
+    let periodLabel;
+    switch (periodType) {
+        case "annual":
+            periodLabel = t("Año actual");
+            break;
+        case "semestral":
+            periodLabel = currentPeriod.periodNumber === 1 
+                ? t("Primer semestre") 
+                : t("Segundo semestre");
+            break;
+        case "quarterly":
+            periodLabel = `${t("Cuatrimestre")} ${currentPeriod.periodNumber}`;
+            break;
+        case "trimestral":
+            periodLabel = `${t("Trimestre")} ${currentPeriod.periodNumber}`;
+            break;
+        default:
+            periodLabel = currentPeriod.label;
+    }
+    
+    return `${periodLabel} (${config.label}) • ${t("Selecciona para ver detalles")}`;
+}
 
 // ──────────────────────────────────────────────────────────────
 // ADMIN DASHBOARD — Vista completa del sistema
 // ──────────────────────────────────────────────────────────────
 
 function AdminDashboard({ vm, permissions, isSmall, c, t }) {
+    // Hook para orquestar selección de semanas
+    const {
+        selectedWeek,
+        handleWeekSelect,
+        handleResetToCurrentWeek,
+        weeklyTrendProps,
+        dailyBarChartProps,
+    } = useWeeklyAttendanceController(vm.attendanceByWeek, vm.attendanceByDay);
+    
     if (!vm.adminData) return null;
+
+    const weekLabel = selectedWeek ? selectedWeek.week : t("Esta semana");
+    
+    // TODO: Obtener de Settings cuando esté implementado
+    const academicPeriod = DEFAULT_ACADEMIC_PERIOD;
+    const weeklySubtitle = getWeeklyTrendSubtitle(academicPeriod, t);
 
     return (
         <>
@@ -176,7 +241,7 @@ function AdminDashboard({ vm, permissions, isSmall, c, t }) {
                 </View>
             </View>
 
-            {/* Gráficas de tendencias */}
+            {/* Gráficas de tendencias - Orquestadas por el hook */}
             <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
                 <Card style={{ flex: 1 }}>
                     <Text style={{
@@ -192,34 +257,63 @@ function AdminDashboard({ vm, permissions, isSmall, c, t }) {
                         color: c.text.secondary,
                         marginBottom: 16,
                     }}>
-                        {t("Últimas 5 semanas")}
+                        {weeklySubtitle}
                     </Text>
                     <WeeklyTrend 
-                        data={vm.attendanceByWeek} 
+                        {...weeklyTrendProps}
                         maxWeeks={5}
                         showTrend={true}
                         colorByPerformance={true}
+                        academicPeriod={academicPeriod}
                     />
                 </Card>
 
                 <Card style={{ flex: 1 }}>
-                    <Text style={{
-                        fontSize: 14,
-                        fontWeight: "600",
-                        color: c.text.primary,
+                    <View style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
                         marginBottom: 4,
+                        minHeight: 20,
                     }}>
-                        {t("Asistencia por día")}
-                    </Text>
+                        <Text style={{
+                            fontSize: 14,
+                            fontWeight: "600",
+                            color: c.text.primary,
+                        }}>
+                            {t("Asistencia por día")}
+                        </Text>
+                        {selectedWeek && (
+                            <TouchableOpacity
+                                onPress={handleResetToCurrentWeek}
+                                style={{
+                                    paddingHorizontal: 8,
+                                    paddingVertical: 2,
+                                    borderRadius: 4,
+                                    backgroundColor: c.status.info + "15",
+                                }}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={{
+                                    fontSize: 10,
+                                    fontWeight: "600",
+                                    color: c.status.info,
+                                }}>
+                                    {t("Ver semana actual")}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
                     <Text style={{
                         fontSize: 12,
                         color: c.text.secondary,
                         marginBottom: 16,
+                        minHeight: 16,
                     }}>
-                        {t("Esta semana")}
+                        {weekLabel}
                     </Text>
                     <DailyBarChart 
-                        data={vm.attendanceByDay} 
+                        {...dailyBarChartProps}
                         height={100}
                         showLegend={true}
                         showSummary={true}
@@ -293,6 +387,10 @@ function AdminDashboard({ vm, permissions, isSmall, c, t }) {
 
 function TeacherDashboard({ vm, permissions, isSmall, c, t }) {
     if (!vm.teacherData) return null;
+    
+    // TODO: Obtener de Settings cuando esté implementado
+    const academicPeriod = DEFAULT_ACADEMIC_PERIOD;
+    const weeklySubtitle = getWeeklyTrendSubtitle(academicPeriod, t);
 
     return (
         <>
@@ -345,30 +443,6 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t }) {
                         color: c.text.primary,
                         marginBottom: 4,
                     }}>
-                        {t("Asistencia por día")}
-                    </Text>
-                    <Text style={{
-                        fontSize: 12,
-                        color: c.text.secondary,
-                        marginBottom: 16,
-                    }}>
-                        {t("En mis fichas esta semana")}
-                    </Text>
-                    <DailyBarChart 
-                        data={vm.attendanceByDay} 
-                        height={100}
-                        showLegend={true}
-                        showSummary={true}
-                    />
-                </Card>
-
-                <Card style={{ flex: 1 }}>
-                    <Text style={{
-                        fontSize: 14,
-                        fontWeight: "600",
-                        color: c.text.primary,
-                        marginBottom: 4,
-                    }}>
                         {t("Asistencia por ficha")}
                     </Text>
                     <Text style={{
@@ -413,32 +487,49 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t }) {
                         ))}
                     </View>
                 </Card>
+                
+                {/* Vista integrada de tendencia semanal */}
+                <Card style={{ flex: 1 }}>
+                    <Text style={{
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: c.text.primary,
+                        marginBottom: 4,
+                    }}>
+                        {t("Tendencia de mis fichas")}
+                    </Text>
+                    <Text style={{
+                        fontSize: 12,
+                        color: c.text.secondary,
+                        marginBottom: 16,
+                    }}>
+                        {weeklySubtitle}
+                    </Text>
+                    <WeeklyTrend 
+                        data={vm.attendanceByWeek} 
+                        maxWeeks={5}
+                        showTrend={true}
+                        colorByPerformance={true}
+                        onWeekSelect={(weekData) => console.log("Semana seleccionada:", weekData)}
+                        selectedWeek={null}
+                        academicPeriod={academicPeriod}
+                    />
+                </Card>
             </View>
 
-            {/* Tendencia semanal del teacher */}
-            <Card>
-                <Text style={{
-                    fontSize: 14,
-                    fontWeight: "600",
-                    color: c.text.primary,
-                    marginBottom: 4,
-                }}>
-                    {t("Tendencia de mis fichas")}
-                </Text>
-                <Text style={{
-                    fontSize: 12,
-                    color: c.text.secondary,
-                    marginBottom: 16,
-                }}>
-                    {t("Evolución de asistencia (últimas 5 semanas)")}
-                </Text>
-                <WeeklyTrend 
-                    data={vm.attendanceByWeek} 
-                    maxWeeks={5}
-                    showTrend={true}
-                    colorByPerformance={true}
-                />
-            </Card>
+            {/* Vista integrada de asistencia diaria */}
+            <WeeklyAttendanceView
+                weeklyData={vm.attendanceByWeek}
+                currentWeekData={vm.attendanceByDay}
+                maxWeeks={5}
+                showTrend={false}
+                colorByPerformance={true}
+                weeklyTitle={t("Tendencia de mis fichas")}
+                weeklySubtitle={weeklySubtitle}
+                dailyTitle={t("Asistencia por día")}
+                currentWeekLabel={t("En mis fichas esta semana")}
+                isSmall={isSmall}
+            />
 
             {/* Estudiantes en riesgo del teacher */}
             {vm.teacherData.myAtRiskStudents.length > 0 && (
@@ -470,7 +561,17 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t }) {
 // ──────────────────────────────────────────────────────────────
 
 function StudentDashboard({ vm, permissions, isSmall, c, t }) {
+    const [selectedWeek, setSelectedWeek] = React.useState(null);
+    
     if (!vm.studentData) return null;
+
+    // Determinar qué datos diarios mostrar
+    const displayedDailyData = selectedWeek?.dailyData || vm.attendanceByDay;
+    const weekLabel = selectedWeek ? selectedWeek.week : t("Esta semana");
+    
+    // TODO: Obtener de Settings cuando esté implementado
+    const academicPeriod = DEFAULT_ACADEMIC_PERIOD;
+    const weeklySubtitle = getWeeklyTrendSubtitle(academicPeriod, t);
 
     return (
         <>
@@ -509,34 +610,62 @@ function StudentDashboard({ vm, permissions, isSmall, c, t }) {
                         color: c.text.secondary,
                         marginBottom: 16,
                     }}>
-                        {t("Últimas 5 semanas")}
+                        {weeklySubtitle}
                     </Text>
                     <WeeklyTrend 
                         data={vm.attendanceByWeek} 
                         maxWeeks={5}
                         showTrend={true}
                         colorByPerformance={true}
+                        onWeekSelect={(weekData) => setSelectedWeek(weekData)}
+                        selectedWeek={selectedWeek?.week}
+                        academicPeriod={academicPeriod}
                     />
                 </Card>
 
                 <Card style={{ flex: 1 }}>
-                    <Text style={{
-                        fontSize: 14,
-                        fontWeight: "600",
-                        color: c.text.primary,
+                    <View style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
                         marginBottom: 4,
                     }}>
-                        {t("Mi asistencia diaria")}
-                    </Text>
+                        <Text style={{
+                            fontSize: 14,
+                            fontWeight: "600",
+                            color: c.text.primary,
+                        }}>
+                            {t("Mi asistencia diaria")}
+                        </Text>
+                        {selectedWeek && (
+                            <TouchableOpacity
+                                onPress={() => setSelectedWeek(null)}
+                                style={{
+                                    paddingHorizontal: 8,
+                                    paddingVertical: 3,
+                                    borderRadius: 4,
+                                    backgroundColor: c.status.info + "15",
+                                }}
+                            >
+                                <Text style={{
+                                    fontSize: 10,
+                                    fontWeight: "600",
+                                    color: c.status.info,
+                                }}>
+                                    {t("Ver semana actual")}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
                     <Text style={{
                         fontSize: 12,
                         color: c.text.secondary,
                         marginBottom: 16,
                     }}>
-                        {t("Esta semana")}
+                        {weekLabel}
                     </Text>
                     <DailyBarChart 
-                        data={vm.attendanceByDay} 
+                        data={displayedDailyData} 
                         height={100}
                         showLegend={true}
                         showSummary={true}

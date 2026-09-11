@@ -14,3 +14,4 @@
 // export { default as Colors } from './colors'; // ⚠️ DEPRECATED - Removido del export
 export { default as Typography, getTypography } from './typography';
 export { BadgePositions, BadgePositionsMobile } from './badgePositions';
+export * from './academicPeriods';

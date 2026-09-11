@@ -7,6 +7,7 @@
 
 export { DailyBarChart } from './DailyBarChart';
 export { WeeklyTrend } from './WeeklyTrend';
+export { useWeeklyAttendanceController } from './WeeklyAttendanceView';
 export { InstructorAttendanceList } from './InstructorAttendanceList';
 export { TopPerformingGroups } from './TopPerformingGroups';
 export { AtRiskStudentsList } from './AtRiskStudentsList';

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 
@@ -13,6 +13,8 @@ import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
  * @param {boolean} showLabels - Mostrar etiquetas
  * @param {number} barWidth - Ancho de cada barra
  * @param {number} gap - Espacio entre grupos de barras
+ * @param {Function} onBarPress - Callback al presionar una barra (recibe el item completo)
+ * @param {string} selectedLabel - Label de la barra actualmente seleccionada
  */
 export function BarChart({
   data = [],
@@ -22,6 +24,8 @@ export function BarChart({
   barWidth = 8,
   gap = 4,
   style,
+  onBarPress,
+  selectedLabel,
 }) {
   const { theme } = useTheme();
 
@@ -36,11 +40,30 @@ export function BarChart({
     )
   );
 
-  const renderBars = (item) => {
+  const renderBars = (item, itemIndex) => {
     const values = Array.isArray(item.values) ? item.values : [{ value: item.value, color: item.color }];
+    const isSelected = selectedLabel === item.label;
+    const isInteractive = !!onBarPress;
+    
+    const BarContainer = isInteractive ? TouchableOpacity : View;
     
     return (
-      <View key={item.label} style={styles.barGroup}>
+      <BarContainer 
+        key={item.label} 
+        style={[
+          styles.barGroup,
+          isInteractive && styles.interactiveBarGroup,
+          isSelected && {
+            backgroundColor: theme.colors.brand.primary + "10",
+            borderRadius: DESIGN_TOKENS.borderRadius.md,
+            paddingVertical: 6,
+            paddingHorizontal: 4,
+            transform: [{ scale: 1.05 }],
+          }
+        ]}
+        onPress={isInteractive ? () => onBarPress(item, itemIndex) : undefined}
+        activeOpacity={0.7}
+      >
         <View style={[styles.barsContainer, { height }]}>
           {values.map((bar, index) => {
             const barHeight = Math.max(3, (bar.value / maxValue) * height);
@@ -53,6 +76,8 @@ export function BarChart({
                     width: barWidth,
                     height: barHeight,
                     backgroundColor: bar.color || theme.colors.brand.primary,
+                    opacity: isSelected ? 1 : 0.9,
+                    transform: isSelected ? [{ scale: 1.1 }] : [],
                   },
                 ]}
               />
@@ -60,16 +85,34 @@ export function BarChart({
           })}
         </View>
         {showLabels && (
-          <Text style={[styles.label, { color: theme.colors.text.secondary }]}>
-            {item.label}
-          </Text>
+          <View style={{
+            paddingHorizontal: 8,
+            paddingVertical: 2,
+            borderRadius: 4,
+            backgroundColor: isSelected 
+              ? theme.colors.brand.primary + "15" 
+              : "transparent",
+          }}>
+            <Text style={[
+              styles.label, 
+              { 
+                color: isSelected 
+                  ? theme.colors.brand.primary
+                  : theme.colors.text.secondary,
+                fontWeight: isSelected ? "700" : "500",
+                fontSize: isSelected ? 12 : 11,
+              }
+            ]}>
+              {item.label}
+            </Text>
+          </View>
         )}
-      </View>
+      </BarContainer>
     );
   };
 
   return (
-    <View style={[styles.container, { height: height + (showLabels ? 30 : 0) }, style]}>
+    <View style={[styles.container, { height: height + (showLabels ? 40 : 0) }, style]}>
       <View style={[styles.chart, { gap }]}>
         {data.map(renderBars)}
       </View>
@@ -90,6 +133,10 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     gap: DESIGN_TOKENS.spacing.xs,
+    transition: "all 0.2s ease",
+  },
+  interactiveBarGroup: {
+    cursor: "pointer",
   },
   barsContainer: {
     flexDirection: "row",
@@ -98,10 +145,12 @@ const styles = StyleSheet.create({
   },
   bar: {
     borderRadius: DESIGN_TOKENS.borderRadius.lg,
+    transition: "all 0.2s ease",
   },
   label: {
     fontSize: 11,
     textAlign: "center",
+    transition: "all 0.2s ease",
   },
 });
 
