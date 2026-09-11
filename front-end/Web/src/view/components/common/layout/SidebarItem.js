@@ -75,7 +75,7 @@ export default function SidebarItem({
     // Generar label para accessibility
     const a11yLabel = accessibilityLabel || (
         badge 
-            ? ${label},  nuevas 
+            ? `${label}, ${badge} nuevas` 
             : label
     );
 
@@ -83,7 +83,7 @@ export default function SidebarItem({
     const a11yHint = accessibilityHint || (
         disabled 
             ? undefined 
-            : Navegar a 
+            : `Navegar a ${label}`
     );
 
     return (
@@ -139,7 +139,7 @@ export default function SidebarItem({
                 rightElement
             ) : badge ? (
                 <View
-                    accessibilityLabel={${badge} notificaciones}
+                    accessibilityLabel={`${badge} notificaciones`}
                     accessibilityRole="text"
                     style={{
                         backgroundColor: c.status.error,

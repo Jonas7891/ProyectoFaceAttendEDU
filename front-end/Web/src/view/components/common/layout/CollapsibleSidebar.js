@@ -168,7 +168,7 @@ export default function CollapsibleSidebar({
                                 position: "absolute",
                                 left: 0,
                                 top: "50%",
-                                marginTop: -216,
+                                marginTop: -196,
                                 width: 30,
                                 height: SIDEBAR_CONSTANTS.TAB_HEIGHT,
                                 backgroundColor: c.background.surface,
@@ -226,7 +226,7 @@ export default function CollapsibleSidebar({
                                     {/* Flecha */}
                                     <Feather
                                         name={isOpen ? "chevron-left" : "chevron-right"}
-                                        size={180}
+                                        size={18}
                                         color={c.text.secondary}
                                         style={{ transform: [{ translateY: -8 }] }}
                                     />
