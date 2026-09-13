@@ -63,6 +63,13 @@ export default function LoginView({
         errorMarginTop: 3,         // Margen entre campo y mensaje de error
     };
     
+    // Handler para envío con Enter
+    const handleKeyPress = (e) => {
+        if (e.nativeEvent.key === 'Enter' && !vm.loading) {
+            vm.handleLogin();
+        }
+    };
+
     const fields = (
         <View style={{ gap: FORM_SPACING.fieldGap }}>
             <TextInput
@@ -71,6 +78,7 @@ export default function LoginView({
                 value={vm.emailDisplay}
                 onChangeText={vm.setEmail}
                 onBlur={() => vm.handleBlur('email')}
+                onKeyPress={handleKeyPress}
                 type="email"
                 leftIcon={<Feather name="mail" size={20} color={c.text.secondary} />}
                 error={!!vm.emailError}
@@ -86,6 +94,7 @@ export default function LoginView({
                     value={vm.password}
                     onChangeText={vm.setPassword}
                     onBlur={() => vm.handleBlur('password')}
+                    onKeyPress={handleKeyPress}
                     type="password"
                     leftIcon={<Feather name="lock" size={20} color={c.text.secondary} />}
                     rightIcon={

@@ -244,27 +244,14 @@ function AdminDashboard({ vm, permissions, isSmall, c, t }) {
             {/* Gráficas de tendencias - Orquestadas por el hook */}
             <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
                 <Card style={{ flex: 1 }}>
-                    <Text style={{
-                        fontSize: 14,
-                        fontWeight: "600",
-                        color: c.text.primary,
-                        marginBottom: 4,
-                    }}>
-                        {t("Tendencia semanal")}
-                    </Text>
-                    <Text style={{
-                        fontSize: 12,
-                        color: c.text.secondary,
-                        marginBottom: 16,
-                    }}>
-                        {weeklySubtitle}
-                    </Text>
                     <WeeklyTrend 
                         {...weeklyTrendProps}
+                        title={t("Tendencia semanal")}
                         maxWeeks={5}
                         showTrend={true}
                         colorByPerformance={true}
                         academicPeriod={academicPeriod}
+                        t={t}
                     />
                 </Card>
 

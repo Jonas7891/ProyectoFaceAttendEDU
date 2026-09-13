@@ -101,7 +101,7 @@ export default function CollapsibleSidebar({
         <Animated.View style={[
             { 
                 position: "relative", 
-                zIndex: 1,
+                zIndex: isSmall ? 1000 : 10,
                 width: isSmall ? width : animatedWidth,
             },
         ]}>
@@ -139,8 +139,8 @@ export default function CollapsibleSidebar({
                         top: isSmall ? 0 : undefined,
                         bottom: isSmall ? 0 : undefined,
                         transform: [{ translateX }],
-                        zIndex: isSmall ? 999 : 1,
-                        elevation: isSmall ? 10 : 0,
+                        zIndex: isSmall ? 1000 : 10,
+                        elevation: isSmall ? 10 : 5,
                     },
                     style,
                 ]}
@@ -159,7 +159,7 @@ export default function CollapsibleSidebar({
                             top: 0,
                             bottom: 0,
                             width: SIDEBAR_CONSTANTS.TAB_WIDTH,
-                            zIndex: 999,
+                            zIndex: 1000,
                         }}
                     >
                         <View
@@ -183,7 +183,7 @@ export default function CollapsibleSidebar({
                                 shadowOffset: { width: 2, height: 0 },
                                 shadowOpacity: 0.15,
                                 shadowRadius: 6,
-                                elevation: 10,
+                                elevation: 15,
                             }}
                         >
                             <TouchableOpacity

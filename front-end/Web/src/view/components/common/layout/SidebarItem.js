@@ -160,6 +160,14 @@ export default function SidebarItem({
                         {badge}
                     </Text>
                 </View>
+            ) : variant !== "danger" ? (
+                /* Chevron sutil para items normales (no para "Cerrar sesión") */
+                <Feather 
+                    name="chevron-right" 
+                    size={16} 
+                    color={c.text.tertiary} 
+                    style={{ opacity: 0.5 }}
+                />
             ) : null}
         </TouchableOpacity>
     );

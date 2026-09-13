@@ -19,14 +19,12 @@ import {
     ConfidenceGuide,
 } from "./components/settings/tabs";
 
-export default function SettingsView() {
+export default function SettingsView({ section = "appearance" }) {
     const { isSmall } = useResponsive();
     const { theme, mode, accentColor, setAccentColor } = useTheme();
     const { currentLanguage, t } = useTranslation();
     const permissions = useRolePermissions();
     const c = theme.colors;
-
-    const [section, setSection] = useState("appearance");
 
     const [previewAccent, setPreviewAccent] = useState(accentColor);
     const [hasUnsaved, setHasUnsaved] = useState(false);
@@ -56,17 +54,6 @@ export default function SettingsView() {
 
     const activeNotifications = [emailAlert, weeklyReport, atRiskAlert, dailySummary].filter(Boolean).length;
 
-    // Secciones visibles seg�n el rol
-    const ALL_SECTIONS = [
-        { id: "general", label: t("General"), icon: "globe", desc: t("Instituci�n y semestre"), adminOnly: true },
-        { id: "facial", label: t("Reconocimiento"), icon: "aperture", desc: t("Umbral y c�mara"), adminOnly: true },
-        { id: "notifications", label: t("Notificaciones"), icon: "bell", desc: t("Alertas y reportes"), adminOnly: false },
-        { id: "security", label: t("Seguridad"), icon: "shield", desc: t("Acceso y sesiones"), adminOnly: true },
-        { id: "appearance", label: t("Apariencia"), icon: "sliders", desc: t("Tema y colores"), adminOnly: false },
-    ];
-
-    const SECTIONS = ALL_SECTIONS.filter(s => !s.adminOnly || permissions.canManageUsers);
-
     function handleSave() {
         if (hasUnsaved) {
             setAccentColor(previewAccent);
@@ -94,30 +81,6 @@ export default function SettingsView() {
         backgroundColor: c.background.surface,
     };
     const sectionTitle = { fontSize: 10, fontWeight: "700", color: c.text.primary };
-
-    // Badge de notificaciones activas por secci�n
-    function SectionBadge({ id }) {
-        if (id === "notifications" && activeNotifications > 0) {
-            return (
-                <View style={{
-                    width: 18,
-                    height: 18,
-                    borderRadius: 14,
-                    backgroundColor: c.brand.primary,
-                    alignItems: "center",
-                    justifyContent: "center",
-                }}>
-                    <Text style={{ fontSize: 10, fontWeight: "700", color: "#fff" }}>
-                        {activeNotifications}
-                    </Text>
-                </View>
-            );
-        }
-        if (id === "security" && !twoFactor) {
-            return <Feather name="alert-triangle" size={12} color="#F59E0B" />;
-        }
-        return null;
-    }
 
     return (
         <ScrollView
@@ -166,97 +129,10 @@ export default function SettingsView() {
                 }
             />
 
-            <View style={{ flexDirection: isSmall ? "column" : "row", gap: 20 }}>
-                {/* -- Nav lateral -- */}
-                <Card padding={6} style={isSmall ? undefined : { width: 220, alignSelf: "flex-start" }}>
-                    {isSmall ? (
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                            <View style={{ flexDirection: "row", gap: 2 }}>
-                                {SECTIONS.map(s => {
-                                    const active = section === s.id;
-                                    return (
-                                        <TouchableOpacity
-                                            key={s.id}
-                                            onPress={() => setSection(s.id)}
-                                            style={{
-                                                flexDirection: "row",
-                                                alignItems: "center",
-                                                gap: 8,
-                                                paddingVertical: 10,
-                                                paddingHorizontal: 12,
-                                                borderRadius: 14,
-                                                backgroundColor: active ? c.brand.primaryLight : "transparent",
-                                            }}
-                                        >
-                                            <Feather
-                                                name={s.icon}
-                                                size={14}
-                                                color={active ? c.brand.primary : c.text.secondary}
-                                            />
-                                            <Text style={{
-                                                fontSize: 10,
-                                                fontWeight: active ? "600" : "400",
-                                                color: active ? c.brand.primary : c.text.secondary
-                                            }}>
-                                                {s.label}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    );
-                                })}
-                            </View>
-                        </ScrollView>
-                    ) : (
-                        <View style={{ gap: 1 }}>
-                            {SECTIONS.map(s => {
-                                const active = section === s.id;
-                                return (
-                                    <TouchableOpacity
-                                        key={s.id}
-                                        onPress={() => setSection(s.id)}
-                                        style={{
-                                            flexDirection: "row",
-                                            alignItems: "center",
-                                            paddingVertical: 12,
-                                            paddingHorizontal: 10,
-                                            borderRadius: 14,
-                                            backgroundColor: active ? c.brand.primaryLight : "transparent",
-                                        }}
-                                    >
-                                        <Feather
-                                            name={s.icon}
-                                            size={15}
-                                            color={active ? c.brand.primary : c.text.secondary}
-                                        />
-                                        <View style={{ flex: 1, marginLeft: 9 }}>
-                                            <Text style={{
-                                                fontSize: 10,
-                                                fontWeight: active ? "600" : "400",
-                                                color: active ? c.brand.primary : c.text.secondary
-                                            }}>
-                                                {s.label}
-                                            </Text>
-                                            {!active && (
-                                                <Text style={{
-                                                    fontSize: 11,
-                                                    color: c.text.disabled,
-                                                    marginTop: 1
-                                                }}>
-                                                    {s.desc}
-                                                </Text>
-                                            )}
-                                        </View>
-                                        <SectionBadge id={s.id} />
-                                    </TouchableOpacity>
-                                );
-                            })}
-                        </View>
-                    )}
-                </Card>
-
-                {/* -- Contenido -- */}
-                <Card style={{ flex: 1 }}>
-                    {/* -- GENERAL ------------------------------------------ */}
-                    {section === "general" && (
+            {/* -- Contenido de la sección actual -- */}
+            <Card style={{ flex: 1 }}>
+                {/* -- GENERAL ------------------------------------------ */}
+                {section === "general" && (
                         <View style={{ gap: 18 }}>
                             <Text style={sectionTitle}>{t("General")}</Text>
 
@@ -894,13 +770,12 @@ export default function SettingsView() {
                                     flex: 1,
                                     lineHeight: 18
                                 }}>
-                                    {t("La preview muestra como se ver el color en botones, badges y elementos activos. Presiona \"Guardar cambios\" para aplicarlo en toda la app.")}
+                                    {t("La preview muestra como se verá el color en botones, badges y elementos activos. Presiona \"Guardar cambios\" para aplicarlo en toda la app.")}
                                 </Text>
                             </View>
                         </View>
                     )}
                 </Card>
-            </View>
         </ScrollView>
     );
 }

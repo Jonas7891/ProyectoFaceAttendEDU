@@ -181,7 +181,7 @@ export function AnimatedDropdown({
         </TouchableOpacity>
       </View>
 
-      {/* Panel */}
+      {/* Panel - Usando Modal para garantizar que esté por encima de todo */}
       {open && triggerRect && (
         <Modal
           transparent
@@ -190,11 +190,13 @@ export function AnimatedDropdown({
           onRequestClose={animateClose}
           statusBarTranslucent
         >
+          {/* Overlay transparente para cerrar al hacer clic fuera */}
           <TouchableOpacity
             style={styles.modalOverlay}
             activeOpacity={1}
             onPress={animateClose}
           >
+            {/* Panel flotante - posicionado absolutamente */}
             <Animated.View
               pointerEvents="box-none"
               style={[
@@ -211,6 +213,7 @@ export function AnimatedDropdown({
                 },
               ]}
             >
+              {/* Contenedor interior para prevenir que los clics cierren el modal */}
               <TouchableOpacity activeOpacity={1}>
                 <ScrollView
                   showsVerticalScrollIndicator={false}

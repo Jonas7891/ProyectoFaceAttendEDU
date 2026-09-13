@@ -11,6 +11,7 @@
  * - **SidebarHeader**: Sección superior con soporte para título, close, toggle
  * - **SidebarNav**: Contenedor scrollable para items de navegación
  * - **SidebarItem**: Item individual con icon, label, badge, estados y variantes
+ * - **SidebarItemCollapsible**: Item con sub-items colapsables tipo carpeta IDE
  * - **SidebarFooter**: Sección inferior con soporte para texto o contenido custom
  * - **SidebarDivider**: Separador visual entre secciones
  * 
@@ -45,6 +46,7 @@ export { default as CollapsibleSidebar } from './CollapsibleSidebar';
 export { default as SidebarHeader } from './SidebarHeader';
 export { default as SidebarNav } from './SidebarNav';
 export { default as SidebarItem } from './SidebarItem';
+export { default as SidebarItemCollapsible } from './SidebarItemCollapsible';
 export { default as SidebarFooter } from './SidebarFooter';
 export { default as SidebarDivider } from './SidebarDivider';
 

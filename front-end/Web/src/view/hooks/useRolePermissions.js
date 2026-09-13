@@ -19,6 +19,25 @@ import { useAuth } from "../../context/AuthContext";
 
 // ── Permisos por rol ────────────────────────────────────────
 
+// ── Labels de tabs por rol ───────────────────────────────────
+// Cada rol puede tener una interpretación diferente del mismo tab
+
+const TAB_LABELS_BY_ROLE = {
+    admin: {
+        students: "Usuarios",
+    },
+    teacher: {
+        students: "Alumnos",
+    },
+    student: {
+        students: "Compañeros",
+    },
+};
+
+function getTabLabel(tabKey, role) {
+    return TAB_LABELS_BY_ROLE[role]?.[tabKey] || null;
+}
+
 // ── Cálculo de tabs visibles ────────────────────────────────
 
 function getVisibleTabs(role) {
@@ -69,6 +88,7 @@ function buildPermissions(role) {
 
         // Navegación
         visibleTabs: getVisibleTabs(role),
+        getTabLabel: (tabKey) => getTabLabel(tabKey, role),
 
         // Metadatos
         role,

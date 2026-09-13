@@ -16,6 +16,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { ProgressBar } from "../common/charts/ProgressBar";
+import { AnimatedDropdown } from "../common/animation/AnimatedDropdown";
 import { useTheme } from "../hooks/useTheme";
 import { 
     ACADEMIC_PERIOD_TYPES, 
@@ -38,6 +39,8 @@ import {
  * @param {string} academicPeriod - Tipo de período académico (annual, semestral, quarterly, trimestral)
  *                                   TODO: Esto vendrá de Settings en el futuro
  * @param {Function} onPeriodChange - Callback cuando cambia el período seleccionado (recibe period object)
+ * @param {string} title - Título del componente (default: "Tendencia semanal")
+ * @param {Function} t - Función de traducción (opcional)
  */
 export function WeeklyTrend({ 
     data = [], 
@@ -48,12 +51,11 @@ export function WeeklyTrend({
     selectedWeek,
     academicPeriod = DEFAULT_ACADEMIC_PERIOD, // TODO: Obtener de Settings
     onPeriodChange,
+    title,
+    t = (key) => key, // Fallback si no se pasa traducción
 }) {
     const { theme } = useTheme();
     const c = theme.colors;
-
-    // Estado para el dropdown
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     
     // Obtener año actual
     const currentYear = new Date().getFullYear();
@@ -87,198 +89,98 @@ export function WeeklyTrend({
     const isInteractive = !!onWeekSelect;
 
     // Handler para cambio de período
-    const handlePeriodSelect = (period) => {
-        setSelectedPeriod(period);
-        setIsDropdownOpen(false);
-        if (onPeriodChange) {
-            onPeriodChange(period);
+    const handlePeriodSelect = (periodId) => {
+        const period = yearPeriods.find(p => p.id === periodId);
+        if (period) {
+            setSelectedPeriod(period);
+            if (onPeriodChange) {
+                onPeriodChange(period);
+            }
         }
     };
 
+    // Preparar items del dropdown con descripción de semanas
+    const dropdownItems = yearPeriods.map(period => ({
+        value: period.id,
+        label: formatPeriodLabel(period, academicPeriod),
+        description: `Semanas ${period.startWeek}-${period.endWeek}`,
+    }));
+
+    // Generar subtítulo dinámico: "Por periodo academico (Primer Semestre)"
+    const dynamicSubtitle = periodConfig && selectedPeriod 
+        ? `Por periodo academico (${selectedPeriod.label})`
+        : "";
+
     return (
         <View style={{ gap: 8 }}>
-            {/* Información del período académico con dropdown */}
-            {periodConfig && (
+            {/* Header con título y dropdown */}
+            <View style={{
+                flexDirection: "row",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                marginBottom: 8,
+                gap: 12,
+            }}>
+                {/* Título y subtítulo dinámico (izquierda) */}
+                <View style={{ flex: 1 }}>
+                    {title && (
+                        <Text style={{
+                            fontSize: 14,
+                            fontWeight: "600",
+                            color: c.text.primary,
+                            marginBottom: 4,
+                        }}>
+                            {title}
+                        </Text>
+                    )}
+                    {/* Subtítulo dinámico: "Primer Semestre (Semestral) • Selecciona para ver detalles" */}
+                    <Text style={{
+                        fontSize: 12,
+                        color: c.text.secondary,
+                    }}>
+                        {dynamicSubtitle}
+                    </Text>
+                </View>
+
+                {/* Dropdown de período (derecha) */}
+                {periodConfig && (
+                    <View style={{ width: 200, marginTop: -2 }}>
+                        <AnimatedDropdown
+                            items={dropdownItems}
+                            value={selectedPeriod.id}
+                            onSelect={handlePeriodSelect}
+                            placeholder="Selecciona período"
+                            triggerHeight={36}
+                            maxVisible={6}
+                        />
+                    </View>
+                )}
+            </View>
+
+            {/* Info dinámica del período seleccionado */}
+            {periodConfig && selectedPeriod && (
                 <View style={{
-                    flexDirection: "column",
-                    gap: 8,
-                    marginBottom: 4,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: 8,
                     paddingBottom: 8,
                     borderBottomWidth: 1,
                     borderBottomColor: c.border.default + "40",
                 }}>
-                    {/* Fila superior: Dropdown de período */}
-                    <View style={{ position: "relative", zIndex: 10 }}>
-                        <Text style={{
-                            fontSize: 10,
-                            color: c.text.tertiary,
-                            marginBottom: 4,
-                        }}>
-                            Período académico
-                        </Text>
-                        
-                        {/* Dropdown button */}
-                        <TouchableOpacity
-                            onPress={() => setIsDropdownOpen(!isDropdownOpen)}
-                            style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                paddingHorizontal: 12,
-                                paddingVertical: 8,
-                                backgroundColor: c.background.elevated,
-                                borderWidth: 1,
-                                borderColor: isDropdownOpen ? c.brand.primary : c.border.default,
-                                borderRadius: 6,
-                                cursor: "pointer",
-                            }}
-                        >
-                            <Text style={{
-                                fontSize: 12,
-                                fontWeight: "600",
-                                color: c.text.primary,
-                            }}>
-                                {formatPeriodLabel(selectedPeriod, academicPeriod)}
-                            </Text>
-                            <Text style={{
-                                fontSize: 12,
-                                color: c.text.secondary,
-                                transform: isDropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
-                            }}>
-                                ▼
-                            </Text>
-                        </TouchableOpacity>
-
-                        {/* Dropdown menu */}
-                        {isDropdownOpen && (
-                            <View style={{
-                                position: "absolute",
-                                top: "100%",
-                                left: 0,
-                                right: 0,
-                                marginTop: 4,
-                                backgroundColor: c.background.elevated,
-                                borderWidth: 1,
-                                borderColor: c.border.default,
-                                borderRadius: 6,
-                                shadowColor: "#000",
-                                shadowOffset: { width: 0, height: 4 },
-                                shadowOpacity: 0.15,
-                                shadowRadius: 8,
-                                elevation: 5,
-                                maxHeight: 240,
-                                overflow: "scroll",
-                            }}>
-                                {yearPeriods.map((period, index) => {
-                                    const isDisabled = period.isFuture;
-                                    const isSelected = selectedPeriod.id === period.id;
-                                    
-                                    return (
-                                        <TouchableOpacity
-                                            key={period.id}
-                                            onPress={() => !isDisabled && handlePeriodSelect(period)}
-                                            disabled={isDisabled}
-                                            style={{
-                                                paddingHorizontal: 12,
-                                                paddingVertical: 10,
-                                                backgroundColor: isSelected 
-                                                    ? c.brand.primary + "15" 
-                                                    : "transparent",
-                                                borderTopWidth: index > 0 ? 1 : 0,
-                                                borderTopColor: c.border.default + "40",
-                                                opacity: isDisabled ? 0.4 : 1,
-                                                cursor: isDisabled ? "not-allowed" : "pointer",
-                                            }}
-                                        >
-                                            <View style={{
-                                                flexDirection: "row",
-                                                alignItems: "center",
-                                                justifyContent: "space-between",
-                                            }}>
-                                                <View style={{ flex: 1 }}>
-                                                    <Text style={{
-                                                        fontSize: 11,
-                                                        fontWeight: isSelected ? "700" : "600",
-                                                        color: isSelected 
-                                                            ? c.brand.primary 
-                                                            : isDisabled 
-                                                            ? c.text.tertiary 
-                                                            : c.text.primary,
-                                                    }}>
-                                                        {period.label}
-                                                    </Text>
-                                                    <Text style={{
-                                                        fontSize: 10,
-                                                        color: c.text.tertiary,
-                                                        marginTop: 2,
-                                                    }}>
-                                                        Semanas {period.startWeek}-{period.endWeek}
-                                                    </Text>
-                                                </View>
-                                                {period.isCurrent && (
-                                                    <View style={{
-                                                        paddingHorizontal: 6,
-                                                        paddingVertical: 2,
-                                                        backgroundColor: c.brand.primary + "20",
-                                                        borderRadius: 4,
-                                                    }}>
-                                                        <Text style={{
-                                                            fontSize: 9,
-                                                            fontWeight: "700",
-                                                            color: c.brand.primary,
-                                                        }}>
-                                                            ACTUAL
-                                                        </Text>
-                                                    </View>
-                                                )}
-                                                {period.isFuture && (
-                                                    <View style={{
-                                                        paddingHorizontal: 6,
-                                                        paddingVertical: 2,
-                                                        backgroundColor: c.text.tertiary + "20",
-                                                        borderRadius: 4,
-                                                    }}>
-                                                        <Text style={{
-                                                            fontSize: 9,
-                                                            fontWeight: "700",
-                                                            color: c.text.tertiary,
-                                                        }}>
-                                                            FUTURO
-                                                        </Text>
-                                                    </View>
-                                                )}
-                                            </View>
-                                        </TouchableOpacity>
-                                    );
-                                })}
-                            </View>
-                        )}
-                    </View>
-
-                    {/* Fila inferior: Progreso del período */}
-                    <View style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "space-between",
+                    <Text style={{
+                        fontSize: 10,
+                        color: c.text.tertiary,
                     }}>
-                        <View style={{ flex: 1 }}>
-                            <Text style={{
-                                fontSize: 10,
-                                color: c.text.tertiary,
-                            }}>
-                                {periodConfig.label} • {periodConfig.minWeeks}-{periodConfig.maxWeeks} semanas
-                            </Text>
-                        </View>
-                        <View style={{ alignItems: "flex-end" }}>
-                            <Text style={{
-                                fontSize: 11,
-                                fontWeight: "700",
-                                color: selectedPeriod.isCurrent ? c.brand.primary : c.text.secondary,
-                            }}>
-                                {recentData.length} / {selectedPeriod.totalWeeks}
-                            </Text>
-                        </View>
-                    </View>
+                        {periodConfig.label} • {selectedPeriod.startWeek}-{selectedPeriod.endWeek} semanas
+                    </Text>
+                    <Text style={{
+                        fontSize: 11,
+                        fontWeight: "700",
+                        color: selectedPeriod.isCurrent ? c.brand.primary : c.text.secondary,
+                    }}>
+                        {recentData.length} / {selectedPeriod.totalWeeks}
+                    </Text>
                 </View>
             )}
 

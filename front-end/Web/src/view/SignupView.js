@@ -90,6 +90,13 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLandi
         vm.setPassword(text);
     };
     
+    // Handler para envío con Enter
+    const handleKeyPress = (e) => {
+        if (e.nativeEvent.key === 'Enter' && !vm.loading) {
+            vm.handleRegister();
+        }
+    };
+    
     // Espaciados centralizados del formulario
     const FORM_SPACING = {
         fieldGap: 8,              // Gap entre campos del formulario
@@ -104,6 +111,7 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLandi
                 value={vm.username}
                 onChangeText={vm.setUsername}
                 onBlur={() => vm.handleBlur('username')}
+                onKeyPress={handleKeyPress}
                 leftIcon={<Feather name="user" size={20} color={c.text.secondary} />}
                 error={!!vm.usernameError}
                 errorMessage={vm.usernameError}
@@ -116,6 +124,7 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLandi
                 value={vm.email}
                 onChangeText={vm.setEmail}
                 onBlur={() => vm.handleBlur('email')}
+                onKeyPress={handleKeyPress}
                 type="email"
                 leftIcon={<Feather name="mail" size={20} color={c.text.secondary} />}
                 error={!!vm.emailError}
@@ -130,6 +139,7 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLandi
                     value={vm.password}
                     onChangeText={handlePasswordChange}
                     onBlur={() => vm.handleBlur('password')}
+                    onKeyPress={handleKeyPress}
                     type="password"
                     leftIcon={<Feather name="lock" size={20} color={c.text.secondary} />}
                     rightIcon={

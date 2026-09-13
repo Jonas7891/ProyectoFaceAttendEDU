@@ -24,7 +24,7 @@ import { useNavigation } from "@react-navigation/native";
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 
-import { Sidebar, SidebarHeader, SidebarNav, SidebarItem, SidebarFooter } from "../components/common/layout";
+import { Sidebar, SidebarHeader, SidebarNav, SidebarItem, SidebarItemCollapsible, SidebarFooter } from "../components/common/layout";
 import { CollapsibleSidebar } from "../components/common/layout";
 import DashboardView    from "../DashboardView";
 import StudentsView     from "../StudentsView";
@@ -43,14 +43,14 @@ import { useTranslation } from "../../i18n/hooks/useTranslation";
 // Renderiza la vista correspondiente según el tab seleccionado.
 // Este componente actúa como un simple switch/router interno.
 
-function TabContent({ tab }) {
+function TabContent({ tab, subTab }) {
     switch (tab) {
         case "dashboard":    return <DashboardView />;
         case "students":     return <StudentsView />;
         case "courses":      return <CoursesView />;
         case "environments": return <EnvironmentsView />;
         case "reports":      return <ReportsView />;
-        case "settings":     return <SettingsView />;
+        case "settings":     return <SettingsView section={subTab || "appearance"} />;
         default:             return <DashboardView />;
     }
 }
@@ -103,15 +103,41 @@ export default function DashboardScreen() {
                         )}
                         
                         <SidebarNav>
-                            {vm.bottomTabs.map((tab) => (
-                                <SidebarItem
-                                    key={tab.key}
-                                    icon={tab.icon}
-                                    label={tab.label}
-                                    active={vm.currentTab === tab.key}
-                                    onPress={() => vm.setTab(tab.key)}
-                                />
-                            ))}
+                            {vm.bottomTabs.map((tab) => {
+                                // Si el tab tiene children, usar SidebarItemCollapsible
+                                if (tab.children && tab.children.length > 0) {
+                                    return (
+                                        <SidebarItemCollapsible
+                                            key={tab.key}
+                                            icon={tab.icon}
+                                            label={tab.label}
+                                            active={vm.currentTab === tab.key}
+                                            defaultExpanded={vm.currentTab === tab.key}
+                                            onPress={() => vm.setTab(tab.key)}
+                                            children={tab.children.map(child => ({
+                                                key: child.key,
+                                                icon: child.icon,
+                                                label: child.label,
+                                                active: vm.currentTab === tab.key && vm.currentSubTab === child.key,
+                                                onPress: () => vm.setSubTab(tab.key, child.key),
+                                                badge: child.badge,
+                                                indicator: child.indicator,
+                                            }))}
+                                        />
+                                    );
+                                }
+                                
+                                // Tab simple sin children
+                                return (
+                                    <SidebarItem
+                                        key={tab.key}
+                                        icon={tab.icon}
+                                        label={tab.label}
+                                        active={vm.currentTab === tab.key}
+                                        onPress={() => vm.setTab(tab.key)}
+                                    />
+                                );
+                            })}
                         </SidebarNav>
                         
                         <SidebarFooter>
@@ -131,7 +157,7 @@ export default function DashboardScreen() {
                     overflow: "hidden",
                     paddingBottom: isSmall ? 64 + insets.bottom : 0,
                 }}>
-                    <TabContent tab={vm.currentTab} />
+                    <TabContent tab={vm.currentTab} subTab={vm.currentSubTab} />
                 </View>
 
                 {/* Bottom tabs — solo móvil */}

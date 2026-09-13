@@ -208,8 +208,7 @@ export function getCurrentPeriod(periodType = DEFAULT_ACADEMIC_PERIOD, year = ne
  * @returns {string} Label formateado para mostrar
  */
 export function formatPeriodLabel(period, periodType) {
-    const config = getAcademicPeriodConfig(periodType);
-    return `${period.label} (${period.totalWeeks} sem)`;
+    return period.label;
 }
 
 export default {
