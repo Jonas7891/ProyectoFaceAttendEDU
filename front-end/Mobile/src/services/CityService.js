@@ -1,7 +1,7 @@
 import { request, GET, POST, PUT, DELETE } from '../api/apiClient';
-import School from '../models/academic/School';
+import City from '../models/identity/City';
 
-const ENDPOINT = 'school';
+const ENDPOINT = 'city';
 
 function unwrap(data) {
   if (data && Array.isArray(data.value)) return data.value;
@@ -15,25 +15,25 @@ function unwrapFirst(data) {
   return arr.length > 0 ? arr[0] : null;
 }
 
-export const SchoolService = {
+export const CityService = {
   getAll: async (params = {}) => {
     const data = await request({ method: GET, url: ENDPOINT, params, requiresAuth: false });
-    return unwrap(data).map(School.fromApi);
+    return unwrap(data).map(City.fromApi);
   },
 
   getById: async (id) => {
     const data = await request({ method: GET, url: `${ENDPOINT}/${id}`, requiresAuth: false });
-    return School.fromApi(data);
+    return City.fromApi(data);
   },
 
-  create: async (schoolData) => {
-    const data = await request({ method: POST, url: ENDPOINT, data: schoolData.toApi(), requiresAuth: false });
-    return School.fromApi(data);
+  create: async (cityData) => {
+    const data = await request({ method: POST, url: ENDPOINT, data: cityData.toApi(), requiresAuth: false });
+    return City.fromApi(data);
   },
 
-  update: async (id, schoolData) => {
-    const data = await request({ method: PUT, url: `${ENDPOINT}/${id}`, data: schoolData.toApi(), requiresAuth: false });
-    return School.fromApi(data);
+  update: async (id, cityData) => {
+    const data = await request({ method: PUT, url: `${ENDPOINT}/${id}`, data: cityData.toApi(), requiresAuth: false });
+    return City.fromApi(data);
   },
 
   delete: async (id) => {

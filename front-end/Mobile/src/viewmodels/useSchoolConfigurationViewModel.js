@@ -2,10 +2,10 @@ import {Alert} from "react-native";
 import {useEffect, useState} from 'react';
 import {validateEmail, validatePhone} from "../utils/validators";
 import {CountryService} from "../services/CountryService";
-// ⚠️ Ajusta el nombre real de la función de actualización en tu SchoolService
-import {getSchoolById, updateSchool} from "../services/SchoolService";
-import {AcademicConfig, AttendanceConfig, ContactInfo, GeneralInfo, SchoolResponse} from "../model/SchoolResponse";
+import {SchoolService} from "../services/SchoolService";
+import {AcademicConfigService} from "../services/AcademicConfigService";
 import {getCurrentUser, getUserByEmail} from "../services/UserService";
+import School from "../models/academic/School";
 
 
 export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => key} = {}) {
@@ -20,7 +20,6 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
     const [academicConfig, setAcademicConfig] = useState(null);
     const [attendanceConfig, setAttendanceConfig] = useState(null);
 
-    // Id del colegio y copia de los datos originales (para guardar y para descartar cambios)
     const [schoolId, setSchoolId] = useState(null);
     const [originalData, setOriginalData] = useState(null);
 
@@ -30,33 +29,40 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
             const email = userInfo?.email;
             const user = await getUserByEmail(email);
 
-            const schoolResponse = await getSchoolById(user.school_id);
+            const school = await SchoolService.getById(user?.personId);
 
-            const general    = GeneralInfo.fromApi(schoolResponse);
-            const contact    = ContactInfo.fromApi(schoolResponse);
-            const academic   = AcademicConfig.fromApi(schoolResponse);
-            const attendance = AttendanceConfig.fromApi(schoolResponse);
+            if (school) {
+                const general = {
+                    name: school.name,
+                    code: school.code,
+                    district: '',
+                };
+                const contact = {
+                    email: school.email,
+                    phone: school.phone,
+                    address: school.address,
+                    city: '',
+                    country: '',
+                };
 
-            setGeneralInfo(general);
-            setContactInfo(contact);
-            setAcademicConfig(academic);
-            setAttendanceConfig(attendance);
-
-            setSchoolId(user.school_id);
-            setOriginalData({ general, contact, academic, attendance });
+                setGeneralInfo(general);
+                setContactInfo(contact);
+                setSchoolId(school.schoolId);
+                setOriginalData({general, contact, academic: null, attendance: null});
+            }
         } catch (error) {
             console.error('Error cargando datos de usuario:', error);
         }
     };
+
     useEffect(() => {
         loadSchoolInfo();
     }, []);
 
-    // Validación de campos
     const [validationErrors, setValidationErrors] = useState({});
 
     const validateField = (fieldName, value) => {
-        const errors = { ...validationErrors };
+        const errors = {...validationErrors};
 
         if (!value || String(value).trim() === '') {
             errors[fieldName] = t('schoolConfig.validation.required');
@@ -66,8 +72,8 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
             errors[fieldName] = t('schoolConfig.validation.invalidPhone');
         } else if (
             fieldName === 'toleranceMinutes' ||
-            fieldName === 'maxAbsences'      ||
-            fieldName === 'maxLatenesses'    ||
+            fieldName === 'maxAbsences' ||
+            fieldName === 'maxLatenesses' ||
             fieldName === 'minimumGrade'
         ) {
             if (isNaN(value)) {
@@ -85,28 +91,28 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
 
     const handleGeneralInfoChange = (field, value) => {
         if (!isAdmin) return;
-        setGeneralInfo(prev => ({ ...prev, [field]: value }));
+        setGeneralInfo(prev => ({...prev, [field]: value}));
         setHasChanges(true);
         validateField(field, value);
     };
 
     const handleContactInfoChange = (field, value) => {
         if (!isAdmin) return;
-        setContactInfo(prev => ({ ...prev, [field]: value }));
+        setContactInfo(prev => ({...prev, [field]: value}));
         setHasChanges(true);
         validateField(field, value);
     };
 
     const handleAcademicConfigChange = (field, value) => {
         if (!isAdmin) return;
-        setAcademicConfig(prev => ({ ...prev, [field]: value }));
+        setAcademicConfig(prev => ({...prev, [field]: value}));
         setHasChanges(true);
         validateField(field, value);
     };
 
     const handleAttendanceConfigChange = (field, value) => {
         if (!isAdmin) return;
-        setAttendanceConfig(prev => ({ ...prev, [field]: value }));
+        setAttendanceConfig(prev => ({...prev, [field]: value}));
         setHasChanges(true);
         validateField(field, value);
     };
@@ -121,26 +127,35 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
         try {
             setIsLoading(true);
 
-            const payload = {
-                ...generalInfo,
-                ...contactInfo,
-                ...academicConfig,
-                ...attendanceConfig,
-            };
+            const payload = new School({
+                school_id: schoolId,
+                name: generalInfo.name,
+                code: generalInfo.code,
+                email: contactInfo.email,
+                phone: contactInfo.phone,
+                address: contactInfo.address,
+            });
 
-            // ⚠️ Ajusta esta llamada al nombre/firma real de tu SchoolService
-            const updatedSchool = await updateSchool(schoolId, payload);
+            const updatedSchool = await SchoolService.update(schoolId, payload);
 
-            const general    = GeneralInfo.fromApi(updatedSchool);
-            const contact    = ContactInfo.fromApi(updatedSchool);
-            const academic   = AcademicConfig.fromApi(updatedSchool);
-            const attendance = AttendanceConfig.fromApi(updatedSchool);
+            if (updatedSchool) {
+                const general = {
+                    name: updatedSchool.name,
+                    code: updatedSchool.code,
+                    district: generalInfo.district,
+                };
+                const contact = {
+                    email: updatedSchool.email,
+                    phone: updatedSchool.phone,
+                    address: updatedSchool.address,
+                    city: contactInfo.city,
+                    country: contactInfo.country,
+                };
 
-            setGeneralInfo(general);
-            setContactInfo(contact);
-            setAcademicConfig(academic);
-            setAttendanceConfig(attendance);
-            setOriginalData({ general, contact, academic, attendance });
+                setGeneralInfo(general);
+                setContactInfo(contact);
+                setOriginalData({general, contact, academic: academicConfig, attendance: attendanceConfig});
+            }
 
             setHasChanges(false);
             setShowConfirmModal(false);
@@ -166,35 +181,26 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
         }
     };
 
-    // ── Estados de modales ─────────────────────
     const [countryModalVisible, setCountryModalVisible] = useState(false);
-    const [cityModalVisible, setCityModalVisible]       = useState(false);
+    const [cityModalVisible, setCityModalVisible] = useState(false);
 
-    // ── Estados de países (desde API) ──────────
-    const [countryOptions, setCountryOptions]     = useState([]);
+    const [countryOptions, setCountryOptions] = useState([]);
     const [loadingCountries, setLoadingCountries] = useState(false);
-    const [countrySearch, setCountrySearch]       = useState('');
+    const [countrySearch, setCountrySearch] = useState('');
 
-    // ── Estados de ciudades ────────────────────
     const [citiesOptions, setCitiesOptions] = useState([]);
     const [loadingCities, setLoadingCities] = useState(false);
-    const [citySearch, setCitySearch]       = useState('');
-
-    // ─────────────────────────────────────────────
-    // Carga inicial de países al montar el componente
-    // ─────────────────────────────────────────────
+    const [citySearch, setCitySearch] = useState('');
 
     useEffect(() => {
         loadAllCountries();
     }, []);
 
-    // Países filtrados por búsqueda
     const filteredCountries = countryOptions.filter((c) =>
         c.name.toLowerCase().includes(countrySearch.toLowerCase()) ||
         c.dialCode.includes(countrySearch)
     );
 
-    // Ciudades filtradas por búsqueda
     const filteredCities = citiesOptions.filter((city) =>
         city.toLowerCase().includes(citySearch.toLowerCase())
     );
@@ -206,18 +212,12 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
         : citiesOptions.slice(0, CITY_LIMIT);
     const isCityListLimited = !citySearchTrimmed && citiesOptions.length > CITY_LIMIT;
 
-    // ─────────────────────────────────────────────
-    // Funciones de API - CountriesNow
-    // ─────────────────────────────────────────────
-
-    // 1. Obtener TODOS los países con sus dial codes
     const loadAllCountries = async () => {
         setLoadingCountries(true);
         try {
             const countries = await CountryService.fetchAllCountries();
             setCountryOptions(countries);
 
-            // Configurar Colombia por defecto
             const colombia = CountryService.findCountryByName(countries, 'colombia');
             if (colombia) {
                 setContactInfo(prev => ({
@@ -245,20 +245,16 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
         } finally {
             setLoadingCities(false);
         }
-    }
-
-    // ─────────────────────────────────────────────
-    // Handlers de país y ciudad
-    // ─────────────────────────────────────────────
+    };
 
     const handleCountryChange = (option) => {
-        if (!isAdmin) return; // 👈 AGREGAR PROTECCIÓN
+        if (!isAdmin) return;
         setContactInfo((prev) => ({
             ...prev,
-            country:    option.name,
-            dialCode:   option.dialCode,
-            phone:      '',
-            city:       '',
+            country: option.name,
+            dialCode: option.dialCode,
+            phone: '',
+            city: '',
             postalCode: '',
         }));
         setCountrySearch('');
@@ -268,48 +264,26 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
     };
 
     const handleCityChange = (cityName) => {
-        setContactInfo((prev) => ({ ...prev, city: cityName }));
+        setContactInfo((prev) => ({...prev, city: cityName}));
         setCitySearch('');
         setHasChanges(true);
         setCityModalVisible(false);
-        // fetchPostalCode(contactInfo.country, cityName);
     };
 
     return {
-        activeTab,
-        isLoading,
-        showConfirmModal,
-        showAdvanced,
-        hasChanges,
-        generalInfo,
-        contactInfo,
-        academicConfig,
-        attendanceConfig,
+        activeTab, isLoading, showConfirmModal, showAdvanced, hasChanges,
+        generalInfo, contactInfo, academicConfig, attendanceConfig,
         validationErrors,
-        handleGeneralInfoChange,
-        handleContactInfoChange,
-        handleAcademicConfigChange,
-        handleAttendanceConfigChange,
-        handleSaveChanges,
-        handleDiscardChanges,
-        countryModalVisible,
-        cityModalVisible,
-        loadingCountries,
-        loadingCities,
-        filteredCountries,
-        displayedCities,
-        isCityListLimited,
-        handleCountryChange,
-        handleCityChange,
-        countrySearch,
-        setCountrySearch,
-        citySearch,
-        setCitySearch,
-        CITY_LIMIT,
-        citiesOptions,
-        setActiveTab,
-        setCountryModalVisible,
-        setCityModalVisible,
-        setShowConfirmModal
-    }
+        handleGeneralInfoChange, handleContactInfoChange,
+        handleAcademicConfigChange, handleAttendanceConfigChange,
+        handleSaveChanges, handleDiscardChanges,
+        countryModalVisible, cityModalVisible,
+        loadingCountries, loadingCities,
+        filteredCountries, displayedCities, isCityListLimited,
+        handleCountryChange, handleCityChange,
+        countrySearch, setCountrySearch,
+        citySearch, setCitySearch,
+        CITY_LIMIT, citiesOptions,
+        setActiveTab, setCountryModalVisible, setCityModalVisible, setShowConfirmModal,
+    };
 }
