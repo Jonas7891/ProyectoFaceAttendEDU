@@ -25,8 +25,14 @@ import ReportsScreen from "../view/screens/ReportsScreen";
 import SettingsScreen from "../view/screens/SettingsScreen";
 
 // ── Importación de Layout Components ──────────────────────────
-import { SidebarHeader, SidebarNav, SidebarItem, SidebarItemCollapsible, SidebarFooter } from "../view/components/common/layout";
-import { CollapsibleSidebar } from "../view/components/common/layout";
+import { 
+    SidebarHeader, 
+    SidebarNav, 
+    SidebarItem, 
+    SidebarItemCollapsible, 
+    SidebarFooter,
+    CollapsibleSidebar 
+} from "../view/components/common/layout";
 
 // ── Importación de Hooks ──────────────────────────────────────
 import { useTheme } from "../view/components/hooks/useTheme";

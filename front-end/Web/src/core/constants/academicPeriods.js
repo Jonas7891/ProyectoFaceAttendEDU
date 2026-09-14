@@ -55,7 +55,7 @@ export const ACADEMIC_PERIOD_CONFIG = {
  * Período académico por defecto del sistema
  * TODO: Esto debe venir de la configuración de la institución en Settings
  */
-export const DEFAULT_ACADEMIC_PERIOD = ACADEMIC_PERIOD_TYPES.SEMESTRAL;
+export const DEFAULT_ACADEMIC_PERIOD = ACADEMIC_PERIOD_TYPES.TRIMESTRAL;
 
 /**
  * Obtener configuración de período académico

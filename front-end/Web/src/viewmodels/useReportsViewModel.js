@@ -1,9 +1,9 @@
 ﻿import { useState, useMemo } from "react";
-import { Platform } from "react-native";
 import { useTheme } from "../view/components/hooks/useTheme";
 import { useTranslation } from "../i18n/hooks/useTranslation";
 import { useAppData } from "../context/AppDataContext";
 import { mockAttendanceByDay, mockAttendanceByWeek } from "../models/data/mockData";
+import { exportToExcel, exportToPDF, buildReportHTML, buildHTMLTable, formatPercentageWithColor, formatStatusBadge } from "../core/utils/exportHelpers";
 
 // ── xlsx (solo se importa en runtime para evitar problemas SSR) ──
 // Se usa dynamic require para mantener compatibilidad con Expo web.
@@ -59,85 +59,6 @@ function buildExcelRows(students, period, _filters) {
         "Facial reg.": s.registered ? "Sí" : "No",
         Período: periodLabel(period),
     }));
-}
-
-function buildPDFHtml(students, period, filters, weeklyData) {
-    const periodText = periodLabel(period);
-    const filterNotes = [];
-    if (filters.courseCode) filterNotes.push(`Programa: ${filters.courseCode}`);
-    if (filters.showAtRiskOnly) filterNotes.push("Solo en riesgo");
-    if (filters.statusFilter !== "all") filterNotes.push(`Estado: ${filters.statusFilter}`);
-    if (filters.attendanceMin > 0 || filters.attendanceMax < 100)
-        filterNotes.push(`Asistencia: ${filters.attendanceMin}%–${filters.attendanceMax}%`);
-
-    const tableRows = students
-        .map(
-            (s) => `
-        <tr>
-            <td>${s.code}</td>
-            <td>${s.name}</td>
-            <td>${s.course}</td>
-            <td>${s.grade}</td>
-            <td style="text-align:center;font-weight:bold;color:${s.attendance < 75 ? "#EF4444" : "#10B981"}">${
-                s.attendance
-            }%</td>
-            <td>${s.status === "active" ? "Activo" : "Inactivo"}</td>
-        </tr>
-    `
-        )
-        .join("");
-
-    const weeklyRows = weeklyData
-        .map((w) => `<tr><td>${w.week}</td><td style="text-align:center">${w.rate}%</td></tr>`)
-        .join("");
-
-    return `<!DOCTYPE html>
-<html lang="es"><head>
-<meta charset="UTF-8"/>
-<title>Reporte de Asistencia — ${periodText}</title>
-<style>
-  body { font-family: Arial, sans-serif; margin: 32px; color: #1a1a2e; }
-  h1 { font-size: 20px; margin-bottom: 4px; }
-  .subtitle { color: #666; font-size: 13px; margin-bottom: 20px; }
-  .filter-tag { display:inline-block; background:#EEF2FF; color:#4F6BED;
-                padding: 3px 10px; border-radius:99px; font-size:12px; margin-right:6px; }
-  table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13px; }
-  th { background: #4F6BED; color: #fff; padding: 8px 12px; text-align: left; }
-  td { padding: 7px 12px; border-bottom: 1px solid #e5e7eb; }
-  tr:nth-child(even) td { background: #f9fafb; }
-  .section-title { font-size: 15px; font-weight: bold; margin: 24px 0 8px; border-bottom: 2px solid #4F6BED; padding-bottom: 4px; }
-  .footer { margin-top: 32px; font-size: 11px; color: #999; text-align: center; }
-  @media print { body { margin: 16px; } }
-</style>
-</head>
-<body>
-  <h1>📊 Reporte de Asistencia — FaceAttend EDU</h1>
-  <div class="subtitle"><strong>Período: ${periodText}</strong> &nbsp;|&nbsp; Generado: ${new Date().toLocaleDateString(
-        "es-CO",
-        { dateStyle: "full" }
-    )}</div>
-
-  ${
-      filterNotes.length
-          ? `<div style="margin-bottom:16px">${filterNotes.map((n) => `<span class="filter-tag">${n}</span>`).join("")}</div>`
-          : ""
-  }
-
-  <div class="section-title">Detalle de Aprendices (${students.length})</div>
-  <table>
-    <thead><tr><th>Código</th><th>Nombre</th><th>Programa</th><th>Ficha/Semestre</th><th>Asistencia</th><th>Estado</th></tr></thead>
-    <tbody>${tableRows}</tbody>
-  </table>
-
-  <div class="section-title">Evolución Semanal</div>
-  <table style="max-width:320px">
-    <thead><tr><th>Semana</th><th>Tasa</th></tr></thead>
-    <tbody>${weeklyRows}</tbody>
-  </table>
-
-  <div class="footer">FaceAttend EDU — Reporte generado automáticamente</div>
-</body>
-</html>`;
 }
 
 // ── ViewModel ────────────────────────────────────────────────
@@ -299,68 +220,130 @@ export function useReportsViewModel() {
     // ── Exportar Excel ───────────────────────────────────────
 
     const exportExcel = () => {
-        try {
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const XLSX = require("xlsx");
+        const rows = buildExcelRows(filteredStudents, period, filters);
 
-            const rows = buildExcelRows(filteredStudents, period, filters);
+        // Hoja 2: evolución semanal
+        const weeklyRows = attendanceByWeek.map((w) => ({
+            Semana: w.week,
+            "Tasa de Asistencia (%)": w.rate,
+        }));
 
-            // Hoja 1: detalle de aprendices
-            const wsStudents = XLSX.utils.json_to_sheet(rows);
-            wsStudents["!cols"] = [
-                { wch: 12 },
-                { wch: 32 },
-                { wch: 32 },
-                { wch: 18 },
-                { wch: 16 },
-                { wch: 12 },
-                { wch: 12 },
-                { wch: 20 },
-            ];
+        // Hoja 3: ranking por programa
+        const rankRows = courseRanking.map((r) => ({
+            Posición: r.rank,
+            Programa: r.courseName,
+            "Promedio (%)": r.rate,
+        }));
 
-            // Hoja 2: evolución semanal
-            const weeklyRows = attendanceByWeek.map((w) => ({
-                Semana: w.week,
-                "Tasa de Asistencia (%)": w.rate,
-            }));
-            const wsWeekly = XLSX.utils.json_to_sheet(weeklyRows);
+        // Configurar hojas con anchos de columna
+        const sheets = [
+            {
+                name: "Aprendices",
+                data: rows,
+                columns: [
+                    { wch: 12 }, // Código
+                    { wch: 32 }, // Nombre
+                    { wch: 32 }, // Programa
+                    { wch: 18 }, // Ficha/Semestre
+                    { wch: 16 }, // Asistencia (%)
+                    { wch: 12 }, // Estado
+                    { wch: 12 }, // Facial reg.
+                    { wch: 20 }, // Período
+                ],
+            },
+            {
+                name: "Evolución Semanal",
+                data: weeklyRows,
+            },
+            {
+                name: "Ranking Programas",
+                data: rankRows,
+            },
+        ];
 
-            // Hoja 3: ranking por programa
-            const rankRows = courseRanking.map((r) => ({
-                Posición: r.rank,
-                Programa: r.courseName,
-                "Promedio (%)": r.rate,
-            }));
-            const wsRanking = XLSX.utils.json_to_sheet(rankRows);
-
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, wsStudents, "Aprendices");
-            XLSX.utils.book_append_sheet(wb, wsWeekly, "Evolución Semanal");
-            XLSX.utils.book_append_sheet(wb, wsRanking, "Ranking Programas");
-
-            const filename = `Reporte_Asistencia_${periodLabel(period).replace(/ /g, "_")}.xlsx`;
-            XLSX.writeFile(wb, filename);
-        } catch (err) {
-            console.error("Error al exportar Excel:", err);
+        const filename = `Reporte_Asistencia_${periodLabel(period).replace(/ /g, "_")}.xlsx`;
+        const result = exportToExcel(sheets, filename);
+        
+        if (!result.success) {
+            console.error("Error al exportar Excel:", result.error);
         }
     };
 
     // ── Exportar PDF ─────────────────────────────────────────
 
     const exportPDF = () => {
-        if (Platform.OS !== "web") {
-            console.warn("La exportación PDF solo está disponible en web por ahora.");
-            return;
+        const periodText = periodLabel(period);
+        
+        // Construir notas de filtros
+        const filterNotes = [];
+        if (filters.courseCode) filterNotes.push(`Programa: ${filters.courseCode}`);
+        if (filters.showAtRiskOnly) filterNotes.push("Solo en riesgo");
+        if (filters.statusFilter !== "all") filterNotes.push(`Estado: ${filters.statusFilter}`);
+        if (filters.attendanceMin > 0 || filters.attendanceMax < 100)
+            filterNotes.push(`Asistencia: ${filters.attendanceMin}%–${filters.attendanceMax}%`);
+
+        // Construir tabla de estudiantes
+        const studentsTable = buildHTMLTable(
+            filteredStudents,
+            [
+                { key: "code", label: "Código" },
+                { key: "name", label: "Nombre" },
+                { key: "course", label: "Programa" },
+                { key: "grade", label: "Ficha/Semestre" },
+                { 
+                    key: "attendance", 
+                    label: "Asistencia", 
+                    align: "center",
+                    render: (value) => formatPercentageWithColor(value, 75, 60)
+                },
+                { 
+                    key: "status", 
+                    label: "Estado",
+                    render: (value) => formatStatusBadge(value, {
+                        active: { text: "Activo", color: "#10B981" },
+                        inactive: { text: "Inactivo", color: "#6B7280" }
+                    })
+                },
+            ]
+        );
+
+        // Construir tabla de evolución semanal
+        const weeklyTable = buildHTMLTable(
+            attendanceByWeek,
+            [
+                { key: "week", label: "Semana" },
+                { 
+                    key: "rate", 
+                    label: "Tasa", 
+                    align: "center",
+                    render: (value) => `${value}%`
+                },
+            ]
+        );
+
+        // Construir HTML completo del reporte
+        const html = buildReportHTML({
+            title: "Reporte de Asistencia — FaceAttend EDU",
+            subtitle: `Período: ${periodText}`,
+            filters: filterNotes,
+            sections: [
+                {
+                    title: `Detalle de Aprendices (${filteredStudents.length})`,
+                    content: studentsTable,
+                },
+                {
+                    title: "Evolución Semanal",
+                    content: `<div style="max-width:320px">${weeklyTable}</div>`,
+                },
+            ],
+            footer: "FaceAttend EDU — Reporte generado automáticamente",
+        });
+
+        const result = exportToPDF(html, `Reporte_${periodText}`);
+        
+        if (!result.success) {
+            console.warn("Error al exportar PDF:", result.error);
         }
-        const html = buildPDFHtml(filteredStudents, period, filters, attendanceByWeek);
-        const win = window.open("", "_blank");
-        if (!win) return;
-        win.document.write(html);
-        win.document.close();
-        win.focus();
-        setTimeout(() => {
-            win.print();
-        }, 400);
     };
 
     return {

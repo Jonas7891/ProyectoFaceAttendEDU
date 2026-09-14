@@ -9,12 +9,3 @@ export { default as HeroSection } from './HeroSection';
 export { default as HeroMediaSection } from './HeroMediaSection';
 export { default as HeroStats } from './heroStats';
 export { default as HeroTitle } from './heroTitle';
-
-// Deprecated - usar Button directamente
-// export { default as HeroButtons } from './heroButtons';
-
-// Deprecated - usar HeroSection
-// export { default as HeroLeft } from './heroLeft';
-
-// Deprecated - usar HeroMediaSection
-// export { default as HeroRight } from './heroRight';

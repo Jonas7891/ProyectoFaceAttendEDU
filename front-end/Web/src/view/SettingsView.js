@@ -8,7 +8,7 @@ import { useTheme } from "./components/hooks/useTheme";
 import { generateTheme } from "../core/theme/generateTheme";
 import { useResponsive } from "./components/hooks/useResponsive";
 import { useTranslation } from "../i18n/hooks/useTranslation";
-import { useRolePermissions } from "./hooks/useRolePermissions";
+import { useRolePermissions } from "../viewmodels/useRolePermissions";
 import {
     ModeSelector,
     LanguageSelector,

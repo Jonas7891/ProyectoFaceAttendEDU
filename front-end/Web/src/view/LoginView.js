@@ -29,10 +29,10 @@ import {
     AuthFooterLink,
     BrandPanelCircles,
     AuthCopyright,
-} from "./components/auth/AuthComponents";
-import { PasswordPolicyModal } from "./components/auth/PasswordPolicyModal";
-import AuthMobileLayout   from "./components/auth/AuthMobileLayout";
-import AuthAnimatedLayout from "./components/auth/AuthAnimatedLayout";
+    PasswordPolicyModal,
+    AuthMobileLayout,
+    AuthAnimatedLayout,
+} from "./components/auth";
 import { useLoginViewModel } from "../viewmodels/useAuthViewModel";
 import { useTranslation }    from "../i18n/hooks/useTranslation";
 

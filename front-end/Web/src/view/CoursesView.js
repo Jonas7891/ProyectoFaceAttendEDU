@@ -15,7 +15,7 @@ import { Navbar as PageHeader } from "./components/common/navigation/Navbar";
 import { useTheme }             from "./components/hooks/useTheme";
 import { useResponsive }        from "./components/hooks/useResponsive";
 import { useCoursesViewModel }  from "../viewmodels/useCoursesViewModel";
-import { useRolePermissions }   from "./hooks/useRolePermissions";
+import { useRolePermissions }   from "../viewmodels/useRolePermissions";
 import { useTranslation }       from "../i18n/hooks/useTranslation";
 
 // -- CourseDetailModal ----------------------------------------

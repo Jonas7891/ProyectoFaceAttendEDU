@@ -10,7 +10,7 @@ import { Card, Badge, Button, ProgressBar, StatCard, Avatar } from "./components
 import { Navbar as PageHeader } from "./components/common/navigation/Navbar";
 import { useTheme }        from "./components/hooks/useTheme";
 import { useResponsive }   from "./components/hooks/useResponsive";
-import { useRolePermissions } from "./hooks/useRolePermissions";
+import { useRolePermissions } from "../viewmodels/useRolePermissions";
 import {
     useReportsViewModel, PERIOD_OPTIONS, DEFAULT_FILTERS,
 } from "../viewmodels/useReportsViewModel";

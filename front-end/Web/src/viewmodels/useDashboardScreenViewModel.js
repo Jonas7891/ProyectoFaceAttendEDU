@@ -1,6 +1,6 @@
 ﻿import { useState, useMemo } from "react";
 import { useAuth }           from "../context/AuthContext";
-import { useRolePermissions } from "../view/hooks/useRolePermissions";
+import { useRolePermissions } from "./useRolePermissions";
 
 // Definición completa de todos los tabs posibles.
 // Cada View decide si renderiza o no según los permisos.

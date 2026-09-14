@@ -26,17 +26,17 @@ import Button             from "./components/common/buttons/Button";
 import TextInput          from "./components/common/inputs/TextInput";
 import Alert              from "./components/common/feedback/Alert";
 import CustomScrollBar    from "./components/common/CustomScrollBar";
-import PasswordStrengthIndicator from "./components/auth/PasswordStrengthIndicator";
 import {
     AuthFooterLink,
     BrandPanelCircles,
     AuthCopyright,
-} from "./components/auth/AuthComponents";
-import AuthMobileLayout   from "./components/auth/AuthMobileLayout";
-import AuthAnimatedLayout from "./components/auth/AuthAnimatedLayout";
+    PasswordStrengthIndicator,
+    AuthMobileLayout,
+    AuthAnimatedLayout,
+} from "./components/auth";
 import { useSignupViewModel } from "../viewmodels/useAuthViewModel";
 import { useTranslation }     from "../i18n/hooks/useTranslation";
-import { useAutoSlideOnContent } from "./hooks/useAutoSlideOnContent";
+import { useAutoSlideOnContent } from "./components/hooks/useAutoSlideOnContent";
 
 
 export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLanding }) {

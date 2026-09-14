@@ -16,7 +16,7 @@ import TextInput from "../components/common/inputs/TextInput";
 import { useTheme }        from "../components/hooks/useTheme";
 import { useResponsive }   from "../components/hooks/useResponsive";
 import { useTranslation }  from "../../i18n/hooks/useTranslation";
-import { useRolePermissions } from "../hooks/useRolePermissions";
+import { useRolePermissions } from "../../viewmodels/useRolePermissions";
 import {
     useEnvironmentsViewModel,
     EMPTY_ENV_FORM,
