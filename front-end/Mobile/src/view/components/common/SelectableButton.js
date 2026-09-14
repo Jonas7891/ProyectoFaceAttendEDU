@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import {Text, TouchableOpacity, View} from 'react-native';
 import styleAuth from './style/Style';
 
-export default function PrimaryButton({
+export default function SelectableButton({
     title,
     onPress = () => { },
     disabled = false,

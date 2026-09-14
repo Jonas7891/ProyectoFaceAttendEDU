@@ -174,11 +174,11 @@ export default function PasswordUpdateModal() {
                                         <View style={[
                                             stylesCommon.passwordModalErrorRow,
                                             {
-                                                backgroundColor: colors.error + '12',
-                                                borderColor: colors.error + '35',
+                                                backgroundColor: (colors.danger || '#ff0000') + '12',
+                                                borderColor: (colors.danger || '#ff0000') + '35',
                                             },
                                         ]}>
-                                            <Text style={[stylesCommon.passwordModalError, { color: colors.error }]}>
+                                            <Text style={[stylesCommon.passwordModalError, { color: colors.danger || '#ff0000' }]}>
                                                 {passwordError}
                                             </Text>
                                         </View>

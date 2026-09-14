@@ -46,7 +46,7 @@ export default function App() {
                 setIsAuthenticated(true);
                 setUserRole(role);
             } else {
-                await AsyncStorage.multiRemove(['userRole', 'userEmail', 'authToken']);
+                await AsyncStorage.multiRemove(['userRole', 'userEmail', 'authToken', 'appLanguage', 'alertsConfig']);
                 setIsAuthenticated(false);
                 setUserRole(null);
             }
@@ -61,7 +61,7 @@ export default function App() {
         try {
             await AsyncStorage.multiSet([
                 ['userRole', role],
-                ['authToken', token || 'default-token']
+                ['authToken', token]
             ]);
             setIsAuthenticated(true);
             setUserRole(role);
@@ -76,7 +76,8 @@ export default function App() {
                 'userRole',
                 'userEmail',
                 'authToken',
-                'appLanguage'
+                'appLanguage',
+                'alertsConfig',
             ]);
 
             await i18n.changeLanguage('es');

@@ -406,11 +406,11 @@ export default function LanguageSettingsScreen() {
                                         onValueChange={() => toggleAlertType('error')}
                                         trackColor={{
                                             false: colors.textSecondary + '40',
-                                            true: colors.error + '70',
+                                            true: (colors.danger || '#ff0000') + '70',
                                         }}
                                         thumbColor={
                                             alertsConfig.enableError
-                                                ? colors.error
+                                                ? colors.danger || '#ff0000'
                                                 : colors.textSecondary
                                         }
                                     />

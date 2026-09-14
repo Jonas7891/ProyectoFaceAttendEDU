@@ -1,7 +1,8 @@
 import React from 'react';
-import { TouchableOpacity, Text, View, Platform } from 'react-native';
+import { TouchableOpacity, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import styleAuth from './style/Style';
 import { useCustomAlert } from '../common/useCustomAlert';
 import CustomAlert from '../common/CustomAlert';
@@ -15,23 +16,16 @@ export default function DangerButton({ title, disabled = false, onLogout }) {
     const handleLogout = async () => {
         try {
             await removeToken();
+            await AsyncStorage.multiRemove(['userRole', 'userEmail', 'authToken', 'appLanguage']);
 
             if (onLogout) {
                 await onLogout();
             } else {
-                console.warn('onLogout no está disponible en DangerButton');
-                navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'HomesScreen' }],
-                });
+                navigation.reset({ index: 0, routes: [{ name: 'HomesScreen' }] });
             }
         } catch (error) {
             console.error('Error al cerrar sesión:', error);
-            showError(
-                t('common.error'),
-                t('logout.error'),
-                hideAlert
-            );
+            showError(t('common.error'), t('logout.error'), hideAlert);
         }
     };
 
