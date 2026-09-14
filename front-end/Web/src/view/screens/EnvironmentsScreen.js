@@ -1,7 +1,7 @@
-// ============================================================
-//  FaceAttend EDU � Environments View
-//  Gesti�n de ambientes/salones: CRUD + horarios por ambiente.
-//  Acciones de gesti�n condicionadas por useRolePermissions.
+﻿// ============================================================
+//  FaceAttend EDU ´┐¢ Environments View
+//  Gesti´┐¢n de ambientes/salones: CRUD + horarios por ambiente.
+//  Acciones de gesti´┐¢n condicionadas por useRolePermissions.
 // ============================================================
 
 import React, { useState } from "react";
@@ -159,7 +159,7 @@ function ScheduleModal({ visible, mode, editing, envId, searchFn, onClose, onSav
                                     <Text style={{ fontSize: 10, fontWeight: "700", color: c.text.primary }}>
                                         {mode === "add" ? t("Nuevo horario") : t("Editar horario")}
                                     </Text>
-                                    <Text style={{ fontSize: 11, color: c.text.secondary }}>{t("Asignaci�n de ficha e instructor")}</Text>
+                                    <Text style={{ fontSize: 11, color: c.text.secondary }}>{t("Asignaci´┐¢n de ficha e instructor")}</Text>
                                 </View>
                             </View>
                             <TouchableOpacity onPress={onClose}><Feather name="x" size={20} color={c.text.secondary} /></TouchableOpacity>
@@ -175,12 +175,12 @@ function ScheduleModal({ visible, mode, editing, envId, searchFn, onClose, onSav
 
                             <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
                                 <View style={{ flex: 1 }}>
-                                    <TextInput label={t("Nº Ficha / Código") + " *"} value={form.courseCode}
+                                    <TextInput label={t("N┬║ Ficha / C├│digo") + " *"} value={form.courseCode}
                                         onChangeText={v => setField("courseCode", v)} placeholder="Ej: 2240001" error={isEmpty(form.courseCode)} />
                                 </View>
                                 <View style={{ flex: 2 }}>
                                     <TextInput label={t("Nombre del programa") + " *"} value={form.courseName}
-                                        onChangeText={v => setField("courseName", v)} placeholder={t("Ej: Tecnolog�a en Sistemas")} error={isEmpty(form.courseName)} />
+                                        onChangeText={v => setField("courseName", v)} placeholder={t("Ej: Tecnolog´┐¢a en Sistemas")} error={isEmpty(form.courseName)} />
                                 </View>
                             </View>
 
@@ -206,7 +206,7 @@ function ScheduleModal({ visible, mode, editing, envId, searchFn, onClose, onSav
 
                             <View style={{ marginBottom: 14 }}>
                                 <Text style={{ fontSize: 10, fontWeight: "600", color: showErrors && form.days.length === 0 ? c.status.danger : c.text.secondary, marginBottom: 8 }}>
-                                    {t("D�as de clase")} *
+                                    {t("D´┐¢as de clase")} *
                                 </Text>
                                 <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
                                     {WEEK_DAYS.map(d => {
@@ -293,7 +293,7 @@ function EnvironmentFormModal({ visible, mode, environment, onClose, onSubmit, t
                                     <Text style={{ fontSize: 10, fontWeight: "700", color: c.text.primary }}>
                                         {mode === "register" ? t("Nuevo ambiente") : t("Editar ambiente")}
                                     </Text>
-                                    <Text style={{ fontSize: 11, color: c.text.secondary }}>{t("Informaci�n del sal�n / espacio")}</Text>
+                                    <Text style={{ fontSize: 11, color: c.text.secondary }}>{t("Informaci´┐¢n del sal´┐¢n / espacio")}</Text>
                                 </View>
                             </View>
                             <TouchableOpacity onPress={onClose}><Feather name="x" size={20} color={c.text.secondary} /></TouchableOpacity>
@@ -315,7 +315,7 @@ function EnvironmentFormModal({ visible, mode, environment, onClose, onSubmit, t
 
                             <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
                                 <View style={{ flex: 1 }}>
-                                    <TextInput label={t("Número / Nombre del ambiente") + " *"} value={form.number}
+                                    <TextInput label={t("N├║mero / Nombre del ambiente") + " *"} value={form.number}
                                         onChangeText={v => setField("number", v)} placeholder={t("Ej: 301")} error={isEmpty(form.number)} />
                                 </View>
                                 <View style={{ flex: 1 }}>
@@ -325,9 +325,9 @@ function EnvironmentFormModal({ visible, mode, environment, onClose, onSubmit, t
                                 </View>
                             </View>
 
-                            <TextInput label={t("Descripción / Ubicación") + " *"} value={form.description}
+                            <TextInput label={t("Descripci├│n / Ubicaci├│n") + " *"} value={form.description}
                                 onChangeText={v => setField("description", v)}
-                                placeholder={t("Ej: Bloque A, piso 3. Aula de teor�a con videobeam.")}
+                                placeholder={t("Ej: Bloque A, piso 3. Aula de teor´┐¢a con videobeam.")}
                                 error={isEmpty(form.description)} multiline />
 
                             <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom: 8, textAlign: "right" }}>* {t("Campos obligatorios")}</Text>
@@ -337,7 +337,7 @@ function EnvironmentFormModal({ visible, mode, environment, onClose, onSubmit, t
                             <Button variant="ghost" onPress={onClose} disabled={saving}>{t("Cancelar")}</Button>
                             <Button variant="primary" onPress={handleSubmit} disabled={saving || success}>
                                 {saving ? <React.Fragment><ActivityIndicator size="small" color="#fff" /></React.Fragment>
-                                    : success ? <React.Fragment><Feather name="check" size={14} color="#fff" /> {t("�Guardado ?")}</React.Fragment>
+                                    : success ? <React.Fragment><Feather name="check" size={14} color="#fff" /> {t("´┐¢Guardado ?")}</React.Fragment>
                                     : <React.Fragment><Feather name="home" size={14} color="#fff" /> {mode === "register" ? t("Registrar ambiente") : t("Guardar cambios")}</React.Fragment>}
                             </Button>
                         </View>
@@ -370,7 +370,7 @@ function ScheduleRow({ schedule, onEdit, onDelete, isLast, t }) {
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2 }}>
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                             <Feather name="clock" size={11} color={c.text.secondary} />
-                            <Text style={{ fontSize: 11, color: c.text.secondary }}>{schedule.startTime} � {schedule.endTime}</Text>
+                            <Text style={{ fontSize: 11, color: c.text.secondary }}>{schedule.startTime} ´┐¢ {schedule.endTime}</Text>
                         </View>
                         <View style={{ flexDirection: "row", gap: 4 }}>
                             {schedule.days.map(d => (
@@ -426,11 +426,11 @@ function EnvironmentDetailModal({ environment, onClose, onEdit, onDelete, onAddS
                     </View>
 
                     <ScrollView style={{ padding: 20 }} showsVerticalScrollIndicator={false}>
-                        {/* Descripci�n */}
+                        {/* Descripci´┐¢n */}
                         <View style={{ backgroundColor: c.background.app, borderRadius: 14, padding: 12, marginBottom: 16 }}>
                             <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 }}>
                                 <Feather name="map-pin" size={13} color={c.text.secondary} />
-                                <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.secondary, textTransform: "uppercase", letterSpacing: 0.5 }}>{t("Ubicaci�n / Descripci�n")}</Text>
+                                <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.secondary, textTransform: "uppercase", letterSpacing: 0.5 }}>{t("Ubicaci´┐¢n / Descripci´┐¢n")}</Text>
                             </View>
                             <Text style={{ fontSize: 11, color: c.text.primary, lineHeight: 20 }}>{environment.description}</Text>
                         </View>
@@ -439,7 +439,7 @@ function EnvironmentDetailModal({ environment, onClose, onEdit, onDelete, onAddS
                         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                             <Text style={{ fontSize: 10, fontWeight: "700", color: c.text.primary }}>{t("Horarios asignados")}</Text>
                             <Button variant="primary" size="sm" onPress={onAddSchedule}>
-                                <Feather name="plus" size={13} color="#fff" /> {"  "}{t("A�adir horario")}
+                                <Feather name="plus" size={13} color="#fff" /> {"  "}{t("A´┐¢adir horario")}
                             </Button>
                         </View>
 
@@ -448,7 +448,7 @@ function EnvironmentDetailModal({ environment, onClose, onEdit, onDelete, onAddS
                                 <EmptyState
                                     icon={<Feather name="calendar" size={36} color={c.text.secondary} />}
                                     title={t("Sin horarios")}
-                                    description={t("Este ambiente no tiene horarios asignados a�n")}
+                                    description={t("Este ambiente no tiene horarios asignados a´┐¢n")}
                                 />
                             ) : environment.schedules.map((s, i) => (
                                 <ScheduleRow key={s.id} schedule={s}
@@ -515,16 +515,16 @@ function EnvironmentCard({ environment, onPress }) {
                             <View style={{ width: 4, height: 4, borderRadius: 14, backgroundColor: c.brand.primary }} />
                             <View style={{ flex: 1 }}>
                                 <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary }} numberOfLines={1}>
-                                    {s.courseCode} � {s.courseName}
+                                    {s.courseCode} ´┐¢ {s.courseName}
                                 </Text>
                                 <Text style={{ fontSize: 11, color: c.text.secondary }} numberOfLines={1}>
-                                    {s.instructorName} � {s.startTime}�{s.endTime} � {s.days.join(", ")}
+                                    {s.instructorName} ´┐¢ {s.startTime}´┐¢{s.endTime} ´┐¢ {s.days.join(", ")}
                                 </Text>
                             </View>
                         </View>
                     ))}
                     {environment.schedules.length > 3 && (
-                        <Text style={{ fontSize: 11, color: c.brand.primary, marginTop: 2 }}>+{environment.schedules.length - 3} {t("m�s...")}</Text>
+                        <Text style={{ fontSize: 11, color: c.brand.primary, marginTop: 2 }}>+{environment.schedules.length - 3} {t("m´┐¢s...")}</Text>
                     )}
                 </View>
             </Card>
@@ -584,7 +584,7 @@ export default function EnvironmentsView() {
                     ))}
                 </View>
 
-                {/* B�squeda */}
+                {/* B´┐¢squeda */}
                 <View style={{ maxWidth: 480, position: "relative", justifyContent: "center" }}>
                     <View style={{ position: "absolute", left: 12, zIndex: 1 }}>
                         <Feather name="search" size={14} color={c.text.secondary} />
@@ -631,7 +631,7 @@ export default function EnvironmentsView() {
                 />
             )}
 
-            {/* Modal registro/edici�n ambiente */}
+            {/* Modal registro/edici´┐¢n ambiente */}
             <EnvironmentFormModal
                 visible={vm.envModalMode === "register" || vm.envModalMode === "edit"}
                 mode={vm.envModalMode === "edit" ? "edit" : "register"}

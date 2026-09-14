@@ -1,22 +1,26 @@
+﻿// ============================================================
+//  FaceAttend EDU ÔÇö Settings SCREEN (Container)
 // ============================================================
-//  FaceAttend EDU — Settings SCREEN (Container)
-// ============================================================
-//  RESPONSABILIDAD: Orquestación y punto de entrada ("qué debe pasar")
+//  RESPONSABILIDAD: Orquestaci├│n y punto de entrada ("qu├® debe pasar")
 //
 //  Este componente:
-//  ✓ Actúa como punto de entrada para la navegación
-//  ✓ Delega toda la presentación a SettingsView
+//  Ô£ô Act├║a como punto de entrada para la navegaci├│n
+//  Ô£ô Delega toda la presentaci├│n a SettingsView
 //
 //  NO debe:
-//  ✗ Contener lógica de negocio
-//  ✗ Renderizar UI directamente (delegado a SettingsView)
+//  Ô£ù Contener l├│gica de negocio
+//  Ô£ù Renderizar UI directamente (delegado a SettingsView)
 //
-//  Patrón: Screen = orquestación, View = presentación
+//  Patr├│n: Screen = orquestaci├│n, View = presentaci├│n
 // ============================================================
 
 import React from "react";
+import { useRoute } from "@react-navigation/native";
 import SettingsView from "../SettingsView";
 
 export default function SettingsScreen() {
-    return <SettingsView />;
+    const route = useRoute();
+    const section = route.params?.section;
+    
+    return <SettingsView section={section} />;
 }

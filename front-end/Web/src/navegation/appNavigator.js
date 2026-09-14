@@ -21,7 +21,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import LandingScreen from "../view/screens/LandingScreen";
 import LoginScreen from "../view/screens/LoginScreen";
 import SignupScreen from "../view/screens/SignupScreen";
-import DashboardScreen from "../view/screens/DashboardScreen";
+import AuthenticatedNavigator from "./AuthenticatedNavigator";
 
 const Stack = createNativeStackNavigator();
 
@@ -49,7 +49,7 @@ export default function AppNavigator() {
 
             <Stack.Screen
                 name="FaceAttendEDU-Dashboard"
-                component={DashboardScreen}
+                component={AuthenticatedNavigator}
             />
         </Stack.Navigator>
     );

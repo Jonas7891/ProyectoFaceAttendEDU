@@ -18,6 +18,7 @@ import { getVariantColors, SIDEBAR_CONSTANTS } from "./constants";
  * @param {string|number} badge - Badge opcional (ej: notificaciones)
  * @param {string} variant - Variante: "default" | "danger" | "success" | "warning"
  * @param {function} onPress - Callback al presionar el item principal (opcional)
+ * @param {function} onExpandedChange - Callback cuando cambia el estado de expansión (opcional)
  * @param {boolean} disabled - Si está deshabilitado (default: false)
  * @param {number} indentSize - Tamaño de indentación para sub-items en px (default: 24)
  * @param {object} style - Estilos adicionales
@@ -43,6 +44,7 @@ export default function SidebarItemCollapsible({
     badge,
     variant = "default",
     onPress,
+    onExpandedChange,
     disabled = false,
     indentSize = 24,
     style,
@@ -69,6 +71,11 @@ export default function SidebarItemCollapsible({
     const handleToggle = () => {
         const newExpandedState = !isExpanded;
         setIsExpanded(newExpandedState);
+        
+        // Notificar cambio de expansión
+        if (onExpandedChange) {
+            onExpandedChange(newExpandedState);
+        }
 
         // Animar altura y rotación del chevron
         Animated.parallel([
@@ -87,27 +94,6 @@ export default function SidebarItemCollapsible({
         ]).start();
     };
 
-    // Efecto para sincronizar expansión con defaultExpanded cuando cambia
-    useEffect(() => {
-        if (defaultExpanded !== isExpanded) {
-            setIsExpanded(defaultExpanded);
-            Animated.parallel([
-                Animated.spring(animatedHeight, {
-                    toValue: defaultExpanded ? 1 : 0,
-                    useNativeDriver: false,
-                    tension: 100,
-                    friction: 10,
-                }),
-                Animated.spring(rotateAnim, {
-                    toValue: defaultExpanded ? 1 : 0,
-                    useNativeDriver: true,
-                    tension: 100,
-                    friction: 10,
-                }),
-            ]).start();
-        }
-    }, [defaultExpanded]);
-
     // Rotación del chevron
     const chevronRotation = rotateAnim.interpolate({
         inputRange: [0, 1],
@@ -120,7 +106,7 @@ export default function SidebarItemCollapsible({
 
     // Handler del item principal
     const handleMainPress = () => {
-        // Si hay onPress, ejecutarlo
+        // Si hay onPress, ejecutarlo (marca como activo)
         if (onPress) {
             onPress();
         }
@@ -148,8 +134,8 @@ export default function SidebarItemCollapsible({
                     alignItems: "center",
                     gap: 12,
                     padding: SIDEBAR_CONSTANTS.ITEM_PADDING,
-                    backgroundColor: active || hasActiveChild ? colors.bg : "transparent",
-                    borderLeftWidth: active || hasActiveChild ? 3 : 0,
+                    backgroundColor: active || hasActiveChild || isExpanded ? colors.bg : "transparent",
+                    borderLeftWidth: active || hasActiveChild || isExpanded ? 3 : 0,
                     borderLeftColor: colors.border,
                 }}
                 activeOpacity={0.7}
@@ -159,7 +145,7 @@ export default function SidebarItemCollapsible({
                     <Feather 
                         name={icon} 
                         size={20} 
-                        color={active || hasActiveChild ? colors.icon : c.text.secondary} 
+                        color={active || hasActiveChild || isExpanded ? colors.icon : c.text.primary} 
                     />
                 )}
 
@@ -167,8 +153,8 @@ export default function SidebarItemCollapsible({
                 <Text
                     style={{
                         fontSize: 14,
-                        fontWeight: active || hasActiveChild ? "600" : "400",
-                        color: active || hasActiveChild ? colors.text : c.text.secondary,
+                        fontWeight: active || hasActiveChild || isExpanded ? "600" : "400",
+                        color: active || hasActiveChild || isExpanded ? colors.text : c.text.primary,
                         flex: 1,
                     }}
                     numberOfLines={1}

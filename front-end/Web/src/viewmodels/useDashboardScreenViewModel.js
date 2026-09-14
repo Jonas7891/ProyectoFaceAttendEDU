@@ -15,6 +15,7 @@ const ALL_TABS = [
         key: "settings",     
         label: "Configuración",  
         icon: "settings",
+        optionalNavigation: true, // No navega al hacer click, solo expande/contrae
         // Sub-secciones de configuración (se renderizarán como sub-items en la sidebar)
         children: [
             { key: "general",        label: "General",         icon: "globe",    adminOnly: true },
@@ -53,6 +54,7 @@ export function useDashboardScreenViewModel() {
                     ...tab,
                     label: roleSpecificLabel || tab.label,
                     children: processedChildren,
+                    optionalNavigation: tab.optionalNavigation, // Preservar la propiedad
                 };
             }),
         [permissions.visibleTabs, permissions.getTabLabel, permissions.canManageUsers]
