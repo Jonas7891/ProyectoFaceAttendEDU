@@ -91,7 +91,7 @@ export function useDashboardScreenViewModel() {
     return {
         currentTab: safeTab,
         currentSubTab,
-        bottomTabs: visibleTabs,
+        bottomTabs: visibleTabs || [],
         setTab,
         setSubTab,
     };

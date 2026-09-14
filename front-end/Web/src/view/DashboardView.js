@@ -96,7 +96,7 @@ function getWeeklyTrendSubtitle(periodType, t) {
 // ──────────────────────────────────────────────────────────────
 
 function AdminDashboard({ vm, permissions, isSmall, c, t }) {
-    // Hook para orquestar selección de semanas
+    // Hook para orquestar selección de semanas - DEBE ejecutarse siempre
     const {
         selectedWeek,
         handleWeekSelect,
@@ -105,13 +105,14 @@ function AdminDashboard({ vm, permissions, isSmall, c, t }) {
         dailyBarChartProps,
     } = useWeeklyAttendanceController(vm.attendanceByWeek, vm.attendanceByDay);
     
-    if (!vm.adminData) return null;
-
-    const weekLabel = selectedWeek ? selectedWeek.week : t("Esta semana");
-    
     // TODO: Obtener de Settings cuando esté implementado
     const academicPeriod = DEFAULT_ACADEMIC_PERIOD;
     const weeklySubtitle = getWeeklyTrendSubtitle(academicPeriod, t);
+    
+    // Early return DESPUÉS de todos los hooks
+    if (!vm.adminData) return null;
+
+    const weekLabel = selectedWeek ? selectedWeek.week : t("Esta semana");
 
     return (
         <>
@@ -551,15 +552,16 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t }) {
 function StudentDashboard({ vm, permissions, isSmall, c, t }) {
     const [selectedWeek, setSelectedWeek] = React.useState(null);
     
+    // TODO: Obtener de Settings cuando esté implementado
+    const academicPeriod = DEFAULT_ACADEMIC_PERIOD;
+    const weeklySubtitle = getWeeklyTrendSubtitle(academicPeriod, t);
+    
+    // Early return DESPUÉS de todos los hooks
     if (!vm.studentData) return null;
 
     // Determinar qué datos diarios mostrar
     const displayedDailyData = selectedWeek?.dailyData || vm.attendanceByDay;
     const weekLabel = selectedWeek ? selectedWeek.week : t("Esta semana");
-    
-    // TODO: Obtener de Settings cuando esté implementado
-    const academicPeriod = DEFAULT_ACADEMIC_PERIOD;
-    const weeklySubtitle = getWeeklyTrendSubtitle(academicPeriod, t);
 
     return (
         <>

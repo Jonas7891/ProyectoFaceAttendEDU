@@ -82,9 +82,9 @@ export function useStudentsViewModel() {
     }
 
     return {
-        students: appData.students,
-        filtered,
-        courses,
+        students: appData.students || [],
+        filtered: filtered || [],
+        courses: courses || [],
         selected,
         isLoading: appData.isLoading,
         search,

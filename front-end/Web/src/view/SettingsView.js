@@ -144,7 +144,7 @@ export default function SettingsView({ section = "appearance" }) {
                                     style={inputStyle}
                                 />
                                 <Text style={descStyle}>
-                                    {t("Aparece en reportes, correos y en la cabecera de la app.")}
+                                    {t("Aparece en reportes, correos y en la cabecera del programa.")}
                                 </Text>
                             </View>
 
@@ -717,7 +717,7 @@ export default function SettingsView({ section = "appearance" }) {
                                     {t("Modo de visualización")}
                                 </Text>
                                 <Text style={descStyle}>
-                                    {t("Elige el tema base de la interfaz. Afecta fondos, textos y superficies de toda la app.")}
+                                    {t("Elige el tema base de la interfaz. Afecta fondos, textos y superficies de todo el programa.")}
                                 </Text>
                                 <ModeSelector />
                             </View>
@@ -731,7 +731,7 @@ export default function SettingsView({ section = "appearance" }) {
                                         {t("Color de acento")}
                                     </Text>
                                     <Text style={descStyle}>
-                                        {t("Este color se aplica a botones principales, tabs activos, barras de progreso, bordes de foco y todos los elementos interactivos. Los cambios se previsualizan abajo � presiona \"Guardar cambios\" para aplicarlos en toda la app.")}
+                                        {t("Este color se aplica a botones principales, tabs activos, barras de progreso, bordes de foco y todos los elementos interactivos. Los cambios se previsualizan abajo � presiona \"Guardar cambios\" para aplicarlos en toda la programa.")}
                                     </Text>
                                 </View>
                                 <AccentColorSelector
@@ -770,7 +770,7 @@ export default function SettingsView({ section = "appearance" }) {
                                     flex: 1,
                                     lineHeight: 18
                                 }}>
-                                    {t("La preview muestra como se verá el color en botones, badges y elementos activos. Presiona \"Guardar cambios\" para aplicarlo en toda la app.")}
+                                    {t("La preview muestra como se verá el color en botones, badges y elementos activos. Presiona \"Guardar cambios\" para aplicarlo en toda la programa.")}
                                 </Text>
                             </View>
                         </View>

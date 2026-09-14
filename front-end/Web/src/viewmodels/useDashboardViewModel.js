@@ -2,6 +2,7 @@
 import { useTheme } from "../view/components/hooks/useTheme";
 import { useTranslation } from "../i18n/hooks/useTranslation";
 import { useAuth } from "../context/AuthContext";
+import { useAppData } from "../context/AppDataContext";
 import {
     mockStudents,
     mockCourses,
@@ -10,7 +11,6 @@ import {
     mockCourseAttendance,
     mockRecentActivity,
     mockInstructorAttendance,
-    mockFichas,
     mockAtRiskStudents,
     mockPerfectAttendanceStudents,
 } from "../models/data/mockData";
@@ -38,6 +38,7 @@ export function useDashboardViewModel() {
     const { theme } = useTheme();
     const { t } = useTranslation();
     const { user } = useAuth();
+    const { fichas } = useAppData();
     const c = theme.colors;
 
     const userRole = user?.role || "student";
@@ -59,18 +60,18 @@ export function useDashboardViewModel() {
 
         // Validaciones defensivas
         if (!mockInstructorAttendance || mockInstructorAttendance.length === 0) return [];
-        if (!mockFichas || mockFichas.length === 0) return [];
+        if (!fichas || fichas.length === 0) return [];
         if (!mockAttendanceByDay || mockAttendanceByDay.length === 0) return [];
 
         const totalInstructors = mockInstructorAttendance.length;
-        const totalFichas = mockFichas.length;
-        const totalStudents = mockFichas.reduce((sum, f) => sum + (f.totalStudents || 0), 0);
-        const activeStudents = mockFichas.reduce((sum, f) => sum + (f.activeStudents || 0), 0);
+        const totalFichas = fichas.length;
+        const totalStudents = fichas.reduce((sum, f) => sum + (f.totalStudents || 0), 0);
+        const activeStudents = fichas.reduce((sum, f) => sum + (f.activeStudents || 0), 0);
         const atRiskCount = mockAtRiskStudents?.length || 0;
         const perfectCount = mockPerfectAttendanceStudents?.length || 0;
 
         // Calcular asistencia promedio global
-        const globalAvgAttendance = mockFichas.reduce((sum, f) => sum + (f.avgAttendance || 0), 0) / (mockFichas.length || 1);
+        const globalAvgAttendance = fichas.reduce((sum, f) => sum + (f.avgAttendance || 0), 0) / (fichas.length || 1);
         
         // Asistencia del día (suma de presentes + tardanzas en todos los días)
         const todayTotalStudents = mockAttendanceByDay.reduce((sum, day) => 
@@ -87,7 +88,7 @@ export function useDashboardViewModel() {
         const instructorsToday = Math.round(totalInstructors * 0.85);
         
         // Fichas con problemas (asistencia < 75%)
-        const problematicFichas = mockFichas.filter(f => (f.avgAttendance || 0) < 75).length;
+        const problematicFichas = fichas.filter(f => (f.avgAttendance || 0) < 75).length;
         
         // Tasa de retención (estudiantes activos / total)
         const retentionRate = totalStudents > 0 
@@ -155,7 +156,7 @@ export function useDashboardViewModel() {
                 icon: "clock",
             },
         ];
-    }, [c, t, userRole]);
+    }, [c, t, userRole, fichas]);
 
     // ── TEACHER: Métricas de sus cursos/fichas asignadas ──────
 
@@ -163,12 +164,12 @@ export function useDashboardViewModel() {
         if (userRole !== "teacher") return [];
 
         // Validaciones defensivas
-        if (!mockFichas || mockFichas.length === 0) return [];
+        if (!fichas || fichas.length === 0) return [];
         if (!mockAtRiskStudents) return [];
 
         // Mock: Filtrar solo las fichas asignadas al instructor
         // TODO: En producción, filtrar por user.assignedFichas o similar
-        const teacherFichas = mockFichas.slice(0, 2);
+        const teacherFichas = fichas.slice(0, 2);
         const totalStudents = teacherFichas.reduce((sum, f) => sum + (f.totalStudents || 0), 0);
         const activeStudents = teacherFichas.reduce((sum, f) => sum + (f.activeStudents || 0), 0);
         const avgAttendance = teacherFichas.reduce((sum, f) => sum + (f.avgAttendance || 0), 0) / (teacherFichas.length || 1);
@@ -231,7 +232,7 @@ export function useDashboardViewModel() {
                 icon: "alert-circle",
             },
         ];
-    }, [c, t, userRole]);
+    }, [c, t, userRole, fichas]);
 
     // ── STUDENT: Métricas personales del día ──────────────────
 
@@ -439,8 +440,8 @@ export function useDashboardViewModel() {
         if (userRole === "teacher") {
             // Mock: filtrar solo las fichas del teacher
             // En producción, usar user.assignedFichas
-            if (!mockFichas || mockFichas.length === 0) return [];
-            const teacherFichas = mockFichas.slice(0, 2);
+            if (!fichas || fichas.length === 0) return [];
+            const teacherFichas = fichas.slice(0, 2);
             courses = mockCourseAttendance
                 .filter(item => teacherFichas.some(f => f.code === item.course))
                 .slice(0, 3);
@@ -473,25 +474,25 @@ export function useDashboardViewModel() {
         if (userRole !== "admin") return null;
         
         // Validaciones defensivas
-        if (!mockFichas || mockFichas.length === 0) return null;
+        if (!fichas || fichas.length === 0) return null;
 
         return {
             instructorAttendance: mockInstructorAttendance || [],
-            fichas: mockFichas || [],
+            fichas: fichas || [],
             atRiskStudents: mockAtRiskStudents || [],
             perfectAttendanceStudents: mockPerfectAttendanceStudents || [],
             
             // Top 5 fichas
-            topFichas: [...mockFichas]
+            topFichas: [...fichas]
                 .sort((a, b) => (b.avgAttendance || 0) - (a.avgAttendance || 0))
                 .slice(0, 5),
             
             // Bottom 3 fichas
-            bottomFichas: [...mockFichas]
+            bottomFichas: [...fichas]
                 .sort((a, b) => (a.avgAttendance || 0) - (b.avgAttendance || 0))
                 .slice(0, 3),
         };
-    }, [userRole]);
+    }, [userRole, fichas]);
 
     // ── Datos específicos de TEACHER ──────────────────────────
 
@@ -499,10 +500,10 @@ export function useDashboardViewModel() {
         if (userRole !== "teacher") return null;
         
         // Validaciones defensivas
-        if (!mockFichas || mockFichas.length === 0) return null;
+        if (!fichas || fichas.length === 0) return null;
 
         // Mock: fichas del teacher
-        const teacherFichas = mockFichas.slice(0, 2);
+        const teacherFichas = fichas.slice(0, 2);
         
         // Estudiantes en riesgo de las fichas del teacher
         const teacherAtRiskStudents = (mockAtRiskStudents || []).filter(s =>
@@ -513,7 +514,7 @@ export function useDashboardViewModel() {
             myFichas: teacherFichas,
             myAtRiskStudents: teacherAtRiskStudents,
         };
-    }, [userRole]);
+    }, [userRole, fichas]);
 
     // ── Datos específicos de STUDENT ──────────────────────────
 
@@ -536,16 +537,16 @@ export function useDashboardViewModel() {
         // Datos comunes
         userRole,
         todayLabel,
-        stats,
-        attendanceByDay,      // Datos filtrados por rol
-        attendanceByWeek,     // Datos filtrados por rol
-        courseAttendance,     // Datos filtrados por rol
-        recentActivity: mockRecentActivity,
+        stats: stats || [],
+        attendanceByDay: attendanceByDay || [],      // Datos filtrados por rol
+        attendanceByWeek: attendanceByWeek || [],     // Datos filtrados por rol
+        courseAttendance: courseAttendance || [],     // Datos filtrados por rol
+        recentActivity: mockRecentActivity || [],
 
         // Datos por rol
-        adminData,
-        teacherData,
-        studentData,
+        adminData: adminData || null,
+        teacherData: teacherData || null,
+        studentData: studentData || null,
     };
 }
 

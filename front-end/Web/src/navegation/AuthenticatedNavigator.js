@@ -77,7 +77,6 @@ const ROUTE_TO_KEY_MAP = {
 function PersistentSidebar() {
     const navigation = useNavigation();
     const { theme } = useTheme();
-    const { isSmall } = useResponsive();
     const c = theme.colors;
     const vm = useDashboardScreenViewModel();
     const { t } = useTranslation();
@@ -146,17 +145,15 @@ function PersistentSidebar() {
     }, [sidebarSelectedTab, sidebarSelectedSubTab]);
     
     // Manejo de logout
-    async function handleLogout() {
+    const handleLogout = React.useCallback(async () => {
         await logout();
         const parent = navigation.getParent();
         if (parent) {
             parent.replace("FaceAttendEDU");
         }
-    }
+    }, [logout, navigation]);
     
-    // No renderizar en móvil
-    if (isSmall) return null;
-    
+    // NO usar early return - el padre decide si renderizar este componente
     return (
         <CollapsibleSidebar width={240}>
             {user && (
@@ -254,7 +251,7 @@ function ScreenWithSidebar({ children }) {
     
     return (
         <View style={{ flex: 1, flexDirection: "row" }}>
-            {/* Sidebar persistente - solo desktop */}
+            {/* Sidebar persistente - renderizado condicional en PADRE */}
             {!isSmall && <PersistentSidebar />}
             
             {/* Contenido de la screen */}
@@ -269,7 +266,6 @@ function ScreenWithSidebar({ children }) {
 function BottomTabs() {
     const navigation = useNavigation();
     const { theme } = useTheme();
-    const { isSmall } = useResponsive();
     const insets = useSafeAreaInsets();
     const c = theme.colors;
     const vm = useDashboardScreenViewModel();
@@ -277,9 +273,6 @@ function BottomTabs() {
     
     // Usar contexto compartido
     const { setSidebarSelectedTab, setSidebarSelectedSubTab } = React.useContext(SidebarStateContext);
-    
-    // No renderizar en desktop
-    if (!isSmall) return null;
     
     // Estado para tracking de ruta actual
     const [currentRouteName, setCurrentRouteName] = React.useState("Dashboard");
@@ -304,7 +297,7 @@ function BottomTabs() {
     
     const currentTabKey = ROUTE_TO_KEY_MAP[currentRouteName] || "dashboard";
     
-    const handleNavigate = (tabKey, subTabKey) => {
+    const handleNavigate = React.useCallback((tabKey, subTabKey) => {
         const routeName = ROUTE_MAP[tabKey];
         if (!routeName) return;
         
@@ -313,8 +306,9 @@ function BottomTabs() {
         
         const params = subTabKey ? { section: subTabKey } : undefined;
         navigation.navigate(routeName, params);
-    };
+    }, [navigation, setSidebarSelectedTab, setSidebarSelectedSubTab]);
     
+    // NO usar early return - el padre decide si renderizar este componente
     return (
         <View style={{
             position: "absolute",
@@ -389,6 +383,9 @@ export default function AuthenticatedNavigator() {
         setSidebarSelectedSubTab,
     }), [sidebarSelectedTab, sidebarSelectedSubTab]);
     
+    // Calcular padding basado en isSmall - DEBE ser antes del return
+    const bottomPadding = isSmall ? 64 : 0;
+    
     return (
         <SidebarStateContext.Provider value={sidebarState}>
             <SafeAreaProvider>
@@ -400,7 +397,7 @@ export default function AuthenticatedNavigator() {
                     <View style={{ 
                         flex: 1,
                         overflow: "hidden",
-                        paddingBottom: isSmall ? 64 : 0,
+                        paddingBottom: bottomPadding,
                     }}>
                         <Stack.Navigator
                             initialRouteName="Dashboard"
@@ -431,8 +428,8 @@ export default function AuthenticatedNavigator() {
                         </Stack.Navigator>
                     </View>
                     
-                    {/* Bottom tabs (solo móvil) */}
-                    <BottomTabs />
+                    {/* Bottom tabs (solo móvil) - renderizado condicional */}
+                    {isSmall && <BottomTabs />}
                 </SafeAreaView>
             </SafeAreaProvider>
         </SidebarStateContext.Provider>

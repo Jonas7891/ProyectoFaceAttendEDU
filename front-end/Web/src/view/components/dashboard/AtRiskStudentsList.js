@@ -147,10 +147,12 @@ export function AtRiskStudentsList({
 
                         {/* Información */}
                         <View style={{ flex: 1, gap: 6 }}>
+                            {/* Header: Nombre + (Última asistencia + Badge) */}
                             <View style={{
                                 flexDirection: "row",
                                 alignItems: "center",
                                 justifyContent: "space-between",
+                                gap: 8,
                             }}>
                                 <Text style={{
                                     fontSize: 14,
@@ -160,47 +162,57 @@ export function AtRiskStudentsList({
                                 }} numberOfLines={1}>
                                     {student.name}
                                 </Text>
-                                
-                                <Badge variant={config.variant} size="sm">
-                                    {student.attendanceRate}%
-                                </Badge>
+
+                                <View style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    gap: 8,
+                                }}>
+                                    <Text style={{
+                                        fontSize: 11,
+                                        color: c.text.disabled,
+                                    }}>
+                                        {t("Última asistencia")}: {student.lastAttendance}
+                                    </Text>
+                                    
+                                    <Badge variant={config.variant} size="sm">
+                                        {student.attendanceRate}%
+                                    </Badge>
+                                </View>
                             </View>
 
+                            {/* Segunda línea: Código + Ficha + Stats */}
                             <View style={{
                                 flexDirection: "row",
                                 alignItems: "center",
-                                gap: 8,
-                            }}>
-                                <Text style={{
-                                    fontSize: 12,
-                                    color: c.text.secondary,
-                                }}>
-                                    {student.code}
-                                </Text>
-                                <Text style={{
-                                    fontSize: 12,
-                                    color: c.text.secondary,
-                                }}>
-                                    • {student.fichaName}
-                                </Text>
-                            </View>
-
-                            {/* Barra de progreso */}
-                            <ProgressBar
-                                value={progressValue}
-                                color={config.color}
-                                size="sm"
-                            />
-
-                            {/* Stats críticos */}
-                            <View style={{
-                                flexDirection: "row",
                                 justifyContent: "space-between",
-                                alignItems: "center",
+                                gap: 8,
                             }}>
                                 <View style={{
                                     flexDirection: "row",
-                                    gap: 12,
+                                    alignItems: "center",
+                                    gap: 8,
+                                    flex: 1,
+                                }}>
+                                    <Text style={{
+                                        fontSize: 12,
+                                        color: c.text.secondary,
+                                    }}>
+                                        {student.code}
+                                    </Text>
+                                    <Text style={{
+                                        fontSize: 12,
+                                        color: c.text.secondary,
+                                    }}>
+                                        • {student.fichaName}
+                                    </Text>
+                                </View>
+
+                                {/* Stats: faltas + seguidas */}
+                                <View style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    gap: 10,
                                 }}>
                                     <View style={{
                                         flexDirection: "row",
@@ -232,32 +244,18 @@ export function AtRiskStudentsList({
                                         </View>
                                     )}
                                 </View>
-
-                                {/* Días hasta sanción */}
-                                <View style={{
-                                    paddingHorizontal: 8,
-                                    paddingVertical: 3,
-                                    borderRadius: 6,
-                                    backgroundColor: config.bgColor,
-                                }}>
-                                    <Text style={{
-                                        fontSize: 10,
-                                        fontWeight: "700",
-                                        color: config.color,
-                                    }}>
-                                        {student.daysUntilSanction} {t("días")}
-                                    </Text>
-                                </View>
                             </View>
 
-                            {/* Última asistencia */}
-                            <Text style={{
-                                fontSize: 11,
-                                color: c.text.disabled,
-                            }}>
-                                {t("Última asistencia")}: {student.lastAttendance}
-                            </Text>
+                            {/* Barra de progreso */}
+                            <ProgressBar
+                                value={progressValue}
+                                color={config.color}
+                                size="sm"
+                            />
                         </View>
+
+                        {/* Chevron - Indicador de clickeable */}
+                        <Feather name="chevron-right" size={20} color={c.text.secondary} />
                     </TouchableOpacity>
                 );
             })}

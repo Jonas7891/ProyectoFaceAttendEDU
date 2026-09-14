@@ -182,10 +182,10 @@ export function useEnvironmentsViewModel() {
     );
 
     return {
-        environments: appData.environments,
-        filtered,
-        users: appData.users,
-        instructors,
+        environments: appData.environments || [],
+        filtered: filtered || [],
+        users: appData.users || [],
+        instructors: instructors || [],
         isLoading: appData.isLoading,
         search,
         setSearch,

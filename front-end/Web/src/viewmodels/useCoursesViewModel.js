@@ -1,37 +1,6 @@
 ﻿import { useState, useMemo } from "react";
 import { useAppData } from "../context/AppDataContext";
 
-// ── Tipo derivado para la vista de cursos ─────────────────
-//
-//  El tipo Course del dominio tiene campos que aún no se
-//  persisten (professor, schedule, room, semester, color).
-//  Derivamos lo que tenemos y dejamos defaults para el resto.
-
-function buildCourseFromProgram(name, studentCount, avgAttendance, index) {
-    const COLORS = [
-        "#4F6BED",
-        "#10B981",
-        "#F59E0B",
-        "#8B5CF6",
-        "#EF4444",
-        "#06B6D4",
-        "#F97316",
-        "#84CC16",
-    ];
-    return {
-        id: `course-${index}`,
-        code: name.slice(0, 6).toUpperCase().replace(/ /g, "-"),
-        name,
-        professor: "—",
-        semester: "Activo",
-        schedule: "—",
-        room: "—",
-        students: studentCount,
-        avgAttendance,
-        color: COLORS[index % COLORS.length],
-    };
-}
-
 // ── ViewModel ─────────────────────────────────────────────
 
 export function useCoursesViewModel() {
@@ -39,11 +8,22 @@ export function useCoursesViewModel() {
     const [search, setSearch] = useState("");
     const [selected, setSelected] = useState(null);
 
-    // Cursos derivados de los programas del contexto global
-    const courses = useMemo(
-        () => appData.programs.map((p, i) => buildCourseFromProgram(p.name, p.studentCount, p.avgAttendance, i)),
-        [appData.programs]
-    );
+    // Cursos vienen directamente de las fichas del contexto
+    const courses = useMemo(() => {
+        // Transformar fichas a formato de curso compatible con la vista
+        return appData.fichas.map((ficha) => ({
+            id: ficha.id,
+            code: ficha.code,
+            name: ficha.name,
+            professor: ficha.instructor || "—",
+            semester: "Activo", // TODO: añadir campo semester a fichas
+            schedule: "—", // TODO: añadir campo schedule a fichas
+            room: "—", // TODO: añadir campo room a fichas
+            students: ficha.totalStudents || 0,
+            avgAttendance: ficha.avgAttendance || 0,
+            color: ficha.color,
+        }));
+    }, [appData.fichas]);
 
     const filtered = useMemo(
         () =>
@@ -73,8 +53,8 @@ export function useCoursesViewModel() {
     }
 
     return {
-        courses,
-        filtered,
+        courses: courses || [],
+        filtered: filtered || [],
         selected,
         search,
         isLoading: appData.isLoading,

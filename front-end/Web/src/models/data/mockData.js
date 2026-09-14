@@ -288,6 +288,7 @@ export const mockFichas = [
         absentToday: 2,
         atRiskStudents: 1,
         excellentStudents: 28,
+        color: "#4F6BED",
     },
     {
         id: "f2",
@@ -304,6 +305,7 @@ export const mockFichas = [
         absentToday: 1,
         atRiskStudents: 0,
         excellentStudents: 27,
+        color: "#10B981",
     },
     {
         id: "f3",
@@ -320,6 +322,7 @@ export const mockFichas = [
         absentToday: 4,
         atRiskStudents: 5,
         excellentStudents: 15,
+        color: "#F59E0B",
     },
     {
         id: "f4",
@@ -336,6 +339,7 @@ export const mockFichas = [
         absentToday: 3,
         atRiskStudents: 2,
         excellentStudents: 22,
+        color: "#8B5CF6",
     },
     {
         id: "f5",
@@ -352,6 +356,7 @@ export const mockFichas = [
         absentToday: 1,
         atRiskStudents: 1,
         excellentStudents: 20,
+        color: "#EF4444",
     },
     {
         id: "f6",
@@ -368,6 +373,7 @@ export const mockFichas = [
         absentToday: 4,
         atRiskStudents: 6,
         excellentStudents: 10,
+        color: "#06B6D4",
     },
 ];
 

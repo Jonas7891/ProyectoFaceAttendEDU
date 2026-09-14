@@ -81,11 +81,12 @@ export function InstructorAttendanceList({
                         />
 
                         {/* Información */}
-                        <View style={{ flex: 1, gap: 6 }}>
+                        <View style={{ flex: 1, gap: 4 }}>
                             <View style={{
                                 flexDirection: "row",
                                 alignItems: "center",
                                 justifyContent: "space-between",
+                                gap: 8,
                             }}>
                                 <Text style={{
                                     fontSize: 14,
@@ -118,8 +119,7 @@ export function InstructorAttendanceList({
                             {/* Stats mini */}
                             <View style={{
                                 flexDirection: "row",
-                                gap: 16,
-                                marginTop: 4,
+                                gap: 8,
                             }}>
                                 <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                                     <Feather name="check-circle" size={12} color={c.status.success} />

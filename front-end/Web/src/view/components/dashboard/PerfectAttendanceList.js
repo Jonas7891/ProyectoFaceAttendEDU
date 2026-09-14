@@ -8,7 +8,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Card, Badge, Avatar } from "../common";
+import { Card, Badge, Avatar, ProgressBar } from "../common";
 import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "../../../i18n/hooks/useTranslation";
 
@@ -93,10 +93,12 @@ export function PerfectAttendanceList({
 
                         {/* Información */}
                         <View style={{ flex: 1, gap: 6 }}>
+                            {/* Header: Nombre + Badge */}
                             <View style={{
                                 flexDirection: "row",
                                 alignItems: "center",
                                 justifyContent: "space-between",
+                                gap: 8,
                             }}>
                                 <Text style={{
                                     fontSize: 14,
@@ -106,76 +108,79 @@ export function PerfectAttendanceList({
                                 }} numberOfLines={1}>
                                     {student.name}
                                 </Text>
-                                
-                                <Badge 
-                                    variant={isPerfect ? "success" : "primary"} 
-                                    size="sm"
-                                >
-                                    {student.attendanceRate}%
-                                </Badge>
+
+                                <View style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    gap: 8,
+                                }}>
+                                    <Badge 
+                                        variant={isPerfect ? "success" : "primary"} 
+                                        size="sm"
+                                    >
+                                        {student.attendanceRate}%
+                                    </Badge>
+                                </View>
                             </View>
 
+                            {/* Segunda línea: Código + Ficha + Stats */}
                             <View style={{
                                 flexDirection: "row",
                                 alignItems: "center",
+                                justifyContent: "space-between",
                                 gap: 8,
                             }}>
-                                <Text style={{
-                                    fontSize: 12,
-                                    color: c.text.secondary,
-                                }}>
-                                    {student.code}
-                                </Text>
-                                <Text style={{
-                                    fontSize: 12,
-                                    color: c.text.secondary,
-                                }}>
-                                    • {student.fichaName}
-                                </Text>
-                            </View>
-
-                            {/* Racha */}
-                            <View style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 12,
-                            }}>
                                 <View style={{
                                     flexDirection: "row",
                                     alignItems: "center",
-                                    gap: 4,
-                                    paddingHorizontal: 8,
-                                    paddingVertical: 4,
-                                    borderRadius: 6,
-                                    backgroundColor: c.status.successLight,
+                                    gap: 8,
+                                    flex: 1,
                                 }}>
-                                    <Feather name="trending-up" size={12} color={c.status.success} />
                                     <Text style={{
-                                        fontSize: 11,
-                                        fontWeight: "600",
-                                        color: c.status.success,
-                                    }}>
-                                        {student.streak} {t("de racha")}
-                                    </Text>
-                                </View>
-
-                                <View style={{
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    gap: 4,
-                                }}>
-                                    <Feather name="calendar" size={11} color={c.text.secondary} />
-                                    <Text style={{
-                                        fontSize: 11,
+                                        fontSize: 12,
                                         color: c.text.secondary,
                                     }}>
-                                        {student.totalClasses} {t("clases")}
+                                        {student.code}
+                                    </Text>
+                                    <Text style={{
+                                        fontSize: 12,
+                                        color: c.text.secondary,
+                                    }}>
+                                        • {student.fichaName}
                                     </Text>
                                 </View>
+
+                                {/* Stats: Racha */}
+                                <View style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    gap: 10,
+                                }}>
+                                    <View style={{
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        gap: 4,
+                                    }}>
+                                        <Feather name="trending-up" size={12} color={c.status.success} />
+                                        <Text style={{
+                                            fontSize: 11,
+                                            color: c.text.secondary,
+                                        }}>
+                                            {student.streak} {t("días de racha")}
+                                        </Text>
+                                    </View>
+                                </View>
                             </View>
+
+                            {/* Barra de progreso */}
+                            <ProgressBar
+                                value={student.attendanceRate}
+                                color={isPerfect ? c.status.success : c.brand.primary}
+                                size="sm"
+                            />
                         </View>
 
-                        {/* Icono */}
+                        {/* Chevron - Indicador de clickeable */}
                         <Feather name="chevron-right" size={20} color={c.text.secondary} />
                     </TouchableOpacity>
                 );

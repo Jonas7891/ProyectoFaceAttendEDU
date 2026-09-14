@@ -39,6 +39,13 @@ import {
     deleteSchedule,
 } from "../models/data/EnvironmentStorage";
 
+import {
+    loadFichas,
+    addFicha as storageAddFicha,
+    updateFicha as storageUpdateFicha,
+    deleteFicha as storageDeleteFicha,
+} from "../models/data/FichaStorage";
+
 // ── Context ───────────────────────────────────────────────
 
 const AppDataContext = createContext(null);
@@ -49,14 +56,16 @@ export function AppDataProvider({ children }) {
     const [students, setStudents] = useState([]);
     const [users, setUsers] = useState([]);
     const [environments, setEnvironments] = useState([]);
+    const [fichas, setFichas] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
     // Carga única al montar — todas las entidades en paralelo
     useEffect(() => {
-        Promise.all([loadStudents(), loadUsers(), loadEnvironments()]).then(([s, u, e]) => {
+        Promise.all([loadStudents(), loadUsers(), loadEnvironments(), loadFichas()]).then(([s, u, e, f]) => {
             setStudents(s);
             setUsers(u);
             setEnvironments(e);
+            setFichas(f);
             setIsLoading(false);
         });
     }, []);
@@ -196,6 +205,32 @@ export function AppDataProvider({ children }) {
         [environments]
     );
 
+    // ── Fichas ────────────────────────────────────────────
+
+    const addFichaFn = useCallback(
+        async (draft) => {
+            const updated = await storageAddFicha(fichas, draft);
+            setFichas(updated);
+        },
+        [fichas]
+    );
+
+    const updateFichaFn = useCallback(
+        async (id, patch) => {
+            const updated = await storageUpdateFicha(fichas, id, patch);
+            setFichas(updated);
+        },
+        [fichas]
+    );
+
+    const removeFichaFn = useCallback(
+        async (id) => {
+            const updated = await storageDeleteFicha(fichas, id);
+            setFichas(updated);
+        },
+        [fichas]
+    );
+
     // ── Valor del contexto ────────────────────────────────
 
     const value = useMemo(
@@ -223,6 +258,11 @@ export function AppDataProvider({ children }) {
             addSchedule: addScheduleFn,
             updateSchedule: updateScheduleFn,
             removeSchedule: removeScheduleFn,
+
+            fichas,
+            addFicha: addFichaFn,
+            updateFicha: updateFichaFn,
+            removeFicha: removeFichaFn,
         }),
         [
             isLoading,
@@ -243,6 +283,10 @@ export function AppDataProvider({ children }) {
             addScheduleFn,
             updateScheduleFn,
             removeScheduleFn,
+            fichas,
+            addFichaFn,
+            updateFichaFn,
+            removeFichaFn,
         ]
     );
 

@@ -7,6 +7,7 @@ import { enableScreens } from "react-native-screens";
 enableScreens();
 
 import { ThemeProvider }    from "./src/context/ThemeContext";
+import { ResponsiveProvider } from "./src/context/ResponsiveContext";
 import { LanguageProvider } from "./src/i18n/context/LanguageContext";
 import { AppDataProvider }  from "./src/context/AppDataContext";
 import { AuthProvider }     from "./src/context/AuthContext";
@@ -23,38 +24,40 @@ export default function App() {
     return (
         <SafeAreaProvider>
             <ThemeProvider>
-                <LanguageProvider>
-                    {/* AuthProvider: sesión del usuario autenticado */}
-                    <AuthProvider>
-                        {/* AppDataProvider: única fuente de verdad para students, users y environments */}
-                        <AppDataProvider>
-                            <NavigationContainer
-                                linking={linkingConfig}
-                                onReady={onReady}
-                                fallback={<></>}  // Loading state mientras se resuelve la URL
-                                documentTitle={{
-                                    formatter: (options, route) => {
-                                        // Generar títulos dinámicos basados en la ruta
-                                        const routeTitles = {
-                                            'FaceAttendEDU': 'FaceAttend EDU',
-                                            'FaceAttendEDU-Login': 'Iniciar Sesión | FaceAttend EDU',
-                                            'FaceAttendEDU-Register': 'Registrarse | FaceAttend EDU',
-                                            'Dashboard': 'Dashboard | FaceAttend EDU',
-                                            'Students': 'Usuarios | FaceAttend EDU',
-                                            'Courses': 'Cursos | FaceAttend EDU',
-                                            'Environments': 'Ambientes | FaceAttend EDU',
-                                            'Reports': 'Reportes | FaceAttend EDU',
-                                            'Settings': 'Configuración | FaceAttend EDU',
-                                        };
-                                        return routeTitles[route?.name] || 'FaceAttend EDU';
-                                    }
-                                }}
-                            >
-                                <AppNavigator />
-                            </NavigationContainer>
-                        </AppDataProvider>
-                    </AuthProvider>
-                </LanguageProvider>
+                <ResponsiveProvider>
+                    <LanguageProvider>
+                        {/* AuthProvider: sesión del usuario autenticado */}
+                        <AuthProvider>
+                            {/* AppDataProvider: única fuente de verdad para students, users y environments */}
+                            <AppDataProvider>
+                                <NavigationContainer
+                                    linking={linkingConfig}
+                                    onReady={onReady}
+                                    fallback={<></>}  // Loading state mientras se resuelve la URL
+                                    documentTitle={{
+                                        formatter: (options, route) => {
+                                            // Generar títulos dinámicos basados en la ruta
+                                            const routeTitles = {
+                                                'FaceAttendEDU': 'FaceAttend EDU',
+                                                'FaceAttendEDU-Login': 'Iniciar Sesión | FaceAttend EDU',
+                                                'FaceAttendEDU-Register': 'Registrarse | FaceAttend EDU',
+                                                'Dashboard': 'Dashboard | FaceAttend EDU',
+                                                'Students': 'Usuarios | FaceAttend EDU',
+                                                'Courses': 'Cursos | FaceAttend EDU',
+                                                'Environments': 'Ambientes | FaceAttend EDU',
+                                                'Reports': 'Reportes | FaceAttend EDU',
+                                                'Settings': 'Configuración | FaceAttend EDU',
+                                            };
+                                            return routeTitles[route?.name] || 'FaceAttend EDU';
+                                        }
+                                    }}
+                                >
+                                    <AppNavigator />
+                                </NavigationContainer>
+                            </AppDataProvider>
+                        </AuthProvider>
+                    </LanguageProvider>
+                </ResponsiveProvider>
             </ThemeProvider>
         </SafeAreaProvider>
     );

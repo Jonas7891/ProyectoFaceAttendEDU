@@ -11,6 +11,7 @@ import { Feather } from "@expo/vector-icons";
 import { Card, Badge, ProgressBar } from "../common";
 import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "../../../i18n/hooks/useTranslation";
+import { getContrastTextColor } from "../../../core/utils/colorHelpers";
 
 /**
  * Ranking de fichas por desempeño
@@ -123,16 +124,28 @@ export function TopPerformingGroups({
                                     </View>
                                 )}
 
-                                {/* Código de ficha */}
+                                {/* Código de ficha con color dinámico */}
                                 <View style={{ flex: 1 }}>
                                     <View style={{
                                         flexDirection: "row",
                                         alignItems: "center",
                                         gap: 8,
                                     }}>
-                                        <Badge variant="primary" size="sm">
-                                            {ficha.code}
-                                        </Badge>
+                                        {/* Badge con color del curso */}
+                                        <View style={{
+                                            paddingHorizontal: 8,
+                                            paddingVertical: 4,
+                                            borderRadius: 6,
+                                            backgroundColor: ficha.color || c.brand.primary,
+                                        }}>
+                                            <Text style={{
+                                                fontSize: 12,
+                                                fontWeight: "600",
+                                                color: getContrastTextColor(ficha.color || c.brand.primary),
+                                            }}>
+                                                {ficha.code}
+                                            </Text>
+                                        </View>
                                         <Text style={{
                                             fontSize: 12,
                                             color: c.text.secondary,
