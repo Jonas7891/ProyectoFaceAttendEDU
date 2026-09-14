@@ -10,13 +10,13 @@ export default function ScrollViews({
   onRefresh,
   loading = false,
   bottomSpace = 80,
-  contentContainerstyle = {},
+  contentContainerStyle = {},
   style = {},
   keyboardShouldPersistTaps = "handled"
 }) {
   if (loading) {
     return (
-      <View style={[stylescommon.loadingContainer, contentContainerstyle]}>
+      <View style={[stylescommon.loadingContainer, contentContainerStyle]}>
         <ActivityIndicator color="#4CAF50" />
       </View>
     );
@@ -34,9 +34,9 @@ export default function ScrollViews({
   return (
     <ScrollView
       style={[stylescommon.ScrollViewWrapper]}
-      contentContainerstyle={[
+      contentContainerStyle={[
         stylescommon.contentContainerScroll,
-        contentContainerstyle,
+        contentContainerStyle,
         { paddingBottom: bottomSpace }
       ]}
       showsVerticalScrollIndicator={showVerticalScroll}

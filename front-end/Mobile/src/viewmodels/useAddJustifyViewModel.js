@@ -68,7 +68,6 @@ export function useAddJustificationViewModel() {
 
         setIsLoading(true);
         try {
-            // Simulación de envío
             await new Promise(resolve => setTimeout(resolve, 1500));
             setAlertData({
                 message: t('justify.successMessage'),
