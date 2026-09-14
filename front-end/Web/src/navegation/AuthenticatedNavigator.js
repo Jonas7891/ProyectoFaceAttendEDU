@@ -80,9 +80,18 @@ function PersistentSidebar() {
     // Usar contexto compartido para el estado del sidebar
     const { sidebarSelectedTab, sidebarSelectedSubTab, setSidebarSelectedTab, setSidebarSelectedSubTab } = React.useContext(SidebarStateContext);
     
-    // Sincronizar estado del sidebar con la navegación actual al montar y cuando cambie
+    // Flag para indicar si la navegación viene del sidebar (evita sync loops)
+    const isNavigatingFromSidebar = React.useRef(false);
+    
+    // Sincronizar estado del sidebar con la navegación actual SOLO al montar o cuando viene de URL
     React.useEffect(() => {
         const syncSidebarWithNavigation = () => {
+            // Si la navegación viene del sidebar, NO sincronizar (evita sobrescribir el click)
+            if (isNavigatingFromSidebar.current) {
+                isNavigatingFromSidebar.current = false;
+                return;
+            }
+            
             const state = navigation.getState();
             if (state?.routes && state.routes.length > 0) {
                 const currentRoute = state.routes[state.index];
@@ -97,10 +106,10 @@ function PersistentSidebar() {
             }
         };
         
-        // Sincronizar al montar
+        // Sincronizar al montar (navegación por URL directa)
         syncSidebarWithNavigation();
         
-        // Sincronizar cuando cambie la navegación
+        // Sincronizar cuando cambie la navegación (back/forward del navegador)
         const unsubscribe = navigation.addListener('state', syncSidebarWithNavigation);
         
         return unsubscribe;
@@ -111,6 +120,9 @@ function PersistentSidebar() {
         const routeName = ROUTE_MAP[tabKey];
         
         if (!routeName) return;
+        
+        // Marcar que la navegación viene del sidebar
+        isNavigatingFromSidebar.current = true;
         
         setSidebarSelectedTab(tabKey);
         setSidebarSelectedSubTab(subTabKey || null);
@@ -170,7 +182,12 @@ function PersistentSidebar() {
                         const shouldShowActive = isParentActive || hasActiveChild;
                         
                         const mainItemOnPress = tab.optionalNavigation 
-                            ? undefined  // No hacer nada al clickear, solo toggle expansión
+                            ? () => {
+                                // Marcar el tab visualmente sin navegar
+                                isNavigatingFromSidebar.current = true;
+                                setSidebarSelectedTab(tab.key);
+                                // Mantener el subtab actual si existe
+                            }
                             : () => handleNavigate(tab.key);
                         
                         // Memoizar children para evitar recrear en cada render
