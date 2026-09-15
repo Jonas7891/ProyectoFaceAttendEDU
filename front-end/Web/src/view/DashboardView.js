@@ -183,7 +183,7 @@ function AdminDashboard({ vm, permissions, isSmall, c, t }) {
                         </Text>
                     </View>
                     <Button variant="ghost" size="sm">
-                        {t("Ver todos")} →
+                        {t("Ver todos → ")}
                     </Button>
                 </View>
                 
@@ -813,14 +813,18 @@ export default function DashboardView() {
     }[vm.userRole] || vm.todayLabel;
 
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: c.background.app }}>
             <PageHeader
                 title={dashboardTitle}
                 subtitle={dashboardSubtitle}
                 actions={
                     permissions.canRegisterFace && (
-                        <Button variant="primary" size="sm">
-                            <Feather name="camera" size={16} color="#fff" /> {t("Tomar asistencia")}
+                        <Button 
+                            variant="primary" 
+                            size="sm"
+                            leftIcon={<Feather name="camera" size={16} color="#fff" />}
+                        >
+                            {t("Tomar asistencia")}
                         </Button>
                     )
                 }

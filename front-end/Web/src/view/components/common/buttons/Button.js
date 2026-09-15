@@ -113,7 +113,7 @@ export function Button({
     primary: { color: theme.colors.text.inverse },
     secondary: { color: theme.colors.text.inverse },
     outline: { color: theme.colors.brand.primary },
-    ghost: { color: theme.colors.brand.primary },
+    ghost: { color: theme.colors.text.primary },
     danger: { color: theme.colors.text.inverse },
   };
 
@@ -136,11 +136,11 @@ export function Button({
     },
   };
 
-  // Tamaño de texto por size
+  // Tamaño de texto por size (usando pesos consistentes)
   const textSizeStyles = {
     sm: { fontSize: 13, fontWeight: "600" },
-    md: { fontSize: 15, fontWeight: "700" },
-    lg: { fontSize: 17, fontWeight: "700" },
+    md: { fontSize: 15, fontWeight: "600" },
+    lg: { fontSize: 17, fontWeight: "600" },
   };
 
   const isDisabled = disabled || loading;

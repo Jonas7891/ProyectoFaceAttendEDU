@@ -164,7 +164,7 @@ export default function ReportsView() {
     }
 
     return (
-        <React.Fragment>
+        <View style={{ flex: 1, backgroundColor: c.background.app }}>
             <ScrollView contentContainerStyle={{ padding: isSmall ? 16 : 24, gap: 16 }} showsVerticalScrollIndicator={false}>
                 <PageHeader
                     title={t("Reportes y estad�sticas")}
@@ -377,6 +377,6 @@ export default function ReportsView() {
                 onClose={vm.closeFilters}
                 availableCourses={vm.availableCourses}
             />
-        </React.Fragment>
+        </View>
     );
 }

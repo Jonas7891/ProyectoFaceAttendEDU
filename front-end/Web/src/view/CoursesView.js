@@ -197,7 +197,7 @@ export default function CoursesView() {
     }
 
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: c.background.app }}>
             <ScrollView
                 contentContainerStyle={{ padding: isSmall ? 16 : 24, gap: 16 }}
                 showsVerticalScrollIndicator={false}

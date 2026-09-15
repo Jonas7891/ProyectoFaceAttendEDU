@@ -553,7 +553,7 @@ export default function EnvironmentsView() {
     const totalSchedules = vm.environments.reduce((acc, e) => acc + e.schedules.length, 0);
 
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: c.background.app }}>
             <ScrollView contentContainerStyle={{ padding: isSmall ? 16 : 24, gap: 16 }} showsVerticalScrollIndicator={false}>
                 <PageHeader
                     title={t("Ambientes")}

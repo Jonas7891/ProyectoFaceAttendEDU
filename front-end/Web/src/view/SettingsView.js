@@ -103,7 +103,7 @@ export default function SettingsView({ section = "appearance" }) {
 
     // Renderizar UI completa para usuarios autorizados
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: c.background.app }}>
             <PageHeader
                 title={t("Configuración")}
                 subtitle={t("Personaliza FaceAttend EDU a tu institución")}
