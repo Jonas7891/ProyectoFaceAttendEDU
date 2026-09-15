@@ -10,8 +10,7 @@ import {
     Modal, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Card, Badge, Button, EmptyState } from "../components/common";
-import { Navbar as PageHeader } from "../components/common/navigation/Navbar";
+import { Card, Badge, Button, EmptyState, PageHeader } from "../components/common";
 import TextInput from "../components/common/inputs/TextInput";
 import { useTheme }        from "../components/hooks/useTheme";
 import { useResponsive }   from "../components/hooks/useResponsive";
@@ -33,13 +32,18 @@ function InstructorAutocomplete({ query, onChangeQuery, onSelect, searchFn, erro
     const results = searchFn(query);
 
     return (
-        <View style={{ marginBottom: 14 }}>
-            <Text style={{ fontSize: 10, fontWeight: "600", color: error ? c.status.danger : c.text.secondary, marginBottom: 6 }}>
+        <View style={{ marginBottom: 16 }}>
+            <Text style={{ 
+                fontSize: 13, 
+                fontWeight: "600", 
+                color: error ? c.status.danger : c.text.secondary, 
+                marginBottom: 8 
+            }}>
                 {t("Instructor / Docente encargado")} *
             </Text>
             <View style={{ position: "relative" }}>
-                <View style={{ position: "absolute", left: 12, top: 12, zIndex: 1 }}>
-                    <Feather name="search" size={14} color={c.text.secondary} />
+                <View style={{ position: "absolute", left: 14, top: 14, zIndex: 1 }}>
+                    <Feather name="search" size={16} color={c.text.secondary} />
                 </View>
                 <TextInput
                     value={query}
@@ -48,18 +52,29 @@ function InstructorAutocomplete({ query, onChangeQuery, onSelect, searchFn, erro
                     placeholder={t("Buscar instructor por nombre...")}
                     placeholderTextColor={c.text.disabled}
                     style={{
-                        height: 40, borderWidth: 1,
+                        height: 48, 
+                        borderWidth: 1,
                         borderColor: error ? c.status.danger : c.border.primary,
-                        borderRadius: 14, paddingLeft: 36, paddingRight: 12,
-                        fontSize: 12, backgroundColor: c.background.app, color: c.text.primary,
+                        borderRadius: 12, 
+                        paddingLeft: 44, 
+                        paddingRight: 14,
+                        fontSize: 14, 
+                        backgroundColor: c.background.app, 
+                        color: c.text.primary,
                     }}
                 />
             </View>
             {open && results.length > 0 && (
                 <View style={{
-                    borderWidth: 1, borderColor: c.border.primary, borderRadius: 14,
-                    backgroundColor: c.background.elevated, marginTop: 8,
-                    shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
+                    borderWidth: 1, 
+                    borderColor: c.border.primary, 
+                    borderRadius: 12,
+                    backgroundColor: c.background.elevated, 
+                    marginTop: 10,
+                    shadowColor: "#000", 
+                    shadowOpacity: 0.12, 
+                    shadowRadius: 12, 
+                    elevation: 6,
                     zIndex: 100,
                 }}>
                     {results.map((u, i) => (
@@ -67,22 +82,36 @@ function InstructorAutocomplete({ query, onChangeQuery, onSelect, searchFn, erro
                             key={u.id}
                             onPress={() => { onSelect(u); setOpen(false); }}
                             style={{
-                                flexDirection: "row", alignItems: "center", gap: 10,
-                                padding: 12,
+                                flexDirection: "row", 
+                                alignItems: "center", 
+                                gap: 12,
+                                padding: 14,
                                 borderBottomWidth: i < results.length - 1 ? 1 : 0,
                                 borderBottomColor: c.border.primary,
                             }}
                         >
                             <View style={{
-                                width: 32, height: 32, borderRadius: 14,
+                                width: 40, 
+                                height: 40, 
+                                borderRadius: 12,
                                 backgroundColor: c.brand.primaryLight,
-                                alignItems: "center", justifyContent: "center",
+                                alignItems: "center", 
+                                justifyContent: "center",
                             }}>
-                                <Feather name="user" size={14} color={c.brand.primary} />
+                                <Feather name="user" size={18} color={c.brand.primary} />
                             </View>
                             <View style={{ flex: 1 }}>
-                                <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary }}>{u.name}</Text>
-                                <Text style={{ fontSize: 11, color: c.text.secondary }}>{u.department ?? u.email}</Text>
+                                <Text style={{ 
+                                    fontSize: 13, 
+                                    fontWeight: "600", 
+                                    color: c.text.primary,
+                                    marginBottom: 2 
+                                }}>
+                                    {u.name}
+                                </Text>
+                                <Text style={{ fontSize: 12, color: c.text.secondary }}>
+                                    {u.department ?? u.email}
+                                </Text>
                             </View>
                             <Badge variant={u.role === "admin" ? "warning" : "primary"}>
                                 {u.role === "admin" ? t("Admin") : t("Docente")}
@@ -148,39 +177,53 @@ function ScheduleModal({ visible, mode, editing, envId, searchFn, onClose, onSav
                     onPress={onClose} activeOpacity={1}
                 >
                     <TouchableOpacity activeOpacity={1} onPress={e => e.stopPropagation()}
-                        style={{ backgroundColor: c.background.surface, borderRadius: 14, width: isSmall ? "100%" : 540, maxHeight: "92%", overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 8, elevation: 14 }}
+                        style={{ backgroundColor: c.background.surface, borderRadius: 16, width: isSmall ? "100%" : 580, maxHeight: "92%", overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 12, elevation: 16 }}
                     >
-                        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 16, borderBottomWidth: 1, borderBottomColor: c.border.primary }}>
-                            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                                <View style={{ width: 36, height: 36, borderRadius: 14, backgroundColor: c.brand.primaryLight, alignItems: "center", justifyContent: "center" }}>
-                                    <Feather name="clock" size={18} color={c.brand.primary} />
+                        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 20, borderBottomWidth: 1, borderBottomColor: c.border.primary }}>
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                                <View style={{ width: 48, height: 48, borderRadius: 16, backgroundColor: c.brand.primaryLight, alignItems: "center", justifyContent: "center" }}>
+                                    <Feather name="clock" size={24} color={c.brand.primary} />
                                 </View>
                                 <View>
-                                    <Text style={{ fontSize: 10, fontWeight: "700", color: c.text.primary }}>
+                                    <Text style={{ fontSize: 18, fontWeight: "700", color: c.text.primary }}>
                                         {mode === "add" ? t("Nuevo horario") : t("Editar horario")}
                                     </Text>
-                                    <Text style={{ fontSize: 11, color: c.text.secondary }}>{t("Asignaci´┐¢n de ficha e instructor")}</Text>
+                                    <Text style={{ fontSize: 13, color: c.text.secondary, marginTop: 2 }}>
+                                        {t("Asignación de ficha e instructor")}
+                                    </Text>
                                 </View>
                             </View>
-                            <TouchableOpacity onPress={onClose}><Feather name="x" size={20} color={c.text.secondary} /></TouchableOpacity>
+                            <TouchableOpacity onPress={onClose}>
+                                <Feather name="x" size={22} color={c.text.secondary} />
+                            </TouchableOpacity>
                         </View>
 
-                        <ScrollView style={{ padding: 20 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                        <ScrollView style={{ padding: 24 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                             {error && (
-                                <View style={{ backgroundColor: c.status.dangerLight, borderRadius: 14, padding: 12, flexDirection: "row", gap: 8, marginBottom: 16 }}>
-                                    <Feather name="alert-circle" size={14} color={c.status.danger} />
-                                    <Text style={{ fontSize: 11, color: c.status.danger, flex: 1 }}>{error}</Text>
+                                <View style={{ backgroundColor: c.status.dangerLight, borderRadius: 12, padding: 14, flexDirection: "row", gap: 10, marginBottom: 20 }}>
+                                    <Feather name="alert-circle" size={16} color={c.status.danger} />
+                                    <Text style={{ fontSize: 13, color: c.status.danger, flex: 1 }}>{error}</Text>
                                 </View>
                             )}
 
-                            <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
+                            <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 14 }}>
                                 <View style={{ flex: 1 }}>
-                                    <TextInput label={t("N┬║ Ficha / C├│digo") + " *"} value={form.courseCode}
-                                        onChangeText={v => setField("courseCode", v)} placeholder="Ej: 2240001" error={isEmpty(form.courseCode)} />
+                                    <TextInput 
+                                        label={t("Nº Ficha / Código") + " *"} 
+                                        value={form.courseCode}
+                                        onChangeText={v => setField("courseCode", v)} 
+                                        placeholder="Ej: 2240001" 
+                                        error={isEmpty(form.courseCode)} 
+                                    />
                                 </View>
                                 <View style={{ flex: 2 }}>
-                                    <TextInput label={t("Nombre del programa") + " *"} value={form.courseName}
-                                        onChangeText={v => setField("courseName", v)} placeholder={t("Ej: Tecnolog´┐¢a en Sistemas")} error={isEmpty(form.courseName)} />
+                                    <TextInput 
+                                        label={t("Nombre del programa") + " *"} 
+                                        value={form.courseName}
+                                        onChangeText={v => setField("courseName", v)} 
+                                        placeholder={t("Ej: Tecnología en Sistemas")} 
+                                        error={isEmpty(form.courseName)} 
+                                    />
                                 </View>
                             </View>
 
@@ -193,43 +236,77 @@ function ScheduleModal({ visible, mode, editing, envId, searchFn, onClose, onSav
                                 t={t}
                             />
 
-                            <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
+                            <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 14 }}>
                                 <View style={{ flex: 1 }}>
-                                    <TextInput label={t("Hora inicio") + " *"} value={form.startTime}
-                                        onChangeText={v => setField("startTime", v)} placeholder="08:00" error={isEmpty(form.startTime)} />
+                                    <TextInput 
+                                        label={t("Hora inicio") + " *"} 
+                                        value={form.startTime}
+                                        onChangeText={v => setField("startTime", v)} 
+                                        placeholder="08:00" 
+                                        error={isEmpty(form.startTime)} 
+                                    />
                                 </View>
                                 <View style={{ flex: 1 }}>
-                                    <TextInput label={t("Hora fin") + " *"} value={form.endTime}
-                                        onChangeText={v => setField("endTime", v)} placeholder="10:00" error={isEmpty(form.endTime)} />
+                                    <TextInput 
+                                        label={t("Hora fin") + " *"} 
+                                        value={form.endTime}
+                                        onChangeText={v => setField("endTime", v)} 
+                                        placeholder="10:00" 
+                                        error={isEmpty(form.endTime)} 
+                                    />
                                 </View>
                             </View>
 
                             <View style={{ marginBottom: 14 }}>
-                                <Text style={{ fontSize: 10, fontWeight: "600", color: showErrors && form.days.length === 0 ? c.status.danger : c.text.secondary, marginBottom: 8 }}>
-                                    {t("D´┐¢as de clase")} *
+                                <Text style={{ fontSize: 13, fontWeight: "600", color: showErrors && form.days.length === 0 ? c.status.danger : c.text.secondary, marginBottom: 10 }}>
+                                    {t("Días de clase")} *
                                 </Text>
-                                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
                                     {WEEK_DAYS.map(d => {
                                         const active = form.days.includes(d);
                                         return (
-                                            <TouchableOpacity key={d} onPress={() => toggleDay(d)}
-                                                style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 14, borderWidth: 1.5,
+                                            <TouchableOpacity 
+                                                key={d} 
+                                                onPress={() => toggleDay(d)}
+                                                style={{ 
+                                                    paddingHorizontal: 14, 
+                                                    paddingVertical: 8, 
+                                                    borderRadius: 8, 
+                                                    borderWidth: 2,
                                                     borderColor: active ? c.brand.primary : c.border.primary,
-                                                    backgroundColor: active ? c.brand.primaryLight : c.background.app }}>
-                                                <Text style={{ fontSize: 10, fontWeight: "600", color: active ? c.brand.primary : c.text.secondary }}>{t(d)}</Text>
+                                                    backgroundColor: active ? c.brand.primaryLight : c.background.app 
+                                                }}
+                                            >
+                                                <Text style={{ fontSize: 13, fontWeight: "600", color: active ? c.brand.primary : c.text.secondary }}>
+                                                    {t(d)}
+                                                </Text>
                                             </TouchableOpacity>
                                         );
                                     })}
                                 </View>
                             </View>
 
-                            <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom: 8, textAlign: "right" }}>* {t("Campos obligatorios")}</Text>
+                            <Text style={{ fontSize: 12, color: c.text.secondary, marginTop: 8, textAlign: "right" }}>
+                                * {t("Campos obligatorios")}
+                            </Text>
                         </ScrollView>
 
-                        <View style={{ flexDirection: "row", gap: 8, justifyContent: "flex-end", padding: 16, borderTopWidth: 1, borderTopColor: c.border.primary }}>
-                            <Button variant="ghost" onPress={onClose} disabled={saving}>{t("Cancelar")}</Button>
-                            <Button variant="primary" onPress={handleSave} disabled={saving}>
-                                {saving ? <React.Fragment><ActivityIndicator size="small" color="#fff" /></React.Fragment> : <React.Fragment><Feather name="check" size={14} color="#fff" /> {t("Guardar horario")}</React.Fragment>}
+                        <View style={{ flexDirection: "row", gap: 10, justifyContent: "flex-end", padding: 20, borderTopWidth: 1, borderTopColor: c.border.primary }}>
+                            <Button variant="ghost" size="md" onPress={onClose} disabled={saving}>
+                                {t("Cancelar")}
+                            </Button>
+                            <Button 
+                                variant="primary" 
+                                size="md" 
+                                onPress={handleSave} 
+                                disabled={saving}
+                                leftIcon={
+                                    saving 
+                                        ? <ActivityIndicator size="small" color="#fff" />
+                                        : <Feather name="check" size={16} color="#fff" />
+                                }
+                            >
+                                {saving ? t("Guardando...") : t("Guardar horario")}
                             </Button>
                         </View>
                     </TouchableOpacity>
@@ -282,63 +359,102 @@ function EnvironmentFormModal({ visible, mode, environment, onClose, onSubmit, t
                 <TouchableOpacity style={{ flex: 1, backgroundColor: c.background.overlay, justifyContent: "center", alignItems: "center", padding: isSmall ? 12 : 24 }}
                     onPress={onClose} activeOpacity={1}>
                     <TouchableOpacity activeOpacity={1} onPress={e => e.stopPropagation()}
-                        style={{ backgroundColor: c.background.surface, borderRadius: 14, width: isSmall ? "100%" : 500, maxHeight: "92%", overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 8, elevation: 14 }}>
+                        style={{ backgroundColor: c.background.surface, borderRadius: 16, width: isSmall ? "100%" : 540, maxHeight: "92%", overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 12, elevation: 16 }}>
 
-                        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 16, borderBottomWidth: 1, borderBottomColor: c.border.primary }}>
-                            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                                <View style={{ width: 36, height: 36, borderRadius: 14, backgroundColor: c.brand.primaryLight, alignItems: "center", justifyContent: "center" }}>
-                                    <Feather name="home" size={18} color={c.brand.primary} />
+                        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 20, borderBottomWidth: 1, borderBottomColor: c.border.primary }}>
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                                <View style={{ width: 48, height: 48, borderRadius: 16, backgroundColor: c.brand.primaryLight, alignItems: "center", justifyContent: "center" }}>
+                                    <Feather name="home" size={24} color={c.brand.primary} />
                                 </View>
                                 <View>
-                                    <Text style={{ fontSize: 10, fontWeight: "700", color: c.text.primary }}>
+                                    <Text style={{ fontSize: 18, fontWeight: "700", color: c.text.primary }}>
                                         {mode === "register" ? t("Nuevo ambiente") : t("Editar ambiente")}
                                     </Text>
-                                    <Text style={{ fontSize: 11, color: c.text.secondary }}>{t("Informaci´┐¢n del sal´┐¢n / espacio")}</Text>
+                                    <Text style={{ fontSize: 13, color: c.text.secondary, marginTop: 2 }}>
+                                        {t("Información del salón / espacio")}
+                                    </Text>
                                 </View>
                             </View>
-                            <TouchableOpacity onPress={onClose}><Feather name="x" size={20} color={c.text.secondary} /></TouchableOpacity>
+                            <TouchableOpacity onPress={onClose}>
+                                <Feather name="x" size={22} color={c.text.secondary} />
+                            </TouchableOpacity>
                         </View>
 
-                        <ScrollView style={{ padding: 20 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                        <ScrollView style={{ padding: 24 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                             {error && (
-                                <View style={{ backgroundColor: c.status.dangerLight, borderRadius: 14, padding: 12, flexDirection: "row", gap: 8, marginBottom: 16 }}>
-                                    <Feather name="alert-circle" size={14} color={c.status.danger} />
-                                    <Text style={{ fontSize: 11, color: c.status.danger, flex: 1 }}>{error}</Text>
+                                <View style={{ backgroundColor: c.status.dangerLight, borderRadius: 12, padding: 14, flexDirection: "row", gap: 10, marginBottom: 20 }}>
+                                    <Feather name="alert-circle" size={16} color={c.status.danger} />
+                                    <Text style={{ fontSize: 13, color: c.status.danger, flex: 1 }}>{error}</Text>
                                 </View>
                             )}
                             {success && (
-                                <View style={{ backgroundColor: c.status.successLight, borderRadius: 14, padding: 12, flexDirection: "row", gap: 8, marginBottom: 16 }}>
-                                    <Feather name="check-circle" size={14} color={c.status.success} />
-                                    <Text style={{ fontSize: 11, color: "#065F46", flex: 1 }}>{t("Ambiente guardado correctamente")}</Text>
+                                <View style={{ backgroundColor: c.status.successLight, borderRadius: 12, padding: 14, flexDirection: "row", gap: 10, marginBottom: 20 }}>
+                                    <Feather name="check-circle" size={16} color={c.status.success} />
+                                    <Text style={{ fontSize: 13, color: "#065F46", flex: 1 }}>{t("Ambiente guardado correctamente")}</Text>
                                 </View>
                             )}
 
-                            <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
+                            <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 14 }}>
                                 <View style={{ flex: 1 }}>
-                                    <TextInput label={t("N├║mero / Nombre del ambiente") + " *"} value={form.number}
-                                        onChangeText={v => setField("number", v)} placeholder={t("Ej: 301")} error={isEmpty(form.number)} />
+                                    <TextInput 
+                                        label={t("Número / Nombre del ambiente") + " *"} 
+                                        value={form.number}
+                                        onChangeText={v => setField("number", v)} 
+                                        placeholder={t("Ej: 301")} 
+                                        error={isEmpty(form.number)} 
+                                    />
                                 </View>
                                 <View style={{ flex: 1 }}>
-                                    <TextInput label={t("Capacidad (personas)")} value={form.capacity}
-                                        onChangeText={v => setField("capacity", v)} placeholder="40" keyboardType="numeric"
-                                        hint={t("Opcional")} />
+                                    <TextInput 
+                                        label={t("Capacidad (personas)")} 
+                                        value={form.capacity}
+                                        onChangeText={v => setField("capacity", v)} 
+                                        placeholder="40" 
+                                        keyboardType="numeric"
+                                        hint={t("Opcional")} 
+                                    />
                                 </View>
                             </View>
 
-                            <TextInput label={t("Descripci├│n / Ubicaci├│n") + " *"} value={form.description}
+                            <TextInput 
+                                label={t("Descripción / Ubicación") + " *"} 
+                                value={form.description}
                                 onChangeText={v => setField("description", v)}
-                                placeholder={t("Ej: Bloque A, piso 3. Aula de teor´┐¢a con videobeam.")}
-                                error={isEmpty(form.description)} multiline />
+                                placeholder={t("Ej: Bloque A, piso 3. Aula de teoría con videobeam.")}
+                                error={isEmpty(form.description)} 
+                                multiline 
+                            />
 
-                            <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom: 8, textAlign: "right" }}>* {t("Campos obligatorios")}</Text>
+                            <Text style={{ fontSize: 12, color: c.text.secondary, marginTop: 8, textAlign: "right" }}>
+                                * {t("Campos obligatorios")}
+                            </Text>
                         </ScrollView>
 
-                        <View style={{ flexDirection: "row", gap: 8, justifyContent: "flex-end", padding: 16, borderTopWidth: 1, borderTopColor: c.border.primary }}>
-                            <Button variant="ghost" onPress={onClose} disabled={saving}>{t("Cancelar")}</Button>
-                            <Button variant="primary" onPress={handleSubmit} disabled={saving || success}>
-                                {saving ? <React.Fragment><ActivityIndicator size="small" color="#fff" /></React.Fragment>
-                                    : success ? <React.Fragment><Feather name="check" size={14} color="#fff" /> {t("´┐¢Guardado ?")}</React.Fragment>
-                                    : <React.Fragment><Feather name="home" size={14} color="#fff" /> {mode === "register" ? t("Registrar ambiente") : t("Guardar cambios")}</React.Fragment>}
+                        <View style={{ flexDirection: "row", gap: 10, justifyContent: "flex-end", padding: 20, borderTopWidth: 1, borderTopColor: c.border.primary }}>
+                            <Button variant="ghost" size="md" onPress={onClose} disabled={saving}>
+                                {t("Cancelar")}
+                            </Button>
+                            <Button 
+                                variant="primary" 
+                                size="md" 
+                                onPress={handleSubmit} 
+                                disabled={saving || success}
+                                leftIcon={
+                                    saving 
+                                        ? <ActivityIndicator size="small" color="#fff" />
+                                        : success 
+                                            ? <Feather name="check" size={16} color="#fff" />
+                                            : <Feather name="home" size={16} color="#fff" />
+                                }
+                            >
+                                {saving 
+                                    ? t("Guardando...") 
+                                    : success 
+                                        ? t("¡Guardado!") 
+                                        : mode === "register" 
+                                            ? t("Registrar ambiente") 
+                                            : t("Guardar cambios")
+                                }
                             </Button>
                         </View>
                     </TouchableOpacity>
@@ -354,39 +470,68 @@ function ScheduleRow({ schedule, onEdit, onDelete, isLast, t }) {
     const { theme } = useTheme();
     const c = theme.colors;
     return (
-        <View style={{ paddingVertical: 10, paddingHorizontal: 12, borderBottomWidth: isLast ? 0 : 1, borderBottomColor: c.border.primary, gap: 6 }}>
+        <View style={{ 
+            paddingVertical: 12, 
+            paddingHorizontal: 14, 
+            borderBottomWidth: isLast ? 0 : 1, 
+            borderBottomColor: c.border.primary, 
+            gap: 8 
+        }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                <View style={{ flex: 1, gap: 2 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <View style={{ flex: 1, gap: 4 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                         <Badge variant="primary">{schedule.courseCode}</Badge>
-                        <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary, flex: 1 }} numberOfLines={1}>
+                        <Text style={{ fontSize: 13, fontWeight: "600", color: c.text.primary, flex: 1 }} numberOfLines={1}>
                             {schedule.courseName}
                         </Text>
                     </View>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 }}>
-                        <Feather name="user" size={12} color={c.text.secondary} />
-                        <Text style={{ fontSize: 11, color: c.text.secondary }}>{schedule.instructorName}</Text>
+                        <Feather name="user" size={14} color={c.text.secondary} />
+                        <Text style={{ fontSize: 13, color: c.text.secondary }}>{schedule.instructorName}</Text>
                     </View>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginTop: 4, flexWrap: "wrap" }}>
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                            <Feather name="clock" size={11} color={c.text.secondary} />
-                            <Text style={{ fontSize: 11, color: c.text.secondary }}>{schedule.startTime} ´┐¢ {schedule.endTime}</Text>
+                            <Feather name="clock" size={13} color={c.text.secondary} />
+                            <Text style={{ fontSize: 13, color: c.text.secondary }}>
+                                {schedule.startTime} — {schedule.endTime}
+                            </Text>
                         </View>
-                        <View style={{ flexDirection: "row", gap: 4 }}>
+                        <View style={{ flexDirection: "row", gap: 4, flexWrap: "wrap" }}>
                             {schedule.days.map(d => (
-                                <View key={d} style={{ backgroundColor: c.brand.primaryLight, borderRadius: 14, paddingHorizontal: 6, paddingVertical: 2 }}>
-                                    <Text style={{ fontSize: 10, fontWeight: "700", color: c.brand.primary }}>{t(d)}</Text>
+                                <View key={d} style={{ 
+                                    backgroundColor: c.brand.primaryLight, 
+                                    borderRadius: 6, 
+                                    paddingHorizontal: 8, 
+                                    paddingVertical: 3 
+                                }}>
+                                    <Text style={{ fontSize: 11, fontWeight: "600", color: c.brand.primary }}>
+                                        {t(d)}
+                                    </Text>
                                 </View>
                             ))}
                         </View>
                     </View>
                 </View>
-                <View style={{ flexDirection: "row", gap: 6, marginLeft: 10 }}>
-                    <TouchableOpacity onPress={onEdit} style={{ padding: 6, borderRadius: 14, backgroundColor: c.brand.primaryLight }}>
-                        <Feather name="edit-2" size={13} color={c.brand.primary} />
+                <View style={{ flexDirection: "row", gap: 8, marginLeft: 12 }}>
+                    <TouchableOpacity 
+                        onPress={onEdit} 
+                        style={{ 
+                            padding: 8, 
+                            borderRadius: 8, 
+                            backgroundColor: c.brand.primaryLight 
+                        }}
+                    >
+                        <Feather name="edit-2" size={14} color={c.brand.primary} />
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={onDelete} style={{ padding: 6, borderRadius: 14, backgroundColor: c.status.dangerLight }}>
-                        <Feather name="trash-2" size={13} color={c.status.danger} />
+                    <TouchableOpacity 
+                        onPress={onDelete} 
+                        style={{ 
+                            padding: 8, 
+                            borderRadius: 8, 
+                            backgroundColor: c.status.dangerLight 
+                        }}
+                    >
+                        <Feather name="trash-2" size={14} color={c.status.danger} />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -410,36 +555,79 @@ function EnvironmentDetailModal({ environment, onClose, onEdit, onDelete, onAddS
                     style={{ backgroundColor: c.background.surface, borderRadius: 14, width: isSmall ? "100%" : 580, maxHeight: "92%", overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 8, elevation: 12 }}>
 
                     {/* Header */}
-                    <View style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: c.border.primary, flexDirection: "row", alignItems: "flex-start", gap: 14 }}>
-                        <View style={{ width: 40, height: 40, borderRadius: 14, backgroundColor: c.brand.primaryLight, alignItems: "center", justifyContent: "center" }}>
-                            <Feather name="home" size={22} color={c.brand.primary} />
+                    <View style={{ 
+                        padding: 18, 
+                        borderBottomWidth: 1, 
+                        borderBottomColor: c.border.primary, 
+                        flexDirection: "row", 
+                        alignItems: "flex-start", 
+                        gap: 16 
+                    }}>
+                        <View style={{ 
+                            width: 48, 
+                            height: 48, 
+                            borderRadius: 16, 
+                            backgroundColor: c.brand.primaryLight, 
+                            alignItems: "center", 
+                            justifyContent: "center" 
+                        }}>
+                            <Feather name="home" size={24} color={c.brand.primary} />
                         </View>
                         <View style={{ flex: 1 }}>
-                            <Text style={{ fontSize: 10, fontWeight: "700", color: c.text.primary }}>{t("Ambiente")} {environment.number}</Text>
+                            <Text style={{ fontSize: 20, fontWeight: "700", color: c.text.primary, marginBottom: 4 }}>
+                                {t("Ambiente")} {environment.number}
+                            </Text>
                             {environment.capacity && (
-                                <Text style={{ fontSize: 11, color: c.text.secondary, marginTop: 2 }}>
-                                    <Feather name="users" size={11} /> {environment.capacity} {t("personas")}
-                                </Text>
+                                <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 }}>
+                                    <Feather name="users" size={14} color={c.text.secondary} />
+                                    <Text style={{ fontSize: 13, color: c.text.secondary }}>
+                                        {environment.capacity} {t("personas")}
+                                    </Text>
+                                </View>
                             )}
                         </View>
-                        <TouchableOpacity onPress={onClose}><Feather name="x" size={18} color={c.text.secondary} /></TouchableOpacity>
+                        <TouchableOpacity onPress={onClose}>
+                            <Feather name="x" size={20} color={c.text.secondary} />
+                        </TouchableOpacity>
                     </View>
 
                     <ScrollView style={{ padding: 20 }} showsVerticalScrollIndicator={false}>
-                        {/* Descripci´┐¢n */}
-                        <View style={{ backgroundColor: c.background.app, borderRadius: 14, padding: 12, marginBottom: 16 }}>
-                            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                                <Feather name="map-pin" size={13} color={c.text.secondary} />
-                                <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.secondary, textTransform: "uppercase", letterSpacing: 0.5 }}>{t("Ubicaci´┐¢n / Descripci´┐¢n")}</Text>
+                        {/* Descripción */}
+                        <View style={{ 
+                            backgroundColor: c.background.app, 
+                            borderRadius: 12, 
+                            padding: 14, 
+                            marginBottom: 18 
+                        }}>
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                                <Feather name="map-pin" size={14} color={c.text.secondary} />
+                                <Text style={{ 
+                                    fontSize: 11, 
+                                    fontWeight: "600", 
+                                    color: c.text.secondary, 
+                                    textTransform: "uppercase", 
+                                    letterSpacing: 0.5 
+                                }}>
+                                    {t("Ubicación / Descripción")}
+                                </Text>
                             </View>
-                            <Text style={{ fontSize: 11, color: c.text.primary, lineHeight: 20 }}>{environment.description}</Text>
+                            <Text style={{ fontSize: 14, color: c.text.primary, lineHeight: 22 }}>
+                                {environment.description}
+                            </Text>
                         </View>
 
                         {/* Horarios */}
-                        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                            <Text style={{ fontSize: 10, fontWeight: "700", color: c.text.primary }}>{t("Horarios asignados")}</Text>
+                        <View style={{ 
+                            flexDirection: "row", 
+                            alignItems: "center", 
+                            justifyContent: "space-between", 
+                            marginBottom: 12 
+                        }}>
+                            <Text style={{ fontSize: 16, fontWeight: "700", color: c.text.primary }}>
+                                {t("Horarios asignados")}
+                            </Text>
                             <Button variant="primary" size="sm" onPress={onAddSchedule}>
-                                <Feather name="plus" size={13} color="#fff" /> {"  "}{t("A´┐¢adir horario")}
+                                <Feather name="plus" size={14} color="#fff" /> {t("Añadir horario")}
                             </Button>
                         </View>
 
@@ -462,13 +650,34 @@ function EnvironmentDetailModal({ environment, onClose, onEdit, onDelete, onAddS
                     </ScrollView>
 
                     {/* Footer */}
-                    <View style={{ padding: 16, borderTopWidth: 1, borderTopColor: c.border.primary, flexDirection: "row", gap: 8, justifyContent: "flex-end" }}>
-                        <Button variant="danger" size="sm" onPress={onDelete}>
-                            <React.Fragment><Feather name="trash-2" size={13} color={c.status.danger} /> {"  "}{t("Eliminar")}</React.Fragment>
+                    <View style={{ 
+                        padding: 16, 
+                        borderTopWidth: 1, 
+                        borderTopColor: c.border.primary, 
+                        flexDirection: "row", 
+                        gap: 10, 
+                        justifyContent: "flex-end" 
+                    }}>
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onPress={onDelete}
+                            leftIcon={<Feather name="trash-2" size={14} color={c.status.danger} />}
+                        >
+                            <Text style={{ color: c.status.danger }}>{t("Eliminar")}</Text>
                         </Button>
-                        <Button variant="ghost" onPress={onClose}>{t("Cerrar")}</Button>
-                        <Button variant="primary" onPress={onEdit}>
-                            <React.Fragment><Feather name="edit-2" size={13} color="#fff" /> {"  "}{t("Editar ambiente")}</React.Fragment>
+                        <Button variant="ghost" size="sm" onPress={onClose}>
+                            {t("Cerrar")}
+                        </Button>
+                        <Button 
+                            variant="primary" 
+                            size="sm" 
+                            onPress={onEdit}
+                            leftIcon={<Feather name="edit-2" size={14} color="#fff" />}
+                        >
+                            {t("Editar ambiente")}
+                        </Button>
+                    </View>
                         </Button>
                     </View>
                 </TouchableOpacity>
@@ -487,44 +696,54 @@ function EnvironmentCard({ environment, onPress }) {
     return (
         <TouchableOpacity onPress={onPress} style={{ flex: 1, minWidth: 260 }}>
             <Card padding={0} style={{ overflow: "hidden", height: "100%" }}>
-                <View style={{ height: 5, backgroundColor: c.brand.primary }} />
-                <View style={{ padding: 14, flex: 1 }}>
-                    <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 8 }}>
+                <View style={{ height: 6, backgroundColor: c.brand.primary }} />
+                <View style={{ padding: 16, flex: 1 }}>
+                    <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
                         <View style={{ flex: 1 }}>
-                            <Text style={{ fontSize: 10, fontWeight: "800", color: c.brand.primary }}>{environment.number}</Text>
-                            <Text style={{ fontSize: 11, color: c.text.secondary, marginTop: 1 }} numberOfLines={2}>{environment.description}</Text>
+                            <Text style={{ fontSize: 18, fontWeight: "700", color: c.brand.primary, marginBottom: 4 }}>
+                                {environment.number}
+                            </Text>
+                            <Text style={{ fontSize: 13, color: c.text.secondary, lineHeight: 18 }} numberOfLines={2}>
+                                {environment.description}
+                            </Text>
                         </View>
                         {environment.capacity && (
-                            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: c.background.app, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
-                                <Feather name="users" size={11} color={c.text.secondary} />
-                                <Text style={{ fontSize: 11, color: c.text.secondary }}>{environment.capacity}</Text>
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: c.background.app, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginLeft: 8 }}>
+                                <Feather name="users" size={14} color={c.text.secondary} />
+                                <Text style={{ fontSize: 13, fontWeight: "600", color: c.text.secondary }}>
+                                    {environment.capacity}
+                                </Text>
                             </View>
                         )}
                     </View>
 
-                    <View style={{ height: 5, backgroundColor: c.border.primary, marginVertical: 12 }} />
+                    <View style={{ height: 1, backgroundColor: c.border.primary, marginVertical: 14 }} />
 
-                    <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.secondary, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+                    <Text style={{ fontSize: 11, fontWeight: "600", color: c.text.secondary, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>
                         {t("Horarios asignados")} ({environment.schedules.length})
                     </Text>
 
                     {environment.schedules.length === 0 ? (
-                        <Text style={{ fontSize: 11, color: c.text.disabled, fontStyle: "italic" }}>{t("Sin horarios asignados")}</Text>
+                        <Text style={{ fontSize: 13, color: c.text.disabled, fontStyle: "italic" }}>
+                            {t("Sin horarios asignados")}
+                        </Text>
                     ) : environment.schedules.slice(0, 3).map(s => (
-                        <View key={s.id} style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                            <View style={{ width: 4, height: 4, borderRadius: 14, backgroundColor: c.brand.primary }} />
+                        <View key={s.id} style={{ flexDirection: "row", alignItems: "flex-start", gap: 10, marginBottom: 8 }}>
+                            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: c.brand.primary, marginTop: 6 }} />
                             <View style={{ flex: 1 }}>
-                                <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary }} numberOfLines={1}>
-                                    {s.courseCode} ´┐¢ {s.courseName}
+                                <Text style={{ fontSize: 13, fontWeight: "600", color: c.text.primary, marginBottom: 2 }} numberOfLines={1}>
+                                    {s.courseCode} — {s.courseName}
                                 </Text>
-                                <Text style={{ fontSize: 11, color: c.text.secondary }} numberOfLines={1}>
-                                    {s.instructorName} ´┐¢ {s.startTime}´┐¢{s.endTime} ´┐¢ {s.days.join(", ")}
+                                <Text style={{ fontSize: 12, color: c.text.secondary }} numberOfLines={1}>
+                                    {s.instructorName} • {s.startTime}–{s.endTime} • {s.days.map(d => t(d)).join(", ")}
                                 </Text>
                             </View>
                         </View>
                     ))}
                     {environment.schedules.length > 3 && (
-                        <Text style={{ fontSize: 11, color: c.brand.primary, marginTop: 2 }}>+{environment.schedules.length - 3} {t("m´┐¢s...")}</Text>
+                        <Text style={{ fontSize: 12, fontWeight: "600", color: c.brand.primary, marginTop: 4 }}>
+                            +{environment.schedules.length - 3} {t("más...")}
+                        </Text>
                     )}
                 </View>
             </Card>
@@ -575,24 +794,43 @@ export default function EnvironmentsView() {
                         { label: t("Total horarios"),  value: totalSchedules,          color: c.status.success },
                         { label: t("Sin horarios"),    value: vm.environments.filter(e => e.schedules.length === 0).length, color: c.status.warning },
                     ].map(({ label, value, color }) => (
-                        <Card key={label} style={{ flex: 1, minWidth: 140, alignItems: "center" }} padding={14}>
-                            <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.secondary, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6, textAlign: "center" }}>
+                        <Card key={label} style={{ flex: 1, minWidth: 160, alignItems: "center" }} padding={16}>
+                            <Text style={{ 
+                                fontSize: 11, 
+                                fontWeight: "600", 
+                                color: c.text.secondary, 
+                                textTransform: "uppercase", 
+                                letterSpacing: 0.5, 
+                                marginBottom: 8, 
+                                textAlign: "center" 
+                            }}>
                                 {label}
                             </Text>
-                            <Text style={{ fontSize: 10, fontWeight: "800", color }}>{value}</Text>
+                            <Text style={{ fontSize: 28, fontWeight: "800", color }}>{value}</Text>
                         </Card>
                     ))}
                 </View>
 
-                {/* B´┐¢squeda */}
+                {/* Búsqueda */}
                 <View style={{ maxWidth: 480, position: "relative", justifyContent: "center" }}>
-                    <View style={{ position: "absolute", left: 12, zIndex: 1 }}>
-                        <Feather name="search" size={14} color={c.text.secondary} />
+                    <View style={{ position: "absolute", left: 14, zIndex: 1 }}>
+                        <Feather name="search" size={16} color={c.text.secondary} />
                     </View>
                     <TextInput
                         placeholder={t("Buscar por ambiente, ficha o instructor...")}
-                        value={vm.search} onChangeText={vm.setSearch}
-                        style={{ height: 44, borderWidth: 1, borderColor: c.border.primary, borderRadius: 14, paddingLeft: 40, paddingRight: 12, fontSize: 14, backgroundColor: c.background.surface, color: c.text.primary }}
+                        value={vm.search} 
+                        onChangeText={vm.setSearch}
+                        style={{ 
+                            height: 48, 
+                            borderWidth: 1, 
+                            borderColor: c.border.primary, 
+                            borderRadius: 14, 
+                            paddingLeft: 44, 
+                            paddingRight: 14, 
+                            fontSize: 14, 
+                            backgroundColor: c.background.surface, 
+                            color: c.text.primary 
+                        }}
                         placeholderTextColor={c.text.disabled}
                     />
                 </View>
