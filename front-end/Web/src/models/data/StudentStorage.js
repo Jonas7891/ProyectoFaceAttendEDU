@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU — StudentStorage
 //
 //  Capa de persistencia para la lista de estudiantes.

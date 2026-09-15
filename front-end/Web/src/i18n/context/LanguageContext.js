@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU — LanguageContext (i18n · Context)
 //
 //  MODO PROVISIONAL — traducciones desde archivos JSON estáticos.

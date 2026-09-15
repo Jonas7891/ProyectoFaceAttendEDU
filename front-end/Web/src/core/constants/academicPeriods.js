@@ -7,6 +7,8 @@
 //  Estos valores pueden ser configurados desde Settings
 // ============================================================
 
+import { getInstitutionConfig, DEFAULT_ACADEMIC_PERIOD } from "../config/institutionConfig";
+
 /**
  * Tipos de períodos académicos soportados
  */
@@ -52,10 +54,46 @@ export const ACADEMIC_PERIOD_CONFIG = {
 };
 
 /**
- * Período académico por defecto del sistema
- * TODO: Esto debe venir de la configuración de la institución en Settings
+ * Re-exportar DEFAULT_ACADEMIC_PERIOD para compatibilidad
  */
-export const DEFAULT_ACADEMIC_PERIOD = ACADEMIC_PERIOD_TYPES.TRIMESTRAL;
+export { DEFAULT_ACADEMIC_PERIOD };
+
+/**
+ * Obtener el tipo de período académico configurado
+ * Lee desde localStorage (Settings)
+ * 
+ * @returns {string} Tipo de período académico
+ */
+export function getConfiguredAcademicPeriodType() {
+    try {
+        const config = getInstitutionConfig();
+        return config.academicPeriodType || DEFAULT_ACADEMIC_PERIOD;
+    } catch (error) {
+        return DEFAULT_ACADEMIC_PERIOD;
+    }
+}
+
+/**
+ * Obtener las fechas del período actual configurado
+ * 
+ * @returns {Object} { startDate, endDate, isAutomatic } o valores null si no están configurados
+ */
+export function getConfiguredPeriodDates() {
+    try {
+        const config = getInstitutionConfig();
+        return {
+            startDate: config.periodStartDate,
+            endDate: config.periodEndDate,
+            isAutomatic: config.isAutomaticPeriod,
+        };
+    } catch (error) {
+        return {
+            startDate: null,
+            endDate: null,
+            isAutomatic: true,
+        };
+    }
+}
 
 /**
  * Obtener configuración de período académico
@@ -95,13 +133,13 @@ export function isValidWeekCount(weeks, periodType = DEFAULT_ACADEMIC_PERIOD) {
  * 
  * @param {Date} startDate - Fecha de inicio del período
  * @param {Date} currentDate - Fecha actual (default: hoy)
- * @returns {number} Número de semana actual (1-indexed)
+ * @returns {number} Número de semana actual (1-indexed, mínimo 1)
  */
 export function getCurrentAcademicWeek(startDate, currentDate = new Date()) {
-    const diffTime = Math.abs(currentDate - startDate);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    const weekNumber = Math.ceil(diffDays / 7);
-    return weekNumber;
+    const diffTime = currentDate - startDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const weekNumber = Math.floor(diffDays / 7) + 1; // +1 para que empiece en semana 1
+    return Math.max(1, weekNumber); // Asegurar que siempre sea al menos 1
 }
 
 /**
@@ -119,70 +157,148 @@ export function generateWeekLabels(totalWeeks, startWeek = 1) {
 }
 
 /**
- * Calcular los períodos académicos del año vigente
+ * Calcular en qué período del año nos encontramos actualmente
+ * basándose en la división del año según el tipo de período
  * 
  * @param {string} periodType - Tipo de período académico
- * @param {number} year - Año a calcular (default: año actual)
- * @returns {Array<Object>} Array de períodos: [{ id, label, startWeek, endWeek, isCurrent, isFuture }]
+ * @param {Date} referenceDate - Fecha de referencia (default: hoy)
+ * @returns {Object} { periodNumber, label, startMonth, endMonth, startDate, endDate }
  */
-export function getYearAcademicPeriods(periodType = DEFAULT_ACADEMIC_PERIOD, year = new Date().getFullYear()) {
-    const config = getAcademicPeriodConfig(periodType);
-    const weeksPerPeriod = config.defaultWeeks;
+export function calculateCurrentPeriodByYear(periodType = DEFAULT_ACADEMIC_PERIOD, referenceDate = new Date()) {
+    const year = referenceDate.getFullYear();
+    const currentMonth = referenceDate.getMonth(); // 0-11
     
-    // Determinar cuántos períodos hay en un año según el tipo
     let periodsPerYear;
+    let monthsPerPeriod;
     let periodNames;
     
     switch (periodType) {
         case ACADEMIC_PERIOD_TYPES.ANNUAL:
             periodsPerYear = 1;
-            periodNames = [`Año ${year}`];
+            monthsPerPeriod = 12;
+            periodNames = ['Año Académico'];
             break;
         case ACADEMIC_PERIOD_TYPES.SEMESTRAL:
             periodsPerYear = 2;
+            monthsPerPeriod = 6;
             periodNames = ['Primer Semestre', 'Segundo Semestre'];
             break;
         case ACADEMIC_PERIOD_TYPES.QUARTERLY:
             periodsPerYear = 3;
+            monthsPerPeriod = 4;
             periodNames = ['Primer Cuatrimestre', 'Segundo Cuatrimestre', 'Tercer Cuatrimestre'];
             break;
         case ACADEMIC_PERIOD_TYPES.TRIMESTRAL:
             periodsPerYear = 4;
+            monthsPerPeriod = 3;
             periodNames = ['Primer Trimestre', 'Segundo Trimestre', 'Tercer Trimestre', 'Cuarto Trimestre'];
             break;
         default:
-            periodsPerYear = 2;
-            periodNames = ['Primer Semestre', 'Segundo Semestre'];
+            periodsPerYear = 4;
+            monthsPerPeriod = 3;
+            periodNames = ['Primer Trimestre', 'Segundo Trimestre', 'Tercer Trimestre', 'Cuarto Trimestre'];
     }
     
-    // Calcular semana actual del año (1-52)
-    const now = new Date();
-    const startOfYear = new Date(year, 0, 1);
-    const currentWeekOfYear = getCurrentAcademicWeek(startOfYear, now);
+    // Calcular en qué período estamos basándose en el mes actual
+    const periodNumber = Math.floor(currentMonth / monthsPerPeriod) + 1;
     
-    // Generar períodos
+    // Calcular meses de inicio y fin del período
+    const startMonth = (periodNumber - 1) * monthsPerPeriod;
+    const endMonth = startMonth + monthsPerPeriod - 1;
+    
+    // Calcular fechas exactas (primer día del mes de inicio, último día del mes de fin)
+    const startDate = new Date(year, startMonth, 1);
+    const endDate = new Date(year, endMonth + 1, 0); // Día 0 del siguiente mes = último día del mes actual
+    
+    return {
+        periodNumber,
+        label: periodNames[periodNumber - 1] || `Período ${periodNumber}`,
+        startMonth,
+        endMonth,
+        startDate,
+        endDate,
+        year,
+        monthsPerPeriod,
+    };
+}
+
+/**
+ * Calcular todos los períodos del año basándose en división por meses
+ * 
+ * @param {string} periodType - Tipo de período académico
+ * @param {number} year - Año de referencia (default: año actual)
+ * @returns {Array<Object>} Array de períodos con sus fechas y semanas
+ */
+export function getYearAcademicPeriodsByMonth(periodType = DEFAULT_ACADEMIC_PERIOD, year = new Date().getFullYear()) {
+    let periodsPerYear;
+    let monthsPerPeriod;
+    let periodNames;
+    
+    switch (periodType) {
+        case ACADEMIC_PERIOD_TYPES.ANNUAL:
+            periodsPerYear = 1;
+            monthsPerPeriod = 12;
+            periodNames = ['Año Académico'];
+            break;
+        case ACADEMIC_PERIOD_TYPES.SEMESTRAL:
+            periodsPerYear = 2;
+            monthsPerPeriod = 6;
+            periodNames = ['Primer Semestre', 'Segundo Semestre'];
+            break;
+        case ACADEMIC_PERIOD_TYPES.QUARTERLY:
+            periodsPerYear = 3;
+            monthsPerPeriod = 4;
+            periodNames = ['Primer Cuatrimestre', 'Segundo Cuatrimestre', 'Tercer Cuatrimestre'];
+            break;
+        case ACADEMIC_PERIOD_TYPES.TRIMESTRAL:
+            periodsPerYear = 4;
+            monthsPerPeriod = 3;
+            periodNames = ['Primer Trimestre', 'Segundo Trimestre', 'Tercer Trimestre', 'Cuarto Trimestre'];
+            break;
+        default:
+            periodsPerYear = 4;
+            monthsPerPeriod = 3;
+            periodNames = ['Primer Trimestre', 'Segundo Trimestre', 'Tercer Trimestre', 'Cuarto Trimestre'];
+    }
+    
+    const today = new Date();
     const periods = [];
-    let currentStartWeek = 1;
+    
+    // Calcular semana del año para inicio de año
+    const startOfYear = new Date(year, 0, 1);
     
     for (let i = 0; i < periodsPerYear; i++) {
-        const endWeek = currentStartWeek + weeksPerPeriod - 1;
-        const isCurrent = currentWeekOfYear >= currentStartWeek && currentWeekOfYear <= endWeek;
-        const isFuture = currentWeekOfYear < currentStartWeek;
+        const startMonth = i * monthsPerPeriod;
+        const endMonth = startMonth + monthsPerPeriod - 1;
+        
+        const startDate = new Date(year, startMonth, 1);
+        const endDate = new Date(year, endMonth + 1, 0);
+        
+        const isCurrent = today >= startDate && today <= endDate;
+        const isFuture = today < startDate;
+        
+        // Calcular número de semana del año para startDate y endDate
+        const startWeek = getCurrentAcademicWeek(startOfYear, startDate);
+        const endWeek = getCurrentAcademicWeek(startOfYear, endDate);
+        const totalWeeks = endWeek - startWeek + 1;
         
         periods.push({
             id: `${periodType}-${year}-${i + 1}`,
             label: periodNames[i],
             periodNumber: i + 1,
-            startWeek: currentStartWeek,
-            endWeek: endWeek,
-            totalWeeks: weeksPerPeriod,
+            startDate,
+            endDate,
+            startMonth,
+            endMonth,
+            monthsPerPeriod,
+            startWeek,
+            endWeek,
+            totalWeeks,
             isCurrent,
             isFuture,
             isPast: !isCurrent && !isFuture,
             year,
         });
-        
-        currentStartWeek = endWeek + 1;
     }
     
     return periods;
@@ -190,14 +306,77 @@ export function getYearAcademicPeriods(periodType = DEFAULT_ACADEMIC_PERIOD, yea
 
 /**
  * Obtener el período académico actual
+ * Prioriza las fechas configuradas manualmente, sino calcula automáticamente por año
  * 
- * @param {string} periodType - Tipo de período académico
- * @param {number} year - Año (default: año actual)
- * @returns {Object|null} Período actual o null si no hay uno activo
+ * @param {string} periodType - Tipo de período académico (opcional, lee de config si no se provee)
+ * @returns {Object|null} Período actual con toda su información
  */
-export function getCurrentPeriod(periodType = DEFAULT_ACADEMIC_PERIOD, year = new Date().getFullYear()) {
-    const periods = getYearAcademicPeriods(periodType, year);
-    return periods.find(p => p.isCurrent) || periods[0]; // Fallback al primero si no hay actual
+export function getCurrentPeriod(periodType) {
+    // Si no se provee periodType, leerlo de la configuración
+    const effectivePeriodType = periodType || getConfiguredAcademicPeriodType();
+    
+    // Obtener fechas configuradas (pueden ser null si no están configuradas)
+    const configuredDates = getConfiguredPeriodDates();
+    
+    // Si hay fechas configuradas manualmente, usarlas
+    if (configuredDates.startDate && configuredDates.endDate) {
+        const startDate = new Date(configuredDates.startDate);
+        const endDate = new Date(configuredDates.endDate);
+        const today = new Date();
+        
+        // Calcular cuál período del año sería según la división estándar
+        const yearPeriod = calculateCurrentPeriodByYear(effectivePeriodType, startDate);
+        
+        // Calcular semanas del año para las fechas configuradas
+        const startOfYear = new Date(startDate.getFullYear(), 0, 1);
+        const startWeek = getCurrentAcademicWeek(startOfYear, startDate);
+        const endWeek = getCurrentAcademicWeek(startOfYear, endDate);
+        const totalWeeks = endWeek - startWeek + 1;
+        
+        return {
+            id: `${effectivePeriodType}-custom-${startDate.getFullYear()}`,
+            label: yearPeriod.label,
+            periodNumber: yearPeriod.periodNumber,
+            startDate,
+            endDate,
+            startWeek,
+            endWeek,
+            totalWeeks,
+            isCurrent: today >= startDate && today <= endDate,
+            isFuture: today < startDate,
+            isPast: today > endDate,
+            isManual: !configuredDates.isAutomatic,
+            isAutomatic: configuredDates.isAutomatic,
+            year: startDate.getFullYear(),
+        };
+    }
+    
+    // Si no hay fechas configuradas, calcular automáticamente por división del año
+    const yearPeriod = calculateCurrentPeriodByYear(effectivePeriodType);
+    
+    // Calcular semanas para el período automático
+    const startOfYear = new Date(yearPeriod.year, 0, 1);
+    const startWeek = getCurrentAcademicWeek(startOfYear, yearPeriod.startDate);
+    const endWeek = getCurrentAcademicWeek(startOfYear, yearPeriod.endDate);
+    const totalWeeks = endWeek - startWeek + 1;
+    
+    return {
+        id: `${effectivePeriodType}-${yearPeriod.year}-${yearPeriod.periodNumber}`,
+        label: yearPeriod.label,
+        periodNumber: yearPeriod.periodNumber,
+        startDate: yearPeriod.startDate,
+        endDate: yearPeriod.endDate,
+        startWeek,
+        endWeek,
+        totalWeeks,
+        isCurrent: true, // Por definición, calculateCurrentPeriodByYear retorna el período actual
+        isFuture: false,
+        isPast: false,
+        isManual: false,
+        isAutomatic: true,
+        year: yearPeriod.year,
+        isCalculatedByYear: true, // Flag para indicar que fue calculado por división del año
+    };
 }
 
 /**
@@ -211,6 +390,82 @@ export function formatPeriodLabel(period, periodType) {
     return period.label;
 }
 
+/**
+ * Formatear rango de fechas del período
+ * 
+ * @param {Object} period - Objeto de período con startDate y endDate
+ * @param {string} locale - Código de locale (default: 'es-ES')
+ * @returns {string} Rango formateado "15 ene 2024 - 30 jun 2024"
+ */
+export function formatPeriodDateRange(period, locale = 'es-ES') {
+    if (!period || !period.startDate || !period.endDate) {
+        return '';
+    }
+    
+    const formatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
+    const startStr = period.startDate.toLocaleDateString(locale, formatOptions);
+    const endStr = period.endDate.toLocaleDateString(locale, formatOptions);
+    
+    return `${startStr} - ${endStr}`;
+}
+
+/**
+ * Obtener label completo del período con fechas
+ * 
+ * @param {Object} period - Objeto de período
+ * @param {string} locale - Código de locale (default: 'es-ES')
+ * @returns {string} Label completo "Primer Semestre (15 ene - 30 jun 2024)"
+ */
+export function getFullPeriodLabel(period, locale = 'es-ES') {
+    if (!period) {
+        return '';
+    }
+    
+    const dateRange = formatPeriodDateRange(period, locale);
+    return dateRange ? `${period.label} (${dateRange})` : period.label;
+}
+
+/**
+ * Calcular el próximo período basándose en el período actual y su tipo
+ * Útil para modo automático
+ * 
+ * @param {Object} currentPeriod - Período actual
+ * @param {string} periodType - Tipo de período
+ * @returns {Object} Próximo período con startDate y endDate
+ */
+export function getNextPeriod(currentPeriod, periodType) {
+    if (!currentPeriod || !currentPeriod.startDate || !currentPeriod.endDate) {
+        return null;
+    }
+    
+    const currentEnd = new Date(currentPeriod.endDate);
+    const currentStart = new Date(currentPeriod.startDate);
+    
+    // Calcular duración del período actual en días
+    const duration = Math.ceil((currentEnd - currentStart) / (1000 * 60 * 60 * 24)) + 1;
+    
+    // El próximo período comienza al día siguiente del fin del actual
+    const nextStart = new Date(currentEnd);
+    nextStart.setDate(nextStart.getDate() + 1);
+    
+    // El fin del próximo período es: inicio + duración - 1 día
+    const nextEnd = new Date(nextStart);
+    nextEnd.setDate(nextEnd.getDate() + duration - 1);
+    
+    // Calcular cuál sería el número de período según la división del año
+    const yearPeriod = calculateCurrentPeriodByYear(periodType, nextStart);
+    
+    return {
+        id: `${periodType}-${nextStart.getFullYear()}-${yearPeriod.periodNumber}`,
+        label: yearPeriod.label,
+        periodNumber: yearPeriod.periodNumber,
+        startDate: nextStart,
+        endDate: nextEnd,
+        year: nextStart.getFullYear(),
+        duration,
+    };
+}
+
 export default {
     ACADEMIC_PERIOD_TYPES,
     ACADEMIC_PERIOD_CONFIG,
@@ -220,4 +475,13 @@ export default {
     isValidWeekCount,
     getCurrentAcademicWeek,
     generateWeekLabels,
+    getConfiguredAcademicPeriodType,
+    getConfiguredPeriodDates,
+    calculateCurrentPeriodByYear,
+    getYearAcademicPeriodsByMonth,
+    getCurrentPeriod,
+    formatPeriodLabel,
+    formatPeriodDateRange,
+    getFullPeriodLabel,
+    getNextPeriod,
 };

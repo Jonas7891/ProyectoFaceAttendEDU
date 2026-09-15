@@ -25,6 +25,7 @@ import {
     ProgressBar,
     AttendanceStatusIcon,
     AttendanceStatusBadge,
+    PageHeader,
 } from "./components/common";
 import {
     DailyBarChart,
@@ -44,7 +45,8 @@ import { useTranslation }        from "../i18n/hooks/useTranslation";
 import { 
     DEFAULT_ACADEMIC_PERIOD,
     getCurrentPeriod,
-    getAcademicPeriodConfig
+    getAcademicPeriodConfig,
+    getConfiguredAcademicPeriodType
 } from "../core/constants/academicPeriods";
 
 // ──────────────────────────────────────────────────────────────
@@ -88,7 +90,10 @@ function getWeeklyTrendSubtitle(periodType, t) {
             periodLabel = currentPeriod.label;
     }
     
-    return `${periodLabel} (${config.label}) • ${t("Selecciona para ver detalles")}`;
+    // Agregar indicador si es configuración manual
+    const manualIndicator = currentPeriod.isManual ? ` ${t("(Manual)")}` : "";
+    
+    return `${periodLabel}${manualIndicator} (${config.label}) • ${t("Selecciona para ver detalles")}`;
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -103,16 +108,23 @@ function AdminDashboard({ vm, permissions, isSmall, c, t }) {
         handleResetToCurrentWeek,
         weeklyTrendProps,
         dailyBarChartProps,
+        currentWeekNumber,
+        isCurrentWeek,
     } = useWeeklyAttendanceController(vm.attendanceByWeek, vm.attendanceByDay);
     
-    // TODO: Obtener de Settings cuando esté implementado
-    const academicPeriod = DEFAULT_ACADEMIC_PERIOD;
+    // Obtener período académico de la configuración (Settings)
+    const academicPeriod = getConfiguredAcademicPeriodType();
     const weeklySubtitle = getWeeklyTrendSubtitle(academicPeriod, t);
     
     // Early return DESPUÉS de todos los hooks
     if (!vm.adminData) return null;
 
-    const weekLabel = selectedWeek ? selectedWeek.week : t("Esta semana");
+    // Label dinámico: si es la semana actual mostrar "Esta semana (Sem X)", sino "Sem X"
+    const weekLabel = isCurrentWeek && currentWeekNumber
+        ? `${t("Esta semana")} (Sem ${currentWeekNumber})` 
+        : selectedWeek 
+            ? selectedWeek.week 
+            : t("Esta semana");
 
     return (
         <>
@@ -272,7 +284,7 @@ function AdminDashboard({ vm, permissions, isSmall, c, t }) {
                         }}>
                             {t("Asistencia por día")}
                         </Text>
-                        {selectedWeek && (
+                        {!isCurrentWeek && (
                             <TouchableOpacity
                                 onPress={handleResetToCurrentWeek}
                                 style={{
@@ -288,7 +300,10 @@ function AdminDashboard({ vm, permissions, isSmall, c, t }) {
                                     fontWeight: "600",
                                     color: c.status.info,
                                 }}>
-                                    {t("Ver semana actual")}
+                                    {currentWeekNumber 
+                                        ? `${t("Ver semana actual")} (Sem ${currentWeekNumber})`
+                                        : t("Ver semana actual")
+                                    }
                                 </Text>
                             </TouchableOpacity>
                         )}
@@ -377,8 +392,8 @@ function AdminDashboard({ vm, permissions, isSmall, c, t }) {
 function TeacherDashboard({ vm, permissions, isSmall, c, t }) {
     if (!vm.teacherData) return null;
     
-    // TODO: Obtener de Settings cuando esté implementado
-    const academicPeriod = DEFAULT_ACADEMIC_PERIOD;
+    // Obtener período académico de la configuración (Settings)
+    const academicPeriod = getConfiguredAcademicPeriodType();
     const weeklySubtitle = getWeeklyTrendSubtitle(academicPeriod, t);
 
     return (
@@ -550,18 +565,30 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t }) {
 // ──────────────────────────────────────────────────────────────
 
 function StudentDashboard({ vm, permissions, isSmall, c, t }) {
-    const [selectedWeek, setSelectedWeek] = React.useState(null);
+    // Hook para orquestar selección de semanas
+    const {
+        selectedWeek,
+        handleWeekSelect,
+        handleResetToCurrentWeek,
+        weeklyTrendProps,
+        dailyBarChartProps,
+        currentWeekNumber,
+        isCurrentWeek,
+    } = useWeeklyAttendanceController(vm.attendanceByWeek, vm.attendanceByDay);
     
-    // TODO: Obtener de Settings cuando esté implementado
-    const academicPeriod = DEFAULT_ACADEMIC_PERIOD;
+    // Obtener período académico de la configuración (Settings)
+    const academicPeriod = getConfiguredAcademicPeriodType();
     const weeklySubtitle = getWeeklyTrendSubtitle(academicPeriod, t);
     
     // Early return DESPUÉS de todos los hooks
     if (!vm.studentData) return null;
 
-    // Determinar qué datos diarios mostrar
-    const displayedDailyData = selectedWeek?.dailyData || vm.attendanceByDay;
-    const weekLabel = selectedWeek ? selectedWeek.week : t("Esta semana");
+    // Label dinámico: si es la semana actual mostrar "Esta semana (Sem X)", sino "Sem X"
+    const weekLabel = isCurrentWeek && currentWeekNumber
+        ? `${t("Esta semana")} (Sem ${currentWeekNumber})` 
+        : selectedWeek 
+            ? selectedWeek.week 
+            : t("Esta semana");
 
     return (
         <>
@@ -603,13 +630,10 @@ function StudentDashboard({ vm, permissions, isSmall, c, t }) {
                         {weeklySubtitle}
                     </Text>
                     <WeeklyTrend 
-                        data={vm.attendanceByWeek} 
+                        {...weeklyTrendProps}
                         maxWeeks={5}
                         showTrend={true}
                         colorByPerformance={true}
-                        onWeekSelect={(weekData) => setSelectedWeek(weekData)}
-                        selectedWeek={selectedWeek?.week}
-                        academicPeriod={academicPeriod}
                     />
                 </Card>
 
@@ -627,9 +651,9 @@ function StudentDashboard({ vm, permissions, isSmall, c, t }) {
                         }}>
                             {t("Mi asistencia diaria")}
                         </Text>
-                        {selectedWeek && (
+                        {!isCurrentWeek && (
                             <TouchableOpacity
-                                onPress={() => setSelectedWeek(null)}
+                                onPress={handleResetToCurrentWeek}
                                 style={{
                                     paddingHorizontal: 8,
                                     paddingVertical: 3,
@@ -642,7 +666,10 @@ function StudentDashboard({ vm, permissions, isSmall, c, t }) {
                                     fontWeight: "600",
                                     color: c.status.info,
                                 }}>
-                                    {t("Ver semana actual")}
+                                    {currentWeekNumber 
+                                        ? `${t("Ver semana actual")} (Sem ${currentWeekNumber})`
+                                        : t("Ver semana actual")
+                                    }
                                 </Text>
                             </TouchableOpacity>
                         )}
@@ -655,7 +682,7 @@ function StudentDashboard({ vm, permissions, isSmall, c, t }) {
                         {weekLabel}
                     </Text>
                     <DailyBarChart 
-                        data={displayedDailyData} 
+                        {...dailyBarChartProps}
                         height={100}
                         showLegend={true}
                         showSummary={true}
@@ -786,41 +813,22 @@ export default function DashboardView() {
     }[vm.userRole] || vm.todayLabel;
 
     return (
-        <ScrollView
-            contentContainerStyle={{ padding: isSmall ? 16 : 24, gap: 24 }}
-            showsVerticalScrollIndicator={false}
-        >
-            {/* Header del Dashboard */}
-            <View style={{ marginBottom: 8 }}>
-                <View style={{
-                    flexDirection: isSmall ? "column" : "row",
-                    justifyContent: "space-between",
-                    alignItems: isSmall ? "flex-start" : "center",
-                    gap: isSmall ? 12 : 16,
-                }}>
-                    <View style={{ flex: 1 }}>
-                        <Text style={{
-                            fontSize: isSmall ? 20 : 24,
-                            fontWeight: "700",
-                            color: c.text.primary,
-                            marginBottom: 4,
-                        }}>
-                            {dashboardTitle}
-                        </Text>
-                        <Text style={{
-                            fontSize: isSmall ? 13 : 14,
-                            color: c.text.secondary,
-                        }}>
-                            {dashboardSubtitle}
-                        </Text>
-                    </View>
-                    {permissions.canRegisterFace && (
+        <View style={{ flex: 1 }}>
+            <PageHeader
+                title={dashboardTitle}
+                subtitle={dashboardSubtitle}
+                actions={
+                    permissions.canRegisterFace && (
                         <Button variant="primary" size="sm">
                             <Feather name="camera" size={16} color="#fff" /> {t("Tomar asistencia")}
                         </Button>
-                    )}
-                </View>
-            </View>
+                    )
+                }
+            />
+            <ScrollView
+                contentContainerStyle={{ padding: isSmall ? 16 : 24, gap: 24 }}
+                showsVerticalScrollIndicator={false}
+            >
 
             {/* Renderizar dashboard según rol */}
             {vm.userRole === "admin" && (
@@ -852,6 +860,7 @@ export default function DashboardView() {
                     t={t}
                 />
             )}
-        </ScrollView>
+            </ScrollView>
+        </View>
     );
 }

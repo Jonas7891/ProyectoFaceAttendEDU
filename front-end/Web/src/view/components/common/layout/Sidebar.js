@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { Animated } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 import { useSidebarAnimation } from "../../hooks/useSidebarAnimation";

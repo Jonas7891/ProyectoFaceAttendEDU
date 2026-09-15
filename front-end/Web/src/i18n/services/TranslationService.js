@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU � TranslationService (i18n � Service)
 //
 //  Orquesta la cadena de traducciones:

@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU — AuthContext
 //
 //  Fuente de verdad para el usuario autenticado.
@@ -119,6 +119,42 @@ export function AuthProvider({ children }) {
         setUser(null);
     }, []);
 
+    const register = useCallback(async (userData) => {
+        // ── TODO: reemplazar con llamada real a tu API de registro ──
+        // Ejemplo:
+        //   const response = await fetch("/api/auth/register", {
+        //       method: "POST",
+        //       body: JSON.stringify(userData),
+        //   });
+        //   if (!response.ok) return "Error al registrar";
+        //   const { user, token } = await response.json();
+        //   await sessionSet(JSON.stringify(user));
+        //   setUser(user);
+        //   return null;
+
+        // Mock: crear un nuevo usuario y guardarlo en la sesión
+        await new Promise((res) => setTimeout(res, 900)); // simular latencia de red
+
+        if (!userData.email || !userData.password || !userData.username) {
+            return "Completa todos los campos";
+        }
+
+        // Crear objeto de usuario registrado (por ahora sin rol, se asignaría en backend)
+        const newUser = {
+            id: `user_${Date.now()}`, // ID temporal
+            username: userData.username,
+            email: userData.email,
+            firstName: userData.username, // Temporalmente usar username como nombre
+            lastName: "",
+            role: "student", // Rol por defecto para usuarios registrados
+            avatar: null,
+        };
+
+        await sessionSet(JSON.stringify(newUser));
+        setUser(newUser);
+        return null;
+    }, []);
+
     const value = useMemo(
         () => ({
             user,
@@ -126,8 +162,9 @@ export function AuthProvider({ children }) {
             isAuthenticated: user !== null,
             login,
             logout,
+            register,
         }),
-        [user, isLoadingAuth, login, logout]
+        [user, isLoadingAuth, login, logout, register]
     );
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

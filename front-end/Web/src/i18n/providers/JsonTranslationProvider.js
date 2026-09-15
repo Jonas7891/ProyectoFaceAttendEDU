@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU — JsonTranslationProvider (i18n · Provider)
 //
 //  IMPLEMENTACIÓN PROVISIONAL — fase de entrega.

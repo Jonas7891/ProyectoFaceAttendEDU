@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU — Auth Components (View Layer)
 //  Componentes puros de UI para las pantallas de autenticación.
 //  Sin lógica de negocio — toda lógica vive en useAuthViewModel.

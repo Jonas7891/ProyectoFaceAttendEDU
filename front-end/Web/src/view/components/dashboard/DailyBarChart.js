@@ -35,15 +35,29 @@ export function DailyBarChart({
     // Estado para el día seleccionado (null = mostrar global)
     const [selectedDayIndex, setSelectedDayIndex] = useState(null);
 
+    // Si no hay datos, generar estructura vacía para mantener el diseño
+    const normalizedData = React.useMemo(() => {
+        if (!data || data.length === 0) {
+            return [
+                { day: "Lun", present: 0, late: 0, absent: 0 },
+                { day: "Mar", present: 0, late: 0, absent: 0 },
+                { day: "Mié", present: 0, late: 0, absent: 0 },
+                { day: "Jue", present: 0, late: 0, absent: 0 },
+                { day: "Vie", present: 0, late: 0, absent: 0 },
+            ];
+        }
+        return data;
+    }, [data]);
+
     // Transformar datos al formato esperado por BarChart
-    const chartData = data.map(item => ({
+    const chartData = normalizedData.map(item => ({
         label: item.day,
         values: [
             { value: item.present, color: c.status.success },
             { value: item.late,    color: c.status.warning },
             { value: item.absent,  color: c.status.danger  },
         ],
-        rawData: item, // Mantener datos originales para la selección
+        rawData: item,
     }));
 
     const legend = [
@@ -53,7 +67,7 @@ export function DailyBarChart({
     ];
 
     // Calcular resumen semanal global
-    const globalSummary = data.reduce((acc, day) => ({
+    const globalSummary = normalizedData.reduce((acc, day) => ({
         present: acc.present + day.present,
         late: acc.late + day.late,
         absent: acc.absent + day.absent,
@@ -62,14 +76,14 @@ export function DailyBarChart({
     const globalTotal = globalSummary.present + globalSummary.late + globalSummary.absent;
 
     // Determinar qué datos mostrar (día específico o global)
-    const displayData = selectedDayIndex !== null && data[selectedDayIndex]
+    const displayData = selectedDayIndex !== null && normalizedData[selectedDayIndex]
         ? {
-            present: data[selectedDayIndex].present,
-            late: data[selectedDayIndex].late,
-            absent: data[selectedDayIndex].absent,
-            total: data[selectedDayIndex].present + data[selectedDayIndex].late + data[selectedDayIndex].absent,
+            present: normalizedData[selectedDayIndex].present,
+            late: normalizedData[selectedDayIndex].late,
+            absent: normalizedData[selectedDayIndex].absent,
+            total: normalizedData[selectedDayIndex].present + normalizedData[selectedDayIndex].late + normalizedData[selectedDayIndex].absent,
             isSpecific: true,
-            dayName: data[selectedDayIndex].day,
+            dayName: normalizedData[selectedDayIndex].day,
         }
         : {
             present: globalSummary.present,
@@ -108,7 +122,7 @@ export function DailyBarChart({
                 barWidth={8} 
                 gap={4}
                 onBarPress={handleBarPress}
-                selectedLabel={selectedDayIndex !== null ? data[selectedDayIndex]?.day : null}
+                selectedLabel={selectedDayIndex !== null ? normalizedData[selectedDayIndex]?.day : null}
             />
             
             {/* Leyenda con valores */}
@@ -232,7 +246,7 @@ export function DailyBarChart({
             )}
 
             {/* Resumen estadístico: Tasa y Puntualidad */}
-            {showSummary && displayData.total > 0 && (
+            {showSummary && (
                 <View style={{
                     flexDirection: "row",
                     justifyContent: "space-around",
@@ -252,13 +266,15 @@ export function DailyBarChart({
                         <Text style={{
                             fontSize: 16,
                             fontWeight: "700",
-                            color: parseFloat(attendanceRate) >= 85 
+                            color: displayData.total === 0
+                                ? c.text.disabled
+                                : parseFloat(attendanceRate) >= 85 
                                 ? c.status.success 
                                 : parseFloat(attendanceRate) >= 75 
                                 ? c.status.warning 
                                 : c.status.danger,
                         }}>
-                            {attendanceRate}%
+                            {displayData.total === 0 ? "0%" : `${attendanceRate}%`}
                         </Text>
                     </View>
                     <View style={{ alignItems: "center" }}>
@@ -272,13 +288,15 @@ export function DailyBarChart({
                         <Text style={{
                             fontSize: 16,
                             fontWeight: "700",
-                            color: parseFloat(punctualityRate) >= 85 
+                            color: displayData.total === 0
+                                ? c.text.disabled
+                                : parseFloat(punctualityRate) >= 85 
                                 ? c.status.success 
                                 : parseFloat(punctualityRate) >= 75 
                                 ? c.status.warning 
                                 : c.status.danger,
                         }}>
-                            {punctualityRate}%
+                            {displayData.total === 0 ? "0%" : `${punctualityRate}%`}
                         </Text>
                     </View>
                 </View>

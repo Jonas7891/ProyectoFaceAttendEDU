@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU — RestTranslationProvider (i18n · Provider)
 //
 //  Proveedor HTTP abstracto de traducción.

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * SIDEBAR_CONSTANTS - Constantes compartidas del sistema Sidebar
  * 
  * Centraliza valores por defecto para mantener consistencia
@@ -20,7 +20,7 @@ export const SIDEBAR_CONSTANTS = {
     },
     
     // Spacing
-    HEADER_PADDING: 20,
+    HEADER_PADDING: 20, // Volver a 20 para coincidir con PageHeader
     ITEM_PADDING: 16,
     DIVIDER_MARGIN_V: 8,
     DIVIDER_MARGIN_H: 16,

@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU — Signup SCREEN
 // ============================================================
 //  RESPONSABILIDAD: Orquestación y Navegación ("qué debe pasar")
@@ -19,14 +19,31 @@
 import React from "react";
 import { useNavigation } from "@react-navigation/native";
 import SignupView from "../SignupView";
+import { useAuth } from "../../context/AuthContext";
 
 export default function SignupScreen() {
     const navigation = useNavigation();
+    const { register } = useAuth();
 
     // ── Navegación post-registro exitoso ──────────────────────
-    function onRegisterSuccess(data) {
+    async function onRegisterSuccess(data) {
         console.log("Registro exitoso:", data.email);
-        navigation.replace("FaceAttendEDU-Dashboard");
+        
+        // Registrar usuario y crear sesión automáticamente
+        const error = await register({
+            username: data.username,
+            email: data.email,
+            password: data.password,
+        });
+        
+        if (!error) {
+            // Registro exitoso → usuario ya tiene sesión activa → ir al Dashboard
+            navigation.replace("FaceAttendEDU-Dashboard");
+        } else {
+            // Error al registrar (raro, pero por si acaso)
+            console.error("Error al registrar:", error);
+            // Podríamos mostrar un alert aquí en vez de navegar
+        }
     }
 
     // ── Navegación a login ────────────────────────────────────

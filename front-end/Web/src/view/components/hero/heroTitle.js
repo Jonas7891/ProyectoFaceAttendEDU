@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { Text } from "react-native";
 import { useResponsive } from "../hooks/useResponsive";
 import { getTypography } from "../../../core/constants/typography";

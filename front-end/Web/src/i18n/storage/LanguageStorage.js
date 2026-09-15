@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU — LanguageStorage (i18n · Storage)
 //
 //  Persiste el idioma seleccionado por el usuario.

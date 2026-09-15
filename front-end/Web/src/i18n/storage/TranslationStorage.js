@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU � TranslationStorage (i18n � Storage)
 //
 //  Persiste el diccionario de traducciones obtenidas de LibreTranslate.

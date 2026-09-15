@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU — Mock Data (Model Layer)
 //  Reemplaza cada export con una llamada real a tu API.
 //  Las ViewModels importan desde aquí, nunca las Views directamente.
@@ -179,14 +179,94 @@ export const mockAttendanceByDay = [
 ];
 
 export const mockAttendanceByWeek = [
-    { week: "Sem 1", rate: 88 },
-    { week: "Sem 2", rate: 84 },
-    { week: "Sem 3", rate: 91 },
-    { week: "Sem 4", rate: 79 },
-    { week: "Sem 5", rate: 87 },
-    { week: "Sem 6", rate: 93 },
-    { week: "Sem 7", rate: 89 },
-    { week: "Sem 8", rate: 86 },
+    { 
+        week: "Sem 1", 
+        rate: 88,
+        dailyData: [
+            { day: "Lun", present: 105, late: 8, absent: 12 },
+            { day: "Mar", present: 110, late: 6, absent: 9 },
+            { day: "Mié", present: 108, late: 10, absent: 7 },
+            { day: "Jue", present: 102, late: 12, absent: 11 },
+            { day: "Vie", present: 106, late: 9, absent: 10 },
+        ]
+    },
+    { 
+        week: "Sem 2", 
+        rate: 84,
+        dailyData: [
+            { day: "Lun", present: 98, late: 10, absent: 17 },
+            { day: "Mar", present: 102, late: 8, absent: 15 },
+            { day: "Mié", present: 100, late: 12, absent: 13 },
+            { day: "Jue", present: 96, late: 14, absent: 15 },
+            { day: "Vie", present: 99, late: 11, absent: 15 },
+        ]
+    },
+    { 
+        week: "Sem 3", 
+        rate: 91,
+        dailyData: [
+            { day: "Lun", present: 112, late: 6, absent: 7 },
+            { day: "Mar", present: 115, late: 5, absent: 5 },
+            { day: "Mié", present: 118, late: 4, absent: 3 },
+            { day: "Jue", present: 110, late: 8, absent: 7 },
+            { day: "Vie", present: 114, late: 6, absent: 5 },
+        ]
+    },
+    { 
+        week: "Sem 4", 
+        rate: 79,
+        dailyData: [
+            { day: "Lun", present: 90, late: 12, absent: 23 },
+            { day: "Mar", present: 88, late: 15, absent: 22 },
+            { day: "Mié", present: 92, late: 10, absent: 23 },
+            { day: "Jue", present: 85, late: 18, absent: 22 },
+            { day: "Vie", present: 87, late: 16, absent: 22 },
+        ]
+    },
+    { 
+        week: "Sem 5", 
+        rate: 87,
+        dailyData: [
+            { day: "Lun", present: 104, late: 9, absent: 12 },
+            { day: "Mar", present: 108, late: 7, absent: 10 },
+            { day: "Mié", present: 106, late: 11, absent: 8 },
+            { day: "Jue", present: 101, late: 13, absent: 11 },
+            { day: "Vie", present: 105, late: 10, absent: 10 },
+        ]
+    },
+    { 
+        week: "Sem 6", 
+        rate: 93,
+        dailyData: [
+            { day: "Lun", present: 118, late: 4, absent: 3 },
+            { day: "Mar", present: 120, late: 3, absent: 2 },
+            { day: "Mié", present: 122, late: 2, absent: 1 },
+            { day: "Jue", present: 115, late: 6, absent: 4 },
+            { day: "Vie", present: 119, late: 4, absent: 2 },
+        ]
+    },
+    { 
+        week: "Sem 7", 
+        rate: 89,
+        dailyData: [
+            { day: "Lun", present: 107, late: 8, absent: 10 },
+            { day: "Mar", present: 111, late: 6, absent: 8 },
+            { day: "Mié", present: 109, late: 9, absent: 7 },
+            { day: "Jue", present: 103, late: 11, absent: 11 },
+            { day: "Vie", present: 108, late: 8, absent: 9 },
+        ]
+    },
+    { 
+        week: "Sem 8", 
+        rate: 86,
+        dailyData: [
+            { day: "Lun", present: 103, late: 9, absent: 13 },
+            { day: "Mar", present: 106, late: 7, absent: 12 },
+            { day: "Mié", present: 104, late: 10, absent: 11 },
+            { day: "Jue", present: 99, late: 13, absent: 13 },
+            { day: "Vie", present: 102, late: 11, absent: 12 },
+        ]
+    },
 ];
 
 export const mockCourseAttendance = [

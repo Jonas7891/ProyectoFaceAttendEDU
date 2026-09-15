@@ -11,7 +11,7 @@
 // ============================================================
 
 import React from "react";
-import { View } from "react-native";
+import { View , Text, TouchableOpacity } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -34,14 +34,17 @@ import {
     CollapsibleSidebar 
 } from "../view/components/common/layout";
 
+// ── Importación de componentes de seguridad ───────────────────
+import { NotAuthorized, AUTH_EXCEPTION_TYPES } from "../view/authorized/NotAuthorized";
+
 // ── Importación de Hooks ──────────────────────────────────────
 import { useTheme } from "../view/components/hooks/useTheme";
 import { useResponsive } from "../view/components/hooks/useResponsive";
 import { useAuth } from "../context/AuthContext";
+import { useRolePermissions } from "../viewmodels/useRolePermissions";
 import { useDashboardScreenViewModel } from "../viewmodels/useDashboardScreenViewModel";
 import { useTranslation } from "../i18n/hooks/useTranslation";
 import { Feather } from "@expo/vector-icons";
-import { Text, TouchableOpacity } from "react-native";
 
 const Stack = createNativeStackNavigator();
 
@@ -370,9 +373,13 @@ function BottomTabs() {
 export default function AuthenticatedNavigator() {
     const { theme } = useTheme();
     const { isSmall } = useResponsive();
+    const { user } = useAuth();
+    const permissions = useRolePermissions();
     const c = theme.colors;
     
-    // Estado compartido del sidebar
+    // ============================================================
+    // HOOKS - Deben estar ANTES de cualquier return condicional
+    // ============================================================
     const [sidebarSelectedTab, setSidebarSelectedTab] = React.useState("dashboard");
     const [sidebarSelectedSubTab, setSidebarSelectedSubTab] = React.useState(null);
     
@@ -383,8 +390,32 @@ export default function AuthenticatedNavigator() {
         setSidebarSelectedSubTab,
     }), [sidebarSelectedTab, sidebarSelectedSubTab]);
     
-    // Calcular padding basado en isSmall - DEBE ser antes del return
     const bottomPadding = isSmall ? 64 : 0;
+    
+    // ============================================================
+    // VALIDACIÓN GLOBAL DE AUTORIZACIÓN
+    // Si el usuario NO está autorizado, renderizar SOLO NotAuthorized
+    // Esto previene que se renderice CUALQUIER layout (sidebar, tabs, etc.)
+    // ============================================================
+    
+    // 1. Verificar sesión activa
+    if (!user) {
+        return <NotAuthorized type={AUTH_EXCEPTION_TYPES.NO_SESSION} />;
+    }
+    
+    // 2. Verificar rol asignado
+    if (!user.role) {
+        return <NotAuthorized type={AUTH_EXCEPTION_TYPES.NO_ROLE} />;
+    }
+    
+    // 3. Verificar que el rol sea válido
+    if (!permissions.isAdmin && !permissions.isTeacher && !permissions.isStudent) {
+        return <NotAuthorized type={AUTH_EXCEPTION_TYPES.INSUFFICIENT_PERMISSIONS} />;
+    }
+    
+    // ============================================================
+    // USUARIO AUTORIZADO - Renderizar navegación normal
+    // ============================================================
     
     return (
         <SidebarStateContext.Provider value={sidebarState}>

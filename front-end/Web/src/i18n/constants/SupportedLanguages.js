@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU — SupportedLanguages (i18n · Constants)
 //
 //  MODO PROVISIONAL — Español, Inglés, Francés y Alemán disponibles desde JSON.

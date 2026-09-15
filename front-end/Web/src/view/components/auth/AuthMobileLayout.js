@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU — AuthMobileLayout (View Layer)
 //  Layout compartido para las pantallas de auth en MÓVIL.
 //

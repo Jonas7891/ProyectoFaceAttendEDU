@@ -31,8 +31,9 @@ export function BarChart({
 
   if (!data.length) return null;
 
-  // Calcular valor máximo
+  // Calcular valor máximo (si todo es 0, usar 1 para evitar división por 0)
   const maxValue = Math.max(
+    1,
     ...data.flatMap(item => 
       Array.isArray(item.values) 
         ? item.values.map(v => v.value)
@@ -66,7 +67,12 @@ export function BarChart({
       >
         <View style={[styles.barsContainer, { height }]}>
           {values.map((bar, index) => {
-            const barHeight = Math.max(3, (bar.value / maxValue) * height);
+            // Calcular altura: si el valor es 0, mostrar barra mínima de 3px
+            // si no, calcular proporcionalmente
+            const barHeight = bar.value === 0 
+              ? 3 
+              : Math.max(3, (bar.value / maxValue) * height);
+            
             return (
               <View
                 key={index}

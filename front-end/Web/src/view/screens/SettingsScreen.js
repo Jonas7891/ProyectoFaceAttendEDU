@@ -1,17 +1,18 @@
-﻿// ============================================================
-//  FaceAttend EDU ÔÇö Settings SCREEN (Container)
 // ============================================================
-//  RESPONSABILIDAD: Orquestaci├│n y punto de entrada ("qu├® debe pasar")
+//  FaceAttend EDU — Settings SCREEN (Container)
+// ============================================================
+//  RESPONSABILIDAD: Orquestación y punto de entrada ("qué debe pasar")
 //
 //  Este componente:
-//  Ô£ô Act├║a como punto de entrada para la navegaci├│n
-//  Ô£ô Delega toda la presentaci├│n a SettingsView
+//  ✓ Actúa como punto de entrada para la navegación
+//  ✓ Delega toda la presentación a SettingsView
 //
 //  NO debe:
-//  Ô£ù Contener l├│gica de negocio
-//  Ô£ù Renderizar UI directamente (delegado a SettingsView)
+//  ✗ Contener lógica de negocio
+//  ✗ Renderizar UI directamente (delegado a SettingsView)
+//  ✗ Validar autorización (lo hace AuthenticatedNavigator GLOBALMENTE)
 //
-//  Patr├│n: Screen = orquestaci├│n, View = presentaci├│n
+//  Patrón: Screen = orquestación, View = presentación
 // ============================================================
 
 import React from "react";
@@ -21,6 +22,9 @@ import SettingsView from "../SettingsView";
 export default function SettingsScreen() {
     const route = useRoute();
     const section = route.params?.section;
+    
+    // La validación de autorización se hace GLOBALMENTE en AuthenticatedNavigator
+    // Este componente solo se renderiza si el usuario YA está autorizado
     
     return <SettingsView section={section} />;
 }

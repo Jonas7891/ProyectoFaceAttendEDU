@@ -15,6 +15,7 @@
 
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { ProgressBar } from "../common/charts/ProgressBar";
 import { AnimatedDropdown } from "../common/animation/AnimatedDropdown";
 import { useTheme } from "../hooks/useTheme";
@@ -22,9 +23,10 @@ import {
     ACADEMIC_PERIOD_TYPES, 
     getAcademicPeriodConfig,
     DEFAULT_ACADEMIC_PERIOD,
-    getYearAcademicPeriods,
+    getYearAcademicPeriodsByMonth,
     getCurrentPeriod,
-    formatPeriodLabel
+    formatPeriodLabel,
+    getCurrentAcademicWeek,
 } from "../../../core/constants/academicPeriods";
 
 /**
@@ -61,20 +63,136 @@ export function WeeklyTrend({
     const currentYear = new Date().getFullYear();
     
     // Obtener todos los períodos del año vigente
-    const yearPeriods = getYearAcademicPeriods(academicPeriod, currentYear);
+    const yearPeriods = getYearAcademicPeriodsByMonth(academicPeriod, currentYear);
     
-    // Período seleccionado (default: período actual)
-    const [selectedPeriod, setSelectedPeriod] = useState(() => getCurrentPeriod(academicPeriod, currentYear));
+    // Encontrar el período actual dentro de yearPeriods
+    const currentPeriodFromList = React.useMemo(() => {
+        return yearPeriods.find(p => p.isCurrent) || yearPeriods[0];
+    }, [yearPeriods]);
+    
+    // Período seleccionado (default: período actual de la lista)
+    const [selectedPeriod, setSelectedPeriod] = useState(currentPeriodFromList);
+    
+    // Ref para trackear el tipo de período anterior
+    const prevAcademicPeriodRef = React.useRef(academicPeriod);
+    
+    // Estado para el offset de paginación (cuántas semanas hacia atrás mostrar)
+    const [weekOffset, setWeekOffset] = useState(0);
+
+    // Calcular semana actual del AÑO (no del período)
+    const currentWeekOfYear = React.useMemo(() => {
+        const today = new Date();
+        const yearStart = new Date(today.getFullYear(), 0, 1);
+        return getCurrentAcademicWeek(yearStart, today);
+    }, []);
+
+    // Generar todas las semanas del período con datos mockeados o reales
+    const fullPeriodData = React.useMemo(() => {
+        if (!selectedPeriod) return [];
+        
+        const weeks = [];
+        const isPast = selectedPeriod.isPast;
+        const isCurrent = selectedPeriod.isCurrent;
+        
+        // Determinar hasta qué semana mostrar
+        let maxWeekToShow;
+        if (isPast) {
+            // Período pasado: mostrar todas las semanas
+            maxWeekToShow = selectedPeriod.endWeek;
+        } else if (isCurrent) {
+            // Período actual: solo hasta la semana actual del año
+            maxWeekToShow = currentWeekOfYear;
+        } else {
+            // Período futuro: no mostrar nada
+            maxWeekToShow = 0;
+        }
+        
+        // Días de la semana laborables
+        const daysOfWeek = ["Lun", "Mar", "Mié", "Jue", "Vie"];
+        
+        // Generar array de semanas con datos del backend o placeholders
+        for (let weekNumber = selectedPeriod.startWeek; weekNumber <= maxWeekToShow && weekNumber <= selectedPeriod.endWeek; weekNumber++) {
+            const weekLabel = `Sem ${weekNumber}`;
+            
+            // Buscar si hay datos reales para esta semana
+            const realData = data.find(d => d.week === weekLabel);
+            
+            if (realData) {
+                // Usar datos reales del backend
+                weeks.push(realData);
+            } else {
+                // Crear placeholder con valores vacíos/cero pero con dailyData correcto
+                weeks.push({
+                    week: weekLabel,
+                    rate: 0,
+                    dailyData: daysOfWeek.map(day => ({
+                        day,
+                        present: 0,
+                        late: 0,
+                        absent: 0,
+                    })),
+                    isEmpty: true, // Flag para identificar datos vacíos
+                });
+            }
+        }
+        
+        return weeks;
+    }, [selectedPeriod, data, currentWeekOfYear]);
+
+    // Calcular rango de semanas disponibles
+    const availableWeeksCount = fullPeriodData.length;
+    
+    // Calcular índices para el slice de datos
+    const endIndex = availableWeeksCount - weekOffset;
+    const startIndex = Math.max(0, endIndex - maxWeeks);
+    
+    // Datos visibles actuales
+    const visibleData = fullPeriodData.slice(startIndex, endIndex);
+    
+    // Calcular el número final de semana visible (para el contador)
+    const lastVisibleWeekIndex = endIndex;
+    
+    // Verificar si hay más semanas disponibles para navegar
+    const canGoBack = startIndex > 0;
+    const canGoForward = weekOffset > 0;
+
+    // Actualizar el período seleccionado SOLO cuando cambia el tipo de período académico
+    React.useEffect(() => {
+        // Solo actualizar si el tipo de período realmente cambió
+        if (prevAcademicPeriodRef.current !== academicPeriod) {
+            const newCurrentPeriod = yearPeriods.find(p => p.isCurrent) || yearPeriods[0];
+            if (newCurrentPeriod) {
+                setSelectedPeriod(newCurrentPeriod);
+                setWeekOffset(0); // Resetear a las semanas más recientes
+            }
+            prevAcademicPeriodRef.current = academicPeriod;
+        }
+    }, [academicPeriod, yearPeriods]);
+    
+    // Resetear offset cuando cambia el período seleccionado
+    React.useEffect(() => {
+        setWeekOffset(0);
+    }, [selectedPeriod]);
+    
+    // Handlers de navegación
+    const handlePrevious = () => {
+        if (canGoBack) {
+            setWeekOffset(prev => Math.min(prev + maxWeeks, availableWeeksCount - maxWeeks));
+        }
+    };
+    
+    const handleNext = () => {
+        if (canGoForward) {
+            setWeekOffset(prev => Math.max(0, prev - maxWeeks));
+        }
+    };
 
     // Obtener configuración del período académico
     const periodConfig = getAcademicPeriodConfig(academicPeriod);
 
-    // Tomar las últimas N semanas
-    const recentData = data.slice(-maxWeeks);
-
-    // Calcular tendencia (comparación última vs primera semana)
-    const trendDirection = recentData.length >= 2 
-        ? recentData[recentData.length - 1].rate - recentData[0].rate
+    // Calcular tendencia (comparación última vs primera semana visible)
+    const trendDirection = visibleData.length >= 2 
+        ? visibleData[visibleData.length - 1].rate - visibleData[0].rate
         : 0;
 
     // Función para obtener color según rendimiento
@@ -99,10 +217,12 @@ export function WeeklyTrend({
         }
     };
 
-    // Preparar items del dropdown con descripción de semanas
+    // Preparar items del dropdown con descripción de semanas e indicador de período actual
     const dropdownItems = yearPeriods.map(period => ({
         value: period.id,
-        label: formatPeriodLabel(period, academicPeriod),
+        label: period.isCurrent 
+            ? `${formatPeriodLabel(period, academicPeriod)} • Actual`
+            : formatPeriodLabel(period, academicPeriod),
         description: `Semanas ${period.startWeek}-${period.endWeek}`,
     }));
 
@@ -143,7 +263,7 @@ export function WeeklyTrend({
                 </View>
 
                 {/* Dropdown de período (derecha) */}
-                {periodConfig && (
+                {periodConfig && selectedPeriod && (
                     <View style={{ width: 200, marginTop: -2 }}>
                         <AnimatedDropdown
                             items={dropdownItems}
@@ -179,16 +299,16 @@ export function WeeklyTrend({
                         fontWeight: "700",
                         color: selectedPeriod.isCurrent ? c.brand.primary : c.text.secondary,
                     }}>
-                        {recentData.length} / {selectedPeriod.totalWeeks}
+                        {lastVisibleWeekIndex} / {availableWeeksCount}
                     </Text>
                 </View>
             )}
 
             {/* Lista de semanas */}
-            {recentData.map((item, index) => {
-                const isLastWeek = index === recentData.length - 1;
+            {visibleData.map((item, index) => {
                 const isSelected = selectedWeek === item.week;
-                const barColor = getColorByRate(item.rate);
+                const isEmpty = item.isEmpty; // Flag para semanas sin datos
+                const barColor = isEmpty ? c.border.primary : getColorByRate(item.rate);
 
                 const WeekContainer = isInteractive ? TouchableOpacity : View;
 
@@ -216,12 +336,10 @@ export function WeeklyTrend({
                         {/* Etiqueta de semana */}
                         <Text style={{
                             fontSize: 11,
-                            fontWeight: isSelected ? "700" : isLastWeek ? "600" : "400",
+                            fontWeight: isSelected ? "700" : "600",
                             color: isSelected 
                                 ? c.brand.primary 
-                                : isLastWeek 
-                                ? c.text.primary 
-                                : c.text.secondary,
+                                : c.text.primary,
                             width: 50,
                             textAlign: "right",
                         }}>
@@ -237,15 +355,15 @@ export function WeeklyTrend({
                             />
                         </View>
 
-                        {/* Porcentaje */}
+                        {/* Porcentaje o indicador de sin datos */}
                         <Text style={{
                             fontSize: 11,
-                            fontWeight: isSelected ? "700" : isLastWeek ? "700" : "600",
-                            color: colorByPerformance ? barColor : c.text.primary,
+                            fontWeight: isSelected ? "700" : "600",
+                            color: isEmpty ? c.text.disabled : colorByPerformance ? barColor : c.text.primary,
                             width: 40,
                             textAlign: "right",
                         }}>
-                            {item.rate}%
+                            {isEmpty ? "—" : `${item.rate}%`}
                         </Text>
 
                         {/* Indicador de selección */}
@@ -261,35 +379,83 @@ export function WeeklyTrend({
                 );
             })}
 
-            {/* Indicador de tendencia */}
-            {showTrend && recentData.length >= 2 && (
+            {/* Indicador de tendencia con botones de navegación */}
+            {showTrend && visibleData.length >= 2 && (
                 <View style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    justifyContent: "center",
+                    justifyContent: "space-between",
                     marginTop: 8,
                     paddingTop: 8,
                     borderTopWidth: 1,
                     borderTopColor: c.border.default,
                 }}>
-                    <Text style={{
-                        fontSize: 11,
-                        color: c.text.secondary,
-                        marginRight: 6,
+                    {/* Botón anterior */}
+                    <TouchableOpacity
+                        onPress={handlePrevious}
+                        disabled={!canGoBack}
+                        style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 16,
+                            backgroundColor: canGoBack ? c.brand.primaryLight : c.background.secondary,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            opacity: canGoBack ? 1 : 0.4,
+                        }}
+                    >
+                        <Feather
+                            name="chevron-left"
+                            size={16}
+                            color={canGoBack ? c.brand.primary : c.text.disabled}
+                        />
+                    </TouchableOpacity>
+
+                    {/* Tendencia central */}
+                    <View style={{
+                        flexDirection: "row",
+                        alignItems: "center",
                     }}>
-                        Tendencia:
-                    </Text>
-                    <Text style={{
-                        fontSize: 11,
-                        fontWeight: "600",
-                        color: trendDirection > 0 
-                            ? c.status.success 
-                            : trendDirection < 0 
-                            ? c.status.danger 
-                            : c.text.secondary,
-                    }}>
-                        {trendDirection > 0 ? "↑" : trendDirection < 0 ? "↓" : "→"} {Math.abs(trendDirection).toFixed(1)}%
-                    </Text>
+                        <Text style={{
+                            fontSize: 11,
+                            color: c.text.secondary,
+                            marginRight: 6,
+                        }}>
+                            Tendencia:
+                        </Text>
+                        <Text style={{
+                            fontSize: 11,
+                            fontWeight: "600",
+                            color: trendDirection > 0 
+                                ? c.status.success 
+                                : trendDirection < 0 
+                                ? c.status.danger 
+                                : c.text.secondary,
+                        }}>
+                            {trendDirection > 0 ? "↑" : trendDirection < 0 ? "↓" : "→"} {Math.abs(trendDirection).toFixed(1)}%
+                        </Text>
+                    </View>
+
+                    {/* Botón siguiente */}
+                    <TouchableOpacity
+                        onPress={handleNext}
+                        disabled={!canGoForward}
+                        style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 16,
+                            backgroundColor: canGoForward ? c.brand.primaryLight : c.background.secondary,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            opacity: canGoForward ? 1 : 0.4,
+                        }}
+                    >
+                        <Feather
+                            name="chevron-right"
+                            size={16}
+                            color={canGoForward ? c.brand.primary : c.text.disabled}
+                        />
+                    </TouchableOpacity>
                 </View>
             )}
         </View>

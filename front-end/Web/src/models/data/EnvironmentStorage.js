@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU — EnvironmentStorage
 //
 //  Capa de persistencia para los ambientes/salones.

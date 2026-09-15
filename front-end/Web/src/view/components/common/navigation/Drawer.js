@@ -1,7 +1,11 @@
 import React from "react";
-import { View, Modal, TouchableOpacity, Animated, Dimensions, StyleSheet, Platform } from "react-native";
+import { View, Modal, TouchableOpacity, Animated, Dimensions, StyleSheet, Platform , Text } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
+
+// Fix for missing import
+import { Feather } from "@expo/vector-icons";
+
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -250,9 +254,5 @@ const styles = StyleSheet.create({
     padding: DESIGN_TOKENS.spacing.lg,
   },
 });
-
-// Fix for missing import
-import { Feather } from "@expo/vector-icons";
-import { Text } from "react-native";
 
 export default Drawer;

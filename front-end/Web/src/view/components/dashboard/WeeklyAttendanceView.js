@@ -16,6 +16,8 @@ import React, { useState } from "react";
 import { View } from "react-native";
 import { WeeklyTrend } from "./WeeklyTrend";
 import { DailyBarChart } from "./DailyBarChart";
+import { getInstitutionConfig } from "../../../core/config/institutionConfig";
+import { getCurrentPeriod, getCurrentAcademicWeek } from "../../../core/constants/academicPeriods";
 
 /**
  * Orquestador de vista de asistencia semanal y diaria
@@ -106,21 +108,91 @@ export function useWeeklyAttendanceController(
     academicPeriod // TODO: En el futuro esto vendrá de Settings
 ) {
     const [selectedWeek, setSelectedWeek] = useState(null);
+    const [isCurrentWeek, setIsCurrentWeek] = useState(true); // Flag para saber si es la semana actual
 
+    // Calcular la semana actual basada en el año (no en el período)
+    const currentWeekNumber = React.useMemo(() => {
+        const today = new Date();
+        const yearStart = new Date(today.getFullYear(), 0, 1);
+        
+        // Calcular semana desde el inicio del año
+        const weekNumber = getCurrentAcademicWeek(yearStart, today);
+        
+        return weekNumber;
+    }, []);
+
+    // Auto-seleccionar la semana actual al montar
+    React.useEffect(() => {
+        if (currentWeekNumber) {
+            const currentWeekLabel = `Sem ${currentWeekNumber}`;
+            // Buscar primero en datos reales
+            let currentWeekData = weeklyData.find(w => w.week === currentWeekLabel);
+            
+            // Si no existe en datos reales, crear placeholder
+            if (!currentWeekData) {
+                currentWeekData = {
+                    week: currentWeekLabel,
+                    rate: 0,
+                    dailyData: [
+                        { day: "Lun", present: 0, late: 0, absent: 0 },
+                        { day: "Mar", present: 0, late: 0, absent: 0 },
+                        { day: "Mié", present: 0, late: 0, absent: 0 },
+                        { day: "Jue", present: 0, late: 0, absent: 0 },
+                        { day: "Vie", present: 0, late: 0, absent: 0 },
+                    ],
+                    isEmpty: true,
+                };
+            }
+            
+            setSelectedWeek(currentWeekData);
+            setIsCurrentWeek(true);
+        }
+    }, [currentWeekNumber, weeklyData]);
+
+    // Si hay semana seleccionada, usar sus dailyData
+    // Si no, usar currentWeekData (datos mock de la semana actual)
     const displayedDailyData = selectedWeek?.dailyData || currentWeekData;
 
     const handleWeekSelect = (weekData) => {
         setSelectedWeek(weekData);
+        // Verificar si la semana seleccionada es la actual
+        const isCurrentWeekSelected = weekData && weekData.week === `Sem ${currentWeekNumber}`;
+        setIsCurrentWeek(isCurrentWeekSelected);
     };
 
     const handleResetToCurrentWeek = () => {
-        setSelectedWeek(null);
+        if (currentWeekNumber) {
+            const currentWeekLabel = `Sem ${currentWeekNumber}`;
+            // Buscar primero en datos reales
+            let currentWeekData = weeklyData.find(w => w.week === currentWeekLabel);
+            
+            // Si no existe en datos reales, crear placeholder
+            if (!currentWeekData) {
+                currentWeekData = {
+                    week: currentWeekLabel,
+                    rate: 0,
+                    dailyData: [
+                        { day: "Lun", present: 0, late: 0, absent: 0 },
+                        { day: "Mar", present: 0, late: 0, absent: 0 },
+                        { day: "Mié", present: 0, late: 0, absent: 0 },
+                        { day: "Jue", present: 0, late: 0, absent: 0 },
+                        { day: "Vie", present: 0, late: 0, absent: 0 },
+                    ],
+                    isEmpty: true,
+                };
+            }
+            
+            setSelectedWeek(currentWeekData);
+            setIsCurrentWeek(true);
+        }
     };
 
     return {
         // Estado
         selectedWeek,
         displayedDailyData,
+        currentWeekNumber, // Exportar para usarlo en el label
+        isCurrentWeek, // Exportar flag para saber si es la semana actual
         
         // Handlers
         handleWeekSelect,

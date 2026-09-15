@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { View, TouchableOpacity, Text } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
@@ -63,13 +63,16 @@ export default function SidebarHeader({
         <View
             style={[
                 {
-                    padding,
+                    paddingTop: 16,
+                    paddingBottom: 16,
+                    paddingHorizontal: padding,
                     borderBottomWidth: border ? 1 : 0,
                     borderBottomColor: c.border.primary,
                     flexDirection: "row",
                     alignItems: "center",
                     justifyContent: align,
                     gap: 12,
+                    height: 88, // Altura fija para coincidir con PageHeader
                 },
                 style,
             ]}

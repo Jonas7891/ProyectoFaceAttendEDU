@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU — AppDataContext
 //
 //  ÚNICA fuente de verdad para los datos de la aplicación.

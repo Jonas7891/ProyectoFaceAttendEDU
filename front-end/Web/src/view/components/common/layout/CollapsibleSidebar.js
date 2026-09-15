@@ -1,4 +1,4 @@
-﻿import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { View, Animated, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import Sidebar from "./Sidebar";
@@ -168,8 +168,8 @@ export default function CollapsibleSidebar({
                                 position: "absolute",
                                 left: 0,
                                 top: "50%",
-                                marginTop: -196,
-                                width: 30,
+                                marginTop: -76,
+                                width: 28,
                                 height: SIDEBAR_CONSTANTS.TAB_HEIGHT,
                                 backgroundColor: c.background.surface,
                                 borderTopRightRadius: 12,

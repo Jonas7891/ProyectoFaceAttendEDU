@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU — UserStorage
 //
 //  Capa de persistencia para los usuarios del sistema

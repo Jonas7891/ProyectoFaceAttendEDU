@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU — AuthAnimatedLayout (View Layer)
 //  Layout compartido para las pantallas de auth en desktop.
 //

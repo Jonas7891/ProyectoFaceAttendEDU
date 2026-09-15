@@ -1,4 +1,4 @@
-﻿import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
 
 // ── Formulario de ambiente ────────────────────────────────

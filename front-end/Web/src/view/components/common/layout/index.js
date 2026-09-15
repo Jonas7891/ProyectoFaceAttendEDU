@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Barrel export para componentes de layout
  * 
  * Sistema completo de Sidebar con composition pattern.

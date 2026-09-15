@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU ´┐¢ Environments View
 //  Gesti´┐¢n de ambientes/salones: CRUD + horarios por ambiente.
 //  Acciones de gesti´┐¢n condicionadas por useRolePermissions.

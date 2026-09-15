@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU — ITranslationProvider (i18n · Provider)
 //
 //  Contrato que debe cumplir cualquier motor de traducción.

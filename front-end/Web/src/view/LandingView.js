@@ -3,8 +3,8 @@ import { View, Image, Text, StyleSheet, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 
-import { Button, BackgroundImage } from "./components/common";
-import { Card } from "./components/common";
+import { Button, BackgroundImage , Card } from "./components/common";
+
 import CustomScrollBar from "./components/common/CustomScrollBar";
 import { HeroSection, HeroMediaSection, HeroStats, HeroTitle } from "./components/hero";
 

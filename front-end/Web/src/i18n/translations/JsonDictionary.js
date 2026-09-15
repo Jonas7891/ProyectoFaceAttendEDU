@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU — JsonDictionary (i18n · Translations)
 //
 //  Punto único de acceso síncrono a los diccionarios JSON.

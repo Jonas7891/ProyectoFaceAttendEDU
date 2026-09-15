@@ -1,4 +1,4 @@
-﻿import { useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { PanResponder, Animated } from "react-native";
 import { SIDEBAR_CONSTANTS } from "../common/layout/constants";
 

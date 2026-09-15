@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU — colorUtils
 //
 //  Utilidades puras de manipulación y evaluación de colores.

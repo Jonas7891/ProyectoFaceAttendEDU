@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  FaceAttend EDU — TranslationEntry (i18n · Model Layer)
 //  Tipos del dominio de internacionalización.
 //  No importa React ni RN — puro JavaScript.

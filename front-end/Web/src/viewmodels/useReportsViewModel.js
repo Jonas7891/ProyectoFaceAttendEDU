@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useTheme } from "../view/components/hooks/useTheme";
 import { useTranslation } from "../i18n/hooks/useTranslation";
 import { useAppData } from "../context/AppDataContext";
