@@ -3,7 +3,8 @@ import {Platform} from "react-native";
 import {useTranslation} from "react-i18next";
 import {useLanguageRefresh} from "../utils/useLanguageRefresh";
 import {useTheme} from "../view/components/common/ThemeContext";
-import {getCurrentUserRole} from "../services/UserService";
+import {getCurrentUserRole, getCurrentUser} from "../services/UserService";
+import {ActorService} from "../services/ActorService";
 import {request, GET} from "../api/apiClient";
 
 function unwrap(data) {
@@ -85,8 +86,35 @@ export function useAttendanceViewModel() {
     const fetchAttendance = useCallback(async (role) => {
         try {
             setLoading(true);
-            const arData = await request({ method: GET, url: 'attendance_record', params: { _limit: 200 }, requiresAuth: false });
-            const records = unwrap(arData);
+            const user = await getCurrentUser();
+            const actors = user?.personId ? await ActorService.getByPerson(user.personId) : [];
+            const myActor = actors?.length > 0 ? actors[0] : null;
+
+            const isTeacherRole = role === 'Docente' || role === 'teacher' || role === 'INSTRUCTOR';
+            const isAdminRole = role === 'Administrador' || role === 'admin';
+
+            let records = [];
+
+            if (isAdminRole) {
+                const arData = await request({ method: GET, url: 'attendance_record', params: { _limit: 200 }, requiresAuth: false });
+                records = unwrap(arData);
+            } else if (isTeacherRole && myActor) {
+                const blockData = await request({ method: GET, url: 'schedule_block', params: { instructor_actor_id: myActor.academicActorId }, requiresAuth: false });
+                const blocks = unwrap(blockData);
+                const blockIds = blocks.map(b => b.schedule_block_id);
+
+                for (const blockId of blockIds) {
+                    const sessionData = await request({ method: GET, url: 'class_session', params: { schedule_block_id: blockId }, requiresAuth: false });
+                    const sessions = unwrap(sessionData);
+                    for (const session of sessions) {
+                        const arData = await request({ method: GET, url: 'attendance_record', params: { class_session_id: session.class_session_id }, requiresAuth: false });
+                        records.push(...unwrap(arData));
+                    }
+                }
+            } else if (myActor) {
+                const arData = await request({ method: GET, url: 'attendance_record', params: { academic_actor_id: myActor.academicActorId, _limit: 200 }, requiresAuth: false });
+                records = unwrap(arData);
+            }
 
             const enriched = [];
             for (const record of records.slice(-50)) {
@@ -109,6 +137,21 @@ export function useAttendanceViewModel() {
                     const personData = await request({ method: GET, url: 'person', params: { person_id: actor.person_id }, requiresAuth: false });
                     const person = unwrap(personData)[0] || {};
 
+                    let docenteName = '—';
+                    if (block.instructor_actor_id) {
+                        try {
+                            const instrActorData = await request({ method: GET, url: 'academic_actor', params: { academic_actor_id: block.instructor_actor_id }, requiresAuth: false });
+                            const instrActor = unwrap(instrActorData)[0];
+                            if (instrActor?.person_id) {
+                                const instrPersonData = await request({ method: GET, url: 'person', params: { person_id: instrActor.person_id }, requiresAuth: false });
+                                const instrPerson = unwrap(instrPersonData)[0];
+                                if (instrPerson) {
+                                    docenteName = `${instrPerson.name || ''} ${instrPerson.last_name || ''}`.trim() || '—';
+                                }
+                            }
+                        } catch (e) {}
+                    }
+
                     const statusMap = { Present: 'presente', Late: 'tarde', Absent: 'ausente' };
                     const hora = record.captured_at ? new Date(record.captured_at).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'}) : '—';
 
@@ -127,7 +170,7 @@ export function useAttendanceViewModel() {
                         periodo: '2026-I',
                         periodo_inicio: '2026-01-15',
                         periodo_fin: '2026-06-30',
-                        docente: `${person.name || ''} ${person.last_name || ''}`.trim(),
+                        docente: docenteName,
                     });
                 } catch (e) {
                     continue;
@@ -158,7 +201,7 @@ export function useAttendanceViewModel() {
         init();
     }, []);
 
-    const isAdmin = userRole === "admin";
+    const isAdmin = userRole === "Administrador" || userRole === "admin";
 
     const filteredTeachers = teacherData.filter(item =>
         (!searchText || item.nombre.toLowerCase().includes(searchText.toLowerCase())) &&

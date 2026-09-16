@@ -56,6 +56,7 @@ export const getCurrentUser = async () => {
     const user = await getUserByEmail(email);
 
     let name = null;
+    let personId = user?.personId || null;
     if (email) {
       const { request, GET } = require('../api/apiClient');
       const personData = await request({ method: GET, url: 'person', params: { email }, requiresAuth: false });
@@ -63,11 +64,13 @@ export const getCurrentUser = async () => {
       if (personArr.length > 0) {
         const person = personArr[0];
         name = [person.name, person.last_name].filter(Boolean).join(' ');
+        personId = person.person_id || personId;
       }
     }
 
     return {
       userId: user?.userId || null,
+      personId: personId,
       email: email,
       name: name,
       roles: role ? [role] : [],
