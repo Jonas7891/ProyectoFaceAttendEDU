@@ -1,5 +1,5 @@
 // ============================================================
-//  FaceAttend EDU — ImportStudentsModal
+//  FaceAttend EDU ï¿½ ImportStudentsModal
 //
 //  Modal para importar estudiantes desde CSV o Excel.
 //  Sin dependencias externas: parseo manual de CSV y uso de
@@ -8,7 +8,7 @@
 //  Columnas esperadas (en cualquier orden, case-insensitive):
 //    name | code | email | course | grade | attendance | registered | status
 //
-//  Las columnas mínimas requeridas son, code, email, course, grade.
+//  Las columnas mï¿½nimas requeridas son, code, email, course, grade.
 // ============================================================
 
 import React, { useState, useRef } from "react";
@@ -20,7 +20,7 @@ import { Feather } from "@expo/vector-icons";
 import { Button, Badge } from "../common";
 import { useTheme }       from "../hooks/useTheme";
 import { useResponsive }  from "../hooks/useResponsive";
-import { useTranslation } from "../../../i18n/hooks/useTranslation";
+import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 
 // -- Tipos -------------------------------------------------
 
@@ -35,12 +35,12 @@ const ALIAS = {
     // code
     code: "code",
     codigo: "code",
-    "código": "code",
+    "cï¿½digo": "code",
     id: "code",
     // email
     email: "email",
     correo: "email",
-    "correo electrónico": "email",
+    "correo electrï¿½nico": "email",
     // course
     course: "course",
     programa: "course",
@@ -81,7 +81,7 @@ function rowToStudent(headers, cells) {
         if (key === "attendance") {
             obj.attendance = Math.min(100, Math.max(0, parseInt(val, 10) || 100));
         } else if (key === "registered") {
-            obj.registered = val === "true" || val === "1" || val === "sí" || val === "si";
+            obj.registered = val === "true" || val === "1" || val === "sï¿½" || val === "si";
         } else if (key === "status") {
             obj.status = val === "inactive" || val === "inactivo" ? "inactive" : "active";
         } else {
@@ -117,8 +117,8 @@ function parseFileContent(text) {
 
 const CSV_TEMPLATE =
     "name,code,email,course,grade,attendance,registered,status\n" +
-    "Ana García López,2024001,a.garcia@uni.edu,Ingeniería de Sistemas,3er semestre,95,false,active\n" +
-    "Carlos Pérez,2024002,c.perez@uni.edu,Matemáticas,2do semestre,88,true,active\n";
+    "Ana Garcï¿½a Lï¿½pez,2024001,a.garcia@uni.edu,Ingenierï¿½a de Sistemas,3er semestre,95,false,active\n" +
+    "Carlos Pï¿½rez,2024002,c.perez@uni.edu,Matemï¿½ticas,2do semestre,88,true,active\n";
 
 function downloadTemplate() {
     if (Platform.OS !== "web") return;
@@ -193,7 +193,7 @@ export default function ImportStudentsModal({
         setFileName(result.name);
         setParseErrors(errors);
         if (rows.length === 0) {
-            setErrorMsg(t("El archivo no contiene filas válidas"));
+            setErrorMsg(t("El archivo no contiene filas vï¿½lidas"));
             setStep("error");
             return;
         }
@@ -283,7 +283,7 @@ export default function ImportStudentsModal({
                         {/* -- STEP: idle -- */}
                         {step === "idle" && (
                             <View style={{ gap: 16 }}>
-                                {/* Zona de arrastre / botón */}
+                                {/* Zona de arrastre / botï¿½n */}
                                 <TouchableOpacity
                                     onPress={handlePickFile}
                                     style={{
@@ -317,7 +317,7 @@ export default function ImportStudentsModal({
                                 }}>
                                     <View style={{ flex: 1 }}>
                                         <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary }}>
-                                            {t("¿Primera vez?")}
+                                            {t("ï¿½Primera vez?")}
                                         </Text>
                                         <Text style={{ fontSize: 11, color: c.text.secondary, marginTop: 2 }}>
                                             {t("Descarga la plantilla con las columnas requeridas")}
@@ -380,7 +380,7 @@ export default function ImportStudentsModal({
                                         </Text>
                                         <Text style={{ fontSize: 11, color: "#065F46", marginTop: 2 }}>
                                             {preview.length} {t("estudiantes listos para importar")}
-                                            {parseErrors > 0 && ` · ${parseErrors} ${t("filas con errores omitidas")}`}
+                                            {parseErrors > 0 && ` ï¿½ ${parseErrors} ${t("filas con errores omitidas")}`}
                                         </Text>
                                     </View>
                                     <TouchableOpacity onPress={() => setStep("idle")}>
@@ -468,7 +468,7 @@ export default function ImportStudentsModal({
                             <View style={{ alignItems: "center", padding: 24, gap: 16 }}>
                                 <ActivityIndicator size="large" color={c.brand.primary} />
                                 <Text style={{ fontSize: 11, color: c.text.secondary }}>
-                                    {t("Importando estudiantes…")}
+                                    {t("Importando estudiantesï¿½")}
                                 </Text>
                             </View>
                         )}
@@ -487,7 +487,7 @@ export default function ImportStudentsModal({
                                     <Feather name="check-circle" size={32} color={c.status.success} />
                                 </View>
                                 <Text style={{ fontSize: 10, fontWeight: "700", color: c.text.primary }}>
-                                    {t("¡Importación exitosa!")}
+                                    {t("ï¿½Importaciï¿½n exitosa!")}
                                 </Text>
                                 <Text style={{ fontSize: 11, color: c.text.secondary, textAlign: "center" }}>
                                     {imported} {t("estudiantes agregados al sistema")}

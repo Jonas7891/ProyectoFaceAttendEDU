@@ -1,15 +1,10 @@
-/**
- * Componentes específicos de Environments
- * 
- * Estos componentes son específicos para la gestión de ambientes/salones
- * y no son genéricos.
- */
+// ============================================================
+//  FaceAttend EDU — Environments Components
+// ============================================================
 
-export { InstructorAutocomplete } from './InstructorAutocomplete';
-export { ScheduleRow } from './ScheduleRow';
-
-// TODO: Extraer modales del Screen a componentes individuales:
-// - EnvironmentCard
-// - EnvironmentDetailModal
-// - EnvironmentFormModal
-// - ScheduleModal
+export { default as EnvironmentCard } from "./EnvironmentCard";
+export { default as EnvironmentDetailModal } from "./EnvironmentDetailModal";
+export { default as EnvironmentFormModal } from "./EnvironmentFormModal";
+export { default as InstructorAutocomplete } from "./InstructorAutocomplete";
+export { default as ScheduleModal } from "./ScheduleModal";
+export { default as ScheduleRow } from "./ScheduleRow";

@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
-import { useTranslation } from "../../../../i18n/hooks/useTranslation";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 
 export function ModeSelector() {
     const { mode, setMode, theme } = useTheme();

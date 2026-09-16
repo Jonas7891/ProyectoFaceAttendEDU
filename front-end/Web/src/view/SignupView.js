@@ -35,7 +35,7 @@ import {
     AuthAnimatedLayout,
 } from "./components/auth";
 import { useSignupViewModel } from "../viewmodels/useAuthViewModel";
-import { useTranslation }     from "../i18n/hooks/useTranslation";
+import { useTranslation }     from "../core/utils/i18n/hooks/useTranslation";
 import { useAutoSlideOnContent } from "./components/hooks/useAutoSlideOnContent";
 
 

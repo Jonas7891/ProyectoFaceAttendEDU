@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useTheme } from "../view/components/hooks/useTheme";
-import { useTranslation } from "../i18n/hooks/useTranslation";
+import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useAuth } from "../context/AuthContext";
 import { useAppData } from "../context/AppDataContext";
 import {

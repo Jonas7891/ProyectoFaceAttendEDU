@@ -41,7 +41,7 @@ import { useTheme }              from "./components/hooks/useTheme";
 import { useResponsive }         from "./components/hooks/useResponsive";
 import { useDashboardViewModel } from "../viewmodels/useDashboardViewModel";
 import { useRolePermissions }    from "../viewmodels/useRolePermissions";
-import { useTranslation }        from "../i18n/hooks/useTranslation";
+import { useTranslation }        from "../core/utils/i18n/hooks/useTranslation";
 import { 
     DEFAULT_ACADEMIC_PERIOD,
     getCurrentPeriod,

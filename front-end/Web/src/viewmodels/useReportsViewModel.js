@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useTheme } from "../view/components/hooks/useTheme";
-import { useTranslation } from "../i18n/hooks/useTranslation";
+import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../context/AppDataContext";
 import { mockAttendanceByDay, mockAttendanceByWeek } from "../models/data/mockData";
 import { exportToExcel, exportToPDF, buildReportHTML, buildHTMLTable, formatPercentageWithColor, formatStatusBadge } from "../core/utils/exportHelpers";

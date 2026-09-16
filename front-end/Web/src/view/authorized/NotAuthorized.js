@@ -21,7 +21,7 @@ import { View, Text, Image, TouchableOpacity, StyleSheet, Animated } from "react
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useTheme } from "../components/hooks/useTheme";
-import { useTranslation } from "../../i18n/hooks/useTranslation";
+import { useTranslation } from "../../core/utils/i18n/hooks/useTranslation";
 
 /**
  * Tipos de excepciones de autorización

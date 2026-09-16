@@ -16,7 +16,7 @@ import React, { useState, useMemo } from "react";
 import { View, Text, TextInput, Pressable } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
-import { useTranslation } from "../../../../i18n/hooks/useTranslation";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { ACADEMIC_PERIOD_TYPES } from "../../../../core/constants/academicPeriods";
 
 /**
@@ -271,7 +271,6 @@ export function DateRangePicker({
                         </Text>
                     )}
                 </View>
-
                 {/* Fecha de fin */}
                 <View style={{ flex: 1 }}>
                     <Text style={labelStyle}>{t("Fecha de fin")}</Text>
@@ -318,7 +317,6 @@ export function DateRangePicker({
                     )}
                 </View>
             </View>
-
             {/* Botón de sugerencia automática */}
             <Pressable
                 onPress={suggestDates}
@@ -344,7 +342,6 @@ export function DateRangePicker({
                     {t("Sugerir fechas automáticamente")}
                 </Text>
             </Pressable>
-
             {/* Indicador de validación y estadísticas */}
             <View
                 style={{

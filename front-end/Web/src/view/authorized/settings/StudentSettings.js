@@ -12,7 +12,7 @@ import { View, Text, TextInput } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Card, ToggleRow, Divider } from "../../components/common";
 import { useTheme } from "../../components/hooks/useTheme";
-import { useTranslation } from "../../../i18n/hooks/useTranslation";
+import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import {
     ModeSelector,
     ThemePreview,

@@ -14,7 +14,7 @@ import { useRolePermissions } from "../viewmodels/useRolePermissions";
 import {
     useReportsViewModel, PERIOD_OPTIONS, DEFAULT_FILTERS,
 } from "../viewmodels/useReportsViewModel";
-import { useTranslation }  from "../i18n/hooks/useTranslation";
+import { useTranslation }  from "../core/utils/i18n/hooks/useTranslation";
 
 // -- WeeklySparkline ------------------------------------------
 

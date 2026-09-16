@@ -13,7 +13,7 @@ import { useResponsive } from "./components/hooks/useResponsive";
 import { useTheme } from "./components/hooks/useTheme";
 import { getTypography } from "../core/constants/typography";
 import BadgePositions, { BadgePositionsMobile } from "../core/constants/badgePositions";
-import { useTranslation } from "../i18n/hooks/useTranslation";
+import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { DESIGN_TOKENS } from "../core/config/theme.config";
 import { 
     getSectionBackground, 

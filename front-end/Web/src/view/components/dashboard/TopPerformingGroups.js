@@ -10,7 +10,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Card, Badge, ProgressBar } from "../common";
 import { useTheme } from "../hooks/useTheme";
-import { useTranslation } from "../../../i18n/hooks/useTranslation";
+import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { getContrastTextColor } from "../../../core/utils/colorHelpers";
 
 /**

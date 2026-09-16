@@ -8,7 +8,7 @@ enableScreens();
 
 import { ThemeProvider }    from "./src/context/ThemeContext";
 import { ResponsiveProvider } from "./src/context/ResponsiveContext";
-import { LanguageProvider } from "./src/i18n/context/LanguageContext";
+import { LanguageProvider } from "./src/core/utils/i18n/context/LanguageContext";
 import { AppDataProvider }  from "./src/context/AppDataContext";
 import { AuthProvider }     from "./src/context/AuthContext";
 

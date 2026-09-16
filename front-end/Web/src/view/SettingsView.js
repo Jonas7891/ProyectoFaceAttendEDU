@@ -18,7 +18,7 @@ import { Button, PageHeader } from "./components/common";
 import { useTheme } from "./components/hooks/useTheme";
 import { generateTheme } from "../core/theme/generateTheme";
 import { useResponsive } from "./components/hooks/useResponsive";
-import { useTranslation } from "../i18n/hooks/useTranslation";
+import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useRolePermissions } from "../viewmodels/useRolePermissions";
 import { useAutomaticPeriodAdvance } from "./components/hooks/useAutomaticPeriodAdvance";
 import { AdminSettings, TeacherSettings, StudentSettings } from "./authorized/settings";

@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { AnimatedDropdown } from "../../common/animation/AnimatedDropdown";
 import { ACADEMIC_PERIOD_CONFIG } from "../../../../core/constants/academicPeriods";
-import { useTranslation } from "../../../../i18n/hooks/useTranslation";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 
 /**
  * AcademicPeriodSelector - Selector de tipo de período académico

@@ -43,7 +43,7 @@ import { useResponsive } from "../view/components/hooks/useResponsive";
 import { useAuth } from "../context/AuthContext";
 import { useRolePermissions } from "../viewmodels/useRolePermissions";
 import { useDashboardScreenViewModel } from "../viewmodels/useDashboardScreenViewModel";
-import { useTranslation } from "../i18n/hooks/useTranslation";
+import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { Feather } from "@expo/vector-icons";
 
 const Stack = createNativeStackNavigator();

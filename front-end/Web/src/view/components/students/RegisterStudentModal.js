@@ -13,7 +13,7 @@ import { Button, AnimatedDropdown, BaseModal } from "../common";
 import TextInput from "../common/inputs/TextInput";
 import { useTheme }               from "../hooks/useTheme";
 import { useResponsive }          from "../hooks/useResponsive";
-import { useTranslation }         from "../../../i18n/hooks/useTranslation";
+import { useTranslation }         from "../../../core/utils/i18n/hooks/useTranslation";
 import FaceRegistrationModal      from "./FaceRegistrationModal";
 import {
     EMPTY_FORM,

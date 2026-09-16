@@ -7,6 +7,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Badge } from "../common";
 import { useTheme } from "../hooks/useTheme";
+import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 
 /**
  * Fila de horario con información y acciones
@@ -15,10 +16,10 @@ import { useTheme } from "../hooks/useTheme";
  * @param {function} onEdit - Callback para editar
  * @param {function} onDelete - Callback para eliminar
  * @param {boolean} isLast - Si es la última fila
- * @param {function} t - Función de traducción
  */
-export function ScheduleRow({ schedule, onEdit, onDelete, isLast, t }) {
+export function ScheduleRow({ schedule, onEdit, onDelete, isLast }) {
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const c = theme.colors;
     
     return (

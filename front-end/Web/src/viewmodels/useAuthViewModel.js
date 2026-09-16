@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { useTranslation } from "../i18n/hooks/useTranslation";
+import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useAuth } from "../context/AuthContext";
 import { checkPassword } from "../core/utils/validation";
 

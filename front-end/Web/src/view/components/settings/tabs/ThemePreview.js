@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text } from "react-native";
-import { useTranslation } from "../../../../i18n/hooks/useTranslation";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 
 export function ThemePreview({ previewTheme }) {
     const { t } = useTranslation();

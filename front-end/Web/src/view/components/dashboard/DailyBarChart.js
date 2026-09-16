@@ -12,7 +12,7 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { BarChart } from "../common/charts/BarChart";
 import { useTheme } from "../hooks/useTheme";
-import { useTranslation } from "../../../i18n/hooks/useTranslation";
+import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 
 /**
  * Gráfico de barras para asistencia diaria (genérico, adaptable por rol)

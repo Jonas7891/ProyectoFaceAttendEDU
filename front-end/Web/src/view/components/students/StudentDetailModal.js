@@ -1,7 +1,7 @@
 // ============================================================
-//  FaceAttend EDU — StudentDetailModal
+//  FaceAttend EDU ï¿½ StudentDetailModal
 //  Modal de detalle de estudiante.
-//  Los botones de gestión se muestran según permisos.
+//  Los botones de gestiï¿½n se muestran segï¿½n permisos.
 // ============================================================
 
 import React from "react";
@@ -9,7 +9,7 @@ import { View, Text, ScrollView, TouchableOpacity, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Badge, Avatar, Button, ProgressBar, useAttendanceColor, ATTENDANCE_THRESHOLDS } from "../common";
 import { useTheme }       from "../hooks/useTheme";
-import { useTranslation } from "../../../i18n/hooks/useTranslation";
+import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 
 
 export default function StudentDetailModal({
@@ -115,12 +115,12 @@ export default function StudentDetailModal({
                                 <ProgressBar value={student.attendance} color={attColor} height={8} />
                                 <Text style={{ fontSize: 11, color: c.text.secondary, marginTop: 8 }}>
                                     {student.attendance >= ATTENDANCE_THRESHOLDS.MIN_ACCEPTABLE
-                                        ? t("Cumple el mínimo requerido (80%)")
-                                        : t("? Por debajo del mínimo requerido (80%)")}
+                                        ? t("Cumple el mï¿½nimo requerido (80%)")
+                                        : t("? Por debajo del mï¿½nimo requerido (80%)")}
                                 </Text>
                             </View>
 
-                            {/* Bloque facial — solo para quienes pueden registrar */}
+                            {/* Bloque facial ï¿½ solo para quienes pueden registrar */}
                             {canRegisterFace && (
                                 <View style={{
                                     flexDirection: "row",

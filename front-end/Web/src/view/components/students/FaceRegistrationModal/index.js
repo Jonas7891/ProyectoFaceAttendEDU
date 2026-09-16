@@ -13,7 +13,7 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import { Modal, View, TouchableOpacity, Platform } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 import { useResponsive } from "../../hooks/useResponsive";
-import { useTranslation } from "../../../../i18n/hooks/useTranslation";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 
 // Utilidades face-api
 import { loadFaceApi, analyzeFrame, cropFace, downloadJson } from "./faceApiUtils";

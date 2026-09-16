@@ -7,8 +7,8 @@ import { TouchableOpacity, View, Text, Modal, FlatList } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
 import { useResponsive } from "../../hooks/useResponsive";
-import { useLanguage } from "../../../../i18n/hooks/useLanguage";
-import { SUPPORTED_LANGUAGES } from "../../../../i18n/constants/SupportedLanguages";
+import { useLanguage } from "../../../../core/utils/i18n/hooks/useLanguage";
+import { SUPPORTED_LANGUAGES } from "../../../../core/utils/i18n/constants/SupportedLanguages";
 import { getTypography } from "../../../../core/constants/typography";
 
 export function LanguageSelector() {

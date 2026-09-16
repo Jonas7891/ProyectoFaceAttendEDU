@@ -34,7 +34,7 @@ import {
     AuthAnimatedLayout,
 } from "./components/auth";
 import { useLoginViewModel } from "../viewmodels/useAuthViewModel";
-import { useTranslation }    from "../i18n/hooks/useTranslation";
+import { useTranslation }    from "../core/utils/i18n/hooks/useTranslation";
 
 
 export default function LoginView({

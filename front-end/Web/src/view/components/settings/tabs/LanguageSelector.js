@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { View } from "react-native";
 import { AnimatedDropdown } from "../../common/animation/AnimatedDropdown";
-import { useTranslation } from "../../../../i18n/hooks/useTranslation";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 
 /**
  * LanguageSelector - Selector de idioma

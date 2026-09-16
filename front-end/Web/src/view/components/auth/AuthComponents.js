@@ -7,7 +7,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { useTheme }       from "../hooks/useTheme";
-import { useTranslation } from "../../../i18n/hooks/useTranslation";
+import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 
 // ── AuthFooterLink ───────────────────────────────────────────
 

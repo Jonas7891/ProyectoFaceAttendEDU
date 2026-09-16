@@ -14,7 +14,7 @@ import { Card, Button, ToggleRow, Divider } from "../../components/common";
 import { PeriodExpirationAlert } from "../../components/settings/PeriodExpirationAlert";
 import { useTheme } from "../../components/hooks/useTheme";
 import { useResponsive } from "../../components/hooks/useResponsive";
-import { useTranslation } from "../../../i18n/hooks/useTranslation";
+import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import {
     ModeSelector,
     LanguageSelector,

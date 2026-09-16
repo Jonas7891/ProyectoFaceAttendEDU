@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import Slider from "@react-native-community/slider";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
-import { useTranslation } from "../../../../i18n/hooks/useTranslation";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import {
     VISION_PRESETS,
     VISION_MODES,

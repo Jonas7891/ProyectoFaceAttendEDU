@@ -28,7 +28,7 @@ import { useTheme }               from "./components/hooks/useTheme";
 import { useResponsive }          from "./components/hooks/useResponsive";
 import { useStudentsViewModel }   from "../viewmodels/useStudentsViewModel";
 import { useRolePermissions }     from "../viewmodels/useRolePermissions";
-import { useTranslation }         from "../i18n/hooks/useTranslation";
+import { useTranslation }         from "../core/utils/i18n/hooks/useTranslation";
 import RegisterStudentModal       from "./components/students/RegisterStudentModal";
 import ImportStudentsModal        from "./components/students/ImportStudentsModal";
 import StudentDetailModal         from "./components/students/StudentDetailModal";

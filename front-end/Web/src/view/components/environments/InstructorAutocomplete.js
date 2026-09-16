@@ -3,11 +3,11 @@
 // ============================================================
 
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, TextInput as RNTextInput } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Badge } from "../common";
-import TextInput from "../common/inputs/TextInput";
 import { useTheme } from "../hooks/useTheme";
+import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 
 /**
  * Campo de autocompletado para buscar y seleccionar instructores
@@ -17,31 +17,31 @@ import { useTheme } from "../hooks/useTheme";
  * @param {function} onSelect - Callback al seleccionar un instructor
  * @param {function} searchFn - Función de búsqueda que retorna resultados
  * @param {boolean} error - Si hay error de validación
- * @param {function} t - Función de traducción
  */
-export function InstructorAutocomplete({ query, onChangeQuery, onSelect, searchFn, error, t }) {
+export function InstructorAutocomplete({ query, onChangeQuery, onSelect, searchFn, error }) {
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const c = theme.colors;
     const [open, setOpen] = useState(false);
     const results = searchFn(query);
 
     return (
-        <View style={{ marginBottom: 14 }}>
+        <View style={{ marginBottom: 16 }}>
             <Text style={{
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: "600",
                 color: error ? c.status.danger : c.text.secondary,
-                marginBottom: 6,
+                marginBottom: 8,
             }}>
                 {t("Instructor / Docente encargado")} *
             </Text>
             
             <View style={{ position: "relative" }}>
-                <View style={{ position: "absolute", left: 12, top: 12, zIndex: 1 }}>
+                <View style={{ position: "absolute", left: 14, top: 14, zIndex: 1 }}>
                     <Feather name="search" size={16} color={c.text.secondary} />
                 </View>
                 
-                <TextInput
+                <RNTextInput
                     value={query}
                     onChangeText={(v) => {
                         onChangeQuery(v);
@@ -51,12 +51,12 @@ export function InstructorAutocomplete({ query, onChangeQuery, onSelect, searchF
                     placeholder={t("Buscar instructor por nombre...")}
                     placeholderTextColor={c.text.disabled}
                     style={{
-                        height: 44,
+                        height: 48,
                         borderWidth: 1,
                         borderColor: error ? c.status.danger : c.border.primary,
-                        borderRadius: 8,
-                        paddingLeft: 40,
-                        paddingRight: 12,
+                        borderRadius: 12,
+                        paddingLeft: 44,
+                        paddingRight: 14,
                         fontSize: 14,
                         backgroundColor: c.background.app,
                         color: c.text.primary,
@@ -68,13 +68,13 @@ export function InstructorAutocomplete({ query, onChangeQuery, onSelect, searchF
                 <View style={{
                     borderWidth: 1,
                     borderColor: c.border.primary,
-                    borderRadius: 8,
+                    borderRadius: 12,
                     backgroundColor: c.background.elevated,
-                    marginTop: 8,
+                    marginTop: 10,
                     shadowColor: "#000",
-                    shadowOpacity: 0.1,
-                    shadowRadius: 8,
-                    elevation: 4,
+                    shadowOpacity: 0.12,
+                    shadowRadius: 12,
+                    elevation: 6,
                     zIndex: 100,
                 }}>
                     {results.map((u, i) => (
@@ -88,15 +88,15 @@ export function InstructorAutocomplete({ query, onChangeQuery, onSelect, searchF
                                 flexDirection: "row",
                                 alignItems: "center",
                                 gap: 12,
-                                padding: 12,
+                                padding: 14,
                                 borderBottomWidth: i < results.length - 1 ? 1 : 0,
                                 borderBottomColor: c.border.primary,
                             }}
                         >
                             <View style={{
-                                width: 36,
-                                height: 36,
-                                borderRadius: 8,
+                                width: 40,
+                                height: 40,
+                                borderRadius: 12,
                                 backgroundColor: c.brand.primaryLight,
                                 alignItems: "center",
                                 justifyContent: "center",
@@ -106,9 +106,10 @@ export function InstructorAutocomplete({ query, onChangeQuery, onSelect, searchF
                             
                             <View style={{ flex: 1 }}>
                                 <Text style={{
-                                    fontSize: 14,
+                                    fontSize: 13,
                                     fontWeight: "600",
                                     color: c.text.primary,
+                                    marginBottom: 2,
                                 }}>
                                     {u.name}
                                 </Text>
