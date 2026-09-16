@@ -174,7 +174,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
         setCountryModalVisible,
         setCityModalVisible,
         setShowConfirmModal
-    } = useSchoolConfigurationViewModel({isAdminUser, t});
+    } = useSchoolConfigurationViewModel({isAdmin: isAdminUser, t});
 
     // ─────────────────────────────────────────────
     // Render

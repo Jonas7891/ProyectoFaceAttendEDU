@@ -55,9 +55,21 @@ export const getCurrentUser = async () => {
 
     const user = await getUserByEmail(email);
 
+    let name = null;
+    if (email) {
+      const { request, GET } = require('../api/apiClient');
+      const personData = await request({ method: GET, url: 'person', params: { email }, requiresAuth: false });
+      const personArr = personData && Array.isArray(personData.value) ? personData.value : Array.isArray(personData) ? personData : [];
+      if (personArr.length > 0) {
+        const person = personArr[0];
+        name = [person.name, person.last_name].filter(Boolean).join(' ');
+      }
+    }
+
     return {
       userId: user?.userId || null,
       email: email,
+      name: name,
       roles: role ? [role] : [],
     };
   } catch {
@@ -68,9 +80,7 @@ export const getCurrentUser = async () => {
 export const getCurrentUserRole = async () => {
   try {
     const role = await AsyncStorage.getItem('userRole');
-    if (!role) return null;
-    const { getHighestRole } = require('../utils/getHighestRole');
-    return getHighestRole([role]);
+    return role || null;
   } catch {
     return null;
   }

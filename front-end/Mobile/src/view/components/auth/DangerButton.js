@@ -16,7 +16,7 @@ export default function DangerButton({ title, disabled = false, onLogout }) {
     const handleLogout = async () => {
         try {
             await removeToken();
-            await AsyncStorage.multiRemove(['userRole', 'userEmail', 'authToken', 'appLanguage']);
+            await AsyncStorage.multiRemove(['userRole', 'userEmail', 'appLanguage', 'alertsConfig']);
 
             if (onLogout) {
                 await onLogout();

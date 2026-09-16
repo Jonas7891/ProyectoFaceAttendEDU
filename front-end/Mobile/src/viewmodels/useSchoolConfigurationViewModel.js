@@ -3,7 +3,7 @@ import {useEffect, useState} from 'react';
 import {validateEmail, validatePhone} from "../utils/validators";
 import {CountryService} from "../services/CountryService";
 import {SchoolService} from "../services/SchoolService";
-import {AcademicConfigService} from "../services/AcademicConfigService";
+import {ActorService} from "../services/ActorService";
 import {getCurrentUser, getUserByEmail} from "../services/UserService";
 import School from "../models/academic/School";
 
@@ -29,7 +29,12 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
             const email = userInfo?.email;
             const user = await getUserByEmail(email);
 
-            const school = await SchoolService.getById(user?.personId);
+            const actors = await ActorService.getByPerson(user?.personId);
+            const actor = actors?.length > 0 ? actors[0] : null;
+            const actorSchoolId = actor?.schoolId;
+            if (!actorSchoolId) return;
+
+            const school = await SchoolService.getById(actorSchoolId);
 
             if (school) {
                 const general = {
@@ -51,7 +56,7 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
                 setOriginalData({general, contact, academic: null, attendance: null});
             }
         } catch (error) {
-            console.error('Error cargando datos de usuario:', error);
+            console.error('Error cargando datos del colegio:', error);
         }
     };
 

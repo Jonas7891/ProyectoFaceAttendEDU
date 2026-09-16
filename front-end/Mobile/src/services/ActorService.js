@@ -23,7 +23,7 @@ export const ActorService = {
 
   getById: async (id) => {
     const data = await request({ method: GET, url: `${ENDPOINT}/${id}`, requiresAuth: false });
-    return AcademicActor.fromApi(data);
+    return AcademicActor.fromApi(unwrapFirst(data));
   },
 
   getBySchool: async (schoolId, actorType = null) => {
