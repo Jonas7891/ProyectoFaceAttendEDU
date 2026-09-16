@@ -1,6 +1,7 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import {getCurrentUserRole} from '../services/UserService';
+import {getCurrentUserRole, getCurrentUser} from '../services/UserService';
+import {ActorService} from '../services/ActorService';
 import {request, GET} from '../api/apiClient';
 
 function unwrap(data) {
@@ -68,11 +69,40 @@ export const usePendingJustificationViewModel = () => {
     const [isModalVisible, setModalVisible] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    const fetchJustifications = useCallback(async () => {
+    const fetchJustifications = useCallback(async (role) => {
         try {
             setLoading(true);
+
+            let justificationFilter = {};
+            const normalizedRole = normalizeRole(role);
+            if (normalizedRole === USER_ROLE.STUDENT) {
+                const user = await getCurrentUser();
+                const actors = await ActorService.getByPerson(user?.personId);
+                if (actors?.length > 0) {
+                    const actorId = actors[0].academicActorId;
+                    const arDataAll = await request({ method: GET, url: 'attendance_record', params: { academic_actor_id: actorId }, requiresAuth: false });
+                    const arIds = unwrap(arDataAll).map(r => r.attendance_record_id);
+                    if (arIds.length > 0) {
+                        justificationFilter = { attendance_record_id: arIds[0] };
+                        // For multiple records, fetch justifications matching any of them
+                        // JSON Server doesn't support IN queries, so we fetch all and filter client-side
+                    }
+                }
+            }
+
             const jData = await request({ method: GET, url: 'justification', params: { _limit: 100 }, requiresAuth: false });
-            const records = unwrap(jData);
+            let records = unwrap(jData);
+
+            if (normalizedRole === USER_ROLE.STUDENT) {
+                const user = await getCurrentUser();
+                const actors = await ActorService.getByPerson(user?.personId);
+                if (actors?.length > 0) {
+                    const actorId = actors[0].academicActorId;
+                    const arDataAll = await request({ method: GET, url: 'attendance_record', params: { academic_actor_id: actorId }, requiresAuth: false });
+                    const myArIds = new Set(unwrap(arDataAll).map(r => r.attendance_record_id));
+                    records = records.filter(j => myArIds.has(j.attendance_record_id));
+                }
+            }
 
             const enriched = [];
             for (const j of records) {
@@ -124,13 +154,14 @@ export const usePendingJustificationViewModel = () => {
             try {
                 const role = await getCurrentUserRole();
                 setUserRole(normalizeRole(role));
+                await fetchJustifications(role);
             } catch (error) {
                 console.error('Error cargando rol:', error);
                 setUserRole(USER_ROLE.ADMIN);
+                await fetchJustifications(null);
             }
         };
         init();
-        fetchJustifications();
     }, []);
 
     const baseJustifications = useMemo(() => {

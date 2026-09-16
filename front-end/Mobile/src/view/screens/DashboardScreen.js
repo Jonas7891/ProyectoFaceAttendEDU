@@ -61,12 +61,7 @@ export default function Dashboard({ onLogout, userRole: propUserRole }) {
                                 </Text>
 
                                 <Text style={[styles.adminName, { color: colors.text }]}>
-                                    {isAdmin
-                                        ? t('userRole.administrator')
-                                        : isTeacher
-                                            ? (currentUser?.name || currentUser?.firstName || t('teacher.teacherName'))
-                                            : (currentUser?.name || currentUser?.firstName || t('student.studentName'))
-                                    }
+                                    {currentUser?.name || t('userRole.administrator')}
                                 </Text>
 
                                 <Text style={[styles.date, { color: colors.textSecondary }]}>

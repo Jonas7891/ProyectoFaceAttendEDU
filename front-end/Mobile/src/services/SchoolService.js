@@ -23,7 +23,7 @@ export const SchoolService = {
 
   getById: async (id) => {
     const data = await request({ method: GET, url: `${ENDPOINT}/${id}`, requiresAuth: false });
-    return School.fromApi(data);
+    return School.fromApi(unwrapFirst(data));
   },
 
   create: async (schoolData) => {

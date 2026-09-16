@@ -90,7 +90,7 @@ export default function MenuJustifyScreen() {
               <View style={styles.mainContent}>
                 <Header title={isStudent ? t('justify.title') : t('admin.justificationManagement')} />
 
-                {isStudent || isTeacher ? (
+                {(isStudent || isTeacher) ? (
                     <>
                       <MenuItem label={t('consultJustify.mainTitle')} onPress={handleValidJustifications} />
                       <MenuItem label={t('admin.pendingJustifications')} onPress={handlePendingJustificationScreen} />

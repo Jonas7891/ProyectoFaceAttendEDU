@@ -223,18 +223,11 @@ export default function ProfileScreen() {
         updateKey,
         handleBack,
         toggleTheme,
-        courses,
-        attendanceStats,
-        justifications,
-        iotDevices,
-        teacherSchedules,
-        teacherCourseStats,
-        schoolInfo,
     } = useProfileViewModel();
 
-    const isStudent = userRole === 'Estudiante';
-    const isTeacher = userRole === 'Profesor';
-    const isAdmin   = userRole === 'Administrador';
+    const isStudent = (userRole || '').toLowerCase().includes('estudiante') || (userRole || '').toLowerCase().includes('student');
+    const isTeacher = (userRole || '').toLowerCase().includes('docente') || (userRole || '').toLowerCase().includes('teacher') || (userRole || '').toLowerCase().includes('instructor');
+    const isAdmin   = (userRole || '').toLowerCase().includes('admin');
     const isDark    = theme === 'dark';
 
     const initials = userInfo?.name

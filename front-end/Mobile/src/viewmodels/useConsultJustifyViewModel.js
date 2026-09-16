@@ -2,6 +2,8 @@ import {useCallback, useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useNavigation} from '@react-navigation/native';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
+import {getCurrentUser} from '../services/UserService';
+import {ActorService} from '../services/ActorService';
 import {request, GET} from '../api/apiClient';
 
 function unwrap(data) {
@@ -31,8 +33,19 @@ export function useValidJustificationsViewModel() {
         const fetchData = async () => {
             try {
                 setIsLoading(true);
+
+                const user = await getCurrentUser();
+                const actors = await ActorService.getByPerson(user?.personId);
+                const actorId = actors?.length > 0 ? actors[0].academicActorId : null;
+
                 const jData = await request({ method: GET, url: 'justification', params: { _limit: 100 }, requiresAuth: false });
-                const records = unwrap(jData);
+                let records = unwrap(jData);
+
+                if (actorId) {
+                    const arDataAll = await request({ method: GET, url: 'attendance_record', params: { academic_actor_id: actorId }, requiresAuth: false });
+                    const myArIds = new Set(unwrap(arDataAll).map(r => r.attendance_record_id));
+                    records = records.filter(j => myArIds.has(j.attendance_record_id));
+                }
 
                 const absences = [];
                 const lates = [];

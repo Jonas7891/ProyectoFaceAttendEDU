@@ -4,6 +4,7 @@ import {useTheme} from '../view/components/common/ThemeContext';
 import {getHighestRole} from '../utils/getHighestRole';
 import {useFocusEffect} from '@react-navigation/native';
 import {getCurrentUserRole, getCurrentUser} from "../services/UserService";
+import {ActorService} from '../services/ActorService';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 import {request, GET} from '../api/apiClient';
 
@@ -84,6 +85,15 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                 const currentUser = await getCurrentUser();
                 const userEmail = currentUser?.email;
 
+                let studentActorId = null;
+                if (!isAdmin && userEmail) {
+                    const user = await getCurrentUser();
+                    const actors = await ActorService.getByPerson(user?.personId);
+                    if (actors?.length > 0) {
+                        studentActorId = actors[0].academicActorId;
+                    }
+                }
+
                 if (isAdmin) {
                     const arData = await request({ method: GET, url: 'attendance_record', params: { _limit: 100 }, requiresAuth: false });
                     const records = unwrap(arData);
@@ -107,17 +117,45 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                     }));
                     setAsistenciasRecientes(recentRecords);
                 } else if (isTeacher) {
-                    const arData = await request({ method: GET, url: 'attendance_record', params: { _limit: 100 }, requiresAuth: false });
-                    const records = unwrap(arData);
-                    const present = records.filter(r => r.attendance_status === 'Present').length;
+                    const user = await getCurrentUser();
+                    const actors = await ActorService.getByPerson(user?.personId);
+                    const myActor = actors?.length > 0 ? actors[0] : null;
+
+                    let teacherRecords = [];
+                    if (myActor) {
+                        const blockData = await request({ method: GET, url: 'schedule_block', params: { instructor_actor_id: myActor.academicActorId }, requiresAuth: false });
+                        const blocks = unwrap(blockData);
+                        for (const block of blocks) {
+                            const sessionData = await request({ method: GET, url: 'class_session', params: { schedule_block_id: block.schedule_block_id }, requiresAuth: false });
+                            const sessions = unwrap(sessionData);
+                            for (const session of sessions) {
+                                const arData = await request({ method: GET, url: 'attendance_record', params: { class_session_id: session.class_session_id }, requiresAuth: false });
+                                teacherRecords.push(...unwrap(arData));
+                            }
+                        }
+                    }
+
+                    const present = teacherRecords.filter(r => r.attendance_status === 'Present').length;
+                    const total = teacherRecords.length || 1;
                     setTeacherStats({
                         presentesHoy: present,
-                        totalEstudiantes: records.length,
+                        totalEstudiantes: total,
                         clasesImpartidasHoy: 3,
                         justificacionesPendientes: 4,
                     });
+
+                    const recentRecords = teacherRecords.slice(-4).reverse().map((r, i) => ({
+                        id: i + 1,
+                        nombre: `Registro #${r.attendance_record_id}`,
+                        hora: r.captured_at ? new Date(r.captured_at).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'}) : '—',
+                        estado: r.attendance_status === 'Present' ? 'presente' : r.attendance_status === 'Late' ? 'tarde' : 'ausente',
+                    }));
+                    setAsistenciasRecientes(recentRecords);
                 } else {
-                    const arData = await request({ method: GET, url: 'attendance_record', params: { _limit: 100 }, requiresAuth: false });
+                    const arParams = studentActorId
+                        ? { academic_actor_id: studentActorId, _limit: 100 }
+                        : { _limit: 100 };
+                    const arData = await request({ method: GET, url: 'attendance_record', params: arParams, requiresAuth: false });
                     const records = unwrap(arData);
                     const present = records.filter(r => r.attendance_status === 'Present').length;
                     const total = records.length || 1;
