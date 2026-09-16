@@ -37,7 +37,6 @@ export default function DangerButton({ title, disabled = false, onLogout }) {
 
     return (
         <>
-            {/* Contenedor que asegura la posición inferior y márgenes seguros */}
             <View style={styleAuth.dangerButtonContainer}>
                 <TouchableOpacity
                     style={[styleAuth.dangerButton, disabled && styleAuth.buttonDisabled]}
