@@ -31,8 +31,22 @@ export function useProfileViewModel() {
                 try {
                     const userInfo = await getCurrentUser();
                     const email = userInfo?.email;
-                    const user = getUserByEmail(email);
-                    setUserInfo(user);
+                    const user = await getUserByEmail(email);
+                    setUserInfo(user ? {
+                        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username || '',
+                        email: user.email || email || '',
+                        role: userRole || '',
+                        joinDate: user.createdAt || '',
+                        colegio: '',
+                        employeeId: user.userId || '',
+                    } : {
+                        name: '',
+                        email: email || '',
+                        role: userRole || '',
+                        joinDate: '',
+                        colegio: '',
+                        employeeId: '',
+                    });
 
                     if (user && user.role) {
                         await loadThemeForRole(user.role);
@@ -70,7 +84,14 @@ export function useProfileViewModel() {
         updateKey,
         isLoading,
         handleBack,
-        performLogout,      // La pantalla debe confirmar antes de llamar a esto
+        performLogout,
         toggleTheme,
+        courses: [],
+        attendanceStats: null,
+        justifications: [],
+        iotDevices: [],
+        teacherSchedules: [],
+        teacherCourseStats: [],
+        schoolInfo: null,
     };
 }
