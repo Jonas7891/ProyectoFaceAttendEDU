@@ -116,7 +116,14 @@ export default function RegisterFace() {
                 )}
             </View>
 
-            <CustomAlert {...alertConfig} onDismiss={hideAlert}/>
+            <CustomAlert
+                visible={alertConfig.visible}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                buttons={alertConfig.buttons}
+                type={alertConfig.type}
+                onClose={hideAlert}
+            />
         </SafeAreaView>
     );
 }

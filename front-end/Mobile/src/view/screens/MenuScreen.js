@@ -150,7 +150,7 @@ export default function MenuScreen({ onLogout }) {
 
                                 <MenuItem label={t('menu.appSettings')} onPress={handleSettings} />
 
-                                {isStudent || isTeacher && (
+                                {(isStudent || isTeacher) && (
                                     <MenuItem
                                         label={t('menu.facialRecognitionFail')}
                                         onPress={handleFacialFail}

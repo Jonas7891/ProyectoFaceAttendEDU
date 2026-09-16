@@ -147,8 +147,12 @@ export default function FacialFail() {
             />
 
             <CustomAlert
-                {...alertConfig}
-                onDismiss={hideAlert}
+                visible={alertConfig.visible}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                buttons={alertConfig.buttons}
+                type={alertConfig.type}
+                onClose={hideAlert}
             />
         </SafeAreaView>
     );
