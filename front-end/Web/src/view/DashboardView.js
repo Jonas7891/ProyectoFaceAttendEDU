@@ -93,7 +93,7 @@ function getWeeklyTrendSubtitle(periodType, t) {
     // Agregar indicador si es configuración manual
     const manualIndicator = currentPeriod.isManual ? ` ${t("(Manual)")}` : "";
     
-    return `${periodLabel}${manualIndicator} (${config.label}) • ${t("Selecciona para ver detalles")}`;
+    return `${periodLabel}${manualIndicator} (${t(config.labelKey)}) • ${t("Selecciona para ver detalles")}`;
 }
 
 // ──────────────────────────────────────────────────────────────

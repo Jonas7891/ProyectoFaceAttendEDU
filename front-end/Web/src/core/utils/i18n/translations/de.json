@@ -523,5 +523,28 @@
   
   "TESTIMONIOS": "ERFAHRUNGSBERICHTE",
   "Comenzar gratis": "Kostenlos beginnen",
-  "Ver demo": "Demo ansehen"
+  "Ver demo": "Demo ansehen",
+  
+  "Anual": "Jährlich",
+  "Semestral": "Halbjährlich",
+  "Cuatrimestral": "Viermonatlich",
+  "Trimestral": "Vierteljährlich",
+  "Período académico completo de un año": "Vollständiger akademischer Zeitraum von einem Jahr",
+  "Período académico de medio año": "Akademischer Zeitraum von einem halben Jahr",
+  "Período académico de cuatro meses": "Akademischer Zeitraum von vier Monaten",
+  "Período académico de tres meses": "Akademischer Zeitraum von drei Monaten",
+  "Seleccionar período": "Zeitraum auswählen",
+  "Configuración del período académico actual": "Konfiguration des aktuellen akademischen Zeitraums",
+  "Define las fechas del período actual. En modo automático, se calculará el próximo período basándose en la duración del actual.": "Legen Sie die Daten des aktuellen Zeitraums fest. Im automatischen Modus wird der nächste Zeitraum basierend auf der Dauer des aktuellen berechnet.",
+  "Auto": "Auto",
+  "Sugerir fechas": "Daten vorschlagen",
+  "Modo Automático Activado": "Automatischer Modus aktiviert",
+  "Modo Manual Activado": "Manueller Modus aktiviert",
+  "Al finalizar el período actual, el sistema calculará automáticamente las fechas del próximo período basándose en la duración del actual y actualizará la configuración.": "Nach Abschluss des aktuellen Zeitraums berechnet das System automatisch die Daten des nächsten Zeitraums basierend auf der Dauer des aktuellen und aktualisiert die Konfiguration.",
+  "Al finalizar el período actual, recibirás una alerta para que configures manualmente las fechas del nuevo período. El sistema NO actualizará las fechas automáticamente.": "Nach Abschluss des aktuellen Zeitraums erhalten Sie eine Warnung, um die Daten des neuen Zeitraums manuell zu konfigurieren. Das System wird die Daten NICHT automatisch aktualisieren.",
+  "Período detectado por división del año:": "Durch Jahresaufteilung erkannter Zeitraum:",
+  "Este cálculo se basa en dividir el año calendario según el tipo de período seleccionado.": "Diese Berechnung basiert auf der Aufteilung des Kalenderjahres nach dem gewählten Zeitraumtyp.",
+  "Trimestre": "Quartal",
+  "Días de inasistencia para sanción": "Abwesenheitstage für Sanktion",
+  "Número de días de ausencia que activa alerta de sanción": "Anzahl der Abwesenheitstage, die Sanktionswarnung auslöst"
 }

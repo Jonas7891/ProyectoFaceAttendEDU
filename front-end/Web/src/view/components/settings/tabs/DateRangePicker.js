@@ -13,7 +13,7 @@
 // ============================================================
 
 import React, { useState, useMemo } from "react";
-import { View, Text, TextInput, Pressable } from "react-native";
+import { View, Text, TextInput } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
@@ -28,6 +28,7 @@ import { ACADEMIC_PERIOD_TYPES } from "../../../../core/constants/academicPeriod
  * @param {function} props.onStartDateChange - Callback cuando cambia fecha inicio
  * @param {function} props.onEndDateChange - Callback cuando cambia fecha fin
  * @param {string} props.periodType - Tipo de período (trimestral, semestral, etc.)
+ * @param {function} props.onSuggestDatesRef - Ref para exponer la función suggestDates (opcional)
  */
 export function DateRangePicker({
     startDate,
@@ -35,6 +36,7 @@ export function DateRangePicker({
     onStartDateChange,
     onEndDateChange,
     periodType = ACADEMIC_PERIOD_TYPES.TRIMESTRAL,
+    onSuggestDatesRef,
 }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
@@ -194,6 +196,13 @@ export function DateRangePicker({
         onEndDateChange(end.toISOString().split('T')[0]);
     };
 
+    // Exponer suggestDates al componente padre si se proporciona la ref
+    React.useEffect(() => {
+        if (onSuggestDatesRef) {
+            onSuggestDatesRef(suggestDates);
+        }
+    }, [onSuggestDatesRef, maxDurationMonths]);
+
     const inputStyle = {
         height: 44,
         borderWidth: 1.5,
@@ -317,31 +326,6 @@ export function DateRangePicker({
                     )}
                 </View>
             </View>
-            {/* Botón de sugerencia automática */}
-            <Pressable
-                onPress={suggestDates}
-                style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 6,
-                    paddingVertical: 8,
-                    paddingHorizontal: 12,
-                    backgroundColor: c.brand.primaryLight,
-                    borderRadius: 10,
-                    alignSelf: "flex-start",
-                }}
-            >
-                <Feather name="zap" size={14} color={c.brand.primary} />
-                <Text
-                    style={{
-                        fontSize: 11,
-                        fontWeight: "600",
-                        color: c.brand.primary,
-                    }}
-                >
-                    {t("Sugerir fechas automáticamente")}
-                </Text>
-            </Pressable>
             {/* Indicador de validación y estadísticas */}
             <View
                 style={{

@@ -523,5 +523,28 @@
   
   "TESTIMONIOS": "TESTIMONIALS",
   "Comenzar gratis": "Get started free",
-  "Ver demo": "View demo"
+  "Ver demo": "View demo",
+  
+  "Anual": "Annual",
+  "Semestral": "Semester",
+  "Cuatrimestral": "Quarterly",
+  "Trimestral": "Trimester",
+  "Período académico completo de un año": "Full academic period of one year",
+  "Período académico de medio año": "Academic period of half a year",
+  "Período académico de cuatro meses": "Academic period of four months",
+  "Período académico de tres meses": "Academic period of three months",
+  "Seleccionar período": "Select period",
+  "Configuración del período académico actual": "Current academic period configuration",
+  "Define las fechas del período actual. En modo automático, se calculará el próximo período basándose en la duración del actual.": "Define the dates of the current period. In automatic mode, the next period will be calculated based on the duration of the current one.",
+  "Auto": "Auto",
+  "Sugerir fechas": "Suggest dates",
+  "Modo Automático Activado": "Automatic Mode Activated",
+  "Modo Manual Activado": "Manual Mode Activated",
+  "Al finalizar el período actual, el sistema calculará automáticamente las fechas del próximo período basándose en la duración del actual y actualizará la configuración.": "At the end of the current period, the system will automatically calculate the dates for the next period based on the current duration and update the configuration.",
+  "Al finalizar el período actual, recibirás una alerta para que configures manualmente las fechas del nuevo período. El sistema NO actualizará las fechas automáticamente.": "At the end of the current period, you will receive an alert to manually configure the dates for the new period. The system will NOT automatically update the dates.",
+  "Período detectado por división del año:": "Period detected by year division:",
+  "Este cálculo se basa en dividir el año calendario según el tipo de período seleccionado.": "This calculation is based on dividing the calendar year according to the selected period type.",
+  "Trimestre": "Quarter",
+  "Días de inasistencia para sanción": "Absence days for sanction",
+  "Número de días de ausencia que activa alerta de sanción": "Number of absence days that triggers sanction alert"
 }

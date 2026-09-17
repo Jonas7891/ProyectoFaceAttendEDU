@@ -118,6 +118,16 @@ export function AdminSettings({
         return checkPeriodExpiration();
     }, [periodStartDate, periodEndDate, configLoaded]);
 
+    // Ref para almacenar la función suggestDates del DateRangePicker
+    const suggestDatesRef = React.useRef(null);
+
+    // Handler que llama a la función del DateRangePicker
+    const handleSuggestDates = () => {
+        if (suggestDatesRef.current) {
+            suggestDatesRef.current();
+        }
+    };
+
     // Mostrar alerta automáticamente cuando el período expira o está por expirar
     React.useEffect(() => {
         if (periodExpiration && (periodExpiration.hasExpired || periodExpiration.isExpiringSoon)) {
@@ -279,7 +289,8 @@ export function AdminSettings({
                         <View style={{ 
                             flexDirection: "row", 
                             gap: 8, 
-                            marginBottom: 16
+                            marginBottom: 16,
+                            flexWrap: "wrap"
                         }}>
                             <Button
                                 variant={isAutomaticPeriod ? "primary" : "outline"}
@@ -320,6 +331,28 @@ export function AdminSettings({
                                     {t("Manual")}
                                 </Text>
                             </Button>
+
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onPress={handleSuggestDates}
+                                style={{ 
+                                    backgroundColor: c.brand.primaryLight,
+                                }}
+                            >
+                                <Feather 
+                                    name="calendar" 
+                                    size={14} 
+                                    color={c.brand.primary}
+                                />
+                                <Text style={{
+                                    fontSize: 13,
+                                    fontWeight: "600",
+                                    color: c.brand.primary,
+                                }}>
+                                    {t("Sugerir fechas")}
+                                </Text>
+                            </Button>
                         </View>
 
                         {/* Selector de fechas */}
@@ -329,6 +362,7 @@ export function AdminSettings({
                             onStartDateChange={setPeriodStartDate}
                             onEndDateChange={setPeriodEndDate}
                             periodType={academicPeriodType}
+                            onSuggestDatesRef={(fn) => { suggestDatesRef.current = fn; }}
                         />
 
                         {/* Información sobre el modo seleccionado */}
@@ -619,7 +653,7 @@ export function AdminSettings({
                         <Divider />
                         <StatsRow
                             label={t("Período académico")}
-                            value={ACADEMIC_PERIOD_CONFIG[academicPeriodType]?.label || t("Sin definir")}
+                            value={t(ACADEMIC_PERIOD_CONFIG[academicPeriodType]?.labelKey) || t("Sin definir")}
                             icon="book-open"
                             color="#F59E0B"
                         />

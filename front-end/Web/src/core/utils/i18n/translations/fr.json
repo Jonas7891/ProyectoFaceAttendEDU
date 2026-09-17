@@ -523,5 +523,28 @@
   
   "TESTIMONIOS": "TÉMOIGNAGES",
   "Comenzar gratis": "Commencer gratuitement",
-  "Ver demo": "Voir démo"
+  "Ver demo": "Voir démo",
+  
+  "Anual": "Annuel",
+  "Semestral": "Semestriel",
+  "Cuatrimestral": "Quadrimestriel",
+  "Trimestral": "Trimestriel",
+  "Período académico completo de un año": "Période académique complète d'un an",
+  "Período académico de medio año": "Période académique d'un semestre",
+  "Período académico de cuatro meses": "Période académique de quatre mois",
+  "Período académico de tres meses": "Période académique de trois mois",
+  "Seleccionar período": "Sélectionner la période",
+  "Configuración del período académico actual": "Configuration de la période académique actuelle",
+  "Define las fechas del período actual. En modo automático, se calculará el próximo período basándose en la duración del actual.": "Définissez les dates de la période actuelle. En mode automatique, la prochaine période sera calculée en fonction de la durée de la période actuelle.",
+  "Auto": "Auto",
+  "Sugerir fechas": "Suggérer des dates",
+  "Modo Automático Activado": "Mode Automatique Activé",
+  "Modo Manual Activado": "Mode Manuel Activé",
+  "Al finalizar el período actual, el sistema calculará automáticamente las fechas del próximo período basándose en la duración del actual y actualizará la configuración.": "À la fin de la période actuelle, le système calculera automatiquement les dates de la prochaine période en fonction de la durée actuelle et mettra à jour la configuration.",
+  "Al finalizar el período actual, recibirás una alerta para que configures manualmente las fechas del nuevo período. El sistema NO actualizará las fechas automáticamente.": "À la fin de la période actuelle, vous recevrez une alerte pour configurer manuellement les dates de la nouvelle période. Le système ne mettra PAS à jour les dates automatiquement.",
+  "Período detectado por división del año:": "Période détectée par division de l'année :",
+  "Este cálculo se basa en dividir el año calendario según el tipo de período seleccionado.": "Ce calcul est basé sur la division de l'année calendaire selon le type de période sélectionné.",
+  "Trimestre": "Trimestre",
+  "Días de inasistencia para sanción": "Jours d'absence pour sanction",
+  "Número de días de ausencia que activa alerta de sanción": "Nombre de jours d'absence qui déclenche une alerte de sanction"
 }

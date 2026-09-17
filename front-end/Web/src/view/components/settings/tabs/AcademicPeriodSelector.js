@@ -17,8 +17,8 @@ export function AcademicPeriodSelector({ value, onChange }) {
     const items = useMemo(() => {
         return Object.entries(ACADEMIC_PERIOD_CONFIG).map(([key, config]) => ({
             value: key,
-            label: config.label,
-            description: `${config.defaultWeeks} ${t("semanas")} • ${config.description}`,
+            label: t(config.labelKey),
+            description: `${config.defaultWeeks} ${t("semanas")} • ${t(config.descriptionKey)}`,
             icon: "calendar",
         }));
     }, [t]);

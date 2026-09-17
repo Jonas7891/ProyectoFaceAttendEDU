@@ -24,32 +24,36 @@ export const ACADEMIC_PERIOD_TYPES = {
  */
 export const ACADEMIC_PERIOD_CONFIG = {
     [ACADEMIC_PERIOD_TYPES.ANNUAL]: {
-        label: 'Anual',
+        labelKey: 'Anual',
         minWeeks: 30,
         maxWeeks: 34,
         defaultWeeks: 32,
-        description: 'Período académico completo de un año',
+        descriptionKey: 'Período académico completo de un año',
+        durationMonths: 12,
     },
     [ACADEMIC_PERIOD_TYPES.SEMESTRAL]: {
-        label: 'Semestral',
+        labelKey: 'Semestral',
         minWeeks: 16,
         maxWeeks: 18,
         defaultWeeks: 17,
-        description: 'Período académico de medio año',
+        descriptionKey: 'Período académico de medio año',
+        durationMonths: 6,
     },
     [ACADEMIC_PERIOD_TYPES.QUARTERLY]: {
-        label: 'Cuatrimestral',
+        labelKey: 'Cuatrimestral',
         minWeeks: 14,
         maxWeeks: 15,
         defaultWeeks: 14,
-        description: 'Período académico de cuatro meses',
+        descriptionKey: 'Período académico de cuatro meses',
+        durationMonths: 4,
     },
     [ACADEMIC_PERIOD_TYPES.TRIMESTRAL]: {
-        label: 'Trimestral',
+        labelKey: 'Trimestral',
         minWeeks: 10,
         maxWeeks: 12,
         defaultWeeks: 11,
-        description: 'Período académico de tres meses',
+        descriptionKey: 'Período académico de tres meses',
+        durationMonths: 3,
     },
 };
 
