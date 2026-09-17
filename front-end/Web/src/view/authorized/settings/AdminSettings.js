@@ -1,11 +1,3 @@
-// ============================================================
-//  FaceAttend EDU — AdminSettings
-//
-//  Configuración completa para administradores.
-//  Incluye todas las secciones: general, facial, notificaciones,
-//  seguridad y apariencia.
-// ============================================================
-
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput } from "react-native";
 import Slider from "@react-native-community/slider";
@@ -242,6 +234,25 @@ export function AdminSettings({
                     <Text style={descStyle}>
                         {t("El nombre aparece en reportes y correos. El identificador se usa en la URL. El tipo de período define cómo se divide el año lectivo.")}
                     </Text>
+
+                    <Divider />
+
+                    {/* Idioma de la aplicación */}
+                    <View style={{
+                        flexDirection: "row",
+                        alignItems: "flex-start",
+                        gap: 12
+                    }}>
+                        <View style={{ flex: 1 }}>
+                            <Text style={labelStyle}>
+                                {t("Idioma de la aplicación")}
+                            </Text>
+                            <Text style={[descStyle, { marginTop: 0 }]}>
+                                {t("Traduce toda la interfaz automáticamente. El español es el idioma original de FaceAttend EDU.")}
+                            </Text>
+                        </View>
+                        <LanguageSelector />
+                    </View>
 
                     <Divider />
 
@@ -532,23 +543,6 @@ export function AdminSettings({
                     </View>
 
                     <Divider />
-
-                    {/* Idioma de la aplicación */}
-                    <View style={{
-                        flexDirection: "row",
-                        alignItems: "flex-start",
-                        gap: 12
-                    }}>
-                        <View style={{ flex: 1 }}>
-                            <Text style={labelStyle}>
-                                {t("Idioma de la aplicación")}
-                            </Text>
-                            <Text style={[descStyle, { marginTop: 0 }]}>
-                                {t("Traduce toda la interfaz automáticamente. El español es el idioma original de FaceAttend EDU.")}
-                            </Text>
-                        </View>
-                        <LanguageSelector />
-                    </View>
 
                     {/* Días para sanción */}
                     <View>

@@ -1,12 +1,3 @@
-// ============================================================
-//  FaceAttend EDU — StudentSettings
-//
-//  Configuración para estudiantes.
-//  Incluye solo: seguridad y apariencia.
-//  NO incluye: configuración general, reconocimiento facial 
-//  ni notificaciones (los estudiantes no reciben notificaciones).
-// ============================================================
-
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput } from "react-native";
 import { Feather } from "@expo/vector-icons";

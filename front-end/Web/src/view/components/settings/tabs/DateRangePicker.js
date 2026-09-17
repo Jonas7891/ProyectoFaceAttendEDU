@@ -91,6 +91,30 @@ export function DateRangePicker({
 
     // Validar rango de fechas completo
     const validation = useMemo(() => {
+        // Primero: validar formato si al menos una fecha está ingresada
+        if (startDate && !isValidDateFormat(startDate)) {
+            return {
+                isValid: false,
+                days: 0,
+                weeks: 0,
+                months: 0,
+                message: t("Formato de fecha inválido (usa AAAA-MM-DD)"),
+                type: "error",
+            };
+        }
+
+        if (endDate && !isValidDateFormat(endDate)) {
+            return {
+                isValid: false,
+                days: 0,
+                weeks: 0,
+                months: 0,
+                message: t("Formato de fecha inválido (usa AAAA-MM-DD)"),
+                type: "error",
+            };
+        }
+
+        // Segundo: verificar que ambas fechas estén completas
         if (!startDate || !endDate) {
             return {
                 isValid: false,
@@ -99,17 +123,6 @@ export function DateRangePicker({
                 months: 0,
                 message: t("Selecciona ambas fechas"),
                 type: "info",
-            };
-        }
-
-        if (!isValidDateFormat(startDate) || !isValidDateFormat(endDate)) {
-            return {
-                isValid: false,
-                days: 0,
-                weeks: 0,
-                months: 0,
-                message: t("Formato de fecha inválido (usa AAAA-MM-DD)"),
-                type: "error",
             };
         }
 
@@ -234,9 +247,9 @@ export function DateRangePicker({
     return (
         <View style={{ gap: 12 }}>
             {/* Campos de entrada de fecha */}
-            <View style={{ flexDirection: "row", gap: 12 }}>
+            <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
                 {/* Fecha de inicio */}
-                <View style={{ flex: 1 }}>
+                <View style={{ width: 120 }}>
                     <Text style={labelStyle}>{t("Fecha de inicio")}</Text>
                     <View style={{ position: "relative" }}>
                         <TextInput
@@ -268,20 +281,9 @@ export function DateRangePicker({
                             </View>
                         )}
                     </View>
-                    {startDateError && (
-                        <Text
-                            style={{
-                                fontSize: 11,
-                                color: c.status.danger,
-                                marginTop: 4,
-                            }}
-                        >
-                            {startDateError}
-                        </Text>
-                    )}
                 </View>
                 {/* Fecha de fin */}
-                <View style={{ flex: 1 }}>
+                <View style={{ width: 120 }}>
                     <Text style={labelStyle}>{t("Fecha de fin")}</Text>
                     <View style={{ position: "relative" }}>
                         <TextInput
@@ -313,96 +315,78 @@ export function DateRangePicker({
                             </View>
                         )}
                     </View>
-                    {endDateError && (
-                        <Text
-                            style={{
-                                fontSize: 11,
-                                color: c.status.danger,
-                                marginTop: 4,
-                            }}
-                        >
-                            {endDateError}
-                        </Text>
-                    )}
                 </View>
-            </View>
-            {/* Indicador de validación y estadísticas */}
-            <View
-                style={{
-                    backgroundColor:
-                        validation.type === "success"
-                            ? c.status.successLight
-                            : validation.type === "error"
-                            ? c.status.dangerLight
-                            : c.status.infoLight,
-                    borderRadius: 14,
-                    padding: 12,
-                    flexDirection: "row",
-                    gap: 8,
-                }}
-            >
-                <Feather
-                    name={
-                        validation.type === "success"
-                            ? "check-circle"
-                            : validation.type === "error"
-                            ? "alert-circle"
-                            : "info"
-                    }
-                    size={16}
-                    color={
-                        validation.type === "success"
-                            ? c.status.success
-                            : validation.type === "error"
-                            ? c.status.danger
-                            : c.status.info
-                    }
-                    style={{ marginTop: 1 }}
-                />
-                <View style={{ flex: 1 }}>
-                    <Text
+
+                {/* Indicador de validación y estadísticas - como tercer campo */}
+                <View style={{ alignSelf: "flex-start" }}>
+                    <Text style={labelStyle}>{" "}</Text>
+                    <View
                         style={{
-                            fontSize: 11,
-                            fontWeight: "600",
-                            color:
+                            backgroundColor:
                                 validation.type === "success"
-                                    ? "#065F46"
+                                    ? c.status.successLight
                                     : validation.type === "error"
-                                    ? "#991B1B"
-                                    : "#1E3A8A",
-                            marginBottom: validation.isValid ? 6 : 0,
+                                    ? c.status.dangerLight
+                                    : c.status.infoLight,
+                            borderRadius: 14,
+                            padding: 12,
+                            flexDirection: "row",
+                            gap: 8,
+                            height: 44,
+                            alignItems: "center",
                         }}
                     >
-                        {validation.message}
-                    </Text>
-                    {validation.isValid && (
-                        <View style={{ flexDirection: "row", gap: 16 }}>
+                        <Feather
+                            name={
+                                validation.type === "success"
+                                    ? "check-circle"
+                                    : validation.type === "error"
+                                    ? "alert-circle"
+                                    : "info"
+                            }
+                            size={16}
+                            color={
+                                validation.type === "success"
+                                    ? c.status.success
+                                    : validation.type === "error"
+                                    ? c.status.danger
+                                    : c.status.info
+                            }
+                        />
+                        <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
                             <Text
                                 style={{
                                     fontSize: 11,
-                                    color: "#065F46",
+                                    fontWeight: "600",
+                                    color:
+                                        validation.type === "success"
+                                            ? "#065F46"
+                                            : validation.type === "error"
+                                            ? "#991B1B"
+                                            : "#1E3A8A",
                                 }}
                             >
-                                📅 {validation.days} {t("días")}
-                            </Text>
-                            <Text
-                                style={{
-                                    fontSize: 11,
-                                    color: "#065F46",
-                                }}
-                            >
-                                📊 {validation.weeks} {t("semanas")}
-                            </Text>
-                            <Text
-                                style={{
-                                    fontSize: 11,
-                                    color: "#065F46",
-                                }}
-                            >
-                                📆 ~{validation.months} {t("meses")}
+                                {validation.isValid ? (
+                                    <>
+                                        <Text>✓ </Text>
+                                        <Text style={{ fontSize: 11, color: "#065F46" }}>
+                                            📅 {validation.days} {t("días")}
+                                        </Text>
+                                        <Text> · </Text>
+                                        <Text style={{ fontSize: 11, color: "#065F46" }}>
+                                            📊 {validation.weeks} {t("semanas")}
+                                        </Text>
+                                        <Text> · </Text>
+                                        <Text style={{ fontSize: 11, color: "#065F46" }}>
+                                            📆 ~{validation.months} {t("meses")}
+                                        </Text>
+                                    </>
+                                ) : (
+                                    validation.message
+                                )}
                             </Text>
                         </View>
-                    )}
+                    </View>
                 </View>
             </View>
         </View>
