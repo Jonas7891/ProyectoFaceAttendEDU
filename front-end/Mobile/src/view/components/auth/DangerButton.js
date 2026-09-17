@@ -44,7 +44,6 @@ export default function DangerButton({ title, disabled = false, onLogout }) {
                 </TouchableOpacity>
             </View>
 
-            {/* Solo para mostrar errores, sin confirmación */}
             <CustomAlert
                 visible={alertConfig.visible}
                 title={alertConfig.title}
