@@ -48,6 +48,7 @@
     "errorEmail": "Please enter your email",
     "errorPassword": "Please enter your password",
     "invalidCredentials": "Invalid credentials",
+    "connectionError": "Could not connect to the server. Check your internet connection and try again.",
     "loginError": "An error occurred while logging in",
     "acceptTerms": "Accept the terms and conditions",
     "forgotPassword": "Forgot password?"
@@ -166,7 +167,7 @@
     "title": "Photo for Initial Facial Recognition",
     "instructions": "Center your face so that it covers most of the camera for better scanning and recognition speed.",
     "registerFacialParams": "Register Facial Parameters",
-    "facialParamsRegistered": "☏ Parameters Registered"
+    "facialParamsRegistered": "Parameters Registered"
   },
   "facialFail": {
     "title": "Facial Recognition Failed",
@@ -481,7 +482,8 @@
     "science": "Science",
     "spanish": "Spanish",
     "english": "English",
-    "physicalEducation": "Physical Education"
+    "physicalEducation": "Physical Education",
+    "general": "General"
   },
   "time": {
     "today": "Today",
@@ -588,9 +590,9 @@
       "successTitle": "Password updated",
       "title": "Change password"
     },
-    "pendingJustifications": "pendingJustifications",
-    "phone": "phone",
-    "present": "present",
+    "pendingJustifications": "Pending justifications",
+    "phone": "Phone",
+    "present": "Present",
     "profileModal": {
       "cancel": "Cancel",
       "editTitle": "Edit profile",
@@ -736,7 +738,7 @@
       "critical": "Critical",
       "warning": "At limit"
     },
-    "searchPlaceholder": "Search by name, code or subject⬦",
+    "searchPlaceholder": "Search by name, code or subject…",
     "noResults": "No {{role}} exceed the {{type}} limit with the current filters.",
     "resultsCount": "{{count}} {{role}} found",
     "generateReport": "Generate general report ({{count}})",
@@ -757,27 +759,27 @@
   },
   "validation": {
     "title": "Incomplete fields",
-    "descriptionRequired": "descriptionRequired",
-    "selectCategoryAndType": "selectCategoryAndType"
+    "descriptionRequired": "Description is required",
+    "selectCategoryAndType": "Select a category and a type"
   },
   "languageSettings": {
-    "appearance": "Apariencia",
-    "themeSelection": "Selecciona el tema de la aplicación",
-    "alertSettings": "Configuración de Alertas",
-    "customizeAlerts": "Personaliza qué tipos de alertas deseas recibir",
-    "configureAlerts": "Configurar Alertas",
-    "alertTypes": "Selecciona qué tipos de alertas deseas ver",
-    "successConfirmations": "Confirmación de operaciones exitosas",
-    "errorAlerts": "Alertas de Error",
-    "errorNotifications": "Notificaciones de errores y problemas",
-    "warningAlerts": "Alertas de Advertencia",
-    "confirmationAlerts": "Alertas de Confirmación",
-    "confirmationRequests": "Solicitudes de confirmación de acciones",
-    "generalAlerts": "Alertas Generales",
-    "generalMessages": "Mensajes informativos generales",
-    "iotAlerts": "Alertas en Dispositivos IoT",
-    "iotMessages": "Mensajes sobre los dispositivos de escaneo facial",
-    "closeButton": "Cerrar"
+    "appearance": "Appearance",
+    "themeSelection": "Select the application theme",
+    "alertSettings": "Alert Settings",
+    "customizeAlerts": "Customize which types of alerts you want to receive",
+    "configureAlerts": "Configure Alerts",
+    "alertTypes": "Select which types of alerts you want to see",
+    "successConfirmations": "Confirmation of successful operations",
+    "errorAlerts": "Error Alerts",
+    "errorNotifications": "Notifications of errors and problems",
+    "warningAlerts": "Warning Alerts",
+    "confirmationAlerts": "Confirmation Alerts",
+    "confirmationRequests": "Action confirmation requests",
+    "generalAlerts": "General Alerts",
+    "generalMessages": "General informational messages",
+    "iotAlerts": "IoT Device Alerts",
+    "iotMessages": "Messages about facial scanning devices",
+    "closeButton": "Close"
   },
   "userRoles": {
     "administrator": "Administrator",
@@ -828,8 +830,8 @@
     "reqNotCommon": "Not a common password",
     "reqNoSequential": "No sequential patterns (123, abc)",
     "reqNoRepeated": "No repeated characters (aaa, 111)",
-    "passwordsMatch": "☏ Passwords match",
-    "passwordsNoMatch": "☓ Passwords do not match",
+    "passwordsMatch": "Passwords match",
+    "passwordsNoMatch": "Passwords do not match",
     "saving": "Saving...",
     "saveButton": "Save password",
     "successTitle": "Password updated!",

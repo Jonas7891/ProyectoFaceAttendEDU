@@ -17,6 +17,7 @@ import {
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../../components/common/ThemeContext';
 import {VerificationService} from '../../../services/verificationService';
+import {request, GET} from '../../../api/apiClient';
 import styles from './style/Style';
 
 const COOLDOWN_MS = 60000;
@@ -68,9 +69,26 @@ const PasswordRecoveryService = {
         await this._simulateNetworkLatency();
 
         const normalizedEmail = email.toLowerCase().trim();
-        const existingEmails = ['admin@example.com', 'student@example.com', 'teacher@example.com'];
 
-        if (!existingEmails.includes(normalizedEmail)) {
+        let exists = false;
+        try {
+            const personData = await request({
+                method: GET,
+                url: 'person',
+                params: { email: normalizedEmail },
+                requiresAuth: false,
+            });
+            const people = personData && Array.isArray(personData.value)
+                ? personData.value
+                : Array.isArray(personData)
+                    ? personData
+                    : [];
+            exists = people.length > 0;
+        } catch {
+            throw new RecoveryError(RecoveryErrorType.TIMEOUT, 'No se pudo verificar el correo. Intenta de nuevo.');
+        }
+
+        if (!exists) {
             throw new RecoveryError(RecoveryErrorType.NOT_FOUND, 'Email no encontrado');
         }
 
