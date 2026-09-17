@@ -324,7 +324,19 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
             )}
 
             <View style={styles.manageUsersModalActions}>
-                <PrimaryButton title={t('common.save')} onPress={handleSave}/>
+                <TouchableOpacity
+                    style={styles.secondaryButton}
+                    onPress={handleSave}
+                >
+                    <Text
+                        style={[
+                            styles.secondaryButtonText,
+                            {color: colors.textSecondary},
+                        ]}
+                    >
+                        {t('common.save')}
+                    </Text>
+                </TouchableOpacity>
                 <TouchableOpacity
                     style={[styles.manageUsersCancelButton, {
                         backgroundColor: colors.primary,

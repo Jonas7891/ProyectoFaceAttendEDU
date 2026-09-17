@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import {Platform, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {useTheme} from './ThemeContext';
+import {normalizeTypography} from '../../../utils/typography';
 
 export const DatePickerInput = ({ value, onChange, placeholder, hint }) => {
     const { colors } = useTheme();
@@ -106,7 +107,7 @@ export const DatePickerInput = ({ value, onChange, placeholder, hint }) => {
     );
 };
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create(normalizeTypography({
     wrapper: {
         width: '100%',
         marginTop: 8,
@@ -154,4 +155,4 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         fontSize: 15,
     },
-});
+}));

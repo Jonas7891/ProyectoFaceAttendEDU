@@ -428,10 +428,6 @@ export default function UpdatePhoto() {
                             {/* ⬇️ Panel inferior de confirmación con fondo oscuro */}
                             <View style={styles.previewOverlayWrapper} pointerEvents="box-none">
                                 <View style={styles.previewOverlay}>
-                                    {/* Icono decorativo */}
-                                    <View style={styles.previewIconContainer}>
-                                        <Text style={styles.previewIcon}>📸</Text>
-                                    </View>
 
                                     <Text style={styles.previewTitle}>
                                         ¿La foto se ve bien?
@@ -475,8 +471,8 @@ export default function UpdatePhoto() {
 
                                         <TouchableOpacity
                                             style={[styles.previewButton, styles.confirmButton, {
-                                                backgroundColor: isProcessing ? (colors.success + '80') : (colors.success ?? '#10B981'),
-                                                shadowColor: colors.success ?? '#10B981',
+                                                backgroundColor: isProcessing ? (colors.primary + '80') : (colors.primary),
+                                                shadowColor: colors.primary,
                                             }]}
                                             onPress={handleConfirmPhoto}
                                             disabled={isProcessing}
@@ -507,31 +503,32 @@ export default function UpdatePhoto() {
                                 flash="off"
                             />
 
-                            <View style={styles.overlayContainer} pointerEvents="none">
-                                <FaceGuideOval status={captureStatus} colors={colors}/>
-                            </View>
+                            <View style={styles.cameraOverlay}>
+                                <View style={styles.overlayContainer} pointerEvents="none">
+                                    <FaceGuideOval status={captureStatus} colors={colors}/>
+                                    <View style={styles.statusOverlay}>
+                                        <View style={styles.statusContainer}>
+                                            <Text style={styles.statusTextUpdate}>{statusMessage}</Text>
+                                        </View>
+                                    </View>
+                                </View>
 
-                            <View style={styles.cameraHeader}>
-                                <TouchableOpacity
-                                    onPress={closeCamera}
-                                    style={styles.closeButton}
-                                    accessibilityLabel="Cerrar cámara"
-                                >
-                                    <Text style={styles.closeButtonText}>✕</Text>
-                                </TouchableOpacity>
-                                <Text style={styles.cameraTitle}>Registro Facial</Text>
-                                <TouchableOpacity
-                                    onPress={() => setFacing(facing === 'front' ? 'back' : 'front')}
-                                    style={styles.flipButton}
-                                    accessibilityLabel="Cambiar cámara"
-                                >
-                                    <Text style={styles.flipButtonText}>🔄</Text>
-                                </TouchableOpacity>
-                            </View>
-
-                            <View style={styles.statusOverlay}>
-                                <View style={styles.statusContainer}>
-                                    <Text style={styles.statusTextUpdate}>{statusMessage}</Text>
+                                <View style={styles.cameraHeader}>
+                                    <TouchableOpacity
+                                        onPress={closeCamera}
+                                        style={styles.closeButton}
+                                        accessibilityLabel="Cerrar cámara"
+                                    >
+                                        <Text style={styles.closeButtonText}>✕</Text>
+                                    </TouchableOpacity>
+                                    <Text style={styles.cameraTitle}>Registro Facial</Text>
+                                    <TouchableOpacity
+                                        onPress={() => setFacing(facing === 'front' ? 'back' : 'front')}
+                                        style={styles.flipButton}
+                                        accessibilityLabel="Cambiar cámara"
+                                    >
+                                        <Text style={styles.flipButtonText}>🔄</Text>
+                                    </TouchableOpacity>
                                 </View>
                             </View>
 

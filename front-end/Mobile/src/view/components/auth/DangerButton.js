@@ -15,9 +15,11 @@ export default function DangerButton({ title, disabled = false, onLogout }) {
 
     const handleLogout = async () => {
         try {
+            // Limpiar almacenamiento
             await removeToken();
             await AsyncStorage.multiRemove(['userRole', 'userEmail', 'appLanguage', 'alertsConfig']);
 
+            // Ejecutar callback (que ya incluye la confirmación desde la pantalla)
             if (onLogout) {
                 await onLogout();
             } else {
@@ -31,7 +33,6 @@ export default function DangerButton({ title, disabled = false, onLogout }) {
 
     return (
         <>
-            {/* Contenedor que asegura la posición inferior y márgenes seguros */}
             <View style={styleAuth.dangerButtonContainer}>
                 <TouchableOpacity
                     style={[styleAuth.dangerButton, disabled && styleAuth.buttonDisabled]}
