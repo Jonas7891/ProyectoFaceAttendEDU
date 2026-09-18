@@ -12,7 +12,7 @@ databaseChangeLog:
                 justification_type_id INT NOT NULL,
                 reason TEXT NOT NULL,
                 submitted_at TIMESTAMP NOT NULL,
-                reviewed_by UUID NULL,
+                reviewed_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
                 reviewed_at TIMESTAMP NULL,
                 review_status attendance.review_status NOT NULL DEFAULT 'Pending',
                 created_at TIMESTAMP NOT NULL,

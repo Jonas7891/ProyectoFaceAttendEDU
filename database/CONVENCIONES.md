@@ -40,18 +40,18 @@ Los prefijos numéricos (`001-`, `002-`, ...) determinan el **orden de ejecució
 
 ### Nombres de esquemas
 
-Un **esquema PostgreSQL por dominio** (bounded context):
+Un **esquema PostgreSQL por dominio** (bounded context). `biometric` es un schema vacío (colecciones en MongoDB):
 
-| Dominio | Esquema |
+| Dominio | Esquema | Notas |
 |---|---|
-| Identity | `identity` |
-| Authorization | `authorization` |
-| Academic | `academic` |
-| Scheduling | `scheduling` |
-| Attendance | `attendance` |
-| Biometric | `biometric` |
-| Configuration | `configuration` |
-| Notification | `notification` |
+| Identity | `identity` | 5 tablas |
+| Authorization | `authorization` | 4 tablas |
+| Academic | `academic` | 8 tablas |
+| Scheduling | `scheduling` | 3 tablas |
+| Attendance | `attendance` | 4 tablas |
+| Biometric | `biometric` | Solo schema, sin tablas (NoSQL en MongoDB) |
+| Configuration | `configuration` | 3 tablas (incluye `biometric_update_case`) |
+| Notification | `notification` | 2 tablas |
 
 ---
 
@@ -124,7 +124,7 @@ Las FK son **reales** a nivel de base de datos:
 
 ## 5. Convenciones de ENUMs
 
-Los enums se modelan como **tipos PostgreSQL personalizados** (`CREATE TYPE ... AS ENUM`), no como `VARCHAR` con validación textual.
+Los enums se modelan como **tipos PostgreSQL personalizados** (`CREATE TYPE ... AS ENUM`), no como `VARCHAR` con validación textual (el DBML los documenta como `varchar` con `note: ENUM` pero la implementación usa tipos nativos).
 
 ```yaml
 - createType:
@@ -141,6 +141,8 @@ Las columnas que usan ENUMs referencian el tipo completo:
     type: attendance.attendance_status
     defaultValue: "Present"
 ```
+
+**ENUMs del modelo (DBML v4):** `user_session_status` (Active/Closed), `authentication_type` (Local/Windows/External), `enrollment_status` (Active/Withdrawn/Completed), `class_session_status` (Open/Closed/Cancelled), `attendance_status` (Present/Absent/Late/Justified), `capture_method` (FACIAL/MANUAL/IOT/IMPORT), `review_status` (Pending/Approved/Rejected), `biometric_type` (FACIAL/FINGERPRINT), `update_status` (Pending/In_Review/Approved/Rejected).
 
 ---
 
@@ -197,16 +199,16 @@ databaseChangeLog:
 ### Arranque completo
 
 ```bash
-cd ms/db
+cd database
 docker compose up -d
 ```
 
-Esto levanta PostgreSQL + los 8 servicios Liquibase que migran todos los dominios.
+Esto levanta PostgreSQL 17 (faceattend_db + 8 schemas) + los 8 servicios Liquibase que migran todos los dominios.
 
 ### Dominio individual
 
 ```bash
-cd ms/db/03-ms-academic-db
+cd database/03-ms-academic-db
 docker compose up
 ```
 

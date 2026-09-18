@@ -26,6 +26,8 @@ databaseChangeLog:
         - sql:
             sql: ALTER TABLE identity.app_user ADD CONSTRAINT uq_user_username UNIQUE (username)
         - sql:
+            sql: ALTER TABLE identity.app_user ADD CONSTRAINT uq_app_user_person UNIQUE (person_id)
+        - sql:
             sql: ALTER TABLE identity.app_user ADD CONSTRAINT fk_app_user_person FOREIGN KEY (person_id) REFERENCES identity.person (person_id) ON DELETE CASCADE
       rollback:
         - dropTable:

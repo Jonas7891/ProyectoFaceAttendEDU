@@ -8,8 +8,8 @@ databaseChangeLog:
             sql: |
               CREATE TABLE attendance.attendance_record (
                 attendance_record_id BIGSERIAL NOT NULL,
-                class_session_id BIGINT NOT NULL,
-                academic_actor_id BIGINT NOT NULL,
+                class_session_id BIGINT NOT NULL, -- Cross-context reference to Scheduling.class_session (NO FK)
+                academic_actor_id BIGINT NOT NULL, -- Cross-context reference to Academic.academic_actor (NO FK)
                 attendance_status attendance.attendance_status NOT NULL,
                 captured_at TIMESTAMP NULL,
                 capture_method attendance.capture_method NOT NULL,

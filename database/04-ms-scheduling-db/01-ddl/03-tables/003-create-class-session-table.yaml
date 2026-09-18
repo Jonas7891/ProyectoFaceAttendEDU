@@ -10,9 +10,9 @@ databaseChangeLog:
                 class_session_id BIGSERIAL NOT NULL,
                 schedule_block_id BIGINT NOT NULL,
                 session_date DATE NOT NULL,
-                opened_by BIGINT NULL,
+                opened_by BIGINT NULL, -- Cross-context reference to Academic.academic_actor (NO FK)
                 opened_at TIMESTAMP NULL,
-                closed_by BIGINT NULL,
+                closed_by BIGINT NULL, -- Cross-context reference to Academic.academic_actor (NO FK)
                 closed_at TIMESTAMP NULL,
                 session_status scheduling.class_session_status NOT NULL DEFAULT 'Open',
                 created_at TIMESTAMP NOT NULL,

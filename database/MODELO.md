@@ -7,11 +7,11 @@ FaceAttend-Edu es una plataforma de **gestión de asistencia mediante reconocimi
 - Gestión de personas, usuarios y credenciales
 - Estructura académica (sedes, programas, cohortes, cursos)
 - Horarios y sesiones de clase
-- Registro de asistencia con múltiples fuentes (facial, manual, IoT)
+- Registro de asistencia con múltiples fuentes (facial, manual, IoT, import)
 - Justificaciones con soporte documental
-- Actualización de plantillas biométricas con flujo de aprobación
+- Actualización de plantillas biométricas con flujo de aprobación (biometric_update_case unifica FACIAL/FINGERPRINT)
 - Alertas y notificaciones
-- Configuración y notificaciones
+- Configuración académica y de seguridad
 
 ---
 
@@ -21,13 +21,13 @@ El modelo se divide en **8 contextos**, cada uno responsable de un área de nego
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      FACEATTEND-EDU                         │
+│                      FACEATTEND-EDU (v4 - DBML)             │
 ├─────────────┬─────────────┬─────────────┬──────────────────┤
 │  IDENTITY   │ AUTHORIZATION│  ACADEMIC   │   SCHEDULING     │
-│             │             │             │                  │
+│  (5 tablas) │ (4 tablas)  │ (8 tablas)  │  (3 tablas)      │
 │ city        │ role        │ school      │ environment      │
 │ person      │ permission  │ program     │ schedule_block   │
-│ app_user    │ role_perm.  │ acad_period │ class_session    │
+│ app_user*   │ role_perm.  │ acad_period │ class_session    │
 │ user_session│ user_role   │ cohort      │                  │
 │ pass_policy │             │ course      │                  │
 │             │             │ actor_type  │                  │
@@ -35,12 +35,13 @@ El modelo se divide en **8 contextos**, cada uno responsable de un área de nego
 │             │             │ enrollment  │                  │
 ├─────────────┼─────────────┼─────────────┼──────────────────┤
 │ ATTENDANCE  │  BIOMETRIC  │ CONFIGURATION│  NOTIFICATION   │
-│             │  (NoSQL)    │             │                  │
+│ (4 tablas)  │  (NoSQL)    │ (3 tablas)  │  (2 tablas)      │
 │ att_record  │ facial_emb  │ acad_config │ alert_type       │
 │ justif_type │ finger_emb  │ sec_config  │ alert            │
-│ justification│            │ biometric_case│                │
+│ justification│ (MongoDB)  │ biometric_case│                │
 │ sup_document│             │             │                  │
-└─────────────────────────────────────────────────────────────┘
+└─────────────┴─────────────┴─────────────┴──────────────────┘
+* app_user.person_id UNIQUE (1:1 con person)
 ```
 
 ---
@@ -53,7 +54,7 @@ El modelo se divide en **8 contextos**, cada uno responsable de un área de nego
 |---|---|---|
 | `city` | Catálogo de ciudades | `city_id` (INT) |
 | `person` | Identidad base: documento, nombre, contacto | `person_id` (UUID) |
-| `app_user` | Credenciales de acceso; 1:1 con `person` | `user_id` (UUID) |
+| `app_user` | Credenciales de acceso; 1:1 con `person` (`person_id` UNIQUE) | `user_id` (UUID) |
 | `user_session` | Sesiones activas/cerradas | `session_id` (UUID) |
 | `password_policy` | Reglas de complejidad de contraseña | `policy_id` (INT) |
 
@@ -164,14 +165,16 @@ enrollment → cohort
 
 **Responsabilidad:** Plantillas biométricas (facial y dactilar).
 
-**No forma parte del esquema relacional.** Se modela como colecciones NoSQL:
+**No forma parte del esquema relacional SQL.** Se modela como colecciones NoSQL en **MongoDB** (fuera del modelo relacional DBML):
 
 | Colección | Campos clave |
 |---|---|
-| `facial_embedding` | `person_id`, `template_version`, `encoding`, `model_version`, `is_active` |
-| `fingerprint_embedding` | `person_id`, `finger_number`, `template_version`, `encoding`, `model_version`, `is_active` |
+| `facial_embedding` | `person_id`, `template_version`, `encoding`, `model_version`, `enrolled_at`, `is_active` |
+| `fingerprint_embedding` | `person_id`, `finger_number`, `template_version`, `encoding`, `model_version`, `enrolled_at`, `is_active` |
 
 **¿Por qué NoSQL?** Los embeddings biométricos son documentos de estructura flexible y de alto volumen de lectura/escritura por reconocimiento en tiempo real.
+
+**En PostgreSQL solo existe el schema `biometric` vacío** (`06-ms-biometric-db` solo crea el schema, sin tablas). La referencia lógica desde `configuration.biometric_update_case.current_embedding_ref` apunta al `_id` del documento en MongoDB (cross-paradigm, sin FK).
 
 ---
 

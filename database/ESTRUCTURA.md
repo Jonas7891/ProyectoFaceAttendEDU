@@ -5,19 +5,19 @@
 FaceAttend-Edu usa **Domain-Driven Design (DDD)**: cada dominio de negocio tiene su propia base de datos lógica (schema PostgreSQL) y su propio ciclo de migración Liquibase.
 
 ```
-ms/db/
+database/
 ├── docker-compose.yml              ← Orquestador principal (PostgreSQL + 8 Liquibase)
 ├── .env                            ← Variables de entorno
-├── scripts/init-multidb.sql        ← Script de inicialización de BDs
+├── scripts/init-multidb.sql        ← Script alternativo multi-DB (desarrollo usa 1 BD + 8 schemas)
 │
-├── 01-ms-identity-db/              → Contexto: Identity
-├── 02-ms-authorization-db/         → Contexto: Authorization
-├── 03-ms-academic-db/              → Contexto: Academic
-├── 04-ms-scheduling-db/            → Contexto: Scheduling
-├── 05-ms-attendance-db/            → Contexto: Attendance
-├── 06-ms-biometric-db/             → Contexto: Biometric (schema solamente)
-├── 07-ms-configuration-db/         → Contexto: Configuration
-├── 08-ms-notification-db/          → Contexto: Notification
+├── 01-ms-identity-db/              → Contexto: Identity (5 tablas)
+├── 02-ms-authorization-db/         → Contexto: Authorization (4 tablas)
+├── 03-ms-academic-db/              → Contexto: Academic (8 tablas)
+├── 04-ms-scheduling-db/            → Contexto: Scheduling (3 tablas)
+├── 05-ms-attendance-db/            → Contexto: Attendance (4 tablas)
+├── 06-ms-biometric-db/             → Contexto: Biometric (solo schema, colecciones NoSQL en MongoDB)
+├── 07-ms-configuration-db/         → Contexto: Configuration (3 tablas, incluye biometric_update_case)
+├── 08-ms-notification-db/          → Contexto: Notification (2 tablas)
 │
 ├── CONVENCIONES.md                 ← Guía de naming y reglas
 ├── ESTRUCTURA.md                   ← Este archivo
@@ -107,26 +107,26 @@ Cada dominio ejecuta sus cambios en este orden:
 ### Opción 1: Todo junto (recomendado para desarrollo)
 
 ```bash
-cd "ms/db"
+cd "database"
 docker compose up -d
 ```
 
 Esto:
-1. Levanta PostgreSQL 17 y espera a que esté sano
+1. Levanta PostgreSQL 17 y espera a que esté sano (faceattend_db + 8 schemas)
 2. Ejecuta los 8 servicios Liquibase en paralelo (uno por dominio)
 3. Cada servicio migra su esquema respectivo
 
 ### Opción 2: Dominio individual
 
 ```bash
-cd "ms/db/03-ms-academic-db"
+cd "database/03-ms-academic-db"
 docker compose up
 ```
 
 ### Opción 3: Reconstruir desde cero
 
 ```bash
-cd "ms/db"
+cd "database"
 docker compose down -v    # Elimina volúmenes (datos)
 docker compose up -d
 ```
@@ -181,7 +181,7 @@ Usa `host.docker.internal` para conectarse a PostgreSQL que corre en el host.
 |---|---|
 | `docker-compose.yml` | Orquestador principal |
 | `.env` | Variables de entorno (credenciales, imagen Liquibase) |
-| `scripts/init-multidb.sql` | Crea las 8 bases de datos (para microservicios separados) |
+| `scripts/init-multidb.sql` | Script alternativo multi-DB (8 BDs). En desarrollo se usa 1 BD + 8 schemas |
 | `CONVENCIONES.md` | Reglas de nomenclatura y diseño |
 | `ESTRUCTURA.md` | Este archivo |
 | `MODELO.md` | Documento conceptual del modelo de datos |
