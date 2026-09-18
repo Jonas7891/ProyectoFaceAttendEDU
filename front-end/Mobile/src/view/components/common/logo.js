@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, View } from "react-native";
+import {Image, View} from "react-native";
 import styleAuth from "./style/Style";
 
 export default function CustomLogo({

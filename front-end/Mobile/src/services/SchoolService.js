@@ -1,30 +1,42 @@
-import { request } from "../api/apiClient";
-import { GET, POST, PUT, DELETE } from "./constants/httpMethod";
-import { schoolsUrl } from "./constants/urls";
+import { request, GET, POST, PUT, DELETE } from '../api/apiClient';
+import School from '../models/academic/School';
 
-/*
-export const getUserByEmail = (data) =>
-    request({
-        method: POST,
-        url: loginUrl,
-        data,
-        requiresAuth: true
-    });
-*/
+const ENDPOINT = 'school';
 
-import { schools } from "./constants/schools";
-// import { jwtDecode } from "jwt-decode";
-// import { getToken } from "../storage/TokenStorage";
-
-export const getSchoolById = (id) => {
-    switch (id) {
-        case 1:
-            return schools.find((school) => school.identification === 1);
-
-        case 2:
-            return schools.find((school) => school.identification === 2);
-
-        case 3:
-            return schools.find((school) => school.identification === 3);
-    }
+function unwrap(data) {
+  if (data && Array.isArray(data.value)) return data.value;
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === 'object') return [data];
+  return [];
 }
+
+function unwrapFirst(data) {
+  const arr = unwrap(data);
+  return arr.length > 0 ? arr[0] : null;
+}
+
+export const SchoolService = {
+  getAll: async (params = {}) => {
+    const data = await request({ method: GET, url: ENDPOINT, params, requiresAuth: false });
+    return unwrap(data).map(School.fromApi);
+  },
+
+  getById: async (id) => {
+    const data = await request({ method: GET, url: `${ENDPOINT}/${id}`, requiresAuth: false });
+    return School.fromApi(unwrapFirst(data));
+  },
+
+  create: async (schoolData) => {
+    const data = await request({ method: POST, url: ENDPOINT, data: schoolData.toApi(), requiresAuth: false });
+    return School.fromApi(data);
+  },
+
+  update: async (id, schoolData) => {
+    const data = await request({ method: PUT, url: `${ENDPOINT}/${id}`, data: schoolData.toApi(), requiresAuth: false });
+    return School.fromApi(data);
+  },
+
+  delete: async (id) => {
+    return request({ method: DELETE, url: `${ENDPOINT}/${id}`, requiresAuth: false });
+  },
+};

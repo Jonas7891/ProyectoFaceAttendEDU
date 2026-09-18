@@ -1,10 +1,18 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
+import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
-import { useTheme } from '../view/components/common/ThemeContext';
+import {useNavigation} from '@react-navigation/native';
+import {useTheme} from '../view/components/common/ThemeContext';
 import {getCurrentUserRole} from "../services/UserService";
-import { useLanguageRefresh } from '../utils/useLanguageRefresh';
+import {useLanguageRefresh} from '../utils/useLanguageRefresh';
+import {request, GET} from '../api/apiClient';
+
+function unwrap(data) {
+  if (data && Array.isArray(data.value)) return data.value;
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === 'object') return [data];
+  return [];
+}
 
 const DEFAULT_JUSTIFICATIONS = [
     { id: "1", type: "Médica", description: "Ausencia por cita médica con especialista", requiresDocument: true, category: "Salud" },
@@ -22,7 +30,6 @@ export function useJustificationsViewModel() {
     const [userRole, setUserRole] = useState(null);
     const updateKey = useLanguageRefresh();
 
-    // Inicializar rol y tema
     useEffect(() => {
         const init = async () => {
             try {
@@ -36,18 +43,36 @@ export function useJustificationsViewModel() {
         init();
     }, [loadThemeForRole]);
 
-    // Cargar justificaciones (y recargar al enfocar pantalla)
     const loadJustifications = useCallback(async () => {
         try {
             const stored = await AsyncStorage.getItem('validJustifications');
             if (stored) {
                 setJustifications(JSON.parse(stored));
+                return;
+            }
+
+            const jtData = await request({ method: GET, url: 'justification_type', requiresAuth: false });
+            const types = unwrap(jtData);
+
+            if (types.length > 0) {
+                const mapped = types.map(t => ({
+                    id: String(t.justification_type_id),
+                    type: t.name,
+                    description: t.description || '',
+                    requiresDocument: t.requires_attachment || false,
+                    category: t.name.includes('méd') || t.name.includes('Méd') ? 'Salud' :
+                              t.name.includes('familiar') || t.name.includes('Familiar') ? 'Familiar' :
+                              t.name.includes('representación') || t.name.includes('institucional') ? 'Académica' : 'General',
+                }));
+                setJustifications(mapped);
+                await AsyncStorage.setItem('validJustifications', JSON.stringify(mapped));
             } else {
                 setJustifications(DEFAULT_JUSTIFICATIONS);
                 await AsyncStorage.setItem('validJustifications', JSON.stringify(DEFAULT_JUSTIFICATIONS));
             }
         } catch (error) {
             console.error('Error al cargar justificaciones:', error);
+            setJustifications(DEFAULT_JUSTIFICATIONS);
         }
     }, []);
 
@@ -57,7 +82,6 @@ export function useJustificationsViewModel() {
         return unsubscribe;
     }, [navigation, loadJustifications]);
 
-    // Derivaciones: categorías únicas y agrupación
     const categories = useMemo(() => [...new Set(justifications.map(j => j.category))], [justifications]);
     const getJustificationsByCategory = useCallback(
         (cat) => justifications.filter(j => j.category === cat),
@@ -67,11 +91,7 @@ export function useJustificationsViewModel() {
     const handleBack = useCallback(() => navigation.goBack(), [navigation]);
 
     return {
-        justifications,
-        userRole,
-        updateKey,
-        categories,
-        getJustificationsByCategory,
-        handleBack,
+        justifications, userRole, updateKey, categories,
+        getJustificationsByCategory, handleBack,
     };
 }

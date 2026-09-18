@@ -1,15 +1,15 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { saveLanguageForRole } from '../view/components/common/languageByRole';
-import { useTheme } from '../view/components/common/ThemeContext';
-import { useLanguageRefresh } from '../utils/useLanguageRefresh';
-import { getCurrentUserRole } from "../services/UserService";
+import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useTranslation} from 'react-i18next';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import {saveLanguageForRole} from '../view/components/common/languageByRole';
+import {useTheme} from '../view/components/common/ThemeContext';
+import {useLanguageRefresh} from '../utils/useLanguageRefresh';
+import {getCurrentUserRole} from "../services/UserService";
 
 export function useLanguageSettingsViewModel() {
-    const { t, i18n } = useTranslation();
+    const {t, i18n} = useTranslation();
     const navigation = useNavigation();
-    const { theme, setThemeForRole, loadThemeForRole } = useTheme();
+    const {theme, setThemeForRole, loadThemeForRole} = useTheme();
 
     const [selectedLanguage, setSelectedLanguage] = useState(i18n.language);
     const [selectedTheme, setSelectedTheme] = useState(theme);
@@ -25,20 +25,20 @@ export function useLanguageSettingsViewModel() {
     });
 
     const clearAlert = useCallback(() => {
-        setAlertData({ message: null, type: 'warning', timestamp: 0 });
+        setAlertData({message: null, type: 'warning', timestamp: 0});
     }, []);
 
     // Listas de idiomas y temas
     const languages = useMemo(() => [
-        { code: 'es', name: 'Español', flag: '🇪🇸' },
-        { code: 'en', name: 'English', flag: '🇬🇧' },
-        { code: 'fr', name: 'Français', flag: '🇫🇷' },
-        { code: 'pt', name: 'Português', flag: '🇵🇹' },
+        {code: 'es', name: 'Español', flag: '🇪🇸'},
+        {code: 'en', name: 'English', flag: '🇬🇧'},
+        {code: 'fr', name: 'Français', flag: '🇫🇷'},
+        {code: 'pt', name: 'Português', flag: '🇵🇹'},
     ], []);
 
     const themes = useMemo(() => [
-        { code: 'light', label: t('settings.lightTheme', { defaultValue: 'Tema Claro' }), icon: '☀️' },
-        { code: 'dark', label: t('settings.darkTheme', { defaultValue: 'Tema Oscuro' }), icon: '🌙' },
+        {code: 'light', label: t('settings.lightTheme'), icon: '☀️'},
+        {code: 'dark', label: t('settings.darkTheme'), icon: '🌙'},
     ], [t]);
 
     // Sincronizar idioma cuando cambia externamente
@@ -68,7 +68,9 @@ export function useLanguageSettingsViewModel() {
                 }
             };
             syncTheme();
-            return () => { isActive = false; };
+            return () => {
+                isActive = false;
+            };
         }, [loadThemeForRole])
     );
 
@@ -79,7 +81,7 @@ export function useLanguageSettingsViewModel() {
             const role = await getCurrentUserRole();
             if (!role) {
                 setAlertData({
-                    message: t('settings.noRoleError', { defaultValue: 'No se pudo determinar el rol del usuario' }),
+                    message: t('settings.noRoleError'),
                     type: 'error',
                     timestamp: Date.now(),
                 });
@@ -96,14 +98,14 @@ export function useLanguageSettingsViewModel() {
             await new Promise(resolve => setTimeout(resolve, 100));
 
             setAlertData({
-                message: t('settings.languageChanged', { defaultValue: 'Idioma y tema guardados correctamente' }),
+                message: t('settings.languageChanged'),
                 type: 'success',
                 timestamp: Date.now(),
             });
         } catch (error) {
             console.error('Error guardando:', error);
             setAlertData({
-                message: t('settings.errorChangingLanguage', { defaultValue: 'No se pudo cambiar el idioma/tema' }),
+                message: t('settings.errorChangingLanguage'),
                 type: 'error',
                 timestamp: Date.now(),
             });

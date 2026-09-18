@@ -1,20 +1,20 @@
 import React from 'react';
 import {
-  Text,
-  View,
-  SafeAreaView,
-  KeyboardAvoidingView,
-  TouchableOpacity,
-  Platform,
-  ScrollView,
-  TextInput,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
+import {useTranslation} from 'react-i18next';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import Separador from '../components/common/Separador';
-import styles from './Style';
-import { useTheme } from '../components/common/ThemeContext';
-import { useAddJustificationViewModel } from '../../viewmodels/useAddJustifyViewModel';
+import styles from './Styles/AddJustifyScreen/Style';
+import {useTheme} from '../components/common/ThemeContext';
+import {useAddJustificationViewModel} from '../../viewmodels/useAddJustifyViewModel';
 
 export default function AddJustification() {
   const { t } = useTranslation();
@@ -29,6 +29,7 @@ export default function AddJustification() {
     setDate,
     time,
     setTime,
+    pickFile,
     isLoading,
     updateKey,
     handleBack,
@@ -161,10 +162,7 @@ export default function AddJustification() {
               {/* Botón de adjuntar archivo (mock) */}
               <TouchableOpacity
                   style={[styles.uploadButton, { backgroundColor: colors.primary }]}
-                  onPress={() => {
-                    // Aquí en un futuro podrías abrir el selector de archivos
-                    // y setear selectedFile. Por ahora queda como demostración.
-                  }}
+                  onPress={pickFile}
               >
                 <Text style={[styles.uploadButtonText, { color: '#fff' }]}>
                   {t('justify.selectFile')}

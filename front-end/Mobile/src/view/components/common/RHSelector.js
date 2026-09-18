@@ -1,32 +1,27 @@
-import React from 'react';
-import {
-    View,
-    Text,
-    TouchableOpacity,
-} from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from './ThemeContext';
+import React, {useEffect, useState} from 'react';
+import {Text, TouchableOpacity, View,} from 'react-native';
+import {useTranslation} from 'react-i18next';
+import {useTheme} from './ThemeContext';
+import {BloodTypeService, DEFAULT_BLOOD_TYPES} from '../../../services/BloodTypeService';
 import stylescommon from './style/Style';
-
-const tiposRH = [
-    { id: "a+", label: "A+" },
-    { id: "a-", label: "A-" },
-    { id: "b+", label: "B+" },
-    { id: "b-", label: "B-" },
-    { id: "ab+", label: "AB+" },
-    { id: "ab-", label: "AB-" },
-    { id: "o+", label: "O+" },
-    { id: "o-", label: "O-" }
-];
 
 export const RHSelector = ({ selectedRH, onSelect }) => {
     const { t } = useTranslation();
     const { colors } = useTheme();
+    const [bloodTypes, setBloodTypes] = useState(DEFAULT_BLOOD_TYPES);
+
+    useEffect(() => {
+        let active = true;
+        BloodTypeService.getAll().then((types) => {
+            if (active) setBloodTypes(types);
+        });
+        return () => { active = false; };
+    }, []);
 
     return (
         <View style={stylescommon.rhSelectorContainer}>
             <View style={stylescommon.rhGridContainer}>
-                {tiposRH.map((rh) => (
+                {bloodTypes.map((rh) => (
                     <TouchableOpacity
                         key={rh.id}
                         style={[

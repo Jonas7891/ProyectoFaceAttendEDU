@@ -1,20 +1,31 @@
-import {Alert, Platform, Switch, Text, TextInput, TouchableOpacity, View} from "react-native";
-import React, {useState, useCallback, useEffect} from 'react';
-import { validateEmail, validatePhone } from "../utils/validators";
-import { CountryService } from "../services/CountryService";
-// ⚠️ Ajusta el nombre real de la función de actualización en tu SchoolService
-import { getSchoolById, updateSchool } from "../services/SchoolService";
-import { SchoolResponse,
-    GeneralInfo,
-    ContactInfo,
-    AcademicConfig,
-    AttendanceConfig} from "../model/SchoolResponse";
-import styles from "../view/screens/Style";
+import {Alert} from "react-native";
+import {useEffect, useState} from 'react';
+import {validateEmail, validatePhone} from "../utils/validators";
+import {CountryService} from "../services/CountryService";
+import {SchoolService} from "../services/SchoolService";
+import {AcademicConfigService} from "../services/AcademicConfigService";
+import AcademicConfiguration from "../models/configuration/AcademicConfiguration";
+import {ActorService} from "../services/ActorService";
 import {getCurrentUser, getUserByEmail} from "../services/UserService";
-import UserResponse from "../model/UserResponse";
+import School from "../models/academic/School";
+
+const ACADEMIC_FIELD_NAMES = ['academicYear', 'startDate', 'endDate'];
+const ATTENDANCE_FIELD_NAMES = ['toleranceMinutes', 'maxAbsences', 'maxLatenesses'];
+
+function buildConfigState(configs, fieldNames, extraDefaults = {}) {
+    const byName = {};
+    for (const cfg of configs || []) {
+        if (cfg?.configurationName) byName[cfg.configurationName] = cfg;
+    }
+    const state = {...extraDefaults};
+    for (const name of fieldNames) {
+        state[name] = byName[name]?.configurationValue ?? '';
+    }
+    return {state, byName};
+}
 
 
-export function useSchoolConfigurationViewModel() {
+export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => key} = {}) {
     const [activeTab, setActiveTab] = useState('general');
     const [isLoading, setIsLoading] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -23,10 +34,22 @@ export function useSchoolConfigurationViewModel() {
 
     const [generalInfo, setGeneralInfo] = useState(null);
     const [contactInfo, setContactInfo] = useState(null);
-    const [academicConfig, setAcademicConfig] = useState(null);
-    const [attendanceConfig, setAttendanceConfig] = useState(null);
+    const [academicConfig, setAcademicConfig] = useState({
+        academicYear: '',
+        startDate: '',
+        endDate: '',
+        totalStudents: 0,
+        totalTeachers: 0,
+        totalCourses: 0,
+    });
+    const [attendanceConfig, setAttendanceConfig] = useState({
+        toleranceMinutes: '',
+        maxAbsences: '',
+        maxLatenesses: '',
+    });
+    const [academicConfigsByName, setAcademicConfigsByName] = useState({});
+    const [attendanceConfigsByName, setAttendanceConfigsByName] = useState({});
 
-    // Id del colegio y copia de los datos originales (para guardar y para descartar cambios)
     const [schoolId, setSchoolId] = useState(null);
     const [originalData, setOriginalData] = useState(null);
 
@@ -36,53 +59,100 @@ export function useSchoolConfigurationViewModel() {
             const email = userInfo?.email;
             const user = await getUserByEmail(email);
 
-            const schoolResponse = await getSchoolById(user.school_id);
+            const actors = await ActorService.getByPerson(user?.personId);
+            const actor = actors?.length > 0 ? actors[0] : null;
+            const actorSchoolId = actor?.schoolId;
+            if (!actorSchoolId) return;
 
-            const general    = GeneralInfo.fromApi(schoolResponse);
-            const contact    = ContactInfo.fromApi(schoolResponse);
-            const academic   = AcademicConfig.fromApi(schoolResponse);
-            const attendance = AttendanceConfig.fromApi(schoolResponse);
+            const school = await SchoolService.getById(actorSchoolId);
 
-            setGeneralInfo(general);
-            setContactInfo(contact);
-            setAcademicConfig(academic);
-            setAttendanceConfig(attendance);
+            if (school) {
+                const general = {
+                    name: school.name,
+                    code: school.code,
+                    district: '',
+                };
+                const contact = {
+                    email: school.email,
+                    phone: school.phone,
+                    address: school.address,
+                    city: '',
+                    country: '',
+                };
 
-            setSchoolId(user.school_id);
-            setOriginalData({ general, contact, academic, attendance });
+                let academic = {
+                    academicYear: '',
+                    startDate: '',
+                    endDate: '',
+                    totalStudents: 0,
+                    totalTeachers: 0,
+                    totalCourses: 0,
+                };
+                let attendance = {
+                    toleranceMinutes: '',
+                    maxAbsences: '',
+                    maxLatenesses: '',
+                };
+                try {
+                    const configs = await AcademicConfigService.getBySchool(actorSchoolId);
+                    const academicBuilt = buildConfigState(configs, ACADEMIC_FIELD_NAMES, {
+                        totalStudents: 0,
+                        totalTeachers: 0,
+                        totalCourses: 0,
+                    });
+                    const attendanceBuilt = buildConfigState(configs, ATTENDANCE_FIELD_NAMES);
+                    academic = academicBuilt.state;
+                    attendance = attendanceBuilt.state;
+                    const mergedByName = {...academicBuilt.byName, ...attendanceBuilt.byName};
+                    const academicMap = {};
+                    const attendanceMap = {};
+                    for (const name of ACADEMIC_FIELD_NAMES) {
+                        if (mergedByName[name]) academicMap[name] = mergedByName[name];
+                    }
+                    for (const name of ATTENDANCE_FIELD_NAMES) {
+                        if (mergedByName[name]) attendanceMap[name] = mergedByName[name];
+                    }
+                    setAcademicConfigsByName(academicMap);
+                    setAttendanceConfigsByName(attendanceMap);
+                } catch (configError) {
+                    console.error('Error cargando configuración académica:', configError);
+                }
+
+                setGeneralInfo(general);
+                setContactInfo(contact);
+                setAcademicConfig(academic);
+                setAttendanceConfig(attendance);
+                setSchoolId(school.schoolId);
+                setOriginalData({general, contact, academic, attendance});
+            }
         } catch (error) {
-            console.error('Error cargando datos de usuario:', error);
+            console.error('Error cargando datos del colegio:', error);
         }
     };
+
     useEffect(() => {
         loadSchoolInfo();
     }, []);
 
-    // console.log(generalInfo);
-    useEffect(() => {
-        console.log(generalInfo);
-    }, [generalInfo]);
-
-    // Validación de campos
     const [validationErrors, setValidationErrors] = useState({});
 
     const validateField = (fieldName, value) => {
-        const errors = { ...validationErrors };
+        const errors = {...validationErrors};
 
         if (!value || String(value).trim() === '') {
-            errors[fieldName] = 'Este campo es requerido';
+            errors[fieldName] = t('schoolConfig.validation.required');
         } else if (fieldName === 'email' && !validateEmail(value)) {
-            errors[fieldName] = 'Email inválido';
+            errors[fieldName] = t('schoolConfig.validation.invalidEmail');
         } else if (fieldName === 'phone' && !validatePhone(value)) {
-            errors[fieldName] = 'Teléfono inválido';
+            errors[fieldName] = t('schoolConfig.validation.invalidPhone');
         } else if (
             fieldName === 'toleranceMinutes' ||
-            fieldName === 'maxAbsences'      ||
-            fieldName === 'maxLatenesses'    ||
+            fieldName === 'maxAbsences' ||
+            fieldName === 'maxLatenesses' ||
             fieldName === 'minimumGrade'
         ) {
             if (isNaN(value)) {
-                errors[fieldName] = 'Debe ser un número';
+                errors[fieldName] = t('schoolConfig.validation.mustBeNumber');
             } else {
                 delete errors[fieldName];
             }
@@ -95,71 +165,121 @@ export function useSchoolConfigurationViewModel() {
     };
 
     const handleGeneralInfoChange = (field, value) => {
-        setGeneralInfo(prev => ({ ...prev, [field]: value }));
+        if (!isAdmin) return;
+        setGeneralInfo(prev => ({...prev, [field]: value}));
         setHasChanges(true);
         validateField(field, value);
     };
 
     const handleContactInfoChange = (field, value) => {
-        setContactInfo(prev => ({ ...prev, [field]: value }));
+        if (!isAdmin) return;
+        setContactInfo(prev => ({...prev, [field]: value}));
         setHasChanges(true);
         validateField(field, value);
     };
 
     const handleAcademicConfigChange = (field, value) => {
-        setAcademicConfig(prev => ({ ...prev, [field]: value }));
+        if (!isAdmin) return;
+        setAcademicConfig(prev => ({...prev, [field]: value}));
         setHasChanges(true);
         validateField(field, value);
     };
 
     const handleAttendanceConfigChange = (field, value) => {
-        setAttendanceConfig(prev => ({ ...prev, [field]: value }));
+        if (!isAdmin) return;
+        setAttendanceConfig(prev => ({...prev, [field]: value}));
         setHasChanges(true);
         validateField(field, value);
     };
 
     const handleSaveChanges = async () => {
+        if (!isAdmin) return;
         if (!schoolId) {
-            Alert.alert('Error', 'No se pudo identificar el colegio a actualizar');
+            Alert.alert(t('common.error'), t('schoolConfig.errors.schoolNotFound'));
             return;
         }
 
         try {
             setIsLoading(true);
 
-            const payload = {
-                ...generalInfo,
-                ...contactInfo,
-                ...academicConfig,
-                ...attendanceConfig,
+            const payload = new School({
+                school_id: schoolId,
+                name: generalInfo.name,
+                code: generalInfo.code,
+                email: contactInfo.email,
+                phone: contactInfo.phone,
+                address: contactInfo.address,
+            });
+
+            const updatedSchool = await SchoolService.update(schoolId, payload);
+
+            const persistConfigs = async (fieldNames, values, existingByName, setByName) => {
+                const nextByName = {...existingByName};
+                for (const name of fieldNames) {
+                    const value = values?.[name];
+                    if (value === undefined || value === null || String(value).trim() === '') continue;
+                    const existing = existingByName[name];
+                    if (existing?.configurationId) {
+                        const updated = await AcademicConfigService.update(
+                            existing.configurationId,
+                            new AcademicConfiguration({
+                                configuration_id: existing.configurationId,
+                                school_id: schoolId,
+                                configuration_name: name,
+                                configuration_value: String(value),
+                                description: existing.description,
+                            })
+                        );
+                        if (updated) nextByName[name] = updated;
+                    } else {
+                        const created = await AcademicConfigService.create(
+                            new AcademicConfiguration({
+                                school_id: schoolId,
+                                configuration_name: name,
+                                configuration_value: String(value),
+                            })
+                        );
+                        if (created) nextByName[name] = created;
+                    }
+                }
+                setByName(nextByName);
             };
 
-            // ⚠️ Ajusta esta llamada al nombre/firma real de tu SchoolService
-            const updatedSchool = await updateSchool(schoolId, payload);
+            await persistConfigs(ACADEMIC_FIELD_NAMES, academicConfig, academicConfigsByName, setAcademicConfigsByName);
+            await persistConfigs(ATTENDANCE_FIELD_NAMES, attendanceConfig, attendanceConfigsByName, setAttendanceConfigsByName);
 
-            const general    = GeneralInfo.fromApi(updatedSchool);
-            const contact    = ContactInfo.fromApi(updatedSchool);
-            const academic   = AcademicConfig.fromApi(updatedSchool);
-            const attendance = AttendanceConfig.fromApi(updatedSchool);
+            if (updatedSchool) {
+                const general = {
+                    name: updatedSchool.name,
+                    code: updatedSchool.code,
+                    district: generalInfo.district,
+                };
+                const contact = {
+                    email: updatedSchool.email,
+                    phone: updatedSchool.phone,
+                    address: updatedSchool.address,
+                    city: contactInfo.city,
+                    country: contactInfo.country,
+                };
 
-            setGeneralInfo(general);
-            setContactInfo(contact);
-            setAcademicConfig(academic);
-            setAttendanceConfig(attendance);
-            setOriginalData({ general, contact, academic, attendance });
+                setGeneralInfo(general);
+                setContactInfo(contact);
+                setOriginalData({general, contact, academic: academicConfig, attendance: attendanceConfig});
+            }
 
             setHasChanges(false);
             setShowConfirmModal(false);
-            Alert.alert('Éxito', 'Configuración del colegio actualizada correctamente');
+            Alert.alert(t('common.success'), t('schoolConfig.success.updated'));
         } catch (error) {
             console.error('Error guardando configuración del colegio:', error);
-            Alert.alert('Error', 'No se pudo guardar los cambios');
+            Alert.alert(t('common.error'), t('schoolConfig.errors.saveFailed'));
         } finally {
             setIsLoading(false);
         }
     };
 
     const handleDiscardChanges = () => {
+        if (!isAdmin) return;
         setHasChanges(false);
         setValidationErrors({});
 
@@ -171,35 +291,26 @@ export function useSchoolConfigurationViewModel() {
         }
     };
 
-    // ── Estados de modales ─────────────────────
     const [countryModalVisible, setCountryModalVisible] = useState(false);
-    const [cityModalVisible, setCityModalVisible]       = useState(false);
+    const [cityModalVisible, setCityModalVisible] = useState(false);
 
-    // ── Estados de países (desde API) ──────────
-    const [countryOptions, setCountryOptions]     = useState([]);
+    const [countryOptions, setCountryOptions] = useState([]);
     const [loadingCountries, setLoadingCountries] = useState(false);
-    const [countrySearch, setCountrySearch]       = useState('');
+    const [countrySearch, setCountrySearch] = useState('');
 
-    // ── Estados de ciudades ────────────────────
     const [citiesOptions, setCitiesOptions] = useState([]);
     const [loadingCities, setLoadingCities] = useState(false);
-    const [citySearch, setCitySearch]       = useState('');
-
-    // ─────────────────────────────────────────────
-    // Carga inicial de países al montar el componente
-    // ─────────────────────────────────────────────
+    const [citySearch, setCitySearch] = useState('');
 
     useEffect(() => {
         loadAllCountries();
     }, []);
 
-    // Países filtrados por búsqueda
     const filteredCountries = countryOptions.filter((c) =>
         c.name.toLowerCase().includes(countrySearch.toLowerCase()) ||
         c.dialCode.includes(countrySearch)
     );
 
-    // Ciudades filtradas por búsqueda
     const filteredCities = citiesOptions.filter((city) =>
         city.toLowerCase().includes(citySearch.toLowerCase())
     );
@@ -211,18 +322,12 @@ export function useSchoolConfigurationViewModel() {
         : citiesOptions.slice(0, CITY_LIMIT);
     const isCityListLimited = !citySearchTrimmed && citiesOptions.length > CITY_LIMIT;
 
-    // ─────────────────────────────────────────────
-    // Funciones de API - CountriesNow
-    // ─────────────────────────────────────────────
-
-    // 1. Obtener TODOS los países con sus dial codes
     const loadAllCountries = async () => {
         setLoadingCountries(true);
         try {
             const countries = await CountryService.fetchAllCountries();
             setCountryOptions(countries);
 
-            // Configurar Colombia por defecto
             const colombia = CountryService.findCountryByName(countries, 'colombia');
             if (colombia) {
                 setContactInfo(prev => ({
@@ -233,7 +338,7 @@ export function useSchoolConfigurationViewModel() {
                 loadCities(colombia.name);
             }
         } catch (error) {
-            Alert.alert('Error', error.message);
+            Alert.alert(t('common.error'), t('schoolConfig.errors.countriesFailed'));
         } finally {
             setLoadingCountries(false);
         }
@@ -246,74 +351,49 @@ export function useSchoolConfigurationViewModel() {
             const cities = await CountryService.fetchCities(countryName);
             setCitiesOptions(cities);
         } catch (error) {
-            Alert.alert('Error', error.message);
+            Alert.alert(t('common.error'), t('schoolConfig.errors.citiesFailed'));
         } finally {
             setLoadingCities(false);
         }
-    }
-
-    // ─────────────────────────────────────────────
-    // Handlers de país y ciudad
-    // ─────────────────────────────────────────────
+    };
 
     const handleCountryChange = (option) => {
+        if (!isAdmin) return;
         setContactInfo((prev) => ({
             ...prev,
-            country:    option.name,
-            dialCode:   option.dialCode,
-            phone:      '',
-            city:       '',
+            country: option.name,
+            dialCode: option.dialCode,
+            phone: '',
+            city: '',
             postalCode: '',
         }));
         setCountrySearch('');
         setHasChanges(true);
         setCountryModalVisible(false);
-        loadAllCountries(option.name);
+        loadCities(option.name);
     };
 
     const handleCityChange = (cityName) => {
-        setContactInfo((prev) => ({ ...prev, city: cityName }));
+        setContactInfo((prev) => ({...prev, city: cityName}));
         setCitySearch('');
         setHasChanges(true);
         setCityModalVisible(false);
-        // fetchPostalCode(contactInfo.country, cityName);
     };
 
     return {
-        activeTab,
-        isLoading,
-        showConfirmModal,
-        showAdvanced,
-        hasChanges,
-        generalInfo,
-        contactInfo,
-        academicConfig,
-        attendanceConfig,
+        activeTab, isLoading, showConfirmModal, showAdvanced, hasChanges,
+        generalInfo, contactInfo, academicConfig, attendanceConfig,
         validationErrors,
-        handleGeneralInfoChange,
-        handleContactInfoChange,
-        handleAcademicConfigChange,
-        handleAttendanceConfigChange,
-        handleSaveChanges,
-        handleDiscardChanges,
-        countryModalVisible,
-        cityModalVisible,
-        loadingCountries,
-        loadingCities,
-        filteredCountries,
-        displayedCities,
-        isCityListLimited,
-        handleCountryChange,
-        handleCityChange,
-        countrySearch,
-        setCountrySearch,
-        citySearch,
-        setCitySearch,
-        CITY_LIMIT,
-        citiesOptions,
-        setActiveTab,
-        setCountryModalVisible,
-        setCityModalVisible,
-        setShowConfirmModal
-    }
+        handleGeneralInfoChange, handleContactInfoChange,
+        handleAcademicConfigChange, handleAttendanceConfigChange,
+        handleSaveChanges, handleDiscardChanges,
+        countryModalVisible, cityModalVisible,
+        loadingCountries, loadingCities,
+        filteredCountries, displayedCities, isCityListLimited,
+        handleCountryChange, handleCityChange,
+        countrySearch, setCountrySearch,
+        citySearch, setCitySearch,
+        CITY_LIMIT, citiesOptions,
+        setActiveTab, setCountryModalVisible, setCityModalVisible, setShowConfirmModal,
+    };
 }

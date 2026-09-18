@@ -1,28 +1,28 @@
-import React from 'react';
-import {
-    View,
-    Text,
-    TouchableOpacity,
-} from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from './ThemeContext';
+import React, {useEffect, useState} from 'react';
+import {Text, TouchableOpacity, View,} from 'react-native';
+import {useTranslation} from 'react-i18next';
+import {useTheme} from './ThemeContext';
+import {DocumentTypeService, DEFAULT_DOCUMENT_TYPES} from '../../../services/DocumentTypeService';
 import stylescommon from './style/Style';
-
-const documentosColombia = [
-    { id: "cc", label: "Cédula de Ciudadanía (CC)", abreviatura: "CC" },
-    { id: "ti", label: "Tarjeta de Identidad (TI)", abreviatura: "TI" },
-    { id: "ce", label: "Cédula de Extranjería (CE)", abreviatura: "CE" }
-];
 
 export const DocumentSelector = ({ selectedDocument, onSelect }) => {
     const { t } = useTranslation();
     const { colors } = useTheme();
+    const [documentTypes, setDocumentTypes] = useState(DEFAULT_DOCUMENT_TYPES);
+
+    useEffect(() => {
+        let active = true;
+        DocumentTypeService.getAll().then((docs) => {
+            if (active) setDocumentTypes(docs);
+        });
+        return () => { active = false; };
+    }, []);
 
     return (
         <View style={stylescommon.selectorContainer}>
             <Text style={[stylescommon.selectorLabelSelector, { color: colors.modalText }]}>{t('documentSelector.label')}</Text>
             <View style={stylescommon.optionsContainerSelector}>
-                {documentosColombia.map((doc) => (
+                {documentTypes.map((doc) => (
                     <TouchableOpacity
                         key={doc.id}
                         style={[

@@ -1,10 +1,7 @@
 import React from 'react';
-import {
-    View,
-    Text,
-} from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from './ThemeContext';
+import {Text, View,} from 'react-native';
+import {useTranslation} from 'react-i18next';
+import {useTheme} from './ThemeContext';
 import stylescommon from './style/Style';
 
 export const ProgressBar = ({ currentStep, totalSteps }) => {

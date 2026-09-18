@@ -1,156 +1,57 @@
-import { useState, useEffect } from "react";
-import { Platform } from "react-native";
-import { useTranslation } from "react-i18next";
-import { useLanguageRefresh } from "../utils/useLanguageRefresh";
-import { useTheme } from "../view/components/common/ThemeContext";
-import { getCurrentUserRole } from "../services/UserService";
+import {useCallback, useEffect, useState} from "react";
+import {Platform} from "react-native";
+import {useTranslation} from "react-i18next";
+import {useLanguageRefresh} from "../utils/useLanguageRefresh";
+import {useTheme} from "../view/components/common/ThemeContext";
+import {getCurrentUserRole, getCurrentUser} from "../services/UserService";
+import {ActorService} from "../services/ActorService";
+import {PeriodService} from "../services/PeriodService";
+import {request, GET} from "../api/apiClient";
 
-// CONSTANTES
+function unwrap(data) {
+  if (data && Array.isArray(data.value)) return data.value;
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === 'object') return [data];
+  return [];
+}
+
 export const STATUS_CONFIG = {
-    presente: { color: "#22C55E", bg: "#DCFCE7", darkBg: "#14532D", label: "attendance.present" },
-    tarde:   { color: "#F59E0B", bg: "#FEF3C7", darkBg: "#451A03", label: "attendance.late" },
-    ausente: { color: "#EF4444", bg: "#FEE2E2", darkBg: "#450A0A", label: "attendance.absent" },
-    justificado: { color: "#8B5CF6", bg: "#EDE9FE", darkBg: "#2E1065", label: "attendance.justified" },
+    presente: {color: "#22C55E", bg: "#DCFCE7", darkBg: "#14532D", label: "attendance.present"},
+    tarde: {color: "#F59E0B", bg: "#FEF3C7", darkBg: "#451A03", label: "attendance.late"},
+    ausente: {color: "#EF4444", bg: "#FEE2E2", darkBg: "#450A0A", label: "attendance.absent"},
+    justificado: {color: "#8B5CF6", bg: "#EDE9FE", darkBg: "#2E1065", label: "attendance.justified"},
 };
 
 export const APPROVAL_CONFIG = {
-    Pending:  { color: "#F59E0B", label: "attendance.pending" },
-    Approved: { color: "#22C55E", label: "attendance.approved" },
-    Rejected: { color: "#EF4444", label: "attendance.rejected" },
+    Pending: {color: "#F59E0B", label: "attendance.pending"},
+    Approved: {color: "#22C55E", label: "attendance.approved"},
+    Rejected: {color: "#EF4444", label: "attendance.rejected"},
 };
 
-// DATOS MOCK (copiar igual que antes, omitidos por brevedad)
-const MOCK_TEACHERS = [
-    {
-        id: 1,
-        nombre: "Ana Martínez",
-        fecha: "2024-03-20", hora: "07:55 AM", estado: "presente",
-        materia: "Matemáticas", codigo_curso: "MAT-101",
-        dia: "Lunes", hora_inicio: "08:00 AM", hora_fin: "10:00 AM",
-        salon: "Aula 201",
-        periodo: "2024-I", periodo_inicio: "2024-01-15", periodo_fin: "2024-06-30",
-    },
-    {
-        id: 2,
-        nombre: "Luis Fernández",
-        fecha: "2024-03-20", hora: "08:02 AM", estado: "presente",
-        materia: "Ciencias", codigo_curso: "CIE-102",
-        dia: "Lunes", hora_inicio: "08:00 AM", hora_fin: "10:00 AM",
-        salon: "Lab Ciencias",
-        periodo: "2024-I", periodo_inicio: "2024-01-15", periodo_fin: "2024-06-30",
-    },
-    {
-        id: 3,
-        nombre: "Carmen López",
-        fecha: "2024-03-20", hora: "08:30 AM", estado: "tarde",
-        materia: "Español", codigo_curso: "ESP-103",
-        dia: "Lunes", hora_inicio: "08:00 AM", hora_fin: "10:00 AM",
-        salon: "Aula 105",
-        periodo: "2024-I", periodo_inicio: "2024-01-15", periodo_fin: "2024-06-30",
-    },
-    {
-        id: 4,
-        nombre: "Roberto Díaz",
-        fecha: "2024-03-20", hora: "—", estado: "ausente",
-        materia: "Historia", codigo_curso: "HIS-104",
-        dia: "Lunes", hora_inicio: "10:00 AM", hora_fin: "12:00 PM",
-        salon: "Aula 302",
-        periodo: "2024-I", periodo_inicio: "2024-01-15", periodo_fin: "2024-06-30",
-    },
-    {
-        id: 5,
-        nombre: "María González",
-        fecha: "2024-03-19", hora: "08:10 AM", estado: "presente",
-        materia: "Inglés", codigo_curso: "ING-105",
-        dia: "Martes", hora_inicio: "08:00 AM", hora_fin: "10:00 AM",
-        salon: "Aula 110",
-        periodo: "2024-I", periodo_inicio: "2024-01-15", periodo_fin: "2024-06-30",
-    },
-    {
-        id: 6,
-        nombre: "Carlos Ruiz",
-        fecha: "2024-03-19", hora: "09:00 AM", estado: "tarde",
-        materia: "Educación Física", codigo_curso: "EDF-106",
-        dia: "Martes", hora_inicio: "08:00 AM", hora_fin: "10:00 AM",
-        salon: "Cancha Principal",
-        periodo: "2024-I", periodo_inicio: "2024-01-15", periodo_fin: "2024-06-30",
-    },
-];
+const SUBJECT_KEYS = {
+    math: "subjects.math",
+    "Matemáticas": "subjects.math",
+    physics: "subjects.physics",
+    "Física": "subjects.physics",
+    history: "subjects.history",
+    Historia: "subjects.history",
+    programming: "subjects.programming",
+    Programación: "subjects.programming",
+    science: "subjects.science",
+    Ciencias: "subjects.science",
+    spanish: "subjects.spanish",
+    Español: "subjects.spanish",
+    english: "subjects.english",
+    Inglés: "subjects.english",
+    physicalEducation: "subjects.physicalEducation",
+    "Educación Física": "subjects.physicalEducation",
+};
 
-const MOCK_MY_ATTENDANCE = [
-    {
-        id: 1,
-        fecha: "2024-03-20", hora: "07:58 AM", estado: "presente",
-        materia: "Matemáticas", codigo_curso: "MAT-101",
-        docente: "Ana Martínez",
-        dia: "Lunes", hora_inicio: "08:00 AM", hora_fin: "10:00 AM",
-        salon: "Aula 201",
-        periodo: "2024-I", periodo_inicio: "2024-01-15", periodo_fin: "2024-06-30",
-        justificacion: null,
-    },
-    {
-        id: 2,
-        fecha: "2024-03-20", hora: "10:05 AM", estado: "presente",
-        materia: "Ciencias", codigo_curso: "CIE-102",
-        docente: "Luis Fernández",
-        dia: "Lunes", hora_inicio: "10:00 AM", hora_fin: "12:00 PM",
-        salon: "Lab Ciencias",
-        periodo: "2024-I", periodo_inicio: "2024-01-15", periodo_fin: "2024-06-30",
-        justificacion: null,
-    },
-    {
-        id: 3,
-        fecha: "2024-03-19", hora: "08:40 AM", estado: "tarde",
-        materia: "Español", codigo_curso: "ESP-103",
-        docente: "Carmen López",
-        dia: "Martes", hora_inicio: "08:00 AM", hora_fin: "10:00 AM",
-        salon: "Aula 105",
-        periodo: "2024-I", periodo_inicio: "2024-01-15", periodo_fin: "2024-06-30",
-        justificacion: null,
-    },
-    {
-        id: 4,
-        fecha: "2024-03-19", hora: "—", estado: "ausente",
-        materia: "Historia", codigo_curso: "HIS-104",
-        docente: "Roberto Díaz",
-        dia: "Martes", hora_inicio: "10:00 AM", hora_fin: "12:00 PM",
-        salon: "Aula 302",
-        periodo: "2024-I", periodo_inicio: "2024-01-15", periodo_fin: "2024-06-30",
-        justificacion: {
-            texto: "Cita médica urgente",
-            estado: "Pending",
-            revisado_por: null,
-            revisado_en: null,
-        },
-    },
-    {
-        id: 5,
-        fecha: "2024-03-18", hora: "08:02 AM", estado: "presente",
-        materia: "Inglés", codigo_curso: "ING-105",
-        docente: "María González",
-        dia: "Miércoles", hora_inicio: "08:00 AM", hora_fin: "10:00 AM",
-        salon: "Aula 110",
-        periodo: "2024-I", periodo_inicio: "2024-01-15", periodo_fin: "2024-06-30",
-        justificacion: null,
-    },
-    {
-        id: 6,
-        fecha: "2024-03-18", hora: "—", estado: "ausente",
-        materia: "Educación Física", codigo_curso: "EDF-106",
-        docente: "Carlos Ruiz",
-        dia: "Miércoles", hora_inicio: "08:00 AM", hora_fin: "10:00 AM",
-        salon: "Cancha Principal",
-        periodo: "2024-I", periodo_inicio: "2024-01-15", periodo_fin: "2024-06-30",
-        justificacion: {
-            texto: "Incapacidad médica presentada.",
-            estado: "Approved",
-            revisado_por: "Admin01",
-            revisado_en: "2024-03-19 09:00",
-        },
-    },
-];
+export function getSubjectLabel(subject, t) {
+    const translationKey = SUBJECT_KEYS[subject];
+    return translationKey ? t(translationKey, {defaultValue: subject}) : subject;
+}
 
-// HELPERS
 export function formatDateKey(date) {
     if (!date) return "";
     const y = date.getFullYear();
@@ -159,21 +60,40 @@ export function formatDateKey(date) {
     return `${y}-${m}-${d}`;
 }
 
-export function formatDateDisplay(date, t) {
-    if (!date) return t("attendance.filterByDate", { defaultValue: "Filtrar fecha" });
-    return date.toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
+export function resolveLocale(language) {
+    if (language === 'en') return 'en-US';
+    if (language === 'pt') return 'pt-BR';
+    if (language === 'fr') return 'fr-FR';
+    return 'es-ES';
 }
 
-// VIEW MODEL
+export function getDayLabel(dayOfWeek, locale = 'es-ES') {
+    const day = Number(dayOfWeek);
+    if (!day || day < 1 || day > 7) return '—';
+    try {
+        // 2024-01-01 fue lunes; desplazar para obtener el día de la semana.
+        const ref = new Date(2024, 0, day);
+        const label = ref.toLocaleDateString(locale, {weekday: 'long'});
+        return label ? label.charAt(0).toUpperCase() + label.slice(1) : '—';
+    } catch {
+        return '—';
+    }
+}
+
+export function formatDateDisplay(date, t, locale = 'es-ES') {
+    if (!date) return t("attendance.filterByDate");
+    return date.toLocaleDateString(locale, {day: "2-digit", month: "short", year: "numeric"});
+}
+
 export function useAttendanceViewModel() {
-    const { t, i18n } = useTranslation();
-    const { colors, loadThemeForRole, theme } = useTheme();
+    const {t, i18n} = useTranslation();
+    const {colors, loadThemeForRole, theme} = useTheme();
     const refreshKey = useLanguageRefresh();
-    const updateKey = refreshKey; // Sincronizar con cambios de idioma
+    const updateKey = refreshKey;
     const isDark = theme === "dark";
 
     const [userRole, setUserRole] = useState(null);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [searchText, setSearchText] = useState("");
     const [selectedDate, setSelectedDate] = useState(null);
     const [showPicker, setShowPicker] = useState(false);
@@ -181,48 +101,150 @@ export function useAttendanceViewModel() {
     const [tempDate, setTempDate] = useState(new Date());
     const [detailItem, setDetailItem] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
+    const [teacherData, setTeacherData] = useState([]);
+    const [myAttendance, setMyAttendance] = useState([]);
+
+    const fetchAttendance = useCallback(async (role) => {
+        try {
+            setLoading(true);
+            const locale = resolveLocale(i18n.language);
+            const user = await getCurrentUser();
+            const actors = user?.personId ? await ActorService.getByPerson(user.personId) : [];
+            const myActor = actors?.length > 0 ? actors[0] : null;
+
+            const isTeacherRole = role === 'Docente' || role === 'teacher' || role === 'INSTRUCTOR';
+            const isAdminRole = role === 'Administrador' || role === 'admin';
+
+            let records = [];
+
+            if (isAdminRole) {
+                const arData = await request({ method: GET, url: 'attendance_record', params: { _limit: 200 }, requiresAuth: false });
+                records = unwrap(arData);
+            } else if (isTeacherRole && myActor) {
+                const blockData = await request({ method: GET, url: 'schedule_block', params: { instructor_actor_id: myActor.academicActorId }, requiresAuth: false });
+                const blocks = unwrap(blockData);
+                const blockIds = blocks.map(b => b.schedule_block_id);
+
+                for (const blockId of blockIds) {
+                    const sessionData = await request({ method: GET, url: 'class_session', params: { schedule_block_id: blockId }, requiresAuth: false });
+                    const sessions = unwrap(sessionData);
+                    for (const session of sessions) {
+                        const arData = await request({ method: GET, url: 'attendance_record', params: { class_session_id: session.class_session_id }, requiresAuth: false });
+                        records.push(...unwrap(arData));
+                    }
+                }
+            } else if (myActor) {
+                const arData = await request({ method: GET, url: 'attendance_record', params: { academic_actor_id: myActor.academicActorId, _limit: 200 }, requiresAuth: false });
+                records = unwrap(arData);
+            }
+
+            let activePeriod = null;
+            try {
+                activePeriod = myActor?.schoolId
+                    ? await PeriodService.getActiveBySchool(myActor.schoolId)
+                    : (await PeriodService.getAll({is_active: true}))[0] || null;
+            } catch (e) {}
+
+            const enriched = [];
+            for (const record of records.slice(-50)) {
+                try {
+                    const sessionData = await request({ method: GET, url: 'class_session', params: { class_session_id: record.class_session_id }, requiresAuth: false });
+                    const session = unwrap(sessionData)[0] || {};
+
+                    const blockData = await request({ method: GET, url: 'schedule_block', params: { schedule_block_id: session.schedule_block_id }, requiresAuth: false });
+                    const block = unwrap(blockData)[0] || {};
+
+                    const courseData = await request({ method: GET, url: 'course', params: { course_id: block.course_id }, requiresAuth: false });
+                    const course = unwrap(courseData)[0] || {};
+
+                    const envData = await request({ method: GET, url: 'environment', params: { environment_id: block.environment_id }, requiresAuth: false });
+                    const env = unwrap(envData)[0] || {};
+
+                    const actorData = await request({ method: GET, url: 'academic_actor', params: { academic_actor_id: record.academic_actor_id }, requiresAuth: false });
+                    const actor = unwrap(actorData)[0] || {};
+
+                    const personData = await request({ method: GET, url: 'person', params: { person_id: actor.person_id }, requiresAuth: false });
+                    const person = unwrap(personData)[0] || {};
+
+                    let docenteName = '—';
+                    if (block.instructor_actor_id) {
+                        try {
+                            const instrActorData = await request({ method: GET, url: 'academic_actor', params: { academic_actor_id: block.instructor_actor_id }, requiresAuth: false });
+                            const instrActor = unwrap(instrActorData)[0];
+                            if (instrActor?.person_id) {
+                                const instrPersonData = await request({ method: GET, url: 'person', params: { person_id: instrActor.person_id }, requiresAuth: false });
+                                const instrPerson = unwrap(instrPersonData)[0];
+                                if (instrPerson) {
+                                    docenteName = `${instrPerson.name || ''} ${instrPerson.last_name || ''}`.trim() || '—';
+                                }
+                            }
+                        } catch (e) {}
+                    }
+
+                    const statusMap = { Present: 'presente', Late: 'tarde', Absent: 'ausente' };
+                    const hora = record.captured_at ? new Date(record.captured_at).toLocaleTimeString(locale, {hour: '2-digit', minute: '2-digit'}) : '—';
+
+                    enriched.push({
+                        id: record.attendance_record_id,
+                        nombre: `${person.name || ''} ${person.last_name || ''}`.trim() || t('attendance.unknownPerson', {id: record.academic_actor_id}),
+                        fecha: record.captured_at ? record.captured_at.split('T')[0] : '',
+                        hora,
+                        estado: statusMap[record.attendance_status] || 'ausente',
+                        materia: course.name || course.code || '—',
+                        codigo_curso: course.code || '—',
+                        dia: getDayLabel(block.day_of_week, locale),
+                        hora_inicio: block.starts_at || '—',
+                        hora_fin: block.ends_at || '—',
+                        salon: env.name || '—',
+                        periodo: activePeriod?.name || '—',
+                        periodo_inicio: activePeriod?.startsOn || '—',
+                        periodo_fin: activePeriod?.endsOn || '—',
+                        docente: docenteName,
+                    });
+                } catch (e) {
+                    continue;
+                }
+            }
+
+            setTeacherData(enriched);
+            setMyAttendance(enriched.slice(-10));
+        } catch (error) {
+            console.error('Error fetching attendance:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, [t, i18n.language]);
 
     useEffect(() => {
         const init = async () => {
             try {
-                // Obtener el rol desde el token (fuente única de verdad)
                 const role = await getCurrentUserRole();
                 setUserRole(role);
-
-                if (role) {
-                    await loadThemeForRole(role);
-                }
+                if (role) await loadThemeForRole(role);
+                await fetchAttendance(role);
             } catch (error) {
                 console.error("Error cargando datos del usuario:", error);
-            } finally {
                 setLoading(false);
             }
         };
-
         init();
-    }, []);
+    }, [fetchAttendance, loadThemeForRole]);
 
-    const isAdmin = userRole === "admin";
+    const isAdmin = userRole === "Administrador" || userRole === "admin";
 
-    const filteredTeachers = MOCK_TEACHERS.filter(item =>
+    const filteredTeachers = teacherData.filter(item =>
         (!searchText || item.nombre.toLowerCase().includes(searchText.toLowerCase())) &&
         (!selectedDate || item.fecha === formatDateKey(selectedDate))
     );
 
-    const filteredMyAttendance = MOCK_MY_ATTENDANCE.filter(item =>
+    const filteredMyAttendance = myAttendance.filter(item =>
         (!selectedDate || item.fecha === formatDateKey(selectedDate))
     );
 
     const activeData = isAdmin ? filteredTeachers : filteredMyAttendance;
 
-    const openDetail = (item) => {
-        setDetailItem(item);
-        setShowDetailModal(true);
-    };
-    const closeDetail = () => {
-        setShowDetailModal(false);
-        setDetailItem(null);
-    };
+    const openDetail = (item) => { setDetailItem(item); setShowDetailModal(true); };
+    const closeDetail = () => { setShowDetailModal(false); setDetailItem(null); };
 
     const handleOpenPicker = () => {
         setTempDate(selectedDate ?? new Date());
@@ -234,29 +256,11 @@ export function useAttendanceViewModel() {
         if (event.type === "set" && date) setSelectedDate(date);
     };
 
-    // RETORNAMOS t también
     return {
-        t,               // <--- AGREGADO
-        isAdmin,
-        isDark,
-        colors,
-        refreshKey,
-        updateKey,
-        searchText,
-        setSearchText,
-        selectedDate,
-        setSelectedDate,
-        showPicker,
-        showIOSModal,
-        setShowIOSModal,
-        tempDate,
-        setTempDate,
-        activeData,
-        detailItem,
-        showDetailModal,
-        openDetail,
-        closeDetail,
-        handleOpenPicker,
-        handleAndroidChange,
+        t, locale: resolveLocale(i18n.language), isAdmin, isDark, colors, refreshKey, updateKey,
+        searchText, setSearchText, selectedDate, setSelectedDate,
+        showPicker, showIOSModal, setShowIOSModal, tempDate, setTempDate,
+        activeData, detailItem, showDetailModal, loading,
+        openDetail, closeDetail, handleOpenPicker, handleAndroidChange,
     };
 }

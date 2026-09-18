@@ -1,13 +1,7 @@
 import React from 'react';
-import {
-    Modal,
-    View,
-    Text,
-    ScrollView,
-    TouchableOpacity,
-} from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from './ThemeContext';
+import {Modal, ScrollView, Text, TouchableOpacity, View,} from 'react-native';
+import {useTranslation} from 'react-i18next';
+import {useTheme} from './ThemeContext';
 import styleAuth from "./style/Style";
 
 export default function TerminosModal({ isVisible, onClose }) {

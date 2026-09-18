@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, {createContext, useCallback, useContext, useEffect, useMemo, useState} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { saveThemeForRole, getThemeForRole } from '../../../utils/themeByRole';
+import {getThemeForRole, saveThemeForRole} from '../../../utils/themeByRole';
 
 export const lightColors = {
     background: '#F5F5F5',

@@ -1,4 +1,4 @@
-import { apiCountry } from '../api/apiCountry';
+import {apiCountry} from '../api/apiCountry';
 
 export const CountryService = {
     fetchAllCountries: async () => {

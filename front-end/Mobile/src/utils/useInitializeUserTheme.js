@@ -1,20 +1,13 @@
-import { useEffect, useState } from 'react';
-import { useTheme } from '../view/components/common/ThemeContext';
-import { getCurrentUserRole } from '../services/UserService';
+import {useEffect, useState, useCallback} from 'react';
+import {useTheme} from '../view/components/common/ThemeContext';
+import {getCurrentUserRole} from '../services/UserService';
 
-/**
- * Hook para inicializar el tema del usuario basado en su rol.
- * Consolida la lógica repetida en múltiples viewmodels.
- * 
- * @param {boolean} onFocus - Si es true, ejecuta la inicialización en useFocusEffect
- * @returns {object} { isLoading, userRole }
- */
-export const useInitializeUserTheme = (onFocus = false) => {
+export const useInitializeUserTheme = () => {
     const { loadThemeForRole } = useTheme();
     const [isLoading, setIsLoading] = useState(false);
     const [userRole, setUserRole] = useState(null);
 
-    const initializeTheme = async () => {
+    const initializeTheme = useCallback(async () => {
         try {
             setIsLoading(true);
             const role = await getCurrentUserRole();
@@ -27,18 +20,11 @@ export const useInitializeUserTheme = (onFocus = false) => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [loadThemeForRole]);
 
-    if (!onFocus) {
-        useEffect(() => {
-            initializeTheme();
-        }, [loadThemeForRole]);
-    }
+    useEffect(() => {
+        initializeTheme();
+    }, [initializeTheme]);
 
-    return {
-        isLoading,
-        userRole,
-        setUserRole,
-        initializeTheme, // Retornar por si se necesita forzar reinicialización
-    };
+    return { isLoading, userRole, setUserRole, initializeTheme };
 };

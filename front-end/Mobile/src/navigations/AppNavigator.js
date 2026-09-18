@@ -3,6 +3,8 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '../utils/i18n';
+import {hasValidToken, removeToken} from '../storage/TokenStorage';
+import {useUser} from '../utils/UserContext';
 import HomesScreen from '../view/screens/login/Login';
 import MenuScreen from '../view/screens/MenuScreen';
 import DashboardScreen from '../view/screens/DashboardScreen';
@@ -23,6 +25,8 @@ import VerifyCodeScreen from "../view/screens/login/Verifycodescreen";
 import ForgotPasswordScreen from "../view/screens/login/Forgotpasswordscreen";
 import PendingJustificationScreen from "../view/screens/PendingJustificationScreen";
 import ManageEnviromentScreen from "../view/screens/ManageEnviromentScreen";
+import RegisterFace from "../view/screens/RegisterFace";
+import {SuccessScreen} from "../view/components/auth/SuccessScreen";
 
 const Stack = createStackNavigator();
 
@@ -30,6 +34,7 @@ export default function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(null);
     const [userRole, setUserRole] = useState(null);
     const navigationRef = useRef(null);
+    const { loadUserData } = useUser();
 
     useEffect(() => {
         checkAuth();
@@ -38,13 +43,14 @@ export default function App() {
     const checkAuth = async () => {
         try {
             const role = await AsyncStorage.getItem('userRole');
-            const authToken = await AsyncStorage.getItem('authToken');
+            const tokenValid = await hasValidToken();
 
-            if (role && authToken) {
+            if (role && tokenValid) {
                 setIsAuthenticated(true);
                 setUserRole(role);
             } else {
-                await AsyncStorage.multiRemove(['userRole', 'userEmail', 'authToken']);
+                await removeToken();
+                await AsyncStorage.multiRemove(['userRole', 'userEmail', 'appLanguage', 'alertsConfig']);
                 setIsAuthenticated(false);
                 setUserRole(null);
             }
@@ -57,12 +63,10 @@ export default function App() {
 
     const handleLogin = async (role, token) => {
         try {
-            await AsyncStorage.multiSet([
-                ['userRole', role],
-                ['authToken', token || 'default-token']
-            ]);
+            await AsyncStorage.setItem('userRole', role);
             setIsAuthenticated(true);
             setUserRole(role);
+            await loadUserData();
         } catch (e) {
             console.error('Error guardando sesión:', e);
         }
@@ -70,17 +74,19 @@ export default function App() {
 
     const handleLogout = async () => {
         try {
+            await removeToken();
             await AsyncStorage.multiRemove([
                 'userRole',
                 'userEmail',
-                'authToken',
-                'appLanguage'
+                'appLanguage',
+                'alertsConfig',
             ]);
 
             await i18n.changeLanguage('es');
 
             setIsAuthenticated(false);
             setUserRole(null);
+            await loadUserData();
 
         } catch (e) {
             console.error('Error en logout:', e);
@@ -157,6 +163,8 @@ export default function App() {
                         <Stack.Screen name="AttendanceReportScreen" component={AttendanceReportScreen}/>
                         <Stack.Screen name="SchoolConfigurationScreen" component={SchoolConfigurationScreen}/>
                         <Stack.Screen name="PendingJustificationScreen" component={PendingJustificationScreen}/>
+                        <Stack.Screen name="RegisterFace" component={RegisterFace} />
+                        <Stack.Screen name="SuccessScreen" component={SuccessScreen}/>
                     </>
                 )}
             </Stack.Navigator>

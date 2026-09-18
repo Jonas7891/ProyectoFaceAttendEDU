@@ -21,14 +21,11 @@ import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import {QuestionInput} from '../components/common/QuestionInput';
 import PrimaryButton from '../components/auth/PrimaryButton';
-import styles from './Style';
+import styles from './Styles/UpdatePhotoScreen/Style';
 import {useUpdatePhotoViewModel} from '../../viewmodels/useUpdatePhotoViewModel';
+import ENV from '../../config/env';
 
-const devFaceStore = {};
-export {devFaceStore};
-
-// url pal backend
-const BACKEND_FACE_URL = ' ';
+const FACE_REGISTER_URL = process.env.EXPO_PUBLIC_FACE_URL || `${ENV.API_BASE_URL}face/register`;
 
 function FaceGuideOval({status, colors}) {
     const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -79,7 +76,7 @@ export default function UpdatePhoto() {
     const [isCameraOpen, setIsCameraOpen] = useState(false);
     const [facing, setFacing] = useState('front');
     const [captureStatus, setCaptureStatus] = useState('idle');
-    const [statusMessage, setStatusMessage] = useState('Posiciona tu rostro en el óvalo');
+    const [statusMessage, setStatusMessage] = useState(t('updatePhoto.camera.positionFace'));
     const [capturedPhoto, setCapturedPhoto] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -115,21 +112,21 @@ export default function UpdatePhoto() {
 
     const openCamera = async () => {
         if (!isFormValid) {
-            Alert.alert('Datos incompletos', 'Por favor completa todos los campos antes de continuar.');
+            Alert.alert(t('updatePhoto.camera.incompleteTitle'), t('updatePhoto.camera.incompleteMsg'));
             return;
         }
 
         if (!permission?.granted) {
             const result = await requestPermission();
             if (!result.granted) {
-                Alert.alert('Permiso denegado', 'Necesitamos acceso a tu cámara.');
+                Alert.alert(t('updatePhoto.camera.permissionTitle'), t('updatePhoto.camera.permissionMsg'));
                 return;
             }
         }
 
         setCaptureStatus('idle');
         setCapturedPhoto(null);
-        setStatusMessage('Posiciona tu rostro en el óvalo');
+        setStatusMessage(t('updatePhoto.camera.positionFace'));
         setIsProcessing(false);
         setIsCameraOpen(true);
     };
@@ -139,12 +136,12 @@ export default function UpdatePhoto() {
 
         if (capturedPhoto) {
             Alert.alert(
-                '¿Descartar foto?',
-                'Si sales, perderás la foto que tomaste.',
+                t('updatePhoto.camera.discardTitle'),
+                t('updatePhoto.camera.discardMsg'),
                 [
-                    {text: 'Cancelar', style: 'cancel'},
+                    {text: t('common.cancel'), style: 'cancel'},
                     {
-                        text: 'Descartar',
+                        text: t('common.discard'),
                         style: 'destructive',
                         onPress: () => {
                             setIsCameraOpen(false);
@@ -167,7 +164,7 @@ export default function UpdatePhoto() {
 
         try {
             setCaptureStatus('capturing');
-            setStatusMessage('Capturando...');
+            setStatusMessage(t('updatePhoto.camera.capturing'));
 
             const photo = await cameraRef.current.takePictureAsync({
                 quality: 0.8,
@@ -177,12 +174,12 @@ export default function UpdatePhoto() {
 
             setCapturedPhoto(photo);
             setCaptureStatus('done');
-            setStatusMessage('Foto capturada. ¿La confirmas?');
+            setStatusMessage(t('updatePhoto.camera.confirmPhoto'));
 
         } catch (err) {
             console.error('Error al tomar foto:', err);
             setCaptureStatus('idle');
-            setStatusMessage('Error al capturar. Intenta de nuevo.');
+            setStatusMessage(t('updatePhoto.camera.captureError'));
         }
     };
 
@@ -194,71 +191,53 @@ export default function UpdatePhoto() {
     const retakePicture = () => {
         setCapturedPhoto(null);
         setCaptureStatus('idle');
-        setStatusMessage('Posiciona tu rostro en el óvalo');
+        setStatusMessage(t('updatePhoto.camera.positionFace'));
     };
 
     const processFacePhoto = async (photo) => {
         setIsProcessing(true);
-        setStatusMessage('Procesando datos faciales...');
+        setStatusMessage(t('updatePhoto.camera.processing'));
 
         try {
-            let embedding = null;
-            let backendResponse = null;
+            const formDataToSend = new FormData();
+            formDataToSend.append('photo', {
+                uri: photo.uri,
+                name: `face_${Date.now()}.jpg`,
+                type: 'image/jpeg',
+            });
+            formDataToSend.append('documento', formData.documento.trim());
+            formDataToSend.append('nombre', formData.nombreCompleto.trim());
 
-            try {
-                const formDataToSend = new FormData();
-                formDataToSend.append('photo', {
-                    uri: photo.uri,
-                    name: `face_${Date.now()}.jpg`,
-                    type: 'image/jpeg',
-                });
-                formDataToSend.append('documento', formData.documento.trim());
-                formDataToSend.append('nombre', formData.nombreCompleto.trim());
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 15000);
+            const response = await fetch(FACE_REGISTER_URL, {
+                method: 'POST',
+                body: formDataToSend,
+                signal: controller.signal,
+            });
 
-                const response = await fetch(BACKEND_FACE_URL, {
-                    method: 'POST',
-                    body: formDataToSend,
-                    signal: controller.signal,
-                });
+            clearTimeout(timeoutId);
 
-                clearTimeout(timeoutId);
-
-                if (response.ok) {
-                    backendResponse = await response.json();
-                    embedding = backendResponse.embedding;
-                }
-            } catch (backendErr) {
-                console.warn('⚠️ Backend no disponible:', backendErr.message);
+            if (!response.ok) {
+                throw new Error(`Face register failed: ${response.status}`);
             }
 
-            if (!embedding) {
-                const seed = formData.documento.trim();
-                embedding = Array.from({length: 512}, (_, i) => {
-                    const x = Math.sin(seed.charCodeAt(i % seed.length) * (i + 1) * 9.8) * 0.5;
-                    return parseFloat(x.toFixed(4));
-                });
-            }
+            const backendResponse = await response.json();
 
             const faceData = {
-                embedding,
+                embedding: backendResponse.embedding,
                 nombre: formData.nombreCompleto.trim(),
                 telefono: formData.telefono.trim(),
                 documento: formData.documento.trim(),
                 photoUri: photo.uri,
                 timestamp: Date.now(),
-                fromBackend: !!backendResponse,
             };
 
-            devFaceStore[formData.documento.trim()] = faceData;
             await SecureStore.setItemAsync(
                 `face_${formData.documento.trim()}`,
                 JSON.stringify(faceData)
             );
-
-            console.log('ROSTRO REGISTRADO:', faceData.nombre);
 
             if (Platform.OS === 'ios') {
                 Vibration.vibrate([0, 50, 100, 50]);
@@ -266,7 +245,7 @@ export default function UpdatePhoto() {
                 Vibration.vibrate([0, 100, 50, 100, 50]);
             }
 
-            setStatusMessage('✓ Rostro registrado con éxito');
+            setStatusMessage(t('updatePhoto.camera.success'));
 
             setTimeout(() => {
                 setIsCameraOpen(false);
@@ -276,9 +255,9 @@ export default function UpdatePhoto() {
 
         } catch (err) {
             console.error('Error procesando rostro:', err);
-            Alert.alert('Error', 'No se pudo procesar el rostro. Intenta de nuevo.');
+            Alert.alert(t('common.error'), t('updatePhoto.camera.processError'));
 
-            setStatusMessage('Error al procesar. Puedes reintentar.');
+            setStatusMessage(t('updatePhoto.camera.retryError'));
             setCaptureStatus('done');
         } finally {
             setIsProcessing(false);
@@ -294,6 +273,12 @@ export default function UpdatePhoto() {
             </SafeAreaView>
         );
     }
+
+    const statusIsError = [
+        t('updatePhoto.camera.captureError'),
+        t('updatePhoto.camera.retryError'),
+        t('updatePhoto.camera.processError'),
+    ].includes(statusMessage);
 
     return (
         <SafeAreaView style={[styles.safeAreaUpdatePhoto, dynamicStyles.safeAreaUpdatePhoto]} key={`${updateKey}`}>
@@ -366,11 +351,11 @@ export default function UpdatePhoto() {
                                 />
                             </View>
 
-                            {devFaceStore[formData.documento?.trim()] && (
+                            {attendanceRegistered && (
                                 <View style={styles.alreadyRegisteredBox}>
                                     <Text
                                         style={[styles.alreadyRegisteredText, {color: colors.success ?? '#10B981'}]}>
-                                        ✓ Ya existe un registro facial para este documento.
+                                        {t('updatePhoto.camera.alreadyRegistered')}
                                     </Text>
                                 </View>
                             )}
@@ -396,7 +381,7 @@ export default function UpdatePhoto() {
                         </View>
 
                         <View style={styles.backButtonContainerUpdatePhoto}>
-                            <PrimaryButton title={t('consultJustify.back')} onPress={handleBack}/>
+                            <PrimaryButton title={t('common.back')} onPress={handleBack}/>
                         </View>
                     </View>
                 </ScrollView>
@@ -421,39 +406,35 @@ export default function UpdatePhoto() {
                                 >
                                     <Text style={styles.closeButtonText}>✕</Text>
                                 </TouchableOpacity>
-                                <Text style={styles.previewHeaderTitle}>Revisar foto</Text>
+                                <Text style={styles.previewHeaderTitle}>{t('updatePhoto.camera.reviewPhoto')}</Text>
                                 <View style={{width: 40}}/>
                             </View>
 
                             {/* ⬇️ Panel inferior de confirmación con fondo oscuro */}
                             <View style={styles.previewOverlayWrapper} pointerEvents="box-none">
                                 <View style={styles.previewOverlay}>
-                                    {/* Icono decorativo */}
-                                    <View style={styles.previewIconContainer}>
-                                        <Text style={styles.previewIcon}>📸</Text>
-                                    </View>
 
                                     <Text style={styles.previewTitle}>
-                                        ¿La foto se ve bien?
+                                        {t('updatePhoto.camera.photoOk')}
                                     </Text>
                                     <Text style={styles.previewSubtitle}>
-                                        Asegúrate de que tu rostro esté claro, bien iluminado y centrado.
+                                        {t('updatePhoto.camera.photoHint')}
                                     </Text>
 
-                                    {statusMessage && statusMessage !== 'Foto capturada. ¿La confirmas?' && (
+                                    {statusMessage && statusMessage !== t('updatePhoto.camera.confirmPhoto') && (
                                         <View style={[
                                             styles.previewStatusBox,
                                             {
-                                                backgroundColor: statusMessage.includes('Error')
+                                                backgroundColor: statusIsError
                                                     ? 'rgba(239, 68, 68, 0.15)'
                                                     : 'rgba(16, 185, 129, 0.15)',
-                                                borderColor: statusMessage.includes('Error')
+                                                borderColor: statusIsError
                                                     ? 'rgba(239, 68, 68, 0.4)'
                                                     : 'rgba(16, 185, 129, 0.4)',
                                             }
                                         ]}>
                                             <Text style={[styles.previewStatus, {
-                                                color: statusMessage.includes('Error') ? '#FCA5A5' : '#6EE7B7'
+                                                color: statusIsError ? '#FCA5A5' : '#6EE7B7'
                                             }]}>
                                                 {statusMessage}
                                             </Text>
@@ -469,14 +450,14 @@ export default function UpdatePhoto() {
                                         >
                                             <Text style={styles.previewButtonIcon}>↻</Text>
                                             <Text style={styles.previewButtonText}>
-                                                Repetir
+                                                {t('updatePhoto.camera.retake')}
                                             </Text>
                                         </TouchableOpacity>
 
                                         <TouchableOpacity
                                             style={[styles.previewButton, styles.confirmButton, {
-                                                backgroundColor: isProcessing ? (colors.success + '80') : (colors.success ?? '#10B981'),
-                                                shadowColor: colors.success ?? '#10B981',
+                                                backgroundColor: isProcessing ? (colors.primary + '80') : (colors.primary),
+                                                shadowColor: colors.primary,
                                             }]}
                                             onPress={handleConfirmPhoto}
                                             disabled={isProcessing}
@@ -488,7 +469,7 @@ export default function UpdatePhoto() {
                                                 <>
                                                     <Text style={styles.previewButtonIcon}>✓</Text>
                                                     <Text style={styles.previewButtonText}>
-                                                        Usar foto
+                                                        {t('updatePhoto.camera.usePhoto')}
                                                     </Text>
                                                 </>
                                             )}
@@ -507,31 +488,32 @@ export default function UpdatePhoto() {
                                 flash="off"
                             />
 
-                            <View style={styles.overlayContainer} pointerEvents="none">
-                                <FaceGuideOval status={captureStatus} colors={colors}/>
-                            </View>
+                            <View style={styles.cameraOverlay}>
+                                <View style={styles.overlayContainer} pointerEvents="none">
+                                    <FaceGuideOval status={captureStatus} colors={colors}/>
+                                    <View style={styles.statusOverlay}>
+                                        <View style={styles.statusContainer}>
+                                            <Text style={styles.statusTextUpdate}>{statusMessage}</Text>
+                                        </View>
+                                    </View>
+                                </View>
 
-                            <View style={styles.cameraHeader}>
-                                <TouchableOpacity
-                                    onPress={closeCamera}
-                                    style={styles.closeButton}
-                                    accessibilityLabel="Cerrar cámara"
-                                >
-                                    <Text style={styles.closeButtonText}>✕</Text>
-                                </TouchableOpacity>
-                                <Text style={styles.cameraTitle}>Registro Facial</Text>
-                                <TouchableOpacity
-                                    onPress={() => setFacing(facing === 'front' ? 'back' : 'front')}
-                                    style={styles.flipButton}
-                                    accessibilityLabel="Cambiar cámara"
-                                >
-                                    <Text style={styles.flipButtonText}>🔄</Text>
-                                </TouchableOpacity>
-                            </View>
-
-                            <View style={styles.statusOverlay}>
-                                <View style={styles.statusContainer}>
-                                    <Text style={styles.statusTextUpdate}>{statusMessage}</Text>
+                                <View style={styles.cameraHeader}>
+                                    <TouchableOpacity
+                                        onPress={closeCamera}
+                                        style={styles.closeButton}
+                                        accessibilityLabel="Cerrar cámara"
+                                    >
+                                        <Text style={styles.closeButtonText}>✕</Text>
+                                    </TouchableOpacity>
+                                    <Text style={styles.cameraTitle}>{t('updatePhoto.camera.title')}</Text>
+                                    <TouchableOpacity
+                                        onPress={() => setFacing(facing === 'front' ? 'back' : 'front')}
+                                        style={styles.flipButton}
+                                        accessibilityLabel="Cambiar cámara"
+                                    >
+                                        <Text style={styles.flipButtonText}>🔄</Text>
+                                    </TouchableOpacity>
                                 </View>
                             </View>
 

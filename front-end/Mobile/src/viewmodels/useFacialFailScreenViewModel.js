@@ -1,16 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from '../view/components/common/ThemeContext';
-import { useNavigation } from '@react-navigation/native';
-import { getCurrentUserRole } from "../services/UserService";
-import { useLanguageRefresh } from '../utils/useLanguageRefresh';
-import { useCustomAlert } from '../view/components/common/useCustomAlert';
+import {useCallback, useEffect, useState} from 'react';
+import {useTranslation} from 'react-i18next';
+import {useTheme} from '../view/components/common/ThemeContext';
+import {useNavigation} from '@react-navigation/native';
+import {getCurrentUserRole} from "../services/UserService";
+import {useLanguageRefresh} from '../utils/useLanguageRefresh';
+import {useCustomAlert} from '../view/components/common/useCustomAlert';
 
 export function useFacialFailViewModel() {
     const navigation = useNavigation();
-    const { i18n, t } = useTranslation();
-    const { loadThemeForRole } = useTheme();
-    const { alertConfig, hideAlert, showSuccess } = useCustomAlert();
+    const {i18n, t} = useTranslation();
+    const {loadThemeForRole} = useTheme();
+    const {alertConfig, hideAlert, showSuccess} = useCustomAlert();
 
     const [userRole, setUserRole] = useState(null);
     const [showQuestionnaire, setShowQuestionnaire] = useState(false);
@@ -41,17 +41,17 @@ export function useFacialFailViewModel() {
     const handleQuestionnaireSuccess = useCallback((data) => {
         // Guardar datos y mostrar alerta con la información
         setFormData(data);
-        const message = 
-            `${t('questionnaire.document', {defaultValue: 'Tipo de Documento'})}: ${data.documentType}\n` +
-            `${t('questionnaire.number', {defaultValue: 'Número de Documento'})}: ${data.documentNumber}\n` +
-            `${t('questionnaire.rhType', {defaultValue: 'Tipo de RH'})}: ${data.rhType}\n` +
-            `${t('questionnaire.relativeDocument', {defaultValue: 'Documento Familiar'})}: ${data.relativeDocument}\n` +
-            `${t('questionnaire.birthDate', {defaultValue: 'Fecha de Nacimiento'})}: ${data.birthDate}\n` +
-            `${t('questionnaire.address', {defaultValue: 'Dirección'})}: ${data.address}\n` +
-            `${t('questionnaire.phone', {defaultValue: 'Teléfono'})}: ${data.phone}`;
-        
+        const message =
+            `${t('questionnaire.document')}: ${data.documentType}\n` +
+            `${t('questionnaire.number')}: ${data.documentNumber}\n` +
+            `${t('questionnaire.rhType')}: ${data.rhType}\n` +
+            `${t('questionnaire.relativeDocument')}: ${data.relativeDocument}\n` +
+            `${t('questionnaire.birthDate')}: ${data.birthDate}\n` +
+            `${t('questionnaire.address')}: ${data.address}\n` +
+            `${t('questionnaire.phone')}: ${data.phone}`;
+
         showSuccess(
-            t('facialFail.success', { defaultValue: 'Éxito' }),
+            t('facialFail.success'),
             message,
             () => {
                 console.log('Cuestionario completado');
@@ -65,11 +65,11 @@ export function useFacialFailViewModel() {
     const handleFacialUpdateSuccess = useCallback((data) => {
         // Guardar datos y mostrar alerta con la información
         setFormData(data);
-        const message = 
-            `${t('facialUpdate.changeType', {defaultValue: 'Tipo de Cambio'})}: ${data.changeLabel}`;
-        
+        const message =
+            `${t('facialUpdate.changeType')}: ${data.changeLabel}`;
+
         showSuccess(
-            t('facialFail.success', { defaultValue: 'Éxito' }),
+            t('facialFail.success'),
             message,
             () => {
                 console.log('Parámetros actualizados');
