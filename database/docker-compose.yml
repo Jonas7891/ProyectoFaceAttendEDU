@@ -1,0 +1,165 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: faceattend-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-faceattend_db}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-faceattend_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  identity-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-identity-liquibase
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./01-ms-identity-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
+      - --username=${POSTGRES_USER:-postgres}
+      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+
+  authorization-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-authorization-liquibase
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./02-ms-authorization-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
+      - --username=${POSTGRES_USER:-postgres}
+      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+
+  academic-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-academic-liquibase
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./03-ms-academic-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
+      - --username=${POSTGRES_USER:-postgres}
+      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+
+  scheduling-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-scheduling-liquibase
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./04-ms-scheduling-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
+      - --username=${POSTGRES_USER:-postgres}
+      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+
+  attendance-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-attendance-liquibase
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./05-ms-attendance-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
+      - --username=${POSTGRES_USER:-postgres}
+      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+
+  biometric-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-biometric-liquibase
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./06-ms-biometric-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
+      - --username=${POSTGRES_USER:-postgres}
+      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+
+  audit-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-audit-liquibase
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./07-ms-audit-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
+      - --username=${POSTGRES_USER:-postgres}
+      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+
+  configuration-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-configuration-liquibase
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./08-ms-configuration-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
+      - --username=${POSTGRES_USER:-postgres}
+      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+
+  notification-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-notification-liquibase
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./09-ms-notification-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
+      - --username=${POSTGRES_USER:-postgres}
+      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+
+volumes:
+  postgres_data:

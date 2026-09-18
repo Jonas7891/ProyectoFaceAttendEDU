@@ -1,0 +1,9 @@
+CREATE DATABASE ms_identity_db;
+CREATE DATABASE ms_authorization_db;
+CREATE DATABASE ms_academic_db;
+CREATE DATABASE ms_scheduling_db;
+CREATE DATABASE ms_attendance_db;
+CREATE DATABASE ms_biometric_db;
+CREATE DATABASE ms_audit_db;
+CREATE DATABASE ms_configuration_db;
+CREATE DATABASE ms_notification_db;

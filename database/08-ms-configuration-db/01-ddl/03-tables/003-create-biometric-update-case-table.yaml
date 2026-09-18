@@ -1,0 +1,57 @@
+databaseChangeLog:
+  - changeSet:
+      id: config-003-create-biometric-update-case-table
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE configuration.biometric_update_case (
+                case_id UUID NOT NULL,
+                person_id UUID NOT NULL,
+                biometric_type configuration.biometric_type NOT NULL,
+                finger_number SMALLINT NULL,
+                current_embedding_ref VARCHAR(500) NULL,
+                reason TEXT NOT NULL,
+                update_status configuration.update_status NOT NULL DEFAULT 'Pending',
+                requested_by UUID NULL,
+                requested_at TIMESTAMP NULL,
+                reviewed_by UUID NULL,
+                reviewed_at TIMESTAMP NULL,
+                resolution_notes VARCHAR(500) NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL,
+                created_by UUID NULL,
+                updated_by UUID NULL,
+                deleted_by UUID NULL,
+                row_version BIGINT NOT NULL DEFAULT 1,
+                CONSTRAINT biometric_update_case_pkey PRIMARY KEY (case_id)
+              )
+        - createIndex:
+            schemaName: configuration
+            tableName: biometric_update_case
+            indexName: idx_biometric_case_person
+            columns:
+              - column:
+                  name: person_id
+        - createIndex:
+            schemaName: configuration
+            tableName: biometric_update_case
+            indexName: idx_biometric_case_person_type
+            columns:
+              - column:
+                  name: person_id
+              - column:
+                  name: biometric_type
+        - createIndex:
+            schemaName: configuration
+            tableName: biometric_update_case
+            indexName: idx_biometric_case_status
+            columns:
+              - column:
+                  name: update_status
+      rollback:
+        - dropTable:
+            schemaName: configuration
+            tableName: biometric_update_case

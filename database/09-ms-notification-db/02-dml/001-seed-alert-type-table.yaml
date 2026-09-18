@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: notif-001-seed-alert-type-table
+      author: Andres Gutierrez
+      context: seed
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              INSERT INTO notification.alert_type (alert_type_id, code, name, created_at, updated_at, row_version) VALUES
+                (1, 'ABSENTEEISM', 'Ausentismo recurrente', NOW(), NOW(), 1),
+                (2, 'REPEATED_TARDINESS', 'Tardanzas repetidas', NOW(), NOW(), 1),
+                (3, 'LOW_ATTENDANCE', 'Bajo porcentaje de asistencia', NOW(), NOW(), 1),
+                (4, 'JUSTIFICATION_PENDING', 'Justificacion pendiente de revision', NOW(), NOW(), 1),
+                (5, 'BIOMETRIC_UPDATE', 'Solicitud de actualizacion biometrica', NOW(), NOW(), 1)
+      rollback:
+        - sql:
+            sql: DELETE FROM notification.alert_type;

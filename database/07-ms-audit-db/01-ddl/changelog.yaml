@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - include:
+      file: 01-schemas/001-create-audit-schema.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 03-tables/001-create-audit-log-table.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 03-tables/002-create-error-log-table.yaml
+      relativeToChangelogFile: true
