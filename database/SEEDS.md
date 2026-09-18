@@ -136,7 +136,7 @@ Parámetros globales de seguridad del sistema.
 | 4 | `password_min_length` | `8` | Longitud mínima de contraseña |
 | 5 | `require_password_change` | `true` | Requerir cambio de contraseña en primer login |
 
-**Archivo:** `08-ms-configuration-db/02-dml/001-seed-security-configuration-table.yaml`
+**Archivo:** `07-ms-configuration-db/02-dml/001-seed-security-configuration-table.yaml`
 
 **Uso:** La aplicación lee estos valores al iniciar para configurar la política de seguridad. Son editables por un `SUPER_ADMIN` vía la tabla `security_configuration`.
 
@@ -154,7 +154,7 @@ Tipos de alerta que el sistema puede generar automáticamente.
 | 4 | `JUSTIFICATION_PENDING` | Justificación pendiente de revisión |
 | 5 | `BIOMETRIC_UPDATE` | Solicitud de actualización biométrica |
 
-**Archivo:** `09-ms-notification-db/02-dml/001-seed-alert-type-table.yaml`
+**Archivo:** `08-ms-notification-db/02-dml/001-seed-alert-type-table.yaml`
 
 **Uso:** Cuando el sistema detecta una condición (ej: un estudiante faltó 3 veces seguidas), genera un `alert` con el `alert_type_id` correspondiente.
 
@@ -169,8 +169,8 @@ Tipos de alerta que el sistema puede generar automáticamente.
 | Authorization | `permission` | 14 | `02-ms-authorization-db/02-dml/002-seed-permission-table.yaml` |
 | Academic | `academic_actor_type` | 2 | `03-ms-academic-db/02-dml/001-seed-academic-actor-type-table.yaml` |
 | Attendance | `justification_type` | 5 | `05-ms-attendance-db/02-dml/001-seed-justification-type-table.yaml` |
-| Configuration | `security_configuration` | 5 | `08-ms-configuration-db/02-dml/001-seed-security-configuration-table.yaml` |
-| Notification | `alert_type` | 5 | `09-ms-notification-db/02-dml/001-seed-alert-type-table.yaml` |
+| Configuration | `security_configuration` | 5 | `07-ms-configuration-db/02-dml/001-seed-security-configuration-table.yaml` |
+| Notification | `alert_type` | 5 | `08-ms-notification-db/02-dml/001-seed-alert-type-table.yaml` |
 
 **Total: 40 registros semilla en 7 tablas catálogo.**
 

@@ -113,22 +113,6 @@ services:
       - --changeLogFile=changelog/changelog-master.yaml
       - update
 
-  audit-liquibase:
-    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
-    container_name: faceattend-audit-liquibase
-    depends_on:
-      postgres:
-        condition: service_healthy
-    volumes:
-      - ./07-ms-audit-db:/liquibase/project
-    command:
-      - --searchPath=/liquibase/project
-      - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
-      - --username=${POSTGRES_USER:-postgres}
-      - --password=${POSTGRES_PASSWORD:-postgres}
-      - --changeLogFile=changelog/changelog-master.yaml
-      - update
-
   configuration-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
     container_name: faceattend-configuration-liquibase
@@ -136,7 +120,7 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./08-ms-configuration-db:/liquibase/project
+      - ./07-ms-configuration-db:/liquibase/project
     command:
       - --searchPath=/liquibase/project
       - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
@@ -152,7 +136,7 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./09-ms-notification-db:/liquibase/project
+      - ./08-ms-notification-db:/liquibase/project
     command:
       - --searchPath=/liquibase/project
       - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}

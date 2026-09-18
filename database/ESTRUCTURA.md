@@ -6,7 +6,7 @@ FaceAttend-Edu usa **Domain-Driven Design (DDD)**: cada dominio de negocio tiene
 
 ```
 ms/db/
-├── docker-compose.yml              ← Orquestador principal (PostgreSQL + 9 Liquibase)
+├── docker-compose.yml              ← Orquestador principal (PostgreSQL + 8 Liquibase)
 ├── .env                            ← Variables de entorno
 ├── scripts/init-multidb.sql        ← Script de inicialización de BDs
 │
@@ -16,9 +16,8 @@ ms/db/
 ├── 04-ms-scheduling-db/            → Contexto: Scheduling
 ├── 05-ms-attendance-db/            → Contexto: Attendance
 ├── 06-ms-biometric-db/             → Contexto: Biometric (schema solamente)
-├── 07-ms-audit-db/                 → Contexto: Audit
-├── 08-ms-configuration-db/         → Contexto: Configuration
-├── 09-ms-notification-db/          → Contexto: Notification
+├── 07-ms-configuration-db/         → Contexto: Configuration
+├── 08-ms-notification-db/          → Contexto: Notification
 │
 ├── CONVENCIONES.md                 ← Guía de naming y reglas
 ├── ESTRUCTURA.md                   ← Este archivo
@@ -37,9 +36,8 @@ ms/db/
 | 04 | `04-ms-scheduling-db` | Scheduling | `scheduling` | `environment`, `schedule_block`, `class_session` |
 | 05 | `05-ms-attendance-db` | Attendance | `attendance` | `attendance_record`, `justification_type`, `justification`, `supporting_document` |
 | 06 | `06-ms-biometric-db` | Biometric | `biometric` | Solo schema (colecciones NoSQL documentadas aparte) |
-| 07 | `07-ms-audit-db` | Audit | `audit` | `audit_log`, `error_log` |
-| 08 | `08-ms-configuration-db` | Configuration | `configuration` | `academic_configuration`, `security_configuration`, `biometric_update_case` |
-| 09 | `09-ms-notification-db` | Notification | `notification` | `alert_type`, `alert` |
+| 07 | `07-ms-configuration-db` | Configuration | `configuration` | `academic_configuration`, `security_configuration`, `biometric_update_case` |
+| 08 | `08-ms-notification-db` | Notification | `notification` | `alert_type`, `alert` |
 
 ---
 
@@ -115,7 +113,7 @@ docker compose up -d
 
 Esto:
 1. Levanta PostgreSQL 17 y espera a que esté sano
-2. Ejecuta los 9 servicios Liquibase en paralelo (uno por dominio)
+2. Ejecuta los 8 servicios Liquibase en paralelo (uno por dominio)
 3. Cada servicio migra su esquema respectivo
 
 ### Opción 2: Dominio individual
@@ -183,7 +181,7 @@ Usa `host.docker.internal` para conectarse a PostgreSQL que corre en el host.
 |---|---|
 | `docker-compose.yml` | Orquestador principal |
 | `.env` | Variables de entorno (credenciales, imagen Liquibase) |
-| `scripts/init-multidb.sql` | Crea las 9 bases de datos (para microservicios separados) |
+| `scripts/init-multidb.sql` | Crea las 8 bases de datos (para microservicios separados) |
 | `CONVENCIONES.md` | Reglas de nomenclatura y diseño |
 | `ESTRUCTURA.md` | Este archivo |
 | `MODELO.md` | Documento conceptual del modelo de datos |

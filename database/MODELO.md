@@ -11,13 +11,13 @@ FaceAttend-Edu es una plataforma de **gestión de asistencia mediante reconocimi
 - Justificaciones con soporte documental
 - Actualización de plantillas biométricas con flujo de aprobación
 - Alertas y notificaciones
-- Auditoría completa de acciones
+- Configuración y notificaciones
 
 ---
 
 ## 2. Bounded Contexts (Contextos delimitados)
 
-El modelo se divide en **9 contextos**, cada uno responsable de un área de negocio:
+El modelo se divide en **8 contextos**, cada uno responsable de un área de negocio:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -34,15 +34,12 @@ El modelo se divide en **9 contextos**, cada uno responsable de un área de nego
 │             │             │ actor       │                  │
 │             │             │ enrollment  │                  │
 ├─────────────┼─────────────┼─────────────┼──────────────────┤
-│ ATTENDANCE  │  BIOMETRIC  │    AUDIT    │  CONFIGURATION   │
+│ ATTENDANCE  │  BIOMETRIC  │ CONFIGURATION│  NOTIFICATION   │
 │             │  (NoSQL)    │             │                  │
-│ att_record  │ facial_emb  │ audit_log   │ acad_config      │
-│ justif_type │ finger_emb  │ error_log   │ sec_config       │
-│ justification│            │             │ biometric_case   │
+│ att_record  │ facial_emb  │ acad_config │ alert_type       │
+│ justif_type │ finger_emb  │ sec_config  │ alert            │
+│ justification│            │ biometric_case│                │
 │ sup_document│             │             │                  │
-├─────────────┴─────────────┴─────────────┴──────────────────┤
-│                     NOTIFICATION                            │
-│  alert_type │ alert                                         │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -178,37 +175,7 @@ enrollment → cohort
 
 ---
 
-## 9. Contexto: Notification
-
-**Responsabilidad:** Tipos de alerta y alertas generadas sobre actores académicos.
-
-| Tabla | Descripción | PK |
-|---|---|---|
-| `alert_type` | Catálogo de tipos de alerta | `alert_type_id` (SMALLINT) |
-| `alert` | Alerta generada sobre un actor | `alert_id` (BIGINT) |
-
-**Cross-context:**
-- `alert.academic_actor_id` → `Academic.academic_actor.academic_actor_id`
-
----
-
-## 10. Contexto: Audit
-
-**Responsabilidad:** Bitácoras de auditoría y errores del sistema.
-
-| Tabla | Descripción | PK |
-|---|---|---|
-| `audit_log` | Acciones de negocio (quién hizo qué) | `audit_log_id` (BIGINT) |
-| `error_log` | Errores técnicos del sistema | `error_id` (BIGINT) |
-
-**Cross-context:**
-- `audit_log.actor_id` → `Identity.app_user.user_id`
-- `error_log.user_id` → `Identity.app_user.user_id`
-- `audit_log.school_id` → `Academic.school.school_id`
-
----
-
-## 11. Contexto: Configuration
+## 9. Contexto: Configuration
 
 **Responsabilidad:** Parámetros configurables y casos de actualización biométrica.
 
@@ -225,7 +192,21 @@ enrollment → cohort
 
 ---
 
-## 12. Regla más importante: Sin FK entre contextos
+## 10. Contexto: Notification
+
+**Responsabilidad:** Tipos de alerta y alertas generadas sobre actores académicos.
+
+| Tabla | Descripción | PK |
+|---|---|---|
+| `alert_type` | Catálogo de tipos de alerta | `alert_type_id` (SMALLINT) |
+| `alert` | Alerta generada sobre un actor | `alert_id` (BIGINT) |
+
+**Cross-context:**
+- `alert.academic_actor_id` → `Academic.academic_actor.academic_actor_id`
+
+---
+
+## 11. Regla más importante: Sin FK entre contextos
 
 > **Toda referencia entre contextos distintos se documenta como comentario, nunca como `Ref:` activa.**
 
@@ -249,7 +230,7 @@ Esto significa que en el código SQL/Liquibase:
 
 ---
 
-## 13. Diagrama de relaciones (simplificado)
+## 12. Diagrama de relaciones (simplificado)
 
 ```
 identity.person ─────────────────────────────────────────┐
@@ -281,7 +262,7 @@ authorization.user_role                        enrollment │
 
 ---
 
-## 14. ENUMs del modelo
+## 13. ENUMs del modelo
 
 | Dominio | Tipo | Valores |
 |---|---|---|

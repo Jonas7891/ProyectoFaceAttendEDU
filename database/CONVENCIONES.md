@@ -50,7 +50,6 @@ Un **esquema PostgreSQL por dominio** (bounded context):
 | Scheduling | `scheduling` |
 | Attendance | `attendance` |
 | Biometric | `biometric` |
-| Audit | `audit` |
 | Configuration | `configuration` |
 | Notification | `notification` |
 
@@ -116,7 +115,7 @@ Las FK son **reales** a nivel de base de datos:
 |---|---|---|
 | `UUID` | Entidades referenciadas desde otros contextos | `person_id`, `user_id`, `case_id` |
 | `INT` autoincrement | Entidades locales, catálogos | `city_id`, `role_id`, `school_id` |
-| `BIGINT` autoincrement | Entidades de alto volumen | `cohort_id`, `enrollment_id`, `audit_log_id` |
+| `BIGINT` autoincrement | Entidades de alto volumen | `cohort_id`, `enrollment_id`, `alert_id` |
 | `SMALLINT` autoincrement | Catálogos pequeños | `actor_type_id`, `alert_type_id` |
 
 **Regla:** Si una columna aparece en un comentario cross-context (`// campo -> Contexto.tabla`), su tipo debe ser `UUID`.
@@ -202,7 +201,7 @@ cd ms/db
 docker compose up -d
 ```
 
-Esto levanta PostgreSQL + los 9 servicios Liquibase que migran todos los dominios.
+Esto levanta PostgreSQL + los 8 servicios Liquibase que migran todos los dominios.
 
 ### Dominio individual
 
