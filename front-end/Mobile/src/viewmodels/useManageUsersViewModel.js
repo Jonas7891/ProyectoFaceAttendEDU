@@ -1,6 +1,10 @@
 import {useCallback, useEffect, useState} from 'react';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 import {request, GET} from '../api/apiClient';
+import {PersonService} from '../services/PersonService';
+import {UserService} from '../services/UserService';
+import Person from '../models/identity/Person';
+import AppUser from '../models/identity/AppUser';
 
 function unwrap(data) {
   if (data && Array.isArray(data.value)) return data.value;
@@ -37,6 +41,8 @@ export function useManageUsersViewModel() {
 
           const entry = {
             id: user.user_id,
+            userId: user.user_id,
+            personId: user.person_id,
             nombre: `${person.name || ''} ${person.last_name || ''}`.trim(),
             email: person.email || '',
             telefono: person.phone || '',
@@ -71,33 +77,67 @@ export function useManageUsersViewModel() {
     return students.filter(s => (s.nombre || '').toLowerCase().includes(q));
   }, [students]);
 
+  const searchTeachers = useCallback((query) => {
+    if (!query || !query.trim()) return [];
+    const q = query.trim().toLowerCase();
+    return teachers.filter(teacher => (teacher.nombre || '').toLowerCase().includes(q));
+  }, [teachers]);
+
   const addStudentById = useCallback((id) => {
     const found = students.find(s => s.id === id);
     if (!found) return null;
     return found;
   }, [students]);
 
-  const updateStudent = useCallback((student) => {
-    setStudents(prev => prev.map(s => (s.id === student.id ? student : s)));
+  const persistPerson = useCallback(async (item) => {
+    const nameParts = String(item.nombre || '').trim().split(/\s+/);
+    const person = await PersonService.update(item.personId, new Person({
+      person_id: item.personId,
+      name: nameParts.shift() || '',
+      last_name: nameParts.join(' '),
+      email: item.email || null,
+      phone: item.telefono || null,
+    }));
+    await UserService.update(item.userId || item.id, new AppUser({
+      user_id: item.userId || item.id,
+      person_id: item.personId,
+      status: item.status,
+    }));
+    return {...item, nombre: person?.fullName || item.nombre};
   }, []);
 
-  const deleteStudent = useCallback((id) => {
+  const updateStudent = useCallback(async (student) => {
+    const updated = await persistPerson(student);
+    setStudents(prev => prev.map(s => (s.id === student.id ? updated : s)));
+  }, [persistPerson]);
+
+  const deleteStudent = useCallback(async (id) => {
+    const student = students.find(item => item.id === id);
+    if (student) {
+      await UserService.delete(student.userId || id);
+      if (student.personId) await PersonService.delete(student.personId);
+    }
     setStudents(prev => prev.filter(s => s.id !== id));
-  }, []);
+  }, [students]);
 
   const addTeacher = useCallback((teacher) => {
-    const newTeacher = { id: `tch_${Date.now()}`, ...teacher };
-    setTeachers(prev => [...prev, newTeacher]);
-    return newTeacher;
+    setTeachers(prev => prev.some(item => item.id === teacher.id) ? prev : [...prev, teacher]);
+    return teacher;
   }, []);
 
-  const updateTeacher = useCallback((teacher) => {
-    setTeachers(prev => prev.map(t => (t.id === teacher.id ? teacher : t)));
-  }, []);
+  const updateTeacher = useCallback(async (teacher) => {
+    const updated = await persistPerson(teacher);
+    setTeachers(prev => prev.map(t => (t.id === teacher.id ? updated : t)));
+  }, [persistPerson]);
 
-  const deleteTeacher = useCallback((id) => {
+  const deleteTeacher = useCallback(async (id) => {
+    const teacher = teachers.find(item => item.id === id);
+    if (teacher) {
+      await UserService.delete(teacher.userId || id);
+      if (teacher.personId) await PersonService.delete(teacher.personId);
+    }
     setTeachers(prev => prev.filter(t => t.id !== id));
-  }, []);
+  }, [teachers]);
 
   return {
     allStudents: students,
@@ -106,6 +146,7 @@ export function useManageUsersViewModel() {
     loading,
     updateKey,
     searchStudents,
+    searchTeachers,
     addStudentById,
     updateStudent,
     deleteStudent,

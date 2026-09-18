@@ -48,6 +48,7 @@
     "errorEmail": "Por favor, digite seu e-mail",
     "errorPassword": "Por favor, digite sua senha",
     "invalidCredentials": "Credenciais inválidas",
+    "connectionError": "Não foi possível conectar ao servidor. Verifique sua conexão com a internet e tente novamente.",
     "loginError": "Ocorreu um erro ao fazer login",
     "acceptTerms": "Aceite os termos e condições",
     "forgotPassword": "Esqueceu sua senha?"
@@ -92,7 +93,9 @@
     "approved": "Aprovado",
     "rejected": "Rejeitado",
     "justifiedStatus": "Justificado",
-    "sectionJustification": "Justificativa"
+    "sectionJustification": "Justificativa",
+    "unknownRecord": "Registro #{{id}}",
+    "unknownPerson": "Ator #{{id}}"
   },
   "settings": {
     "language": "Idioma",
@@ -158,15 +161,38 @@
     "phoneNumber": "Número de Telefone",
     "phonePlaceholder": "Exemplo: 3001234567",
     "registerAttendance": "Atualizar Parâmetros",
-    "attendanceRegistered": "✓ Parâmetros Atualizados",
+    "attendanceRegistered": "Parâmetros Atualizados",
     "completeFields": "Por favor, preencha todos os campos",
-    "settings": "Ajustes"
+    "settings": "Ajustes",
+    "camera": {
+      "positionFace": "Posicione seu rosto no oval",
+      "capturing": "Capturando...",
+      "confirmPhoto": "Foto capturada. Confirmar?",
+      "captureError": "Erro ao capturar. Tente novamente.",
+      "processing": "Processando dados faciais...",
+      "success": "Rosto registrado com sucesso",
+      "processError": "Não foi possível processar o rosto. Tente novamente.",
+      "retryError": "Erro ao processar. Você pode tentar novamente.",
+      "incompleteTitle": "Dados incompletos",
+      "incompleteMsg": "Por favor, preencha todos os campos antes de continuar.",
+      "permissionTitle": "Permissão negada",
+      "permissionMsg": "Precisamos de acesso à sua câmera.",
+      "discardTitle": "Descartar foto?",
+      "discardMsg": "Se sair, você perderá a foto tirada.",
+      "reviewPhoto": "Revisar foto",
+      "photoOk": "A foto está boa?",
+      "photoHint": "Certifique-se de que seu rosto esteja nítido, bem iluminado e centralizado.",
+      "retake": "Repetir",
+      "usePhoto": "Usar foto",
+      "title": "Registro Facial",
+      "alreadyRegistered": "Seus parâmetros faciais já estão registrados."
+    }
   },
   "takePhoto": {
     "title": "Foto para Reconhecimento Facial Inicial",
     "instructions": "Centralize seu rosto de forma que cubra a maior parte da câmera para melhor escaneamento e velocidade de reconhecimento.",
     "registerFacialParams": "Registrar Parâmetros Faciais",
-    "facialParamsRegistered": "✓ Parâmetros Registrados"
+    "facialParamsRegistered": "Parâmetros Registrados"
   },
   "facialFail": {
     "title": "Falha no Reconhecimento Facial",
@@ -295,7 +321,7 @@
   },
   "news": {
     "title": "Novidades",
-    "content": "Imagine que você precisa usar um aplicativo para registrar sua presença com o rosto. Primeiro, o sistema mostra uma caixa na tela para você saber exatamente onde colocar o rosto. Conforme você se ajusta, fica verde para informar que está pronto.\n\nÈ importante estar em um local bem iluminado. Quando o rosto estiver bem visível, o sistema pede um pequeno gesto, como piscar ou mover levemente a cabeça, para garantir que não é uma foto ou algo falso.\n\nO melhor é que a leitura não demora muito, apenas cerca de dois ou três segundos, e imediatamente aparece uma mensagem clara na tela dizendo se a presença foi registrada ou se houve algum problema. Tudo é projetado para ser rápido e simples.",
+    "content": "Imagine que você precisa usar um aplicativo para registrar sua presença com o rosto. Primeiro, o sistema mostra uma caixa na tela para você saber exatamente onde colocar o rosto. Conforme você se ajusta, fica verde para informar que está pronto.\n\nÉ importante estar em um local bem iluminado. Quando o rosto estiver bem visível, o sistema pede um pequeno gesto, como piscar ou mover levemente a cabeça, para garantir que não é uma foto ou algo falso.\n\nO melhor é que a leitura não demora muito, apenas cerca de dois ou três segundos, e imediatamente aparece uma mensagem clara na tela dizendo se a presença foi registrada ou se houve algum problema. Tudo é projetado para ser rápido e simples: abra o aplicativo, pressione o botão para ir à seção de Escaneamento Facial, posicione-se no quadro, pisque e em poucos segundos sua presença estará registrada.",
     "creationDate": "Data de criação",
     "unknownDate": "##/##/####"
   },
@@ -319,7 +345,7 @@
     "objectText": "O aplicativo tem como finalidade gerenciar o registro de presença de usuários em espaços públicos ou privados através de tecnologia de reconhecimento facial, permitindo a validação de identidade de forma automatizada.",
     "authorizationTitle": "3. AUTORIZAÇÃO PARA TRATAMENTO DE DADOS PESSOAIS",
     "authorizationText": "O usuário autoriza prévia, expressa e informadamente o responsável pelo aplicativo a coletar, armazenar, usar, processar e excluir seus dados pessoais, conforme estabelecido pela legislação colombiana vigente.",
-    "sensitiveDataTitle": "4. TRATAMENTO DE DADOS SENSÍVEIS (BIOMÈTRICOS)",
+    "sensitiveDataTitle": "4. TRATAMENTO DE DADOS SENSÍVEIS (BIOMÉTRICOS)",
     "sensitiveDataText": "O usuário autoriza expressamente o tratamento de seus dados biométricos (imagem facial), que são considerados dados sensíveis, para as seguintes finalidades:",
     "purpose1": "4.1 Validar a identidade do usuário.",
     "purpose2": "4.2 Registrar sua presença em locais autorizados.",
@@ -440,14 +466,17 @@
     "attendanceRecorded": "Presença registrada",
     "newJustification": "Nova justificativa",
     "justificationMathMsg": "Juan Pérez enviou uma justificativa para a aula de Matemática.",
-    "attendanceGroupMsg": "A presença do grupo 10-A foi registrada com sucesso."
+    "attendanceGroupMsg": "A presença do grupo 10-A foi registrada com sucesso.",
+    "late": "Atrasado",
+    "present": "Presente",
+    "seeAll": "Ver todos"
   },
   "student": {
     "greeting": "Olá estudante",
     "studentName": "Ana Martins",
     "myAttendance": "Minha presença",
     "classesAttended": "aulas assistidas",
-    "lastRegister": "Öltimo registro",
+    "lastRegister": "Último registro",
     "quickActions": "Minhas ações",
     "registerFace": "Registrar rosto",
     "registerFaceDesc": "Marcar presença facial",
@@ -478,7 +507,8 @@
     "science": "Ciências",
     "spanish": "Espanhol",
     "english": "Inglês",
-    "physicalEducation": "Educação Física"
+    "physicalEducation": "Educação Física",
+    "general": "Geral"
   },
   "time": {
     "today": "Hoje",
@@ -585,9 +615,9 @@
       "successTitle": "Senha atualizada",
       "title": "Alterar senha"
     },
-    "pendingJustifications": "pendingJustifications",
-    "phone": "phone",
-    "present": "present",
+    "pendingJustifications": "Justificativas pendentes",
+    "phone": "Telefone",
+    "present": "Presentes",
     "profileModal": {
       "cancel": "Cancelar",
       "editTitle": "Editar perfil",
@@ -712,7 +742,9 @@
     },
     "errors": {
       "schoolNotFound": "Não foi possível identificar a escola a ser atualizada",
-      "saveFailed": "Não foi possível salvar as alterações"
+      "saveFailed": "Não foi possível salvar as alterações",
+      "countriesFailed": "Não foi possível carregar os países",
+      "citiesFailed": "Não foi possível carregar as cidades"
     },
     "success": {
       "updated": "Configuração da escola atualizada com sucesso"
@@ -733,7 +765,7 @@
       "critical": "Críticos",
       "warning": "No limite"
     },
-    "searchPlaceholder": "Buscar por nome, código ou matéria⬦",
+    "searchPlaceholder": "Buscar por nome, código ou matéria…",
     "noResults": "Nenhum {{role}} ultrapassa o limite de {{type}} com os filtros atuais.",
     "resultsCount": "{{count}} {{role}} encontrado(s)",
     "generateReport": "Gerar relatório geral ({{count}})",
@@ -751,11 +783,14 @@
     },
     "absenceLabel": "Faltas\n(limite {{limit}})",
     "latenessLabel": "Atrasos\n(limite {{limit}})"
+    ,"reportSent": "O relatório foi enviado com sucesso."
+    ,"reportError": "Não foi possível enviar o relatório."
+    ,"confirmGeneral": "Será gerado um relatório para {{count}} pessoas. Continuar?"
   },
   "validation": {
     "title": "Campos incompletos",
-    "descriptionRequired": "descriptionRequired",
-    "selectCategoryAndType": "selectCategoryAndType"
+    "descriptionRequired": "A descrição é obrigatória",
+    "selectCategoryAndType": "Selecione uma categoria e um tipo"
   },
   "languageSettings": {
     "appearance": "Aparência",
@@ -778,8 +813,8 @@
   },
   "userRoles": {
     "administrator": "Administrador",
-    "student": "Estudiante",
-    "teacher": "Profesor"
+    "student": "Estudante",
+    "teacher": "Professor"
   },
   "justificationReasons": {
     "medicalDisability": "Incapacidade médica",
@@ -810,6 +845,7 @@
     "errorNotFound": "Não encontramos uma conta com esse e-mail.",
     "errorTimeout": "A solicitação demorou muito. Verifique sua conexão e tente novamente.",
     "errorGeneric": "Ocorreu um erro. Tente novamente.",
+    "errorRateLimit": "Você deve aguardar {{seconds}} segundos antes de tentar novamente.",
     "successMessage": "Código enviado com sucesso. Redirecionando..."
   },
   "passwordUpdate": {
@@ -825,8 +861,8 @@
     "reqNotCommon": "Não é uma senha comum",
     "reqNoSequential": "Sem padrões sequenciais (123, abc)",
     "reqNoRepeated": "Sem caracteres repetidos (aaa, 111)",
-    "passwordsMatch": "☏ As senhas coincidem",
-    "passwordsNoMatch": "☓ As senhas não coincidem",
+    "passwordsMatch": "As senhas coincidem",
+    "passwordsNoMatch": "As senhas não coincidem",
     "saving": "Salvando...",
     "saveButton": "Salvar senha",
     "successTitle": "Senha atualizada!",
@@ -865,5 +901,26 @@
     "locationRequired": "A localização é obrigatória.",
     "confirm": "Confirmar",
     "deleteQuestion": "Tem certeza de que deseja excluir este ambiente?"
+  },
+  "registerFace": {
+    "title": "Registro de rosto",
+    "subtitleReview": "Revise a foto. Se estiver satisfeito, salve-a; caso contrário, tire outra.",
+    "subtitleReady": "Coloque seu rosto dentro do oval e pressione o botão quando estiver pronto.",
+    "subtitleStarting": "Iniciando câmera...",
+    "permissionText": "É necessário acesso à câmera para registrar seu rosto.",
+    "allowCamera": "Permitir câmera",
+    "saveFace": "Salvar rosto",
+    "saving": "Salvando...",
+    "retake": "Tirar novamente",
+    "captureFace": "Capturar rosto",
+    "startingCamera": "Iniciando câmera...",
+    "cameraErrorTitle": "Erro de câmera",
+    "cameraErrorMsg": "Não foi possível iniciar a câmera. Tente novamente.",
+    "captureErrorTitle": "Erro de captura",
+    "captureErrorMsg": "Não foi possível tirar a foto. Tente novamente.",
+    "saveSuccessTitle": "Registro bem-sucedido",
+    "saveSuccessMsg": "Seu rosto foi registrado com sucesso neste dispositivo.",
+    "saveErrorTitle": "Erro ao salvar",
+    "saveErrorMsg": "Ocorreu um problema ao salvar seu registro facial."
   }
 }

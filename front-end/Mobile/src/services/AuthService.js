@@ -1,4 +1,4 @@
-import { request, GET } from '../api/apiClient';
+import { request, GET, POST, DELETE } from '../api/apiClient';
 import AuthResponse from '../models/identity/AuthResponse';
 import AuthRequest from '../models/identity/AuthRequest';
 import { VerificationService } from './verificationService';
@@ -66,8 +66,16 @@ export const AuthService = {
       if (role?.role_name) roleNames.push(role.role_name);
     }
 
-    // 5. Generar token temporal (JSON Server no soporta POST)
-    const token = `mock-${userRaw.user_id}-${Date.now()}`;
+    // 5. Crear sesión real en el backend y usar su token.
+    const sessionData = await request({
+      method: POST,
+      url: SESSIONS_ENDPOINT,
+      data: { user_id: userRaw.user_id },
+      requiresAuth: false,
+    });
+    const session = unwrapFirst(sessionData);
+    const token = session?.token || session?.session_token || session?.session_id || String(session?.id || '');
+    if (!token) throw new Error('No se pudo crear la sesión');
 
     // 6. Construir AuthResponse
     return AuthResponse.fromApi({
@@ -86,12 +94,25 @@ export const AuthService = {
   },
 
   refreshToken: async (refreshToken) => {
-    const token = `mock-refresh-${Date.now()}`;
+    const data = await request({
+      method: POST,
+      url: `${SESSIONS_ENDPOINT}/refresh`,
+      data: { refresh_token: refreshToken },
+      requiresAuth: false,
+    });
+    const session = unwrapFirst(data);
+    const token = session?.token || session?.session_token || data?.token;
+    if (!token) throw new Error('No se pudo refrescar la sesión');
     return AuthResponse.fromApi({ token });
   },
 
   logout: async (sessionId) => {
-    // JSON Server no soporta POST/PUT, logout es local
+    if (!sessionId) return;
+    await request({
+      method: DELETE,
+      url: `${SESSIONS_ENDPOINT}/${sessionId}`,
+      requiresAuth: false,
+    });
   },
 
   forgotPassword: async (email) => {

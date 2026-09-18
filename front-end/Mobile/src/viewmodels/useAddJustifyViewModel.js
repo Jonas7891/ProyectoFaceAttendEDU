@@ -2,6 +2,10 @@ import {useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useNavigation} from '@react-navigation/native';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
+import * as DocumentPicker from 'expo-document-picker';
+import {request, GET, POST} from '../api/apiClient';
+import {getCurrentUser} from '../services/UserService';
+import {ActorService} from '../services/ActorService';
 
 export function useAddJustificationViewModel() {
     const navigation = useNavigation();
@@ -26,6 +30,14 @@ export function useAddJustificationViewModel() {
 
     // Limpiar alerta
     const clearAlert = () => setAlertData({message: null, type: 'warning', timestamp: 0});
+
+    const pickFile = async () => {
+        const result = await DocumentPicker.getDocumentAsync({
+            type: ['application/pdf', 'image/*', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+            copyToCacheDirectory: true,
+        });
+        if (!result.canceled) setSelectedFile(result.assets[0]);
+    };
 
     // Navegación hacia atrás
     const handleBack = () => navigation.goBack();
@@ -68,7 +80,34 @@ export function useAddJustificationViewModel() {
 
         setIsLoading(true);
         try {
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            const user = await getCurrentUser();
+            const actors = await ActorService.getByPerson(user?.personId);
+            const actor = actors?.[0];
+            const attendanceData = actor
+                ? await request({method: GET, url: 'attendance_record', params: {academic_actor_id: actor.academicActorId}, requiresAuth: false})
+                : [];
+            const attendanceRecords = attendanceData?.value || attendanceData || [];
+            const attendanceRecord = attendanceRecords.find(record => record.captured_at?.startsWith(date));
+            const typeData = await request({method: GET, url: 'justification_type', requiresAuth: false});
+            const types = typeData?.value || typeData || [];
+            const type = types.find(item => {
+                const name = String(item.name || '').toLowerCase();
+                return justificationType === 'retardo' ? name.includes('ret') || name.includes('late') : name.includes('inas') || name.includes('absen');
+            }) || types[0];
+
+            await request({
+                method: POST,
+                url: 'justification',
+                data: {
+                    attendance_record_id: attendanceRecord?.attendance_record_id || null,
+                    justification_type_id: type?.justification_type_id || null,
+                    reason: description.trim(),
+                    submitted_at: new Date(`${date}T${time || '00:00'}`).toISOString(),
+                    review_status: 'Pending',
+                    attachment: selectedFile ? {name: selectedFile.name, uri: selectedFile.uri, mime_type: selectedFile.mimeType} : null,
+                },
+                requiresAuth: false,
+            });
             setAlertData({
                 message: t('justify.successMessage'),
                 type: 'success',
@@ -97,6 +136,7 @@ export function useAddJustificationViewModel() {
         setDate,
         time,
         setTime,
+        pickFile,
         isLoading,
         updateKey,
         handleBack,

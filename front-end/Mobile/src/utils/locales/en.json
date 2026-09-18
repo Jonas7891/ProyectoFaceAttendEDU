@@ -48,6 +48,7 @@
     "errorEmail": "Please enter your email",
     "errorPassword": "Please enter your password",
     "invalidCredentials": "Invalid credentials",
+    "connectionError": "Could not connect to the server. Check your internet connection and try again.",
     "loginError": "An error occurred while logging in",
     "acceptTerms": "Accept the terms and conditions",
     "forgotPassword": "Forgot password?"
@@ -92,7 +93,9 @@
     "approved": "Approved",
     "rejected": "Rejected",
     "justifiedStatus": "Justified",
-    "sectionJustification": "Justification"
+    "sectionJustification": "Justification",
+    "unknownRecord": "Record #{{id}}",
+    "unknownPerson": "Actor #{{id}}"
   },
   "settings": {
     "languageChanged": "Language changed successfully",
@@ -160,13 +163,36 @@
     "registerAttendance": "Update Parameters",
     "attendanceRegistered": "Parameters Updated",
     "completeFields": "Please complete all fields",
-    "settings": "Settings"
+    "settings": "Settings",
+    "camera": {
+      "positionFace": "Position your face in the oval",
+      "capturing": "Capturing...",
+      "confirmPhoto": "Photo captured. Confirm it?",
+      "captureError": "Capture error. Try again.",
+      "processing": "Processing facial data...",
+      "success": "Face registered successfully",
+      "processError": "Could not process the face. Try again.",
+      "retryError": "Processing error. You can retry.",
+      "incompleteTitle": "Incomplete data",
+      "incompleteMsg": "Please complete all fields before continuing.",
+      "permissionTitle": "Permission denied",
+      "permissionMsg": "We need access to your camera.",
+      "discardTitle": "Discard photo?",
+      "discardMsg": "If you leave, you will lose the photo you took.",
+      "reviewPhoto": "Review photo",
+      "photoOk": "Does the photo look good?",
+      "photoHint": "Make sure your face is clear, well lit and centered.",
+      "retake": "Retake",
+      "usePhoto": "Use photo",
+      "title": "Facial Registration",
+      "alreadyRegistered": "Your facial parameters are already registered."
+    }
   },
   "takePhoto": {
     "title": "Photo for Initial Facial Recognition",
     "instructions": "Center your face so that it covers most of the camera for better scanning and recognition speed.",
     "registerFacialParams": "Register Facial Parameters",
-    "facialParamsRegistered": "☏ Parameters Registered"
+    "facialParamsRegistered": "Parameters Registered"
   },
   "facialFail": {
     "title": "Facial Recognition Failed",
@@ -481,7 +507,8 @@
     "science": "Science",
     "spanish": "Spanish",
     "english": "English",
-    "physicalEducation": "Physical Education"
+    "physicalEducation": "Physical Education",
+    "general": "General"
   },
   "time": {
     "today": "Today",
@@ -588,9 +615,9 @@
       "successTitle": "Password updated",
       "title": "Change password"
     },
-    "pendingJustifications": "pendingJustifications",
-    "phone": "phone",
-    "present": "present",
+    "pendingJustifications": "Pending justifications",
+    "phone": "Phone",
+    "present": "Present",
     "profileModal": {
       "cancel": "Cancel",
       "editTitle": "Edit profile",
@@ -715,7 +742,9 @@
     },
     "errors": {
       "schoolNotFound": "The school to update could not be identified",
-      "saveFailed": "The changes could not be saved"
+      "saveFailed": "The changes could not be saved",
+      "countriesFailed": "Could not load countries",
+      "citiesFailed": "Could not load cities"
     },
     "success": {
       "updated": "School configuration updated successfully"
@@ -736,7 +765,7 @@
       "critical": "Critical",
       "warning": "At limit"
     },
-    "searchPlaceholder": "Search by name, code or subject⬦",
+    "searchPlaceholder": "Search by name, code or subject…",
     "noResults": "No {{role}} exceed the {{type}} limit with the current filters.",
     "resultsCount": "{{count}} {{role}} found",
     "generateReport": "Generate general report ({{count}})",
@@ -754,30 +783,33 @@
     },
     "absenceLabel": "Absences\n(limit {{limit}})",
     "latenessLabel": "Lateness\n(limit {{limit}})"
+    ,"reportSent": "The report was sent successfully."
+    ,"reportError": "The report could not be sent."
+    ,"confirmGeneral": "A report will be generated for {{count}} people. Continue?"
   },
   "validation": {
     "title": "Incomplete fields",
-    "descriptionRequired": "descriptionRequired",
-    "selectCategoryAndType": "selectCategoryAndType"
+    "descriptionRequired": "Description is required",
+    "selectCategoryAndType": "Select a category and a type"
   },
   "languageSettings": {
-    "appearance": "Apariencia",
-    "themeSelection": "Selecciona el tema de la aplicación",
-    "alertSettings": "Configuración de Alertas",
-    "customizeAlerts": "Personaliza qué tipos de alertas deseas recibir",
-    "configureAlerts": "Configurar Alertas",
-    "alertTypes": "Selecciona qué tipos de alertas deseas ver",
-    "successConfirmations": "Confirmación de operaciones exitosas",
-    "errorAlerts": "Alertas de Error",
-    "errorNotifications": "Notificaciones de errores y problemas",
-    "warningAlerts": "Alertas de Advertencia",
-    "confirmationAlerts": "Alertas de Confirmación",
-    "confirmationRequests": "Solicitudes de confirmación de acciones",
-    "generalAlerts": "Alertas Generales",
-    "generalMessages": "Mensajes informativos generales",
-    "iotAlerts": "Alertas en Dispositivos IoT",
-    "iotMessages": "Mensajes sobre los dispositivos de escaneo facial",
-    "closeButton": "Cerrar"
+    "appearance": "Appearance",
+    "themeSelection": "Select the application theme",
+    "alertSettings": "Alert Settings",
+    "customizeAlerts": "Customize which types of alerts you want to receive",
+    "configureAlerts": "Configure Alerts",
+    "alertTypes": "Select which types of alerts you want to see",
+    "successConfirmations": "Confirmation of successful operations",
+    "errorAlerts": "Error Alerts",
+    "errorNotifications": "Notifications of errors and problems",
+    "warningAlerts": "Warning Alerts",
+    "confirmationAlerts": "Confirmation Alerts",
+    "confirmationRequests": "Action confirmation requests",
+    "generalAlerts": "General Alerts",
+    "generalMessages": "General informational messages",
+    "iotAlerts": "IoT Device Alerts",
+    "iotMessages": "Messages about facial scanning devices",
+    "closeButton": "Close"
   },
   "userRoles": {
     "administrator": "Administrator",
@@ -813,6 +845,7 @@
     "errorNotFound": "No account was found with that email.",
     "errorTimeout": "The request took too long. Check your connection and try again.",
     "errorGeneric": "An error occurred. Try again.",
+    "errorRateLimit": "You must wait {{seconds}} seconds before retrying.",
     "successMessage": "Code sent successfully. Redirecting..."
   },
   "passwordUpdate": {
@@ -828,8 +861,8 @@
     "reqNotCommon": "Not a common password",
     "reqNoSequential": "No sequential patterns (123, abc)",
     "reqNoRepeated": "No repeated characters (aaa, 111)",
-    "passwordsMatch": "☏ Passwords match",
-    "passwordsNoMatch": "☓ Passwords do not match",
+    "passwordsMatch": "Passwords match",
+    "passwordsNoMatch": "Passwords do not match",
     "saving": "Saving...",
     "saveButton": "Save password",
     "successTitle": "Password updated!",
@@ -868,5 +901,26 @@
     "locationRequired": "Location is required.",
     "confirm": "Confirm",
     "deleteQuestion": "Are you sure you want to delete this environment?"
+  },
+  "registerFace": {
+    "title": "Face registration",
+    "subtitleReview": "Review the photo. If you are satisfied, save it; otherwise, retake it.",
+    "subtitleReady": "Place your face inside the oval and press the button when you are ready.",
+    "subtitleStarting": "Starting camera...",
+    "permissionText": "Camera access is required to register your face.",
+    "allowCamera": "Allow camera",
+    "saveFace": "Save face",
+    "saving": "Saving...",
+    "retake": "Retake",
+    "captureFace": "Capture face",
+    "startingCamera": "Starting camera...",
+    "cameraErrorTitle": "Camera error",
+    "cameraErrorMsg": "Could not start the camera. Try again.",
+    "captureErrorTitle": "Capture error",
+    "captureErrorMsg": "Could not take the photo. Try again.",
+    "saveSuccessTitle": "Successful registration",
+    "saveSuccessMsg": "Your face was successfully registered on this device.",
+    "saveErrorTitle": "Save error",
+    "saveErrorMsg": "A problem occurred while saving your facial record."
   }
 }

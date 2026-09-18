@@ -2,14 +2,7 @@ import {useCallback, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useNavigation} from '@react-navigation/native';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
-import {request, GET} from '../api/apiClient';
-
-function unwrap(data) {
-  if (data && Array.isArray(data.value)) return data.value;
-  if (Array.isArray(data)) return data;
-  if (data && typeof data === 'object') return [data];
-  return [];
-}
+import {request, POST} from '../api/apiClient';
 
 export function useAddValidJustificationViewModel() {
     const navigation = useNavigation();
@@ -56,9 +49,17 @@ export function useAddValidJustificationViewModel() {
 
         setIsSaving(true);
         try {
-            const jtData = await request({ method: GET, url: 'justification_type', requiresAuth: false });
-            const types = unwrap(jtData);
-            const matchingType = types.find(jt => jt.name?.toLowerCase().includes(type.toLowerCase().split(' ')[0]));
+            await request({
+                method: POST,
+                url: 'justification_type',
+                data: {
+                    name: type.trim(),
+                    description: description.trim(),
+                    requires_attachment: requiresDocument,
+                    category: category.trim(),
+                },
+                requiresAuth: false,
+            });
 
             setAlertData({ message: t('admin.justificationCreated'), type: 'success', timestamp: Date.now() });
         } catch (error) {

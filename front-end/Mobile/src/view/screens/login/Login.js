@@ -22,7 +22,7 @@ import TerminosModal from '../../components/common/TerminosModal';
 import ScrollView from '../../components/common/ScrollView';
 import CustomAlert from '../../components/common/CustomAlert';
 import {useCustomAlert} from '../../components/common/useCustomAlert';
-import styles from './style/Style';
+import styles from '../Styles/Login/Style';
 import {useLoginViewModel} from '../../../viewmodels/useLoginViewModel';
 
 const MAX_FAILED_ATTEMPTS = 3;

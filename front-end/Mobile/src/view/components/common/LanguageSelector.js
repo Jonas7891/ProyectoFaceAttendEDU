@@ -1,20 +1,23 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Modal, Text, TouchableOpacity, View} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {saveLanguageForRole} from './languageByRole';
+import {LanguageService, DEFAULT_LANGUAGES} from '../../../services/LanguageService';
 import stylescommon from './style/Style';
-
-const languages = [
-  { code: 'es', name: '🇪🇸 Español' },
-  { code: 'en', name: '🇬🇧 English' },
-  { code: 'fr', name: '🇫🇷 Français' },
-  { code: 'pt', name: '🇵🇹 Português' },
-];
 
 const LanguageSelector = ({ isVisible, onClose }) => {
   const { i18n, t } = useTranslation();
   const [selectedLanguage, setSelectedLanguage] = useState(i18n.language);
+  const [languages, setLanguages] = useState(DEFAULT_LANGUAGES);
+
+  useEffect(() => {
+    let active = true;
+    LanguageService.getAll().then((langs) => {
+      if (active) setLanguages(langs);
+    });
+    return () => { active = false; };
+  }, []);
 
   const handleLanguageChange = async (languageCode) => {
     try {

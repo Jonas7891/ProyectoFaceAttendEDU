@@ -3,6 +3,7 @@ import {useTranslation} from 'react-i18next';
 import {getCurrentUserRole, getCurrentUser} from '../services/UserService';
 import {ActorService} from '../services/ActorService';
 import {request, GET} from '../api/apiClient';
+import {JustificationService} from '../services/JustificationService';
 
 function unwrap(data) {
   if (data && Array.isArray(data.value)) return data.value;
@@ -182,16 +183,24 @@ export const usePendingJustificationViewModel = () => {
     const openDetail = useCallback((item) => { setSelectedItem(item); setModalVisible(true); }, []);
     const closeDetail = useCallback(() => { setModalVisible(false); setTimeout(() => setSelectedItem(null), 300); }, []);
 
-    const approveJustification = useCallback((id) => {
+    const approveJustification = useCallback(async (id) => {
         if (userRole === USER_ROLE.STUDENT) return;
-        setJustifications((prev) => prev.map((j) => j.id === id ? {...j, status: JUSTIFICATION_STATUS_INTERNAL.APPROVED} : j));
-        closeDetail();
+        const reviewer = await getCurrentUser();
+        const updated = await JustificationService.approve(id, reviewer?.userId);
+        if (updated) {
+            setJustifications((prev) => prev.map((j) => j.id === id ? {...j, status: JUSTIFICATION_STATUS_INTERNAL.APPROVED} : j));
+            closeDetail();
+        }
     }, [closeDetail, userRole]);
 
-    const rejectJustification = useCallback((id) => {
+    const rejectJustification = useCallback(async (id) => {
         if (userRole === USER_ROLE.STUDENT) return;
-        setJustifications((prev) => prev.map((j) => j.id === id ? {...j, status: JUSTIFICATION_STATUS_INTERNAL.REJECTED} : j));
-        closeDetail();
+        const reviewer = await getCurrentUser();
+        const updated = await JustificationService.reject(id, reviewer?.userId);
+        if (updated) {
+            setJustifications((prev) => prev.map((j) => j.id === id ? {...j, status: JUSTIFICATION_STATUS_INTERNAL.REJECTED} : j));
+            closeDetail();
+        }
     }, [closeDetail, userRole]);
 
     const counts = useMemo(() => {

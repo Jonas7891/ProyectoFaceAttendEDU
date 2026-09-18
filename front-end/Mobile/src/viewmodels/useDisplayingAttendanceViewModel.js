@@ -5,6 +5,7 @@ import {useLanguageRefresh} from "../utils/useLanguageRefresh";
 import {useTheme} from "../view/components/common/ThemeContext";
 import {getCurrentUserRole, getCurrentUser} from "../services/UserService";
 import {ActorService} from "../services/ActorService";
+import {PeriodService} from "../services/PeriodService";
 import {request, GET} from "../api/apiClient";
 
 function unwrap(data) {
@@ -59,9 +60,29 @@ export function formatDateKey(date) {
     return `${y}-${m}-${d}`;
 }
 
-export function formatDateDisplay(date, t) {
+export function resolveLocale(language) {
+    if (language === 'en') return 'en-US';
+    if (language === 'pt') return 'pt-BR';
+    if (language === 'fr') return 'fr-FR';
+    return 'es-ES';
+}
+
+export function getDayLabel(dayOfWeek, locale = 'es-ES') {
+    const day = Number(dayOfWeek);
+    if (!day || day < 1 || day > 7) return '—';
+    try {
+        // 2024-01-01 fue lunes; desplazar para obtener el día de la semana.
+        const ref = new Date(2024, 0, day);
+        const label = ref.toLocaleDateString(locale, {weekday: 'long'});
+        return label ? label.charAt(0).toUpperCase() + label.slice(1) : '—';
+    } catch {
+        return '—';
+    }
+}
+
+export function formatDateDisplay(date, t, locale = 'es-ES') {
     if (!date) return t("attendance.filterByDate");
-    return date.toLocaleDateString("es-ES", {day: "2-digit", month: "short", year: "numeric"});
+    return date.toLocaleDateString(locale, {day: "2-digit", month: "short", year: "numeric"});
 }
 
 export function useAttendanceViewModel() {
@@ -86,6 +107,7 @@ export function useAttendanceViewModel() {
     const fetchAttendance = useCallback(async (role) => {
         try {
             setLoading(true);
+            const locale = resolveLocale(i18n.language);
             const user = await getCurrentUser();
             const actors = user?.personId ? await ActorService.getByPerson(user.personId) : [];
             const myActor = actors?.length > 0 ? actors[0] : null;
@@ -115,6 +137,13 @@ export function useAttendanceViewModel() {
                 const arData = await request({ method: GET, url: 'attendance_record', params: { academic_actor_id: myActor.academicActorId, _limit: 200 }, requiresAuth: false });
                 records = unwrap(arData);
             }
+
+            let activePeriod = null;
+            try {
+                activePeriod = myActor?.schoolId
+                    ? await PeriodService.getActiveBySchool(myActor.schoolId)
+                    : (await PeriodService.getAll({is_active: true}))[0] || null;
+            } catch (e) {}
 
             const enriched = [];
             for (const record of records.slice(-50)) {
@@ -153,23 +182,23 @@ export function useAttendanceViewModel() {
                     }
 
                     const statusMap = { Present: 'presente', Late: 'tarde', Absent: 'ausente' };
-                    const hora = record.captured_at ? new Date(record.captured_at).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'}) : '—';
+                    const hora = record.captured_at ? new Date(record.captured_at).toLocaleTimeString(locale, {hour: '2-digit', minute: '2-digit'}) : '—';
 
                     enriched.push({
                         id: record.attendance_record_id,
-                        nombre: `${person.name || ''} ${person.last_name || ''}`.trim() || `Actor #${record.academic_actor_id}`,
+                        nombre: `${person.name || ''} ${person.last_name || ''}`.trim() || t('attendance.unknownPerson', {id: record.academic_actor_id}),
                         fecha: record.captured_at ? record.captured_at.split('T')[0] : '',
                         hora,
                         estado: statusMap[record.attendance_status] || 'ausente',
                         materia: course.name || course.code || '—',
                         codigo_curso: course.code || '—',
-                        dia: block.day_of_week === 1 ? 'Lunes' : block.day_of_week === 2 ? 'Martes' : block.day_of_week === 3 ? 'Miércoles' : block.day_of_week === 4 ? 'Jueves' : block.day_of_week === 5 ? 'Viernes' : '—',
+                        dia: getDayLabel(block.day_of_week, locale),
                         hora_inicio: block.starts_at || '—',
                         hora_fin: block.ends_at || '—',
                         salon: env.name || '—',
-                        periodo: '2026-I',
-                        periodo_inicio: '2026-01-15',
-                        periodo_fin: '2026-06-30',
+                        periodo: activePeriod?.name || '—',
+                        periodo_inicio: activePeriod?.startsOn || '—',
+                        periodo_fin: activePeriod?.endsOn || '—',
                         docente: docenteName,
                     });
                 } catch (e) {
@@ -184,7 +213,7 @@ export function useAttendanceViewModel() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [t, i18n.language]);
 
     useEffect(() => {
         const init = async () => {
@@ -199,7 +228,7 @@ export function useAttendanceViewModel() {
             }
         };
         init();
-    }, []);
+    }, [fetchAttendance, loadThemeForRole]);
 
     const isAdmin = userRole === "Administrador" || userRole === "admin";
 
@@ -228,7 +257,7 @@ export function useAttendanceViewModel() {
     };
 
     return {
-        t, isAdmin, isDark, colors, refreshKey, updateKey,
+        t, locale: resolveLocale(i18n.language), isAdmin, isDark, colors, refreshKey, updateKey,
         searchText, setSearchText, selectedDate, setSelectedDate,
         showPicker, showIOSModal, setShowIOSModal, tempDate, setTempDate,
         activeData, detailItem, showDetailModal, loading,

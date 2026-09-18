@@ -48,6 +48,7 @@
     "errorEmail": "Veuillez saisir votre adresse e-mail",
     "errorPassword": "Veuillez saisir votre mot de passe",
     "invalidCredentials": "Identifiants invalides",
+    "connectionError": "Impossible de se connecter au serveur. Vérifiez votre connexion internet et réessayez.",
     "loginError": "Une erreur s'est produite lors de la connexion",
     "acceptTerms": "Acceptez les conditions générales",
     "forgotPassword": "Mot de passe oublié ?"
@@ -77,7 +78,7 @@
     "periodStart": "Début",
     "periodEnd": "Fin",
     "teacher": "Enseignant",
-    "approvalStatus": "Ètat de validation",
+    "approvalStatus": "État de validation",
     "justificationText": "Justification",
     "justified": "Justifié",
     "noJustification": "Aucune justification",
@@ -92,10 +93,12 @@
     "approved": "Approuvé",
     "rejected": "Rejeté",
     "justifiedStatus": "Justifié",
-    "sectionJustification": "Justification"
+    "sectionJustification": "Justification",
+    "unknownRecord": "Enregistrement n°{{id}}",
+    "unknownPerson": "Acteur n°{{id}}"
   },
   "settings": {
-    "language": "Idioma",
+    "language": "Langue",
     "selectLanguage": "Sélectionnez votre langue préférée",
     "languageChanged": "Langue modifiée avec succès",
     "errorChangingLanguage": "Impossible de modifier la langue",
@@ -158,18 +161,41 @@
     "phoneNumber": "Numéro de téléphone",
     "phonePlaceholder": "Exemple : 3001234567",
     "registerAttendance": "Mettre à jour les paramètres",
-    "attendanceRegistered": "✓ Paramètres mis à jour",
+    "attendanceRegistered": "Paramètres mis à jour",
     "completeFields": "Veuillez remplir tous les champs",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "camera": {
+      "positionFace": "Positionnez votre visage dans l'ovale",
+      "capturing": "Capture en cours...",
+      "confirmPhoto": "Photo capturée. La confirmez-vous ?",
+      "captureError": "Erreur de capture. Réessayez.",
+      "processing": "Traitement des données faciales...",
+      "success": "Visage enregistré avec succès",
+      "processError": "Impossible de traiter le visage. Réessayez.",
+      "retryError": "Erreur de traitement. Vous pouvez réessayer.",
+      "incompleteTitle": "Données incomplètes",
+      "incompleteMsg": "Veuillez remplir tous les champs avant de continuer.",
+      "permissionTitle": "Permission refusée",
+      "permissionMsg": "Nous avons besoin d'accéder à votre caméra.",
+      "discardTitle": "Abandonner la photo ?",
+      "discardMsg": "Si vous quittez, vous perdrez la photo prise.",
+      "reviewPhoto": "Vérifier la photo",
+      "photoOk": "La photo est-elle correcte ?",
+      "photoHint": "Assurez-vous que votre visage est net, bien éclairé et centré.",
+      "retake": "Reprendre",
+      "usePhoto": "Utiliser la photo",
+      "title": "Enregistrement facial",
+      "alreadyRegistered": "Vos paramètres faciaux sont déjà enregistrés."
+    }
   },
   "takePhoto": {
     "title": "Photo pour la reconnaissance faciale initiale",
     "instructions": "Centrez votre visage afin qu'il couvre la majeure partie de la caméra pour améliorer le scan et la vitesse de reconnaissance.",
     "registerFacialParams": "Enregistrer les paramètres faciaux",
-    "facialParamsRegistered": "☏ Paramètres faciaux enregistrés"
+    "facialParamsRegistered": "Paramètres faciaux enregistrés"
   },
   "facialFail": {
-    "title": "Èchec de la reconnaissance faciale",
+    "title": "Échec de la reconnaissance faciale",
     "subtitle": "Sélectionnez l'option correspondant à votre situation :",
     "questionnaire": "1. Questionnaire",
     "questionnaireDescription": "Un questionnaire doit être rempli avec des questions spécifiques que seul l'utilisateur peut connaître",
@@ -184,17 +210,17 @@
   },
   "dashboard": {
     "greeting": "Bonjour",
-    "admin": "Administrador",
+    "admin": "Administrateur",
     "attendance": "Présence aujourd'hui",
     "employeesPresent": "de",
     "employeesAttending": "enseignants présents",
-    "quickActions": "Ações Rápidas",
+    "quickActions": "Actions rapides",
     "registerAttendance": "Mettre à jour les paramètres",
     "registerAttendanceDesc": "Mise à jour des paramètres faciaux",
     "employeeManagement": "Gestion des enseignants",
     "employeeManagementDesc": "Ajouter, modifier ou supprimer des enseignants",
-    "reports": "Relatórios",
-    "reportsDesc": "Gerar relatórios de presença",
+    "reports": "Rapports",
+    "reportsDesc": "Générer des rapports de présence",
     "facialConfig": "Configuration faciale",
     "facialConfigDesc": "Mettre à jour les paramètres faciaux",
     "recentAttendance": "Présences récentes",
@@ -206,9 +232,9 @@
     "minutesLate": "minutes de retard",
     "facialRecognitionImproved": "Reconnaissance faciale améliorée",
     "facialRecognitionMsg": "Le système a mis à jour ses algorithmes",
-    "minutesAgo": "minutos",
-    "hoursAgo": "horas",
-    "ago": "atrás",
+    "minutesAgo": "minutes",
+    "hoursAgo": "heures",
+    "ago": "il y a",
     "environmentManagement": "Gestion des Environnements",
     "viewAttendance": "Voir les présences détaillées",
     "manageEnvironmentDesc": "Ajouter, modifier ou supprimer des environnements",
@@ -227,12 +253,12 @@
     "justifiedDelays": "Retards justifiés",
     "noAbsencesRegistered": "Aucune absence enregistrée",
     "noDelaysRegistered": "Aucun retard enregistré",
-    "back": "Voltar",
-    "statusApproved": "Aprovada",
-    "statusPending": "Pendente",
-    "dateLabel": "Data",
-    "timeLabel": "Hora",
-    "reasonLabel": "Motivo",
+    "back": "Retour",
+    "statusApproved": "Approuvée",
+    "statusPending": "En attente",
+    "dateLabel": "Date",
+    "timeLabel": "Heure",
+    "reasonLabel": "Motif",
     "noAttachment": "Sans pièce jointe",
     "viewDetail": "Voir détail",
     "sent": "Envoyé",
@@ -248,7 +274,7 @@
     "reject": "Rejeter",
     "approve": "Approuver",
     "filterAll": "Tous",
-    "filterStudents": "Ètudiants",
+    "filterStudents": "Étudiants",
     "filterTeachers": "Enseignants",
     "subtitleMySubmissions": "Mes justifications envoyées",
     "subtitleStudentPending": "En attente des étudiants",
@@ -276,10 +302,10 @@
     "descriptionLabel": "Description de la justification",
     "reasonPlaceholder": "Décrivez le motif de votre absence ou de votre retard...",
     "submit": "Envoyer la justification",
-    "successMessage": "☏ Justification envoyée avec succès !",
+    "successMessage": "Justification envoyée avec succès !",
     "dateFormat": "AAAA-MM-JJ",
     "timeFormat": "HH:MM AM/PM",
-    "descriptionPlaceholder": "Ècrivez ici la description du motif...",
+    "descriptionPlaceholder": "Écrivez ici la description du motif...",
     "attachDocument": "Joindre un document",
     "selectFile": "Sélectionner un fichier",
     "supportedFormats": "Formats acceptés : PDF, image (JPG, PNG), Word (DOC, DOCX)",
@@ -294,22 +320,22 @@
     "backToDashboard": "Voltar ao Painel"
   },
   "news": {
-    "title": "Novidades",
+    "title": "Actualités",
     "content": "Imaginez que vous deviez utiliser une application pour enregistrer votre présence avec votre visage. Le système affiche d'abord un cadre à l'écran pour vous aider à positionner votre visage. Lorsqu'il devient vert, vous êtes prêt.\n\nPlacez-vous dans un endroit bien éclairé. Le système vous demande ensuite un petit geste, comme cligner des yeux ou bouger légèrement la tête, afin de vérifier qu'il ne s'agit pas d'une photo.\n\nLe scan ne dure que deux ou trois secondes. Un message indique si la présence a été enregistrée ou si un problème est survenu. Ouvrez l'application, accédez au scan facial, positionnez-vous dans le cadre, clignez des yeux et votre présence est enregistrée.",
-    "creationDate": "Data de criação",
+    "creationDate": "Date de création",
     "unknownDate": "##/##/####"
   },
   "history": {
-    "title": "Histórico",
-    "noHistory": "Nenhum histórico de presença"
+    "title": "Historique",
+    "noHistory": "Aucun historique de présence"
   },
   "homes": {
     "greeting": "Connexion"
   },
   "registerModal": {
-    "title": "Solicitação de Conta Pessoal",
-    "description": "Se você não tem uma conta criada, deve solicitá-la ao administrador.",
-    "close": "Fechar"
+    "title": "Demande de compte personnel",
+    "description": "Si vous n'avez pas de compte, vous devez en faire la demande à l'administrateur.",
+    "close": "Fermer"
   },
   "termsModal": {
     "title": "CONDITIONS GÉNÉRALES",
@@ -319,41 +345,41 @@
     "objectText": "L'application a pour objectif de gérer l'enregistrement des présences dans des espaces publics ou privés au moyen de la reconnaissance faciale, permettant une validation automatisée de l'identité.",
     "authorizationTitle": "3. AUTORISATION DU TRAITEMENT DES DONNÉES PERSONNELLES",
     "authorizationText": "L'utilisateur autorise préalablement et expressément le responsable de l'application à collecter, stocker, utiliser, traiter et supprimer ses données personnelles, conformément à la législation colombienne en vigueur.",
-    "sensitiveDataTitle": "4. TRATAMENTO DE DADOS SENSÍVEIS (BIOMÈTRICOS)",
+    "sensitiveDataTitle": "4. TRAITEMENT DES DONNÉES SENSIBLES (BIOMÉTRIQUES)",
     "sensitiveDataText": "L'utilisateur autorise expressément le traitement de ses données biométriques (image faciale), considérées comme des données sensibles, aux fins suivantes :",
     "purpose1": "4.1 Valider l'identité de l'utilisateur.",
     "purpose2": "4.2 Enregistrer sa présence dans les lieux autorisés.",
     "purpose3": "4.3 Prévenir l'usurpation d'identité et la fraude.",
     "sensitiveDataNote": "L'utilisateur reconnaît qu'il n'est pas obligé d'autoriser le traitement de données sensibles ; il comprend toutefois qu'un refus peut empêcher l'utilisation de l'application.",
-    "finalityTitle": "5. FINALIDADE DO TRATAMENTO DOS DADOS",
-    "finalityText": "Os dados pessoais coletados serão utilizados para:",
-    "finality1": "5.1 Registro e controle de presença.",
+    "finalityTitle": "5. FINALITÉ DU TRAITEMENT DES DONNÉES",
+    "finalityText": "Les données personnelles collectées seront utilisées pour :",
+    "finality1": "5.1 Enregistrement et contrôle de présence.",
     "finality2": "5.2 Identification de l'utilisateur.",
-    "finality3": "5.3 Segurança e controle de acesso.",
-    "finality4": "5.4 Cumprimento de obrigações legais.",
-    "finality5": "5.5 Melhoria do serviço.",
-    "rightsTitle": "6. DIREITOS DO TITULAR DOS DADOS",
+    "finality3": "5.3 Sécurité et contrôle d'accès.",
+    "finality4": "5.4 Respect des obligations légales.",
+    "finality5": "5.5 Amélioration du service.",
+    "rightsTitle": "6. DROITS DU TITULAIRE DES DONNÉES",
     "rightsText": "L'utilisateur, en tant que titulaire des données personnelles, a le droit de :",
     "rights1": "6.1 Connaître, mettre à jour et rectifier ses données.",
-    "rights2": "6.2 Solicitar prova da autorização concedida.",
-    "rights3": "6.3 Étre informé de l'utilisation de ses données.",
+    "rights2": "6.2 Demander une preuve de l'autorisation accordée.",
+    "rights3": "6.3 Être informé de l'utilisation de ses données.",
     "rights4": "6.4 Révoquer son autorisation et/ou demander la suppression de ses données.",
     "rights5": "6.5 Accéder gratuitement à ses données personnelles.",
     "rightsNote": "Pour exercer ces droits, l'utilisateur peut contacter l'application par les canaux établis.",
     "storageTitle": "7. STOCKAGE ET SÉCURITÉ DES INFORMATIONS",
-    "storageText1": "Os dados pessoais serão armazenados pelo tempo necessário para cumprir as finalidades descritas ou conforme as disposições legais aplicáveis.",
-    "storageText2": "L'application mettra en ŏuvre des mesures de sécurité techniques, humaines et administratives pour protéger les informations contre tout accès non autorisé, perte, utilisation abusive ou fraude.",
+    "storageText1": "Les données personnelles seront conservées aussi longtemps que nécessaire pour atteindre les finalités décrites ou conformément aux dispositions légales applicables.",
+    "storageText2": "L'application mettra en œuvre des mesures de sécurité techniques, humaines et administratives pour protéger les informations contre tout accès non autorisé, perte, utilisation abusive ou fraude.",
     "transferTitle": "8. TRANSFERT ET TRANSMISSION DES DONNÉES",
     "transferText": "L'utilisateur autorise le partage de ses données personnelles avec des tiers chargés du traitement uniquement lorsque cela est nécessaire au fonctionnement de l'application ou requis par la loi, tout en garantissant la protection des informations.",
-    "responsibilitiesTitle": "9. RESPONSABILITÈS DE L'UTILISATEUR",
+    "responsibilitiesTitle": "9. RESPONSABILITÉS DE L'UTILISATEUR",
     "responsibilitiesText": "L'utilisateur s'engage à :",
-    "responsibilities1": "9.1 Fornecer informações verdadeiras e atualizadas.",
+    "responsibilities1": "9.1 Fournir des informations véridiques et à jour.",
     "responsibilities2": "9.2 Utiliser l'application de manière appropriée.",
-    "responsibilities3": "9.3 Não suplantar a identidade de terceiros.",
-    "responsibilities4": "9.4 Cumprir as normas aplicáveis no uso do serviço.",
+    "responsibilities3": "9.3 Ne pas usurper l'identité de tiers.",
+    "responsibilities4": "9.4 Respecter les règles applicables lors de l'utilisation du service.",
     "liabilityTitle": "10. LIMITATION DE RESPONSABILITÉ",
     "liabilityText": "L'application ne sera pas responsable de :",
-    "liability1": "10.1 Falhas técnicas alheias ao seu controle.",
+    "liability1": "10.1 Défaillances techniques indépendantes de son contrôle.",
     "liability2": "10.2 L'utilisation abusive du système par l'utilisateur.",
     "liability3": "10.3 Les accès non autorisés résultant de la négligence de l'utilisateur.",
     "modificationsTitle": "11. MODIFICATIONS",
@@ -361,7 +387,7 @@
     "legislationTitle": "12. LÉGISLATION APPLICABLE",
     "legislationText": "Les présentes conditions générales sont régies par les lois de la République de Colombie, notamment la loi 1581 de 2012 et ses décrets d'application.",
     "acceptanceFinalTitle": "13. ACCEPTATION FINALE",
-    "close": "Fechar",
+    "close": "Fermer",
     "acceptanceFinalText": "L'utilisateur déclare avoir lu, compris et accepté l'intégralité des présentes conditions générales ainsi que la politique de traitement des données personnelles, et autorise l'utilisation de ses données conformément à ces dispositions."
   },
   "questionnaire": {
@@ -391,28 +417,28 @@
     "relativeDocumentQuestion": "Quel est le numéro de document de votre proche ?"
   },
   "facialUpdate": {
-    "beardChange": "Mudança de barba/bigode",
-    "hairChange": "Mudança de penteado",
-    "glasses": "Uso de óculos",
-    "weightChange": "Mudança significativa de peso",
-    "makeup": "Maquiagem diferente",
-    "expression": "Expressão facial diferente",
+    "beardChange": "Changement de barbe/moustache",
+    "hairChange": "Changement de coiffure",
+    "glasses": "Port de lunettes",
+    "weightChange": "Changement de poids important",
+    "makeup": "Maquillage différent",
+    "expression": "Expression faciale différente",
     "selectOption": "Sélectionnez une option",
     "selectOptionMessage": "Veuillez sélectionner le changement qui s'est produit sur votre visage",
-    "updateParams": "Atualizar",
+    "updateParams": "Mettre à jour",
     "confirmUpdate": "Étes-vous sûr de vouloir mettre à jour vos paramètres faciaux ?",
-    "success": "Sucesso",
+    "success": "Succès",
     "paramsUpdated": "Vos paramètres faciaux ont été mis à jour",
     "changeType": "Type de changement"
   },
   "documentSelector": {
-    "label": "Tipo de documento:"
+    "label": "Type de document :"
   },
   "rhSelector": {
     "label": "Sélectionnez votre groupe sanguin :"
   },
   "progressBar": {
-    "question": "Pergunta {{currentStep}} de {{totalSteps}}"
+    "question": "Question {{currentStep}} sur {{totalSteps}}"
   },
   "teacher": {
     "greeting": "Bon retour",
@@ -440,7 +466,10 @@
     "attendanceGroupMsg": "La présence du groupe 10-A a été enregistrée avec succès.",
     "attendanceLabel": "Présence de mes groupes",
     "attendanceRecorded": "Présence enregistrée",
-    "newJustification": "Nouvelle justification"
+    "newJustification": "Nouvelle justification",
+    "late": "En retard",
+    "present": "Présent",
+    "seeAll": "Voir tout"
   },
   "student": {
     "greeting": "Bonjour étudiant",
@@ -455,17 +484,17 @@
     "mySchedule": "Mon emploi du temps",
     "facialSetup": "Configurer le visage",
     "myRecentRecords": "Mes enregistrements récents",
-    "seeAll": "Ver histórico",
+    "seeAll": "Voir l'historique",
     "present": "Présent",
     "late": "En retard",
-    "notifications": "Notificações",
-    "faceRecognized": "Rosto reconhecido",
-    "attendanceReminder": "Lembrete de presença",
+    "notifications": "Notifications",
+    "faceRecognized": "Visage reconnu",
+    "attendanceReminder": "Rappel de présence",
     "lates": "Retards",
-    "facialFailures": "Falhas de reconhecimento",
-    "recognitionSuccessRate": "Taxa de sucesso",
+    "facialFailures": "Échecs de reconnaissance",
+    "recognitionSuccessRate": "Taux de réussite",
     "times": "fois à ce jour",
-    "UpdateFace": "Atualização de Rosto",
+    "UpdateFace": "Mise à jour du visage",
     "UpdateFaceDesc": "Mettez à jour vos données biométriques",
     "faceRecognizedMsg": "Votre visage a été reconnu avec succès aujourd'hui à 08h15",
     "attendanceReminderDesc": "N'oubliez pas d'enregistrer votre présence par reconnaissance faciale."
@@ -478,7 +507,8 @@
     "science": "Sciences",
     "spanish": "Espagnol",
     "english": "Anglais",
-    "physicalEducation": "Éducation physique"
+    "physicalEducation": "Éducation physique",
+    "general": "Général"
   },
   "time": {
     "today": "Aujourd'hui",
@@ -554,7 +584,7 @@
     "quickSettings": "Paramètres Rapides",
     "logout": "Déconnexion",
     "logoutConfirm": "Êtes-vous sûr de vouloir vous déconnecter ?",
-    "school": "Ècole",
+    "school": "École",
     "pending": "En attente",
     "active": "Actif",
     "absent": "Absent",
@@ -585,9 +615,9 @@
       "successTitle": "Mot de passe mis à jour",
       "title": "Modifier le mot de passe"
     },
-    "pendingJustifications": "pendingJustifications",
-    "phone": "phone",
-    "present": "present",
+    "pendingJustifications": "Justifications en attente",
+    "phone": "Téléphone",
+    "present": "Présents",
     "profileModal": {
       "cancel": "Annuler",
       "editTitle": "Modifier le profil",
@@ -610,17 +640,17 @@
   },
   "manageUsers": {
     "title": "Gestion des Utilisateurs",
-    "students": "Ètudiants",
+    "students": "Étudiants",
     "teachers": "Enseignants",
-    "addStudent": "Ajouter un Ètudiant",
+    "addStudent": "Ajouter un étudiant",
     "noRecords": "Aucun enregistrement",
-    "searchStudent": "Rechercher un Ètudiant",
+    "searchStudent": "Rechercher un étudiant",
     "enterStudentName": "Entrez le nom de l'étudiant",
     "enterNameToSearch": "Entrez un nom à rechercher",
-    "editStudentInfo": "Modifier les Informations de l'Ètudiant",
+    "editStudentInfo": "Modifier les informations de l'étudiant",
     "newRecord": "Nouvel Enregistrement",
     "grade": "Année d'études",
-    "subject": "Sujet",
+    "subject": "Matière",
     "validation": "Validation",
     "nameRequired": "Le nom est requis",
     "confirm": "Confirmer",
@@ -712,7 +742,9 @@
     },
     "errors": {
       "schoolNotFound": "Impossible d'identifier l'établissement à mettre à jour",
-      "saveFailed": "Impossible d'enregistrer les modifications"
+      "saveFailed": "Impossible d'enregistrer les modifications",
+      "countriesFailed": "Impossible de charger les pays",
+      "citiesFailed": "Impossible de charger les villes"
     },
     "success": {
       "updated": "Configuration de l'établissement mise à jour avec succès"
@@ -731,9 +763,9 @@
     "filters": {
       "all": "Tous",
       "critical": "Critiques",
-      "warning": "ì la limite"
+      "warning": "À la limite"
     },
-    "searchPlaceholder": "Rechercher par nom, code ou matière⬦",
+    "searchPlaceholder": "Rechercher par nom, code ou matière…",
     "noResults": "Aucun {{role}} ne dépasse la limite de {{type}} avec les filtres actuels.",
     "resultsCount": "{{count}} {{role}} trouvé(s)",
     "generateReport": "Générer le rapport général ({{count}})",
@@ -747,19 +779,22 @@
     },
     "statusLabels": {
       "critical": "CRITIQUE",
-      "warning": "ì LA LIMITE"
+      "warning": "À LA LIMITE"
     },
     "absenceLabel": "Absences\n(limite {{limit}})",
     "latenessLabel": "Retards\n(limite {{limit}})"
+    ,"reportSent": "Le rapport a été envoyé avec succès."
+    ,"reportError": "Le rapport n'a pas pu être envoyé."
+    ,"confirmGeneral": "Un rapport sera généré pour {{count}} personnes. Continuer ?"
   },
   "validation": {
     "title": "Champs incomplets",
-    "descriptionRequired": "descriptionRequired",
-    "selectCategoryAndType": "selectCategoryAndType"
+    "descriptionRequired": "La description est obligatoire",
+    "selectCategoryAndType": "Sélectionnez une catégorie et un type"
   },
   "languageSettings": {
-    "appearance": "Apariencia",
-    "themeSelection": "Selecciona el tema de la aplicación",
+    "appearance": "Apparence",
+    "themeSelection": "Sélectionnez le thème de l'application",
     "alertSettings": "Configuration des alertes",
     "customizeAlerts": "Personnalisez les types d'alertes que vous souhaitez recevoir",
     "configureAlerts": "Configurer les alertes",
@@ -810,6 +845,7 @@
     "errorNotFound": "Aucun compte n'a été trouvé avec cet e-mail.",
     "errorTimeout": "La requête a pris trop de temps. Vérifiez votre connexion et réessayez.",
     "errorGeneric": "Une erreur s'est produite. Réessayez.",
+    "errorRateLimit": "Vous devez attendre {{seconds}} secondes avant de réessayer.",
     "successMessage": "Code envoyé avec succès. Redirection..."
   },
   "passwordUpdate": {
@@ -825,8 +861,8 @@
     "reqNotCommon": "Ce n'est pas un mot de passe courant",
     "reqNoSequential": "Aucun motif séquentiel (123, abc)",
     "reqNoRepeated": "Aucun caractère répété (aaa, 111)",
-    "passwordsMatch": "☏ Les mots de passe correspondent",
-    "passwordsNoMatch": "☓ Les mots de passe ne correspondent pas",
+    "passwordsMatch": "Les mots de passe correspondent",
+    "passwordsNoMatch": "Les mots de passe ne correspondent pas",
     "saving": "Enregistrement...",
     "saveButton": "Enregistrer le mot de passe",
     "successTitle": "Mot de passe mis à jour !",
@@ -865,5 +901,26 @@
     "locationRequired": "L'emplacement est obligatoire.",
     "confirm": "Confirmer",
     "deleteQuestion": "Voulez-vous vraiment supprimer cet environnement ?"
+  },
+  "registerFace": {
+    "title": "Enregistrement du visage",
+    "subtitleReview": "Vérifiez la photo. Si elle vous convient, enregistrez-la ; sinon, reprenez-la.",
+    "subtitleReady": "Placez votre visage dans l'ovale et appuyez sur le bouton lorsque vous êtes prêt.",
+    "subtitleStarting": "Démarrage de la caméra...",
+    "permissionText": "L'accès à la caméra est requis pour enregistrer votre visage.",
+    "allowCamera": "Autoriser la caméra",
+    "saveFace": "Enregistrer le visage",
+    "saving": "Enregistrement...",
+    "retake": "Reprendre",
+    "captureFace": "Capturer le visage",
+    "startingCamera": "Démarrage de la caméra...",
+    "cameraErrorTitle": "Erreur de caméra",
+    "cameraErrorMsg": "Impossible de démarrer la caméra. Réessayez.",
+    "captureErrorTitle": "Erreur de capture",
+    "captureErrorMsg": "Impossible de prendre la photo. Réessayez.",
+    "saveSuccessTitle": "Enregistrement réussi",
+    "saveSuccessMsg": "Votre visage a été enregistré avec succès sur cet appareil.",
+    "saveErrorTitle": "Erreur d'enregistrement",
+    "saveErrorMsg": "Un problème est survenu lors de l'enregistrement de votre visage."
   }
 }

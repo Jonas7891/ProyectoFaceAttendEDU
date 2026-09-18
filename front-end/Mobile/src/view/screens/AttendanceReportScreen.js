@@ -13,7 +13,7 @@ import {
 import {useTheme} from '../components/common/ThemeContext';
 import {useTranslation} from 'react-i18next';
 import CustomAlert from '../components/common/CustomAlert';
-import styles from './Style';
+import styles from './Styles/AttendanceReportScreen/Style';
 import {useAttendanceReportViewModel} from '../../viewmodels/useAttendanceReportViewModel';
 
 // ===========================================================================
@@ -307,11 +307,11 @@ export default function AttendanceReportScreen({ navigation }) {
                                     styles.typeTabTextReport,
                                     {
                                         color:
-                                            activeType === 'absence'
-                                                ? (isDark ? '#FF8A80' : '#C62828')
+                                            activeType === 'lateness'
+                                                ? (isDark ? '#FFCC80' : '#F57C00')
                                                 : colors.textSecondary,
                                     },
-                                    activeType === 'absence' && { fontWeight: '700' },
+                                    activeType === 'lateness' && { fontWeight: '700' },
                                 ]}
                             >
                                 {t('attendanceReport.latenessLabel', {limit: LATENESS_LIMIT}).replace(/\n/g, ' ')}

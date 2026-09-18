@@ -5,7 +5,7 @@ import BottomBar from '../components/common/NavigationBar';
 import ScrollViewWrapper from '../components/common/ScrollView';
 import CustomTabs from '../components/common/CustomTabs';
 import Separador from '../components/common/Separador';
-import styles from './Style';
+import styles from './Styles/NewsScreen/Style';
 import {useTheme} from '../components/common/ThemeContext';
 import {useNewsViewModel} from '../../viewmodels/useNewsViewModel';
 

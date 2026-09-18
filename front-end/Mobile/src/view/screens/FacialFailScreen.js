@@ -17,7 +17,7 @@ import {QuestionnaireModal} from '../components/common/QuestionnaireModal';
 import {FacialUpdateModal} from '../components/common/FacialUpdateModal';
 import CustomLogo from '../components/common/logo';
 import CustomAlert from '../components/common/CustomAlert';
-import styles from './Style';
+import styles from './Styles/FacialFailScreen/Style';
 import {useFacialFailViewModel} from '../../viewmodels/useFacialFailScreenViewModel';
 
 export default function FacialFail() {

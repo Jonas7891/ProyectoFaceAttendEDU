@@ -15,7 +15,7 @@ import DangerButton from "../components/auth/DangerButton";
 import CustomLogo from "../components/common/logo";
 import CustomAlert from '../components/common/CustomAlert';
 import {useCustomAlert} from '../components/common/useCustomAlert';
-import styles from "./Style";
+import styles from "./Styles/MenuScreen/Style";
 import {useMenuViewModel} from '../../viewmodels/useMenuViewModel';
 import {useUser} from '../../utils/UserContext';
 

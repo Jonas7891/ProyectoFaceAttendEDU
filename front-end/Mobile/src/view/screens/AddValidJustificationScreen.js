@@ -15,7 +15,7 @@ import {useTranslation} from "react-i18next";
 import {useNavigation} from "@react-navigation/native";
 import PrimaryButton from "../components/auth/PrimaryButton";
 import {useTheme} from "../components/common/ThemeContext";
-import styles from "./Style";
+import styles from "./Styles/AddValidJustificationScreen/Style";
 import {useAddValidJustificationViewModel} from "../../viewmodels/useAddValidJustificationViewModel";
 import CustomAlert from "../components/common/CustomAlert";
 import {useCustomAlert} from "../components/common/useCustomAlert";

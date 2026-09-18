@@ -14,7 +14,7 @@ import {useTranslation} from 'react-i18next';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import CustomLogo from '../components/common/logo';
 import Separador from '../components/common/Separador';
-import styles from './Style';
+import styles from './Styles/MenuJustifyScreen/Style';
 import {useTheme} from '../components/common/ThemeContext';
 import {useMenuJustifyViewModel} from '../../viewmodels/useMenuJustifyViewModel';
 import {useUser} from '../../utils/UserContext';
