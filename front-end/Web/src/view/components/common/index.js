@@ -44,4 +44,5 @@ export { Avatar } from './Avatar';
 export { Divider } from './Divider';
 export { ToggleRow } from './ToggleRow';
 export { BackgroundImage } from './BackgroundImage';
+export { InfoModal } from './InfoModal';
 export { default as CustomScrollBar } from './CustomScrollBar';

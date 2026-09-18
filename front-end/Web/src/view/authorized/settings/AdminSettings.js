@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput } from "react-native";
+import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import Slider from "@react-native-community/slider";
 import { Feather } from "@expo/vector-icons";
-import { Card, Button, ToggleRow, Divider } from "../../components/common";
+import { Card, Button, ToggleRow, Divider, InfoModal } from "../../components/common";
 import { PeriodExpirationAlert } from "../../components/settings/PeriodExpirationAlert";
 import { useTheme } from "../../components/hooks/useTheme";
 import { useResponsive } from "../../components/hooks/useResponsive";
@@ -56,6 +56,9 @@ export function AdminSettings({
     const [periodEndDate, setPeriodEndDate] = useState("");
     const [isAutomaticPeriod, setIsAutomaticPeriod] = useState(true);
     const [showExpirationAlert, setShowExpirationAlert] = useState(true);
+    
+    // Estado para controlar el modal informativo
+    const [showInfoModal, setShowInfoModal] = useState(false);
     
     const [confidence, setConfidence] = useState(85);
     const [autoRegister, setAutoRegister] = useState(true);
@@ -272,28 +275,24 @@ export function AdminSettings({
                                     {t("Define las fechas del período actual. En modo automático, se calculará el próximo período basándose en la duración del actual.")}
                                 </Text>
                             </View>
-                            <View style={{
-                                backgroundColor: isAutomaticPeriod ? c.status.successLight : c.status.warningLight,
-                                paddingHorizontal: 8,
-                                paddingVertical: 4,
-                                borderRadius: 8,
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 4,
-                            }}>
-                                <Feather 
-                                    name={isAutomaticPeriod ? "zap" : "edit-3"} 
-                                    size={12} 
-                                    color={isAutomaticPeriod ? c.status.success : c.status.warning} 
-                                />
+                            <TouchableOpacity
+                                onPress={() => setShowInfoModal(true)}
+                                style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    gap: 4,
+                                    paddingVertical: 4,
+                                }}
+                            >
                                 <Text style={{
                                     fontSize: 11,
                                     fontWeight: "600",
-                                    color: isAutomaticPeriod ? c.status.success : c.status.warning,
+                                    color: c.brand.primary,
+                                    textDecorationLine: "underline",
                                 }}>
-                                    {isAutomaticPeriod ? t("Auto") : t("Manual")}
+                                    {t("¿Cómo funciona?")}
                                 </Text>
-                            </View>
+                            </TouchableOpacity>
                         </View>
 
                         {/* Selector de modo */}
@@ -415,51 +414,37 @@ export function AdminSettings({
                                 </Text>
                             </View>
                         </View>
+                    </View>
 
-                        {/* Mostrar período actual detectado automáticamente */}
-                        {automaticPeriod && (
-                            <View style={{
-                                marginTop: 12,
-                                backgroundColor: c.brand.primaryLight,
-                                borderRadius: 14,
-                                padding: 12,
-                                flexDirection: "row",
-                                gap: 8,
-                            }}>
-                                <Feather
-                                    name="calendar"
-                                    size={13}
-                                    color={c.brand.primary}
-                                    style={{ marginTop: 1 }}
-                                />
-                                <View style={{ flex: 1 }}>
+                    {/* Modal informativo */}
+                    <InfoModal
+                        visible={showInfoModal}
+                        onClose={() => setShowInfoModal(false)}
+                        title={t("Período detectado por división del año")}
+                        icon="calendar"
+                    >
+                        <View style={{ gap: 12 }}>
+                            {automaticPeriod && (
+                                <View>
                                     <Text style={{
-                                        fontSize: 11,
+                                        fontSize: 14,
                                         fontWeight: "600",
                                         color: c.brand.primary,
-                                        marginBottom: 4,
-                                    }}>
-                                        {t("Período detectado por división del año:")}
-                                    </Text>
-                                    <Text style={{
-                                        fontSize: 11,
-                                        color: c.brand.primary,
-                                        lineHeight: 18
+                                        marginBottom: 8,
                                     }}>
                                         {getFullPeriodLabel(automaticPeriod)}
                                     </Text>
                                     <Text style={{
-                                        fontSize: 10,
-                                        color: c.brand.primary,
-                                        marginTop: 4,
-                                        opacity: 0.8,
+                                        fontSize: 13,
+                                        color: c.text.primary,
+                                        lineHeight: 20,
                                     }}>
                                         {t("Este cálculo se basa en dividir el año calendario según el tipo de período seleccionado.")}
                                     </Text>
                                 </View>
-                            </View>
-                        )}
-                    </View>
+                            )}
+                        </View>
+                    </InfoModal>
 
                     {/* Asistencia mínima */}
                     <View>
