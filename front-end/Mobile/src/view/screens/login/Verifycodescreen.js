@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../../components/common/ThemeContext';
-import styles from './style/Style';
+import styles from '../Styles/Verifycodescreen/Style';
 
 // Componentes
 import {CodeInput} from '../../components/auth/CodeInput';

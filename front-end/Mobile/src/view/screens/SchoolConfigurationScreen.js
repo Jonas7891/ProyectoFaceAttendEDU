@@ -16,7 +16,7 @@ import {
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
-import styles from './Style';
+import styles from './Styles/SchoolConfigurationScreen/Style';
 import {useSchoolConfigurationViewModel} from "../../viewmodels/useSchoolConfigurationViewModel";
 import {useTheme} from '../../view/components/common/ThemeContext';
 import {useUser} from '../../utils/UserContext';

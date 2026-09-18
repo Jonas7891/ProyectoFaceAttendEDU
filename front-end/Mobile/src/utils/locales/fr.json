@@ -93,7 +93,9 @@
     "approved": "Approuvé",
     "rejected": "Rejeté",
     "justifiedStatus": "Justifié",
-    "sectionJustification": "Justification"
+    "sectionJustification": "Justification",
+    "unknownRecord": "Enregistrement n°{{id}}",
+    "unknownPerson": "Acteur n°{{id}}"
   },
   "settings": {
     "language": "Langue",
@@ -161,7 +163,30 @@
     "registerAttendance": "Mettre à jour les paramètres",
     "attendanceRegistered": "Paramètres mis à jour",
     "completeFields": "Veuillez remplir tous les champs",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "camera": {
+      "positionFace": "Positionnez votre visage dans l'ovale",
+      "capturing": "Capture en cours...",
+      "confirmPhoto": "Photo capturée. La confirmez-vous ?",
+      "captureError": "Erreur de capture. Réessayez.",
+      "processing": "Traitement des données faciales...",
+      "success": "Visage enregistré avec succès",
+      "processError": "Impossible de traiter le visage. Réessayez.",
+      "retryError": "Erreur de traitement. Vous pouvez réessayer.",
+      "incompleteTitle": "Données incomplètes",
+      "incompleteMsg": "Veuillez remplir tous les champs avant de continuer.",
+      "permissionTitle": "Permission refusée",
+      "permissionMsg": "Nous avons besoin d'accéder à votre caméra.",
+      "discardTitle": "Abandonner la photo ?",
+      "discardMsg": "Si vous quittez, vous perdrez la photo prise.",
+      "reviewPhoto": "Vérifier la photo",
+      "photoOk": "La photo est-elle correcte ?",
+      "photoHint": "Assurez-vous que votre visage est net, bien éclairé et centré.",
+      "retake": "Reprendre",
+      "usePhoto": "Utiliser la photo",
+      "title": "Enregistrement facial",
+      "alreadyRegistered": "Vos paramètres faciaux sont déjà enregistrés."
+    }
   },
   "takePhoto": {
     "title": "Photo pour la reconnaissance faciale initiale",
@@ -717,7 +742,9 @@
     },
     "errors": {
       "schoolNotFound": "Impossible d'identifier l'établissement à mettre à jour",
-      "saveFailed": "Impossible d'enregistrer les modifications"
+      "saveFailed": "Impossible d'enregistrer les modifications",
+      "countriesFailed": "Impossible de charger les pays",
+      "citiesFailed": "Impossible de charger les villes"
     },
     "success": {
       "updated": "Configuration de l'établissement mise à jour avec succès"
@@ -756,6 +783,9 @@
     },
     "absenceLabel": "Absences\n(limite {{limit}})",
     "latenessLabel": "Retards\n(limite {{limit}})"
+    ,"reportSent": "Le rapport a été envoyé avec succès."
+    ,"reportError": "Le rapport n'a pas pu être envoyé."
+    ,"confirmGeneral": "Un rapport sera généré pour {{count}} personnes. Continuer ?"
   },
   "validation": {
     "title": "Champs incomplets",
@@ -815,6 +845,7 @@
     "errorNotFound": "Aucun compte n'a été trouvé avec cet e-mail.",
     "errorTimeout": "La requête a pris trop de temps. Vérifiez votre connexion et réessayez.",
     "errorGeneric": "Une erreur s'est produite. Réessayez.",
+    "errorRateLimit": "Vous devez attendre {{seconds}} secondes avant de réessayer.",
     "successMessage": "Code envoyé avec succès. Redirection..."
   },
   "passwordUpdate": {
@@ -870,5 +901,26 @@
     "locationRequired": "L'emplacement est obligatoire.",
     "confirm": "Confirmer",
     "deleteQuestion": "Voulez-vous vraiment supprimer cet environnement ?"
+  },
+  "registerFace": {
+    "title": "Enregistrement du visage",
+    "subtitleReview": "Vérifiez la photo. Si elle vous convient, enregistrez-la ; sinon, reprenez-la.",
+    "subtitleReady": "Placez votre visage dans l'ovale et appuyez sur le bouton lorsque vous êtes prêt.",
+    "subtitleStarting": "Démarrage de la caméra...",
+    "permissionText": "L'accès à la caméra est requis pour enregistrer votre visage.",
+    "allowCamera": "Autoriser la caméra",
+    "saveFace": "Enregistrer le visage",
+    "saving": "Enregistrement...",
+    "retake": "Reprendre",
+    "captureFace": "Capturer le visage",
+    "startingCamera": "Démarrage de la caméra...",
+    "cameraErrorTitle": "Erreur de caméra",
+    "cameraErrorMsg": "Impossible de démarrer la caméra. Réessayez.",
+    "captureErrorTitle": "Erreur de capture",
+    "captureErrorMsg": "Impossible de prendre la photo. Réessayez.",
+    "saveSuccessTitle": "Enregistrement réussi",
+    "saveSuccessMsg": "Votre visage a été enregistré avec succès sur cet appareil.",
+    "saveErrorTitle": "Erreur d'enregistrement",
+    "saveErrorMsg": "Un problème est survenu lors de l'enregistrement de votre visage."
   }
 }

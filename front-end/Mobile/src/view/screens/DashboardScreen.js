@@ -6,7 +6,7 @@ import {useTheme} from '../components/common/ThemeContext';
 import BottomBar from '../components/common/NavigationBar';
 import ScrollViewWrapper from '../components/common/ScrollView';
 import CustomTabs from '../components/common/CustomTabs';
-import styles from './Style';
+import styles from './Styles/DashboardScreen/Style';
 import {useDashboardViewModel} from '../../viewmodels/useDashboardViewModel';
 import {useUser} from '../../utils/UserContext';
 

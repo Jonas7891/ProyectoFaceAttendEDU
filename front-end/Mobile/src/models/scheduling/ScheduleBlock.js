@@ -14,8 +14,21 @@ export default class ScheduleBlock extends BaseModel {
   }
 
   get dayName() {
-    const days = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-    return days[this.dayOfWeek] || '';
+    return this.dayNameForLocale('es-ES');
+  }
+
+  dayNameForLocale(locale = 'es-ES') {
+    const day = Number(this.dayOfWeek);
+    if (!day || day < 1 || day > 7) return '';
+    try {
+      // 2024-01-01 fue lunes; desplazar para obtener el día de la semana.
+      const ref = new Date(2024, 0, day);
+      const label = ref.toLocaleDateString(locale, {weekday: 'long'});
+      return label ? label.charAt(0).toUpperCase() + label.slice(1) : '';
+    } catch {
+      const days = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+      return days[day] || '';
+    }
   }
 
   static fromApi(data) {

@@ -1,7 +1,7 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
-import {Alert} from 'react-native';
+import {useTranslation} from 'react-i18next';
 import {useCustomAlert} from '../view/components/common/useCustomAlert';
-import {request, GET} from '../api/apiClient';
+import {request, GET, POST} from '../api/apiClient';
 
 function unwrap(data) {
   if (data && Array.isArray(data.value)) return data.value;
@@ -11,6 +11,7 @@ function unwrap(data) {
 }
 
 export function useAttendanceReportViewModel() {
+    const {t} = useTranslation();
     const ABSENCE_LIMIT = 3;
     const LATENESS_LIMIT = 6;
 
@@ -20,7 +21,7 @@ export function useAttendanceReportViewModel() {
         return 'ok';
     }, [ABSENCE_LIMIT, LATENESS_LIMIT]);
 
-    const {alertConfig, hideAlert, showSuccess, showConfirm} = useCustomAlert();
+    const {alertConfig, hideAlert, showSuccess, showError, showConfirm} = useCustomAlert();
     const [activeRole, setActiveRole] = useState('student');
     const [activeType, setActiveType] = useState('absence');
     const [activeFilter, setActiveFilter] = useState('all');
@@ -55,7 +56,7 @@ export function useAttendanceReportViewModel() {
                         const person = unwrap(personData)[0] || {};
                         enriched.push({
                             ...stats,
-                            name: `${person.name || ''} ${person.last_name || ''}`.trim() || `Actor #${aid}`,
+                            name: `${person.name || ''} ${person.last_name || ''}`.trim() || t('attendance.unknownPerson', {id: aid}),
                             code: actor.actor_code || '—',
                             course: '—',
                             type: actor.actor_type_id === 1 ? 'student' : 'teacher',
@@ -112,31 +113,42 @@ export function useAttendanceReportViewModel() {
     const handleGenerateIndividual = useCallback((person) => { setSelectedPerson(person); setModalVisible(true); }, []);
     const closeModal = useCallback(() => { setModalVisible(false); }, []);
 
-    const handleConfirmReport = useCallback(() => {
-        setModalVisible(false);
+    const sendReport = useCallback(async (people) => {
         setIsLoading(true);
-        setTimeout(() => {
+        try {
+            await request({
+                method: POST,
+                url: 'attendance_report',
+                data: {
+                    role: activeRole,
+                    attendance_type: activeType,
+                    people,
+                },
+                requiresAuth: false,
+            });
+            showSuccess(t('attendanceReport.title'), t('attendanceReport.reportSent'));
+        } finally {
             setIsLoading(false);
-            Alert.alert('Reporte generado', 'El reporte de ' + selectedPerson?.name + ' fue enviado correctamente.', [{text: 'Aceptar'}]);
-        }, 1800);
-    }, [selectedPerson]);
+        }
+    }, [activeRole, activeType, showSuccess, t]);
+
+    const handleConfirmReport = useCallback(async () => {
+        setModalVisible(false);
+        try {
+            await sendReport([selectedPerson]);
+        } catch (error) {
+            showError(t('common.error'), error.message || t('attendanceReport.reportError'));
+        }
+    }, [selectedPerson, sendReport, showError, t]);
 
     const handleGenerateAll = useCallback(() => {
         if (filteredData.length === 0) return;
-        const roleLabel = activeRole === 'student' ? 'estudiante(s)' : 'docente(s)';
-        const typeLabel = activeType === 'absence' ? 'inasistencias' : 'retardos';
-        Alert.alert(
-            'Generar reporte general',
-            'Se generará un reporte para ' + filteredData.length + ' ' + roleLabel + ' con ' + typeLabel + ' superiores al tope. ¿Continuar?',
-            [
-                {text: 'Cancelar', style: 'cancel'},
-                {text: 'Confirmar', onPress: () => {
-                    setIsLoading(true);
-                    setTimeout(() => { setIsLoading(false); Alert.alert('Reportes enviados ✓', filteredData.length + ' reporte(s) generados exitosamente.'); }, 2000);
-                }},
-            ],
+        showConfirm(
+            t('attendanceReport.title'),
+            t('attendanceReport.confirmGeneral', {count: filteredData.length}),
+            () => sendReport(filteredData),
         );
-    }, [filteredData, activeRole, activeType]);
+    }, [filteredData, sendReport, showConfirm, t]);
 
     const handleRoleChange = useCallback((role) => { setActiveRole(role); setSearchText(''); setActiveFilter('all'); }, []);
 

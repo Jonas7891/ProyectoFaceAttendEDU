@@ -12,7 +12,7 @@ import {
 import {useTranslation} from 'react-i18next';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import Separador from '../components/common/Separador';
-import styles from './Style';
+import styles from './Styles/ConsultJustifyScreen/Style';
 import {useTheme} from '../components/common/ThemeContext';
 import {useValidJustificationsViewModel} from '../../viewmodels/useConsultJustifyViewModel';
 

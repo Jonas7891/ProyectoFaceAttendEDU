@@ -18,20 +18,12 @@ import {useTranslation} from 'react-i18next';
 import {useTheme} from '../../components/common/ThemeContext';
 import {VerificationService} from '../../../services/verificationService';
 import {request, GET} from '../../../api/apiClient';
-import styles from './style/Style';
+import styles from '../Styles/Forgotpasswordscreen/Style';
 
 const COOLDOWN_MS = 60000;
 const REQUEST_TIMEOUT_MS = 15000;
-const CODE_LENGTH = 6;
 const NAVIGATION_DELAY_MS = 1500;
 const FOCUS_DELAY_MS = 400;
-
-function generateRecoveryCode(length = CODE_LENGTH) {
-    const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    return Array.from({ length }, () =>
-        charset.charAt(Math.floor(Math.random() * charset.length))
-    ).join('');
-}
 
 function isValidEmail(email) {
     if (!email || typeof email !== 'string') return false;
@@ -62,12 +54,7 @@ class RecoveryError extends Error {
 }
 
 const PasswordRecoveryService = {
-    _devCodeStore: new Map(),
-    _devTimestamps: new Map(),
-
     async sendRecoveryEmail(email) {
-        await this._simulateNetworkLatency();
-
         const normalizedEmail = email.toLowerCase().trim();
 
         let exists = false;
@@ -92,33 +79,7 @@ const PasswordRecoveryService = {
             throw new RecoveryError(RecoveryErrorType.NOT_FOUND, 'Email no encontrado');
         }
 
-        VerificationService.sendRecoveryCode(normalizedEmail);
-    },
-
-    async _simulateNetworkLatency() {
-        return new Promise((resolve, reject) => {
-            const timeoutId = setTimeout(() => {
-                reject(new RecoveryError(RecoveryErrorType.TIMEOUT, 'Timeout de red'));
-            }, REQUEST_TIMEOUT_MS);
-
-            const latencyId = setTimeout(() => {
-                clearTimeout(timeoutId);
-                resolve();
-            }, 700);
-
-            return () => {
-                clearTimeout(timeoutId);
-                clearTimeout(latencyId);
-            };
-        });
-    },
-
-    _logRecoveryCode(email, code) {
-        console.log('─────────────────────────────────────');
-        console.log('🔑 CÓDIGO DE RECUPERACIÓN');
-        console.log(`   Email : ${email}`);
-        console.log(`   Código: ${code}`);
-        console.log('─────────────────────────────────────');
+        await VerificationService.sendRecoveryCode(normalizedEmail);
     },
 };
 
@@ -205,6 +166,7 @@ function useEmailValidation() {
 }
 
 function usePasswordRecovery({ onSuccess }) {
+    const { t } = useTranslation();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -222,12 +184,12 @@ function usePasswordRecovery({ onSuccess }) {
 
         if (timeSinceLastAttempt < COOLDOWN_MS) {
             const waitSeconds = Math.ceil((COOLDOWN_MS - timeSinceLastAttempt) / 1000);
-            throw new Error(`Debes esperar ${waitSeconds} segundos antes de reintentar.`);
+            throw new Error(t('forgotPassword.errorRateLimit', { seconds: waitSeconds }));
         }
 
         lastAttemptRef.current = now;
         cooldown.startCooldown(Math.ceil(COOLDOWN_MS / 1000));
-    }, [cooldown]);
+    }, [cooldown, t]);
 
     const sendRecovery = useCallback(async (email) => {
         try {
@@ -236,11 +198,11 @@ function usePasswordRecovery({ onSuccess }) {
 
             // Validaciones
             if (!email.trim()) {
-                throw new Error('Ingresa tu correo electrónico.');
+                throw new Error(t('forgotPassword.errorRequired'));
             }
 
             if (!isValidEmail(email)) {
-                throw new Error('El formato del correo no es válido.');
+                throw new Error(t('forgotPassword.errorInvalidEmail'));
             }
 
             _validateRateLimit();
@@ -266,13 +228,13 @@ function usePasswordRecovery({ onSuccess }) {
             } else {
                 setError({
                     type: RecoveryErrorType.GENERIC,
-                    message: err.message || 'Ocurrió un error. Intenta de nuevo.',
+                    message: err.message || t('forgotPassword.errorGeneric'),
                 });
             }
         } finally {
             setIsLoading(false);
         }
-    }, [onSuccess, cooldown, _validateRateLimit]);
+    }, [onSuccess, cooldown, _validateRateLimit, t]);
 
     const clearError = useCallback(() => {
         setError(null);

@@ -14,7 +14,7 @@ import {
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
-import styles from './Style';
+import styles from './Styles/ManageEnviromentScreen/Style';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import {useCustomAlert} from '../components/common/useCustomAlert';

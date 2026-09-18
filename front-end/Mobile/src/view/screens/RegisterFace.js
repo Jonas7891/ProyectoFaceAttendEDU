@@ -2,14 +2,16 @@ import React from 'react';
 import {ActivityIndicator, Image, SafeAreaView, Text, TouchableOpacity, View,} from 'react-native';
 import {CameraView} from 'expo-camera';
 import {useIsFocused} from '@react-navigation/native';
+import {useTranslation} from 'react-i18next';
 import CustomLogo from '../components/common/logo';
 import CustomAlert from '../components/common/CustomAlert';
 import PrimaryButton from '../components/auth/PrimaryButton';
-import styles from './Style';
+import styles from './Styles/RegisterFace/Style';
 import {useRegisterFaceScreenViewModel} from '../../viewmodels/useRegisterFaceScreenViewModel';
 
 export default function RegisterFace() {
     const isFocused = useIsFocused();
+    const {t} = useTranslation();
 
     const {
         permissionLoading,
@@ -30,16 +32,16 @@ export default function RegisterFace() {
     } = useRegisterFaceScreenViewModel();
 
     const subtitle = capturedPhoto
-        ? 'Revisa la fotografía. Si estás conforme guárdala; de lo contrario, vuelve a tomarla.'
+        ? t('registerFace.subtitleReview')
         : cameraReady
-            ? 'Coloca tu rostro dentro del óvalo y presiona el botón cuando estés acomodado.'
-            : 'Iniciando cámara...';
+            ? t('registerFace.subtitleReady')
+            : t('registerFace.subtitleStarting');
 
     return (
         <SafeAreaView style={styles.safeAreaRegisterFace}>
             <View style={styles.registerFaceContainer}>
                 <View style={styles.registerFaceHeader}>
-                    <Text style={styles.registerFaceTitle}>Registro de rostro</Text>
+                    <Text style={styles.registerFaceTitle}>{t('registerFace.title')}</Text>
                     <CustomLogo size="small" rounded={true} backgroundColor="#000000" marginBottom={-2}/>
                 </View>
 
@@ -56,13 +58,13 @@ export default function RegisterFace() {
                 ) : !permissionGranted ? (
                     <View style={styles.cameraWrapper}>
                         <Text style={styles.registerFacePermissionText}>
-                            Se requiere acceso a la cámara para registrar tu rostro.
+                            {t('registerFace.permissionText')}
                         </Text>
                         <TouchableOpacity
                             style={styles.registerFacePermissionButton}
                             onPress={requestPermission}
                         >
-                            <Text style={styles.registerFacePermissionButtonText}>Permitir cámara</Text>
+                            <Text style={styles.registerFacePermissionButtonText}>{t('registerFace.allowCamera')}</Text>
                         </TouchableOpacity>
                     </View>
                 ) : isFocused ? (
@@ -82,7 +84,7 @@ export default function RegisterFace() {
                     {capturedPhoto ? (
                         <>
                             <PrimaryButton
-                                title={saving ? 'Guardando...' : 'Guardar rostro'}
+                                title={saving ? t('registerFace.saving') : t('registerFace.saveFace')}
                                 onPress={handleSave}
                             />
                             <TouchableOpacity
@@ -90,7 +92,7 @@ export default function RegisterFace() {
                                 onPress={handleRetake}
                                 disabled={saving}
                             >
-                                <Text style={styles.secondaryButtonText}>Volver a tomar</Text>
+                                <Text style={styles.secondaryButtonText}>{t('registerFace.retake')}</Text>
                             </TouchableOpacity>
                         </>
                     ) : (
@@ -100,7 +102,7 @@ export default function RegisterFace() {
                             disabled={!cameraReady}
                         >
                             <Text style={styles.captureButtonText}>
-                                {cameraReady ? 'Capturar rostro' : 'Iniciando cámara...'}
+                                {cameraReady ? t('registerFace.captureFace') : t('registerFace.startingCamera')}
                             </Text>
                         </TouchableOpacity>
                     )}
@@ -109,7 +111,7 @@ export default function RegisterFace() {
                 {!capturedPhoto && (
                     <View style={styles.registerFaceFooter}>
                         <PrimaryButton
-                            title="Volver"
+                            title={t('common.back')}
                             onPress={handleBack}
                         />
                     </View>

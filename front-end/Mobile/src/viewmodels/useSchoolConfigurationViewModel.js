@@ -3,9 +3,26 @@ import {useEffect, useState} from 'react';
 import {validateEmail, validatePhone} from "../utils/validators";
 import {CountryService} from "../services/CountryService";
 import {SchoolService} from "../services/SchoolService";
+import {AcademicConfigService} from "../services/AcademicConfigService";
+import AcademicConfiguration from "../models/configuration/AcademicConfiguration";
 import {ActorService} from "../services/ActorService";
 import {getCurrentUser, getUserByEmail} from "../services/UserService";
 import School from "../models/academic/School";
+
+const ACADEMIC_FIELD_NAMES = ['academicYear', 'startDate', 'endDate'];
+const ATTENDANCE_FIELD_NAMES = ['toleranceMinutes', 'maxAbsences', 'maxLatenesses'];
+
+function buildConfigState(configs, fieldNames, extraDefaults = {}) {
+    const byName = {};
+    for (const cfg of configs || []) {
+        if (cfg?.configurationName) byName[cfg.configurationName] = cfg;
+    }
+    const state = {...extraDefaults};
+    for (const name of fieldNames) {
+        state[name] = byName[name]?.configurationValue ?? '';
+    }
+    return {state, byName};
+}
 
 
 export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => key} = {}) {
@@ -17,8 +34,21 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
 
     const [generalInfo, setGeneralInfo] = useState(null);
     const [contactInfo, setContactInfo] = useState(null);
-    const [academicConfig, setAcademicConfig] = useState(null);
-    const [attendanceConfig, setAttendanceConfig] = useState(null);
+    const [academicConfig, setAcademicConfig] = useState({
+        academicYear: '',
+        startDate: '',
+        endDate: '',
+        totalStudents: 0,
+        totalTeachers: 0,
+        totalCourses: 0,
+    });
+    const [attendanceConfig, setAttendanceConfig] = useState({
+        toleranceMinutes: '',
+        maxAbsences: '',
+        maxLatenesses: '',
+    });
+    const [academicConfigsByName, setAcademicConfigsByName] = useState({});
+    const [attendanceConfigsByName, setAttendanceConfigsByName] = useState({});
 
     const [schoolId, setSchoolId] = useState(null);
     const [originalData, setOriginalData] = useState(null);
@@ -50,10 +80,50 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
                     country: '',
                 };
 
+                let academic = {
+                    academicYear: '',
+                    startDate: '',
+                    endDate: '',
+                    totalStudents: 0,
+                    totalTeachers: 0,
+                    totalCourses: 0,
+                };
+                let attendance = {
+                    toleranceMinutes: '',
+                    maxAbsences: '',
+                    maxLatenesses: '',
+                };
+                try {
+                    const configs = await AcademicConfigService.getBySchool(actorSchoolId);
+                    const academicBuilt = buildConfigState(configs, ACADEMIC_FIELD_NAMES, {
+                        totalStudents: 0,
+                        totalTeachers: 0,
+                        totalCourses: 0,
+                    });
+                    const attendanceBuilt = buildConfigState(configs, ATTENDANCE_FIELD_NAMES);
+                    academic = academicBuilt.state;
+                    attendance = attendanceBuilt.state;
+                    const mergedByName = {...academicBuilt.byName, ...attendanceBuilt.byName};
+                    const academicMap = {};
+                    const attendanceMap = {};
+                    for (const name of ACADEMIC_FIELD_NAMES) {
+                        if (mergedByName[name]) academicMap[name] = mergedByName[name];
+                    }
+                    for (const name of ATTENDANCE_FIELD_NAMES) {
+                        if (mergedByName[name]) attendanceMap[name] = mergedByName[name];
+                    }
+                    setAcademicConfigsByName(academicMap);
+                    setAttendanceConfigsByName(attendanceMap);
+                } catch (configError) {
+                    console.error('Error cargando configuración académica:', configError);
+                }
+
                 setGeneralInfo(general);
                 setContactInfo(contact);
+                setAcademicConfig(academic);
+                setAttendanceConfig(attendance);
                 setSchoolId(school.schoolId);
-                setOriginalData({general, contact, academic: null, attendance: null});
+                setOriginalData({general, contact, academic, attendance});
             }
         } catch (error) {
             console.error('Error cargando datos del colegio:', error);
@@ -142,6 +212,41 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
             });
 
             const updatedSchool = await SchoolService.update(schoolId, payload);
+
+            const persistConfigs = async (fieldNames, values, existingByName, setByName) => {
+                const nextByName = {...existingByName};
+                for (const name of fieldNames) {
+                    const value = values?.[name];
+                    if (value === undefined || value === null || String(value).trim() === '') continue;
+                    const existing = existingByName[name];
+                    if (existing?.configurationId) {
+                        const updated = await AcademicConfigService.update(
+                            existing.configurationId,
+                            new AcademicConfiguration({
+                                configuration_id: existing.configurationId,
+                                school_id: schoolId,
+                                configuration_name: name,
+                                configuration_value: String(value),
+                                description: existing.description,
+                            })
+                        );
+                        if (updated) nextByName[name] = updated;
+                    } else {
+                        const created = await AcademicConfigService.create(
+                            new AcademicConfiguration({
+                                school_id: schoolId,
+                                configuration_name: name,
+                                configuration_value: String(value),
+                            })
+                        );
+                        if (created) nextByName[name] = created;
+                    }
+                }
+                setByName(nextByName);
+            };
+
+            await persistConfigs(ACADEMIC_FIELD_NAMES, academicConfig, academicConfigsByName, setAcademicConfigsByName);
+            await persistConfigs(ATTENDANCE_FIELD_NAMES, attendanceConfig, attendanceConfigsByName, setAttendanceConfigsByName);
 
             if (updatedSchool) {
                 const general = {
@@ -233,7 +338,7 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
                 loadCities(colombia.name);
             }
         } catch (error) {
-            Alert.alert('Error', error.message);
+            Alert.alert(t('common.error'), t('schoolConfig.errors.countriesFailed'));
         } finally {
             setLoadingCountries(false);
         }
@@ -246,7 +351,7 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
             const cities = await CountryService.fetchCities(countryName);
             setCitiesOptions(cities);
         } catch (error) {
-            Alert.alert('Error', error.message);
+            Alert.alert(t('common.error'), t('schoolConfig.errors.citiesFailed'));
         } finally {
             setLoadingCities(false);
         }

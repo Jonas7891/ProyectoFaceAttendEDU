@@ -13,7 +13,7 @@ import {
     View,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import styles from "./Style";
+import styles from "./Styles/DisplayingAttendance/Style";
 import BottomBar from "../components/common/NavigationBar";
 import CustomTabs from "../components/common/CustomTabs";
 import {
@@ -31,15 +31,10 @@ import {
 function DetailRow({icon, label, value, colors, valueColor}) {
     if (!value || value === "—") return null;
     return (
-        <View style={{
-            flexDirection: "row", alignItems: "stretch",
-            paddingVertical: 10,
-            borderBottomWidth: 1, borderBottomColor: colors.separator ?? "#F0F0F0",
-            gap: 12,
-        }}>
-            <View style={{flex: 1}}>
-                <Text style={{fontSize: 11, color: colors.textMuted, marginBottom: 2}}>{label}</Text>
-                <Text style={{fontSize: 14, fontWeight: "600", color: valueColor ?? colors.text}}>
+        <View style={[styles.detailRow, {borderBottomColor: colors.separator ?? "#F0F0F0"}]}>
+            <View style={styles.detailRowBody}>
+                <Text style={[styles.detailRowLabel, {color: colors.textMuted}]}>{label}</Text>
+                <Text style={[styles.detailRowValue, {color: valueColor ?? colors.text}]}>
                     {value}
                 </Text>
             </View>
@@ -49,11 +44,7 @@ function DetailRow({icon, label, value, colors, valueColor}) {
 
 function SectionLabel({text, colors}) {
     return (
-        <Text style={{
-            fontSize: 11, fontWeight: "700", color: colors.primary,
-            letterSpacing: 0.8, marginTop: 20, marginBottom: 4,
-            textTransform: "uppercase",
-        }}>
+        <Text style={[styles.sectionLabel, {color: colors.primary}]}>
             {text}
         </Text>
     );
@@ -71,45 +62,35 @@ function TeacherDetailModal({item, visible, onClose, colors, t, isDark}) {
     return (
         <Modal transparent visible={visible} animationType="slide" onRequestClose={onClose}>
             <TouchableOpacity activeOpacity={1} onPress={onClose}
-                              style={{flex: 1, backgroundColor: "rgba(0,0,0,0.5)"}}/>
-            <View style={{
-                position: "absolute", bottom: 0, left: 0, right: 0,
+                              style={styles.modalOverlay}/>
+            <View style={[styles.bottomSheet, {
                 backgroundColor: colors.background,
-                borderTopLeftRadius: 24, borderTopRightRadius: 24,
                 paddingBottom: Platform.OS === "ios" ? 40 : 24,
-                maxHeight: "84%",
-            }}>
+            }]}>
                 {/* Handle */}
-                <View style={{
-                    width: 40, height: 4, borderRadius: 2,
+                <View style={[styles.sheetHandle, {
                     backgroundColor: colors.separator ?? "#E0E0E0",
-                    alignSelf: "center", marginTop: 12, marginBottom: 20,
-                }}/>
+                }]}/>
 
                 <ScrollView
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{paddingHorizontal: 24, paddingBottom: 16}}
+                    contentContainerStyle={styles.sheetScrollContent}
                 >
                     {/* Cabecera */}
-                    <View style={{
-                        flexDirection: "row", alignItems: "center",
-                        gap: 14, marginBottom: 24,
-                    }}>
-                        <View style={{
-                            width: 58, height: 58, borderRadius: 29,
+                    <View style={styles.sheetHeaderRow}>
+                        <View style={[styles.avatarLarge, {
                             backgroundColor: isDark ? cfg.darkBg : cfg.bg,
-                            justifyContent: "center", alignItems: "center",
-                            borderWidth: 2, borderColor: cfg.color,
-                        }}>
-                            <Text style={{fontSize: 20, fontWeight: "700", color: cfg.color}}>
+                            borderColor: cfg.color,
+                        }]}>
+                            <Text style={[styles.avatarLargeText, {color: cfg.color}]}>
                                 {initials}
                             </Text>
                         </View>
-                        <View style={{flex: 1}}>
-                            <Text style={{fontSize: 18, fontWeight: "700", color: colors.text}}>
+                        <View style={styles.headerBody}>
+                            <Text style={[styles.headerName, {color: colors.text}]}>
                                 {item.nombre}
                             </Text>
-                            <Text style={{fontSize: 13, color: colors.textSecondary, marginTop: 2}}>
+                            <Text style={[styles.headerMeta, {color: colors.textSecondary}]}>
                                 {getSubjectLabel(item.materia, t)} · {item.codigo_curso}
                             </Text>
                         </View>
@@ -149,14 +130,11 @@ function TeacherDetailModal({item, visible, onClose, colors, t, isDark}) {
 
                 <TouchableOpacity
                     onPress={onClose}
-                    style={{
-                        marginHorizontal: 24, marginTop: 8,
-                        paddingVertical: 14, borderRadius: 14,
+                    style={[styles.sheetCloseButton, {
                         backgroundColor: isDark ? "#2A2A2A" : "#F5F5F5",
-                        alignItems: "center",
-                    }}
+                    }]}
                 >
-                    <Text style={{fontSize: 15, fontWeight: "600", color: colors.textSecondary, borderWidth: 0.2,}}>
+                    <Text style={[styles.sheetCloseText, {color: colors.textSecondary}]}>
                         {t("common.close")}
                     </Text>
                 </TouchableOpacity>
@@ -179,38 +157,30 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
     return (
         <Modal transparent visible={visible} animationType="slide" onRequestClose={onClose}>
             <TouchableOpacity activeOpacity={1} onPress={onClose}
-                              style={{flex: 1, backgroundColor: "rgba(0,0,0,0.5)"}}/>
-            <View style={{
-                position: "absolute", bottom: 0, left: 0, right: 0,
+                              style={styles.modalOverlay}/>
+            <View style={[styles.bottomSheetTall, {
                 backgroundColor: colors.background,
-                borderTopLeftRadius: 24, borderTopRightRadius: 24,
                 paddingBottom: Platform.OS === "ios" ? 40 : 24,
-                maxHeight: "88%",
-            }}>
+            }]}>
                 {/* Handle */}
-                <View style={{
-                    width: 40, height: 4, borderRadius: 2,
+                <View style={[styles.sheetHandle, {
                     backgroundColor: colors.separator ?? "#E0E0E0",
-                    alignSelf: "center", marginTop: 12, marginBottom: 20,
-                }}/>
+                }]}/>
 
                 <ScrollView
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{paddingHorizontal: 24, paddingBottom: 16}}
+                    contentContainerStyle={styles.sheetScrollContent}
                 >
                     {/* Cabecera */}
-                    <View style={{
+                    <View style={[styles.statusCard, {
                         backgroundColor: isDark ? cfg.darkBg : cfg.bg,
-                        borderRadius: 16, padding: 16,
-                        flexDirection: "row", alignItems: "center",
-                        gap: 14, marginBottom: 24,
-                        borderWidth: 1, borderColor: cfg.color + "55",
-                    }}>
-                        <View style={{flex: 1}}>
-                            <Text style={{fontSize: 17, fontWeight: "700", color: cfg.color}}>
+                        borderColor: cfg.color + "55",
+                    }]}>
+                        <View style={styles.statusCardBody}>
+                            <Text style={[styles.statusCardTitle, {color: cfg.color}]}>
                                 {getSubjectLabel(item.materia, t)}
                             </Text>
-                            <Text style={{fontSize: 12, color: cfg.color + "BB", marginTop: 2}}>
+                            <Text style={[styles.statusCardCode, {color: cfg.color + "BB"}]}>
                                 {item.codigo_curso}
                             </Text>
                         </View>
@@ -253,23 +223,16 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
                                           colors={colors}/>
 
                             {/* Badge de aprobación */}
-                            <View style={{
-                                flexDirection: "row", alignItems: "center", gap: 10,
-                                paddingVertical: 10,
-                                borderBottomWidth: 1, borderBottomColor: colors.separator ?? "#F0F0F0",
-                            }}>
-                                <View style={{flex: 1}}>
-                                    <Text style={{fontSize: 11, color: colors.textMuted, marginBottom: 6}}>
+                            <View style={[styles.approvalRow, {borderBottomColor: colors.separator ?? "#F0F0F0"}]}>
+                                <View style={styles.approvalBody}>
+                                    <Text style={[styles.approvalLabel, {color: colors.textMuted}]}>
                                         {t("attendance.approvalStatus")}
                                     </Text>
-                                    <View style={{
-                                        alignSelf: "flex-start",
+                                    <View style={[styles.approvalBadge, {
                                         backgroundColor: justCfg.color + "22",
-                                        borderRadius: 20,
-                                        paddingHorizontal: 12, paddingVertical: 4,
-                                        borderWidth: 1, borderColor: justCfg.color + "55",
-                                    }}>
-                                        <Text style={{fontSize: 13, fontWeight: "700", color: justCfg.color}}>
+                                        borderColor: justCfg.color + "55",
+                                    }]}>
+                                        <Text style={[styles.approvalBadgeText, {color: justCfg.color}]}>
                                             {t(justCfg.label)}
                                         </Text>
                                     </View>
@@ -287,16 +250,14 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
 
                     {/* Sin justificación + ausente → aviso */}
                     {!item.justificacion && item.estado === "ausente" && (
-                        <View style={{
-                            marginTop: 20,
+                        <View style={[styles.warnBox, {
                             backgroundColor: isDark ? "#451A03" : "#FEF3C7",
-                            borderRadius: 12, padding: 14,
-                            borderWidth: 1, borderColor: "#F59E0B55",
-                        }}>
-                            <Text style={{fontSize: 13, fontWeight: "600", color: "#F59E0B", marginBottom: 4}}>
+                            borderColor: "#F59E0B55",
+                        }]}>
+                            <Text style={[styles.warnTitle, {color: "#F59E0B"}]}>
                                 {t("attendance.noJustification")}
                             </Text>
-                            <Text style={{fontSize: 12, color: isDark ? "#FDE68A" : "#92400E"}}>
+                            <Text style={[styles.warnMsg, {color: isDark ? "#FDE68A" : "#92400E"}]}>
                                 {t("attendance.noJustificationHint")}
                             </Text>
                         </View>
@@ -305,14 +266,11 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
 
                 <TouchableOpacity
                     onPress={onClose}
-                    style={{
-                        marginHorizontal: 24, marginTop: 8,
-                        paddingVertical: 14, borderRadius: 14,
+                    style={[styles.sheetCloseButton, {
                         backgroundColor: isDark ? "#2A2A2A" : "#F5F5F5",
-                        alignItems: "center",
-                    }}
+                    }]}
                 >
-                    <Text style={{fontSize: 15, fontWeight: "600", color: colors.textSecondary}}>
+                    <Text style={[styles.sheetCloseTextPlain, {color: colors.textSecondary}]}>
                         {t("common.close")}
                     </Text>
                 </TouchableOpacity>
@@ -330,30 +288,26 @@ function TeacherCard({item, colors, t, isDark, onInfo}) {
     const cfg = STATUS_CONFIG[item.estado] ?? STATUS_CONFIG.ausente;
 
     return (
-        <View style={{
+        <View style={[styles.teacherCard, {
             backgroundColor: colors.card,
-            borderRadius: 14, marginHorizontal: 20, marginBottom: 10, padding: 14,
-            flexDirection: "row", alignItems: "center", gap: 12,
-            borderWidth: 1, borderColor: colors.separator ?? "#F0F0F0",
-            borderLeftWidth: 4, borderLeftColor: cfg.color,
-        }}>
-            <View style={{
-                width: 46, height: 46, borderRadius: 23,
+            borderColor: colors.separator ?? "#F0F0F0",
+            borderLeftColor: cfg.color,
+        }]}>
+            <View style={[styles.teacherAvatar, {
                 backgroundColor: isDark ? cfg.darkBg : cfg.bg,
-                justifyContent: "center", alignItems: "center",
-            }}>
-                <Text style={{fontSize: 15, fontWeight: "700", color: cfg.color}}>{initials}</Text>
+            }]}>
+                <Text style={[styles.teacherAvatarText, {color: cfg.color}]}>{initials}</Text>
             </View>
 
-            <View style={{flex: 1}}>
-                <Text style={{fontSize: 15, fontWeight: "600", color: colors.text, marginBottom: 2}}>
+            <View style={styles.teacherBody}>
+                <Text style={[styles.teacherName, {color: colors.text}]}>
                     {item.nombre}
                 </Text>
-                <Text style={{fontSize: 12, color: colors.textSecondary}}>
+                <Text style={[styles.teacherMeta, {color: colors.textSecondary}]}>
                     {getSubjectLabel(item.materia, t)} · <Text
                     style={{color: colors.textMuted}}>{item.codigo_curso}</Text>
                 </Text>
-                <Text style={{fontSize: 11, color: colors.textMuted, marginTop: 2}}>
+                <Text style={[styles.teacherSub, {color: colors.textMuted}]}>
                     {item.fecha} · {item.estado !== "ausente" ? item.hora : "—"}
                 </Text>
             </View>
@@ -362,18 +316,13 @@ function TeacherCard({item, colors, t, isDark, onInfo}) {
             <TouchableOpacity
                 onPress={() => onInfo(item)}
                 hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
-                style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 18,
+                style={[styles.infoButton, {
                     backgroundColor: isDark ? cfg.darkBg : cfg.bg,
-                    justifyContent: "center",
-                    alignItems: "center",
-                }}
+                }]}
             >
                 <Image
                     source={require("../../assets/images/lupa.png")}
-                    style={{width: 18, height: 18, tintColor: cfg.color}}
+                    style={[styles.infoIcon, {tintColor: cfg.color}]}
                 />
             </TouchableOpacity>
         </View>
@@ -389,17 +338,16 @@ function MyAttendanceCard({item, colors, t, isDark, onInfo}) {
     const hasJustification = !!item.justificacion;
 
     return (
-        <View style={{
+        <View style={[styles.myCard, {
             backgroundColor: colors.card,
-            borderRadius: 14, marginHorizontal: 20, marginBottom: 10, padding: 14,
-            borderWidth: 1, borderColor: colors.separator ?? "#F0F0F0",
-        }}>
+            borderColor: colors.separator ?? "#F0F0F0",
+        }]}>
             <View
-                style={{flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10}}>
-                <View style={{flexDirection: "row", alignItems: "center", gap: 6}}>
-                    <Text style={{fontSize: 13, fontWeight: "700", color: colors.primary}}>{item.fecha}</Text>
+                style={styles.myCardHeader}>
+                <View style={styles.myCardDateRow}>
+                    <Text style={[styles.myCardDate, {color: colors.primary}]}>{item.fecha}</Text>
                     {item.estado !== "ausente" && (
-                        <Text style={{fontSize: 12, color: colors.textSecondary}}>· {item.hora}</Text>
+                        <Text style={[styles.myCardTime, {color: colors.textSecondary}]}>· {item.hora}</Text>
                     )}
                 </View>
 
@@ -407,49 +355,37 @@ function MyAttendanceCard({item, colors, t, isDark, onInfo}) {
                 <TouchableOpacity
                     onPress={() => onInfo(item)}
                     hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
-                    style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 18,
+                    style={[styles.infoButton, {
                         backgroundColor: isDark ? cfg.darkBg : cfg.bg,
-                        justifyContent: "center",
-                        alignItems: "center",
-                    }}
+                    }]}
                 >
                     <Image
                         source={require("../../assets/images/lupa.png")}
-                        style={{width: 18, height: 18, tintColor: cfg.color}}
+                        style={[styles.infoIcon, {tintColor: cfg.color}]}
                     />
                 </TouchableOpacity>
             </View>
 
-            <View style={{
-                flexDirection: "row", gap: 8,
-                paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.separator ?? "#F0F0F0",
-            }}>
-                <View style={{flex: 1}}>
-                    <Text style={{fontSize: 11, color: colors.textMuted, marginBottom: 2}}>
+            <View style={[styles.myCardBody, {
+                borderTopColor: colors.separator ?? "#F0F0F0",
+            }]}>
+                <View style={styles.myCardField}>
+                    <Text style={[styles.myCardFieldLabel, {color: colors.textMuted}]}>
                         {t("attendance.subject")}
                     </Text>
-                    <Text style={{
-                        fontSize: 14,
-                        fontWeight: "600",
-                        color: colors.text
-                    }}>{getSubjectLabel(item.materia, t)}</Text>
+                    <Text style={[styles.myCardFieldValue, {color: colors.text}]}>{getSubjectLabel(item.materia, t)}</Text>
                 </View>
-                <View style={{flex: 1}}>
-                    <Text style={{fontSize: 11, color: colors.textMuted, marginBottom: 2}}>
+                <View style={styles.myCardField}>
+                    <Text style={[styles.myCardFieldLabel, {color: colors.textMuted}]}>
                         {t("attendance.teacher")}
                     </Text>
-                    <Text style={{fontSize: 14, color: colors.text}}>{item.docente}</Text>
+                    <Text style={[styles.myCardFieldValuePlain, {color: colors.text}]}>{item.docente}</Text>
                 </View>
                 {hasJustification && (
-                    <View style={{
-                        alignSelf: "flex-end",
+                    <View style={[styles.justifiedBadge, {
                         backgroundColor: isDark ? "#2E1065" : "#EDE9FE",
-                        borderRadius: 20, paddingHorizontal: 8
-                    }}>
-                        <Text style={{fontSize: 11, fontWeight: "700", color: "#8B5CF6"}}>
+                    }]}>
+                        <Text style={styles.justifiedBadgeText}>
                             {t("attendance.justified")}
                         </Text>
                     </View>
@@ -463,6 +399,7 @@ export default function DisplayingAttendance() {
     // Extraemos todas las propiedades UNA SOLA VEZ
     const {
         t,                      // <--- Obtenemos t
+        locale,
         isAdmin,
         isDark,
         colors,
@@ -490,26 +427,23 @@ export default function DisplayingAttendance() {
             style={[styles.safeArea, {backgroundColor: colors.background}]}
             key={`${updateKey}`}
         >
-            <View style={{flex: 1, backgroundColor: colors.background, marginTop: Platform.OS === "ios" ? 15 : 10}}>
-                <View style={{marginHorizontal: 20}}>
+            <View style={[styles.mainContainer, {
+                backgroundColor: colors.background,
+                marginTop: Platform.OS === "ios" ? 15 : 10,
+            }]}>
+                <View style={styles.tabsWrap}>
                     <CustomTabs userRole={isAdmin ? "admin" : "student"}/>
                 </View>
 
                 {/* Filtros */}
-                <View style={{flexDirection: "row", gap: 8, marginBottom: 10, marginHorizontal: 20, marginTop: 20}}>
+                <View style={styles.filtersRow}>
                     {isAdmin && (
-                        <View style={{
-                            flex: 2,
-                            flexDirection: "row",
-                            alignItems: "center",
+                        <View style={[styles.searchBox, {
                             backgroundColor: colors.inputBackground,
-                            borderWidth: 1.5,
                             borderColor: searchText ? colors.primary : (colors.separator ?? "#E0E0E0"),
-                            borderRadius: 10,
-                            paddingHorizontal: 12
-                        }}>
+                        }]}>
                             <TextInput
-                                style={{flex: 1, paddingVertical: 10, color: colors.text, fontSize: 14}}
+                                style={[styles.searchInput, {color: colors.text}]}
                                 placeholder={t("attendance.searchByName")}
                                 placeholderTextColor={colors.textMuted}
                                 value={searchText}
@@ -517,34 +451,27 @@ export default function DisplayingAttendance() {
                             />
                             {searchText ? (
                                 <TouchableOpacity onPress={() => setSearchText("")}>
-                                    <Text style={{color: colors.danger, fontSize: 16, fontWeight: "700"}}>✕</Text>
+                                    <Text style={[styles.clearText, {color: colors.danger}]}>✕</Text>
                                 </TouchableOpacity>
                             ) : (
                                 <Image source={require("../../assets/images/lupa.png")}
-                                       style={{width: 16, height: 16, tintColor: colors.textMuted}}/>
+                                       style={[styles.searchIcon, {tintColor: colors.textMuted}]}/>
                             )}
                         </View>
                     )}
 
-                    <TouchableOpacity onPress={handleOpenPicker} style={{
+                    <TouchableOpacity onPress={handleOpenPicker} style={[styles.dateButton, {
                         flex: isAdmin ? 1.2 : 1,
-                        flexDirection: "row",
-                        alignItems: "center",
                         backgroundColor: colors.inputBackground,
-                        borderWidth: 1.5,
                         borderColor: selectedDate ? colors.primary : (colors.separator ?? "#E0E0E0"),
-                        borderRadius: 10,
-                        paddingHorizontal: 12,
-                        paddingVertical: 10,
-                        gap: 6
-                    }}>
-                        <Text style={{flex: 1, color: selectedDate ? colors.text : colors.textMuted, fontSize: 13}}
+                    }]}>
+                        <Text style={[styles.dateText, {color: selectedDate ? colors.text : colors.textMuted}]}
                               numberOfLines={1}>
-                            {formatDateDisplay(selectedDate, t)}
+                            {formatDateDisplay(selectedDate, t, locale)}
                         </Text>
                         {selectedDate && (
                             <TouchableOpacity onPress={() => setSelectedDate(null)}>
-                                <Text style={{color: colors.danger, fontSize: 16, fontWeight: "700"}}>✕</Text>
+                                <Text style={[styles.clearText, {color: colors.danger}]}>✕</Text>
                             </TouchableOpacity>
                         )}
                     </TouchableOpacity>
@@ -560,43 +487,24 @@ export default function DisplayingAttendance() {
                 <Modal transparent visible={showIOSModal} animationType="slide"
                        onRequestClose={() => setShowIOSModal(false)}>
                     <TouchableOpacity activeOpacity={1} onPress={() => setShowIOSModal(false)}
-                                      style={{flex: 1, backgroundColor: "rgba(0,0,0,0.45)"}}/>
-                    <View style={{
-                        position: "absolute",
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        backgroundColor: colors.card,
-                        borderTopLeftRadius: 20,
-                        borderTopRightRadius: 20,
-                        padding: 16,
-                        paddingBottom: 34
-                    }}>
-                        <View style={{
-                            width: 40,
-                            height: 4,
-                            borderRadius: 2,
+                                      style={styles.modalOverlayLight}/>
+                    <View style={[styles.iosSheet, {backgroundColor: colors.card}]}>
+                        <View style={[styles.iosHandle, {
                             backgroundColor: colors.separator ?? "#E0E0E0",
-                            alignSelf: "center",
-                            marginBottom: 14
-                        }}/>
-                        <View style={{flexDirection: "row", justifyContent: "space-between", marginBottom: 8}}>
+                        }]}/>
+                        <View style={styles.iosActionsRow}>
                             <TouchableOpacity onPress={() => setShowIOSModal(false)}>
-                                <Text style={{
+                                <Text style={[styles.iosActionText, {
                                     color: colors.danger,
-                                    fontSize: 16,
-                                    fontWeight: "600"
-                                }}>{t("common.cancel")}</Text>
+                                }]}>{t("common.cancel")}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity onPress={() => {
                                 setSelectedDate(tempDate);
                                 setShowIOSModal(false);
                             }}>
-                                <Text style={{
+                                <Text style={[styles.iosActionText, {
                                     color: colors.primary,
-                                    fontSize: 16,
-                                    fontWeight: "600"
-                                }}>{t("common.accept")}</Text>
+                                }]}>{t("common.accept")}</Text>
                             </TouchableOpacity>
                         </View>
                         <DateTimePicker value={tempDate} mode="date" display="spinner"
@@ -609,16 +517,16 @@ export default function DisplayingAttendance() {
                 <FlatList
                     data={activeData}
                     keyExtractor={item => item.id.toString()}
-                    style={{flex: 1}}
-                    contentContainerStyle={{paddingTop: 4, paddingBottom: 20}}
+                    style={styles.listStyle}
+                    contentContainerStyle={styles.listContent}
                     renderItem={({item}) =>
                         isAdmin
                             ? <TeacherCard item={item} colors={colors} t={t} isDark={isDark} onInfo={openDetail}/>
                             : <MyAttendanceCard item={item} colors={colors} t={t} isDark={isDark} onInfo={openDetail}/>
                     }
                     ListEmptyComponent={
-                        <View style={{alignItems: "center", paddingVertical: 50}}>
-                            <Text style={{color: colors.textMuted, fontSize: 14, textAlign: "center"}}>
+                        <View style={styles.emptyWrap}>
+                            <Text style={[styles.emptyText, {color: colors.textMuted}]}>
                                 {t("attendance.noResults")}
                             </Text>
                         </View>

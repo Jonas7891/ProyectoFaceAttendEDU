@@ -5,7 +5,7 @@ import {useTheme} from '../components/common/ThemeContext';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import PasswordUpdateModal from '../components/common/PasswordUpdateModal';
 import ProfileUpdateModal from '../components/common/ProfileUpdateModal';
-import styles from './Style';
+import styles from './Styles/ProfileScreen/Style';
 import {useProfileViewModel} from '../../viewmodels/useProfileViewModel';
 
 /** Fila de información clave → valor */

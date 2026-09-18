@@ -33,6 +33,11 @@ export function useValidJustificationsViewModel() {
         const fetchData = async () => {
             try {
                 setIsLoading(true);
+                const timeLocale =
+                    i18n.language === 'en' ? 'en-US'
+                    : i18n.language === 'pt' ? 'pt-BR'
+                    : i18n.language === 'fr' ? 'fr-FR'
+                    : 'es-ES';
 
                 const user = await getCurrentUser();
                 const actors = await ActorService.getByPerson(user?.personId);
@@ -64,7 +69,7 @@ export function useValidJustificationsViewModel() {
                         };
 
                         if (j.justification_type_id === 3) {
-                            entry.hora = j.submitted_at ? new Date(j.submitted_at).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'}) : '—';
+                            entry.hora = j.submitted_at ? new Date(j.submitted_at).toLocaleTimeString(timeLocale, {hour: '2-digit', minute: '2-digit'}) : '—';
                             lates.push(entry);
                         } else {
                             absences.push(entry);
@@ -83,7 +88,7 @@ export function useValidJustificationsViewModel() {
             }
         };
         fetchData();
-    }, []);
+    }, [i18n.language]);
 
     const currentData = activeSection === 'inasistencias' ? inasistenciasData : retardosData;
 

@@ -2,7 +2,7 @@ import React from "react";
 import {Platform, SafeAreaView, ScrollView, Text, TouchableOpacity, View} from "react-native";
 import {useTranslation} from "react-i18next";
 import {useTheme} from '../components/common/ThemeContext';
-import styles from "./Style";
+import styles from "./Styles/ValidAllJustifications/Style";
 import {useJustificationsViewModel} from '../../viewmodels/useValidAllJustificationsViewModel';
 
 export default function JustificationsScreen() {

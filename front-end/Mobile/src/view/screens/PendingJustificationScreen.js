@@ -13,7 +13,7 @@ import {
     View,
 } from 'react-native';
 import {useTranslation} from 'react-i18next';
-import styles from './Style';
+import styles from './Styles/PendingJustificationScreen/Style';
 import {useTheme} from '../components/common/ThemeContext';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import {usePendingJustificationViewModel} from '../../viewmodels/usePendingJustificationViewModel';

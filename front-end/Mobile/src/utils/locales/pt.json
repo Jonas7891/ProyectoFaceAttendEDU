@@ -93,7 +93,9 @@
     "approved": "Aprovado",
     "rejected": "Rejeitado",
     "justifiedStatus": "Justificado",
-    "sectionJustification": "Justificativa"
+    "sectionJustification": "Justificativa",
+    "unknownRecord": "Registro #{{id}}",
+    "unknownPerson": "Ator #{{id}}"
   },
   "settings": {
     "language": "Idioma",
@@ -161,7 +163,30 @@
     "registerAttendance": "Atualizar Parâmetros",
     "attendanceRegistered": "Parâmetros Atualizados",
     "completeFields": "Por favor, preencha todos os campos",
-    "settings": "Ajustes"
+    "settings": "Ajustes",
+    "camera": {
+      "positionFace": "Posicione seu rosto no oval",
+      "capturing": "Capturando...",
+      "confirmPhoto": "Foto capturada. Confirmar?",
+      "captureError": "Erro ao capturar. Tente novamente.",
+      "processing": "Processando dados faciais...",
+      "success": "Rosto registrado com sucesso",
+      "processError": "Não foi possível processar o rosto. Tente novamente.",
+      "retryError": "Erro ao processar. Você pode tentar novamente.",
+      "incompleteTitle": "Dados incompletos",
+      "incompleteMsg": "Por favor, preencha todos os campos antes de continuar.",
+      "permissionTitle": "Permissão negada",
+      "permissionMsg": "Precisamos de acesso à sua câmera.",
+      "discardTitle": "Descartar foto?",
+      "discardMsg": "Se sair, você perderá a foto tirada.",
+      "reviewPhoto": "Revisar foto",
+      "photoOk": "A foto está boa?",
+      "photoHint": "Certifique-se de que seu rosto esteja nítido, bem iluminado e centralizado.",
+      "retake": "Repetir",
+      "usePhoto": "Usar foto",
+      "title": "Registro Facial",
+      "alreadyRegistered": "Seus parâmetros faciais já estão registrados."
+    }
   },
   "takePhoto": {
     "title": "Foto para Reconhecimento Facial Inicial",
@@ -717,7 +742,9 @@
     },
     "errors": {
       "schoolNotFound": "Não foi possível identificar a escola a ser atualizada",
-      "saveFailed": "Não foi possível salvar as alterações"
+      "saveFailed": "Não foi possível salvar as alterações",
+      "countriesFailed": "Não foi possível carregar os países",
+      "citiesFailed": "Não foi possível carregar as cidades"
     },
     "success": {
       "updated": "Configuração da escola atualizada com sucesso"
@@ -756,6 +783,9 @@
     },
     "absenceLabel": "Faltas\n(limite {{limit}})",
     "latenessLabel": "Atrasos\n(limite {{limit}})"
+    ,"reportSent": "O relatório foi enviado com sucesso."
+    ,"reportError": "Não foi possível enviar o relatório."
+    ,"confirmGeneral": "Será gerado um relatório para {{count}} pessoas. Continuar?"
   },
   "validation": {
     "title": "Campos incompletos",
@@ -815,6 +845,7 @@
     "errorNotFound": "Não encontramos uma conta com esse e-mail.",
     "errorTimeout": "A solicitação demorou muito. Verifique sua conexão e tente novamente.",
     "errorGeneric": "Ocorreu um erro. Tente novamente.",
+    "errorRateLimit": "Você deve aguardar {{seconds}} segundos antes de tentar novamente.",
     "successMessage": "Código enviado com sucesso. Redirecionando..."
   },
   "passwordUpdate": {
@@ -870,5 +901,26 @@
     "locationRequired": "A localização é obrigatória.",
     "confirm": "Confirmar",
     "deleteQuestion": "Tem certeza de que deseja excluir este ambiente?"
+  },
+  "registerFace": {
+    "title": "Registro de rosto",
+    "subtitleReview": "Revise a foto. Se estiver satisfeito, salve-a; caso contrário, tire outra.",
+    "subtitleReady": "Coloque seu rosto dentro do oval e pressione o botão quando estiver pronto.",
+    "subtitleStarting": "Iniciando câmera...",
+    "permissionText": "É necessário acesso à câmera para registrar seu rosto.",
+    "allowCamera": "Permitir câmera",
+    "saveFace": "Salvar rosto",
+    "saving": "Salvando...",
+    "retake": "Tirar novamente",
+    "captureFace": "Capturar rosto",
+    "startingCamera": "Iniciando câmera...",
+    "cameraErrorTitle": "Erro de câmera",
+    "cameraErrorMsg": "Não foi possível iniciar a câmera. Tente novamente.",
+    "captureErrorTitle": "Erro de captura",
+    "captureErrorMsg": "Não foi possível tirar a foto. Tente novamente.",
+    "saveSuccessTitle": "Registro bem-sucedido",
+    "saveSuccessMsg": "Seu rosto foi registrado com sucesso neste dispositivo.",
+    "saveErrorTitle": "Erro ao salvar",
+    "saveErrorMsg": "Ocorreu um problema ao salvar seu registro facial."
   }
 }
