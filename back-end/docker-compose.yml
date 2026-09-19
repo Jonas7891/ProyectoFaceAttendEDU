@@ -1,0 +1,363 @@
+services:
+  # ──────────────────────────────────────────────────────────────
+  # Infrastructure — PostgreSQL, MongoDB, Redis, Kafka
+  # ADR-003 MongoDB, ADR-006 Kafka, ADR-015 Redis, DB per service
+  # ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:17-alpine
+    container_name: faceattend-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-faceattend_db}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - faceattend-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-faceattend_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  mongodb:
+    image: mongo:7
+    container_name: faceattend-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-mongoadmin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-mongopass}
+      MONGO_INITDB_DATABASE: ${MONGO_DB:-faceattend_biometric}
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - faceattend-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: faceattend-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - faceattend-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zookeeper:
+    image: bitnami/zookeeper:3.9
+    container_name: faceattend-zookeeper
+    restart: unless-stopped
+    environment:
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+    networks:
+      - faceattend-net
+
+  kafka:
+    image: bitnami/kafka:3.7
+    container_name: faceattend-kafka
+    restart: unless-stopped
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: CLIENT://:29092,EXTERNAL://:9092
+      KAFKA_ADVERTISED_LISTENERS: CLIENT://kafka:29092,EXTERNAL://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      - "${KAFKA_PORT:-9092}:9092"
+    networks:
+      - faceattend-net
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # ──────────────────────────────────────────────────────────────
+  # Java — Spring Boot 4.1.1 / JDK 21 (ADR-005 §1,2,4,5)
+  # 01 identity 8081, 02 authorization 8083, 04 scheduling 8087, 05 attendance 8085
+  # Hexagonal: _stacks/java-spring.md
+  # ──────────────────────────────────────────────────────────────
+  ms-identity:
+    build:
+      context: ./01-ms-identity
+      dockerfile: Dockerfile
+    image: faceattend/ms-identity:latest
+    container_name: faceattend-ms-identity
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_DATASOURCE_HIKARI_SCHEMA: identity
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8081
+    ports:
+      - "8081:8081"
+    networks:
+      - faceattend-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+
+  ms-authorization:
+    build:
+      context: ./02-ms-authorization
+      dockerfile: Dockerfile
+    image: faceattend/ms-authorization:latest
+    container_name: faceattend-ms-authorization
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_DATASOURCE_HIKARI_SCHEMA: authorization
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8083
+    ports:
+      - "8083:8083"
+    networks:
+      - faceattend-net
+    restart: unless-stopped
+
+  ms-scheduling:
+    build:
+      context: ./04-ms-scheduling
+      dockerfile: Dockerfile
+    image: faceattend/ms-scheduling:latest
+    container_name: faceattend-ms-scheduling
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_DATASOURCE_HIKARI_SCHEMA: scheduling
+      SERVER_PORT: 8087
+    ports:
+      - "8087:8087"
+    networks:
+      - faceattend-net
+    restart: unless-stopped
+
+  ms-attendance:
+    build:
+      context: ./05-ms-attendance
+      dockerfile: Dockerfile
+    image: faceattend/ms-attendance:latest
+    container_name: faceattend-ms-attendance
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_DATASOURCE_HIKARI_SCHEMA: attendance
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER:-mongoadmin}:${MONGO_PASSWORD:-mongopass}@mongodb:27017/${MONGO_DB:-faceattend_biometric}?authSource=admin
+      SERVER_PORT: 8085
+    ports:
+      - "8085:8085"
+    networks:
+      - faceattend-net
+    restart: unless-stopped
+
+  # ──────────────────────────────────────────────────────────────
+  # TypeScript — Fastify + Drizzle / pg (ADR-005 §3, §9)
+  # 03 academic 8084 (Drizzle), 07 configuration 8089
+  # Hexagonal: _stacks/node-typescript.md
+  # ──────────────────────────────────────────────────────────────
+  ms-academic:
+    build:
+      context: ./03-ms-academic
+      dockerfile: Dockerfile
+    image: faceattend/ms-academic:latest
+    container_name: faceattend-ms-academic
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-faceattend_db}
+      PORT: 8084
+      KAFKA_BROKERS: kafka:29092
+      NODE_ENV: production
+    ports:
+      - "8084:8084"
+    networks:
+      - faceattend-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8084/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+
+  ms-configuration:
+    build:
+      context: ./07-ms-configuration
+      dockerfile: Dockerfile
+    image: faceattend/ms-configuration:latest
+    container_name: faceattend-ms-configuration
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-faceattend_db}
+      PORT: 8089
+      KAFKA_BROKERS: kafka:29092
+      NODE_ENV: production
+    ports:
+      - "8089:8089"
+    networks:
+      - faceattend-net
+    restart: unless-stopped
+
+  # ──────────────────────────────────────────────────────────────
+  # Python — FastAPI + Motor (ADR-005 §6)
+  # 06 biometric 8086 — MongoDB vector search, OpenCV
+  # Hexagonal: _stacks/python-fastapi.md
+  # ──────────────────────────────────────────────────────────────
+  ms-biometric:
+    build:
+      context: ./06-ms-biometric
+      dockerfile: Dockerfile
+    image: faceattend/ms-biometric:latest
+    container_name: faceattend-ms-biometric
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      MONGODB_URL: mongodb://${MONGO_USER:-mongoadmin}:${MONGO_PASSWORD:-mongopass}@mongodb:27017/${MONGO_DB:-faceattend_biometric}?authSource=admin
+      PORT: 8086
+      KAFKA_BROKERS: kafka:29092
+    ports:
+      - "8086:8086"
+    networks:
+      - faceattend-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8086/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+
+  # ──────────────────────────────────────────────────────────────
+  # Go — Gin (ADR-005 §7)
+  # 08 notification 8090 — 5-10 MB distroless
+  # Hexagonal: _stacks/go.md
+  # ──────────────────────────────────────────────────────────────
+  ms-notification:
+    build:
+      context: ./08-ms-notification
+      dockerfile: Dockerfile
+    image: faceattend/ms-notification:latest
+    container_name: faceattend-ms-notification
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-faceattend_db}?sslmode=disable
+      PORT: 8090
+      KAFKA_BROKERS: kafka:29092
+    ports:
+      - "8090:8090"
+    networks:
+      - faceattend-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8090/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+
+  # ──────────────────────────────────────────────────────────────
+  # API Gateway — Kong OSS 3.6 DB-less + Redis (ADR-007, ADR-005 §10)
+  # 99 gateway 8080 proxy / 8001 admin
+  # ──────────────────────────────────────────────────────────────
+  kong-gateway:
+    image: kong:3.6
+    container_name: faceattend-kong
+    depends_on:
+      ms-identity:
+        condition: service_healthy
+      ms-academic:
+        condition: service_healthy
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+    ports:
+      - "${KONG_PROXY_PORT:-8080}:8000"
+      - "${KONG_ADMIN_PORT:-8001}:8001"
+    volumes:
+      - ./99-api-gateway/kong/kong.yml:/kong/kong.yml:ro
+    networks:
+      - faceattend-net
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+networks:
+  faceattend-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  mongo_data:
+  redis_data:
