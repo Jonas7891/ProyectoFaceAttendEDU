@@ -2,31 +2,36 @@
 
 > **Stack ADR-005:** `TypeScript + Fastify` · **Guía:** `../../fae-docs/_stacks/node-typescript.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md`
-> **Database:** `../database/07-ms-configuration-db` (schema `configuration`) · **Puerto:** `8089`
+> **Database:** `../database/07-ms-configuration-db` (schema `configuration`) · **Puerto:** `8089` · **Dominio:** `06-data/domains/09-configuration.md`
 
-## Decisión (ADR-005)
+## Decisión (ADR-005 §9)
 
-Fuente: `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md` — polyglot modular monolith. Este servicio usa **`TypeScript + Fastify`**.
+**Best option: TypeScript + Fastify (22/25)** — trivial CRUD 3 tables.
 
-Ver en el ADR la tabla de scoring (Performance/Ecosystem/Learning curve/Library fit/Ops) y el rationale por workload.
+| # | Option | Perf | Eco | Learn | Lib | Ops | Total | Notes |
+|---|--------|:----:|:---:|:-----:|:---:|:---:|-------|-------|
+| **1** | **TS + Fastify** | 4 | 4 | 5 | 4 | 5 | **22** | 20 min coding, minimal deps. |
+| 2 | TS + NestJS | 3 | 5 | 4 | 5 | 4 | 21 | Overkill for 3 tables. |
+| 3 | Python + FastAPI | 3 | 4 | 4 | 4 | 4 | 19 | Different runtime simplest. |
+| 4 | Go + Gin | 5 | 3 | 2 | 3 | 4 | 17 | Fastest but 3 tables. |
+| 5 | Express | 3 | 4 | 5 | 3 | 5 | 20 | No OpenAPI gen. |
 
-## Estructura hexagonal por stack
+**Rationale:** No domain logic, 3 tables CRUD, Fastify lightest with good perf. NestJS decorators not worth overhead.
 
-Ver guía completa en `../../fae-docs/_stacks/node-typescript.md` y patrón en `../../fae-docs/05-architecture/hexagonal-architecture.md`.
+## Estructura hexagonal (node-typescript.md)
 
-- **Java Spring Boot** → `_stacks/java-spring.md`: `src/main/java/.../domain` (POJO sin Spring), `application/usecase`, `infrastructure/web,persistence,messaging`, `config`. Regla: `domain` no importa `org.springframework.*`.
-- **TypeScript Fastify** → `_stacks/node-typescript.md`: `src/domain` (entities/VO/events/ports), `application/use-cases`, `infrastructure/http,persistence,messaging`, `main.ts`. Regla: `infrastructure → application → domain`.
-- **Python FastAPI** → `_stacks/python-fastapi.md`: `domain/entities,value_objects,events,ports`, `application/use_cases`, `infrastructure/web, persistence, messaging`, `main.py` + `alembic/`. Regla: `domain` solo stdlib.
-- **Go Gin** → `_stacks/go.md`: `internal/domain`, `internal/application/usecase`, `internal/infrastructure/http,postgres,kafka`, `cmd/server/main.go`, `migrations/`. Regla: `internal/domain` no importa `internal/infrastructure`.
+```
+src/
+├── domain/entities/ AcademicConfiguration, SecurityConfiguration, BiometricUpdateCase
+└── infrastructure/persistence/ pg table
+```
 
-Este servicio sigue esa estructura. Ver `SERVICE.md` § Estructura del Proyecto para el layout concreto.
+## Dependencias
 
-## Dependencias por capa
-
-Ver `../../fae-docs/_stacks/node-typescript.md` § Main dependencies y `SERVICE.md` § Stack Tecnológico para el `pom.xml`/`package.json`/`pyproject.toml`/`go.mod` concreto.
+Fastify 4, `pg` 8, `zod`, `pino`, `typescript` 5.
 
 ## Ejecución
 
-- **DB:** `cd ../database/07-ms-configuration-db && docker compose up` o `cd ../database && docker compose up -d`
-- **Servicio:** ver `../../fae-docs/_stacks/node-typescript.md` § Tools and minimum versions + `SERVICE.md` § Configuración (puerto `8089`)
-
+```bash
+npm install && npm run dev  # 8089
+```
