@@ -1,6 +1,5 @@
-﻿export interface AcademicConfiguration {
+export interface SecurityConfiguration {
   configurationId: number;
-  schoolId: number;
   configurationName: string;
   configurationValue: string;
   description?: string;
