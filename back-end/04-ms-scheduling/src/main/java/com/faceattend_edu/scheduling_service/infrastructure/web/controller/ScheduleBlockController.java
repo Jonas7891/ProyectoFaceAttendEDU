@@ -25,8 +25,17 @@ public class ScheduleBlockController {
     private final ScheduleBlockWebMapper mapper;
 
     @GetMapping
-    public ResponseEntity<List<ScheduleBlockResponse>> list() {
-        List<ScheduleBlockResponse> list = listUseCase.list().stream().map(mapper::toResponse).collect(Collectors.toList());
+    public ResponseEntity<List<ScheduleBlockResponse>> list(
+            @RequestParam(required = false) Long cohortId,
+            @RequestParam(required = false) Integer environmentId,
+            @RequestParam(required = false) Long instructorActorId,
+            @RequestParam(required = false) Integer courseId) {
+        List<ScheduleBlockResponse> list = listUseCase.list().stream()
+                .filter(b -> cohortId == null || cohortId.equals(b.getCohortId()))
+                .filter(b -> environmentId == null || environmentId.equals(b.getEnvironmentId()))
+                .filter(b -> instructorActorId == null || instructorActorId.equals(b.getInstructorActorId()))
+                .filter(b -> courseId == null || courseId.equals(b.getCourseId()))
+                .map(mapper::toResponse).collect(Collectors.toList());
         return ResponseEntity.ok(list);
     }
 

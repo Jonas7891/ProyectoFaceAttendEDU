@@ -29,8 +29,11 @@ public class ClassSessionController {
     private final ClassSessionWebMapper mapper;
 
     @GetMapping
-    public ResponseEntity<List<ClassSessionResponse>> list() {
-        List<ClassSessionResponse> list = listUseCase.list().stream().map(mapper::toResponse).collect(Collectors.toList());
+    public ResponseEntity<List<ClassSessionResponse>> list(
+            @RequestParam(required = false) Long scheduleBlockId) {
+        List<ClassSessionResponse> list = listUseCase.list().stream()
+                .filter(s -> scheduleBlockId == null || scheduleBlockId.equals(s.getScheduleBlockId()))
+                .map(mapper::toResponse).collect(Collectors.toList());
         return ResponseEntity.ok(list);
     }
 
