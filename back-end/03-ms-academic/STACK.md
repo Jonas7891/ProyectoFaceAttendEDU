@@ -1,31 +1,46 @@
 ﻿# STACK — 03-ms-academic
 
-> **Stack ADR-005:** `TypeScript + Fastify + Drizzle` · **Guía:** `../../fae-docs/_stacks/node-typescript.md`
+> **Stack ADR-005:** `TypeScript + Fastify + Drizzle ORM` · **Guía:** `../../fae-docs/_stacks/node-typescript.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md`
-> **Database:** `../database/03-ms-academic-db` (schema `academic`) · **Puerto:** `8084`
+> **Database:** `../database/03-ms-academic-db` (schema `academic`) · **Puerto:** `8084` · **Dominio:** `06-data/domains/03-academic.md`
 
-## Decisión (ADR-005)
+## Decisión (ADR-005 §3)
 
-Fuente: `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md` — polyglot modular monolith. Este servicio usa **`TypeScript + Fastify + Drizzle`**.
+**Best option: TypeScript + Fastify + Drizzle (22/25)** — 8 entidades, JOINs complejos para reportes.
 
-Ver en el ADR la tabla de scoring (Performance/Ecosystem/Learning curve/Library fit/Ops) y el rationale por workload.
+| # | Option | Perf | Eco | Learn | Lib | Ops | Total | Notes |
+|---|--------|:----:|:---:|:-----:|:---:|:---:|-------|-------|
+| **1** | **TS + Fastify + Drizzle** | 4 | 4 | 5 | 4 | 5 | **22** | Drizzle SQL-like, genera SQL eficiente vs TypeORM. |
+| 2 | Java + Spring Boot | 4 | 5 | 2 | 5 | 3 | 19 | Hibernate 7 entidades OK, JVM overhead. |
+| 3 | Python + FastAPI + SQLAlchemy | 3 | 4 | 4 | 4 | 4 | 19 | SQLAlchemy bueno, GIL limita reports. |
+| 4 | TS + NestJS + TypeORM | 3 | 5 | 4 | 4 | 4 | 20 | TypeORM JOINs verbosos/incorrectos. |
+| 5 | Go + Gin + sqlx | 5 | 3 | 2 | 3 | 4 | 17 | Más rápido, manual SQL todo. |
 
-## Estructura hexagonal por stack
+**Rationale:** Drizzle type-safety catch schema mismatches compile-time; Fastify speed para reporting read-heavy.
 
-Ver guía completa en `../../fae-docs/_stacks/node-typescript.md` y patrón en `../../fae-docs/05-architecture/hexagonal-architecture.md`.
+## Estructura hexagonal (node-typescript.md)
 
-- **Java Spring Boot** → `_stacks/java-spring.md`: `src/main/java/.../domain` (POJO sin Spring), `application/usecase`, `infrastructure/web,persistence,messaging`, `config`. Regla: `domain` no importa `org.springframework.*`.
-- **TypeScript Fastify** → `_stacks/node-typescript.md`: `src/domain` (entities/VO/events/ports), `application/use-cases`, `infrastructure/http,persistence,messaging`, `main.ts`. Regla: `infrastructure → application → domain`.
-- **Python FastAPI** → `_stacks/python-fastapi.md`: `domain/entities,value_objects,events,ports`, `application/use_cases`, `infrastructure/web, persistence, messaging`, `main.py` + `alembic/`. Regla: `domain` solo stdlib.
-- **Go Gin** → `_stacks/go.md`: `internal/domain`, `internal/application/usecase`, `internal/infrastructure/http,postgres,kafka`, `cmd/server/main.go`, `migrations/`. Regla: `internal/domain` no importa `internal/infrastructure`.
+```
+src/
+├── domain/
+│   ├── entities/ School, Program, Cohort, Course, AcademicActor, Enrollment
+│   ├── value-objects/ AcademicActorType
+│   ├── events/ EnrollmentCreated, CourseCreated
+│   └── ports/in+out/ ICreateEnrollmentUseCase, IEnrollmentRepository
+├── application/use-cases/ CreateEnrollmentUseCase
+└── infrastructure/
+    ├── http/ controllers + routes (Fastify)
+    ├── persistence/ Drizzle schema + repository
+    └── messaging/ Kafka publisher
+```
 
-Este servicio sigue esa estructura. Ver `SERVICE.md` § Estructura del Proyecto para el layout concreto.
+## Dependencias (package.json)
 
-## Dependencias por capa
-
-Ver `../../fae-docs/_stacks/node-typescript.md` § Main dependencies y `SERVICE.md` § Stack Tecnológico para el `pom.xml`/`package.json`/`pyproject.toml`/`go.mod` concreto.
+Fastify 4, Drizzle ORM, `pg` 8, `zod` 3, `kafkajs`, `pino`, `typescript` 5, `jest` + `testcontainers`.
 
 ## Ejecución
 
-- **DB:** `cd ../database/03-ms-academic-db && docker compose up` o `cd ../database && docker compose up -d`
-- **Servicio:** ver `../../fae-docs/_stacks/node-typescript.md` § Tools and minimum versions + `SERVICE.md` § Configuración (puerto `8084`)
+```bash
+npm install && npm run dev  # 8084
+npm test && npm run build
+```
