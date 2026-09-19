@@ -2,30 +2,43 @@
 
 > **Stack ADR-005:** `Java 21 + Spring Boot 3` · **Guía:** `../../fae-docs/_stacks/java-spring.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md`
-> **Database:** `../database/02-ms-authorization-db` (schema `authorization`) · **Puerto:** `8083`
+> **Database:** `../database/02-ms-authorization-db` (schema `authorization`) · **Puerto:** `8083` · **Dominio:** `06-data/domains/02-authorization.md`
 
-## Decisión (ADR-005)
+## Decisión (ADR-005 §2)
 
-Fuente: `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md` — polyglot modular monolith. Este servicio usa **`Java 21 + Spring Boot 3`**.
+**Best option: Java 21 + Spring Boot 3 (19/25)** — RBAC read-heavy, permission checks embedded in JWT claims per ADR-008.
 
-Ver en el ADR la tabla de scoring (Performance/Ecosystem/Learning curve/Library fit/Ops) y el rationale por workload.
+| # | Option | Perf | Eco | Learn | Lib | Ops | Total | Notes |
+|---|--------|:----:|:---:|:-----:|:---:|:---:|-------|-------|
+| **1** | **Java + Spring Boot** | 4 | 5 | 2 | 5 | 3 | **19** | Spring Security gold standard. Consistency with identity. |
+| 2 | TS + Fastify | 4 | 4 | 5 | 4 | 5 | 22 | DB query cached Redis, fast but not needed. |
+| 3 | TS + NestJS | 3 | 5 | 4 | 5 | 4 | 21 | Guards = RBAC but 10 lines not 100. |
+| 4 | Python + FastAPI | 3 | 4 | 4 | 4 | 4 | 19 | casbin binding, different runtime. |
+| 5 | Go + Gin | 5 | 3 | 2 | 3 | 4 | 17 | Fastest check, overkill cache solves it. |
 
-## Estructura hexagonal por stack
+**Rationale:** Real optimization is JWT claims (ADR-008), not language speed. Java chosen for consistency and Spring Security RBAC patterns, TTL cache 5m.
 
-Ver guía completa en `../../fae-docs/_stacks/java-spring.md` y patrón en `../../fae-docs/05-architecture/hexagonal-architecture.md`.
+## Estructura hexagonal (java-spring.md)
 
-- **Java Spring Boot** → `_stacks/java-spring.md`: `src/main/java/.../domain` (POJO sin Spring), `application/usecase`, `infrastructure/web,persistence,messaging`, `config`. Regla: `domain` no importa `org.springframework.*`.
-- **TypeScript Fastify** → `_stacks/node-typescript.md`: `src/domain` (entities/VO/events/ports), `application/use-cases`, `infrastructure/http,persistence,messaging`, `main.ts`. Regla: `infrastructure → application → domain`.
-- **Python FastAPI** → `_stacks/python-fastapi.md`: `domain/entities,value_objects,events,ports`, `application/use_cases`, `infrastructure/web, persistence, messaging`, `main.py` + `alembic/`. Regla: `domain` solo stdlib.
-- **Go Gin** → `_stacks/go.md`: `internal/domain`, `internal/application/usecase`, `internal/infrastructure/http,postgres,kafka`, `cmd/server/main.go`, `migrations/`. Regla: `internal/domain` no importa `internal/infrastructure`.
+```
+src/main/java/com/faceattend_edu/authorization_service/
+├── domain/
+│   ├── model/ Role, Permission, RolePermission, UserRole
+│   └── port/in+out/
+├── application/usecase/ AssignRole, CheckPermission
+└── infrastructure/
+    ├── web/ RoleController, PermissionController
+    ├── persistence/ RoleJpaEntity, PermissionJpaEntity, Adapter
+    └── config/ SecurityConfig
+```
 
-Este servicio sigue esa estructura. Ver `SERVICE.md` § Estructura del Proyecto para el layout concreto.
+## Dependencias (pom.xml)
 
-## Dependencias por capa
-
-Ver `../../fae-docs/_stacks/java-spring.md` § Main dependencies y `SERVICE.md` § Stack Tecnológico para el `pom.xml`/`package.json`/`pyproject.toml`/`go.mod` concreto.
+Spring Boot 4.1.1, `webmvc`, `data-jpa`, `security`, `validation`, `liquibase`, `postgresql`, `lombok`, `springdoc`, `kafka`.
 
 ## Ejecución
 
-- **DB:** `cd ../database/02-ms-authorization-db && docker compose up` o `cd ../database && docker compose up -d`
-- **Servicio:** ver `../../fae-docs/_stacks/java-spring.md` § Tools and minimum versions + `SERVICE.md` § Configuración (puerto `8083`)
+```bash
+cd ../database && docker compose up -d
+./mvnw spring-boot:run  # 8083
+```
