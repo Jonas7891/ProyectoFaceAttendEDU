@@ -7,7 +7,7 @@ services:
     url: http://host.docker.internal:8081
     routes:
       - name: identity-route
-        paths: [/api/v1/persons, /api/v1/users, /api/v1/auth, /api/v1/sessions]
+        paths: [/api/v1/persons, /api/v1/users, /api/v1/auth, /api/v1/sessions, /api/v1/cities, /api/v1/password-policies]
         strip_path: false
     plugins:
       - name: cors
