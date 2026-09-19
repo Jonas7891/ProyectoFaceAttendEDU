@@ -1,7 +1,7 @@
-﻿_format_version: "3.0"
+_format_version: "3.0"
 _transform: true
 
-# Kong DB-less — FaceAttend EDU — ADR-007 + ADR-005
+# Kong DB-less � FaceAttend EDU � ADR-007 + ADR-005
 services:
   - name: identity-service
     url: http://host.docker.internal:8081
@@ -19,7 +19,11 @@ services:
       - name: rate-limiting
         config:
           minute: 60
-          policy: local
+          fault_tolerant: true
+          redis_host: redis
+          redis_port: 6379
+          redis_database: 0
+          policy: redis
   - name: authorization-service
     url: http://host.docker.internal:8083
     routes:
@@ -34,7 +38,11 @@ services:
       - name: rate-limiting
         config:
           minute: 100
-          policy: local
+          fault_tolerant: true
+          redis_host: redis
+          redis_port: 6379
+          redis_database: 0
+          policy: redis
   - name: academic-service
     url: http://host.docker.internal:8084
     routes:
@@ -68,7 +76,11 @@ services:
       - name: rate-limiting
         config:
           minute: 200
-          policy: local
+          fault_tolerant: true
+          redis_host: redis
+          redis_port: 6379
+          redis_database: 0
+          policy: redis
   - name: biometric-service
     url: http://host.docker.internal:8086
     routes:
@@ -96,6 +108,19 @@ services:
         strip_path: false
     plugins:
       - name: jwt
+consumers:
+  # Local-dev consumer for the jwt plugin (HS256). Rotate before production.
+  # Production target per ADR-007: RS256 keys issued by identity-service.
+  - username: faceattend-admin
+    jwt_secrets:
+      - key: faceattend-admin-key
+        algorithm: HS256
+        secret: faceattend-local-dev-secret-change-me
+# TLS termination (production): mount cert/key and uncomment:
+# certificates:
+#   - cert: /kong/ssl/faceattend.crt
+#     key: /kong/ssl/faceattend.key
+#     snis: ["api.faceattend.local"]
 plugins:
   - name: cors
     config:
@@ -107,4 +132,8 @@ plugins:
   - name: rate-limiting
     config:
       minute: 300
-      policy: local
+      fault_tolerant: true
+      redis_host: redis
+      redis_port: 6379
+      redis_database: 0
+      policy: redis
