@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useAuth }           from "../context/AuthContext";
 import { useRolePermissions } from "./useRolePermissions";
+import { useTranslation }     from "../core/utils/i18n/hooks/useTranslation";
 
 // Definición completa de todos los tabs posibles.
 // Cada View decide si renderiza o no según los permisos.
@@ -29,8 +30,9 @@ const ALL_TABS = [
 
 export function useDashboardScreenViewModel() {
     const permissions = useRolePermissions();
+    const { t } = useTranslation();
 
-    // Filtra los tabs según los permisos del rol actual y aplica labels dinámicos
+    // Filtra los tabs según los permisos del rol actual y aplica labels dinámicos y traducciones
     const visibleTabs = useMemo(
         () => ALL_TABS
             .filter(t => permissions.visibleTabs.includes(t.key))
@@ -38,26 +40,32 @@ export function useDashboardScreenViewModel() {
                 // Obtener label específico por rol si existe
                 const roleSpecificLabel = permissions.getTabLabel(tab.key);
                 
+                // Aplicar traducción al label
+                const translatedLabel = t(roleSpecificLabel || tab.label);
+                
                 // Procesar children si existen
                 let processedChildren = undefined;
                 if (tab.children) {
                     processedChildren = tab.children
                         .filter(child => !child.adminOnly || permissions.canManageUsers)
-                        .map(child => ({
-                            ...child,
-                            // Aplicar label dinámico si existe
-                            label: permissions.getTabLabel(child.key) || child.label,
-                        }));
+                        .map(child => {
+                            const childRoleLabel = permissions.getTabLabel(child.key);
+                            return {
+                                ...child,
+                                // Aplicar traducción al label del child
+                                label: t(childRoleLabel || child.label),
+                            };
+                        });
                 }
                 
                 return {
                     ...tab,
-                    label: roleSpecificLabel || tab.label,
+                    label: translatedLabel,
                     children: processedChildren,
-                    optionalNavigation: tab.optionalNavigation, // Preservar la propiedad
+                    optionalNavigation: tab.optionalNavigation,
                 };
             }),
-        [permissions.visibleTabs, permissions.getTabLabel, permissions.canManageUsers]
+        [permissions.visibleTabs, permissions.getTabLabel, permissions.canManageUsers, t]
     );
 
     // Si el tab inicial (dashboard) no fuera visible, toma el primero disponible

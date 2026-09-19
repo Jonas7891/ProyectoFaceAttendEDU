@@ -60,9 +60,33 @@ function HeroContent({ fadeLeft, slideLeft, fadeRight, slideRight, onNavigate })
                 gap={36}
             >
                 <HeroTitle
-                    title={t("Asistencia\n")}
-                    accent={t("inteligente\n")}
-                    end={t("para tu institución")}
+                    title={(() => {
+                        const heroText = t("Asistencia inteligente para tu institución");
+                        const words = heroText.split(' ');
+                        if (words.length >= 2) {
+                            // title = primera palabra + salto de línea
+                            return words[0] + '\n';
+                        }
+                        return heroText;
+                    })()}
+                    accent={(() => {
+                        const heroText = t("Asistencia inteligente para tu institución");
+                        const words = heroText.split(' ');
+                        if (words.length >= 2) {
+                            // accent = segunda palabra + salto de línea
+                            return words[1] + '\n';
+                        }
+                        return '';
+                    })()}
+                    end={(() => {
+                        const heroText = t("Asistencia inteligente para tu institución");
+                        const words = heroText.split(' ');
+                        if (words.length >= 3) {
+                            // end = resto del texto (a partir de la tercera palabra)
+                            return words.slice(2).join(' ');
+                        }
+                        return '';
+                    })()}
                 />
                 <View style={{ flexDirection: "row", gap: sp(12), flexWrap: "wrap" }}>
                     <Button

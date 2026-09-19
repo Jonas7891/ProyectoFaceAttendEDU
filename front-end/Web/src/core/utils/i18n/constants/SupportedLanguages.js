@@ -1,27 +1,22 @@
 // ============================================================
 //  FaceAttend EDU — SupportedLanguages (i18n · Constants)
 //
-//  MODO PROVISIONAL — Español, Inglés, Francés y Alemán disponibles desde JSON.
+//  Español es el idioma fuente de la aplicación.
+//  Las traducciones se obtienen dinámicamente del microservicio
+//  fae-translation-service mediante RestTranslationProvider.
 //
-//  Los demás idiomas están comentados y listos para activarse
-//  cuando se implemente el proveedor de traducción automática
-//  (LibreTranslate u otro).
+//  Para AGREGAR un idioma:
+//    1. Añadir entrada en SUPPORTED_LANGUAGES con code, label, labelES y flag
+//    2. El sistema creará automáticamente el JSON correspondiente
+//       cuando se soliciten traducciones para ese idioma
 //
-//  Para AGREGAR un idioma con JSON estático:
-//    1. Crear src/i18n/translations/.json
-//    2. Registrarlo en JsonDictionary.ts (import + entrada en DICTIONARIES).
-//    3. Descomentar (o añadir) su entrada en SUPPORTED_LANGUAGES.
-//
-//  Para REACTIVAR traducción automática (LibreTranslate):
-//    1. Descomentar todos los idiomas en SUPPORTED_LANGUAGES.
-//    2. Restaurar el proveedor en LanguageContext.tsx.
-//    3. Sin cambios en la UI.
+//  Idiomas activos:
+//    - Español (es): idioma fuente, sin traducciones necesarias
+//    - Inglés (en): traducciones dinámicas ES→EN
+//    - Francés (fr): traducciones dinámicas ES→FR
+//    - Alemán (de): traducciones dinámicas ES→DE
+//    - Portugués (pt): traducciones dinámicas ES→PT
 // ============================================================
-
-// ── Idiomas activos (fase provisional) ───────────────────────
-//
-//  Solo los idiomas con archivo JSON en src/i18n/translations/
-//  y entrada en JsonDictionary.ts deben estar descomentados.
 
 export const SUPPORTED_LANGUAGES = [
     { code: "es", label: "Español",   labelES: "Español",   flag: "🇪🇸" },

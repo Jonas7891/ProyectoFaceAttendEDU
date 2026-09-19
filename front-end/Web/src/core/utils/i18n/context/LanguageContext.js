@@ -1,34 +1,15 @@
 // ============================================================
 //  FaceAttend EDU — LanguageContext (i18n · Context)
 //
-//  MODO PROVISIONAL — traducciones desde archivos JSON estáticos.
+//  Context de traducción con LoadingView como flujo alternativo.
 //
-//  ┌─ Qué cambió respecto a la versión original ──────────────┐
-//  │                                                           │
-//  │  • t() ahora es SÍNCRONO: lee de JsonDictionary que      │
-//  │    tiene los JSON ya en memoria (bundle estático).        │
-//  │    Sin flash de contenido en español, sin re-renders      │
-//  │    asíncronos, sin llamadas HTTP.                         │
-//  │                                                           │
-//  │  • Se eliminó temporalmente el patrón resolvedRef/bump()  │
-//  │    (solo necesario para fuentes asíncronas).              │
-//  │                                                           │
-//  │  • translationService, TranslationCache y                 │
-//  │    TranslationStorage siguen en el proyecto intactos.     │
-//  │                                                           │
-//  └───────────────────────────────────────────────────────────┘
+//  FLUJO AL CAMBIAR IDIOMA:
+//    1. isPreparingTranslations = true → LoadingView aparece
+//    2. Preparar TODAS las traducciones necesarias
+//    3. Aplicar cambio de idioma
+//    4. isPreparingTranslations = false → View normal
 //
-//  ┌─ Cómo reactivar LibreTranslate en el futuro ─────────────┐
-//  │                                                           │
-//  │  1. Quitar el import de JsonDictionary / lookup().        │
-//  │  2. Descomentar el import de translationService.          │
-//  │  3. Restaurar resolvedRef, bump() y el patrón async       │
-//  │     en t() (ver comentarios inline).                      │
-//  │  4. Sin ningún cambio en la UI ni en useTranslation().    │
-//  │                                                           │
-//  └───────────────────────────────────────────────────────────┘
-//
-//  API pública (sin cambios):
+//  API pública:
 //    const { t, language, setLanguage, isLoading } = useLanguageContext();
 // ============================================================
 
@@ -41,23 +22,9 @@ import React, {
     useState,
 } from "react";
 
-// ── Arquitectura original — mantenida, desacoplada temporalmente ──────────
-//
-//  Descomentar en el futuro para reactivar LibreTranslate:
-//
-// import { translationService } from "../services/TranslationService";
-//
-//  (TranslationService, TranslationCache y TranslationStorage
-//   permanecen en disco intactos, listos para ser reactivados.)
-
-import { LanguageStorage }                   from "../storage/LanguageStorage";
+import { translationService } from "../services/TranslationService";
+import { LanguageStorage } from "../storage/LanguageStorage";
 import { SOURCE_LANGUAGE, DEFAULT_LANGUAGE } from "../constants/SupportedLanguages";
-// ── MODO PROVISIONAL: lookup síncrono desde JSON en bundle ────────────────
-
-import { lookup } from "../translations/JsonDictionary";
-
-// ── Tipos del contexto ────────────────────────────────────────────────────
-
 
 // ── Context ───────────────────────────────────────────────────────────────
 
@@ -66,22 +33,17 @@ const LanguageContext = createContext({
     setLanguage: async () => {},
     t: (text) => text,
     isLoading: true,
+    isPreparingTranslations: false,
 });
 
 // ── Provider ──────────────────────────────────────────────────────────────
 
 export function LanguageProvider({ children }) {
-    const [language,  setLanguageState] = useState(DEFAULT_LANGUAGE);
-    const [isLoading, setIsLoading]     = useState(true);
+    const [language, setLanguageState] = useState(DEFAULT_LANGUAGE);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isPreparingTranslations, setIsPreparingTranslations] = useState(false);
 
     // ── Inicialización ───────────────────────────────────────────────
-    //
-    //  Lee el idioma guardado en storage al arrancar.
-    //
-    //  MODO PRODUCCIÓN (futuro) — descomentar:
-    //    if (saved !== SOURCE_LANGUAGE) {
-    //        await translationService.hydrate(saved);
-    //    }
 
     useEffect(() => {
         let cancelled = false;
@@ -90,6 +52,11 @@ export function LanguageProvider({ children }) {
             const saved = await LanguageStorage.load();
             if (cancelled) return;
 
+            // Hidratar traducciones si el idioma no es español
+            if (saved !== SOURCE_LANGUAGE) {
+                await translationService.hydrate(saved);
+            }
+
             setLanguageState(saved);
             setIsLoading(false);
         })();
@@ -97,55 +64,103 @@ export function LanguageProvider({ children }) {
         return () => { cancelled = true; };
     }, []);
 
+    // ── Verificar y preparar traducciones de View actual ──────────────
+
+    const checkAndPrepareTranslations = useCallback(async () => {
+        // Solo verificar si ya cargó y no es español
+        if (isLoading || language === SOURCE_LANGUAGE) return;
+        
+        // Usar requestAnimationFrame para esperar al próximo frame (después del render)
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        
+        const activeTexts = translationService.getActiveTexts();
+        
+        if (activeTexts.length === 0) return;
+        
+        // Verificar cuántos textos faltan traducir
+        const missing = activeTexts.filter(text => {
+            const cached = translationService.getCached(text, language);
+            return cached === text; // Si devuelve lo mismo, falta traducción
+        });
+        
+        if (missing.length > 0) {
+            console.log(`[LanguageContext] View actual necesita ${missing.length} traducciones`);
+            
+            setIsPreparingTranslations(true);
+            
+            try {
+                await translationService.prepareTranslations(missing, language);
+            } catch (error) {
+                console.error('[LanguageContext] Error preparando traducciones:', error);
+            } finally {
+                setIsPreparingTranslations(false);
+            }
+        }
+        
+        // Limpiar tracking para la próxima View
+        translationService.clearTracking();
+        
+    }, [language, isLoading]);
+
     // ── Cambio de idioma ─────────────────────────────────────────────
-    //
-    //  MODO PRODUCCIÓN (futuro) — descomentar:
-    //    if (code !== SOURCE_LANGUAGE) {
-    //        await translationService.hydrate(code);
-    //    }
 
     const setLanguage = useCallback(async (code) => {
         if (code === language) return;
-        setLanguageState(code);
-        await LanguageStorage.save(code);
+        
+        console.log(`[LanguageContext] Cambio de idioma: ${language} → ${code}`);
+        
+        // PASO 1: Mostrar LoadingView INMEDIATAMENTE
+        setIsPreparingTranslations(true);
+        
+        try {
+            // PASO 2: Hidratar del storage (traducciones guardadas)
+            if (code !== SOURCE_LANGUAGE) {
+                await translationService.hydrate(code);
+            }
+            
+            // PASO 3: Preparar traducciones de textos actualmente en uso
+            if (code !== SOURCE_LANGUAGE) {
+                console.log(`[LanguageContext] Preparando traducciones para textos activos...`);
+                await translationService.prepareCurrentTexts(code);
+                console.log(`[LanguageContext] ✓ Traducciones listas`);
+            }
+            
+            // PASO 4: SOLO AHORA cambiar el idioma (esto dispara re-render)
+            console.log(`[LanguageContext] Aplicando idioma ${code}`);
+            setLanguageState(code);
+            await LanguageStorage.save(code);
+            
+        } catch (error) {
+            console.error('[LanguageContext] Error cambiando idioma:', error);
+            // Aplicar cambio aunque falle
+            setLanguageState(code);
+            await LanguageStorage.save(code);
+        } finally {
+            // PASO 5: Ocultar LoadingView
+            console.log(`[LanguageContext] LoadingView oculta, mostrando View normal`);
+            setIsPreparingTranslations(false);
+        }
     }, [language]);
 
-    // ── Función t() — SÍNCRONA en modo provisional ───────────────────
-    //
-    //  Lee directamente del objeto JSON importado en bundle.
-    //  O(1), sin efectos secundarios, sin re-renders adicionales.
-    //
-    //  Para TODOS los idiomas (incluido "es") se pasa por lookup() para
-    //  que el JSON sea la fuente de verdad única. Si la key no existe en
-    //  el JSON del idioma activo, se devuelve el texto original (fallback).
-    //
-    //  MODO PRODUCCIÓN (futuro) — restaurar:
-    //    const resolvedRef = useRef(new Map());
-    //    const [tick, setTick] = useState(0);
-    //    const bump = useCallback(() => setTick(n => n + 1), []);
-    //
-    //    const t = useCallback((text)=> {
-    //        if (!text) return text;
-    //        if (language === SOURCE_LANGUAGE) return lookup(text, SOURCE_LANGUAGE) ?? text;
-    //        const key = text;
-    //        if (resolvedRef.current.has(key)) return resolvedRef.current.get(key);
-    //        translationService.translate(text, language).then(translated => {
-    //            resolvedRef.current.set(key, translated);
-    //            bump();
-    //        });
-    //        return text; // fallback al español mientras carga
-    //    }, [language, bump]);
+    // ── Función t() — SÍNCRONA ───────────────────────────────────────
 
-    const t = useCallback((text)=> {
+    const t = useCallback((text) => {
         if (!text) return text;
-        return lookup(text, language);
+        return translationService.getCached(text, language);
     }, [language]);
 
     // ── Valor del contexto ───────────────────────────────────────────
 
     const value = useMemo(
-        () => ({ language, setLanguage, t, isLoading }),
-        [language, setLanguage, t, isLoading],
+        () => ({ 
+            language, 
+            setLanguage,
+            checkAndPrepareTranslations,
+            t, 
+            isLoading,
+            isPreparingTranslations,
+        }),
+        [language, setLanguage, checkAndPrepareTranslations, t, isLoading, isPreparingTranslations],
     );
 
     return (

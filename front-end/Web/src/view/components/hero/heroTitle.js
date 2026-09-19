@@ -22,14 +22,6 @@ import { useTheme } from "../hooks/useTheme";
  *   accent="FaceAttend" 
  *   end=" EDU" 
  * />
- * 
- * @example
- * // Con salto de línea
- * <HeroTitle 
- *   title="Asistencia\n" 
- *   accent="inteligente\n" 
- *   end="para tu institución" 
- * />
  */
 export default function HeroTitle({ title, accent, end, style, accentColor }) {
     const { fs } = useResponsive();

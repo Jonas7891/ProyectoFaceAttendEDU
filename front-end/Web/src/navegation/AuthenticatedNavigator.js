@@ -239,7 +239,7 @@ function PersistentSidebar() {
             <SidebarFooter>
                 <SidebarItem
                     icon="log-out"
-                    label="Cerrar sesión"
+                    label={t("Cerrar sesión")}
                     variant="danger"
                     onPress={handleLogout}
                 />

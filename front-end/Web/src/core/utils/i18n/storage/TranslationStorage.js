@@ -1,15 +1,22 @@
 // ============================================================
-//  FaceAttend EDU � TranslationStorage (i18n � Storage)
+//  FaceAttend EDU — TranslationStorage (i18n · Storage)
 //
-//  Persiste el diccionario de traducciones obtenidas de LibreTranslate.
-//  As� las traducciones sobreviven entre reinicios de la app.
+//  Persiste el diccionario de traducciones obtenidas del microservicio.
+//  Las traducciones sobreviven entre reinicios de la app.
 //  Usa localStorage en web y AsyncStorage en mobile.
 //
-//  Estructura en storage:
-//    faceattend_translations_en  ?  JSON { "Guardar": "Save", � }
-//    faceattend_translations_fr  ?  JSON { "Guardar": "Enregistrer", � }
+//  Comportamiento:
+//    - Español (es) NO se persiste (es el idioma fuente)
+//    - Solo persiste traducciones dinámicas para idiomas != "es"
+//    - Los JSON comienzan vacíos y se llenan dinámicamente
 //
-//  Una key por idioma, aislado, f�cil de limpiar.
+//  Estructura en storage:
+//    faceattend_translations_en  →  JSON { "Guardar": "Save", … }
+//    faceattend_translations_fr  →  JSON { "Guardar": "Enregistrer", … }
+//    faceattend_translations_de  →  JSON { "Guardar": "Speichern", … }
+//    faceattend_translations_pt  →  JSON { "Guardar": "Salvar", … }
+//
+//  Una key por idioma, aislado, fácil de limpiar.
 // ============================================================
 
 import { Platform } from "react-native";

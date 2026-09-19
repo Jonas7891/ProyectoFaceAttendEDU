@@ -2,14 +2,16 @@
 //  FaceAttend EDU — TranslationCache (i18n · Cache)
 //
 //  Caché en memoria (Map) de dos niveles:
-//    idioma → texto fuente → traducción
+//    idioma → texto fuente (español) → traducción
 //
-//  Características:
-//  - O(1) lectura y escritura
-//  - Sin dependencias externas
-//  - Sobrevive a cambios de idioma dentro de la sesión
-//  - Se hidrata desde el storage persistente al iniciar
-//  - Minimiza llamadas HTTP a LibreTranslate
+//  Comportamiento:
+//    - Español NO se cachea (es el idioma fuente)
+//    - Solo cachea traducciones para idiomas != "es"
+//    - O(1) lectura y escritura
+//    - Sin dependencias externas
+//    - Sobrevive a cambios de idioma dentro de la sesión
+//    - Se hidrata desde TranslationStorage al iniciar
+//    - Minimiza llamadas HTTP al microservicio de traducción
 // ============================================================
 
 export class TranslationCache {
