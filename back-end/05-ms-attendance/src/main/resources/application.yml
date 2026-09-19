@@ -1,6 +1,8 @@
 ﻿server:
   port: 8085
 spring:
+  application:
+    name: attendance-service
   datasource:
     url: jdbc:postgresql://localhost:5432/faceattend_db
     username: postgres
@@ -12,3 +14,18 @@ spring:
       ddl-auto: validate
     properties:
       hibernate.default_schema: attendance
+  kafka:
+    bootstrap-servers: localhost:9092
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    default-schema: attendance
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
