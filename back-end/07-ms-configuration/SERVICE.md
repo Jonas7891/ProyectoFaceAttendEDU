@@ -1,4 +1,4 @@
-# Configuration Service — `08-ms-configuration`
+﻿# Configuration Service â€” `07-ms-configuration`
 
 ## 1. Responsabilidad
 
@@ -13,10 +13,10 @@ Gestionar parametros configurables del sistema (academicos por sede y de segurid
 | `biometric_update_case` | Solicitud de actualizacion biometrica | `case_id` (UUID) |
 
 **Cross-context:**
-- `academic_configuration.school_id` → `Academic.school.school_id`
-- `biometric_update_case.person_id` → `Identity.person.person_id`
-- `biometric_update_case.requested_by` → `Identity.app_user.user_id`
-- `biometric_update_case.reviewed_by` → `Identity.app_user.user_id`
+- `academic_configuration.school_id` â†’ `Academic.school.school_id`
+- `biometric_update_case.person_id` â†’ `Identity.person.person_id`
+- `biometric_update_case.requested_by` â†’ `Identity.app_user.user_id`
+- `biometric_update_case.reviewed_by` â†’ `Identity.app_user.user_id`
 
 ## 3. Stack Tecnologico
 
@@ -125,20 +125,20 @@ mapstruct-processor
 
 ```
 academic_actor/person solicita actualizacion
-       │
-       ▼
+       â”‚
+       â–¼
 biometric_update_case (Pending)
-       │
-       │ reviewer revisa
-       ▼
+       â”‚
+       â”‚ reviewer revisa
+       â–¼
 biometric_update_case (In_Review)
-       │
-       ├── APPROVED ──> Biometric aplica nuevo embedding
-       │                  │
-       │                  ▼
-       │              facial/fingerprint_embedding (nueva version)
-       │
-       └── REJECTED ──> Notification informa al solicitante
+       â”‚
+       â”œâ”€â”€ APPROVED â”€â”€> Biometric aplica nuevo embedding
+       â”‚                  â”‚
+       â”‚                  â–¼
+       â”‚              facial/fingerprint_embedding (nueva version)
+       â”‚
+       â””â”€â”€ REJECTED â”€â”€> Notification informa al solicitante
 ```
 
 ### Estados de actualizacion
@@ -234,3 +234,4 @@ spring:
 ### Decision: Go 1.22
 
 Configuration es el servicio **mas simple** del sistema. Go resuelve CRUD + cache con el minimo overhead posible, manteniendo consistencia con la mayoria de servicios del sistema.
+

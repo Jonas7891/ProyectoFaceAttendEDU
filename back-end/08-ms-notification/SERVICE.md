@@ -1,4 +1,4 @@
-# Notification Service — `09-ms-notification`
+﻿# Notification Service â€” `08-ms-notification`
 
 ## 1. Responsabilidad
 
@@ -12,7 +12,7 @@ Gestionar tipos de alerta y alertas generadas automaticamente por el sistema sob
 | `alert` | Alerta generada sobre un actor | `alert_id` (BIGINT) |
 
 **Cross-context:**
-- `alert.academic_actor_id` → `Academic.academic_actor.academic_actor_id`
+- `alert.academic_actor_id` â†’ `Academic.academic_actor.academic_actor_id`
 
 ## 3. Stack Tecnologico
 
@@ -130,7 +130,7 @@ public void consumeEvent(DomainEvent event) {
 
 ### Topicos consumidos
 
-| Topico | Eventos → Alertas |
+| Topico | Eventos â†’ Alertas |
 |--------|-------------------|
 | `attendance-events` | ABSENTEEISM_DETECTED, REPEATED_TARDINESS, LOW_ATTENDANCE |
 | `scheduling-events` | CLASS_SESSION_CANCELLED |
@@ -163,16 +163,16 @@ public void consumeEvent(DomainEvent event) {
 
 ```
 Attendance Service detecta patron
-       │
-       ▼
+       â”‚
+       â–¼
 Kafka Event (ABSENTEEISM_DETECTED)
-       │
-       ▼
+       â”‚
+       â–¼
 Notification Service genera alert
-       │
-       ├── Email al coordinador
-       ├── Push al instructor
-       └── Registro en audit_log
+       â”‚
+       â”œâ”€â”€ Email al coordinador
+       â”œâ”€â”€ Push al instructor
+       â””â”€â”€ Registro en audit_log
 ```
 
 ---
@@ -261,7 +261,7 @@ notification:
 
 ### Por que TypeScript gana
 
-- **Templates de email**: Thymeleaf, MJML, Nunjucks — el ecosistema de templates HTML para email es mas rico en Node/TypeScript.
+- **Templates de email**: Thymeleaf, MJML, Nunjucks â€” el ecosistema de templates HTML para email es mas rico en Node/TypeScript.
 - **Firebase Admin**: SDK oficial de Google para TypeScript, bien documentado.
 - **Twilio SDK**: SDK oficial de Twilio para Node.js, el mas maduro.
 - **NestJS event-driven**: Modulos de event listeners nativos, integracion con Kafka via @nestjs/microservices.
@@ -282,3 +282,4 @@ notification:
 ### Decision: TypeScript (NestJS)
 
 Notification es un servicio **event-driven multi-canal** (email, push, SMS, in-app). TypeScript con NestJS ofrece el mejor ecosistema para templates de email, integracion con Firebase/Twilio, y manejo de eventos asincronos.
+

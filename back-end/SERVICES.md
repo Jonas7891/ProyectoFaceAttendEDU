@@ -2,21 +2,23 @@
 
 ## 1. Vision General
 
-FaceAttend-Edu es una plataforma de gestion de asistencia mediante reconocimiento biometrico para instituciones educativas. La arquitectura se basa en **9 microservicios** que implementan **Domain-Driven Design (DDD)**, donde cada dominio de negocio tiene su propia base de datos logica (schema PostgreSQL) y su propio ciclo de migracion Liquibase.
+FaceAttend-Edu es una plataforma de gestion de asistencia mediante reconocimiento biometrico para instituciones educativas. La arquitectura se basa en **8 bounded contexts + API Gateway** en **polyglot modular monolith** (ADR-002, ADR-005, ADR-007), donde cada dominio tiene su propia base de datos logica (schema PostgreSQL) y ciclo Liquibase. **Audit excluido por solicitud** (antes 07-ms-audit, ahora eliminado).
 
 ```
 ms/
-├── 01-ms-identity/          → Identity (personas, usuarios, sesiones)
-├── 02-ms-authorization/     → Authorization (RBAC: roles y permisos)
-├── 03-ms-academic/          → Academic (sedes, programas, cohortes, cursos)
-├── 04-ms-scheduling/        → Scheduling (horarios y sesiones de clase)
-├── 05-ms-attendance/        → Attendance (asistencia, justificaciones)
-├── 06-ms-biometric/         → Biometric (embeddings faciales y dactilares)
-├── 07-ms-audit/             → Audit (bitacoras de auditoria y errores)
-├── 08-ms-configuration/     → Configuration (parametros configurables)
-├── 09-ms-notification/      → Notification (alertas y notificaciones)
-└── db/                      → Migraciones Liquibase (9 schemas)
+├── 01-ms-identity/          → Identity (personas, usuarios, sesiones)          Java Spring Boot 8081
+├── 02-ms-authorization/     → Authorization (RBAC)                             Java Spring Boot 8083
+├── 03-ms-academic/          → Academic (sedes, programas, cohortes, cursos)    TS Fastify+Drizzle 8084
+├── 04-ms-scheduling/        → Scheduling (horarios y sesiones de clase)         Java Spring Boot 8087
+├── 05-ms-attendance/        → Attendance (asistencia, justificaciones)         Java Spring Boot 8085
+├── 06-ms-biometric/         → Biometric (embeddings facial/dactilar)           Python FastAPI 8086 + MongoDB
+├── 07-ms-configuration/     → Configuration (parámetros + biometric_update_case) TS Fastify 8089
+├── 08-ms-notification/      → Notification (alertas)                           Go Gin 8090
+├── 99-api-gateway/          → API Gateway (Kong OSS DB-less + Redis)           Kong 8080/8001
+└── ../database/             → Migraciones Liquibase (8 schemas, 1 BD faceattend_db)
 ```
+
+Fuente canónica de modelo: `../../fae-docs/06-data/domains/*.md` ; Stack: `ADR-005 + ADR-007` ; Hexagonal: `05-architecture/hexagonal-architecture.md` ; Guías: `_stacks/*.md`. Ver `DATABASE.md` para mapa detallado.
 
 ---
 
@@ -24,300 +26,138 @@ ms/
 
 ### 2.1 Patron: Arquitectura Hexagonal (Puertos y Adaptadores)
 
-Todos los servicios siguen el patron de Arquitectura Hexagonal definido en el servicio Identity:
+Todos los servicios 01-08 siguen hexagonal (`_stacks/java-spring.md`, `node-typescript.md`, `python-fastapi.md`, `go.md`). Gateway 99 es infra (no hexagonal).
 
-```
-com.faceattend_edu.{service}_service/
-├── adapter/
-│   ├── in/
-│   │   └── web/
-│   │       ├── controller/     ← Endpoints REST
-│   │       ├── dto/            ← Request/Response DTOs
-│   │       └── mapper/         ← DTO <-> Domain mappers
-│   └── out/
-│       └── persistence/
-│           ├── entity/         ← JPA Entities
-│           ├── repository/     ← Spring Data JPA repositories
-│           ├── mapper/         ← Entity <-> Domain mappers
-│           └── *Adapter.java   ← Port implementation
-├── application/
-│   ├── port/
-│   │   ├── in/                 ← Use case interfaces (driving)
-│   │   └── out/                ← Port interfaces (driven)
-│   └── usecase/                ← Use case implementations
-├── config/                     ← Spring @Configuration beans
-├── domain/
-│   ├── model/                  ← Domain entities (rich models)
-│   ├── event/                  ← Domain events
-│   ├── exception/              ← Domain exceptions
-│   └── service/                ← Domain services (business logic)
-└── shared/                     ← Cross-cutting concerns
-```
+- **Java (01,02,04,05):** `src/main/java/.../domain` (POJO sin Spring) → `application/usecase` → `infrastructure/web,persistence,messaging` — ver `_stacks/java-spring.md`
+- **TypeScript (03,07):** `src/domain` → `application/use-cases` → `infrastructure/http,persistence,messaging` → `main.ts` — ver `_stacks/node-typescript.md`
+- **Python (06):** `domain/` → `application/use_cases` → `infrastructure/web,persistence,messaging` → `main.py + alembic/` — ver `_stacks/python-fastapi.md`
+- **Go (08):** `internal/domain` → `internal/application/usecase` → `internal/infrastructure/http,postgres,kafka` → `cmd/server/main.go` — ver `_stacks/go.md`
 
-### 2.2 Stack Tecnologico Base
+### 2.2 Stack Tecnologico Base (ADR-005 + ADR-007)
 
-FaceAttend-Edu es un sistema **polyglot**. Cada servicio usa el lenguaje y framework optimizado para su caso de uso especifico:
+| Servicio | Lenguaje | Framework | Puerto | DB | Razon ADR-005/007 |
+|----------|----------|-----------|--------|----|-------------------|
+| Identity 01 | Java 21 | Spring Boot 3 | 8081 | PostgreSQL identity | Hibernate/JPA + Spring Security JWT/Session |
+| Authorization 02 | Java 21 | Spring Boot 3 | 8083 | PostgreSQL authorization | Spring Security RBAC, permisos en JWT |
+| Academic 03 | TypeScript | Fastify + Drizzle | 8084 | PostgreSQL academic | Drizzle JOINs 7 tablas eficiente |
+| Scheduling 04 | Java 21 | Spring Boot 3 | 8087 | PostgreSQL scheduling | @UniqueConstraint anti-double-booking + ACID |
+| Attendance 05 | Java 21 | Spring Boot 3 | 8085 | PostgreSQL attendance | @Transactional ACID crítico |
+| Biometric 06 | Python 3.12 | FastAPI | 8086 | MongoDB biometric | OpenCV/pymongo vector — único viable |
+| Configuration 07 | TypeScript | Fastify | 8089 | PostgreSQL configuration | CRUD trivial 3 tablas |
+| Notification 08 | Go 1.22 | Gin | 8090 | PostgreSQL notification | Binario 5-10 MB para 2 tablas |
+| Gateway 99 | — | Kong OSS 3.6 DB-less + Redis 7 | 8080/8001 | Redis cache | Plugins JWT/rate-limit/CORS, kong.yml declarativo (ADR-007) |
 
-| Servicio | Lenguaje | Framework | Razon |
-|----------|----------|-----------|-------|
-| Identity | Java 21 | Spring Boot 4.1.1 | Ya implementado, ecosistema JWT/Security maduro |
-| Authorization | Go 1.22 | Gin | Baja latencia para checks de permisos, 6x menos memoria |
-| Academic | TypeScript | NestJS/Nestia | CRUD complejo, validacion, reportes, DX superior |
-| Scheduling | Go 1.22 | Gin | Concurrencia para deteccion de conflictos de horario |
-| Attendance | Go 1.22 | Gin | Alto throughput para registros IoT y facial en tiempo real |
-| Biometric | Python 3.12 | FastAPI | OpenCV, dlib, TensorFlow/PyTorch nativos |
-| Audit | Go 1.22 | Gin | Streaming de eventos de alto volumen, bajo overhead |
-| Configuration | Go 1.22 | Gin | CRUD simple, cache, bajo consumo de recursos |
-| Notification | TypeScript | NestJS/Nestia | Templates email, Firebase SDK, Twilio, event-driven |
+Ver `ADR-005-technology-stack.md` para scoring y `ADR-007-api-gateway.md` para gateway.
 
-### 2.3 Politica de Lenguajes
+### 2.3 Politica de Lenguajes (ADR-005)
 
-| Lenguaje | Servicios | Uso total | Container image |
-|----------|-----------|-----------|-----------------|
-| **Go 1.22** | Authorization, Scheduling, Attendance, Audit, Configuration | 5/9 servicios | ~8MB (distroless) |
-| **TypeScript** | Academic, Notification | 2/9 servicios | ~50MB (node-slim) |
-| **Java 21** | Identity | 1/9 servicios | ~200MB (spring-boot) |
-| **Python 3.12** | Biometric | 1/9 servicios | ~150MB (python-slim) |
+| Lenguaje | Servicios | Total | Imagen |
+|----------|-----------|-------|--------|
+| **Java 21** | Identity, Authorization, Scheduling, Attendance | 4/8 | ~200 MB spring-boot |
+| **TypeScript** | Academic (Drizzle), Configuration | 2/8 | ~50 MB node-slim |
+| **Python 3.12** | Biometric | 1/8 | ~150 MB python-slim |
+| **Go 1.22** | Notification | 1/8 | ~8 MB distroless |
+| **Kong/Redis** | Gateway 99 (infra) | — | kong:3.6 + redis:7-alpine |
 
-**Por que polyglot?**
-- Cada servicio tiene requisitos distintos (ML, CRUD complejo, baja latencia, IoT)
-- Go para servicios de alta frecuencia/baja latencia (5 servicios)
-- TypeScript para servicios con dominio complejo y templates (2 servicios)
-- Java solo donde ya esta implementado (1 servicio)
-- Python solo para ML/vision (1 servicio)
+Polyglot modular monolith: JVM + Node + Python + Go + Kong. 4 runtimes + gateway.
 
 ### 2.4 Comunicacion entre Servicios
 
 | Tipo | Mecanismo | Uso |
 |------|-----------|-----|
-| Sincrona | REST (HTTP/HTTPS) | Consultas directas, CRUD |
-| Asincrona | Apache Kafka (eventos) | Domain Events, notificaciones |
-| Cross-context | Referencias UUID (sin FK) | Identidad unica entre schemas |
+| Sincrona | REST via Kong 8080 | CRUD |
+| Asincrona | Kafka | Domain Events |
+| Cross-context | UUID sin FK | Referencias entre schemas |
 
 ### 2.5 Base de Datos
 
-- **Motor:** PostgreSQL 18 (unica instancia, schemas separados)
-- **Patron:** Database-per-Bounded-Context (schema por dominio)
-- **Migraciones:** Liquibase con estructura estandarizada (DDL, DML, DCL, TCL, Rollbacks)
-- **NoSQL:** MongoDB para embeddings biometricos (facial_embedding, fingerprint_embedding)
-- **Regla de oro:** Nunca FK reales entre contextos distintos
+- **Motor:** PostgreSQL 17 (1 instancia, 8 schemas) + MongoDB 7 (biometric) + Redis 7 (gateway)
+- **Patron:** Database-per-Bounded-Context
+- **Migraciones:** Liquibase 01-ddl → 02-dml → 03-dcl → 04-tcl (ver `../database/ESTRUCTURA.md`)
+- **Regla:** Nunca FK reales entre contextos distintos
 
 ---
 
 ## 3. Servicios
 
-### 3.1 Identity (`01-ms-identity`)
+### 3.1 Identity (`01-ms-identity`) — Java 8081
+**Responsabilidad:** Identidad de personas, credenciales de acceso, sesiones y password_policy.
+**Tablas:** `city`, `person`, `app_user`, `user_session`, `password_policy` — Ver `06-data/domains/01-identity.md` y `../database/01-ms-identity-db`
+**Detalle:** Ver `01-ms-identity/SERVICE.md` + `STACK.md` + `DATA_MODEL.md`
 
-**Responsabilidad:** Identidad de personas, credenciales de acceso, sesiones y politicas de contrasena.
-
-**Tablas:** `city`, `person`, `app_user`, `user_session`, `password_policy`
-
-**Endpoints principales:**
-- CRUD de personas
-- CRUD de usuarios
-- Autenticacion (login/logout)
-- Gestion de sesiones
-- Activacion/desactivacion de usuarios
-
-**Detalle:** Ver `01-ms-identity/SERVICE.md`
-
----
-
-### 3.2 Authorization (`02-ms-authorization`)
-
-**Responsabilidad:** Control de acceso basado en roles (RBAC). Roles, permisos y asignaciones usuario-rol.
-
-**Tablas:** `role`, `permission`, `role_permission`, `user_role`
-
-**Endpoints principales:**
-- CRUD de roles y permisos
-- Asignacion de roles a usuarios
-- Asignacion de permisos a roles
-- Evaluacion de permisos
-
+### 3.2 Authorization (`02-ms-authorization`) — Java 8083
+**Responsabilidad:** RBAC.
+**Tablas:** `role`, `permission`, `role_permission`, `user_role` — Ver `06-data/domains/02-authorization.md`
 **Detalle:** Ver `02-ms-authorization/SERVICE.md`
 
----
+### 3.3 Academic (`03-ms-academic`) — TS Fastify+Drizzle 8084
+**Responsabilidad:** `school`, `program`, `academic_period`, `cohort`, `course`, `academic_actor_type`, `academic_actor`, `enrollment` — Ver `06-data/domains/03-academic.md`
 
-### 3.3 Academic (`03-ms-academic`)
+### 3.4 Scheduling (`04-ms-scheduling`) — Java 8087
+**Responsabilidad:** `environment`, `schedule_block`, `class_session` — Ver `06-data/domains/04-scheduling.md` — unique `(environment,day,starts_at)` y `(instructor,day,starts_at)` previenen double-booking.
 
-**Responsabilidad:** Estructura academica: sedes, programas, periodos, cohortes, cursos, actores academicos y matriculas.
+### 3.5 Attendance (`05-ms-attendance`) — Java 8085
+**Responsabilidad:** `attendance_record`, `justification_type`, `justification`, `supporting_document` (+ `attendance_report`) — Ver `06-data/domains/05-attendance.md`
 
-**Tablas:** `school`, `program`, `academic_period`, `cohort`, `course`, `academic_actor_type`, `academic_actor`, `enrollment`
+### 3.6 Biometric (`06-ms-biometric`) — Python FastAPI 8086
+**Responsabilidad:** Híbrido SQL vacío + MongoDB `facial_embeddings`, `fingerprint_embeddings`; caso en `configuration.biometric_update_case` — Ver `06-data/domains/06-biometric.md`
+**Stack:** `_stacks/python-fastapi.md`
 
-**Endpoints principales:**
-- CRUD de sedes, programas, periodos, cohortes, cursos
-- Registro de actores academicos (estudiantes/instructores)
-- Gestion de matriculas
-- Consultas de estructura academica
+### 3.7 Configuration (`07-ms-configuration`) — TS Fastify 8089
+**Responsabilidad:** `academic_configuration`, `security_configuration`, `biometric_update_case` — Ver `06-data/domains/09-configuration.md` (dominio 09 mapea a 07 tras reorden)
 
-**Detalle:** Ver `03-ms-academic/SERVICE.md`
+### 3.8 Notification (`08-ms-notification`) — Go Gin 8090
+**Responsabilidad:** `alert_type`, `alert` sobre `academic_actor` — Ver `06-data/domains/07-notification.md` (dominio 07 mapea a 08)
 
----
-
-### 3.4 Scheduling (`04-ms-scheduling`)
-
-**Responsabilidad:** Traduce la estructura academica en horarios y sesiones de clase concretas.
-
-**Tablas:** `environment`, `schedule_block`, `class_session`
-
-**Endpoints principales:**
-- CRUD de ambientes (aulas/laboratorios)
-- Gestion de bloques de horario recurrentes
-- Apertura/cierre de sesiones de clase
-- Consulta de disponibilidad de ambientes/instructores
-
-**Detalle:** Ver `04-ms-scheduling/SERVICE.md`
-
----
-
-### 3.5 Attendance (`05-ms-attendance`)
-
-**Responsabilidad:** Registro de asistencia con multiples fuentes (facial, manual, IoT, import), justificaciones y soportes documentales.
-
-**Tablas:** `attendance_record`, `justification_type`, `justification`, `supporting_document`
-
-**Endpoints principales:**
-- Registro de asistencia (FACIAL, MANUAL, IOT, IMPORT)
-- CRUD de justificaciones
-- Gestion de documentos de soporte
-- Consultas de asistencia por sesion/estudiante
-
-**Detalle:** Ver `05-ms-attendance/SERVICE.md`
-
----
-
-### 3.6 Biometric (`06-ms-biometric`)
-
-**Responsabilidad:** Gestion de plantillas biometricas (facial y dactilar). Servicio hibrido SQL + NoSQL.
-
-**Tablas SQL:** `biometric_update_case` (en schema Configuration)
-
-**Colecciones NoSQL:** `facial_embedding`, `fingerprint_embedding`
-
-**Endpoints principales:**
-- Enrollment de plantillas faciales/dactilares
-- Verificacion/identificacion biometrica
-- Solicitud de actualizacion de plantilla
-- Flujo de aprobacion de actualizaciones
-
-**Detalle:** Ver `06-ms-biometric/SERVICE.md`
-
----
-
-### 3.7 Audit (`07-ms-audit`)
-
-**Responsabilidad:** Bitacoras de auditoria (acciones de negocio) y errores tecnicos del sistema.
-
-**Tablas:** `audit_log`, `error_log`
-
-**Endpoints principales:**
-- Registro automatico de acciones de negocio
-- Registro de errores tecnicos
-- Consultas de auditoria (quien, que, cuando, donde)
-- Consultas de errores por tipo/fecha/usuario
-
-**Detalle:** Ver `07-ms-audit/SERVICE.md`
-
----
-
-### 3.8 Configuration (`08-ms-configuration`)
-
-**Responsabilidad:** Parametros configurables del sistema (academicos y de seguridad) y casos de actualizacion biometrica.
-
-**Tablas:** `academic_configuration`, `security_configuration`, `biometric_update_case`
-
-**Endpoints principales:**
-- CRUD de configuracion academica por sede
-- CRUD de configuracion de seguridad global
-- Gestion de casos de actualizacion biometrica
-- Flujo de aprobacion (Pending -> In_Review -> Approved/Rejected)
-
-**Detalle:** Ver `08-ms-configuration/SERVICE.md`
-
----
-
-### 3.9 Notification (`09-ms-notification`)
-
-**Responsabilidad:** Tipos de alerta y alertas generadas automaticamente sobre actores academicos.
-
-**Tablas:** `alert_type`, `alert`
-
-**Endpoints principales:**
-- CRUD de tipos de alerta
-- Generacion automatica de alertas
-- Consulta de alertas por actor/tipo/estado
-- Resolucion de alertas
-
-**Detalle:** Ver `09-ms-notification/SERVICE.md`
+### 3.9 Gateway (`99-api-gateway`) — Kong OSS 8080
+**Responsabilidad:** Routing, JWT RS256, rate-limit, CORS, TLS. Kong DB-less `kong/kong.yml` + Redis. Ver `99-api-gateway/SERVICE.md` y `ADR-007-api-gateway.md`.
 
 ---
 
 ## 4. Diagrama de Dependencias
 
 ```
-                    ┌─────────────┐
-                    │  IDENTITY   │
-                    │  (person,   │
-                    │   user)     │
-                    └──────┬──────┘
-                           │
-              ┌────────────┼────────────┐
-              ▼            ▼            ▼
-     ┌─────────────┐ ┌───────────┐ ┌──────────────┐
-     │AUTHORIZATION│ │ ACADEMIC  │ │ BIOMETRIC    │
-     │ (RBAC)      │ │ (school,  │ │ (embeddings) │
-     │             │ │  program) │ │              │
-     └─────────────┘ └─────┬─────┘ └──────────────┘
-                           │
-              ┌────────────┼────────────┐
-              ▼            ▼            ▼
-     ┌─────────────┐ ┌───────────┐ ┌──────────────┐
-     │ SCHEDULING  │ │CONFIGURAT.│ │NOTIFICATION  │
-     │ (horarios)  │ │ (params)  │ │ (alertas)    │
-     └──────┬──────┘ └───────────┘ └──────────────┘
-            │
-            ▼
-     ┌─────────────┐
-     │ ATTENDANCE  │
-     │ (asistencia)│
-     └──────┬──────┘
-            │
-            ▼
-     ┌─────────────┐
-     │   AUDIT     │
-     │ (bitacora)  │
-     └─────────────┘
+                 Kong 99 (8080)  [Redis]
+                      │
+        ┌─────────────┼─────────────┐
+        ▼             ▼             ▼
+   IDENTITY     AUTHORIZATION   ACADEMIC ──┐
+   8081 Java     8083 Java     8084 TS    │
+        └────────────┼────────────┘        │
+                     ▼                    ▼
+              SCHEDULING  ←─────── ACADEMIC
+               8087 Java                  │
+                     │                    ▼
+                     ▼              CONFIGURATION
+               ATTENDANCE           8089 TS
+               8085 Java                  │
+                     │                    ▼
+              BIOMETRIC  ←──────── NOTIFICATION
+              8086 Python         8090 Go
 ```
+
+Audit eliminado. Gateway es edge; Attendance es critical path ACID; Biometric es MongoDB vector.
 
 ---
 
 ## 5. Convenciones Comunes
 
 ### 5.1 Auditoria
-
-Todas las tablas incluyen:
-- `created_at`, `updated_at`, `deleted_at` (timestamps)
-- `created_by`, `updated_by`, `deleted_by` (UUID de usuario)
-- `row_version` (bloqueo optimista)
-- Soft delete via `deleted_at` (nunca borrado fisico)
+Todas las tablas incluyen: `created_at`, `updated_at`, `deleted_at`, `created_by`, `updated_by`, `deleted_by`, `row_version` — Soft delete via `deleted_at`.
 
 ### 5.2 Identificadores
-
 | Tipo | Uso | Ejemplo |
 |------|-----|---------|
-| UUID | Entidades referenciadas entre contextos | `person_id`, `user_id` |
+| UUID | Entidades entre contextos | `person_id`, `user_id` |
 | INT autoincrement | Catalogos locales | `city_id`, `role_id` |
-| BIGINT autoincrement | Alto volumen | `cohort_id`, `audit_log_id` |
-| SMALLINT autoincrement | Catalogos pequenos | `actor_type_id`, `alert_type_id` |
+| BIGINT autoincrement | Alto volumen | `cohort_id` |
+| SMALLINT autoincrement | Catalogos pequeños | `actor_type_id`, `alert_type_id` |
 
-### 5.3 ENUMs de PostgreSQL
-
-Los enums se definen como `CREATE TYPE ... AS ENUM`, no como VARCHAR con validacion textual.
+### 5.3 ENUMs
+`CREATE TYPE ... AS ENUM`, no VARCHAR con validación textual.
 
 ### 5.4 Cross-Context References
-
-Nunca se crean FK reales entre contextos distintos. Las referencias se documentan como comentarios en Liquibase y se validan a nivel de aplicacion.
+Nunca FK reales entre contextos distintos. Solo comentarios `remarks: Cross-context reference ... NO FK`.
 
 ---
 
@@ -326,42 +166,52 @@ Nunca se crean FK reales entre contextos distintos. Las referencias se documenta
 ### Arranque completo (desarrollo)
 
 ```bash
-cd ms/db
-docker compose up -d
+cd ../database && docker compose up -d          # Postgres 17 + 8 Liquibase
+cd ../back-end/99-api-gateway && docker compose up -d  # Kong + Redis
 ```
 
 ### Servicio individual
 
 ```bash
-cd ms/01-ms-identity
+# Java 01,02,04,05
 ./mvnw spring-boot:run
+
+# TS 03,07
+npm run dev
+
+# Python 06
+uvicorn main:app --reload --port 8086
+
+# Go 08
+go run cmd/server/main.go
+
+# Kong 99
+docker compose up -d && curl http://localhost:8001/
 ```
 
 ### Verificar estado
 
 ```bash
-# PostgreSQL
 docker exec -it faceattend-postgres-18 psql -U postgres -d faceattend_db
-
-# Ver esquemas
 \dn
-
-# Ver tablas de un esquema
 \dt academic.*
+curl http://localhost:8080/api/v1/persons  # via Kong
 ```
 
 ---
 
 ## 7. Documentacion por Servicio
 
-| Servicio | Documento | Estado |
-|----------|-----------|--------|
-| Identity | `01-ms-identity/SERVICE.md` | Implementado |
-| Authorization | `02-ms-authorization/SERVICE.md` | Pendiente |
-| Academic | `03-ms-academic/SERVICE.md` | Pendiente |
-| Scheduling | `04-ms-scheduling/SERVICE.md` | Pendiente |
-| Attendance | `05-ms-attendance/SERVICE.md` | Pendiente |
-| Biometric | `06-ms-biometric/SERVICE.md` | Pendiente |
-| Audit | `07-ms-audit/SERVICE.md` | Pendiente |
-| Configuration | `08-ms-configuration/SERVICE.md` | Pendiente |
-| Notification | `09-ms-notification/SERVICE.md` | Pendiente |
+| Servicio | Documento | Stack | Estado |
+|----------|-----------|-------|--------|
+| Identity 01 | `01-ms-identity/SERVICE.md` + `STACK.md` + `DATA_MODEL.md` | Java Spring Boot | Implementado |
+| Authorization 02 | `02-ms-authorization/...` | Java Spring Boot | Pendiente |
+| Academic 03 | `03-ms-academic/...` | TS Fastify+Drizzle | Pendiente |
+| Scheduling 04 | `04-ms-scheduling/...` | Java Spring Boot | Pendiente |
+| Attendance 05 | `05-ms-attendance/...` | Java Spring Boot | Pendiente |
+| Biometric 06 | `06-ms-biometric/...` | Python FastAPI | Pendiente |
+| Configuration 07 | `07-ms-configuration/...` | TS Fastify | Pendiente |
+| Notification 08 | `08-ms-notification/...` | Go Gin | Pendiente |
+| Gateway 99 | `99-api-gateway/SERVICE.md` + `kong/kong.yml` | Kong OSS | Infra |
+
+Audit excluido por solicitud. Ver `DATABASE.md` y `../../fae-docs/06-data/domains` + `ADR-005/007` + `_stacks/`.
