@@ -37,6 +37,21 @@ databaseChangeLog:
                   constraints:
                     nullable: true
               - column:
+                  name: district
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: country
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: city_name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: true
+              - column:
                   name: phone
                   type: VARCHAR(50)
                   constraints:

@@ -51,6 +51,8 @@ databaseChangeLog:
             columns:
               - column:
                   name: update_status
+        - sql:
+            sql: ALTER TABLE configuration.biometric_update_case ADD CONSTRAINT chk_finger_number CHECK ((biometric_type = 'FINGERPRINT' AND finger_number BETWEEN 1 AND 10) OR (biometric_type = 'FACIAL' AND finger_number IS NULL))
       rollback:
         - dropTable:
             schemaName: configuration

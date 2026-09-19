@@ -71,6 +71,8 @@ databaseChangeLog:
                     nullable: false
         - sql:
             sql: ALTER TABLE scheduling.environment ADD CONSTRAINT uq_environment_code_school UNIQUE (school_id, code)
+        - sql:
+            sql: ALTER TABLE scheduling.environment ADD CONSTRAINT chk_environment_capacity CHECK (capacity > 0)
       rollback:
         - dropTable:
             schemaName: scheduling

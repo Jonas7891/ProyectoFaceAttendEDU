@@ -23,3 +23,6 @@ databaseChangeLog:
   - include:
       file: 03-tables/004-create-supporting-document-table.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 03-tables/005-create-attendance-report-table.yaml
+      relativeToChangelogFile: true

@@ -77,6 +77,8 @@ databaseChangeLog:
             columns:
               - column:
                   name: justification_id
+        - sql:
+            sql: ALTER TABLE attendance.supporting_document ADD CONSTRAINT chk_size_bytes CHECK (size_bytes > 0)
       rollback:
         - dropTable:
             schemaName: attendance

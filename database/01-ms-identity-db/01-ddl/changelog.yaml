@@ -9,9 +9,6 @@ databaseChangeLog:
       file: 02-types/002-create-authentication-type.yaml
       relativeToChangelogFile: true
   - include:
-      file: 03-tables/001-create-city-table.yaml
-      relativeToChangelogFile: true
-  - include:
       file: 03-tables/002-create-person-table.yaml
       relativeToChangelogFile: true
   - include:

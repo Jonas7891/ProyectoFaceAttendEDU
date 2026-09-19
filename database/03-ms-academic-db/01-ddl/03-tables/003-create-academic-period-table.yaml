@@ -80,6 +80,8 @@ databaseChangeLog:
             sql: ALTER TABLE academic.academic_period ADD CONSTRAINT uq_period_name_school UNIQUE (school_id, name)
         - sql:
             sql: ALTER TABLE academic.academic_period ADD CONSTRAINT fk_academic_period_school FOREIGN KEY (school_id) REFERENCES academic.school (school_id) ON DELETE CASCADE
+        - sql:
+            sql: ALTER TABLE academic.academic_period ADD CONSTRAINT chk_period_dates CHECK (starts_on < ends_on)
       rollback:
         - dropTable:
             schemaName: academic

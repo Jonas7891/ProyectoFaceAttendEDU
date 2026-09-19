@@ -39,6 +39,28 @@ databaseChangeLog:
                   constraints:
                     nullable: true
               - column:
+                  name: document_type
+                  type: VARCHAR(10)
+                  constraints:
+                    nullable: true
+                  remarks: "CC / TI / CE / PP"
+              - column:
+                  name: blood_type
+                  type: VARCHAR(5)
+                  constraints:
+                    nullable: true
+                  remarks: "A+, A-, B+, B-, AB+, AB-, O+, O-"
+              - column:
+                  name: birth_date
+                  type: DATE
+                  constraints:
+                    nullable: true
+              - column:
+                  name: address
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
+              - column:
                   name: status
                   type: BOOLEAN
                   defaultValueBoolean: true

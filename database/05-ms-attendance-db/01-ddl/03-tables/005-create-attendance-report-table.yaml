@@ -1,43 +1,54 @@
 databaseChangeLog:
   - changeSet:
-      id: acad-005-create-course-table
+      id: att-008-create-attendance-report-table
       author: Andres Gutierrez
       changes:
         - createTable:
-            schemaName: academic
-            tableName: course
+            schemaName: attendance
+            tableName: attendance_report
             columns:
               - column:
-                  name: course_id
-                  type: INT
-                  autoIncrement: true
+                  name: report_id
+                  type: UUID
                   constraints:
                     primaryKey: true
                     nullable: false
               - column:
-                  name: program_id
+                  name: school_id
                   type: INT
                   constraints:
-                    nullable: false
+                    nullable: true
+                  remarks: "Cross-context reference to Academic.school (NO FK)"
               - column:
-                  name: code
+                  name: cohort_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                  remarks: "Cross-context reference to Academic.cohort (NO FK)"
+              - column:
+                  name: generated_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+                  remarks: "Cross-context reference to Identity.app_user (NO FK)"
+              - column:
+                  name: report_type
                   type: VARCHAR(50)
                   constraints:
                     nullable: false
               - column:
-                  name: name
-                  type: VARCHAR(255)
+                  name: filters
+                  type: JSONB
                   constraints:
-                    nullable: false
+                    nullable: true
               - column:
-                  name: credit_hours
-                  type: SMALLINT
+                  name: result
+                  type: JSONB
                   constraints:
-                    nullable: false
+                    nullable: true
               - column:
-                  name: status
-                  type: BOOLEAN
-                  defaultValueBoolean: true
+                  name: generated_at
+                  type: TIMESTAMP
                   constraints:
                     nullable: false
               - column:
@@ -76,13 +87,21 @@ databaseChangeLog:
                   defaultValueNumeric: 1
                   constraints:
                     nullable: false
-        - sql:
-            sql: ALTER TABLE academic.course ADD CONSTRAINT uq_course_code_program UNIQUE (program_id, code)
-        - sql:
-            sql: ALTER TABLE academic.course ADD CONSTRAINT fk_course_program FOREIGN KEY (program_id) REFERENCES academic.program (program_id) ON DELETE CASCADE
-        - sql:
-            sql: ALTER TABLE academic.course ADD CONSTRAINT chk_course_credit_hours CHECK (credit_hours > 0)
+        - createIndex:
+            schemaName: attendance
+            tableName: attendance_report
+            indexName: idx_report_school
+            columns:
+              - column:
+                  name: school_id
+        - createIndex:
+            schemaName: attendance
+            tableName: attendance_report
+            indexName: idx_report_cohort
+            columns:
+              - column:
+                  name: cohort_id
       rollback:
         - dropTable:
-            schemaName: academic
-            tableName: course
+            schemaName: attendance
+            tableName: attendance_report

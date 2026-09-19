@@ -5,25 +5,14 @@
 // v5: city seeds removed (external API), permission refactored,
 //     justification_type per-school, security_configuration trimmed,
 //     alert_type severity/channel added
+// v6: person extended (document_type, blood_type, birth_date, address),
+//     city table removed, school extended (district, country, city_name),
+//     justification resolution_notes, attendance_report, CHECKs, two_factor
 ////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////
 // IDENTITY
 ////////////////////////////////////////////////////////////
-
-Table city {
-  city_id int [pk, increment]
-  name varchar [not null]
-  department varchar [null]
-
-  created_at datetime [not null]
-  updated_at datetime [not null]
-  deleted_at datetime [null]
-  created_by uuid [null]
-  updated_by uuid [null]
-  deleted_by uuid [null]
-  row_version bigint [not null, default: 1]
-}
 
 Table person {
   person_id uuid [pk, not null]
@@ -32,6 +21,10 @@ Table person {
   last_name varchar [not null]
   email varchar [null]
   phone varchar [null]
+  document_type varchar [null, note: 'CC / TI / CE / PP']
+  blood_type varchar [null, note: 'A+, A-, B+, B-, AB+, AB-, O+, O-']
+  birth_date date [null]
+  address varchar [null]
   status boolean [not null, default: true]
 
   created_at datetime [not null]
@@ -194,8 +187,11 @@ Table school {
   school_id int [pk, increment]
   code varchar [not null, unique]
   name varchar [not null]
-  city_id varchar [null, note: 'External catalog via countriesnow API, no FK to identity.city']
+  city_id varchar [null, note: 'External catalog via countriesnow API, no FK']
   address varchar [null]
+  district varchar [null]
+  country varchar [null]
+  city_name varchar [null]
   phone varchar [null]
   email varchar [null]
   status boolean [not null, default: true]
@@ -501,6 +497,7 @@ Table justification {
   reviewed_by uuid [null, note: 'app_user.user_id (cross-context)']
   reviewed_at datetime [null]
   review_status varchar [not null, note: 'ENUM: Pending / Approved / Rejected']
+  resolution_notes text [null]
 
   created_at datetime [not null]
   updated_at datetime [not null]
@@ -533,6 +530,30 @@ Table supporting_document {
   row_version bigint [not null, default: 1]
 
   indexes { justification_id [name: 'idx_document_justification'] }
+}
+
+Table attendance_report {
+  report_id uuid [pk, not null]
+  school_id int [null, note: 'Cross-context to Academic.school']
+  cohort_id bigint [null, note: 'Cross-context to Academic.cohort']
+  generated_by uuid [null, note: 'Cross-context to Identity.app_user']
+  report_type varchar [not null]
+  filters jsonb [null]
+  result jsonb [null]
+  generated_at datetime [not null]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    school_id [name: 'idx_report_school']
+    cohort_id [name: 'idx_report_cohort']
+  }
 }
 
 // Relaciones internas (Attendance)
@@ -743,7 +764,6 @@ Table biometric_update_case {
 ////////////////////////////////////////////////////////////
 
 TableGroup Identity [color: #3498DB] {
-  city
   person
   app_user
   user_session
@@ -779,6 +799,7 @@ TableGroup Attendance [color: #e67e22] {
   justification_type
   justification
   supporting_document
+  attendance_report
 }
 
 TableGroup Notification [color: #f1c40f] {

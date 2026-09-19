@@ -87,6 +87,10 @@ databaseChangeLog:
             sql: ALTER TABLE scheduling.schedule_block ADD CONSTRAINT uq_block_environment_slot UNIQUE (environment_id, day_of_week, starts_at)
         - sql:
             sql: ALTER TABLE scheduling.schedule_block ADD CONSTRAINT uq_block_instructor_slot UNIQUE (instructor_actor_id, day_of_week, starts_at)
+        - sql:
+            sql: ALTER TABLE scheduling.schedule_block ADD CONSTRAINT chk_block_day_of_week CHECK (day_of_week BETWEEN 1 AND 7)
+        - sql:
+            sql: ALTER TABLE scheduling.schedule_block ADD CONSTRAINT chk_block_time CHECK (starts_at < ends_at)
         - createIndex:
             schemaName: scheduling
             tableName: schedule_block

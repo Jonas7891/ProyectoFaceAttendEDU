@@ -25,6 +25,8 @@ databaseChangeLog:
               )
         - sql:
             sql: ALTER TABLE attendance.attendance_record ADD CONSTRAINT uq_attendance_session_actor UNIQUE (class_session_id, academic_actor_id)
+        - sql:
+            sql: ALTER TABLE attendance.attendance_record ADD CONSTRAINT chk_match_score CHECK (match_score IS NULL OR match_score BETWEEN 0 AND 1)
         - createIndex:
             schemaName: attendance
             tableName: attendance_record
