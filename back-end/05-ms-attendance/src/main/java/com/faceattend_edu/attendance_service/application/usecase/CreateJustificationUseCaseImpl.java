@@ -4,6 +4,7 @@ import com.faceattend_edu.attendance_service.domain.exception.DuplicateEntityExc
 import com.faceattend_edu.attendance_service.domain.model.Justification;
 import com.faceattend_edu.attendance_service.domain.port.in.CreateJustificationUseCase;
 import com.faceattend_edu.attendance_service.domain.port.out.JustificationRepository;
+import com.faceattend_edu.attendance_service.infrastructure.messaging.DomainEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -12,9 +13,14 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CreateJustificationUseCaseImpl implements CreateJustificationUseCase {
     private final JustificationRepository repository;
+    private final DomainEventPublisher eventPublisher;
     @Override public Justification create(Justification j){
         j.validate(); j.touchCreated();
         repository.findByAttendanceRecordId(j.getAttendanceRecordId()).ifPresent(existing -> { throw new DuplicateEntityException("Justification already exists for attendanceRecordId=" + j.getAttendanceRecordId()); });
-        try { return repository.save(j); } catch (DataIntegrityViolationException ex){ throw new DuplicateEntityException("Justification duplicate violates unique constraint (attendance_record_id)", ex); }
+        try {
+            Justification saved = repository.save(j);
+            eventPublisher.publish("justification-events", "{\"justificationId\":" + saved.getJustificationId() + ",\"status\":\"" + saved.getReviewStatus() + "\"}");
+            return saved;
+        } catch (DataIntegrityViolationException ex){ throw new DuplicateEntityException("Justification duplicate violates unique constraint (attendance_record_id)", ex); }
     }
 }
