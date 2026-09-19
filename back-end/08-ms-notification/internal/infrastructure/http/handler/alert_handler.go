@@ -14,10 +14,11 @@ type AlertHandler struct {
 	creator  port.AlertCreator
 	lister   port.AlertLister
 	resolver port.AlertResolver
+	deleter  port.AlertDeleter
 }
 
-func NewAlertHandler(creator port.AlertCreator, lister port.AlertLister, resolver port.AlertResolver) *AlertHandler {
-	return &AlertHandler{creator: creator, lister: lister, resolver: resolver}
+func NewAlertHandler(creator port.AlertCreator, lister port.AlertLister, resolver port.AlertResolver, deleter port.AlertDeleter) *AlertHandler {
+	return &AlertHandler{creator: creator, lister: lister, resolver: resolver, deleter: deleter}
 }
 
 func (h *AlertHandler) Register(r gin.IRouter) {
@@ -26,6 +27,7 @@ func (h *AlertHandler) Register(r gin.IRouter) {
 	g.GET("", h.List)
 	g.GET("/:id", h.Get)
 	g.PATCH("/:id/resolve", h.Resolve)
+	g.DELETE("/:id", h.Delete)
 
 	// alias without prefix for compatibility
 	alt := r.Group("/alerts")
@@ -33,6 +35,7 @@ func (h *AlertHandler) Register(r gin.IRouter) {
 	alt.GET("", h.List)
 	alt.GET("/:id", h.Get)
 	alt.PATCH("/:id/resolve", h.Resolve)
+	alt.DELETE("/:id", h.Delete)
 }
 
 func (h *AlertHandler) Create(c *gin.Context) {
@@ -112,6 +115,20 @@ func (h *AlertHandler) Resolve(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, alert)
+}
+
+func (h *AlertHandler) Delete(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+	if err := h.deleter.DeleteAlert(c.Request.Context(), id); err != nil {
+		handleDomainError(c, err)
+		return
+	}
+	c.Status(http.StatusNoContent)
 }
 
 func handleDomainError(c *gin.Context, err error) {

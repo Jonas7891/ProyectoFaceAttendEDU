@@ -120,3 +120,17 @@ func (r *AlertRepository) Update(ctx context.Context, a domain.Alert) error {
 }
 
 func itoa(i int) string { return strconv.Itoa(i) }
+
+func (r *AlertRepository) Delete(ctx context.Context, id int64) error {
+	if r.pool == nil {
+		return errors.New("database not configured")
+	}
+	ct, err := r.pool.Exec(ctx, `DELETE FROM notification.alert WHERE alert_id=$1`, id)
+	if err != nil {
+		return err
+	}
+	if ct.RowsAffected() == 0 {
+		return domain.ErrNotFound{Entity: "alert", ID: string(rune(id))}
+	}
+	return nil
+}

@@ -12,10 +12,12 @@ import (
 type AlertTypeHandler struct {
 	creator port.AlertTypeCreator
 	lister  port.AlertTypeLister
+	updater port.AlertTypeUpdater
+	deleter port.AlertTypeDeleter
 }
 
-func NewAlertTypeHandler(creator port.AlertTypeCreator, lister port.AlertTypeLister) *AlertTypeHandler {
-	return &AlertTypeHandler{creator: creator, lister: lister}
+func NewAlertTypeHandler(creator port.AlertTypeCreator, lister port.AlertTypeLister, updater port.AlertTypeUpdater, deleter port.AlertTypeDeleter) *AlertTypeHandler {
+	return &AlertTypeHandler{creator: creator, lister: lister, updater: updater, deleter: deleter}
 }
 
 func (h *AlertTypeHandler) Register(r gin.IRouter) {
@@ -23,11 +25,15 @@ func (h *AlertTypeHandler) Register(r gin.IRouter) {
 	g.POST("", h.Create)
 	g.GET("", h.List)
 	g.GET("/:id", h.Get)
+	g.PUT("/:id", h.Update)
+	g.DELETE("/:id", h.Delete)
 
 	alt := r.Group("/alert-types")
 	alt.POST("", h.Create)
 	alt.GET("", h.List)
 	alt.GET("/:id", h.Get)
+	alt.PUT("/:id", h.Update)
+	alt.DELETE("/:id", h.Delete)
 }
 
 func (h *AlertTypeHandler) Create(c *gin.Context) {
@@ -68,4 +74,38 @@ func (h *AlertTypeHandler) Get(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, at)
+}
+
+func (h *AlertTypeHandler) Update(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 16)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+	var req port.UpdateAlertTypeCommand
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	at, err := h.updater.UpdateAlertType(c.Request.Context(), int16(id), req)
+	if err != nil {
+		handleDomainError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, at)
+}
+
+func (h *AlertTypeHandler) Delete(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 16)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+	if err := h.deleter.DeleteAlertType(c.Request.Context(), int16(id)); err != nil {
+		handleDomainError(c, err)
+		return
+	}
+	c.Status(http.StatusNoContent)
 }

@@ -22,12 +22,15 @@ func Wire(pool *pgxpool.Pool) *Container {
 	createAlert := usecase.NewCreateAlert(alertRepo, alertTypeRepo)
 	listAlerts := usecase.NewListAlerts(alertRepo)
 	resolveAlert := usecase.NewResolveAlert(alertRepo)
+	deleteAlert := usecase.NewDeleteAlert(alertRepo)
 
 	createAlertType := usecase.NewCreateAlertType(alertTypeRepo)
 	listAlertTypes := usecase.NewListAlertTypes(alertTypeRepo)
+	updateAlertType := usecase.NewUpdateAlertType(alertTypeRepo)
+	deleteAlertType := usecase.NewDeleteAlertType(alertTypeRepo)
 
-	alertHandler := handler.NewAlertHandler(createAlert, listAlerts, resolveAlert)
-	alertTypeHandler := handler.NewAlertTypeHandler(createAlertType, listAlertTypes)
+	alertHandler := handler.NewAlertHandler(createAlert, listAlerts, resolveAlert, deleteAlert)
+	alertTypeHandler := handler.NewAlertTypeHandler(createAlertType, listAlertTypes, updateAlertType, deleteAlertType)
 
 	return &Container{
 		AlertHandler:     alertHandler,

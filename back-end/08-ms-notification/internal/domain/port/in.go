@@ -51,3 +51,22 @@ type AlertTypeLister interface {
 	ListTypes(ctx context.Context, q ListAlertTypesQuery) ([]domain.AlertType, error)
 	GetType(ctx context.Context, id int16) (*domain.AlertType, error)
 }
+
+type UpdateAlertTypeCommand struct {
+	Code     string `json:"code"`
+	Name     string `json:"name"`
+	Severity string `json:"severity"`
+	Channel  string `json:"channel"`
+}
+
+type AlertTypeUpdater interface {
+	UpdateAlertType(ctx context.Context, id int16, cmd UpdateAlertTypeCommand) (*domain.AlertType, error)
+}
+
+type AlertTypeDeleter interface {
+	DeleteAlertType(ctx context.Context, id int16) error
+}
+
+type AlertDeleter interface {
+	DeleteAlert(ctx context.Context, id int64) error
+}

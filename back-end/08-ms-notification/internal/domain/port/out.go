@@ -10,6 +10,7 @@ type AlertRepository interface {
 	FindByID(ctx context.Context, id int64) (*domain.Alert, error)
 	FindAll(ctx context.Context, filter AlertFilter) ([]domain.Alert, error)
 	Update(ctx context.Context, a domain.Alert) error
+	Delete(ctx context.Context, id int64) error
 }
 
 type AlertFilter struct {
