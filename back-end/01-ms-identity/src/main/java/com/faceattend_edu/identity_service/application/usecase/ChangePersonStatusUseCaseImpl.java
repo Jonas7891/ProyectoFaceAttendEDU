@@ -1,0 +1,25 @@
+package com.faceattend_edu.identity_service.application.usecase;
+
+import com.faceattend_edu.identity_service.application.port.in.ChangePersonStatusUseCase;
+import com.faceattend_edu.identity_service.application.port.out.LoadPersonPort;
+import com.faceattend_edu.identity_service.application.port.out.UpdatePersonPort;
+import com.faceattend_edu.identity_service.domain.model.Person;
+import lombok.RequiredArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@RequiredArgsConstructor
+public class ChangePersonStatusUseCaseImpl implements ChangePersonStatusUseCase {
+
+    private final LoadPersonPort loadPersonPort;
+    private final UpdatePersonPort updatePersonPort;
+
+    @Override
+    public void changeStatus(UUID personId, boolean status) {
+        Person person = loadPersonPort.loadPerson(personId);
+        person.setStatus(status);
+        person.setUpdatedAt(LocalDateTime.now());
+        updatePersonPort.updatePerson(person);
+    }
+}
