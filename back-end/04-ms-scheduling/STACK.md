@@ -2,30 +2,36 @@
 
 > **Stack ADR-005:** `Java 21 + Spring Boot 3` · **Guía:** `../../fae-docs/_stacks/java-spring.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md`
-> **Database:** `../database/04-ms-scheduling-db` (schema `scheduling`) · **Puerto:** `8087`
+> **Database:** `../database/04-ms-scheduling-db` (schema `scheduling`) · **Puerto:** `8087` · **Dominio:** `06-data/domains/04-scheduling.md`
 
-## Decisión (ADR-005)
+## Decisión (ADR-005 §4)
 
-Fuente: `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md` — polyglot modular monolith. Este servicio usa **`Java 21 + Spring Boot 3`**.
+**Best option: Java 21 + Spring Boot 3 (19/25)** — critical invariant anti-double-booking via unique constraints.
 
-Ver en el ADR la tabla de scoring (Performance/Ecosystem/Learning curve/Library fit/Ops) y el rationale por workload.
+| # | Option | Perf | Eco | Learn | Lib | Ops | Total | Notes |
+|---|--------|:----:|:---:|:-----:|:---:|:---:|-------|-------|
+| **1** | **Java + Spring Boot** | 4 | 5 | 2 | 5 | 3 | **19** | `@UniqueConstraint` + `DataIntegrityViolationException` clean. |
+| 2 | TS + Fastify + Drizzle | 4 | 4 | 5 | 4 | 5 | 22 | Constraints work, exception handling less elegant. |
+| 3 | TS + NestJS + TypeORM | 3 | 5 | 4 | 4 | 4 | 20 | TypeORM inefficient. |
+| 4 | Python + FastAPI | 3 | 4 | 4 | 4 | 4 | 19 | Different runtime. |
+| 5 | Go + Gin | 5 | 3 | 2 | 3 | 4 | 17 | DB-level constraints, not app. |
 
-## Estructura hexagonal por stack
+**Rationale:** ACID transaction atomic schedule_block + class_session; consistency with identity/authorization/attendance.
 
-Ver guía completa en `../../fae-docs/_stacks/java-spring.md` y patrón en `../../fae-docs/05-architecture/hexagonal-architecture.md`.
+## Estructura hexagonal (java-spring.md)
 
-- **Java Spring Boot** → `_stacks/java-spring.md`: `src/main/java/.../domain` (POJO sin Spring), `application/usecase`, `infrastructure/web,persistence,messaging`, `config`. Regla: `domain` no importa `org.springframework.*`.
-- **TypeScript Fastify** → `_stacks/node-typescript.md`: `src/domain` (entities/VO/events/ports), `application/use-cases`, `infrastructure/http,persistence,messaging`, `main.ts`. Regla: `infrastructure → application → domain`.
-- **Python FastAPI** → `_stacks/python-fastapi.md`: `domain/entities,value_objects,events,ports`, `application/use_cases`, `infrastructure/web, persistence, messaging`, `main.py` + `alembic/`. Regla: `domain` solo stdlib.
-- **Go Gin** → `_stacks/go.md`: `internal/domain`, `internal/application/usecase`, `internal/infrastructure/http,postgres,kafka`, `cmd/server/main.go`, `migrations/`. Regla: `internal/domain` no importa `internal/infrastructure`.
+```
+src/main/java/com/faceattend_edu/scheduling_service/
+├── domain/model/ Environment, ScheduleBlock, ClassSession
+└── infrastructure/persistence/ JpaEntity with @UniqueConstraint
+```
 
-Este servicio sigue esa estructura. Ver `SERVICE.md` § Estructura del Proyecto para el layout concreto.
+## Dependencias
 
-## Dependencias por capa
-
-Ver `../../fae-docs/_stacks/java-spring.md` § Main dependencies y `SERVICE.md` § Stack Tecnológico para el `pom.xml`/`package.json`/`pyproject.toml`/`go.mod` concreto.
+Spring Boot 4.1.1, `webmvc`, `data-jpa`, `validation`, `liquibase`, `postgresql`, `lombok`.
 
 ## Ejecución
 
-- **DB:** `cd ../database/04-ms-scheduling-db && docker compose up` o `cd ../database && docker compose up -d`
-- **Servicio:** ver `../../fae-docs/_stacks/java-spring.md` § Tools and minimum versions + `SERVICE.md` § Configuración (puerto `8087`)
+```bash
+./mvnw spring-boot:run  # 8087
+```
