@@ -2,31 +2,43 @@
 
 > **Stack ADR-005:** `Go 1.22 + Gin` · **Guía:** `../../fae-docs/_stacks/go.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md`
-> **Database:** `../database/08-ms-notification-db` (schema `notification`) · **Puerto:** `8090`
+> **Database:** `../database/08-ms-notification-db` (schema `notification`) · **Puerto:** `8090` · **Dominio:** `06-data/domains/07-notification.md`
 
-## Decisión (ADR-005)
+## Decisión (ADR-005 §7)
 
-Fuente: `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md` — polyglot modular monolith. Este servicio usa **`Go 1.22 + Gin`**.
+**Best option: Go 1.22 + Gin (17/25)** — lightweight 2 tables, tiny binary.
 
-Ver en el ADR la tabla de scoring (Performance/Ecosystem/Learning curve/Library fit/Ops) y el rationale por workload.
+| # | Option | Perf | Eco | Learn | Lib | Ops | Total | Notes |
+|---|--------|:----:|:---:|:-----:|:---:|:---:|-------|-------|
+| **1** | **Go + Gin** | 5 | 3 | 2 | 3 | 4 | **17** | 5-10 MB binary, ideal low-complexity. |
+| 2 | TS + Fastify | 4 | 4 | 5 | 4 | 5 | 22 | 20 min coding, fastest to implement. |
+| 3 | TS + NestJS | 3 | 5 | 4 | 5 | 4 | 21 | Overkill 2 tables. |
+| 4 | Python + FastAPI | 3 | 4 | 4 | 4 | 4 | 19 | Different runtime trivial. |
+| 5 | Java + Spring Boot | 4 | 5 | 2 | 5 | 3 | 19 | 2 tables don't need Spring. |
 
-## Estructura hexagonal por stack
+**Rationale:** Smallest footprint, simplicity for alert lifecycle raised→resolved, low-risk Go learning (5-10 MB).
 
-Ver guía completa en `../../fae-docs/_stacks/go.md` y patrón en `../../fae-docs/05-architecture/hexagonal-architecture.md`.
+## Estructura hexagonal (go.md)
 
-- **Java Spring Boot** → `_stacks/java-spring.md`: `src/main/java/.../domain` (POJO sin Spring), `application/usecase`, `infrastructure/web,persistence,messaging`, `config`. Regla: `domain` no importa `org.springframework.*`.
-- **TypeScript Fastify** → `_stacks/node-typescript.md`: `src/domain` (entities/VO/events/ports), `application/use-cases`, `infrastructure/http,persistence,messaging`, `main.ts`. Regla: `infrastructure → application → domain`.
-- **Python FastAPI** → `_stacks/python-fastapi.md`: `domain/entities,value_objects,events,ports`, `application/use_cases`, `infrastructure/web, persistence, messaging`, `main.py` + `alembic/`. Regla: `domain` solo stdlib.
-- **Go Gin** → `_stacks/go.md`: `internal/domain`, `internal/application/usecase`, `internal/infrastructure/http,postgres,kafka`, `cmd/server/main.go`, `migrations/`. Regla: `internal/domain` no importa `internal/infrastructure`.
+```
+internal/
+├── domain/ entity.go, event.go, port/in.go+out.go
+├── application/usecase/ create_alert.go
+└── infrastructure/
+    ├── http/handler/ alert_handler.go + dto
+    ├── postgres/ alert_repository.go
+    └── config/wire.go
+cmd/server/main.go
+migrations/
+```
 
-Este servicio sigue esa estructura. Ver `SERVICE.md` § Estructura del Proyecto para el layout concreto.
+## Dependencias (go.mod)
 
-## Dependencias por capa
-
-Ver `../../fae-docs/_stacks/go.md` § Main dependencies y `SERVICE.md` § Stack Tecnológico para el `pom.xml`/`package.json`/`pyproject.toml`/`go.mod` concreto.
+Gin 1.9, validator 10, pgx 5, golang-migrate 4, otel, zap.
 
 ## Ejecución
 
-- **DB:** `cd ../database/08-ms-notification-db && docker compose up` o `cd ../database && docker compose up -d`
-- **Servicio:** ver `../../fae-docs/_stacks/go.md` § Tools and minimum versions + `SERVICE.md` § Configuración (puerto `8090`)
-
+```bash
+go run ./cmd/server/...  # 8090
+go test ./...
+```
