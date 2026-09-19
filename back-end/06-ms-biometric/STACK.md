@@ -2,30 +2,43 @@
 
 > **Stack ADR-005:** `Python 3.12 + FastAPI` · **Guía:** `../../fae-docs/_stacks/python-fastapi.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md`
-> **Database:** `../database/06-ms-biometric-db` (schema `biometric (vacío) + MongoDB`) · **Puerto:** `8086`
+> **Database:** `MongoDB 7 vector search` + `../database/06-ms-biometric-db` (schema vacío) · **Puerto:** `8086` · **Dominio:** `06-data/domains/06-biometric.md`
 
-## Decisión (ADR-005)
+## Decisión (ADR-005 §6)
 
-Fuente: `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md` — polyglot modular monolith. Este servicio usa **`Python 3.12 + FastAPI`**.
+**Best option: Python + FastAPI (22/25) — non-negotiable for CV workload.**
 
-Ver en el ADR la tabla de scoring (Performance/Ecosystem/Learning curve/Library fit/Ops) y el rationale por workload.
+| # | Option | Perf | Eco | Learn | Lib | Ops | Total | Notes |
+|---|--------|:----:|:---:|:-----:|:---:|:---:|-------|-------|
+| **1** | **Python + FastAPI** | 4 | 5 | 4 | 5 | 4 | **22** | OpenCV canonical, face_recognition Python-first, pymongo vector, NumPy. |
+| 2 | Python + Flask | 3 | 5 | 4 | 5 | 4 | 21 | Same eco, Flask less structured than FastAPI async. |
+| 3 | TS + Fastify | 3 | 2 | 5 | 2 | 4 | 16 | opencv4nodejs fragile, face-api unmaintained. |
+| 4 | TS + NestJS | 3 | 2 | 4 | 2 | 4 | 15 | Same + framework overhead. |
+| 5 | Rust + Actix + opencv-rust | 5 | 2 | 1 | 2 | 3 | 13 | Fastest, 12mo ramp-up, bindings poorly documented. |
 
-## Estructura hexagonal por stack
+**Rationale:** OpenCV Python binding 10x more maintained; only real choice FastAPI vs Flask — FastAPI wins async for concurrent face-matching + auto OpenAPI for attendance integration.
 
-Ver guía completa en `../../fae-docs/_stacks/python-fastapi.md` y patrón en `../../fae-docs/05-architecture/hexagonal-architecture.md`.
+## Estructura hexagonal (python-fastapi.md)
 
-- **Java Spring Boot** → `_stacks/java-spring.md`: `src/main/java/.../domain` (POJO sin Spring), `application/usecase`, `infrastructure/web,persistence,messaging`, `config`. Regla: `domain` no importa `org.springframework.*`.
-- **TypeScript Fastify** → `_stacks/node-typescript.md`: `src/domain` (entities/VO/events/ports), `application/use-cases`, `infrastructure/http,persistence,messaging`, `main.ts`. Regla: `infrastructure → application → domain`.
-- **Python FastAPI** → `_stacks/python-fastapi.md`: `domain/entities,value_objects,events,ports`, `application/use_cases`, `infrastructure/web, persistence, messaging`, `main.py` + `alembic/`. Regla: `domain` solo stdlib.
-- **Go Gin** → `_stacks/go.md`: `internal/domain`, `internal/application/usecase`, `internal/infrastructure/http,postgres,kafka`, `cmd/server/main.go`, `migrations/`. Regla: `internal/domain` no importa `internal/infrastructure`.
+```
+domain/
+├── entities/ facial_embedding, fingerprint_embedding
+├── value_objects/ model_version
+├── events/ facial_enrolled
+└── ports/in_/out/ enroll_use_case, embedding_repository
+application/use_cases/ enroll_facial
+infrastructure/
+├── web/ routers/facial_router, schemas
+├── persistence/ motor repositories
+└── config/ settings, dependencies
+```
 
-Este servicio sigue esa estructura. Ver `SERVICE.md` § Estructura del Proyecto para el layout concreto.
+## Dependencias (pyproject.toml)
 
-## Dependencias por capa
-
-Ver `../../fae-docs/_stacks/python-fastapi.md` § Main dependencies y `SERVICE.md` § Stack Tecnológico para el `pom.xml`/`package.json`/`pyproject.toml`/`go.mod` concreto.
+FastAPI 0.110, Uvicorn, Pydantic 2, Motor (MongoDB), OpenCV, face_recognition, pymongo vector, structlog, pytest.
 
 ## Ejecución
 
-- **DB:** `cd ../database/06-ms-biometric-db && docker compose up` o `cd ../database && docker compose up -d`
-- **Servicio:** ver `../../fae-docs/_stacks/python-fastapi.md` § Tools and minimum versions + `SERVICE.md` § Configuración (puerto `8086`)
+```bash
+poetry install && uvicorn main:app --reload --port 8086
+```
