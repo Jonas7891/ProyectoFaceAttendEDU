@@ -24,8 +24,13 @@ public class JustificationController {
     private final JustificationWebMapper mapper;
 
     @GetMapping
-    public ResponseEntity<List<JustificationResponse>> list(){
-        List<JustificationResponse> list = listUseCase.list().stream().map(mapper::toResponse).collect(Collectors.toList());
+    public ResponseEntity<List<JustificationResponse>> list(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long attendanceRecordId){
+        List<JustificationResponse> list = listUseCase.list().stream()
+                .filter(j -> status == null || status.equals(j.getReviewStatus()))
+                .filter(j -> attendanceRecordId == null || attendanceRecordId.equals(j.getAttendanceRecordId()))
+                .map(mapper::toResponse).collect(Collectors.toList());
         return ResponseEntity.ok(list);
     }
 

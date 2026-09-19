@@ -25,8 +25,15 @@ public class AttendanceRecordController {
     private final AttendanceRecordWebMapper mapper;
 
     @GetMapping
-    public ResponseEntity<List<AttendanceRecordResponse>> list(){
-        List<AttendanceRecordResponse> list = listUseCase.list().stream().map(mapper::toResponse).collect(Collectors.toList());
+    public ResponseEntity<List<AttendanceRecordResponse>> list(
+            @RequestParam(required = false) Long classSessionId,
+            @RequestParam(required = false) Long academicActorId,
+            @RequestParam(required = false) String attendanceStatus){
+        List<AttendanceRecordResponse> list = listUseCase.list().stream()
+                .filter(r -> classSessionId == null || classSessionId.equals(r.getClassSessionId()))
+                .filter(r -> academicActorId == null || academicActorId.equals(r.getAcademicActorId()))
+                .filter(r -> attendanceStatus == null || attendanceStatus.equals(r.getAttendanceStatus()))
+                .map(mapper::toResponse).collect(Collectors.toList());
         return ResponseEntity.ok(list);
     }
 
