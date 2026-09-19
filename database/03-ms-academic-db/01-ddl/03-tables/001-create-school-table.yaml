@@ -27,10 +27,10 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: city_id
-                  type: INT
+                  type: VARCHAR(100)
                   constraints:
-                    nullable: false
-                  remarks: "Cross-context reference to Identity.city (NO FK)"
+                    nullable: true
+                  remarks: "External catalog via countriesnow API, no FK"
               - column:
                   name: address
                   type: VARCHAR(255)

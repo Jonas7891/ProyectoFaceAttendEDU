@@ -1,212 +1,174 @@
-# Registros Predefinidos — FaceAttend-Edu
+# Predefined Records — FaceAttend-Edu
 
-## 1. Visión general
+## 1. Overview
 
-Estos registros se crean automáticamente al ejecutar las migraciones Liquibase (`docker compose up`). Son datos **semilla** (seeds) para tablas catálogo que el negocio necesita para funcionar desde el primer momento.
+These records are created automatically when running Liquibase migrations (`docker compose up`). They are **seed** data for catalog tables required at startup.
 
-Todos los seeds se ejecutan con `context: seed`, lo que permite excluirlos si se desea ejecutar solo la estructura.
+All seeds run with `context: seed`, allowing structure-only execution.
 
----
-
-## 2. Identity — `identity.city`
-
-Ciudades principales de Colombia. Referenciadas por `academic.school.city_id`.
-
-| ID | Nombre | Departamento |
-|----|--------|--------------|
-| 1 | Bogotá | Cundinamarca |
-| 2 | Medellín | Antioquia |
-| 3 | Cali | Valle del Cauca |
-| 4 | Barranquilla | Atlántico |
-| 5 | Cartagena | Bolívar |
-
-**Archivo:** `01-ms-identity-db/02-dml/001-seed-city-table.yaml`
-
-**Uso:** Al registrar una nueva sede (`school`), se asigna una `city_id` de este catálogo.
+Note: `identity.city` has no seeds — cities come from external API `countriesnow.space` (`front-end/Mobile/src/api/apiCountry.js:1`).
 
 ---
 
-## 3. Authorization — `authorization.role`
+## 2. Authorization — `authorization.role`
 
-Roles del sistema RBAC. Cada usuario recibe uno o más roles vía `user_role`.
+RBAC roles. Assigned via `user_role`.
 
-| ID | Rol | Descripción |
-|----|-----|-------------|
-| 1 | `SUPER_ADMIN` | Super administrador del sistema |
-| 2 | `SCHOOL_ADMIN` | Administrador de sede |
-| 3 | `INSTRUCTOR` | Docente/Instructor |
-| 4 | `STUDENT` | Estudiante/Aprendiz |
+| ID | Role | Description |
+|----|------|-------------|
+| 1 | `SUPER_ADMIN` | Super administrator |
+| 2 | `SCHOOL_ADMIN` | School administrator |
+| 3 | `INSTRUCTOR` | Instructor |
+| 4 | `STUDENT` | Student |
 
-**Archivo:** `02-ms-authorization-db/02-dml/001-seed-role-table.yaml`
-
-**Uso:** Al crear un usuario, se le asigna al menos un rol. El rol determina los permisos que tiene.
+**File:** `02-ms-authorization-db/02-dml/001-seed-role-table.yaml`
 
 ---
 
-## 4. Authorization — `authorization.permission`
+## 3. Authorization — `authorization.permission`
 
-Permisos atómicos del sistema. Se asignan a roles vía `role_permission`.
+Atomic permissions with bounded-context prefix (`context.resource:action`). Assigned to roles via `role_permission`.
 
-| ID | Permiso | Descripción |
-|----|---------|-------------|
-| 1 | `person.create` | Crear personas |
-| 2 | `person.read` | Consultar personas |
-| 3 | `person.update` | Actualizar personas |
-| 4 | `person.delete` | Eliminar personas |
-| 5 | `school.create` | Crear sedes |
-| 6 | `school.read` | Consultar sedes |
-| 7 | `school.update` | Actualizar sedes |
-| 8 | `enrollment.create` | Crear matrículas |
-| 9 | `enrollment.read` | Consultar matrículas |
-| 10 | `attendance.read` | Consultar asistencias |
-| 11 | `attendance.update` | Actualizar asistencias |
-| 12 | `justification.approve` | Aprobar justificaciones |
-| 13 | `biometric.update` | Solicitar actualización biométrica |
-| 14 | `configuration.manage` | Gestionar configuración |
+| ID | Permission | Description |
+|----|------------|-------------|
+| 1 | `identity.person:read` | View persons |
+| 2 | `identity.person:write` | Create/update persons |
+| 3 | `academic.school:manage` | Manage schools |
+| 4 | `academic.enrollment:manage` | Manage enrollments |
+| 5 | `scheduling.session:manage` | Manage sessions and schedule |
+| 6 | `attendance.record:read` | View attendance |
+| 7 | `attendance.record:write` | Create/update attendance |
+| 8 | `attendance.justification:approve` | Approve justifications |
+| 9 | `biometric.case:request` | Request biometric update |
+| 10 | `biometric.case:review` | Review biometric updates |
+| 11 | `configuration:manage` | Manage configuration |
+| 12 | `notification.alert:read` | View alerts |
 
-**Archivo:** `02-ms-authorization-db/02-dml/002-seed-permission-table.yaml`
+**File:** `02-ms-authorization-db/02-dml/002-seed-permission-table.yaml`
 
-**Uso:** Los permisos se agrupan en roles. Ejemplo: el rol `INSTRUCTOR` podría tener `attendance.read`, `attendance.update` y `justification.approve`.
+### Suggested role × permission matrix
 
-### Matriz sugerida de roles × permisos
-
-| Permiso | SUPER_ADMIN | SCHOOL_ADMIN | INSTRUCTOR | STUDENT |
+| Permission | SUPER_ADMIN | SCHOOL_ADMIN | INSTRUCTOR | STUDENT |
 |---------|:-----------:|:------------:|:----------:|:-------:|
-| `person.create` | ✅ | ✅ | ❌ | ❌ |
-| `person.read` | ✅ | ✅ | ✅ | ✅ |
-| `person.update` | ✅ | ✅ | ❌ | ❌ |
-| `person.delete` | ✅ | ❌ | ❌ | ❌ |
-| `school.create` | ✅ | ❌ | ❌ | ❌ |
-| `school.read` | ✅ | ✅ | ✅ | ✅ |
-| `school.update` | ✅ | ✅ | ❌ | ❌ |
-| `enrollment.create` | ✅ | ✅ | ❌ | ❌ |
-| `enrollment.read` | ✅ | ✅ | ✅ | ✅ |
-| `attendance.read` | ✅ | ✅ | ✅ | ✅ |
-| `attendance.update` | ✅ | ✅ | ✅ | ❌ |
-| `justification.approve` | ✅ | ✅ | ✅ | ❌ |
-| `biometric.update` | ✅ | ✅ | ✅ | ✅ |
-| `configuration.manage` | ✅ | ❌ | ❌ | ❌ |
+| `identity.person:read` | ✅ | ✅ | ✅ | ✅ |
+| `identity.person:write` | ✅ | ✅ | ❌ | ❌ |
+| `academic.school:manage` | ✅ | ✅ | ❌ | ❌ |
+| `academic.enrollment:manage` | ✅ | ✅ | ❌ | ❌ |
+| `scheduling.session:manage` | ✅ | ✅ | ✅ | ❌ |
+| `attendance.record:read` | ✅ | ✅ | ✅ | ✅ |
+| `attendance.record:write` | ✅ | ✅ | ✅ | ❌ |
+| `attendance.justification:approve` | ✅ | ✅ | ✅ | ❌ |
+| `biometric.case:request` | ✅ | ✅ | ✅ | ✅ |
+| `biometric.case:review` | ✅ | ✅ | ✅ | ❌ |
+| `configuration:manage` | ✅ | ❌ | ❌ | ❌ |
+| `notification.alert:read` | ✅ | ✅ | ✅ | ✅ |
 
-> **Nota:** Esta matriz es una sugerencia. La asignación real se hace vía `role_permission` y puede personalizarse.
+> Assignment via `role_permission` is customizable.
 
 ---
 
-## 5. Academic — `academic.academic_actor_type`
+## 4. Academic — `academic.academic_actor_type`
 
-Tipos de actor académico. Determina si una persona es estudiante o instructor dentro de una sede.
+| ID | Code | Name |
+|----|------|------|
+| 1 | `STUDENT` | Student |
+| 2 | `INSTRUCTOR` | Instructor |
 
-| ID | Código | Nombre |
-|----|--------|--------|
-| 1 | `STUDENT` | Estudiante/Aprendiz |
-| 2 | `INSTRUCTOR` | Docente/Instructor |
-
-**Archivo:** `03-ms-academic-db/02-dml/001-seed-academic-actor-type-table.yaml`
-
-**Uso:** Al registrar un `academic_actor`, se especifica el `actor_type_id` para indicar si es estudiante o instructor. La misma `person` puede ser instructor en una sede y estudiante en otra.
+**File:** `03-ms-academic-db/02-dml/001-seed-academic-actor-type-table.yaml`
 
 ---
 
-## 6. Attendance — `attendance.justification_type`
+## 5. Attendance — `attendance.justification_type` (per-school)
 
-Tipos de justificación para inasistencias o tardanzas.
+Types support `school_id` (`NULL` = global, `NOT NULL` = per-school custom). Global seeds are minimal; schools can add custom types via `POST justification_type`.
 
-| ID | Nombre | Descripción | Requiere adjunto |
-|----|--------|-------------|:----------------:|
-| 1 | Incapacidad médica | Justificación por incapacidad médica certificada | ✅ Sí |
-| 2 | Calamidad doméstica | Justificación por calamidad doméstica | ✅ Sí |
-| 3 | Cita médica | Justificación por cita médica programada | ✅ Sí |
-| 4 | Compromiso académico | Justificación por actividad académica externa | ❌ No |
-| 5 | Permiso personal | Justificación por permiso personal del aprendiz | ❌ No |
+| ID | School | Name | Requires attachment |
+|----|--------|------|---------------------|
+| 1 | global | Medical leave | ✅ |
+| 2 | global | Domestic calamity | ✅ |
+| 3 | global | Academic commitment | ❌ |
 
-**Archivo:** `05-ms-attendance-db/02-dml/001-seed-justification-type-table.yaml`
+**File:** `05-ms-attendance-db/02-dml/001-seed-justification-type-table.yaml`
 
-**Uso:** Al crear una `justification`, se selecciona el tipo. Si `requires_attachment = true`, el sistema debe exigir un `supporting_document` adjunto.
+**Usage:** `justification_type_id` selected on `justification` creation. Unique per `(school_id, name)` (`uq_justification_type_school_name`).
 
 ---
 
-## 7. Configuration — `configuration.security_configuration`
+## 6. Configuration — `configuration.security_configuration`
 
-Parámetros globales de seguridad del sistema.
+Global security params. Password policy lives in `identity.password_policy`.
 
-| ID | Parámetro | Valor | Descripción |
+| ID | Parameter | Value | Description |
 |----|-----------|-------|-------------|
-| 1 | `session_timeout_minutes` | `480` | Tiempo máximo de sesión en minutos (8 horas) |
-| 2 | `max_login_attempts` | `5` | Número máximo de intentos de login antes de bloqueo |
-| 3 | `lockout_duration_minutes` | `30` | Duración del bloqueo tras intentos fallidos |
-| 4 | `password_min_length` | `8` | Longitud mínima de contraseña |
-| 5 | `require_password_change` | `true` | Requerir cambio de contraseña en primer login |
+| 1 | `session_timeout_minutes` | `480` | Session max duration |
+| 2 | `max_login_attempts` | `5` | Max attempts before lockout |
+| 3 | `lockout_duration_minutes` | `30` | Lockout duration |
 
-**Archivo:** `07-ms-configuration-db/02-dml/001-seed-security-configuration-table.yaml`
-
-**Uso:** La aplicación lee estos valores al iniciar para configurar la política de seguridad. Son editables por un `SUPER_ADMIN` vía la tabla `security_configuration`.
+**File:** `07-ms-configuration-db/02-dml/001-seed-security-configuration-table.yaml`
 
 ---
 
-## 8. Notification — `notification.alert_type`
+## 7. Notification — `notification.alert_type`
 
-Tipos de alerta que el sistema puede generar automáticamente.
+Alert types with `severity` and `channel` for `AlertsConfigContext` mapping.
 
-| ID | Código | Nombre |
-|----|--------|--------|
-| 1 | `ABSENTEEISM` | Ausentismo recurrente |
-| 2 | `REPEATED_TARDINESS` | Tardanzas repetidas |
-| 3 | `LOW_ATTENDANCE` | Bajo porcentaje de asistencia |
-| 4 | `JUSTIFICATION_PENDING` | Justificación pendiente de revisión |
-| 5 | `BIOMETRIC_UPDATE` | Solicitud de actualización biométrica |
+| ID | Code | Name | Severity | Channel |
+|----|------|------|----------|---------|
+| 1 | `ATTENDANCE_ABSENTEEISM` | Recurrent absenteeism | WARNING | DASHBOARD |
+| 2 | `ATTENDANCE_TARDINESS` | Repeated tardiness | WARNING | DASHBOARD |
+| 3 | `ATTENDANCE_LOW` | Low attendance rate | CRITICAL | EMAIL |
+| 4 | `JUSTIFICATION_PENDING` | Pending justification review | INFO | DASHBOARD |
+| 5 | `BIOMETRIC_UPDATE` | Biometric update request | INFO | PUSH |
 
-**Archivo:** `08-ms-notification-db/02-dml/001-seed-alert-type-table.yaml`
-
-**Uso:** Cuando el sistema detecta una condición (ej: un estudiante faltó 3 veces seguidas), genera un `alert` con el `alert_type_id` correspondiente.
+**File:** `08-ms-notification-db/02-dml/001-seed-alert-type-table.yaml`
 
 ---
 
-## 9. Resumen por dominio
+## 8. Summary by domain
 
-| Dominio | Tabla catálogo | Registros | Archivo seed |
+| Domain | Catalog table | Records | Seed file |
 |---------|---------------|:---------:|--------------|
-| Identity | `city` | 5 | `01-ms-identity-db/02-dml/001-seed-city-table.yaml` |
 | Authorization | `role` | 4 | `02-ms-authorization-db/02-dml/001-seed-role-table.yaml` |
-| Authorization | `permission` | 14 | `02-ms-authorization-db/02-dml/002-seed-permission-table.yaml` |
+| Authorization | `permission` | 12 | `02-ms-authorization-db/02-dml/002-seed-permission-table.yaml` |
 | Academic | `academic_actor_type` | 2 | `03-ms-academic-db/02-dml/001-seed-academic-actor-type-table.yaml` |
-| Attendance | `justification_type` | 5 | `05-ms-attendance-db/02-dml/001-seed-justification-type-table.yaml` |
-| Configuration | `security_configuration` | 5 | `07-ms-configuration-db/02-dml/001-seed-security-configuration-table.yaml` |
+| Attendance | `justification_type` | 3 | `05-ms-attendance-db/02-dml/001-seed-justification-type-table.yaml` |
+| Configuration | `security_configuration` | 3 | `07-ms-configuration-db/02-dml/001-seed-security-configuration-table.yaml` |
 | Notification | `alert_type` | 5 | `08-ms-notification-db/02-dml/001-seed-alert-type-table.yaml` |
 
-**Total: 40 registros semilla en 7 tablas catálogo.**
+**Total: 29 seed records in 6 catalog tables.** `identity.city` removed (external API).
 
 ---
 
-## 10. Cómo agregar nuevos registros
+## 9. How to add new records
 
-Los seeds se ejecutan una sola vez al crear la BD. Para agregar nuevos registros después de la inicialización, usar SQL directo o crear un nuevo archivo DML con un changeset incremental:
+Seeds run once on DB creation. For post-init inserts use incremental DML:
 
 ```yaml
 databaseChangeLog:
   - changeSet:
-      id: 002-add-new-cities
-      author: TuNombre
+      id: 002-add-custom-justification-type
+      author: YourName
       changes:
         - insert:
-            tableName: city
-            schemaName: identity
+            tableName: justification_type
+            schemaName: attendance
             columns:
-              - column: { name: city_id, value: 6 }
-              - column: { name: name, value: 'Bucaramanga' }
-              - column: { name: department, value: 'Santander' }
+              - column: { name: justification_type_id, value: 4 }
+              - column: { name: school_id, value: 1 }
+              - column: { name: name, value: 'Sports leave' }
+              - column: { name: description, value: 'Sports competition' }
+              - column: { name: requires_attachment, value: false }
               - column: { name: created_at, valueDate: { dateFunction: now } }
-              - column: { name: updated_at, valueDate: { dateFunction: now } }
               - column: { name: row_version, value: 1 }
 ```
 
-> **Importante:** Nunca modificar los changesets de seeds existentes una vez ejecutados en producción. Siempre agregar nuevos changesets incrementales.
+> Never modify existing seed changesets in production. Always add incremental changesets.
 
 ---
 
-## 11. Tablas con ENUMs (no seeds)
+## 10. Tables with ENUMs (no seeds)
 
-Las siguientes tablas usan **tipos ENUM de PostgreSQL** en lugar de tablas catálogo. Sus valores están definidos en `02-types/` y se crean automáticamente:
-
-| Dominio | Tipo ENUM | Valores |
+| Domain | ENUM type | Values |
 |---------|-----------|---------|
 | Identity | `user_session_status` | Active, Closed |
 | Identity | `authentication_type` | Local, Windows, External |
@@ -217,5 +179,3 @@ Las siguientes tablas usan **tipos ENUM de PostgreSQL** en lugar de tablas catá
 | Attendance | `review_status` | Pending, Approved, Rejected |
 | Configuration | `biometric_type` | FACIAL, FINGERPRINT |
 | Configuration | `update_status` | Pending, In_Review, Approved, Rejected |
-
-Estos valores **no se insertan** como registros; son parte del tipo de datos PostgreSQL y se validan a nivel de esquema.

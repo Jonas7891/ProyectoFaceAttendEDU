@@ -26,6 +26,19 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
+                  name: severity
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+                  remarks: "INFO / WARNING / CRITICAL"
+              - column:
+                  name: channel
+                  type: VARCHAR(20)
+                  defaultValue: "DASHBOARD"
+                  constraints:
+                    nullable: false
+                  remarks: "DASHBOARD / EMAIL / PUSH"
+              - column:
                   name: created_at
                   type: TIMESTAMP
                   constraints:

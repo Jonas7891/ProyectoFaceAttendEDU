@@ -1,4 +1,1 @@
-databaseChangeLog:
-  - include:
-      file: 001-seed-city-table.yaml
-      relativeToChangelogFile: true
+databaseChangeLog: []
