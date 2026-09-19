@@ -24,7 +24,10 @@ services:
     url: http://host.docker.internal:8083
     routes:
       - name: authorization-route
-        paths: [/api/v1/roles, /api/v1/permissions, /api/v1/user-roles]
+        paths: [/api/v1/roles, /api/v1/permissions]
+        strip_path: false
+      - name: authorization-nested-route
+        paths: ["~/api/v1/users/.+/roles", /api/v1/auth/evaluate]
         strip_path: false
     plugins:
       - name: jwt
@@ -36,7 +39,7 @@ services:
     url: http://host.docker.internal:8084
     routes:
       - name: academic-route
-        paths: [/api/v1/schools, /api/v1/programs, /api/v1/academic-periods, /api/v1/cohorts, /api/v1/courses, /api/v1/academic-actors, /api/v1/enrollments]
+        paths: [/api/v1/schools, /api/v1/programs, /api/v1/academic-periods, /api/v1/periods, /api/v1/cohorts, /api/v1/courses, /api/v1/actor-types, /api/v1/academic-actors, /api/v1/enrollments]
         strip_path: false
     plugins:
       - name: jwt
@@ -52,7 +55,7 @@ services:
     url: http://host.docker.internal:8085
     routes:
       - name: attendance-route
-        paths: [/api/v1/attendance-records, /api/v1/justifications, /api/v1/supporting-documents]
+        paths: [/api/v1/attendance-records, /api/v1/justifications, /api/v1/justification-types, /api/v1/supporting-documents]
         strip_path: false
     plugins:
       - name: jwt
@@ -72,7 +75,10 @@ services:
     url: http://host.docker.internal:8089
     routes:
       - name: configuration-route
-        paths: [/api/v1/academic-configurations, /api/v1/security-configurations, /api/v1/biometric-update-cases]
+        paths: [/api/v1/academic-configurations, /api/v1/security-configurations, /api/v1/biometric-update-cases, /api/v1/configurations]
+        strip_path: false
+      - name: configuration-nested-route
+        paths: ["~/api/v1/schools/.+/configurations", "~/api/v1/persons/.+/biometric-cases"]
         strip_path: false
     plugins:
       - name: jwt
