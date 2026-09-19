@@ -5,10 +5,12 @@ import com.faceattend_edu.identity_service.application.port.out.LoadUserSessionP
 import com.faceattend_edu.identity_service.application.port.out.UpdateUserSessionPort;
 import com.faceattend_edu.identity_service.domain.model.UserSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 @RequiredArgsConstructor
+@Service
 public class CloseUserSessionUseCaseImpl implements CloseUserSessionUseCase {
 
     private final LoadUserSessionPort loadUserSessionPort;

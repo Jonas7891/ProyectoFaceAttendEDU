@@ -6,10 +6,12 @@ import com.faceattend_edu.identity_service.application.port.out.UpdateUserPort;
 import com.faceattend_edu.identity_service.domain.model.User;
 import com.faceattend_edu.identity_service.domain.service.UserActivationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 @RequiredArgsConstructor
+@Service
 public class ActivateUserUseCaseImpl implements ActivateUserUseCase {
 
     private final LoadUserPort loadUserPort;

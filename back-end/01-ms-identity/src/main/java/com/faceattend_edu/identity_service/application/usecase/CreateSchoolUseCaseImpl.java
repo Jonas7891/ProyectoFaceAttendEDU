@@ -4,10 +4,12 @@ import com.faceattend_edu.identity_service.application.port.in.CreateSchoolUseCa
 import com.faceattend_edu.identity_service.application.port.out.SaveSchoolPort;
 import com.faceattend_edu.identity_service.domain.model.School;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
+@Service
 public class CreateSchoolUseCaseImpl implements CreateSchoolUseCase {
 
     private final SaveSchoolPort saveSchoolPort;

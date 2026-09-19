@@ -5,11 +5,13 @@ import com.faceattend_edu.identity_service.application.port.out.LoadPersonPort;
 import com.faceattend_edu.identity_service.application.port.out.UpdatePersonPort;
 import com.faceattend_edu.identity_service.domain.model.Person;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @RequiredArgsConstructor
+@Service
 public class ChangePersonStatusUseCaseImpl implements ChangePersonStatusUseCase {
 
     private final LoadPersonPort loadPersonPort;

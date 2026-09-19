@@ -7,8 +7,10 @@ import com.faceattend_edu.identity_service.domain.exception.UnauthorizedExceptio
 import com.faceattend_edu.identity_service.domain.model.User;
 import com.faceattend_edu.identity_service.domain.model.UserSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
+@Service
 public class AuthenticateUserUseCaseImpl implements AuthenticateUserUseCase {
 
     private final LoadUserByUsernamePort loadUserByUsernamePort;

@@ -4,10 +4,12 @@ import com.faceattend_edu.identity_service.application.port.in.CreatePersonUseCa
 import com.faceattend_edu.identity_service.application.port.out.SavePersonPort;
 import com.faceattend_edu.identity_service.domain.model.Person;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
+@Service
 public class CreatePersonUseCaseImpl implements CreatePersonUseCase {
 
     private final SavePersonPort savePersonPort;

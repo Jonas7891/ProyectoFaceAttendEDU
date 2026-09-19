@@ -8,10 +8,12 @@ import com.faceattend_edu.identity_service.domain.model.Person;
 import com.faceattend_edu.identity_service.domain.model.School;
 import com.faceattend_edu.identity_service.domain.service.PersonTransferService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 @RequiredArgsConstructor
+@Service
 public class TransferPersonUseCaseImpl implements TransferPersonUseCase {
 
     private final LoadPersonPort loadPersonPort;

@@ -6,10 +6,12 @@ import com.faceattend_edu.identity_service.application.port.out.SaveUserSessionP
 import com.faceattend_edu.identity_service.domain.model.User;
 import com.faceattend_edu.identity_service.domain.model.UserSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 @RequiredArgsConstructor
+@Service
 public class CreateUserSessionUseCaseImpl implements CreateUserSessionUseCase {
 
     private final LoadUserPort loadUserPort;

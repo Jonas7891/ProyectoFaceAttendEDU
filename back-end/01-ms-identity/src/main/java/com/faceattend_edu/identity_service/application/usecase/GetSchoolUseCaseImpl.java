@@ -4,10 +4,12 @@ import com.faceattend_edu.identity_service.application.port.in.GetSchoolUseCase;
 import com.faceattend_edu.identity_service.application.port.out.LoadSchoolPort;
 import com.faceattend_edu.identity_service.domain.model.School;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 @RequiredArgsConstructor
+@Service
 public class GetSchoolUseCaseImpl implements GetSchoolUseCase {
 
     private final LoadSchoolPort loadSchoolPort;
