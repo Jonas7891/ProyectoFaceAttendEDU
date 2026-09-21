@@ -1,4 +1,4 @@
-﻿export interface AcademicConfiguration {
+export interface AcademicConfiguration {
   configurationId: number;
   schoolId: number;
   configurationName: string;

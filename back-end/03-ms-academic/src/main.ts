@@ -1,4 +1,4 @@
-﻿import Fastify from 'fastify';
+import Fastify from 'fastify';
 import { registerAcademicRoutes } from './infrastructure/http/routes';
 import { registerEventHook } from './infrastructure/messaging/event.publisher';
 

@@ -1,4 +1,4 @@
-﻿# API Gateway — 99-api-gateway (Kong OSS)
+# API Gateway — 99-api-gateway (Kong OSS)
 
 ## 1. Responsabilidad
 Entrada unica web/movil/API. Routing, JWT RS256 (identity 8081), rate-limiting, CORS, TLS. Enruta a 8 servicios internos (8081-8090) del modular monolith (ADR-002). Extraction Strangler Fig sin reemplazo.

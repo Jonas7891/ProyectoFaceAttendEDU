@@ -1,4 +1,4 @@
-﻿# Notification Service â€” `08-ms-notification`
+# Notification Service â€” `08-ms-notification`
 
 ## 1. Responsabilidad
 

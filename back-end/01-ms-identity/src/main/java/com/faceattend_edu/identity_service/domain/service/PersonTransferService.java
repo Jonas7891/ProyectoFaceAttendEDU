@@ -3,7 +3,9 @@ package com.faceattend_edu.identity_service.domain.service;
 import com.faceattend_edu.identity_service.domain.model.Person;
 import com.faceattend_edu.identity_service.domain.model.School;
 import com.faceattend_edu.identity_service.domain.exception.DomainException;
+import org.springframework.stereotype.Service;
 
+@Service
 public class PersonTransferService {
 
     public void transferPerson(Person person, School newSchool) {

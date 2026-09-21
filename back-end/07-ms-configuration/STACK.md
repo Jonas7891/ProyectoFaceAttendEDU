@@ -1,4 +1,4 @@
-﻿# STACK — 07-ms-configuration
+# STACK — 07-ms-configuration
 
 > **Stack ADR-005:** `TypeScript + Fastify` · **Guía:** `../../fae-docs/_stacks/node-typescript.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md`

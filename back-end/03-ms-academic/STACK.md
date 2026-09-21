@@ -1,4 +1,4 @@
-﻿# STACK — 03-ms-academic
+# STACK — 03-ms-academic
 
 > **Stack ADR-005:** `TypeScript + Fastify + Drizzle ORM` · **Guía:** `../../fae-docs/_stacks/node-typescript.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md`

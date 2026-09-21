@@ -1,4 +1,4 @@
-﻿from fastapi import FastAPI
+from fastapi import FastAPI
 from infrastructure.web.routers.facial_router import router as facial_router
 from infrastructure.web.routers.fingerprint_router import router as fingerprint_router
 from infrastructure.web.routers.update_router import router as update_router

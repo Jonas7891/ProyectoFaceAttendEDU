@@ -1,4 +1,4 @@
-﻿package main
+package main
 
 import (
 	"context"
@@ -15,10 +15,6 @@ func main() {
 	r := gin.Default()
 	r.GET("/health", func(c *gin.Context) { c.JSON(200, gin.H{"status": "ok", "service": "notification-service"}) })
 	r.GET("/api/v1/health", func(c *gin.Context) { c.JSON(200, gin.H{"status": "ok", "service": "notification-service"}) })
-
-	// legacy simple endpoints for backward compatibility
-	r.GET("/api/v1/alerts", func(c *gin.Context) { c.JSON(200, gin.H{"alerts": []interface{}{}}) })
-	r.GET("/alerts", func(c *gin.Context) { c.JSON(200, gin.H{"alerts": []interface{}{}}) })
 
 	// Try to connect to Postgres if DATABASE_URL is set
 	databaseURL := os.Getenv("DATABASE_URL")
