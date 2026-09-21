@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { registerAcademicRoutes } from './infrastructure/http/routes';
 import { registerEventHook } from './infrastructure/messaging/event.publisher';
 import { registerQualityMiddleware, registerQualityHealthEndpoint } from './infrastructure/http/qualityMiddleware';
+import { registerIEEE829TestLogMiddleware, registerIEEE829TestLogEndpoints } from './infrastructure/http/ieee829TestLogMiddleware';
 
 const app = Fastify({ logger: true });
 const startedAt = Date.now();
@@ -41,6 +42,10 @@ async function start() {
   // ISO/IEC 9001 — Quality audit middleware (Cláusula 8.5.2 / 9.1)
   registerQualityMiddleware(app);
   registerQualityHealthEndpoint(app);
+
+  // IEEE 829 — Test log middleware (Cláusula 6 - Test Log)
+  registerIEEE829TestLogMiddleware(app);
+  registerIEEE829TestLogEndpoints(app);
 
   await registerAcademicRoutes(app);
   registerEventHook(app);

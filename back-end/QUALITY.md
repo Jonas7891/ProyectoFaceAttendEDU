@@ -146,6 +146,40 @@ Request → [Quality Middleware] → [Auth] → [Controller] → [UseCase] → [
 
 ---
 
-## 7. Nota de Implementación
+## 7. IEEE 829 — Documentación de Pruebas
+
+### 7.1 Integración del Estándar IEEE 829
+
+Se ha integrado el estándar **IEEE 829-1998** para documentación de pruebas de software, complementando la infraestructura de calidad ISO 9001.
+
+| Documento IEEE 829 | Archivo | Estado |
+|---|---|---|
+| Test Plan | `IEEE829_TEST_PLAN.md` | ✅ Implementado |
+| Test Case Specification | `IEEE829_TEST_CASE_SPECIFICATION.md` | ✅ Implementado |
+| Test Summary Report | `IEEE829_TEST_SUMMARY_REPORT.md` | ✅ Implementado |
+| Test Incident Report | `IEEE829_TEST_INCIDENT_REPORT.md` | ✅ Implementado |
+| Test Log Middleware | `ieee829TestLogMiddleware.ts` | 🆕 Integrado |
+
+### 7.2 Archivos de Prueba por Servicio
+
+| Servicio | Archivo de Prueba | Tipo | Test Cases |
+|---|---|---|---|
+| 02-ms-authorization | `RoleControllerTest.java` | JUnit 5 | TC-02-001 a TC-02-006 |
+| 03-ms-academic | `academic.test.ts` | Vitest | TC-03-001 a TC-03-010 |
+| 05-ms-attendance | `AttendanceRecordControllerTest.java` | JUnit 5 | TC-05-001 a TC-05-006 |
+| 06-ms-biometric | `test_facial_embedding.py` | pytest | TC-06-001 a TC-06-008 |
+| 08-ms-notification | `alert_handler_test.go` | Go testing | TC-08-001 a TC-08-010 |
+
+### 7.3 Endpoints de Prueba (IEEE 829 Test Log)
+
+| Endpoint | Descripción |
+|---|---|
+| `GET /api/v1/quality/test-log` | Obtener registros de prueba |
+| `GET /api/v1/quality/test-log/:testId` | Obtener registro específico |
+| `GET /api/v1/quality/test-summary` | Reporte resumido de pruebas |
+
+---
+
+## 8. Nota de Implementación
 
 Este plan se implementa de forma **no invasiva**: los middlewares/interceptores se agregan sin modificar la lógica de negocio existente. Cada servicio mantiene su independencia y se beneficia de las mejoras de calidad de forma transparente.
