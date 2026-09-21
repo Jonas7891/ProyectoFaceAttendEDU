@@ -40,6 +40,8 @@ const evaluationBody = z.object({
   scores: scoresSchema,
   comments: z.string().optional(),
   status: z.enum(['Draft', 'Completed']).default('Draft'),
+  // ISO 29110 SI.O2 — trazabilidad: la evaluación de producto puede ligarse a un proyecto.
+  projectId: z.number().int().positive().optional(),
 });
 
 function withScore(data: any): QualityEvaluation {
