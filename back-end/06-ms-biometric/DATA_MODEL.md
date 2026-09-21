@@ -1,4 +1,4 @@
-﻿# DATA_MODEL — 06-ms-biometric
+# DATA_MODEL — 06-ms-biometric
 
 > **Servicio:** `06-ms-biometric` · **Schema:** `biometric (vacío) + MongoDB` · **Puerto ADR-005:** `8086`
 > **Fuente canónica:** `../database/06-ms-biometric-db/01-ddl/03-tables/` + `../../fae-docs/06-data/domains/06-biometric.md`

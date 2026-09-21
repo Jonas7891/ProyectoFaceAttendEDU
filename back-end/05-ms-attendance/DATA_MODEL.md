@@ -1,4 +1,4 @@
-﻿# DATA_MODEL — 05-ms-attendance
+# DATA_MODEL — 05-ms-attendance
 
 > **Servicio:** `05-ms-attendance` · **Schema:** `attendance` · **Puerto ADR-005:** `8085`
 > **Fuente canónica:** `../database/05-ms-attendance-db/01-ddl/03-tables/` + `../../fae-docs/06-data/domains/05-attendance.md`

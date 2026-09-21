@@ -1,4 +1,4 @@
-﻿module github.com/faceattend/notification-service
+module github.com/faceattend/notification-service
 
 go 1.22
 

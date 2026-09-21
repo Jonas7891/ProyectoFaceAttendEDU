@@ -1,4 +1,4 @@
-﻿# Acople Database ↔ Back-end — FaceAttend EDU
+# Acople Database ↔ Back-end — FaceAttend EDU
 
 > **Fuente canónica de esquema:** ../database/ (8 bounded contexts, 1 BD faceattend_db + 8 schemas, Liquibase)
 > **Modelo lógico:** ../../fae-docs/06-data/domains/ (01-identity ... 09-configuration, 07-notification)

@@ -1,4 +1,4 @@
-﻿# STACK — 08-ms-notification
+# STACK — 08-ms-notification
 
 > **Stack ADR-005:** `Go 1.22 + Gin` · **Guía:** `../../fae-docs/_stacks/go.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md`

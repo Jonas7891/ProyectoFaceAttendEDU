@@ -30,16 +30,32 @@ const caseBody = z.object({
   requestedBy: z.string().nullable().optional(),
 });
 
+function getPagination(req: any): { limit: number; offset: number } {
+  let limit = Number(req?.query?.limit ?? 20);
+  let offset = Number(req?.query?.offset ?? 0);
+  if (!Number.isInteger(limit) || limit <= 0) limit = 20;
+  if (!Number.isInteger(offset) || offset < 0) offset = 0;
+  return { limit: Math.min(limit, 100), offset };
+}
+
+function page<T>(items: T[], req: any, reply: any): T[] {
+  const q = (req as any)?.query as any;
+  if (!q || (q.limit === undefined && q.offset === undefined)) return items;
+  const { limit, offset } = getPagination(req);
+  reply.header('x-total-count', items.length);
+  return items.slice(offset, offset + limit);
+}
+
 function registerAcademicConfigRoutes(app: FastifyInstance, base: string) {
   app.post(base, async (req, reply) => {
     const parsed = academicBody.safeParse((req as any).body);
-    if (!parsed.success) return reply.code(400).send({ error: 'BadRequest', details: parsed.error.flatten() });
+    if (!parsed.success) return reply.code(400).send({ error: 'BadRequest', details: parsed.error.flatten(), timestamp: new Date().toISOString() });
     return reply.code(201).send(stores.academic.create(parsed.data as any));
   });
-  app.get(base, async (req) => {
+  app.get(base, async (req, reply) => {
     const q = (req.query as any) ?? {};
-    if (q.name) return stores.academic.list((c: any) => c.configurationName === q.name);
-    return stores.academic.list();
+    if (q.name) return page(stores.academic.list((c: any) => c.configurationName === q.name), req, reply);
+    return page(stores.academic.list(), req, reply);
   });
   app.get(`${base}/:id`, async (req, reply) => {
     const found = stores.academic.get((req.params as any).id);
@@ -60,13 +76,13 @@ function registerAcademicConfigRoutes(app: FastifyInstance, base: string) {
 function registerSecurityConfigRoutes(app: FastifyInstance, base: string) {
   app.post(base, async (req, reply) => {
     const parsed = securityBody.safeParse((req as any).body);
-    if (!parsed.success) return reply.code(400).send({ error: 'BadRequest', details: parsed.error.flatten() });
+    if (!parsed.success) return reply.code(400).send({ error: 'BadRequest', details: parsed.error.flatten(), timestamp: new Date().toISOString() });
     return reply.code(201).send(stores.security.create(parsed.data as any));
   });
-  app.get(base, async (req) => {
+  app.get(base, async (req, reply) => {
     const q = (req.query as any) ?? {};
-    if (q.name) return stores.security.list((c: any) => c.configurationName === q.name);
-    return stores.security.list();
+    if (q.name) return page(stores.security.list((c: any) => c.configurationName === q.name), req, reply);
+    return page(stores.security.list(), req, reply);
   });
   app.get(`${base}/:id`, async (req, reply) => {
     const found = stores.security.get((req.params as any).id);
@@ -96,9 +112,9 @@ export async function registerConfigurationRoutes(app: FastifyInstance) {
   for (const base of ['/api/v1/configurations/academic', '/api/v1/academic-configurations']) {
     void base;
   }
-  app.get('/api/v1/schools/:schoolId/configurations', async (req) => {
+  app.get('/api/v1/schools/:schoolId/configurations', async (req, reply) => {
     const schoolId = Number((req.params as any).schoolId);
-    return stores.academic.list((c: any) => c.schoolId === schoolId);
+    return page(stores.academic.list((c: any) => c.schoolId === schoolId), req, reply);
   });
 
   // ---------- Biometric update cases ----------
@@ -114,10 +130,10 @@ export async function registerConfigurationRoutes(app: FastifyInstance) {
     );
     return reply.code(201).send(created);
   });
-  app.get('/api/v1/biometric-update-cases', async (req) => {
+  app.get('/api/v1/biometric-update-cases', async (req, reply) => {
     const q = (req.query as any) ?? {};
-    if (q.status) return stores.cases.list((c: any) => c.updateStatus === q.status);
-    return stores.cases.list();
+    if (q.status) return page(stores.cases.list((c: any) => c.updateStatus === q.status), req, reply);
+    return page(stores.cases.list(), req, reply);
   });
   app.get('/api/v1/biometric-update-cases/:id', async (req, reply) => {
     const found = stores.cases.get((req.params as any).id);
@@ -140,8 +156,8 @@ export async function registerConfigurationRoutes(app: FastifyInstance) {
     if (!stores.cases.remove((req.params as any).id)) return reply.code(404).send({ error: 'NotFound' });
     return reply.code(204).send();
   });
-  app.get('/api/v1/persons/:personId/biometric-cases', async (req) => {
+  app.get('/api/v1/persons/:personId/biometric-cases', async (req, reply) => {
     const personId = (req.params as any).personId;
-    return stores.cases.list((c: any) => c.personId === personId);
+    return page(stores.cases.list((c: any) => c.personId === personId), req, reply);
   });
 }

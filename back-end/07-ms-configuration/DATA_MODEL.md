@@ -1,4 +1,4 @@
-﻿# DATA_MODEL — 07-ms-configuration
+# DATA_MODEL — 07-ms-configuration
 
 > **Servicio:** `07-ms-configuration` · **Schema:** `configuration` · **Puerto ADR-005:** `8089`
 > **Fuente canónica:** `../database/07-ms-configuration-db/01-ddl/03-tables/` + `../../fae-docs/06-data/domains/09-configuration.md`

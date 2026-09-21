@@ -1,4 +1,4 @@
-﻿[tool.poetry]
+[tool.poetry]
 name = "biometric-service"
 version = "0.1.0"
 description = "FaceAttend EDU Biometric Service — Python FastAPI per ADR-005"

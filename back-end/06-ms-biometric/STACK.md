@@ -1,4 +1,4 @@
-﻿# STACK — 06-ms-biometric
+# STACK — 06-ms-biometric
 
 > **Stack ADR-005:** `Python 3.12 + FastAPI` · **Guía:** `../../fae-docs/_stacks/python-fastapi.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md`

@@ -1,4 +1,4 @@
-﻿# Configuration Service â€” `07-ms-configuration`
+# Configuration Service â€” `07-ms-configuration`
 
 ## 1. Responsabilidad
 

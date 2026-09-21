@@ -1,4 +1,4 @@
-﻿# DATA_MODEL — 01-ms-identity
+# DATA_MODEL — 01-ms-identity
 
 > **Servicio:** `01-ms-identity` · **Schema:** `identity` · **Puerto ADR-005:** `8081`
 > **Fuente canónica:** `../database/01-ms-identity-db/01-ddl/03-tables/` + `../../fae-docs/06-data/domains/01-identity.md`

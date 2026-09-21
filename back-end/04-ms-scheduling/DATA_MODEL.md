@@ -1,4 +1,4 @@
-﻿# DATA_MODEL — 04-ms-scheduling
+# DATA_MODEL — 04-ms-scheduling
 
 > **Servicio:** `04-ms-scheduling` · **Schema:** `scheduling` · **Puerto ADR-005:** `8087`
 > **Fuente canónica:** `../database/04-ms-scheduling-db/01-ddl/03-tables/` + `../../fae-docs/06-data/domains/04-scheduling.md`

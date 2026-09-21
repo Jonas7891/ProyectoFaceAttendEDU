@@ -1,4 +1,4 @@
-﻿# 99-api-gateway — Kong OSS
+# 99-api-gateway — Kong OSS
 
 > **Puerto:** 8080 proxy / 8001 admin — Stack ADR-005/007: Kong OSS DB-less + Redis
 > **Fuente:** ../../fae-docs/05-architecture/decisions/records/ADR-007-api-gateway.md + ADR-005

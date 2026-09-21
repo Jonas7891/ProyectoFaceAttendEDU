@@ -1,4 +1,4 @@
-﻿export type EnrollmentStatus = 'Active' | 'Withdrawn' | 'Completed';
+export type EnrollmentStatus = 'Active' | 'Withdrawn' | 'Completed';
 export interface EnrollmentRecord {
   enrollmentId: number;
   academicActorId: number;

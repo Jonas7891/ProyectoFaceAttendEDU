@@ -1,4 +1,4 @@
-﻿# DATA_MODEL — 08-ms-notification
+# DATA_MODEL — 08-ms-notification
 
 > **Servicio:** `08-ms-notification` · **Schema:** `notification` · **Puerto ADR-005:** `8090`
 > **Fuente canónica:** `../database/08-ms-notification-db/01-ddl/03-tables/` + `../../fae-docs/06-data/domains/07-notification.md`

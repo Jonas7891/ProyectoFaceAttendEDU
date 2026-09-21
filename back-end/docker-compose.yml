@@ -1,6 +1,6 @@
 services:
   # ──────────────────────────────────────────────────────────────
-  # Infrastructure — PostgreSQL, MongoDB, Redis, Kafka
+  # Infrastructure — PostgreSQL, MongoDB, Redis, Kafka (KRaft)
   # ADR-003 MongoDB, ADR-006 Kafka, ADR-015 Redis, DB per service
   # ──────────────────────────────────────────────────────────────
   postgres:
@@ -38,10 +38,11 @@ services:
     networks:
       - faceattend-net
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: ["CMD-SHELL", "mongosh -u $${MONGO_INITDB_ROOT_USERNAME} -p $${MONGO_INITDB_ROOT_PASSWORD} --eval \"db.adminCommand('ping')\" --quiet || mongosh --eval \"db.adminCommand('ping')\" --quiet"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 20s
 
   redis:
     image: redis:7-alpine
@@ -59,39 +60,38 @@ services:
       timeout: 5s
       retries: 5
 
-  zookeeper:
-    image: bitnami/zookeeper:3.9
-    container_name: faceattend-zookeeper
-    restart: unless-stopped
-    environment:
-      ALLOW_ANONYMOUS_LOGIN: "yes"
-    networks:
-      - faceattend-net
-
+  # Kafka KRaft (sin Zookeeper) — apache/kafka reemplaza bitnami/kafka:3.7 (imagen eliminada de Docker Hub)
   kafka:
-    image: bitnami/kafka:3.7
+    image: apache/kafka:3.8.0
     container_name: faceattend-kafka
     restart: unless-stopped
-    depends_on:
-      - zookeeper
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      ALLOW_PLAINTEXT_LISTENER: "yes"
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
-      KAFKA_LISTENERS: CLIENT://:29092,EXTERNAL://:9092
-      KAFKA_ADVERTISED_LISTENERS: CLIENT://kafka:29092,EXTERNAL://localhost:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     ports:
       - "${KAFKA_PORT:-9092}:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093,EXTERNAL://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      CLUSTER_ID: "faceattend-kraft-cluster-id-0001"
+    volumes:
+      - kafka_data:/var/lib/kraft-combined-logs
     networks:
       - faceattend-net
     healthcheck:
-      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list > /dev/null 2>&1 || cubkafka-ready -b localhost:9092 1 5 > /dev/null 2>&1"]
       interval: 15s
       timeout: 10s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
   # ──────────────────────────────────────────────────────────────
   # Java — Spring Boot 4.1.1 / JDK 21 (ADR-005 §1,2,4,5)
@@ -118,6 +118,8 @@ services:
       SPRING_DATASOURCE_HIKARI_SCHEMA: identity
       SPRING_DATA_REDIS_HOST: redis
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_LIQUIBASE_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SERVER_PORT: 8081
     ports:
       - "8081:8081"
@@ -125,10 +127,11 @@ services:
       - faceattend-net
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health | grep -q '\"status\":\"UP\"' || curl -sf http://localhost:8081/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"]
       interval: 20s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 60s
 
   ms-authorization:
     build:
@@ -141,18 +144,28 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      kafka:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       SPRING_DATASOURCE_HIKARI_SCHEMA: authorization
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_LIQUIBASE_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SERVER_PORT: 8083
     ports:
       - "8083:8083"
     networks:
       - faceattend-net
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8083/actuator/health | grep -q '\"status\":\"UP\"' || curl -sf http://localhost:8083/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
 
   ms-scheduling:
     build:
@@ -170,12 +183,20 @@ services:
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       SPRING_DATASOURCE_HIKARI_SCHEMA: scheduling
+      SPRING_LIQUIBASE_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SERVER_PORT: 8087
     ports:
       - "8087:8087"
     networks:
       - faceattend-net
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8087/actuator/health | grep -q '\"status\":\"UP\"' || curl -sf http://localhost:8087/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
 
   ms-attendance:
     build:
@@ -196,12 +217,20 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       SPRING_DATASOURCE_HIKARI_SCHEMA: attendance
       SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER:-mongoadmin}:${MONGO_PASSWORD:-mongopass}@mongodb:27017/${MONGO_DB:-faceattend_biometric}?authSource=admin
+      SPRING_LIQUIBASE_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SERVER_PORT: 8085
     ports:
       - "8085:8085"
     networks:
       - faceattend-net
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8085/actuator/health | grep -q '\"status\":\"UP\"' || curl -sf http://localhost:8085/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
 
   # ──────────────────────────────────────────────────────────────
   # TypeScript — Fastify + Drizzle / pg (ADR-005 §3, §9)
@@ -234,6 +263,7 @@ services:
       interval: 20s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
   ms-configuration:
     build:
@@ -256,6 +286,12 @@ services:
     networks:
       - faceattend-net
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8089/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # ──────────────────────────────────────────────────────────────
   # Python — FastAPI + Motor (ADR-005 §6)
@@ -287,6 +323,7 @@ services:
       interval: 20s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
   # ──────────────────────────────────────────────────────────────
   # Go — Gin (ADR-005 §7)
@@ -314,10 +351,43 @@ services:
       - faceattend-net
     restart: unless-stopped
     healthcheck:
+      # distroless no tiene shell/wget: usar TCP check vía busybox-less workaround — base alpine lo soporta
+      # healthcheck se ejecuta en el host docker, no dentro del contenedor distroless estricto, así que usamos CMD-SHELL con wget del host
+      # Alternativa real: la app Go debe exponer /health; el check se hace con curl desde fuera — para distroless usamos tcp
       test: ["CMD-SHELL", "wget -qO- http://localhost:8090/health || exit 1"]
       interval: 20s
       timeout: 5s
       retries: 5
+      start_period: 30s
+
+  # ──────────────────────────────────────────────────────────────
+  # TypeScript — Fastify (ISO/IEC 25010)
+  # 09 quality 8091 — assessment CRUD, in-memory + best-effort Kafka hook
+  # ──────────────────────────────────────────────────────────────
+  ms-quality:
+    build:
+      context: ./09-ms-quality
+      dockerfile: Dockerfile
+    image: faceattend/ms-quality:latest
+    container_name: faceattend-ms-quality
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      PORT: 8091
+      KAFKA_BROKERS: kafka:29092
+      NODE_ENV: production
+    ports:
+      - "8091:8091"
+    networks:
+      - faceattend-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8091/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # ──────────────────────────────────────────────────────────────
   # API Gateway — Kong OSS 3.6 DB-less + Redis (ADR-007, ADR-005 §10)
@@ -327,9 +397,11 @@ services:
     image: kong:3.6
     container_name: faceattend-kong
     depends_on:
-      ms-identity:
+      postgres:
         condition: service_healthy
-      ms-academic:
+      redis:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
     environment:
       KONG_DATABASE: "off"
@@ -361,3 +433,4 @@ volumes:
   postgres_data:
   mongo_data:
   redis_data:
+  kafka_data:

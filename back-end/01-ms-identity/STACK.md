@@ -1,4 +1,4 @@
-﻿# STACK — 01-ms-identity
+# STACK — 01-ms-identity
 
 > **Stack ADR-005:** `Java 21 + Spring Boot 3` · **Guía:** `../../fae-docs/_stacks/java-spring.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md`

@@ -1,4 +1,4 @@
-﻿.PHONY: dev test build lint migrate
+.PHONY: dev test build lint migrate
 
 dev:
 	go run ./cmd/server/...

@@ -1,4 +1,4 @@
-﻿# DATA_MODEL — 02-ms-authorization
+# DATA_MODEL — 02-ms-authorization
 
 > **Servicio:** `02-ms-authorization` · **Schema:** `authorization` · **Puerto ADR-005:** `8083`
 > **Fuente canónica:** `../database/02-ms-authorization-db/01-ddl/03-tables/` + `../../fae-docs/06-data/domains/02-authorization.md`

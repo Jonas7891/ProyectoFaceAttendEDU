@@ -1,4 +1,4 @@
-﻿package com.faceattend_edu.scheduling_service.domain.model;
+package com.faceattend_edu.scheduling_service.domain.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
