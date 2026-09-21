@@ -41,6 +41,11 @@ func main() {
 	}
 
 	// Wire hexagonal dependencies (even if pool is nil, handlers are registered)
+	// ISO/IEC 9001 — Quality audit middleware (Cláusula 8.5.2 / 9.1)
+	r.Use(handler.QualityAuditMiddleware())
+	r.GET("/health/quality", handler.QualityHealthHandler())
+	r.GET("/api/v1/quality/report", handler.QualityHealthHandler())
+
 	container := config.Wire(pool)
 	if container != nil {
 		if container.AlertHandler != nil {
