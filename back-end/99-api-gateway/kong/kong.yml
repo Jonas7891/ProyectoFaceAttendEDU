@@ -108,6 +108,22 @@ services:
         strip_path: false
     plugins:
       - name: jwt
+  - name: quality-service
+    url: http://host.docker.internal:8091
+    routes:
+      - name: quality-route
+        paths: [/api/v1/quality]
+        strip_path: false
+    plugins:
+      - name: jwt
+      - name: rate-limiting
+        config:
+          minute: 100
+          fault_tolerant: true
+          redis_host: redis
+          redis_port: 6379
+          redis_database: 0
+          policy: redis
 consumers:
   # Local-dev consumer for the jwt plugin (HS256). Rotate before production.
   # Production target per ADR-007: RS256 keys issued by identity-service.

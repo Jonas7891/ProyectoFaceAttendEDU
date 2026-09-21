@@ -14,6 +14,7 @@ ms/
 ├── 06-ms-biometric/         → Biometric (embeddings facial/dactilar)           Python FastAPI 8086 + MongoDB
 ├── 07-ms-configuration/     → Configuration (parámetros + biometric_update_case) TS Fastify 8089
 ├── 08-ms-notification/      → Notification (alertas)                           Go Gin 8090
+├── 09-ms-quality/           → Quality (instrumento ISO 25010, evaluaciones)    TS Fastify 8091
 ├── 99-api-gateway/          → API Gateway (Kong OSS DB-less + Redis)           Kong 8080/8001
 └── ../database/             → Migraciones Liquibase (8 schemas, 1 BD faceattend_db)
 ```
@@ -108,6 +109,9 @@ Polyglot modular monolith: JVM + Node + Python + Go + Kong. 4 runtimes + gateway
 
 ### 3.8 Notification (`08-ms-notification`) — Go Gin 8090
 **Responsabilidad:** `alert_type`, `alert` sobre `academic_actor` — Ver `06-data/domains/07-notification.md` (dominio 07 mapea a 08)
+
+### 3.9 Quality (`09-ms-quality`) — TS Fastify 8091
+**Responsabilidad:** Instrumento ISO/IEC 25010 (24 ítems) + CRUD de evaluaciones y promedios por servicio — Ver `09-ms-quality/SERVICE.md` + `ISO25010_QUALITY_REPORT.md`
 
 ### 3.9 Gateway (`99-api-gateway`) — Kong OSS 8080
 **Responsabilidad:** Routing, JWT RS256, rate-limit, CORS, TLS. Kong DB-less `kong/kong.yml` + Redis. Ver `99-api-gateway/SERVICE.md` y `ADR-007-api-gateway.md`.

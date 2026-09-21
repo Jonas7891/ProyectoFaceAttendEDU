@@ -1,11 +1,12 @@
-﻿import Fastify from 'fastify';
+import Fastify from 'fastify';
 import { randomUUID } from 'node:crypto';
-import { registerAcademicRoutes } from './infrastructure/http/routes';
+import { registerQualityRoutes } from './infrastructure/http/routes';
 import { registerEventHook } from './infrastructure/messaging/event.publisher';
 
 const app = Fastify({ logger: true });
 const startedAt = Date.now();
 
+// ISO 25010 — Mantenibilidad/Seguridad: correlación de peticiones.
 app.addHook('onRequest', async (req, reply) => {
   const requestId = (req.headers['x-request-id'] as string) || randomUUID();
   (req as any).requestId = requestId;
@@ -15,6 +16,8 @@ app.addHook('onSend', async (_req, reply, payload) => {
   reply.header('x-content-type-options', 'nosniff');
   return payload;
 });
+
+// ISO 25010 — Fiabilidad: formato de error uniforme + sin fuga de stack.
 app.setErrorHandler((error, req, reply) => {
   const status = (error as any).statusCode && (error as any).statusCode >= 400 ? (error as any).statusCode : 500;
   req.log.error({ err: error, path: req.url }, 'unhandled error');
@@ -33,13 +36,13 @@ const version = process.env.npm_package_version || '0.1.0';
 function healthPayload(service: string) {
   return { status: 'ok', service, version, uptimeSeconds: Math.floor((Date.now() - startedAt) / 1000), timestamp: new Date().toISOString() };
 }
-app.get('/health', async () => healthPayload('academic-service'));
-app.get('/api/v1/health', async () => healthPayload('academic-service'));
+app.get('/health', async () => healthPayload('quality-service'));
+app.get('/api/v1/health', async () => healthPayload('quality-service'));
 
 async function start() {
-  await registerAcademicRoutes(app);
+  await registerQualityRoutes(app);
   registerEventHook(app);
-  const port = Number(process.env.PORT) || 8084;
+  const port = Number(process.env.PORT) || 8091;
   await app.listen({ port, host: '0.0.0.0' });
 }
 

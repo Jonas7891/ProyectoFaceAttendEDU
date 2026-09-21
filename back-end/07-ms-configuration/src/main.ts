@@ -1,11 +1,40 @@
 ﻿import Fastify from 'fastify';
+import { randomUUID } from 'node:crypto';
 import { registerConfigurationRoutes } from './infrastructure/http/routes';
 import { registerEventHook } from './infrastructure/messaging/event.publisher';
 
 const app = Fastify({ logger: true });
+const startedAt = Date.now();
 
-app.get('/health', async () => ({ status: 'ok', service: 'configuration-service' }));
-app.get('/api/v1/health', async () => ({ status: 'ok', service: 'configuration-service' }));
+app.addHook('onRequest', async (req, reply) => {
+  const requestId = (req.headers['x-request-id'] as string) || randomUUID();
+  (req as any).requestId = requestId;
+  reply.header('x-request-id', requestId);
+});
+app.addHook('onSend', async (_req, reply, payload) => {
+  reply.header('x-content-type-options', 'nosniff');
+  return payload;
+});
+app.setErrorHandler((error, req, reply) => {
+  const status = (error as any).statusCode && (error as any).statusCode >= 400 ? (error as any).statusCode : 500;
+  req.log.error({ err: error, path: req.url }, 'unhandled error');
+  reply.code(status).send({
+    error: status === 404 ? 'NotFound' : status === 400 ? 'BadRequest' : 'InternalError',
+    message: status === 500 ? 'Unexpected internal error' : (error as Error).message,
+    path: req.url,
+    timestamp: new Date().toISOString(),
+  });
+});
+app.setNotFoundHandler((req, reply) => {
+  reply.code(404).send({ error: 'NotFound', message: `Route ${req.method} ${req.url} not found`, timestamp: new Date().toISOString() });
+});
+
+const version = process.env.npm_package_version || '0.1.0';
+function healthPayload(service: string) {
+  return { status: 'ok', service, version, uptimeSeconds: Math.floor((Date.now() - startedAt) / 1000), timestamp: new Date().toISOString() };
+}
+app.get('/health', async () => healthPayload('configuration-service'));
+app.get('/api/v1/health', async () => healthPayload('configuration-service'));
 
 async function start() {
   await registerConfigurationRoutes(app);
