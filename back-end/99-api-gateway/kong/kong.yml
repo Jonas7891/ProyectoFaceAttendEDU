@@ -1,10 +1,10 @@
 _format_version: "3.0"
 _transform: true
 
-# Kong DB-less � FaceAttend EDU � ADR-007 + ADR-005
+# Kong DB-less ï¿½ FaceAttend EDU ï¿½ ADR-007 + ADR-005
 services:
   - name: identity-service
-    url: http://host.docker.internal:8081
+    url: http://ms-identity:8081
     routes:
       - name: identity-route
         paths: [/api/v1/persons, /api/v1/users, /api/v1/auth, /api/v1/sessions, /api/v1/cities, /api/v1/password-policies]
@@ -25,7 +25,7 @@ services:
           redis_database: 0
           policy: redis
   - name: authorization-service
-    url: http://host.docker.internal:8083
+    url: http://ms-authorization:8083
     routes:
       - name: authorization-route
         paths: [/api/v1/roles, /api/v1/permissions]
@@ -44,7 +44,7 @@ services:
           redis_database: 0
           policy: redis
   - name: academic-service
-    url: http://host.docker.internal:8084
+    url: http://ms-academic:8084
     routes:
       - name: academic-route
         paths: [/api/v1/schools, /api/v1/programs, /api/v1/academic-periods, /api/v1/periods, /api/v1/cohorts, /api/v1/courses, /api/v1/actor-types, /api/v1/academic-actors, /api/v1/enrollments]
@@ -52,7 +52,7 @@ services:
     plugins:
       - name: jwt
   - name: scheduling-service
-    url: http://host.docker.internal:8087
+    url: http://ms-scheduling:8087
     routes:
       - name: scheduling-route
         paths: [/api/v1/environments, /api/v1/schedule-blocks, /api/v1/class-sessions, /api/v1/actors, /api/v1/blocks]
@@ -63,7 +63,7 @@ services:
     plugins:
       - name: jwt
   - name: attendance-service
-    url: http://host.docker.internal:8085
+    url: http://ms-attendance:8085
     routes:
       - name: attendance-route
         paths: [/api/v1/attendance-records, /api/v1/attendance, /api/v1/justifications, /api/v1/justification-types, /api/v1/supporting-documents]
@@ -82,7 +82,7 @@ services:
           redis_database: 0
           policy: redis
   - name: biometric-service
-    url: http://host.docker.internal:8086
+    url: http://ms-biometric:8086
     routes:
       - name: biometric-route
         paths: [/api/v1/biometric]
@@ -90,7 +90,7 @@ services:
     plugins:
       - name: jwt
   - name: configuration-service
-    url: http://host.docker.internal:8089
+    url: http://ms-configuration:8089
     routes:
       - name: configuration-route
         paths: [/api/v1/academic-configurations, /api/v1/security-configurations, /api/v1/biometric-update-cases, /api/v1/configurations]
@@ -101,7 +101,7 @@ services:
     plugins:
       - name: jwt
   - name: notification-service
-    url: http://host.docker.internal:8090
+    url: http://ms-notification:8090
     routes:
       - name: notification-route
         paths: [/api/v1/alert-types, /api/v1/alerts]
@@ -109,7 +109,7 @@ services:
     plugins:
       - name: jwt
   - name: quality-service
-    url: http://host.docker.internal:8091
+    url: http://ms-quality:8091
     routes:
       - name: quality-route
         paths: [/api/v1/quality]

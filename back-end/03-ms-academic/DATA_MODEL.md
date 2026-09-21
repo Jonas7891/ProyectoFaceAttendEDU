@@ -1,4 +1,4 @@
-﻿# DATA_MODEL — 03-ms-academic
+# DATA_MODEL — 03-ms-academic
 
 > **Servicio:** `03-ms-academic` · **Schema:** `academic` · **Puerto ADR-005:** `8084`
 > **Fuente canónica:** `../database/03-ms-academic-db/01-ddl/03-tables/` + `../../fae-docs/06-data/domains/03-academic.md`

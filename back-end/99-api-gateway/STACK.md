@@ -1,4 +1,4 @@
-﻿# STACK — 99-api-gateway
+# STACK — 99-api-gateway
 
 > **Stack ADR-005 §10 + ADR-007:** `Kong OSS 3.6 DB-less + Redis 7` · **Puerto:** `8080 proxy / 8001 admin`
 > **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-007-api-gateway.md` + `ADR-005-technology-stack.md`

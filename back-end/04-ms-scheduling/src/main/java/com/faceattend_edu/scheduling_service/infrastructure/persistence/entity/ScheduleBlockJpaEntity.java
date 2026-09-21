@@ -1,4 +1,4 @@
-﻿package com.faceattend_edu.scheduling_service.infrastructure.persistence.entity;
+package com.faceattend_edu.scheduling_service.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

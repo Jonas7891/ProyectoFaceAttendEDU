@@ -1,4 +1,4 @@
-﻿import { pgTable, serial, smallserial, bigserial, integer, bigint, smallint, varchar, boolean, date, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, serial, smallserial, bigserial, integer, bigint, smallint, varchar, boolean, date, timestamp } from 'drizzle-orm/pg-core';
 
 // Canonical Drizzle schema — 8 tables from fae-docs/06-data/domains/03-academic.md (schema academic).
 // Runtime CRUD uses memory.store.ts; this file keeps DB mapping for Liquibase/Drizzle parity.

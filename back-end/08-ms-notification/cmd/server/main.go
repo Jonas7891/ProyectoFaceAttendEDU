@@ -1,4 +1,4 @@
-﻿package main
+package main
 
 import (
 	"context"
@@ -62,10 +62,6 @@ func main() {
 	r.NoMethod(func(c *gin.Context) {
 		c.JSON(http.StatusMethodNotAllowed, gin.H{"error": "MethodNotAllowed", "message": "Method not allowed", "timestamp": time.Now().UTC().Format(time.RFC3339)})
 	})
-
-	// legacy simple endpoints for backward compatibility
-	r.GET("/api/v1/alerts", func(c *gin.Context) { c.JSON(200, gin.H{"alerts": []interface{}{}}) })
-	r.GET("/alerts", func(c *gin.Context) { c.JSON(200, gin.H{"alerts": []interface{}{}}) })
 
 	// Try to connect to Postgres if DATABASE_URL is set
 	databaseURL := os.Getenv("DATABASE_URL")

@@ -1,4 +1,4 @@
-﻿package com.faceattend_edu.authorization_service.domain.port.out;
+package com.faceattend_edu.authorization_service.domain.port.out;
 
 import com.faceattend_edu.authorization_service.domain.model.Role;
 

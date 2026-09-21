@@ -1,4 +1,4 @@
-﻿from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 from domain.similarity import cosine

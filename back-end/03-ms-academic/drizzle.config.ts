@@ -1,4 +1,4 @@
-﻿import type { Config } from 'drizzle-kit';
+import type { Config } from 'drizzle-kit';
 export default {
   schema: './src/infrastructure/persistence/schema.ts',
   out: './drizzle',

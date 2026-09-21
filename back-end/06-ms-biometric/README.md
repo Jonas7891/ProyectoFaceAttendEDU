@@ -1,4 +1,4 @@
-﻿# 06-ms-biometric — Python FastAPI
+# 06-ms-biometric — Python FastAPI
 
 Non-negotiable per ADR-005 22/25. OpenCV canonical, face_recognition, pymongo vector.
 
