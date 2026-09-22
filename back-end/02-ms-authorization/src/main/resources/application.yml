@@ -1,0 +1,21 @@
+server:
+  port: 8083
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/faceattend_db
+    username: postgres
+    password: postgres
+    hikari:
+      schema: authorization
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.default_schema: authorization
+      hibernate.globally_quoted_identifiers: true
+      hibernate.hbm2ddl.create_namespaces: true
+  kafka:
+    bootstrap-servers: localhost:9092
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    default-schema: authorization

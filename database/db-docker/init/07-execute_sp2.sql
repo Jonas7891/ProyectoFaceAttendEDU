@@ -1,2 +1,0 @@
--- INSERTAR DATOS A LAS TABLAS
-CALL insert_info();

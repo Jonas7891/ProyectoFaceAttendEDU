@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - include:
+      file: 01-schemas/001-create-configuration-schema.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 02-types/001-create-biometric-type.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 02-types/002-create-update-status-type.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 03-tables/001-create-academic-configuration-table.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 03-tables/002-create-security-configuration-table.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 03-tables/003-create-biometric-update-case-table.yaml
+      relativeToChangelogFile: true

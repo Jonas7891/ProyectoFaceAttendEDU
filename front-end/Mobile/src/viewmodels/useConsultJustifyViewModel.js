@@ -1,0 +1,106 @@
+import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useTranslation} from 'react-i18next';
+import {useNavigation} from '@react-navigation/native';
+import {useLanguageRefresh} from '../utils/useLanguageRefresh';
+import {getCurrentUser} from '../services/UserService';
+import {ActorService} from '../services/ActorService';
+import {request, GET} from '../api/apiClient';
+
+function unwrap(data) {
+  if (data && Array.isArray(data.value)) return data.value;
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === 'object') return [data];
+  return [];
+}
+
+export function useValidJustificationsViewModel() {
+    const navigation = useNavigation();
+    const {t, i18n} = useTranslation();
+
+    const [activeSection, setActiveSection] = useState('inasistencias');
+    const updateKey = useLanguageRefresh();
+    const [isLoading, setIsLoading] = useState(true);
+    const [inasistenciasData, setInasistenciasData] = useState([]);
+    const [retardosData, setRetardosData] = useState([]);
+
+    const JUSTIFICATION_STATUS = {
+        APPROVED: 'approved',
+        PENDING: 'pending',
+        REJECTED: 'rejected',
+    };
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setIsLoading(true);
+                const timeLocale =
+                    i18n.language === 'en' ? 'en-US'
+                    : i18n.language === 'pt' ? 'pt-BR'
+                    : i18n.language === 'fr' ? 'fr-FR'
+                    : 'es-ES';
+
+                const user = await getCurrentUser();
+                const actors = await ActorService.getByPerson(user?.personId);
+                const actorId = actors?.length > 0 ? actors[0].academicActorId : null;
+
+                const jData = await request({ method: GET, url: 'justification', params: { _limit: 100 }, requiresAuth: false });
+                let records = unwrap(jData);
+
+                if (actorId) {
+                    const arDataAll = await request({ method: GET, url: 'attendance_record', params: { academic_actor_id: actorId }, requiresAuth: false });
+                    const myArIds = new Set(unwrap(arDataAll).map(r => r.attendance_record_id));
+                    records = records.filter(j => myArIds.has(j.attendance_record_id));
+                }
+
+                const absences = [];
+                const lates = [];
+
+                for (const j of records) {
+                    try {
+                        const typeData = await request({ method: GET, url: 'justification_type', params: { justification_type_id: j.justification_type_id }, requiresAuth: false });
+                        const jType = unwrap(typeData)[0] || {};
+
+                        const statusMap = { Pending: 'pending', Approved: 'approved', Rejected: 'rejected' };
+                        const entry = {
+                            id: j.justification_id,
+                            fecha: j.submitted_at ? j.submitted_at.split('T')[0] : '',
+                            motivo: jType.name || j.reason || '—',
+                            estado: statusMap[j.review_status] || 'pending',
+                        };
+
+                        if (j.justification_type_id === 3) {
+                            entry.hora = j.submitted_at ? new Date(j.submitted_at).toLocaleTimeString(timeLocale, {hour: '2-digit', minute: '2-digit'}) : '—';
+                            lates.push(entry);
+                        } else {
+                            absences.push(entry);
+                        }
+                    } catch (e) {
+                        continue;
+                    }
+                }
+
+                setInasistenciasData(absences);
+                setRetardosData(lates);
+            } catch (error) {
+                console.error('Error fetching justifications:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchData();
+    }, [i18n.language]);
+
+    const currentData = activeSection === 'inasistencias' ? inasistenciasData : retardosData;
+
+    const handleBack = useCallback(() => navigation.goBack(), [navigation]);
+
+    const getEstadoColor = useCallback((estado) => {
+        return estado === JUSTIFICATION_STATUS.APPROVED ? "#4CAF50" : "#FF9800";
+    }, []);
+
+    return {
+        activeSection, setActiveSection, updateKey, isLoading,
+        inasistenciasData, retardosData, currentData,
+        handleBack, getEstadoColor,
+    };
+}
