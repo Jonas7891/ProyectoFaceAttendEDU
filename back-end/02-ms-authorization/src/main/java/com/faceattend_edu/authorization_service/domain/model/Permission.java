@@ -37,8 +37,8 @@ public class Permission {
     }
 
     public void touchUpdated() {
+        // row_version lo gestiona Hibernate via @Version; incrementarlo aqui rompe el merge.
         updatedAt = Instant.now();
-        rowVersion++;
     }
 
     private static boolean isBlank(String s) { return s == null || s.trim().isEmpty(); }
