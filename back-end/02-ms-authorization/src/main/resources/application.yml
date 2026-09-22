@@ -17,5 +17,5 @@ spring:
   kafka:
     bootstrap-servers: localhost:9092
   liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.yaml
-    default-schema: authorization
+    # Las migraciones viven en ../database/ (fuente canonica); el servicio no auto-migra.
+    enabled: false

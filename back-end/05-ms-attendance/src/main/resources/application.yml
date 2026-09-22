@@ -4,7 +4,7 @@ spring:
   application:
     name: attendance-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/faceattend_db
+    url: jdbc:postgresql://localhost:5432/faceattend_db?stringtype=unspecified
     username: postgres
     password: postgres
     hikari:
@@ -19,8 +19,8 @@ spring:
   kafka:
     bootstrap-servers: localhost:9092
   liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.yaml
-    default-schema: attendance
+    # Las migraciones viven en ../database/ (fuente canonica); el servicio no auto-migra.
+    enabled: false
 management:
   endpoints:
     web:
