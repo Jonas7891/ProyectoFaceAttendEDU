@@ -89,7 +89,7 @@ class AttendanceRecordControllerTest {
             request.setAttendanceStatus("Present");
             request.setCaptureMethod("FACIAL");
 
-            when(mapper.toDomain(any())).thenReturn(sampleRecord);
+            when(mapper.toDomain(any(CreateAttendanceRecordRequest.class))).thenReturn(sampleRecord);
             when(createUseCase.create(any())).thenReturn(sampleRecord);
             when(mapper.toResponse(any())).thenReturn(sampleResponse);
 
@@ -97,7 +97,7 @@ class AttendanceRecordControllerTest {
             var response = controller.create(request);
 
             // Assert
-            assertEquals(201, response.getStatusCodeValue());
+            assertEquals(201, response.getStatusCode().value());
             assertNotNull(response.getBody());
             assertEquals(1L, response.getBody().getAttendanceRecordId());
             verify(createUseCase, times(1)).create(any());
@@ -119,7 +119,7 @@ class AttendanceRecordControllerTest {
             var response = controller.get(1L);
 
             // Assert
-            assertEquals(200, response.getStatusCodeValue());
+            assertEquals(200, response.getStatusCode().value());
             assertNotNull(response.getBody());
             assertEquals(1L, response.getBody().getAttendanceRecordId());
         }
@@ -157,7 +157,7 @@ class AttendanceRecordControllerTest {
             var response = controller.update(1L, request);
 
             // Assert
-            assertEquals(200, response.getStatusCodeValue());
+            assertEquals(200, response.getStatusCode().value());
             verify(updateUseCase, times(1)).update(eq(1L), any());
         }
     }
@@ -176,7 +176,7 @@ class AttendanceRecordControllerTest {
             var response = controller.delete(1L);
 
             // Assert
-            assertEquals(204, response.getStatusCodeValue());
+            assertEquals(204, response.getStatusCode().value());
             verify(deleteUseCase, times(1)).delete(1L);
         }
     }
@@ -196,7 +196,7 @@ class AttendanceRecordControllerTest {
             var response = controller.list(null, null, null);
 
             // Assert
-            assertEquals(200, response.getStatusCodeValue());
+            assertEquals(200, response.getStatusCode().value());
             assertFalse(response.getBody().isEmpty());
         }
 
@@ -211,7 +211,7 @@ class AttendanceRecordControllerTest {
             var response = controller.list(null, null, "Present");
 
             // Assert
-            assertEquals(200, response.getStatusCodeValue());
+            assertEquals(200, response.getStatusCode().value());
         }
     }
 
@@ -231,7 +231,7 @@ class AttendanceRecordControllerTest {
 
             List<CreateAttendanceRecordRequest> requests = Arrays.asList(req1);
 
-            when(mapper.toDomain(any())).thenReturn(sampleRecord);
+            when(mapper.toDomain(any(CreateAttendanceRecordRequest.class))).thenReturn(sampleRecord);
             when(bulkUseCase.bulk(any())).thenReturn(Arrays.asList(sampleRecord));
             when(mapper.toResponse(any())).thenReturn(sampleResponse);
 
@@ -239,7 +239,7 @@ class AttendanceRecordControllerTest {
             var response = controller.bulk(requests);
 
             // Assert
-            assertEquals(201, response.getStatusCodeValue());
+            assertEquals(201, response.getStatusCode().value());
             assertFalse(response.getBody().isEmpty());
         }
     }

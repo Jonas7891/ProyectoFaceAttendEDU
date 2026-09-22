@@ -90,7 +90,7 @@ class RoleControllerTest {
             var response = controller.createRole(request);
 
             // Assert
-            assertEquals(201, response.getStatusCodeValue());
+            assertEquals(201, response.getStatusCode().value());
             assertNotNull(response.getBody());
             assertEquals("ADMIN", response.getBody().getRoleName());
         }
@@ -111,7 +111,7 @@ class RoleControllerTest {
             var response = controller.getRole(1);
 
             // Assert
-            assertEquals(200, response.getStatusCodeValue());
+            assertEquals(200, response.getStatusCode().value());
             assertNotNull(response.getBody());
             assertEquals(1, response.getBody().getRoleId());
         }
@@ -151,7 +151,7 @@ class RoleControllerTest {
             var response = controller.updateRole(1, request);
 
             // Assert
-            assertEquals(200, response.getStatusCodeValue());
+            assertEquals(200, response.getStatusCode().value());
             verify(updateRoleUseCase, times(1)).updateRole(1, "ADMIN", "Updated description");
         }
     }
@@ -170,7 +170,7 @@ class RoleControllerTest {
             var response = controller.deleteRole(1);
 
             // Assert
-            assertEquals(204, response.getStatusCodeValue());
+            assertEquals(204, response.getStatusCode().value());
             verify(deleteRoleUseCase, times(1)).deleteRole(1);
         }
     }
@@ -190,7 +190,7 @@ class RoleControllerTest {
             var response = controller.listRoles();
 
             // Assert
-            assertEquals(200, response.getStatusCodeValue());
+            assertEquals(200, response.getStatusCode().value());
             assertFalse(response.getBody().isEmpty());
         }
     }
@@ -212,7 +212,7 @@ class RoleControllerTest {
             var response = controller.assignPermission(1, request);
 
             // Assert
-            assertEquals(201, response.getStatusCodeValue());
+            assertEquals(201, response.getStatusCode().value());
             verify(assignPermissionToRoleUseCase, times(1)).assignPermissionToRole(1, 10);
         }
     }
