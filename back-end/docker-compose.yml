@@ -15,6 +15,7 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./database-init:/docker-entrypoint-initdb.d:ro
     networks:
       - faceattend-net
     healthcheck:
@@ -120,6 +121,8 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_LIQUIBASE_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_HBM2DDL_CREATE_NAMESPACES: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_GLOBALLY_QUOTED_IDENTIFIERS: "true"
       SERVER_PORT: 8081
     ports:
       - "8081:8081"
@@ -154,6 +157,8 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_LIQUIBASE_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_HBM2DDL_CREATE_NAMESPACES: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_GLOBALLY_QUOTED_IDENTIFIERS: "true"
       SERVER_PORT: 8083
     ports:
       - "8083:8083"
@@ -185,6 +190,8 @@ services:
       SPRING_DATASOURCE_HIKARI_SCHEMA: scheduling
       SPRING_LIQUIBASE_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_HBM2DDL_CREATE_NAMESPACES: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_GLOBALLY_QUOTED_IDENTIFIERS: "true"
       SERVER_PORT: 8087
     ports:
       - "8087:8087"
@@ -219,6 +226,8 @@ services:
       SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER:-mongoadmin}:${MONGO_PASSWORD:-mongopass}@mongodb:27017/${MONGO_DB:-faceattend_biometric}?authSource=admin
       SPRING_LIQUIBASE_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_HBM2DDL_CREATE_NAMESPACES: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_GLOBALLY_QUOTED_IDENTIFIERS: "true"
       SERVER_PORT: 8085
     ports:
       - "8085:8085"

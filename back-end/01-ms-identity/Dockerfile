@@ -4,7 +4,7 @@ WORKDIR /build
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 COPY src ./src
-RUN mvn package -DskipTests -B
+RUN mvn package -Dmaven.test.skip=true -B
 
 FROM eclipse-temurin:21-jre-alpine
 RUN apk add --no-cache curl

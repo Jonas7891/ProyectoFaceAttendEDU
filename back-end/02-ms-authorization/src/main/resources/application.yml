@@ -12,6 +12,8 @@ spring:
       ddl-auto: validate
     properties:
       hibernate.default_schema: authorization
+      hibernate.globally_quoted_identifiers: true
+      hibernate.hbm2ddl.create_namespaces: true
   kafka:
     bootstrap-servers: localhost:9092
   liquibase:

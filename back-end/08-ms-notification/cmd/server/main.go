@@ -13,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/faceattend/notification-service/internal/infrastructure/config"
+	"github.com/faceattend/notification-service/internal/infrastructure/http/handler"
 )
 
 var startedAt = time.Now()
