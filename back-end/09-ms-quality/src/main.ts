@@ -2,6 +2,7 @@ import Fastify from 'fastify';
 import { randomUUID } from 'node:crypto';
 import { registerQualityRoutes } from './infrastructure/http/routes';
 import { registerProcessRoutes } from './infrastructure/http/process.routes';
+import { registerIstqbRoutes } from './infrastructure/http/istqb.routes';
 import { registerEventHook } from './infrastructure/messaging/event.publisher';
 
 const app = Fastify({ logger: true });
@@ -43,6 +44,7 @@ app.get('/api/v1/health', async () => healthPayload('quality-service'));
 async function start() {
   await registerQualityRoutes(app);
   await registerProcessRoutes(app);
+  await registerIstqbRoutes(app);
   registerEventHook(app);
   const port = Number(process.env.PORT) || 8091;
   await app.listen({ port, host: '0.0.0.0' });
