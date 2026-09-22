@@ -5,13 +5,15 @@ import com.faceattend_edu.identity_service.adapter.in.web.mapper.PersonWebMapper
 import com.faceattend_edu.identity_service.application.port.in.ChangePersonStatusUseCase;
 import com.faceattend_edu.identity_service.application.port.in.CreatePersonUseCase;
 import com.faceattend_edu.identity_service.application.port.in.GetPersonUseCase;
-import com.faceattend_edu.identity_service.application.port.in.TransferPersonUseCase;
 import com.faceattend_edu.identity_service.application.port.in.UpdatePersonUseCase;
+import com.faceattend_edu.identity_service.domain.model.Person;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.util.Map;
+import java.net.URI;
 import java.util.UUID;
 
 @RestController
@@ -23,12 +25,14 @@ public class PersonController {
     private final GetPersonUseCase getPersonUseCase;
     private final UpdatePersonUseCase updatePersonUseCase;
     private final ChangePersonStatusUseCase changePersonStatusUseCase;
-    private final TransferPersonUseCase transferPersonUseCase;
     private final PersonWebMapper personWebMapper;
 
     @PostMapping
-    public ResponseEntity<PersonDto> createPerson(@RequestBody PersonDto personDto) {
-        return ResponseEntity.ok(personWebMapper.toDto(createPersonUseCase.createPerson(personWebMapper.toDomain(personDto))));
+    public ResponseEntity<PersonDto> createPerson(@Valid @RequestBody PersonDto personDto) {
+        Person created = createPersonUseCase.createPerson(personWebMapper.toDomain(personDto));
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}").buildAndExpand(created.getPersonId()).toUri();
+        return ResponseEntity.created(location).body(personWebMapper.toDto(created));
     }
 
     @GetMapping("/{id}")
@@ -37,16 +41,10 @@ public class PersonController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> updatePerson(@PathVariable UUID id, @RequestBody PersonDto personDto) {
+    public ResponseEntity<PersonDto> updatePerson(@PathVariable UUID id, @Valid @RequestBody PersonDto personDto) {
         personDto.setPersonId(id);
-        updatePersonUseCase.updatePerson(personWebMapper.toDomain(personDto));
-        return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/{id}/transfer")
-    public ResponseEntity<Void> transferPerson(@PathVariable UUID id, @RequestBody Map<String, UUID> body) {
-        transferPersonUseCase.transferPerson(id, body.get("newSchoolId"));
-        return ResponseEntity.noContent().build();
+        updatePersonUseCase.updatePerson(id, personWebMapper.toDomain(personDto));
+        return ResponseEntity.ok(personWebMapper.toDto(getPersonUseCase.getPerson(id)));
     }
 
     @PatchMapping("/{id}/status")

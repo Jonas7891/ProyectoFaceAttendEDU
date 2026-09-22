@@ -8,7 +8,6 @@ public record PersonCreated(
         String lastName,
         String email,
         String phone,
-        String bloodType,
-        UUID schoolId
+        String bloodType
 ) {
 }

@@ -4,6 +4,8 @@ import com.faceattend_edu.identity_service.adapter.out.persistence.entity.CityJp
 import com.faceattend_edu.identity_service.domain.model.City;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
 @Component
 public class CityPersistenceMapper {
 
@@ -20,12 +22,14 @@ public class CityPersistenceMapper {
 
     public CityJpaEntity toEntity(City domain) {
         if (domain == null) return null;
-        return new CityJpaEntity(
-            domain.getCityId(),
-            domain.getName(),
-            domain.getDepartment(),
-            domain.getCreatedAt(),
-            domain.getUpdatedAt()
-        );
+        CityJpaEntity entity = new CityJpaEntity();
+        entity.setCityId(domain.getCityId());
+        entity.setName(domain.getName());
+        entity.setDepartment(domain.getDepartment());
+        entity.setCreatedAt(domain.getCreatedAt());
+        entity.setUpdatedAt(domain.getUpdatedAt());
+        // created_at es NOT NULL sin default en el DDL canonico.
+        if (entity.getCreatedAt() == null) entity.setCreatedAt(LocalDateTime.now());
+        return entity;
     }
 }

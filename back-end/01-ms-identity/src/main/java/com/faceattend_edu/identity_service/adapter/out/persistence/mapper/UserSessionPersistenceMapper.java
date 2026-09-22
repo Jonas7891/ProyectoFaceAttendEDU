@@ -5,6 +5,8 @@ import com.faceattend_edu.identity_service.domain.model.UserSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
 @Component
 @RequiredArgsConstructor
 public class UserSessionPersistenceMapper {
@@ -25,13 +27,16 @@ public class UserSessionPersistenceMapper {
 
     public UserSessionJpaEntity toEntity(UserSession domain) {
         if (domain == null) return null;
-        return new UserSessionJpaEntity(
-            domain.getSessionId(),
-            userPersistenceMapper.toEntity(domain.getUserId()),
-            domain.getStartDate(),
-            domain.getEndDate(),
-            domain.getSourceIp(),
-            domain.getSessionStatus()
-        );
+        UserSessionJpaEntity entity = new UserSessionJpaEntity();
+        entity.setSessionId(domain.getSessionId());
+        entity.setUser(userPersistenceMapper.toEntity(domain.getUserId()));
+        entity.setStartDate(domain.getStartDate());
+        entity.setEndDate(domain.getEndDate());
+        entity.setSourceIp(domain.getSourceIp());
+        entity.setSessionStatus(domain.getSessionStatus());
+        // start_date y created_at son NOT NULL sin default en el DDL canonico.
+        if (entity.getStartDate() == null) entity.setStartDate(LocalDateTime.now());
+        if (entity.getCreatedAt() == null) entity.setCreatedAt(LocalDateTime.now());
+        return entity;
     }
 }

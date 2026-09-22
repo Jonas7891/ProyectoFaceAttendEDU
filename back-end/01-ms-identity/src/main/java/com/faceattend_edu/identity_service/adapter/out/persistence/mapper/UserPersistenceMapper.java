@@ -2,16 +2,20 @@ package com.faceattend_edu.identity_service.adapter.out.persistence.mapper;
 
 import com.faceattend_edu.identity_service.adapter.out.persistence.entity.UserJpaEntity;
 import com.faceattend_edu.identity_service.domain.model.User;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class UserPersistenceMapper {
+
+    private final PersonPersistenceMapper personPersistenceMapper;
 
     public User toDomain(UserJpaEntity entity) {
         if (entity == null) return null;
         return new User(
             entity.getUserId(),
-            null, // Person needs separate mapping to avoid circular dependency
+            personPersistenceMapper.toDomain(entity.getPerson()),
             entity.getUsername(),
             entity.getPasswordHash(),
             entity.getAuthenticationType(),
@@ -24,16 +28,16 @@ public class UserPersistenceMapper {
 
     public UserJpaEntity toEntity(User domain) {
         if (domain == null) return null;
-        return new UserJpaEntity(
-            domain.getUserId(),
-            null, // Person needs separate mapping
-            domain.getUsername(),
-            domain.getPasswordHash(),
-            domain.getAuthenticationType(),
-            domain.getStatus(),
-            domain.getCreatedAt(),
-            domain.getUpdatedAt(),
-            domain.getLastAccess()
-        );
+        UserJpaEntity entity = new UserJpaEntity();
+        entity.setUserId(domain.getUserId());
+        entity.setPerson(personPersistenceMapper.toEntity(domain.getPersonId()));
+        entity.setUsername(domain.getUsername());
+        entity.setPasswordHash(domain.getPasswordHash());
+        entity.setAuthenticationType(domain.getAuthenticationType());
+        entity.setStatus(domain.getStatus());
+        entity.setCreatedAt(domain.getCreatedAt());
+        entity.setUpdatedAt(domain.getUpdatedAt());
+        entity.setLastAccess(domain.getLastAccess());
+        return entity;
     }
 }

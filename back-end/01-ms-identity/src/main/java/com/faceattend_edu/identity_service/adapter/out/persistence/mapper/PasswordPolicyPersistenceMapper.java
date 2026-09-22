@@ -4,6 +4,8 @@ import com.faceattend_edu.identity_service.adapter.out.persistence.entity.Passwo
 import com.faceattend_edu.identity_service.domain.model.PasswordPolicy;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
 @Component
 public class PasswordPolicyPersistenceMapper {
 
@@ -24,16 +26,18 @@ public class PasswordPolicyPersistenceMapper {
 
     public PasswordPolicyJpaEntity toEntity(PasswordPolicy domain) {
         if (domain == null) return null;
-        return new PasswordPolicyJpaEntity(
-            domain.getPolicyId(),
-            domain.getMinLength(),
-            domain.getMaxLength(),
-            domain.getRequiresUppercase(),
-            domain.getRequiresNumbers(),
-            domain.getRequiresSymbols(),
-            domain.getExpirationDays(),
-            domain.getCreatedAt(),
-            domain.getUpdatedAt()
-        );
+        PasswordPolicyJpaEntity entity = new PasswordPolicyJpaEntity();
+        entity.setPolicyId(domain.getPolicyId());
+        entity.setMinLength(domain.getMinLength());
+        entity.setMaxLength(domain.getMaxLength());
+        entity.setRequiresUppercase(domain.getRequiresUppercase());
+        entity.setRequiresNumbers(domain.getRequiresNumbers());
+        entity.setRequiresSymbols(domain.getRequiresSymbols());
+        entity.setExpirationDays(domain.getExpirationDays());
+        entity.setCreatedAt(domain.getCreatedAt());
+        entity.setUpdatedAt(domain.getUpdatedAt());
+        // created_at es NOT NULL sin default en el DDL canonico.
+        if (entity.getCreatedAt() == null) entity.setCreatedAt(LocalDateTime.now());
+        return entity;
     }
 }

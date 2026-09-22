@@ -5,8 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -16,24 +16,35 @@ import java.util.regex.Pattern;
 @NoArgsConstructor
 public class Person {
     private UUID personId;
-    private School schoolId;
+    private String documentNumber;
     private String name;
     private String lastName;
     private String email;
     private String phone;
-    private BloodType rh;
+    private String documentType;
+    private BloodType bloodType;
+    private LocalDate birthDate;
+    private String address;
     private Boolean status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private LocalDateTime deletedAt;
+    private UUID createdBy;
+    private UUID updatedBy;
+    private UUID deletedBy;
+    private long rowVersion;
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
 
     public void validate() {
-        Objects.requireNonNull(this, "Person must not be null");
+        if (isNullOrBlank(this.documentNumber)) throw new IllegalArgumentException("Person.documentNumber is required");
         if (isNullOrBlank(this.name)) throw new IllegalArgumentException("Person.name is required");
         if (isNullOrBlank(this.lastName)) throw new IllegalArgumentException("Person.lastName is required");
         if (this.email != null && !EMAIL_PATTERN.matcher(this.email).matches()) {
             throw new IllegalArgumentException("Person.email is not a valid email");
+        }
+        if (this.documentNumber != null && this.documentNumber.length() > 50) {
+            throw new IllegalArgumentException("Person.documentNumber max 50");
         }
     }
 

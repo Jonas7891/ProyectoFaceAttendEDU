@@ -10,7 +10,6 @@ public record PersonUpdated(
         String email,
         String phone,
         String bloodType,
-        UUID schoolId,
         Instant occurredAt
 ) {
 }
