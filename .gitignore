@@ -11,6 +11,7 @@ target/
 .env
 .env.local
 *.env.*
+.qwen
 
 # IDE files
 .vscode/
