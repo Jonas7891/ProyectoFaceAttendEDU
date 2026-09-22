@@ -9,6 +9,10 @@ services:
       - name: identity-route
         paths: [/api/v1/persons, /api/v1/users, /api/v1/auth, /api/v1/sessions, /api/v1/cities, /api/v1/password-policies]
         strip_path: false
+      # Canonical school lives in academic-service; identity SchoolController kept direct-only for backward compat
+      - name: identity-nested-route
+        paths: ["~/api/v1/persons/.+/transfer", "~/api/v1/users/.+/activate"]
+        strip_path: false
     plugins:
       - name: cors
         config:
@@ -55,7 +59,7 @@ services:
     url: http://ms-scheduling:8087
     routes:
       - name: scheduling-route
-        paths: [/api/v1/environments, /api/v1/schedule-blocks, /api/v1/class-sessions, /api/v1/actors, /api/v1/blocks]
+        paths: [/api/v1/environments, /api/v1/schedule-blocks, /api/v1/class-sessions]
         strip_path: false
       - name: scheduling-nested-route
         paths: ["~/api/v1/cohorts/.+/blocks"]
@@ -66,7 +70,7 @@ services:
     url: http://ms-attendance:8085
     routes:
       - name: attendance-route
-        paths: [/api/v1/attendance-records, /api/v1/attendance, /api/v1/justifications, /api/v1/justification-types, /api/v1/supporting-documents]
+        paths: [/api/v1/attendance-records, /api/v1/justifications, /api/v1/justification-types, /api/v1/supporting-documents]
         strip_path: false
       - name: attendance-nested-route
         paths: ["~/api/v1/class-sessions/.+/attendance", "~/api/v1/academic-actors/.+/attendance", "~/api/v1/attendance/.+/justification", "~/api/v1/justifications/.+/documents"]
@@ -113,7 +117,7 @@ services:
     url: http://ms-academic:8084
     routes:
       - name: quality-health-route
-        paths: [/health/quality, /api/v1/quality/report]
+        paths: [/health/quality]
         strip_path: false
     plugins:
       - name: cors

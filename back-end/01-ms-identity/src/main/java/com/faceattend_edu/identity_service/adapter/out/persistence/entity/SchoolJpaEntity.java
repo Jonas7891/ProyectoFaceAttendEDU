@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "schools")
+@Table(name = "schools", schema = "identity")
 @Getter
 @Setter
 @AllArgsConstructor

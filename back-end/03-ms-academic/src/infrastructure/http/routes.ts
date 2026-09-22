@@ -256,7 +256,32 @@ export async function registerAcademicRoutes(app: FastifyInstance) {
   });
 
   // ---------- Actor types ----------
+  const actorTypeBody = z.object({
+    code: z.string().min(1),
+    name: z.string().min(1),
+  });
+  app.post('/api/v1/actor-types', async (req, reply) => {
+    const parsed = actorTypeBody.safeParse((req as any).body);
+    if (!parsed.success) return send400(reply, 'Invalid actor-type payload', parsed.error.flatten());
+    return reply.code(201).send(stores.actorTypes.create(parsed.data as any));
+  });
   app.get('/api/v1/actor-types', async (req, reply) => page(stores.actorTypes.list(), req, reply));
+  app.get('/api/v1/actor-types/:id', async (req, reply) => {
+    const found = stores.actorTypes.get(Number((req.params as any).id));
+    if (!found) return reply.code(404).send({ error: 'NotFound' });
+    return found;
+  });
+  app.put('/api/v1/actor-types/:id', async (req, reply) => {
+    const parsed = actorTypeBody.partial().safeParse((req as any).body);
+    if (!parsed.success) return send400(reply, 'Invalid actor-type payload', parsed.error.flatten());
+    const updated = stores.actorTypes.update(Number((req.params as any).id), parsed.data as any);
+    if (!updated) return reply.code(404).send({ error: 'NotFound' });
+    return updated;
+  });
+  app.delete('/api/v1/actor-types/:id', async (req, reply) => {
+    if (!stores.actorTypes.remove(Number((req.params as any).id))) return reply.code(404).send({ error: 'NotFound' });
+    return reply.code(204).send();
+  });
 
   // ---------- Academic actors ----------
   const actorBody = z.object({

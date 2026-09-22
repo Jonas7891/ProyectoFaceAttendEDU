@@ -68,6 +68,12 @@ func (h *AlertHandler) List(c *gin.Context) {
 	if v := c.Query("resolved"); v != "" {
 		b, _ := strconv.ParseBool(v)
 		q.Resolved = &b
+	} else if v := c.Query("status"); v != "" {
+		// Alias ?status=resolved|open|pending for gateway clients
+		b := v == "resolved" || v == "Resolved" || v == "RESOLVED"
+		if v == "resolved" || v == "Resolved" || v == "RESOLVED" || v == "open" || v == "Open" || v == "OPEN" || v == "pending" || v == "Pending" || v == "PENDING" {
+			q.Resolved = &b
+		}
 	}
 	if v := c.Query("limit"); v != "" {
 		if iv, err := strconv.Atoi(v); err == nil {

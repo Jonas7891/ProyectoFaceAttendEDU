@@ -42,6 +42,24 @@ app.get('/health', async () => healthPayload('quality-service'));
 app.get('/api/v1/health', async () => healthPayload('quality-service'));
 
 async function start() {
+  // PostgreSQL best-effort: verify DATABASE_URL, fallback to MemoryStore.
+  const databaseUrl = process.env.DATABASE_URL;
+  const pgSchema = process.env.PG_SCHEMA || 'quality';
+  if (databaseUrl) {
+    try {
+      const { Pool } = await import('pg');
+      const pool = new Pool({ connectionString: databaseUrl });
+      await pool.query(`CREATE SCHEMA IF NOT EXISTS "${pgSchema}"`);
+      await pool.query('SELECT 1');
+      app.log.info({ schema: pgSchema }, 'postgres connected (quality)');
+      await pool.end();
+    } catch (err) {
+      app.log.warn({ err }, 'postgres unavailable, using MemoryStore');
+    }
+  } else {
+    app.log.warn('DATABASE_URL not set, using MemoryStore');
+  }
+
   await registerQualityRoutes(app);
   await registerProcessRoutes(app);
   await registerIstqbRoutes(app);

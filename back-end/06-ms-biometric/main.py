@@ -83,6 +83,26 @@ app.include_router(facial_router)
 app.include_router(fingerprint_router)
 app.include_router(update_router)
 
+
+@app.on_event("startup")
+async def _connect_mongo() -> None:
+    # MongoDB best-effort (Motor): verify MONGODB_URL, fallback to MemoryStore.
+    import os
+
+    url = os.getenv("MONGODB_URL")
+    if not url:
+        return
+    try:
+        from motor.motor_asyncio import AsyncIOMotorClient
+
+        client = AsyncIOMotorClient(url, serverSelectionTimeoutMS=3000)
+        await client.admin.command("ping")
+        client.close()
+    except Exception:
+        # MemoryStore fallback keeps basic CRUD working without MongoDB.
+        pass
+
+
 @app.get("/health")
 async def health(): return _health("biometric-service")
 

@@ -42,8 +42,9 @@ public class PasswordPolicyController {
         return ResponseEntity.ok(passwordPolicyWebMapper.toDto(getPasswordPolicyUseCase.getPolicy(id)));
     }
 
-    @PutMapping
-    public ResponseEntity<Void> updatePolicy(@RequestBody PasswordPolicyDto policyDto) {
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> updatePolicy(@PathVariable Integer id, @RequestBody PasswordPolicyDto policyDto) {
+        policyDto.setPolicyId(id);
         updatePasswordPolicyUseCase.updatePolicy(passwordPolicyWebMapper.toDomain(policyDto));
         return ResponseEntity.noContent().build();
     }

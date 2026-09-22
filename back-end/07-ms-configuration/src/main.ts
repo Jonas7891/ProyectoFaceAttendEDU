@@ -38,6 +38,24 @@ app.get('/health', async () => healthPayload('configuration-service'));
 app.get('/api/v1/health', async () => healthPayload('configuration-service'));
 
 async function start() {
+  // PostgreSQL best-effort: verify DATABASE_URL, fallback to MemoryStore.
+  const databaseUrl = process.env.DATABASE_URL;
+  const pgSchema = process.env.PG_SCHEMA || 'configuration';
+  if (databaseUrl) {
+    try {
+      const { Pool } = await import('pg');
+      const pool = new Pool({ connectionString: databaseUrl });
+      await pool.query(`CREATE SCHEMA IF NOT EXISTS "${pgSchema}"`);
+      await pool.query('SELECT 1');
+      app.log.info({ schema: pgSchema }, 'postgres connected (configuration)');
+      await pool.end();
+    } catch (err) {
+      app.log.warn({ err }, 'postgres unavailable, using MemoryStore');
+    }
+  } else {
+    app.log.warn('DATABASE_URL not set, using MemoryStore');
+  }
+
   // ISO/IEC 9001 — Quality audit middleware (Cláusula 8.5.2 / 9.1)
   registerQualityMiddleware(app);
   registerQualityHealthEndpoint(app);

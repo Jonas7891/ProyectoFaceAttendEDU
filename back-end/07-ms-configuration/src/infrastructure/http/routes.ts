@@ -140,6 +140,13 @@ export async function registerConfigurationRoutes(app: FastifyInstance) {
     if (!found) return reply.code(404).send({ error: 'NotFound' });
     return found;
   });
+  app.put('/api/v1/biometric-update-cases/:id', async (req, reply) => {
+    const parsed = caseBody.partial().safeParse((req as any).body);
+    if (!parsed.success) return reply.code(400).send({ error: 'BadRequest', details: parsed.error.flatten() });
+    const updated = stores.cases.update((req.params as any).id, parsed.data as any);
+    if (!updated) return reply.code(404).send({ error: 'NotFound' });
+    return updated;
+  });
   app.patch('/api/v1/biometric-update-cases/:id/review', async (req, reply) => {
     const parsed = z
       .object({ updateStatus: z.enum(['In_Review', 'Approved', 'Rejected']), reviewedBy: z.string().optional(), resolutionNotes: z.string().optional() })

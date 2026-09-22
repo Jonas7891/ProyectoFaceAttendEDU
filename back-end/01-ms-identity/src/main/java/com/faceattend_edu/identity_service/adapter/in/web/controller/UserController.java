@@ -2,6 +2,7 @@ package com.faceattend_edu.identity_service.adapter.in.web.controller;
 
 import com.faceattend_edu.identity_service.adapter.in.web.dto.UserDto;
 import com.faceattend_edu.identity_service.adapter.in.web.mapper.UserWebMapper;
+import com.faceattend_edu.identity_service.application.port.in.ActivateUserUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ChangeUserStatusUseCase;
 import com.faceattend_edu.identity_service.application.port.in.CreateUserUseCase;
 import com.faceattend_edu.identity_service.application.port.in.GetUserUseCase;
@@ -21,6 +22,7 @@ public class UserController {
     private final GetUserUseCase getUserUseCase;
     private final UpdateUserUseCase updateUserUseCase;
     private final ChangeUserStatusUseCase changeUserStatusUseCase;
+    private final ActivateUserUseCase activateUserUseCase;
     private final UserWebMapper userWebMapper;
 
     @PostMapping
@@ -33,9 +35,16 @@ public class UserController {
         return ResponseEntity.ok(userWebMapper.toDto(getUserUseCase.getUser(id)));
     }
 
-    @PutMapping
-    public ResponseEntity<Void> updateUser(@RequestBody UserDto userDto) {
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> updateUser(@PathVariable UUID id, @RequestBody UserDto userDto) {
+        userDto.setUserId(id);
         updateUserUseCase.updateUser(userWebMapper.toDomain(userDto));
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/activate")
+    public ResponseEntity<Void> activateUser(@PathVariable UUID id) {
+        activateUserUseCase.activateUser(id);
         return ResponseEntity.noContent().build();
     }
 

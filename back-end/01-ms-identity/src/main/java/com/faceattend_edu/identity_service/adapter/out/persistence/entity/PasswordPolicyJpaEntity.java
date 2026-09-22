@@ -5,7 +5,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "password_policy")
+@Table(name = "password_policy", schema = "identity")
 @Getter
 @Setter
 @AllArgsConstructor

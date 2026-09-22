@@ -30,8 +30,9 @@ public class SchoolController {
         return ResponseEntity.ok(schoolWebMapper.toDto(getSchoolUseCase.getSchool(id)));
     }
 
-    @PutMapping
-    public ResponseEntity<Void> updateSchool(@RequestBody SchoolDto schoolDto) {
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> updateSchool(@PathVariable UUID id, @RequestBody SchoolDto schoolDto) {
+        schoolDto.setSchoolId(id);
         updateSchoolUseCase.updateSchool(schoolWebMapper.toDomain(schoolDto));
         return ResponseEntity.noContent().build();
     }

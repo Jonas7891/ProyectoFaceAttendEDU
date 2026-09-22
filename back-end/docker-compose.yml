@@ -88,7 +88,7 @@ services:
     networks:
       - faceattend-net
     healthcheck:
-      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list > /dev/null 2>&1 || cubkafka-ready -b localhost:9092 1 5 > /dev/null 2>&1"]
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list > /dev/null 2>&1"]
       interval: 15s
       timeout: 10s
       retries: 10
@@ -259,6 +259,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-faceattend_db}
+      PG_SCHEMA: academic
       PORT: 8084
       KAFKA_BROKERS: kafka:29092
       NODE_ENV: production
@@ -287,6 +288,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-faceattend_db}
+      PG_SCHEMA: configuration
       PORT: 8089
       KAFKA_BROKERS: kafka:29092
       NODE_ENV: production
@@ -352,6 +354,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-faceattend_db}?sslmode=disable
+      PG_SCHEMA: notification
       PORT: 8090
       KAFKA_BROKERS: kafka:29092
     ports:
@@ -380,9 +383,13 @@ services:
     image: faceattend/ms-quality:latest
     container_name: faceattend-ms-quality
     depends_on:
+      postgres:
+        condition: service_healthy
       kafka:
         condition: service_healthy
     environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-faceattend_db}
+      PG_SCHEMA: quality
       PORT: 8091
       KAFKA_BROKERS: kafka:29092
       NODE_ENV: production
@@ -406,8 +413,6 @@ services:
     image: kong:3.6
     container_name: faceattend-kong
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
       kafka:

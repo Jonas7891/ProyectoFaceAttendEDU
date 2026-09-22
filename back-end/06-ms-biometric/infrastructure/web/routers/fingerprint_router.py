@@ -22,6 +22,11 @@ class VerifyFingerprintRequest(BaseModel):
     encoding: list[float] = Field(min_length=1)
 
 
+class IdentifyFingerprintRequest(BaseModel):
+    encoding: list[float] = Field(min_length=1)
+    finger_number: int | None = Field(default=None, ge=1, le=10)
+
+
 @router.post("/enroll", status_code=status.HTTP_201_CREATED)
 async def enroll_fingerprint(req: EnrollFingerprintRequest):
     return fingerprint_store.enroll(req.model_dump())
@@ -54,3 +59,25 @@ async def verify_fingerprint(req: VerifyFingerprintRequest):
         raise HTTPException(status_code=404, detail="no active fingerprint template")
     score = cosine(req.encoding, active[0]["encoding"])
     return {"match": score >= SIMILARITY_THRESHOLD, "score": score}
+
+
+@router.post("/identify")
+async def identify_fingerprint(req: IdentifyFingerprintRequest):
+    best: dict | None = None
+    best_score = 0.0
+    seen: dict[str, dict] = {}
+    for doc in fingerprint_store._docs.values():
+        if not doc["is_active"]:
+            continue
+        if req.finger_number is not None and doc.get("finger_number") != req.finger_number:
+            continue
+        key = f"{doc['person_id']}:{doc.get('finger_number')}"
+        seen[key] = doc
+    for doc in seen.values():
+        score = cosine(req.encoding, doc["encoding"])
+        if score > best_score:
+            best_score = score
+            best = doc
+    if best is None or best_score < SIMILARITY_THRESHOLD:
+        raise HTTPException(status_code=404, detail="no match found")
+    return {"person_id": best["person_id"], "finger_number": best.get("finger_number"), "score": best_score}
