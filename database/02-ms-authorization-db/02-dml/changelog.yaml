@@ -5,3 +5,6 @@ databaseChangeLog:
   - include:
       file: 002-seed-permission-table.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 003-sync-catalog-sequences.yaml
+      relativeToChangelogFile: true
