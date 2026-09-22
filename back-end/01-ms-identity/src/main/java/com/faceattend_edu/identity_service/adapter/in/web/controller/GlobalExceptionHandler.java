@@ -4,11 +4,14 @@ import com.faceattend_edu.identity_service.domain.exception.DuplicateEntityExcep
 import com.faceattend_edu.identity_service.domain.exception.EntityNotFoundException;
 import com.faceattend_edu.identity_service.domain.exception.ValidationException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.Instant;
 import java.util.Map;
@@ -51,6 +54,25 @@ public class GlobalExceptionHandler {
                 .map(f -> f.getField() + ": " + f.getDefaultMessage())
                 .reduce((a, b) -> a + ", " + b).orElse(ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(envelope(HttpStatus.BAD_REQUEST, msg, req));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleDataIntegrity(DataIntegrityViolationException ex, HttpServletRequest req) {
+        // No se expone el mensaje SQL interno al cliente.
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(envelope(HttpStatus.CONFLICT, "Resource violates a uniqueness constraint", req));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> handleUnreadableBody(HttpMessageNotReadableException ex, HttpServletRequest req) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(envelope(HttpStatus.BAD_REQUEST, "Malformed request body", req));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest req) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(envelope(HttpStatus.BAD_REQUEST, "Invalid value for parameter '" + ex.getName() + "'", req));
     }
 
     @ExceptionHandler(Exception.class)
