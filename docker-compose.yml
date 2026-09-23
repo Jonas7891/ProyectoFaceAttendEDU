@@ -1,6 +1,11 @@
 include:
   - ./database/docker-compose.yml
   - ./back-end/docker-compose.yml
+  # frontend-web (:8082 → nginx :80) viene de back-end/docker-compose.yml
+  # y consume el gateway Kong (:8080). Levantar todo con:
+  #   docker compose up --build
+  # Solo frontend + gateway (tras primer build del backend):
+  #   docker compose up frontend-web kong-gateway
 
 services:
   postgres:

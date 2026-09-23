@@ -65,8 +65,20 @@ export interface DerivedProgram {
 
 // ── Tipos del contexto ────────────────────────────────────
 
+export interface BackendStatus {
+    /** true si el gateway respondió al menos a /health de un MS. */
+    online: boolean;
+    /** Detalle por servicio cuando se consultó. */
+    checkedAt?: string;
+    checkedServices?: Record<string, boolean>;
+}
+
 export interface AppDataContextType {
     isLoading: boolean;
+    /** Estado de conectividad con el backend (best-effort, no bloquea UI). */
+    backend: BackendStatus;
+    /** Reintenta la comprobación de backend y precarga conteos. No borra datos locales. */
+    refreshFromApi: () => Promise<BackendStatus>;
 
     // ── Students ────────────────────────────────────────
     students: Student[];
@@ -95,6 +107,34 @@ export interface AppDataContextType {
     removeSchedule: (envId: string, scheduleId: string) => Promise<void>;
 }
 
+// ── Backend (best-effort) ─────────────────────────────────
+//
+//  checkBackend() consulta /health de los MS Node (academic,
+//  configuration, quality) a través del gateway. Si el gateway
+//  no responde, la app sigue con datos locales sin errores.
+
+async function checkBackend(): Promise<BackendStatus> {
+    const { request } = await import("../api/apiClient");
+    const { getApiBaseUrl } = await import("../config/env");
+    const services: Array<{ key: string; path: string; base?: string }> = [
+        { key: "academic", path: "/health", base: getApiBaseUrl().replace(":8080", ":8084") },
+        { key: "configuration", path: "/health", base: getApiBaseUrl().replace(":8080", ":8089") },
+        { key: "quality", path: "/health", base: getApiBaseUrl().replace(":8080", ":8091") },
+        { key: "gateway-academic", path: "/api/v1/schools" },
+    ];
+    const checkedServices: Record<string, boolean> = {};
+    for (const s of services) {
+        try {
+            await request<unknown>(s.path, { method: "GET", timeoutMs: 3000, baseUrl: s.base });
+            checkedServices[s.key] = true;
+        } catch {
+            checkedServices[s.key] = false;
+        }
+    }
+    const online = Object.values(checkedServices).some(Boolean);
+    return { online, checkedAt: new Date().toISOString(), checkedServices };
+}
+
 // ── Context ───────────────────────────────────────────────
 
 const AppDataContext = createContext<AppDataContextType | null>(null);
@@ -106,6 +146,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     const [users,        setUsers]        = useState<AppUser[]>([]);
     const [environments, setEnvironments] = useState<Environment[]>([]);
     const [isLoading,    setIsLoading]    = useState(true);
+    const [backend,      setBackend]      = useState<BackendStatus>({ online: false });
 
     // Carga única al montar — todas las entidades en paralelo
     useEffect(() => {
@@ -119,6 +160,8 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
             setEnvironments(e);
             setIsLoading(false);
         });
+        // Chequeo best-effort del backend (no bloquea, no borra datos locales)
+        void checkBackend().then(setBackend).catch(() => undefined);
     }, []);
 
     // ── Programs derivados (sin storage propio) ───────────
@@ -217,10 +260,20 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         setEnvironments(updated);
     }, [environments]);
 
+    const refreshFromApi = useCallback(async (): Promise<BackendStatus> => {
+        const status = await checkBackend().catch(
+            (): BackendStatus => ({ online: false, checkedAt: new Date().toISOString() })
+        );
+        setBackend(status);
+        return status;
+    }, []);
+
     // ── Valor del contexto ────────────────────────────────
 
     const value = useMemo<AppDataContextType>(() => ({
         isLoading,
+        backend,
+        refreshFromApi,
 
         students,
         addStudent:     addStudentFn,
@@ -245,6 +298,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         removeSchedule: removeScheduleFn,
     }), [
         isLoading,
+        backend, refreshFromApi,
         students,    addStudentFn, importStudentsFn, updateStudentFn, removeStudentFn,
         programs,
         users,       addUserFn, updateUserFn, removeUserFn,

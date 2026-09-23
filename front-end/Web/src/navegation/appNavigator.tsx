@@ -5,9 +5,11 @@ import LandingPage from "../view/screens/landingScreen";
 import LoginScreen from "../view/screens/loginScreen";
 import SignupScreen from "../view/screens/signupScreen";
 import DashboardScreen from "../view/screens/dashboardScreen";
+import { RouteNames } from "./linking";
 
 const Stack = createNativeStackNavigator();
 
+/** Rutas: / → landing, /login, /register, /dashboard (ver linking.ts). */
 export default function AppNavigator() {
 
     return (
@@ -18,22 +20,22 @@ export default function AppNavigator() {
             }}
         >
             <Stack.Screen
-                name="FaceAttendEDU"
+                name={RouteNames.landing}
                 component={LandingPage}
             />
 
             <Stack.Screen
-                name="FaceAttendEDU-Login"
+                name={RouteNames.login}
                 component={LoginScreen}
             />
 
             <Stack.Screen
-                name="FaceAttendEDU-Register"
+                name={RouteNames.register}
                 component={SignupScreen}
             />
 
             <Stack.Screen
-                name="FaceAttendEDU-Dashboard"
+                name={RouteNames.dashboard}
                 component={DashboardScreen}
             />
         </Stack.Navigator>
