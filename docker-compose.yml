@@ -1,0 +1,9 @@
+include:
+  - ./database/docker-compose.yml
+  - ./back-end/docker-compose.yml
+
+services:
+  postgres:
+    networks:
+      - default
+      - faceattend-net
