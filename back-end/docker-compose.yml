@@ -417,6 +417,24 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      ms-identity:
+        condition: service_healthy
+      ms-authorization:
+        condition: service_healthy
+      ms-academic:
+        condition: service_healthy
+      ms-scheduling:
+        condition: service_healthy
+      ms-attendance:
+        condition: service_healthy
+      ms-biometric:
+        condition: service_healthy
+      ms-configuration:
+        condition: service_healthy
+      ms-notification:
+        condition: service_healthy
+      ms-quality:
+        condition: service_healthy
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /kong/kong.yml
