@@ -38,13 +38,35 @@ export function WeeklyReportToggle({ value, onToggle, description }) {
     );
 }
 
-// ── At Risk Alert ─────────────────────────────────────────
-export function AtRiskAlertToggle({ value, onToggle, description }) {
+// ── At Risk Alert (Genérico y parametrizable por rol) ────
+/**
+ * Componente genérico para alertas de riesgo.
+ * Configurable según el rol del usuario:
+ * - Admin: alertas sobre instructores/profesores
+ * - Teacher: alertas sobre aprendices
+ * - Student: alertas sobre ellos mismos
+ * 
+ * @param {Object} props
+ * @param {boolean} props.value - Estado del toggle
+ * @param {Function} props.onToggle - Callback al cambiar el toggle
+ * @param {string} props.label - Etiqueta personalizada según el rol
+ * @param {string} props.description - Descripción personalizada según el rol
+ * @param {string} props.targetRole - Rol objetivo de la alerta ("instructor"|"student"|"self")
+ */
+export function AtRiskAlertToggle({ value, onToggle, label, description, targetRole = "student" }) {
     const { t } = useTranslation();
+    
+    // Etiquetas por defecto según targetRole si no se proporciona una personalizada
+    const defaultLabels = {
+        instructor: t("Alerta de instructores en riesgo"),
+        student: t("Alerta de estudiantes en riesgo"),
+        self: t("Alerta de asistencia personal"),
+    };
+    
     return (
         <>
             <ToggleRow
-                label={t("Alerta de estudiantes en riesgo")}
+                label={label || defaultLabels[targetRole] || defaultLabels.student}
                 description={description}
                 value={value}
                 onToggle={onToggle}

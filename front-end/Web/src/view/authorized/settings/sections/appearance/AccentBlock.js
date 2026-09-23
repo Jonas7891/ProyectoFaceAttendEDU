@@ -10,9 +10,8 @@
 import React from "react";
 import { View, Text } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Divider } from "../../../../components/common";
 import { useTranslation } from "../../../../../core/utils/i18n/hooks/useTranslation";
-import { AccentColorSelector, ThemePreview } from "../../../../components/settings/tabs";
+import { AccentColorSelector } from "../../../../components/settings/tabs";
 import { useSettingsSectionStyles } from "../../modals/useSettingsSectionStyles";
 
 export function AccentBlock({ previewAccent, onPreviewChange, previewTheme }) {
@@ -28,18 +27,13 @@ export function AccentBlock({ previewAccent, onPreviewChange, previewTheme }) {
                     {t("Este color se aplica a botones principales, tabs activos, barras de progreso, bordes de foco y todos los elementos interactivos. Los cambios se previsualizan abajo — presiona \"Guardar cambios\" para aplicarlos en toda la aplicación.")}
                 </Text>
             </View>
+
+            {/* Selector de colores + Preview en vivo dentro */}
             <AccentColorSelector
                 previewHex={previewAccent}
                 onPreviewChange={onPreviewChange}
+                previewTheme={previewTheme}
             />
-
-            <Divider />
-
-            {/* Preview en vivo */}
-            <View style={{ gap: 8 }}>
-                <Text style={labelStyle}>{t("Vista previa en vivo")}</Text>
-                <ThemePreview previewTheme={previewTheme} />
-            </View>
 
             <View style={{
                 flexDirection: "row",

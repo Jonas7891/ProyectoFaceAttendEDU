@@ -71,7 +71,7 @@ export function AdminSettings({ section, onSave, previewAccent, onPreviewChange,
     // ── Estado notificaciones ─────────────────────────────────
     const [emailAlert, setEmailAlert] = useState(true);
     const [weeklyReport, setWeeklyReport] = useState(true);
-    const [atRiskAlert, setAtRiskAlert] = useState(true);
+    const [atRiskAlert, setAtRiskAlert] = useState(true); // Para instructores/profesores
     const [dailySummary, setDailySummary] = useState(false);
     const [pushNotifications, setPushNotifications] = useState(true);
     const [pushDuration, setPushDuration] = useState(0); // Sin valor por defecto
@@ -215,7 +215,8 @@ export function AdminSettings({ section, onSave, previewAccent, onPreviewChange,
                     <AtRiskAlertToggle
                         value={atRiskAlert}
                         onToggle={() => setAtRiskAlert(v => !v)}
-                        description={`${t("Notifica cuando un estudiante cae por debajo del")} ${minAttendance}% ${t("de asistencia mínima configurado en Reconocimiento.")}`}
+                        targetRole="instructor"
+                        description={`${t("Notifica cuando un instructor cae por debajo del")} ${minAttendance}% ${t("de asistencia mínima configurado en Reconocimiento.")}`}
                     />,
                     <DailySummaryToggle
                         value={dailySummary}

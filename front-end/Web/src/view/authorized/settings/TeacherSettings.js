@@ -17,7 +17,10 @@ import {
     AppearanceSettings,
 } from "./modals";
 import {
-    NotificationToggles,
+    EmailAlertToggle,
+    WeeklyReportToggle,
+    AtRiskAlertToggle,
+    DailySummaryToggle,
     TwoFactorRow,
     SessionTimeInput,
     ModeBlock,
@@ -34,7 +37,7 @@ export function TeacherSettings({ section, onSave, previewAccent, onPreviewChang
     // ── Estado notificaciones ─────────────────────────────────
     const [emailAlert, setEmailAlert] = useState(true);
     const [weeklyReport, setWeeklyReport] = useState(true);
-    const [atRiskAlert, setAtRiskAlert] = useState(true);
+    const [atRiskAlert, setAtRiskAlert] = useState(true); // Para estudiantes/aprendices
     const [dailySummary, setDailySummary] = useState(false);
     const [minAttendance, setMinAttendance] = useState(80);
 
@@ -70,17 +73,26 @@ export function TeacherSettings({ section, onSave, previewAccent, onPreviewChang
         notifications: (
             <NotificationsSettings
                 sections={[
-                    <NotificationToggles
-                        emailAlert={emailAlert}    onEmailAlert={() => setEmailAlert(v => !v)}
-                        weeklyReport={weeklyReport} onWeeklyReport={() => setWeeklyReport(v => !v)}
-                        atRiskAlert={atRiskAlert}  onAtRiskAlert={() => setAtRiskAlert(v => !v)}
-                        dailySummary={dailySummary} onDailySummary={() => setDailySummary(v => !v)}
-                        descriptions={{
-                            emailAlert:   t("Envía un correo cuando un estudiante de tus cursos no asiste. Ideal para clases pequeñas o con seguimiento individual."),
-                            weeklyReport: t("Resumen automático de asistencia de tus cursos enviado cada lunes a las 8am."),
-                            atRiskAlert:  `${t("Notifica cuando un estudiante de tus cursos cae por debajo del")} ${minAttendance}% ${t("de asistencia mínima.")}`,
-                            dailySummary: t("Resumen automático de asistencia de tus cursos al finalizar el día."),
-                        }}
+                    <EmailAlertToggle
+                        value={emailAlert}
+                        onToggle={() => setEmailAlert(v => !v)}
+                        description={t("Envía un correo cuando un estudiante de tus cursos no asiste. Ideal para clases pequeñas o con seguimiento individual.")}
+                    />,
+                    <WeeklyReportToggle
+                        value={weeklyReport}
+                        onToggle={() => setWeeklyReport(v => !v)}
+                        description={t("Resumen automático de asistencia de tus cursos enviado cada lunes a las 8am.")}
+                    />,
+                    <AtRiskAlertToggle
+                        value={atRiskAlert}
+                        onToggle={() => setAtRiskAlert(v => !v)}
+                        targetRole="student"
+                        description={`${t("Notifica cuando un estudiante de tus cursos cae por debajo del")} ${minAttendance}% ${t("de asistencia mínima.")}`}
+                    />,
+                    <DailySummaryToggle
+                        value={dailySummary}
+                        onToggle={() => setDailySummary(v => !v)}
+                        description={t("Resumen automático de asistencia de tus cursos al finalizar el día.")}
                     />,
                 ]}
             />
