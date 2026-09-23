@@ -1,0 +1,173 @@
+_format_version: "3.0"
+_transform: true
+
+# Kong DB-less ï¿½ FaceAttend EDU ï¿½ ADR-007 + ADR-005
+services:
+  - name: identity-service
+    url: http://ms-identity:8081
+    routes:
+      - name: identity-route
+        paths: [/api/v1/persons, /api/v1/users, /api/v1/auth, /api/v1/sessions, /api/v1/cities, /api/v1/password-policies]
+        strip_path: false
+      # Canonical school lives in academic-service; identity SchoolController kept direct-only for backward compat
+      - name: identity-nested-route
+        paths: ["~/api/v1/persons/.+/transfer", "~/api/v1/users/.+/activate"]
+        strip_path: false
+    plugins:
+      - name: cors
+        config:
+          origins: ["*"]
+          methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+          headers: [Authorization, Content-Type]
+          credentials: true
+      - name: rate-limiting
+        config:
+          minute: 60
+          fault_tolerant: true
+          redis_host: redis
+          redis_port: 6379
+          redis_database: 0
+          policy: redis
+  - name: authorization-service
+    url: http://ms-authorization:8083
+    routes:
+      - name: authorization-route
+        paths: [/api/v1/roles, /api/v1/permissions]
+        strip_path: false
+      - name: authorization-nested-route
+        paths: ["~/api/v1/users/.+/roles", /api/v1/auth/evaluate]
+        strip_path: false
+    plugins:
+      - name: jwt
+      - name: rate-limiting
+        config:
+          minute: 100
+          fault_tolerant: true
+          redis_host: redis
+          redis_port: 6379
+          redis_database: 0
+          policy: redis
+  - name: academic-service
+    url: http://ms-academic:8084
+    routes:
+      - name: academic-route
+        paths: [/api/v1/schools, /api/v1/programs, /api/v1/academic-periods, /api/v1/periods, /api/v1/cohorts, /api/v1/courses, /api/v1/actor-types, /api/v1/academic-actors, /api/v1/enrollments]
+        strip_path: false
+    plugins:
+      - name: jwt
+  - name: scheduling-service
+    url: http://ms-scheduling:8087
+    routes:
+      - name: scheduling-route
+        paths: [/api/v1/environments, /api/v1/schedule-blocks, /api/v1/class-sessions]
+        strip_path: false
+      - name: scheduling-nested-route
+        paths: ["~/api/v1/cohorts/.+/blocks"]
+        strip_path: false
+    plugins:
+      - name: jwt
+  - name: attendance-service
+    url: http://ms-attendance:8085
+    routes:
+      - name: attendance-route
+        paths: [/api/v1/attendance-records, /api/v1/justifications, /api/v1/justification-types, /api/v1/supporting-documents]
+        strip_path: false
+      - name: attendance-nested-route
+        paths: ["~/api/v1/class-sessions/.+/attendance", "~/api/v1/academic-actors/.+/attendance", "~/api/v1/attendance/.+/justification", "~/api/v1/justifications/.+/documents"]
+        strip_path: false
+    plugins:
+      - name: jwt
+      - name: rate-limiting
+        config:
+          minute: 200
+          fault_tolerant: true
+          redis_host: redis
+          redis_port: 6379
+          redis_database: 0
+          policy: redis
+  - name: biometric-service
+    url: http://ms-biometric:8086
+    routes:
+      - name: biometric-route
+        paths: [/api/v1/biometric]
+        strip_path: false
+    plugins:
+      - name: jwt
+  - name: configuration-service
+    url: http://ms-configuration:8089
+    routes:
+      - name: configuration-route
+        paths: [/api/v1/academic-configurations, /api/v1/security-configurations, /api/v1/biometric-update-cases, /api/v1/configurations]
+        strip_path: false
+      - name: configuration-nested-route
+        paths: ["~/api/v1/schools/.+/configurations", "~/api/v1/persons/.+/biometric-cases"]
+        strip_path: false
+    plugins:
+      - name: jwt
+  - name: notification-service
+    url: http://ms-notification:8090
+    routes:
+      - name: notification-route
+        paths: [/api/v1/alert-types, /api/v1/alerts]
+        strip_path: false
+    plugins:
+      - name: jwt
+  # ── ISO/IEC 9001 Quality Health Endpoints ────────────────────
+  - name: quality-health
+    url: http://ms-academic:8084
+    routes:
+      - name: quality-health-route
+        paths: [/health/quality]
+        strip_path: false
+    plugins:
+      - name: cors
+        config:
+          origins: ["*"]
+          methods: [GET]
+          headers: [Content-Type]
+  # ── Quality Service (ISO 25010/29110) ──────────────────────
+  - name: quality-service
+    url: http://ms-quality:8091
+    routes:
+      - name: quality-route
+        paths: [/api/v1/quality]
+        strip_path: false
+    plugins:
+      - name: jwt
+      - name: rate-limiting
+        config:
+          minute: 100
+          fault_tolerant: true
+          redis_host: redis
+          redis_port: 6379
+          redis_database: 0
+          policy: redis
+consumers:
+  # Local-dev consumer for the jwt plugin (HS256). Rotate before production.
+  # Production target per ADR-007: RS256 keys issued by identity-service.
+  - username: faceattend-admin
+    jwt_secrets:
+      - key: faceattend-admin-key
+        algorithm: HS256
+        secret: faceattend-local-dev-secret-change-me
+# TLS termination (production): mount cert/key and uncomment:
+# certificates:
+#   - cert: /kong/ssl/faceattend.crt
+#     key: /kong/ssl/faceattend.key
+#     snis: ["api.faceattend.local"]
+plugins:
+  - name: cors
+    config:
+      origins: ["http://localhost:3000", "http://localhost:5173"]
+      methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+      headers: [Authorization, Content-Type, X-Requested-With]
+      credentials: true
+      max_age: 3600
+  - name: rate-limiting
+    config:
+      minute: 300
+      fault_tolerant: true
+      redis_host: redis
+      redis_port: 6379
+      redis_database: 0
+      policy: redis

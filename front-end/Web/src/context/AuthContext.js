@@ -177,7 +177,7 @@ export function useAuth() {
     if (!ctx) {
         throw new Error(
             "[FaceAttend] useAuth() debe usarse dentro de <AuthProvider>. " +
-                "Envuelve tu app con <AuthProvider> en app.tsx."
+            "Envuelve tu app con <AuthProvider> en app.tsx."
         );
     }
     return ctx;

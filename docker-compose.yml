@@ -1,0 +1,89 @@
+include:
+  - ./database/docker-compose.yml
+  - ./back-end/docker-compose.yml
+  # frontend-web (:8082 → nginx :80) viene de back-end/docker-compose.yml
+  # y consume el gateway Kong (:8080). Levantar todo con:
+  #   docker compose up --build
+  # Solo frontend + gateway (tras primer build del backend):
+  #   docker compose up frontend-web kong-gateway
+
+services:
+  postgres:
+    networks:
+      - default
+      - faceattend-net
+
+  authorization-liquibase:
+    depends_on:
+      identity-liquibase:
+        condition: service_completed_successfully
+
+  academic-liquibase:
+    depends_on:
+      authorization-liquibase:
+        condition: service_completed_successfully
+
+  scheduling-liquibase:
+    depends_on:
+      academic-liquibase:
+        condition: service_completed_successfully
+
+  attendance-liquibase:
+    depends_on:
+      scheduling-liquibase:
+        condition: service_completed_successfully
+
+  biometric-liquibase:
+    depends_on:
+      attendance-liquibase:
+        condition: service_completed_successfully
+
+  configuration-liquibase:
+    depends_on:
+      biometric-liquibase:
+        condition: service_completed_successfully
+
+  notification-liquibase:
+    depends_on:
+      configuration-liquibase:
+        condition: service_completed_successfully
+
+  ms-identity:
+    depends_on:
+      identity-liquibase:
+        condition: service_completed_successfully
+
+  ms-authorization:
+    depends_on:
+      authorization-liquibase:
+        condition: service_completed_successfully
+
+  ms-academic:
+    depends_on:
+      academic-liquibase:
+        condition: service_completed_successfully
+
+  ms-scheduling:
+    depends_on:
+      scheduling-liquibase:
+        condition: service_completed_successfully
+
+  ms-attendance:
+    depends_on:
+      attendance-liquibase:
+        condition: service_completed_successfully
+
+  ms-biometric:
+    depends_on:
+      biometric-liquibase:
+        condition: service_completed_successfully
+
+  ms-configuration:
+    depends_on:
+      configuration-liquibase:
+        condition: service_completed_successfully
+
+  ms-notification:
+    depends_on:
+      notification-liquibase:
+        condition: service_completed_successfully

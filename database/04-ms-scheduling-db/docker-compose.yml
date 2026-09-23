@@ -1,0 +1,15 @@
+services:
+  liquibase:
+    image: liquibase/liquibase:4.29.0
+    container_name: faceattend-scheduling-liquibase
+    command:
+      - --searchPath=/liquibase/project
+      - --url=jdbc:postgresql://host.docker.internal:5432/faceattend_db
+      - --username=postgres
+      - --password=postgres
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+    volumes:
+      - .:/liquibase/project
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
