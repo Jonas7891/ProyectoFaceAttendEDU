@@ -14,15 +14,16 @@ export { TwoFactorRow }           from "./security/TwoFactorRow";
 export { SessionTimeInput }       from "./security/SessionTimeInput";
 
 // notifications
-export { NotificationToggles }    from "./notifications/NotificationToggles";
+export { EmailAlertToggle, WeeklyReportToggle, AtRiskAlertToggle, DailySummaryToggle } from "./notifications/NotificationToggles";
+export { PushNotificationToggle } from "./notifications/PushNotificationConfig";
 
 // general
 export { InstitutionInfo }        from "./general/InstitutionInfo";
 export { PeriodConfig }           from "./general/PeriodConfig";
-export { AttendanceThresholds }   from "./general/AttendanceThresholds";
 export { GeneralSummary }         from "./general/GeneralSummary";
 export { LanguageBlock }          from "./general/LanguageBlock";
 
 // facial
 export { ConfidenceSlider }       from "./facial/ConfidenceSlider";
 export { FaceToggles }            from "./facial/FaceToggles";
+export { AttendanceThresholds }   from "./facial/AttendanceThresholds";

@@ -49,6 +49,8 @@ const DEFAULT_INSTITUTION_CONFIG = {
     weeklyReport: true,
     atRiskAlert: true,
     dailySummary: false,
+    pushNotifications: true,
+    pushDuration: 0, // Sin valor por defecto - el usuario debe configurarlo
     
     // Seguridad
     twoFactor: false,

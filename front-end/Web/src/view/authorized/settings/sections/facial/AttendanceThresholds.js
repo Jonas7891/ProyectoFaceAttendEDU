@@ -1,6 +1,11 @@
 // ============================================================
 //  AttendanceThresholds — Sliders de asistencia mínima y
-//  días para sanción.
+//  días para sanción (módulo de Reconocimiento Facial)
+//  
+//  Ahora ubicado en la sección "Reconocimiento" para administradores,
+//  ya que estas configuraciones están estrechamente relacionadas
+//  con el sistema de detección y seguimiento facial.
+//
 //  UI pura. Sin estado propio.
 //
 //  Props:

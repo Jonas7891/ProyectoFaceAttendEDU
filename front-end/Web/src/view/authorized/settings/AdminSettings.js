@@ -5,7 +5,7 @@
 //  ORDEN. Todo el estado vive aquí. Los modals solo renderizan
 //  lo que reciben.
 //
-//  Secciones: general · facial · notifications · security · appearance
+//  Secciones: general · facial (con umbrales de asistencia) · notifications · security · appearance
 // ============================================================
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
@@ -28,7 +28,11 @@ import {
     LanguageBlock,
     ConfidenceSlider,
     FaceToggles,
-    NotificationToggles,
+    EmailAlertToggle,
+    WeeklyReportToggle,
+    AtRiskAlertToggle,
+    DailySummaryToggle,
+    PushNotificationToggle,
     TwoFactorRow,
     SessionTimeInput,
     ModeBlock,
@@ -69,6 +73,8 @@ export function AdminSettings({ section, onSave, previewAccent, onPreviewChange,
     const [weeklyReport, setWeeklyReport] = useState(true);
     const [atRiskAlert, setAtRiskAlert] = useState(true);
     const [dailySummary, setDailySummary] = useState(false);
+    const [pushNotifications, setPushNotifications] = useState(true);
+    const [pushDuration, setPushDuration] = useState(0); // Sin valor por defecto
 
     // ── Estado seguridad ──────────────────────────────────────
     const [twoFactor, setTwoFactor] = useState(false);
@@ -92,6 +98,8 @@ export function AdminSettings({ section, onSave, previewAccent, onPreviewChange,
         setWeeklyReport(config.weeklyReport);
         setAtRiskAlert(config.atRiskAlert);
         setDailySummary(config.dailySummary);
+        setPushNotifications(config.pushNotifications ?? true);
+        setPushDuration(config.pushDuration ?? 0); // Sin valor por defecto
         setTwoFactor(config.twoFactor);
         setSessionTime(String(config.sessionTime));
         setConfigLoaded(true);
@@ -125,6 +133,7 @@ export function AdminSettings({ section, onSave, previewAccent, onPreviewChange,
                 confidenceThreshold: confidence,
                 autoRegister, savePhotos,
                 emailAlert, weeklyReport, atRiskAlert, dailySummary,
+                pushNotifications, pushDuration,
                 twoFactor, sessionTime: parseInt(sessionTime),
             })
         );
@@ -134,6 +143,7 @@ export function AdminSettings({ section, onSave, previewAccent, onPreviewChange,
         minAttendance, daysUntilSanction, confidence,
         autoRegister, savePhotos,
         emailAlert, weeklyReport, atRiskAlert, dailySummary,
+        pushNotifications, pushDuration,
         twoFactor, sessionTime,
     ]);
 
@@ -160,10 +170,6 @@ export function AdminSettings({ section, onSave, previewAccent, onPreviewChange,
                         showExpirationAlert={showExpirationAlert}
                         onDismissExpiration={() => setShowExpirationAlert(false)}
                     />,
-                    <AttendanceThresholds
-                        minAttendance={minAttendance} onMinAttendanceChange={setMinAttendance}
-                        daysUntilSanction={daysUntilSanction} onDaysSanctionChange={setDaysUntilSanction}
-                    />,
                     <GeneralSummary
                         institutionName={institutionName}
                         academicPeriodType={academicPeriodType}
@@ -171,8 +177,6 @@ export function AdminSettings({ section, onSave, previewAccent, onPreviewChange,
                         periodEndDate={periodEndDate}
                         isAutomaticPeriod={isAutomaticPeriod}
                         automaticPeriod={automaticPeriod}
-                        minAttendance={minAttendance}
-                        daysUntilSanction={daysUntilSanction}
                         currentLanguageLabel={currentLanguage?.labelES}
                     />,
                 ]}
@@ -182,6 +186,10 @@ export function AdminSettings({ section, onSave, previewAccent, onPreviewChange,
             <FaceSettings
                 title={t("Reconocimiento facial")}
                 sections={[
+                    <AttendanceThresholds
+                        minAttendance={minAttendance} onMinAttendanceChange={setMinAttendance}
+                        daysUntilSanction={daysUntilSanction} onDaysSanctionChange={setDaysUntilSanction}
+                    />,
                     <ConfidenceSlider value={confidence} onChange={setConfidence} />,
                     <FaceToggles
                         confidence={confidence}
@@ -194,17 +202,32 @@ export function AdminSettings({ section, onSave, previewAccent, onPreviewChange,
         notifications: (
             <NotificationsSettings
                 sections={[
-                    <NotificationToggles
-                        emailAlert={emailAlert}   onEmailAlert={() => setEmailAlert(v => !v)}
-                        weeklyReport={weeklyReport} onWeeklyReport={() => setWeeklyReport(v => !v)}
-                        atRiskAlert={atRiskAlert}  onAtRiskAlert={() => setAtRiskAlert(v => !v)}
-                        dailySummary={dailySummary} onDailySummary={() => setDailySummary(v => !v)}
-                        descriptions={{
-                            emailAlert:   t("Envía un correo al docente cuando un estudiante no asiste. Ideal para clases pequeñas o con seguimiento individual."),
-                            weeklyReport: t("Resumen automático de asistencia enviado cada lunes a las 8am. Incluye porcentajes por curso."),
-                            atRiskAlert:  `${t("Notifica cuando un estudiante cae por debajo del")} ${minAttendance}% ${t("de asistencia mínima configurado en General.")}`,
-                            dailySummary: t("Resumen automático de asistencia al finalizar el día. Puede generar muchas notificaciones en días de muchas clases."),
-                        }}
+                    <EmailAlertToggle
+                        value={emailAlert}
+                        onToggle={() => setEmailAlert(v => !v)}
+                        description={t("Envía un correo al docente cuando un estudiante no asiste. Ideal para clases pequeñas o con seguimiento individual.")}
+                    />,
+                    <WeeklyReportToggle
+                        value={weeklyReport}
+                        onToggle={() => setWeeklyReport(v => !v)}
+                        description={t("Resumen automático de asistencia enviado cada lunes a las 8am. Incluye porcentajes por curso.")}
+                    />,
+                    <AtRiskAlertToggle
+                        value={atRiskAlert}
+                        onToggle={() => setAtRiskAlert(v => !v)}
+                        description={`${t("Notifica cuando un estudiante cae por debajo del")} ${minAttendance}% ${t("de asistencia mínima configurado en Reconocimiento.")}`}
+                    />,
+                    <DailySummaryToggle
+                        value={dailySummary}
+                        onToggle={() => setDailySummary(v => !v)}
+                        description={t("Resumen automático de asistencia al finalizar el día. Puede generar muchas notificaciones en días de muchas clases.")}
+                    />,
+                    <PushNotificationToggle
+                        enabled={pushNotifications}
+                        onToggle={() => setPushNotifications(v => !v)}
+                        duration={pushDuration}
+                        onDurationChange={setPushDuration}
+                        description={t("Notificaciones emergentes en tiempo real del sistema.")}
                     />,
                 ]}
             />

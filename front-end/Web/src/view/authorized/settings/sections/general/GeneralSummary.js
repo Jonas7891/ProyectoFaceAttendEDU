@@ -9,8 +9,6 @@
 //   - periodEndDate      : string
 //   - isAutomaticPeriod  : bool
 //   - automaticPeriod    : objeto calculado
-//   - minAttendance      : number
-//   - daysUntilSanction  : number
 //   - currentLanguageLabel : string
 // ============================================================
 import React from "react";
@@ -31,8 +29,6 @@ export function GeneralSummary({
     periodEndDate,
     isAutomaticPeriod,
     automaticPeriod,
-    minAttendance,
-    daysUntilSanction,
     currentLanguageLabel,
 }) {
     const { t } = useTranslation();
@@ -62,10 +58,6 @@ export function GeneralSummary({
                 icon="calendar-check"
                 color="#8B5CF6"
             />
-            <Divider />
-            <StatsRow label={t("Mínimo de asistencia")} value={`${minAttendance}%`} icon="bar-chart-2" color="#10B981" />
-            <Divider />
-            <StatsRow label={t("Días para sanción")} value={`${daysUntilSanction} días`} icon="alert-triangle" color="#EF4444" />
             <Divider />
             <StatsRow label={t("Idioma")} value={currentLanguageLabel ?? t("Español")} icon="globe" color="#3B82F6" />
         </View>

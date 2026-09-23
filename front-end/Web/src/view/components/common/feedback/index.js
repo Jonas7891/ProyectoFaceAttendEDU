@@ -12,6 +12,7 @@ export { EmptyState } from './EmptyState';
 // Notifications
 export { Alert } from './Alert';
 export { ToastProvider, useToast } from './Toast';
+export { PushNotificationProvider, usePushNotification } from './PushNotification';
 
 // Progress
 export { ProgressBar } from './ProgressBar';
