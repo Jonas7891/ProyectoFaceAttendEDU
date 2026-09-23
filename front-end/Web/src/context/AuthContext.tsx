@@ -101,36 +101,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const login = useCallback(async (credentials: LoginCredentials): Promise<string | null> => {
-        // ── TODO: reemplazar con llamada real a tu API de autenticación ──
-        // Ejemplo:
-        //   const response = await fetch("/api/auth/login", {
-        //       method: "POST",
-        //       body: JSON.stringify(credentials),
-        //   });
-        //   if (!response.ok) return "Credenciales incorrectas";
-        //   const { user, token } = await response.json();
-        //   await sessionSet(JSON.stringify(user));
-        //   setUser(user);
-        //   return null;
-
-        // Mock: busca el usuario por email en los datos de desarrollo.
-        // Cualquier contraseña no vacía es válida en modo mock.
-        await new Promise(res => setTimeout(res, 800)); // simular latencia de red
-
+        // Intenta backend real (POST /api/v1/auth/login) vía AuthService,
+        // que ya incluye fallback a mock si no hay backend.
         if (!credentials.email || !credentials.password) {
             return "Completa todos los campos";
         }
-
-        const found = mockAppUsers.find(
-            u => u.email.toLowerCase() === credentials.email.toLowerCase()
-        );
-
-        if (!found) {
-            return "No se encontró una cuenta con ese correo";
+        try {
+            const { login: loginRequest } = await import("../services/AuthService");
+            await loginRequest({ email: credentials.email, password: credentials.password });
+        } catch (e) {
+            return e instanceof Error ? e.message : "Credenciales incorrectas";
         }
 
-        await sessionSet(JSON.stringify(found));
-        setUser(found);
+        // Perfil UI: se resuelve desde mock local por email (el backend
+        // identity aún no expone perfil completo por username en login).
+        const found = mockAppUsers.find(
+            (u) => u.email.toLowerCase() === credentials.email.toLowerCase()
+        );
+        const profile: AppUser = found ?? {
+            id: credentials.email,
+            name: credentials.email.split("@")[0] ?? credentials.email,
+            email: credentials.email,
+            role: "student",
+            status: "active",
+        };
+
+        await sessionSet(JSON.stringify(profile));
+        setUser(profile);
         return null;
     }, []);
 

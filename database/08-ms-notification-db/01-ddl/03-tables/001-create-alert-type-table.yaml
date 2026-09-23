@@ -2,6 +2,12 @@ databaseChangeLog:
   - changeSet:
       id: notif-001-create-alert-type-table
       author: Andres Gutierrez
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                schemaName: notification
+                tableName: alert_type
       changes:
         - createTable:
             schemaName: notification

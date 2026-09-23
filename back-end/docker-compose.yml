@@ -417,6 +417,24 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      ms-identity:
+        condition: service_healthy
+      ms-authorization:
+        condition: service_healthy
+      ms-academic:
+        condition: service_healthy
+      ms-scheduling:
+        condition: service_healthy
+      ms-attendance:
+        condition: service_healthy
+      ms-biometric:
+        condition: service_healthy
+      ms-configuration:
+        condition: service_healthy
+      ms-notification:
+        condition: service_healthy
+      ms-quality:
+        condition: service_healthy
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /kong/kong.yml
@@ -438,6 +456,33 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+
+  # ──────────────────────────────────────────────────────────────
+  # Frontend — Expo Web estático + nginx (SPA /, /login, /register,
+  # /dashboard). Consume el backend vía gateway Kong :8080.
+  # ──────────────────────────────────────────────────────────────
+  frontend-web:
+    build:
+      context: ../front-end/Web
+      dockerfile: Dockerfile
+      args:
+        EXPO_PUBLIC_API_URL: http://kong-gateway:8000
+    image: faceattend/frontend-web:latest
+    container_name: faceattend-frontend-web
+    depends_on:
+      kong-gateway:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-8082}:80"
+    networks:
+      - faceattend-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
 networks:
   faceattend-net:

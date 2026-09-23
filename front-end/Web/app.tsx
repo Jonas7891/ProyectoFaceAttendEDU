@@ -7,6 +7,7 @@ import { AppDataProvider }  from "./src/context/AppDataContext";
 import { AuthProvider }     from "./src/context/AuthContext";
 
 import AppNavigator from "./src/navegation/appNavigator";
+import { linking } from "./src/navegation/linking";
 
 export default function App() {
     return (
@@ -16,7 +17,8 @@ export default function App() {
                 <AuthProvider>
                     {/* AppDataProvider: única fuente de verdad para students, users y environments */}
                     <AppDataProvider>
-                        <NavigationContainer>
+                        {/* linking: enrutado web /, /login, /register, /dashboard */}
+                        <NavigationContainer linking={linking as never}>
                             <AppNavigator />
                         </NavigationContainer>
                     </AppDataProvider>

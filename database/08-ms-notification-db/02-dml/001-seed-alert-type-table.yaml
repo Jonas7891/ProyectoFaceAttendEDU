@@ -4,6 +4,12 @@ databaseChangeLog:
       author: Andres Gutierrez
       context: seed
       splitStatements: false
+      preConditions:
+        - onFail: MARK_RAN
+        - rowCount:
+            schemaName: notification
+            tableName: alert_type
+            expectedRows: 0
       changes:
         - sql:
             sql: |
