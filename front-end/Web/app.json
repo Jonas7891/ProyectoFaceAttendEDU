@@ -4,7 +4,7 @@
     "slug": "FaceAttend-EDU",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./src/assets/images/logo(antiguo)FaceAttend.png",
+    "icon": "./src/assets/images/logo(antiguo)FaceAttend2.png",
     "scheme": "FaceAttend-EDU",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -23,7 +23,7 @@
     },
     "web": {
       "output": "single",
-      "favicon": "./src/assets/images/logo(antiguo)FaceAttend.png"
+      "favicon": "./src/assets/images/logo(antiguo)FaceAttend2.png"
     },
     "plugins": [
       [
