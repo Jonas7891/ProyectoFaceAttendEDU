@@ -2,11 +2,23 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
-import { VISION_PRESETS } from "../../../../core/theme/presets";
+import { buildPaletteForVision } from "../../../../core/theme/presets";
 
-export function ColorPresetSelector({ visionMode, previewHex, onPresetSelect }) {
+/**
+ * ColorPresetSelector
+ * 
+ * Props:
+ * - visionMode: string - Modo de visión actual
+ * - customColors: { [semantic]: hex } - Colores actuales (customizados o default)
+ * - selectedSemantic: string | null - Slot semántico seleccionado actualmente
+ * - onPresetSelect: (preset) => void - Callback al seleccionar un preset
+ */
+export function ColorPresetSelector({ visionMode, customColors, selectedSemantic, onPresetSelect }) {
     const { theme } = useTheme();
     const c = theme.colors;
+
+    // Construir paleta dinámica para el modo de visión actual
+    const palette = buildPaletteForVision(visionMode);
 
     return (
         <View style={{ gap: 10 }}>
@@ -19,18 +31,22 @@ export function ColorPresetSelector({ visionMode, previewHex, onPresetSelect }) 
                 borderWidth: 1,
                 borderColor: c.border.primary,
             }}>
-                {VISION_PRESETS[visionMode].map(preset => {
-                    const active = previewHex.toLowerCase() === preset.color.toLowerCase();
+                {palette.map((preset, index) => {
+                    // El color mostrado es el customizado actual, no el preset por defecto
+                    const displayColor = customColors[preset.semantic];
+                    const active = selectedSemantic === preset.semantic;
+                    const isLast = index === palette.length - 1;
+
                     return (
                         <TouchableOpacity
-                            key={preset.key}
+                            key={preset.semantic}
                             onPress={() => onPresetSelect(preset)}
                             style={{
                                 flex: 1,
-                                backgroundColor: preset.color,
+                                backgroundColor: displayColor,
                                 alignItems: "center",
                                 justifyContent: "center",
-                                borderRightWidth: preset.key === VISION_PRESETS[visionMode][VISION_PRESETS[visionMode].length - 1].key ? 0 : 1,
+                                borderRightWidth: isLast ? 0 : 1,
                                 borderRightColor: "rgba(255, 255, 255, 0.2)",
                             }}
                         >
@@ -55,11 +71,11 @@ export function ColorPresetSelector({ visionMode, previewHex, onPresetSelect }) 
             <View style={{
                 flexDirection: "row",
             }}>
-                {VISION_PRESETS[visionMode].map(preset => {
-                    const active = previewHex.toLowerCase() === preset.color.toLowerCase();
+                {palette.map(preset => {
+                    const active = selectedSemantic === preset.semantic;
                     return (
                         <View
-                            key={preset.key}
+                            key={preset.semantic}
                             style={{
                                 flex: 1,
                                 alignItems: "center",

@@ -12,6 +12,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Card } from "../../components/common";
 import { useResponsive } from "../../components/hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
+import { useEditableConfig } from "../../components/hooks/useEditableConfig";
 import { SecurityMeter } from "../../components/settings/tabs";
 import {
     GeneralSettings,
@@ -47,105 +48,82 @@ import {
     checkPeriodExpiration,
 } from "../../../core/config/institutionConfig";
 
-export function AdminSettings({ section, onSave, previewAccent, onPreviewChange, previewTheme }) {
+export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onSaveSuccessColors, previewAccent, onPreviewChange, previewTheme, onHasChanges, onColorChanges }) {
     const { isSmall } = useResponsive();
     const { currentLanguage, t } = useTranslation();
 
-    // ── Estado general ────────────────────────────────────────
-    const [institutionName, setInstitutionName] = useState("Universidad Nacional");
-    const [institutionSlug, setInstitutionSlug] = useState("universidad-nacional");
-    const [academicPeriodType, setAcademicPeriodType] = useState("trimestral");
-    const [periodStartDate, setPeriodStartDate] = useState("");
-    const [periodEndDate, setPeriodEndDate] = useState("");
-    const [isAutomaticPeriod, setIsAutomaticPeriod] = useState(true);
+    // ── Estado no editable (UI temporal) ──────────────────────
     const [showExpirationAlert, setShowExpirationAlert] = useState(true);
-    const [minAttendance, setMinAttendance] = useState(80);
-    const [daysUntilSanction, setDaysUntilSanction] = useState(15);
-    const [configLoaded, setConfigLoaded] = useState(false);
 
-    // ── Estado facial ─────────────────────────────────────────
-    const [confidence, setConfidence] = useState(85);
-    const [autoRegister, setAutoRegister] = useState(true);
-    const [savePhotos, setSavePhotos] = useState(false);
-
-    // ── Estado notificaciones ─────────────────────────────────
-    const [emailAlert, setEmailAlert] = useState(true);
-    const [weeklyReport, setWeeklyReport] = useState(true);
-    const [atRiskAlert, setAtRiskAlert] = useState(true); // Para instructores/profesores
-    const [dailySummary, setDailySummary] = useState(false);
-    const [pushNotifications, setPushNotifications] = useState(true);
-    const [pushDuration, setPushDuration] = useState(0); // Sin valor por defecto
-
-    // ── Estado seguridad ──────────────────────────────────────
-    const [twoFactor, setTwoFactor] = useState(false);
-    const [sessionTime, setSessionTime] = useState("60");
-
-    // ── Carga inicial ─────────────────────────────────────────
-    useEffect(() => {
+    // ── Configuración inicial ─────────────────────────────────
+    const initialConfig = useMemo(() => {
         const config = getInstitutionConfig();
-        setInstitutionName(config.institutionName);
-        setInstitutionSlug(config.institutionSlug);
-        setAcademicPeriodType(config.academicPeriodType);
-        setPeriodStartDate(config.periodStartDate || "");
-        setPeriodEndDate(config.periodEndDate || "");
-        setIsAutomaticPeriod(config.isAutomaticPeriod ?? true);
-        setMinAttendance(config.minAttendance);
-        setDaysUntilSanction(config.daysUntilSanction);
-        setConfidence(config.confidenceThreshold);
-        setAutoRegister(config.autoRegister);
-        setSavePhotos(config.savePhotos);
-        setEmailAlert(config.emailAlert);
-        setWeeklyReport(config.weeklyReport);
-        setAtRiskAlert(config.atRiskAlert);
-        setDailySummary(config.dailySummary);
-        setPushNotifications(config.pushNotifications ?? true);
-        setPushDuration(config.pushDuration ?? 0); // Sin valor por defecto
-        setTwoFactor(config.twoFactor);
-        setSessionTime(String(config.sessionTime));
-        setConfigLoaded(true);
+        return {
+            institutionName: config.institutionName,
+            institutionSlug: config.institutionSlug,
+            academicPeriodType: config.academicPeriodType,
+            periodStartDate: config.periodStartDate || "",
+            periodEndDate: config.periodEndDate || "",
+            isAutomaticPeriod: config.isAutomaticPeriod ?? true,
+            minAttendance: config.minAttendance,
+            daysUntilSanction: config.daysUntilSanction,
+            confidence: config.confidenceThreshold,
+            autoRegister: config.autoRegister,
+            savePhotos: config.savePhotos,
+            emailAlert: config.emailAlert,
+            weeklyReport: config.weeklyReport,
+            atRiskAlert: config.atRiskAlert,
+            dailySummary: config.dailySummary,
+            pushNotifications: config.pushNotifications ?? true,
+            pushDuration: config.pushDuration ?? 0,
+            twoFactor: config.twoFactor,
+            sessionTime: String(config.sessionTime),
+        };
     }, []);
+
+    // ── Hook genérico de configuración editable ───────────────
+    const {
+        config,
+        updateConfig,
+        hasChanges,
+        save,
+        discard,
+    } = useEditableConfig(initialConfig, {
+        onSave: (cfg) => {
+            // Transformar sessionTime a número antes de guardar
+            const success = updateInstitutionConfig({
+                ...cfg,
+                confidenceThreshold: cfg.confidence,
+                sessionTime: parseInt(cfg.sessionTime),
+            });
+            return success;
+        },
+        onHasChanges,
+    });
+
+    // ── Registrar callbacks con el padre ──────────────────────
+    useEffect(() => {
+        if (onSave) onSave(save);
+    }, [onSave, save]);
+
+    useEffect(() => {
+        if (onDiscard) onDiscard(discard);
+    }, [onDiscard, discard]);
 
     // ── Derivados ─────────────────────────────────────────────
     const automaticPeriod = useMemo(() => {
-        if (!configLoaded) return null;
-        return getCurrentPeriod(academicPeriodType);
-    }, [academicPeriodType, configLoaded]);
+        return getCurrentPeriod(config.academicPeriodType);
+    }, [config.academicPeriodType]);
 
     const periodExpiration = useMemo(() => {
-        if (!configLoaded) return null;
         return checkPeriodExpiration();
-    }, [periodStartDate, periodEndDate, configLoaded]);
+    }, [config.periodStartDate, config.periodEndDate]);
 
     useEffect(() => {
         if (periodExpiration?.hasExpired || periodExpiration?.isExpiringSoon) {
             setShowExpirationAlert(true);
         }
     }, [periodExpiration]);
-
-    // ── Registrar guardado en el padre ────────────────────────
-    useEffect(() => {
-        if (!onSave) return;
-        onSave(() =>
-            updateInstitutionConfig({
-                institutionName, institutionSlug, academicPeriodType,
-                periodStartDate, periodEndDate, isAutomaticPeriod,
-                minAttendance, daysUntilSanction,
-                confidenceThreshold: confidence,
-                autoRegister, savePhotos,
-                emailAlert, weeklyReport, atRiskAlert, dailySummary,
-                pushNotifications, pushDuration,
-                twoFactor, sessionTime: parseInt(sessionTime),
-            })
-        );
-    }, [
-        onSave, institutionName, institutionSlug, academicPeriodType,
-        periodStartDate, periodEndDate, isAutomaticPeriod,
-        minAttendance, daysUntilSanction, confidence,
-        autoRegister, savePhotos,
-        emailAlert, weeklyReport, atRiskAlert, dailySummary,
-        pushNotifications, pushDuration,
-        twoFactor, sessionTime,
-    ]);
 
     // ── Mapa de secciones por clave ───────────────────────────
     const sectionMap = {
@@ -154,28 +132,34 @@ export function AdminSettings({ section, onSave, previewAccent, onPreviewChange,
                 title={t("General")}
                 sections={[
                     <InstitutionInfo
-                        institutionName={institutionName} onNameChange={setInstitutionName}
-                        institutionSlug={institutionSlug} onSlugChange={setInstitutionSlug}
-                        academicPeriodType={academicPeriodType} onPeriodTypeChange={setAcademicPeriodType}
+                        institutionName={config.institutionName}
+                        onNameChange={(value) => updateConfig("institutionName", value)}
+                        institutionSlug={config.institutionSlug}
+                        onSlugChange={(value) => updateConfig("institutionSlug", value)}
+                        academicPeriodType={config.academicPeriodType}
+                        onPeriodTypeChange={(value) => updateConfig("academicPeriodType", value)}
                         isSmall={isSmall}
                     />,
                     <LanguageBlock />,
                     <PeriodConfig
-                        periodStartDate={periodStartDate} onStartDateChange={setPeriodStartDate}
-                        periodEndDate={periodEndDate}     onEndDateChange={setPeriodEndDate}
-                        isAutomaticPeriod={isAutomaticPeriod} onModeChange={setIsAutomaticPeriod}
-                        academicPeriodType={academicPeriodType}
+                        periodStartDate={config.periodStartDate}
+                        onStartDateChange={(value) => updateConfig("periodStartDate", value)}
+                        periodEndDate={config.periodEndDate}
+                        onEndDateChange={(value) => updateConfig("periodEndDate", value)}
+                        isAutomaticPeriod={config.isAutomaticPeriod}
+                        onModeChange={(value) => updateConfig("isAutomaticPeriod", value)}
+                        academicPeriodType={config.academicPeriodType}
                         automaticPeriod={automaticPeriod}
                         periodExpiration={periodExpiration}
                         showExpirationAlert={showExpirationAlert}
                         onDismissExpiration={() => setShowExpirationAlert(false)}
                     />,
                     <GeneralSummary
-                        institutionName={institutionName}
-                        academicPeriodType={academicPeriodType}
-                        periodStartDate={periodStartDate}
-                        periodEndDate={periodEndDate}
-                        isAutomaticPeriod={isAutomaticPeriod}
+                        institutionName={config.institutionName}
+                        academicPeriodType={config.academicPeriodType}
+                        periodStartDate={config.periodStartDate}
+                        periodEndDate={config.periodEndDate}
+                        isAutomaticPeriod={config.isAutomaticPeriod}
                         automaticPeriod={automaticPeriod}
                         currentLanguageLabel={currentLanguage?.labelES}
                     />,
@@ -187,14 +171,21 @@ export function AdminSettings({ section, onSave, previewAccent, onPreviewChange,
                 title={t("Reconocimiento facial")}
                 sections={[
                     <AttendanceThresholds
-                        minAttendance={minAttendance} onMinAttendanceChange={setMinAttendance}
-                        daysUntilSanction={daysUntilSanction} onDaysSanctionChange={setDaysUntilSanction}
+                        minAttendance={config.minAttendance}
+                        onMinAttendanceChange={(value) => updateConfig("minAttendance", value)}
+                        daysUntilSanction={config.daysUntilSanction}
+                        onDaysSanctionChange={(value) => updateConfig("daysUntilSanction", value)}
                     />,
-                    <ConfidenceSlider value={confidence} onChange={setConfidence} />,
+                    <ConfidenceSlider
+                        value={config.confidence}
+                        onChange={(value) => updateConfig("confidence", value)}
+                    />,
                     <FaceToggles
-                        confidence={confidence}
-                        autoRegister={autoRegister} onAutoRegister={() => setAutoRegister(v => !v)}
-                        savePhotos={savePhotos}     onSavePhotos={() => setSavePhotos(v => !v)}
+                        confidence={config.confidence}
+                        autoRegister={config.autoRegister}
+                        onAutoRegister={() => updateConfig("autoRegister", !config.autoRegister)}
+                        savePhotos={config.savePhotos}
+                        onSavePhotos={() => updateConfig("savePhotos", !config.savePhotos)}
                     />,
                 ]}
             />
@@ -203,31 +194,31 @@ export function AdminSettings({ section, onSave, previewAccent, onPreviewChange,
             <NotificationsSettings
                 sections={[
                     <EmailAlertToggle
-                        value={emailAlert}
-                        onToggle={() => setEmailAlert(v => !v)}
+                        value={config.emailAlert}
+                        onToggle={() => updateConfig("emailAlert", !config.emailAlert)}
                         description={t("Envía un correo al docente cuando un estudiante no asiste. Ideal para clases pequeñas o con seguimiento individual.")}
                     />,
                     <WeeklyReportToggle
-                        value={weeklyReport}
-                        onToggle={() => setWeeklyReport(v => !v)}
+                        value={config.weeklyReport}
+                        onToggle={() => updateConfig("weeklyReport", !config.weeklyReport)}
                         description={t("Resumen automático de asistencia enviado cada lunes a las 8am. Incluye porcentajes por curso.")}
                     />,
                     <AtRiskAlertToggle
-                        value={atRiskAlert}
-                        onToggle={() => setAtRiskAlert(v => !v)}
+                        value={config.atRiskAlert}
+                        onToggle={() => updateConfig("atRiskAlert", !config.atRiskAlert)}
                         targetRole="instructor"
-                        description={`${t("Notifica cuando un instructor cae por debajo del")} ${minAttendance}% ${t("de asistencia mínima configurado en Reconocimiento.")}`}
+                        description={`${t("Notifica cuando un instructor cae por debajo del")} ${config.minAttendance}% ${t("de asistencia mínima configurado en Reconocimiento.")}`}
                     />,
                     <DailySummaryToggle
-                        value={dailySummary}
-                        onToggle={() => setDailySummary(v => !v)}
+                        value={config.dailySummary}
+                        onToggle={() => updateConfig("dailySummary", !config.dailySummary)}
                         description={t("Resumen automático de asistencia al finalizar el día. Puede generar muchas notificaciones en días de muchas clases.")}
                     />,
                     <PushNotificationToggle
-                        enabled={pushNotifications}
-                        onToggle={() => setPushNotifications(v => !v)}
-                        duration={pushDuration}
-                        onDurationChange={setPushDuration}
+                        enabled={config.pushNotifications}
+                        onToggle={() => updateConfig("pushNotifications", !config.pushNotifications)}
+                        duration={config.pushDuration}
+                        onDurationChange={(value) => updateConfig("pushDuration", value)}
                         description={t("Notificaciones emergentes en tiempo real del sistema.")}
                     />,
                 ]}
@@ -236,15 +227,17 @@ export function AdminSettings({ section, onSave, previewAccent, onPreviewChange,
         security: (
             <SecuritySettings
                 title={t("Seguridad")}
-                header={<SecurityMeter twoFactor={twoFactor} sessionTime={sessionTime} />}
+                header={<SecurityMeter twoFactor={config.twoFactor} sessionTime={config.sessionTime} />}
                 sections={[
                     <TwoFactorRow
-                        value={twoFactor} onToggle={() => setTwoFactor(v => !v)}
+                        value={config.twoFactor}
+                        onToggle={() => updateConfig("twoFactor", !config.twoFactor)}
                         description={t("Requiere un código adicional al iniciar sesión. Protege la cuenta aunque alguien obtenga tu contraseña.")}
                         warningText={t("Sin 2FA, la cuenta queda vulnerable si la contraseña se compromete. Se recomienda activarlo.")}
                     />,
                     <SessionTimeInput
-                        value={sessionTime} onChange={setSessionTime}
+                        value={config.sessionTime}
+                        onChange={(value) => updateConfig("sessionTime", value)}
                         contextHint={(min) =>
                             min > 120 ? t(" ⚠ Sesiones largas aumentan el riesgo si el dispositivo queda desbloqueado.")
                             : min <= 15 ? t(" Sesión muy corta — el usuario deberá iniciar sesión con frecuencia.")
@@ -260,8 +253,9 @@ export function AdminSettings({ section, onSave, previewAccent, onPreviewChange,
                 sections={[
                     <ModeBlock />,
                     <AccentBlock
-                        previewAccent={previewAccent}
-                        onPreviewChange={onPreviewChange}
+                        onHasChanges={onColorChanges}
+                        onDiscardRegister={onDiscardColors}
+                        onSaveSuccessRegister={onSaveSuccessColors}
                         previewTheme={previewTheme}
                     />,
                 ]}

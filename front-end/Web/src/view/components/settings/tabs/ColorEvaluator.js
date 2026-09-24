@@ -36,7 +36,7 @@ export function ColorEvaluator({ currentHex, verdict }) {
                     borderWidth: 1,
                     borderColor: c.border.secondary,
                 }} />
-                <View style={{ flex: 1, gap: 4 }}>
+                <View style={{ gap: 4, minWidth: 140 }}>
                     <Text style={{
                         fontSize: 10,
                         fontWeight: "700",
@@ -69,15 +69,11 @@ export function ColorEvaluator({ currentHex, verdict }) {
                         <WcagBadge level={verdict.wcagLevel} />
                     </View>
                 </View>
-            </View>
-
-            {/* Barra de contraste */}
-            <View style={{
-                padding: 12,
-                borderBottomWidth: 1,
-                borderBottomColor: c.border.primary
-            }}>
-                <ContrastBar ratio={verdict.contrastRatio} />
+                
+                {/* Barra de contraste al lado derecho */}
+                <View style={{ flex: 1 }}>
+                    <ContrastBar ratio={verdict.contrastRatio} />
+                </View>
             </View>
 
             {/* Filas de análisis */}

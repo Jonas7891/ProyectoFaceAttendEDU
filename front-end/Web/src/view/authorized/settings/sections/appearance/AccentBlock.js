@@ -1,53 +1,42 @@
 // ============================================================
-//  AccentBlock — Selector de color de acento + preview en vivo
-//  UI pura. Sin estado propio, sin rol.
+//  AccentBlock — Selector de paleta semántica completa
+//  UI pura que renderiza el selector autónomo.
 //
 //  Props:
-//   - previewAccent   : string hex
-//   - onPreviewChange : (hex) => void
-//   - previewTheme    : tema generado con el hex en preview
+//   - onColorsExport  : (customColors) => void - Callback opcional para cuando el componente guarde
+//   - onHasChanges    : (hasChanges: boolean) => void - Callback para notificar cambios sin guardar
+//   - onDiscardRegister: (discardFn) => void - Callback para registrar función de descarte
+//   - onSaveSuccessRegister: (commitFn) => void - Callback para registrar función de commit
+//   - previewTheme    : Tema generado con los colores en preview
 // ============================================================
 import React from "react";
 import { View, Text } from "react-native";
-import { Feather } from "@expo/vector-icons";
 import { useTranslation } from "../../../../../core/utils/i18n/hooks/useTranslation";
 import { AccentColorSelector } from "../../../../components/settings/tabs";
 import { useSettingsSectionStyles } from "../../modals/useSettingsSectionStyles";
 
-export function AccentBlock({ previewAccent, onPreviewChange, previewTheme }) {
+export function AccentBlock({ onColorsExport, onHasChanges, onDiscardRegister, onSaveSuccessRegister, previewTheme }) {
     const { t } = useTranslation();
-    const { c, labelStyle, descStyle } = useSettingsSectionStyles();
+    const { labelStyle, descStyle } = useSettingsSectionStyles();
 
     return (
         <View style={{ gap: 10 }}>
-            {/* Color de acento */}
+            {/* Paleta de colores semánticos */}
             <View>
-                <Text style={labelStyle}>{t("Color de acento")}</Text>
+                <Text style={labelStyle}>{t("Paleta de colores")}</Text>
                 <Text style={descStyle}>
-                    {t("Este color se aplica a botones principales, tabs activos, barras de progreso, bordes de foco y todos los elementos interactivos. Los cambios se previsualizan abajo — presiona \"Guardar cambios\" para aplicarlos en toda la aplicación.")}
+                    {t("Personaliza los colores semánticos de la aplicación: Primario (interacción), Correcto (éxitos), Advertencias, Errores y Fuentes. Los cambios se previsualizan abajo — presiona \"Guardar cambios\" para aplicarlos en toda la aplicación.")}
                 </Text>
             </View>
 
-            {/* Selector de colores + Preview en vivo dentro */}
+            {/* Selector de colores autónomo */}
             <AccentColorSelector
-                previewHex={previewAccent}
-                onPreviewChange={onPreviewChange}
+                onColorsExport={onColorsExport}
+                onHasChanges={onHasChanges}
+                onDiscardRegister={onDiscardRegister}
+                onSaveSuccessRegister={onSaveSuccessRegister}
                 previewTheme={previewTheme}
             />
-
-            <View style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-                backgroundColor: c.brand.primaryLight,
-                borderRadius: 14,
-                padding: 12,
-            }}>
-                <Feather name="info" size={13} color={c.brand.primary} />
-                <Text style={{ fontSize: 11, color: c.brand.primary, flex: 1, lineHeight: 18 }}>
-                    {t("La preview muestra como se verá el color en botones, badges y elementos activos. Presiona \"Guardar cambios\" para aplicarlo en toda la aplicación.")}
-                </Text>
-            </View>
         </View>
     );
 }

@@ -8,9 +8,10 @@
 //  Secciones: security · appearance
 // ============================================================
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card } from "../../components/common";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
+import { useEditableConfig } from "../../components/hooks/useEditableConfig";
 import { SecurityMeter } from "../../components/settings/tabs";
 import {
     NotificationsSettings,
@@ -30,43 +31,51 @@ import {
     updateInstitutionConfig,
 } from "../../../core/config/institutionConfig";
 
-export function StudentSettings({ section, onSave, previewAccent, onPreviewChange, previewTheme }) {
+export function StudentSettings({ section, onSave, onDiscard, onDiscardColors, onSaveSuccessColors, previewAccent, onPreviewChange, previewTheme, onHasChanges, onColorChanges }) {
     const { t } = useTranslation();
 
-    // ── Estado notificaciones ─────────────────────────────────
-    const [atRiskAlert, setAtRiskAlert] = useState(true); // Para alerta personal
-    const [pushNotifications, setPushNotifications] = useState(true);
-    const [pushDuration, setPushDuration] = useState(0);
-    const [minAttendance, setMinAttendance] = useState(80);
-
-    // ── Estado seguridad ──────────────────────────────────────
-    const [twoFactor, setTwoFactor] = useState(false);
-    const [sessionTime, setSessionTime] = useState("60");
-
-    // ── Carga inicial ─────────────────────────────────────────
-    useEffect(() => {
-        const config = getInstitutionConfig();
-        setAtRiskAlert(config.atRiskAlert ?? true);
-        setPushNotifications(config.pushNotifications ?? true);
-        setPushDuration(config.pushDuration ?? 0);
-        setMinAttendance(config.minAttendance);
-        setTwoFactor(config.twoFactor);
-        setSessionTime(String(config.sessionTime));
+    // ── Configuración inicial ─────────────────────────────────
+    const initialConfig = useMemo(() => {
+        const cfg = getInstitutionConfig();
+        return {
+            atRiskAlert: cfg.atRiskAlert ?? true,
+            pushNotifications: cfg.pushNotifications ?? true,
+            pushDuration: cfg.pushDuration ?? 0,
+            minAttendance: cfg.minAttendance,
+            twoFactor: cfg.twoFactor,
+            sessionTime: String(cfg.sessionTime),
+        };
     }, []);
 
-    // ── Registrar guardado en el padre ────────────────────────
+    // ── Hook genérico de configuración editable ───────────────
+    const {
+        config,
+        updateConfig,
+        hasChanges,
+        save,
+        discard,
+    } = useEditableConfig(initialConfig, {
+        onSave: (cfg) => {
+            const success = updateInstitutionConfig({
+                atRiskAlert: cfg.atRiskAlert,
+                pushNotifications: cfg.pushNotifications,
+                pushDuration: cfg.pushDuration,
+                twoFactor: cfg.twoFactor,
+                sessionTime: parseInt(cfg.sessionTime),
+            });
+            return success;
+        },
+        onHasChanges,
+    });
+
+    // ── Registrar callbacks con el padre ──────────────────────
     useEffect(() => {
-        if (!onSave) return;
-        onSave(() =>
-            updateInstitutionConfig({
-                atRiskAlert,
-                pushNotifications,
-                pushDuration,
-                twoFactor,
-                sessionTime: parseInt(sessionTime),
-            })
-        );
-    }, [onSave, atRiskAlert, pushNotifications, pushDuration, twoFactor, sessionTime]);
+        if (onSave) onSave(save);
+    }, [onSave, save]);
+
+    useEffect(() => {
+        if (onDiscard) onDiscard(discard);
+    }, [onDiscard, discard]);
 
     // ── Mapa de secciones por clave ───────────────────────────
     const sectionMap = {
@@ -74,16 +83,16 @@ export function StudentSettings({ section, onSave, previewAccent, onPreviewChang
             <NotificationsSettings
                 sections={[
                     <AtRiskAlertToggle
-                        value={atRiskAlert}
-                        onToggle={() => setAtRiskAlert(v => !v)}
+                        value={config.atRiskAlert}
+                        onToggle={() => updateConfig("atRiskAlert", !config.atRiskAlert)}
                         targetRole="self"
-                        description={`${t("Recibe una notificación cuando tu asistencia cae por debajo del")} ${minAttendance}% ${t("mínimo requerido. Te ayuda a estar al tanto de tu progreso académico.")}`}
+                        description={`${t("Recibe una notificación cuando tu asistencia cae por debajo del")} ${config.minAttendance}% ${t("mínimo requerido. Te ayuda a estar al tanto de tu progreso académico.")}`}
                     />,
                     <PushNotificationToggle
-                        enabled={pushNotifications}
-                        onToggle={() => setPushNotifications(v => !v)}
-                        duration={pushDuration}
-                        onDurationChange={setPushDuration}
+                        enabled={config.pushNotifications}
+                        onToggle={() => updateConfig("pushNotifications", !config.pushNotifications)}
+                        duration={config.pushDuration}
+                        onDurationChange={(value) => updateConfig("pushDuration", value)}
                         description={t("Notificaciones emergentes sobre tu asistencia y actualizaciones del sistema.")}
                     />,
                 ]}
@@ -92,15 +101,17 @@ export function StudentSettings({ section, onSave, previewAccent, onPreviewChang
         security: (
             <SecuritySettings
                 title={t("Seguridad")}
-                header={<SecurityMeter twoFactor={twoFactor} sessionTime={sessionTime} />}
+                header={<SecurityMeter twoFactor={config.twoFactor} sessionTime={config.sessionTime} />}
                 sections={[
                     <TwoFactorRow
-                        value={twoFactor} onToggle={() => setTwoFactor(v => !v)}
+                        value={config.twoFactor}
+                        onToggle={() => updateConfig("twoFactor", !config.twoFactor)}
                         description={t("Requiere un código adicional al iniciar sesión. Protege tu cuenta aunque alguien obtenga tu contraseña.")}
                         warningText={t("Sin 2FA, tu cuenta queda vulnerable si la contraseña se compromete. Se recomienda activarlo.")}
                     />,
                     <SessionTimeInput
-                        value={sessionTime} onChange={setSessionTime}
+                        value={config.sessionTime}
+                        onChange={(value) => updateConfig("sessionTime", value)}
                         contextHint={(min) =>
                             min > 120 ? t(" ⚠ Sesiones largas aumentan el riesgo si el dispositivo queda desbloqueado.")
                             : min <= 15 ? t(" Sesión muy corta — deberás iniciar sesión con frecuencia.")
@@ -116,8 +127,9 @@ export function StudentSettings({ section, onSave, previewAccent, onPreviewChang
                 sections={[
                     <ModeBlock />,
                     <AccentBlock
-                        previewAccent={previewAccent}
-                        onPreviewChange={onPreviewChange}
+                        onHasChanges={onColorChanges}
+                        onDiscardRegister={onDiscardColors}
+                        onSaveSuccessRegister={onSaveSuccessColors}
                         previewTheme={previewTheme}
                     />,
                 ]}

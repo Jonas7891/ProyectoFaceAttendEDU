@@ -7,9 +7,10 @@
 //  Secciones: notifications · security · appearance
 // ============================================================
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card } from "../../components/common";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
+import { useEditableConfig } from "../../components/hooks/useEditableConfig";
 import { SecurityMeter } from "../../components/settings/tabs";
 import {
     NotificationsSettings,
@@ -31,42 +32,53 @@ import {
     updateInstitutionConfig,
 } from "../../../core/config/institutionConfig";
 
-export function TeacherSettings({ section, onSave, previewAccent, onPreviewChange, previewTheme }) {
+export function TeacherSettings({ section, onSave, onDiscard, onDiscardColors, onSaveSuccessColors, previewAccent, onPreviewChange, previewTheme, onHasChanges, onColorChanges }) {
     const { t } = useTranslation();
 
-    // ── Estado notificaciones ─────────────────────────────────
-    const [emailAlert, setEmailAlert] = useState(true);
-    const [weeklyReport, setWeeklyReport] = useState(true);
-    const [atRiskAlert, setAtRiskAlert] = useState(true); // Para estudiantes/aprendices
-    const [dailySummary, setDailySummary] = useState(false);
-    const [minAttendance, setMinAttendance] = useState(80);
-
-    // ── Estado seguridad ──────────────────────────────────────
-    const [twoFactor, setTwoFactor] = useState(false);
-    const [sessionTime, setSessionTime] = useState("60");
-
-    // ── Carga inicial ─────────────────────────────────────────
-    useEffect(() => {
-        const config = getInstitutionConfig();
-        setEmailAlert(config.emailAlert);
-        setWeeklyReport(config.weeklyReport);
-        setAtRiskAlert(config.atRiskAlert);
-        setDailySummary(config.dailySummary);
-        setMinAttendance(config.minAttendance);
-        setTwoFactor(config.twoFactor);
-        setSessionTime(String(config.sessionTime));
+    // ── Configuración inicial ─────────────────────────────────
+    const initialConfig = useMemo(() => {
+        const cfg = getInstitutionConfig();
+        return {
+            emailAlert: cfg.emailAlert,
+            weeklyReport: cfg.weeklyReport,
+            atRiskAlert: cfg.atRiskAlert,
+            dailySummary: cfg.dailySummary,
+            minAttendance: cfg.minAttendance,
+            twoFactor: cfg.twoFactor,
+            sessionTime: String(cfg.sessionTime),
+        };
     }, []);
 
-    // ── Registrar guardado en el padre ────────────────────────
+    // ── Hook genérico de configuración editable ───────────────
+    const {
+        config,
+        updateConfig,
+        hasChanges,
+        save,
+        discard,
+    } = useEditableConfig(initialConfig, {
+        onSave: (cfg) => {
+            const success = updateInstitutionConfig({
+                emailAlert: cfg.emailAlert,
+                weeklyReport: cfg.weeklyReport,
+                atRiskAlert: cfg.atRiskAlert,
+                dailySummary: cfg.dailySummary,
+                twoFactor: cfg.twoFactor,
+                sessionTime: parseInt(cfg.sessionTime),
+            });
+            return success;
+        },
+        onHasChanges,
+    });
+
+    // ── Registrar callbacks con el padre ──────────────────────
     useEffect(() => {
-        if (!onSave) return;
-        onSave(() =>
-            updateInstitutionConfig({
-                emailAlert, weeklyReport, atRiskAlert, dailySummary,
-                twoFactor, sessionTime: parseInt(sessionTime),
-            })
-        );
-    }, [onSave, emailAlert, weeklyReport, atRiskAlert, dailySummary, twoFactor, sessionTime]);
+        if (onSave) onSave(save);
+    }, [onSave, save]);
+
+    useEffect(() => {
+        if (onDiscard) onDiscard(discard);
+    }, [onDiscard, discard]);
 
     // ── Mapa de secciones por clave ───────────────────────────
     const sectionMap = {
@@ -74,24 +86,24 @@ export function TeacherSettings({ section, onSave, previewAccent, onPreviewChang
             <NotificationsSettings
                 sections={[
                     <EmailAlertToggle
-                        value={emailAlert}
-                        onToggle={() => setEmailAlert(v => !v)}
+                        value={config.emailAlert}
+                        onToggle={() => updateConfig("emailAlert", !config.emailAlert)}
                         description={t("Envía un correo cuando un estudiante de tus cursos no asiste. Ideal para clases pequeñas o con seguimiento individual.")}
                     />,
                     <WeeklyReportToggle
-                        value={weeklyReport}
-                        onToggle={() => setWeeklyReport(v => !v)}
+                        value={config.weeklyReport}
+                        onToggle={() => updateConfig("weeklyReport", !config.weeklyReport)}
                         description={t("Resumen automático de asistencia de tus cursos enviado cada lunes a las 8am.")}
                     />,
                     <AtRiskAlertToggle
-                        value={atRiskAlert}
-                        onToggle={() => setAtRiskAlert(v => !v)}
+                        value={config.atRiskAlert}
+                        onToggle={() => updateConfig("atRiskAlert", !config.atRiskAlert)}
                         targetRole="student"
-                        description={`${t("Notifica cuando un estudiante de tus cursos cae por debajo del")} ${minAttendance}% ${t("de asistencia mínima.")}`}
+                        description={`${t("Notifica cuando un estudiante de tus cursos cae por debajo del")} ${config.minAttendance}% ${t("de asistencia mínima.")}`}
                     />,
                     <DailySummaryToggle
-                        value={dailySummary}
-                        onToggle={() => setDailySummary(v => !v)}
+                        value={config.dailySummary}
+                        onToggle={() => updateConfig("dailySummary", !config.dailySummary)}
                         description={t("Resumen automático de asistencia de tus cursos al finalizar el día.")}
                     />,
                 ]}
@@ -100,15 +112,17 @@ export function TeacherSettings({ section, onSave, previewAccent, onPreviewChang
         security: (
             <SecuritySettings
                 title={t("Seguridad")}
-                header={<SecurityMeter twoFactor={twoFactor} sessionTime={sessionTime} />}
+                header={<SecurityMeter twoFactor={config.twoFactor} sessionTime={config.sessionTime} />}
                 sections={[
                     <TwoFactorRow
-                        value={twoFactor} onToggle={() => setTwoFactor(v => !v)}
+                        value={config.twoFactor}
+                        onToggle={() => updateConfig("twoFactor", !config.twoFactor)}
                         description={t("Requiere un código adicional al iniciar sesión. Protege la cuenta aunque alguien obtenga tu contraseña.")}
                         warningText={t("Sin 2FA, la cuenta queda vulnerable si la contraseña se compromete. Se recomienda activarlo.")}
                     />,
                     <SessionTimeInput
-                        value={sessionTime} onChange={setSessionTime}
+                        value={config.sessionTime}
+                        onChange={(value) => updateConfig("sessionTime", value)}
                         contextHint={(min) =>
                             min > 120 ? t(" ⚠ Sesiones largas aumentan el riesgo si el dispositivo queda desbloqueado.")
                             : min <= 15 ? t(" Sesión muy corta — el usuario deberá iniciar sesión con frecuencia.")
@@ -124,8 +138,9 @@ export function TeacherSettings({ section, onSave, previewAccent, onPreviewChang
                 sections={[
                     <ModeBlock />,
                     <AccentBlock
-                        previewAccent={previewAccent}
-                        onPreviewChange={onPreviewChange}
+                        onHasChanges={onColorChanges}
+                        onDiscardRegister={onDiscardColors}
+                        onSaveSuccessRegister={onSaveSuccessColors}
                         previewTheme={previewTheme}
                     />,
                 ]}

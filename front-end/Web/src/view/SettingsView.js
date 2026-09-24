@@ -34,18 +34,34 @@ export default function SettingsView({ section = "appearance" }) {
     useAutomaticPeriodAdvance(true, 60); // Verificar cada 60 minutos
 
     const [previewAccent, setPreviewAccent] = useState(accentColor);
-    const [hasUnsaved, setHasUnsaved] = useState(false);
+    const [hasUnsavedAccent, setHasUnsavedAccent] = useState(false);
+    const [hasConfigChanges, setHasConfigChanges] = useState(false);
+    const [hasColorChanges, setHasColorChanges] = useState(false);
     const [saved, setSaved] = useState(false);
     
     // Ref para almacenar la función de guardado del componente hijo
     const saveConfigRef = useRef(null);
+    const discardConfigRef = useRef(null);
+    const discardColorsRef = useRef(null);
+    const saveSuccessColorsRef = useRef(null);
 
     const previewTheme = generateTheme(previewAccent, mode);
 
     function handlePreviewChange(hex) {
         setPreviewAccent(hex);
-        setHasUnsaved(hex.toLowerCase() !== accentColor.toLowerCase());
+        setHasUnsavedAccent(hex.toLowerCase() !== accentColor.toLowerCase());
     }
+
+    function handleConfigChanges(hasChanges) {
+        setHasConfigChanges(hasChanges);
+    }
+
+    function handleColorsChange(hasChanges) {
+        setHasColorChanges(hasChanges);
+    }
+
+    // Combinar todos los tipos de cambios
+    const anyUnsavedChanges = hasUnsavedAccent || hasConfigChanges || hasColorChanges;
 
     function handleSave() {
         // Ejecutar la función de guardado del componente hijo
@@ -54,20 +70,42 @@ export default function SettingsView({ section = "appearance" }) {
             
             if (success) {
                 // Actualizar color de acento si cambió
-                if (hasUnsaved) {
+                if (hasUnsavedAccent) {
                     setAccentColor(previewAccent);
-                    setHasUnsaved(false);
+                    setHasUnsavedAccent(false);
                 }
+                
+                // Notificar a AccentColorSelector que actualice su initialColors
+                if (saveSuccessColorsRef.current) {
+                    saveSuccessColorsRef.current();
+                }
+                
+                // Los componentes hijos actualizarán sus initialConfig/initialColors
+                // Damos un momento para que React procese y recalcule hasChanges
+                setTimeout(() => {
+                    setHasConfigChanges(false);
+                    setHasColorChanges(false);
+                }, 0);
                 
                 setSaved(true);
                 setTimeout(() => setSaved(false), 2500);
             }
         } else {
-            // Si no hay función de guardado (solo cambio de color)
-            if (hasUnsaved) {
+            // Si no hay función de guardado (solo cambios de UI)
+            if (hasUnsavedAccent) {
                 setAccentColor(previewAccent);
-                setHasUnsaved(false);
+                setHasUnsavedAccent(false);
             }
+            
+            // Notificar a AccentColorSelector que actualice su initialColors
+            if (saveSuccessColorsRef.current) {
+                saveSuccessColorsRef.current();
+            }
+            
+            setTimeout(() => {
+                setHasConfigChanges(false);
+                setHasColorChanges(false);
+            }, 0);
             
             setSaved(true);
             setTimeout(() => setSaved(false), 2500);
@@ -75,8 +113,23 @@ export default function SettingsView({ section = "appearance" }) {
     }
 
     function handleDiscard() {
+        // Revertir color de acento
         setPreviewAccent(accentColor);
-        setHasUnsaved(false);
+        setHasUnsavedAccent(false);
+        
+        // Llamar función de descarte de configuración
+        if (discardConfigRef.current) {
+            discardConfigRef.current();
+        }
+        
+        // Llamar función de descarte de colores
+        if (discardColorsRef.current) {
+            discardColorsRef.current();
+        }
+        
+        // Resetear flags
+        setHasConfigChanges(false);
+        setHasColorChanges(false);
     }
 
     // Usuario AUTORIZADO confirmado por SettingsScreen
@@ -86,8 +139,19 @@ export default function SettingsView({ section = "appearance" }) {
         onSave: (saveFn) => {
             saveConfigRef.current = saveFn;
         },
+        onDiscard: (discardFn) => {
+            discardConfigRef.current = discardFn;
+        },
+        onDiscardColors: (discardFn) => {
+            discardColorsRef.current = discardFn;
+        },
+        onSaveSuccessColors: (commitFn) => {
+            saveSuccessColorsRef.current = commitFn;
+        },
         previewAccent,
         onPreviewChange: handlePreviewChange,
+        onHasChanges: handleConfigChanges, // Cambios en configuración general
+        onColorChanges: handleColorsChange, // Cambios en paleta de colores
         previewTheme,
     };
 
@@ -109,7 +173,7 @@ export default function SettingsView({ section = "appearance" }) {
                 subtitle={t("Personaliza FaceAttend EDU a tu institución")}
                 actions={
                     <>
-                        {hasUnsaved && (
+                        {anyUnsavedChanges && (
                             <>
                                 <View style={{
                                     flexDirection: "row",
@@ -137,11 +201,11 @@ export default function SettingsView({ section = "appearance" }) {
                                 <Button variant="ghost" size="sm" onPress={handleDiscard}>
                                     {t("Descartar")}
                                 </Button>
+                                <Button variant="primary" onPress={handleSave} size="sm">
+                                    {saved ? t("¡Guardado!") : t("Guardar cambios")}
+                                </Button>
                             </>
                         )}
-                        <Button variant="primary" onPress={handleSave} size="sm">
-                            {saved ? t("¡Guardado!") : t("Guardar cambios")}
-                        </Button>
                     </>
                 }
             />

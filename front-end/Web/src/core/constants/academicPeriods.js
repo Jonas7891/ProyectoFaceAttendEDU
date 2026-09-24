@@ -13,9 +13,9 @@ import { getInstitutionConfig, DEFAULT_ACADEMIC_PERIOD } from "../config/institu
  * Tipos de períodos académicos soportados
  */
 export const ACADEMIC_PERIOD_TYPES = {
-    ANNUAL: 'annual',           // Anual
+    ANNUAL: 'anual',           // Anual
     SEMESTRAL: 'semestral',     // Semestral
-    QUARTERLY: 'quarterly',      // Cuatrimestral
+    QUARTERLY: 'cuatrimestral',      // Cuatrimestral
     TRIMESTRAL: 'trimestral',   // Trimestral
 };
 
