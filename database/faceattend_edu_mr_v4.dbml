@@ -28,8 +28,8 @@ Table person {
   last_name varchar [not null]
   email varchar [null]
   phone varchar [null]
-  document_type varchar [null, note: 'CC / TI / CE / PP']
-  blood_type varchar [null, note: 'A+, A-, B+, B-, AB+, AB-, O+, O-']
+  document_type varchar [null, note: 'CC / TI / CE / PP — CHECK-backed (chk_person_document_type)']
+  blood_type varchar [null, note: 'A+, A-, B+, B-, AB+, AB-, O+, O- — CHECK-backed (chk_person_blood_type)']
   birth_date date [null]
   address varchar [null]
   status boolean [not null, default: true]
@@ -43,7 +43,9 @@ Table person {
   row_version bigint [not null, default: 1]
 
   indexes {
-    document_number [unique, name: 'uq_person_document']
+    // CC y TI pueden compartir numeración entre personas distintas:
+    // la unicidad real es (document_type, document_number), no global.
+    (document_type, document_number) [unique, name: 'uq_person_document']
     email [name: 'idx_person_email']
     deleted_at [name: 'idx_person_deleted']
   }
