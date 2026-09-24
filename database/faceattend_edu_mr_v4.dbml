@@ -494,6 +494,9 @@ Table justification_type {
   indexes {
     (school_id, name) [unique, name: 'uq_justification_type_school_name']
     school_id [name: 'idx_justification_type_school']
+    // En PostgreSQL NULL ≠ NULL: el UNIQUE (school_id, name) no impide dos
+    // tipos globales con el mismo nombre. Se exige además el índice parcial:
+    // UNIQUE (name) WHERE school_id IS NULL (uq_justification_type_global_name).
   }
 }
 
