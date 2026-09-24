@@ -8,6 +8,13 @@
 // v6: person extended (document_type, blood_type, birth_date, address),
 //     city table removed, school extended (district, country, city_name),
 //     justification resolution_notes, attendance_report, CHECKs, two_factor
+// v7: biometric_update_case moved to Biometric group (logical owner;
+//     physically still hosted in `configuration` schema, see note below),
+//     person document uniqueness fixed to (document_type, document_number),
+//     CHECKs/ENUMs documented as native types, microservice-cut exclusions
+//     clarified (attendance_report = derived projection, audit/error_log =
+//     cross-cutting observability). Conventions made explicit: singular
+//     table names, mixed PK strategy, day_of_week 1..7.
 ////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////
@@ -568,7 +575,7 @@ Ref: supporting_document.justification_id > justification.justification_id
 
 
 ////////////////////////////////////////////////////////////
-// BIOMETRIC (NoSQL — colecciones documentales, fuera del modelo SQL)
+// BIOMETRIC (colecciones NoSQL + caso de actualización SQL)
 ////////////////////////////////////////////////////////////
 // facial_embedding (collection)      -> person_id, template_version, encoding, model_version, enrolled_at, is_active
 // fingerprint_embedding (collection) -> person_id, finger_number, template_version, encoding, model_version, enrolled_at, is_active
@@ -576,6 +583,51 @@ Ref: supporting_document.justification_id > justification.justification_id
 // Estas colecciones NO se modelan como Table en este DBML relacional.
 // Su referencia lógica desde SQL se documenta como texto libre (current_embedding_ref),
 // nunca como Ref: real, por ser cross-paradigm (SQL -> NoSQL).
+//
+// biometric_update_case SÍ es tabla SQL y su dueño lógico es este grupo
+// (hasta v6 vivía en Configuration junto a pares nombre/valor genéricos,
+// pero es el flujo de re-enrolamiento biométrico: caso de negocio real).
+// NOTA FÍSICA: el DDL Liquibase la hospeda todavía en el schema `configuration`
+// (07-ms-configuration-db) porque los servicios 06/07 y el front-end
+// (endpoints.configuration.biometricCases) dependen de esa ubicación.
+// Mover el schema físico requiere una migración con ventana de compatibilidad
+// y cambios en back-end/front-end: queda como deuda planificada, no como
+// inconsistencia del modelo lógico.
+
+Table biometric_update_case {
+  case_id uuid [pk, not null]
+  person_id uuid [not null]
+  biometric_type varchar [not null, note: 'ENUM: FACIAL / FINGERPRINT']
+  finger_number smallint [null, note: 'Obligatorio solo si biometric_type = FINGERPRINT (1..10); nulo si es FACIAL']
+  current_embedding_ref varchar [null, note: '_id lógico del documento activo en facial_embedding o fingerprint_embedding (NoSQL). Sin FK real: cross-paradigm.']
+  reason text [not null]
+  update_status varchar [not null, note: 'ENUM: Pending / In_Review / Approved / Rejected']
+  requested_by uuid [null, note: 'app_user.user_id (cross-context)']
+  requested_at datetime [null]
+  reviewed_by uuid [null, note: 'app_user.user_id (cross-context)']
+  reviewed_at datetime [null]
+  resolution_notes varchar [null]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    person_id [name: 'idx_biometric_case_person']
+    (person_id, biometric_type) [name: 'idx_biometric_case_person_type']
+    update_status [name: 'idx_biometric_case_status']
+  }
+}
+
+// Cross-context (sin FK):
+// biometric_update_case.person_id -> Identity.person
+// biometric_update_case.requested_by -> Identity.app_user
+// biometric_update_case.reviewed_by -> Identity.app_user
+// biometric_update_case.current_embedding_ref -> Biometric.facial_embedding / Biometric.fingerprint_embedding (NoSQL, cross-paradigm)
 
 
 ////////////////////////////////////////////////////////////
@@ -722,41 +774,9 @@ Table security_configuration {
   row_version bigint [not null, default: 1]
 }
 
-Table biometric_update_case {
-  case_id uuid [pk, not null]
-  person_id uuid [not null]
-  biometric_type varchar [not null, note: 'ENUM: FACIAL / FINGERPRINT']
-  finger_number smallint [null, note: 'Obligatorio solo si biometric_type = FINGERPRINT (1..10); nulo si es FACIAL']
-  current_embedding_ref varchar [null, note: '_id lógico del documento activo en facial_embedding o fingerprint_embedding (NoSQL). Sin FK real: cross-paradigm.']
-  reason text [not null]
-  update_status varchar [not null, note: 'ENUM: Pending / In_Review / Approved / Rejected']
-  requested_by uuid [null, note: 'app_user.user_id (cross-context)']
-  requested_at datetime [null]
-  reviewed_by uuid [null, note: 'app_user.user_id (cross-context)']
-  reviewed_at datetime [null]
-  resolution_notes varchar [null]
-
-  created_at datetime [not null]
-  updated_at datetime [not null]
-  deleted_at datetime [null]
-  created_by uuid [null]
-  updated_by uuid [null]
-  deleted_by uuid [null]
-  row_version bigint [not null, default: 1]
-
-  indexes {
-    person_id [name: 'idx_biometric_case_person']
-    (person_id, biometric_type) [name: 'idx_biometric_case_person_type']
-    update_status [name: 'idx_biometric_case_status']
-  }
-}
-
-// Cross-context (sin FK):
-// academic_configuration.school_id -> Academic.school
-// biometric_update_case.person_id -> Identity.person
-// biometric_update_case.requested_by -> Identity.app_user
-// biometric_update_case.reviewed_by -> Identity.app_user
-// biometric_update_case.current_embedding_ref -> Biometric.facial_embedding / Biometric.fingerprint_embedding (NoSQL, cross-paradigm)
+// NOTA: biometric_update_case vivía en esta sección hasta v6. En v7 su dueño
+// lógico es el grupo Biometric (ver sección BIOMETRIC más arriba): es el flujo de
+// re-enrolamiento biométrico, no parametrización.
 
 
 ////////////////////////////////////////////////////////////
@@ -802,6 +822,10 @@ TableGroup Attendance [color: #e67e22] {
   attendance_report
 }
 
+TableGroup Biometric [color: #8e44ad] {
+  biometric_update_case
+}
+
 TableGroup Notification [color: #f1c40f] {
   alert_type
   alert
@@ -815,9 +839,14 @@ TableGroup Audit [color: #95a5a6] {
 TableGroup Configuration [color: #34495e] {
   academic_configuration
   security_configuration
-  biometric_update_case
 }
 
-// Nota: el grupo "Biometric" ya no contiene tablas SQL en este archivo.
-// facial_embedding y fingerprint_embedding viven como colecciones NoSQL
-// documentadas aparte (modelo_conceptual.md), fuera del alcance de este DBML.
+// NOTA DE CLASIFICACIÓN (recorte a microservicios, v7):
+// - attendance_report (Attendance) es una proyección derivada de reporte
+//   (filtros + resultado JSONB, sin FKs): se conserva en el modelo completo
+//   pero queda fuera del núcleo 3FN de 4 servicios.
+// - audit_log / error_log (Audit) son observabilidad transversal, no un
+//   dominio de negocio: se conservan fuera del recorte.
+// - biometric_update_case pertenece lógicamente a Biometric; el DDL Liquibase
+//   la hospeda en el schema `configuration` de forma transitoria
+//   (ver NOTA FÍSICA en la sección BIOMETRIC).
