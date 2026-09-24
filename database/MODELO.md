@@ -21,27 +21,32 @@ El modelo se divide en **8 contextos**, cada uno responsable de un área de nego
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      FACEATTEND-EDU (v4 - DBML)             │
+│                      FACEATTEND-EDU (v7 - DBML)             │
 ├─────────────┬─────────────┬─────────────┬──────────────────┤
 │  IDENTITY   │ AUTHORIZATION│  ACADEMIC   │   SCHEDULING     │
-│  (5 tablas) │ (4 tablas)  │ (8 tablas)  │  (3 tablas)      │
-│ city        │ role        │ school      │ environment      │
-│ person      │ permission  │ program     │ schedule_block   │
-│ app_user*   │ role_perm.  │ acad_period │ class_session    │
-│ user_session│ user_role   │ cohort      │                  │
-│ pass_policy │             │ course      │                  │
-│             │             │ actor_type  │                  │
+│  (4 tablas) │ (4 tablas)  │ (8 tablas)  │  (3 tablas)      │
+│ person      │ role        │ school      │ environment      │
+│ app_user*   │ permission  │ program     │ schedule_block   │
+│ user_session│ role_perm.  │ acad_period │ class_session    │
+│ pass_policy │ user_role   │ cohort      │                  │
+│ (+city DDL  │             │ course      │                  │
+│  deprecated)│             │ actor_type  │                  │
 │             │             │ actor       │                  │
 │             │             │ enrollment  │                  │
 ├─────────────┼─────────────┼─────────────┼──────────────────┤
-│ ATTENDANCE  │  BIOMETRIC  │ CONFIGURATION│  NOTIFICATION   │
-│ (4 tablas)  │  (NoSQL)    │ (3 tablas)  │  (2 tablas)      │
-│ att_record  │ facial_emb  │ acad_config │ alert_type       │
-│ justif_type │ finger_emb  │ sec_config  │ alert            │
-│ justification│ (MongoDB)  │ biometric_case│                │
-│ sup_document│             │             │                  │
+│ ATTENDANCE  │  BIOMETRIC  │ CONFIGURATION│ NOTIFICATION    │
+│ (5 tablas)  │ (1 tabla + │ (2 tablas)  │  (2 tablas)      │
+│ att_record  │  NoSQL)     │ acad_config │ alert_type       │
+│ justif_type │ biometr_case│ sec_config  │ alert            │
+│ justification│ facial_emb │             │                  │
+│ sup_document│ finger_emb  │  AUDIT (obs)│                  │
+│ att_report† │ (MongoDB)   │ audit_log   │                  │
+│             │             │ error_log   │                  │
 └─────────────┴─────────────┴─────────────┴──────────────────┘
 * app_user.person_id UNIQUE (1:1 con person)
+† att_report = proyección derivada (filtros + resultado JSONB, sin FKs):
+  se conserva en el modelo completo pero fuera del núcleo 3FN de 4 servicios.
+AUDIT = observabilidad transversal (sin FKs), fuera del recorte a 4 servicios.
 ```
 
 ---
@@ -52,11 +57,15 @@ El modelo se divide en **8 contextos**, cada uno responsable de un área de nego
 
 | Tabla | Descripción | PK |
 |---|---|---|
-| `city` | Catálogo de ciudades | `city_id` (INT) |
-| `person` | Identidad base: documento, nombre, contacto | `person_id` (UUID) |
+| `person` | Identidad base: documento, nombre, contacto. Unicidad real `(document_type, document_number)` — CC y TI pueden compartir numeración | `person_id` (UUID) |
 | `app_user` | Credenciales de acceso; 1:1 con `person` (`person_id` UNIQUE) | `user_id` (UUID) |
 | `user_session` | Sesiones activas/cerradas | `session_id` (UUID) |
 | `password_policy` | Reglas de complejidad de contraseña | `policy_id` (INT) |
+
+> `city` (catálogo geográfico) está **deprecated**: DBML v6 la eliminó — las ciudades vienen de la API externa `countriesnow.space`. El DDL Liquibase `001-create-city-table.yaml` se conserva de forma transitoria pendiente de remoción.
+
+**Reglas de integridad (v7):**
+- `person.document_type` y `person.blood_type` son VARCHAR + CHECK (`chk_person_document_type`, `chk_person_blood_type`), no ENUMs nativos.
 
 **Relaciones internas:**
 - `app_user.person_id` → `person.person_id`
@@ -145,9 +154,10 @@ enrollment → cohort
 | Tabla | Descripción | PK |
 |---|---|---|
 | `attendance_record` | Un registro por actor y sesión | `attendance_record_id` (BIGINT) |
-| `justification_type` | Catálogo de tipos de justificación | `justification_type_id` (INT) |
+| `justification_type` | Catálogo de tipos de justificación (per-school: `school_id` NULL = global). UNIQUE `(school_id, name)` + índice parcial UNIQUE `(name)` WHERE `school_id IS NULL` (en PG, NULL ≠ NULL) | `justification_type_id` (INT) |
 | `justification` | Justificación de inasistencia/tardanza | `justification_id` (BIGINT) |
 | `supporting_document` | Soportes documentales adjuntos | `supporting_document_id` (BIGINT) |
+| `attendance_report` † | Proyección derivada de reporte (filtros + resultado JSONB, sin FKs). Fuera del núcleo 3FN de 4 servicios | `report_id` (UUID) |
 
 **Cross-context:**
 - `attendance_record.class_session_id` → `Scheduling.class_session.class_session_id`
@@ -163,9 +173,9 @@ enrollment → cohort
 
 ## 8. Contexto: Biometric
 
-**Responsabilidad:** Plantillas biométricas (facial y dactilar).
+**Responsabilidad:** Plantillas biométricas (facial y dactilar) + flujo de re-enrolamiento con aprobación.
 
-**No forma parte del esquema relacional SQL.** Se modela como colecciones NoSQL en **MongoDB** (fuera del modelo relacional DBML):
+**Colecciones NoSQL en MongoDB** (fuera del modelo relacional DBML):
 
 | Colección | Campos clave |
 |---|---|
@@ -174,24 +184,28 @@ enrollment → cohort
 
 **¿Por qué NoSQL?** Los embeddings biométricos son documentos de estructura flexible y de alto volumen de lectura/escritura por reconocimiento en tiempo real.
 
-**En PostgreSQL solo existe el schema `biometric` vacío** (`06-ms-biometric-db` solo crea el schema, sin tablas). La referencia lógica desde `configuration.biometric_update_case.current_embedding_ref` apunta al `_id` del documento en MongoDB (cross-paradigm, sin FK).
+**Tabla SQL del contexto** (dueña lógica desde v7 — antes archivada en Configuration):
+
+| Tabla | Descripción | PK |
+|---|---|---|
+| `biometric_update_case` | Solicitud de actualización biométrica (FACIAL / FINGERPRINT). `finger_number` solo para FINGERPRINT (1..10, CHECK `chk_finger_number`), nulo para FACIAL. `update_status` DEFAULT `'Pending'`. `requested_by` / `requested_at` NOT NULL | `case_id` (UUID) |
+
+**¿Por qué es un dominio propio?** Es el único que necesita un motor distinto (documentos con vectores, no filas) y cómputo distinto (comparar vectores = CPU/GPU, no SQL).
+
+> **Nota física transitoria:** el DDL Liquibase hospeda todavía esta tabla en el schema `configuration` (`07-ms-configuration-db`) porque los servicios 06/07 y el front-end (`endpoints.configuration.biometricCases`) dependen de esa ubicación. Mover el schema físico requiere migración con compatibilidad + cambios en back-end/front-end: deuda planificada. La referencia `current_embedding_ref` apunta al `_id` del documento en MongoDB (cross-paradigm, sin FK).
 
 ---
 
 ## 9. Contexto: Configuration
 
-**Responsabilidad:** Parámetros configurables y casos de actualización biométrica.
+**Responsabilidad:** Parámetros configurables (pares nombre/valor).
 
 | Tabla | Descripción | PK |
 |---|---|---|
 | `academic_configuration` | Parámetros por sede | `configuration_id` (INT) |
 | `security_configuration` | Parámetros globales de seguridad | `configuration_id` (INT) |
-| `biometric_update_case` | Solicitud de actualización biométrica | `case_id` (UUID) |
 
-**`biometric_update_case`** unifica los casos de actualización facial y dactilar:
-- `biometric_type`: FACIAL / FINGERPRINT (ENUM)
-- `finger_number`: Solo para FINGERPRINT (1..10), nulo para FACIAL
-- `current_embedding_ref`: Referencia lógica al documento activo en NoSQL
+> `biometric_update_case` vivía aquí hasta v6. En v7 su dueño lógico es Biometric (§8): es el flujo de re-enrolamiento, no parametrización.
 
 ---
 
@@ -209,7 +223,20 @@ enrollment → cohort
 
 ---
 
-## 11. Regla más importante: Sin FK entre contextos
+## 11. Contexto: Audit (observabilidad transversal)
+
+**Responsabilidad:** Trazabilidad de acciones y registro de errores. No es un dominio de negocio: ningún otro contexto referencia estas tablas y ellas no imponen FKs hacia nadie (solo comentarios cross-context a `Identity.app_user` y `Academic.school`).
+
+| Tabla | Descripción | PK |
+|---|---|---|
+| `audit_log` | Acciones sobre agregados (actor, aggregate_type/id, app, IP, fecha) | `audit_log_id` (BIGINT) |
+| `error_log` | Errores de aplicación (tipo, descripción, usuario, sede, fecha) | `error_id` (BIGINT) |
+
+Quedan **fuera del recorte a 4 microservicios** a propósito: son infraestructura de observabilidad, no bounded contexts de negocio.
+
+---
+
+## 12. Regla más importante: Sin FK entre contextos
 
 > **Toda referencia entre contextos distintos se documenta como comentario, nunca como `Ref:` activa.**
 
@@ -233,7 +260,7 @@ Esto significa que en el código SQL/Liquibase:
 
 ---
 
-## 12. Diagrama de relaciones (simplificado)
+## 13. Diagrama de relaciones (simplificado)
 
 ```
 identity.person ─────────────────────────────────────────┐
@@ -265,16 +292,21 @@ authorization.user_role                        enrollment │
 
 ---
 
-## 13. ENUMs del modelo
+## 14. ENUMs y dominios CHECK del modelo
 
-| Dominio | Tipo | Valores |
-|---|---|---|
-| Identity | `user_session_status` | Active, Closed |
-| Identity | `authentication_type` | Local, Windows, External |
-| Academic | `enrollment_status` | Active, Withdrawn, Completed |
-| Scheduling | `class_session_status` | Open, Closed, Cancelled |
-| Attendance | `attendance_status` | Present, Absent, Late, Justified |
-| Attendance | `capture_method` | FACIAL, MANUAL, IOT, IMPORT |
-| Attendance | `review_status` | Pending, Approved, Rejected |
-| Configuration | `biometric_type` | FACIAL, FINGERPRINT |
-| Configuration | `update_status` | Pending, In_Review, Approved, Rejected |
+Los ENUMs se implementan como **tipos PostgreSQL nativos** (`02-types/` de cada dominio); el DBML los documenta como `varchar + note` porque no renderiza enums nativos. `document_type` y `blood_type` son VARCHAR + CHECK (no tipos nativos).
+
+| Dominio | Tipo | Valores | Implementación |
+|---|---|---|---|
+| Identity | `user_session_status` | Active, Closed | ENUM nativo |
+| Identity | `authentication_type` | Local, Windows, External | ENUM nativo |
+| Identity | `document_type` | CC, TI, CE, PP | CHECK `chk_person_document_type` |
+| Identity | `blood_type` | A+, A-, B+, B-, AB+, AB-, O+, O- | CHECK `chk_person_blood_type` |
+| Academic | `enrollment_status` | Active, Withdrawn, Completed | ENUM nativo |
+| Scheduling | `class_session_status` | Open, Closed, Cancelled | ENUM nativo |
+| Scheduling | `day_of_week` | 1..7 (ISO) | CHECK `chk_block_day_of_week` |
+| Attendance | `attendance_status` | Present, Absent, Late, Justified | ENUM nativo |
+| Attendance | `capture_method` | FACIAL, MANUAL, IOT, IMPORT | ENUM nativo |
+| Attendance | `review_status` | Pending, Approved, Rejected | ENUM nativo |
+| Biometric | `biometric_type` | FACIAL, FINGERPRINT | ENUM nativo |
+| Biometric | `update_status` | Pending, In_Review, Approved, Rejected | ENUM nativo |
