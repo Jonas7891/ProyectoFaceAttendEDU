@@ -90,7 +90,7 @@ Types support `school_id` (`NULL` = global, `NOT NULL` = per-school custom). Glo
 
 **File:** `05-ms-attendance-db/02-dml/001-seed-justification-type-table.yaml`
 
-**Usage:** `justification_type_id` selected on `justification` creation. Unique per `(school_id, name)` (`uq_justification_type_school_name`).
+**Usage:** `justification_type_id` selected on `justification` creation. Unique per `(school_id, name)` (`uq_justification_type_school_name`) plus partial unique `(name)` for globals (`uq_justification_type_global_name`, `WHERE school_id IS NULL` — in PostgreSQL `NULL ≠ NULL`).
 
 ---
 
@@ -177,5 +177,7 @@ databaseChangeLog:
 | Attendance | `attendance_status` | Present, Absent, Late, Justified |
 | Attendance | `capture_method` | FACIAL, MANUAL, IOT, IMPORT |
 | Attendance | `review_status` | Pending, Approved, Rejected |
-| Configuration | `biometric_type` | FACIAL, FINGERPRINT |
-| Configuration | `update_status` | Pending, In_Review, Approved, Rejected |
+| Biometric | `biometric_type` | FACIAL, FINGERPRINT |
+| Biometric | `update_status` | Pending, In_Review, Approved, Rejected |
+
+> `person.document_type`, `person.blood_type` and `schedule_block.day_of_week` (1..7 ISO) are CHECK-backed, not native ENUMs — no types to create, no seeds needed.
