@@ -2,6 +2,7 @@ package com.faceattend_edu.identity_service.application.usecase;
 
 import com.faceattend_edu.identity_service.application.port.in.GetCityUseCase;
 import com.faceattend_edu.identity_service.application.port.out.LoadCityPort;
+import com.faceattend_edu.identity_service.domain.exception.EntityNotFoundException;
 import com.faceattend_edu.identity_service.domain.model.City;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,10 @@ public class GetCityUseCaseImpl implements GetCityUseCase {
 
     @Override
     public City getCity(Integer cityId) {
-        return loadCityPort.loadCity(cityId);
+        City city = loadCityPort.loadCity(cityId);
+        if (city == null) {
+            throw new EntityNotFoundException("City", cityId);
+        }
+        return city;
     }
 }

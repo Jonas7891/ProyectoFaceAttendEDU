@@ -4,6 +4,7 @@ import com.faceattend_edu.identity_service.adapter.out.persistence.mapper.UserSe
 import com.faceattend_edu.identity_service.adapter.out.persistence.repository.UserSessionJpaRepository;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserSessionPort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserSessionsPort;
+import com.faceattend_edu.identity_service.application.port.out.ListUserSessionsPort;
 import com.faceattend_edu.identity_service.application.port.out.SaveUserSessionPort;
 import com.faceattend_edu.identity_service.application.port.out.UpdateUserSessionPort;
 import com.faceattend_edu.identity_service.domain.model.UserSession;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class UserSessionPersistenceAdapter implements LoadUserSessionPort, LoadUserSessionsPort, SaveUserSessionPort, UpdateUserSessionPort {
+public class UserSessionPersistenceAdapter implements LoadUserSessionPort, LoadUserSessionsPort, SaveUserSessionPort, UpdateUserSessionPort, ListUserSessionsPort {
 
     private final UserSessionJpaRepository repository;
     private final UserSessionPersistenceMapper mapper;
@@ -27,6 +28,11 @@ public class UserSessionPersistenceAdapter implements LoadUserSessionPort, LoadU
     }
 
     @Override
+    public List<UserSession> listUserSessions() {
+        return repository.findAll().stream().map(mapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
     public List<UserSession> loadUserSessions(UUID userId) {
         return repository.findByUser_UserId(userId).stream()
                 .map(mapper::toDomain)
@@ -34,8 +40,8 @@ public class UserSessionPersistenceAdapter implements LoadUserSessionPort, LoadU
     }
 
     @Override
-    public void saveUserSession(UserSession session) {
-        repository.save(mapper.toEntity(session));
+    public UserSession saveUserSession(UserSession session) {
+        return mapper.toDomain(repository.save(mapper.toEntity(session)));
     }
 
     @Override

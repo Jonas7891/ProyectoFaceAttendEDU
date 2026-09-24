@@ -27,11 +27,15 @@ public class User {
     private LocalDateTime updatedAt;
     private LocalDateTime lastAccess;
 
-    private static final Set<String> ALLOWED_AUTH_TYPES = new HashSet<>(Arrays.asList("LOCAL", "LDAP", "OAUTH"));
+    private static final Set<String> ALLOWED_AUTH_TYPES = new HashSet<>(Arrays.asList("Local", "Windows", "External"));
+
+    public static final String DEFAULT_AUTHENTICATION_TYPE = "Local";
 
     public void validate() {
         Objects.requireNonNull(this, "User must not be null");
-        if (this.userId == null) throw new IllegalArgumentException("User.userId is required");
+        if (this.personId == null || this.personId.getPersonId() == null) {
+            throw new IllegalArgumentException("User.personId is required");
+        }
         if (isNullOrBlank(this.username)) throw new IllegalArgumentException("User.username is required");
         if (isNullOrBlank(this.passwordHash)) throw new IllegalArgumentException("User.passwordHash is required");
         if (this.authenticationType != null && !ALLOWED_AUTH_TYPES.contains(this.authenticationType)) {
