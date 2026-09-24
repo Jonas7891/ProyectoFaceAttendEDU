@@ -1,14 +1,9 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useCustomAlert} from '../view/components/common/useCustomAlert';
-import {request, GET, POST} from '../api/apiClient';
-
-function unwrap(data) {
-  if (data && Array.isArray(data.value)) return data.value;
-  if (Array.isArray(data)) return data;
-  if (data && typeof data === 'object') return [data];
-  return [];
-}
+import {backendGet, ENV, request, POST} from '../api/backend';
+import {getCurrentUserRole, getCurrentUser} from '../services/UserService';
+import {ActorService} from '../services/ActorService';
 
 export function useAttendanceReportViewModel() {
     const {t} = useTranslation();
@@ -36,7 +31,7 @@ export function useAttendanceReportViewModel() {
         const fetchData = async () => {
             try {
                 setIsLoading(true);
-                const arData = await request({ method: GET, url: 'attendance_record', params: { _limit: 500 }, requiresAuth: false });
+                const arData = await backendGet(ENV.ATTENDANCE_BASE_URL, 'api/v1/attendance-records', {_limit: 500});
                 const records = unwrap(arData);
 
                 const actorMap = {};
@@ -50,10 +45,10 @@ export function useAttendanceReportViewModel() {
                 const enriched = [];
                 for (const [aid, stats] of Object.entries(actorMap)) {
                     try {
-                        const actorData = await request({ method: GET, url: 'academic_actor', params: { academic_actor_id: aid }, requiresAuth: false });
-                        const actor = unwrap(actorData)[0] || {};
-                        const personData = await request({ method: GET, url: 'person', params: { person_id: actor.person_id }, requiresAuth: false });
-                        const person = unwrap(personData)[0] || {};
+                        const actorData = await backendGet(ENV.ACADEMIC_BASE_URL, 'api/v1/academic-actors', {academic_actor_id: aid});
+                        const actor = (actorData?.value || actorData || [])[0] || {};
+                        const personData = await backendGet(ENV.API_BASE_URL, 'api/v1/persons', {person_id: actor.person_id});
+                        const person = (personData?.value || personData || [])[0] || {};
                         enriched.push({
                             ...stats,
                             name: `${person.name || ''} ${person.last_name || ''}`.trim() || t('attendance.unknownPerson', {id: aid}),

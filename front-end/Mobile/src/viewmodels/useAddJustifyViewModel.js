@@ -3,7 +3,7 @@ import {useTranslation} from 'react-i18next';
 import {useNavigation} from '@react-navigation/native';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 import * as DocumentPicker from 'expo-document-picker';
-import {request, GET, POST} from '../api/apiClient';
+import {JustificationService, backendGet} from '../services/JustificationService';
 import {getCurrentUser} from '../services/UserService';
 import {ActorService} from '../services/ActorService';
 
@@ -84,29 +84,24 @@ export function useAddJustificationViewModel() {
             const actors = await ActorService.getByPerson(user?.personId);
             const actor = actors?.[0];
             const attendanceData = actor
-                ? await request({method: GET, url: 'attendance_record', params: {academic_actor_id: actor.academicActorId}, requiresAuth: false})
+                ? await backendGet(BASE(), 'api/v1/attendance-records', {academicActorId: actor.academicActorId})
                 : [];
             const attendanceRecords = attendanceData?.value || attendanceData || [];
             const attendanceRecord = attendanceRecords.find(record => record.captured_at?.startsWith(date));
-            const typeData = await request({method: GET, url: 'justification_type', requiresAuth: false});
+            const typeData = await backendGet(BASE(), 'api/v1/justification-types', {});
             const types = typeData?.value || typeData || [];
             const type = types.find(item => {
                 const name = String(item.name || '').toLowerCase();
                 return justificationType === 'retardo' ? name.includes('ret') || name.includes('late') : name.includes('inas') || name.includes('absen');
             }) || types[0];
 
-            await request({
-                method: POST,
-                url: 'justification',
-                data: {
-                    attendance_record_id: attendanceRecord?.attendance_record_id || null,
-                    justification_type_id: type?.justification_type_id || null,
-                    reason: description.trim(),
-                    submitted_at: new Date(`${date}T${time || '00:00'}`).toISOString(),
-                    review_status: 'Pending',
-                    attachment: selectedFile ? {name: selectedFile.name, uri: selectedFile.uri, mime_type: selectedFile.mimeType} : null,
-                },
-                requiresAuth: false,
+            await JustificationService.create({
+                attendanceRecordId: attendanceRecord?.attendance_record_id || null,
+                justificationTypeId: type?.justification_type_id || null,
+                reason: description.trim(),
+                submittedAt: new Date(`${date}T${time || '00:00'}`).toISOString(),
+                reviewStatus: 'Pending',
+                attachment: selectedFile ? {name: selectedFile.name, uri: selectedFile.uri, mime_type: selectedFile.mimeType} : null,
             });
             setAlertData({
                 message: t('justify.successMessage'),

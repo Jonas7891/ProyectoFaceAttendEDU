@@ -4,7 +4,7 @@ import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {saveLanguageForRole} from '../view/components/common/languageByRole';
 import {getCurrentUserRole} from "../services/UserService";
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
-import {request, GET} from '../api/apiClient';
+import {JustificationService} from '../services/JustificationService';
 
 function unwrap(data) {
   if (data && Array.isArray(data.value)) return data.value;
@@ -30,9 +30,7 @@ export function useMenuJustifyViewModel() {
                     setUserRole(finalRole);
                     await saveLanguageForRole(finalRole);
 
-                    const jData = await request({ method: GET, url: 'justification', params: { _limit: 200 }, requiresAuth: false });
-                    const records = unwrap(jData);
-                    const pending = records.filter(j => j.review_status === 'Pending').length;
+                    const pending = (await JustificationService.getPending()).length;
                     setPendingCount(pending);
                 } catch (error) {
                     console.error('Error loading data:', error);

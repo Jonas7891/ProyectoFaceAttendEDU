@@ -2,8 +2,7 @@ import {useCallback, useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {getCurrentUserRole, getCurrentUser} from '../services/UserService';
 import {ActorService} from '../services/ActorService';
-import {request, GET} from '../api/apiClient';
-import {JustificationService} from '../services/JustificationService';
+import {JustificationService, getJustificationTypeMap, getAcademicActorMap, getAttendanceRecordCached, getPersonCached, mapConcurrent} from '../services/JustificationService';
 
 function unwrap(data) {
   if (data && Array.isArray(data.value)) return data.value;
@@ -74,73 +73,69 @@ export const usePendingJustificationViewModel = () => {
         try {
             setLoading(true);
 
-            let justificationFilter = {};
             const normalizedRole = normalizeRole(role);
+            let records;
             if (normalizedRole === USER_ROLE.STUDENT) {
                 const user = await getCurrentUser();
                 const actors = await ActorService.getByPerson(user?.personId);
                 if (actors?.length > 0) {
-                    const actorId = actors[0].academicActorId;
-                    const arDataAll = await request({ method: GET, url: 'attendance_record', params: { academic_actor_id: actorId }, requiresAuth: false });
-                    const arIds = unwrap(arDataAll).map(r => r.attendance_record_id);
-                    if (arIds.length > 0) {
-                        justificationFilter = { attendance_record_id: arIds[0] };
-                        // For multiple records, fetch justifications matching any of them
-                        // JSON Server doesn't support IN queries, so we fetch all and filter client-side
+                    const mine = [];
+                    for (const actor of actors) {
+                        mine.push(...await JustificationService.getByActor(actor.academicActorId));
                     }
+                    records = mine;
+                } else {
+                    records = [];
                 }
+            } else if (normalizedRole === USER_ROLE.TEACHER) {
+                // Para teachers: traer solo Pending + Approved, sin mezclarlas
+                const all = await JustificationService.getAll();
+                records = all.filter(j => {
+                    const jd = j?.justificationId !== undefined ? {
+                        reviewStatus: j.reviewStatus ?? j.review_status,
+                    } : j;
+                    return ['Pending', 'Approved'].includes(jd.reviewStatus);
+                });
+            } else {
+                // ADMIN: traer todas
+                records = await JustificationService.getAll();
             }
 
-            const jData = await request({ method: GET, url: 'justification', params: { _limit: 100 }, requiresAuth: false });
-            let records = unwrap(jData);
+            const [typeMap, actorMap] = await Promise.all([getJustificationTypeMap(), getAcademicActorMap()]);
 
-            if (normalizedRole === USER_ROLE.STUDENT) {
-                const user = await getCurrentUser();
-                const actors = await ActorService.getByPerson(user?.personId);
-                if (actors?.length > 0) {
-                    const actorId = actors[0].academicActorId;
-                    const arDataAll = await request({ method: GET, url: 'attendance_record', params: { academic_actor_id: actorId }, requiresAuth: false });
-                    const myArIds = new Set(unwrap(arDataAll).map(r => r.attendance_record_id));
-                    records = records.filter(j => myArIds.has(j.attendance_record_id));
-                }
-            }
+            const enriched = await mapConcurrent(records, async (j) => {
+                // Accept both Justification models (camelCase) and raw rows (snake_case).
+                const jd = {
+                    justification_id: j.justificationId ?? j.justification_id,
+                    justification_type_id: j.justificationTypeId ?? j.justification_type_id,
+                    attendance_record_id: j.attendanceRecordId ?? j.attendance_record_id,
+                    reason: j.reason,
+                    submitted_at: j.submittedAt ?? j.submitted_at,
+                    review_status: j.reviewStatus ?? j.review_status,
+                };
 
-            const enriched = [];
-            for (const j of records) {
-                try {
-                    const typeData = await request({ method: GET, url: 'justification_type', params: { justification_type_id: j.justification_type_id }, requiresAuth: false });
-                    const jType = unwrap(typeData)[0] || {};
+                const ar = await getAttendanceRecordCached(jd.attendance_record_id);
+                const actor = actorMap[String(ar?.academic_actor_id)] || {};
+                const person = await getPersonCached(actor.person_id);
 
-                    const arData = await request({ method: GET, url: 'attendance_record', params: { attendance_record_id: j.attendance_record_id }, requiresAuth: false });
-                    const ar = unwrap(arData)[0] || {};
+                const statusMap = { Pending: 'pending', Approved: 'approved', Rejected: 'rejected' };
+                const jType = typeMap[jd.justification_type_id] || {};
 
-                    const actorData = await request({ method: GET, url: 'academic_actor', params: { academic_actor_id: ar.academic_actor_id }, requiresAuth: false });
-                    const actor = unwrap(actorData)[0] || {};
-
-                    const personData = await request({ method: GET, url: 'person', params: { person_id: actor.person_id }, requiresAuth: false });
-                    const person = unwrap(personData)[0] || {};
-
-                    const statusMap = { Pending: 'pending', Approved: 'approved', Rejected: 'rejected' };
-                    const typeMap = { 1: 'inasistencia', 2: 'inasistencia', 3: 'retardo' };
-
-                    enriched.push({
-                        id: String(j.justification_id),
-                        role: actor.actor_type_id === 1 ? USER_ROLE.STUDENT : USER_ROLE.TEACHER,
-                        userName: `${person.name || ''} ${person.last_name || ''}`.trim(),
-                        userCode: actor.actor_code || '—',
-                        userGroup: '—',
-                        type: typeMap[j.justification_type_id] || 'inasistencia',
-                        date: j.submitted_at ? j.submitted_at.split('T')[0] : '',
-                        time: null,
-                        description: j.reason || '',
-                        attachment: null,
-                        submittedAt: j.submitted_at || '',
-                        status: statusMap[j.review_status] || 'pending',
-                    });
-                } catch (e) {
-                    continue;
-                }
-            }
+                return {
+                    id: String(jd.justification_id),
+                    role: actor.actor_type_id === 1 ? USER_ROLE.STUDENT : USER_ROLE.TEACHER,
+                    userName: `${person?.name || ''} ${person?.last_name || ''}`.trim(),
+                    userCode: actor.actor_code || '—',
+                    userGroup: '—',
+                    type: /ret|late|tard/i.test(jType.name || '') ? 'retardo' : 'inasistencia',
+                    date: jd.submitted_at ? jd.submitted_at.split('T')[0] : '',
+                    time: null,
+                    description: jd.reason || '',
+                    attachment: null,
+                    submittedAt: jd.submitted_at || '',
+                    status: statusMap[jd.review_status] || 'pending',
+                };
+            });
 
             setJustifications(enriched);
         } catch (error) {
@@ -177,6 +172,10 @@ export const usePendingJustificationViewModel = () => {
         if (userRole === USER_ROLE.ADMIN && activeFilter !== 'all') {
             return baseJustifications.filter((j) => j.role === activeFilter);
         }
+        // Para TEACHER, filtrar también por estado cuando activeFilter no es 'all'
+        if (userRole === USER_ROLE.TEACHER && activeFilter !== 'all') {
+            return baseJustifications.filter((j) => j.status === activeFilter);
+        }
         return baseJustifications;
     }, [baseJustifications, activeFilter, userRole]);
 
@@ -205,7 +204,9 @@ export const usePendingJustificationViewModel = () => {
 
     const counts = useMemo(() => {
         if (userRole === USER_ROLE.TEACHER) {
-            return {all: baseJustifications.length, student: baseJustifications.length};
+            const pending = justifications.filter(j => j.status === 'pending').length;
+            const approved = justifications.filter(j => j.status === 'approved').length;
+            return {all: justifications.length, pending, approved};
         }
         if (userRole === USER_ROLE.STUDENT) {
             return {all: baseJustifications.length};

@@ -5,7 +5,7 @@ import {useNavigation} from '@react-navigation/native';
 import {useTheme} from '../view/components/common/ThemeContext';
 import {getCurrentUserRole} from "../services/UserService";
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
-import {request, GET} from '../api/apiClient';
+import {JustificationService} from '../services/JustificationService';
 
 function unwrap(data) {
   if (data && Array.isArray(data.value)) return data.value;
@@ -51,8 +51,7 @@ export function useJustificationsViewModel() {
                 return;
             }
 
-            const jtData = await request({ method: GET, url: 'justification_type', requiresAuth: false });
-            const types = unwrap(jtData);
+            const types = await JustificationService.getTypes();
 
             if (types.length > 0) {
                 const mapped = types.map(t => ({
@@ -60,9 +59,9 @@ export function useJustificationsViewModel() {
                     type: t.name,
                     description: t.description || '',
                     requiresDocument: t.requires_attachment || false,
-                    category: t.name.includes('méd') || t.name.includes('Méd') ? 'Salud' :
-                              t.name.includes('familiar') || t.name.includes('Familiar') ? 'Familiar' :
-                              t.name.includes('representación') || t.name.includes('institucional') ? 'Académica' : 'General',
+                    category: /m[eé]d/i.test(t.name) ? 'Salud' :
+                              /familiar|calamidad/i.test(t.name) ? 'Familiar' :
+                              /representaci[oó]n|institucional|academic/i.test(t.name) ? 'Académica' : 'General',
                 }));
                 setJustifications(mapped);
                 await AsyncStorage.setItem('validJustifications', JSON.stringify(mapped));

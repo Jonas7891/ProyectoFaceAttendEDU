@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useState} from 'react';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
-import {request, GET} from '../api/apiClient';
+import {backendGet, ENV} from '../api/backend';
 import {PersonService} from '../services/PersonService';
 import {UserService} from '../services/UserService';
 import Person from '../models/identity/Person';
@@ -22,7 +22,7 @@ export function useManageUsersViewModel() {
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const usersData = await request({ method: GET, url: 'app_user', params: { _limit: 50 }, requiresAuth: false });
+      const usersData = await backendGet(ENV.API_BASE_URL, 'api/v1/app-users', {_limit: 50});
       const users = unwrap(usersData);
 
       const personIds = users.map(u => u.person_id).filter(Boolean);
@@ -30,12 +30,12 @@ export function useManageUsersViewModel() {
       const teachersList = [];
 
       for (const userId of users.map(u => u.user_id)) {
-        const rolesData = await request({ method: GET, url: 'user_role', params: { user_id: userId }, requiresAuth: false });
+        const rolesData = await backendGet(ENV.AUTHZ_BASE_URL, 'api/v1/user-roles', {user_id: userId});
         const roles = unwrap(rolesData);
         const roleIds = roles.map(r => r.role_id);
 
         for (const user of users.filter(u => u.user_id === userId)) {
-          const personData = await request({ method: GET, url: 'person', params: { person_id: user.person_id }, requiresAuth: false });
+          const personData = await backendGet(ENV.API_BASE_URL, 'api/v1/persons', {person_id: user.person_id});
           const personArr = unwrap(personData);
           const person = personArr[0] || {};
 

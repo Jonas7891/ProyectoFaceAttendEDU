@@ -2,7 +2,7 @@ import {useCallback, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useNavigation} from '@react-navigation/native';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
-import {request, POST} from '../api/apiClient';
+import {JustificationService} from '../services/JustificationService';
 
 export function useAddValidJustificationViewModel() {
     const navigation = useNavigation();
@@ -49,16 +49,10 @@ export function useAddValidJustificationViewModel() {
 
         setIsSaving(true);
         try {
-            await request({
-                method: POST,
-                url: 'justification_type',
-                data: {
-                    name: type.trim(),
-                    description: description.trim(),
-                    requires_attachment: requiresDocument,
-                    category: category.trim(),
-                },
-                requiresAuth: false,
+            await JustificationService.createType({
+                name: type.trim(),
+                description: description.trim(),
+                requiresAttachment: requiresDocument,
             });
 
             setAlertData({ message: t('admin.justificationCreated'), type: 'success', timestamp: Date.now() });

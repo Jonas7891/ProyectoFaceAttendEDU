@@ -4,7 +4,12 @@ import {useNavigation} from '@react-navigation/native';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 import {getCurrentUser} from '../services/UserService';
 import {ActorService} from '../services/ActorService';
-import {request, GET} from '../api/apiClient';
+import {
+  JustificationService,
+  getJustificationTypeMap,
+  getAttendanceRecordCached,
+  mapConcurrent,
+} from '../services/JustificationService';
 
 function unwrap(data) {
   if (data && Array.isArray(data.value)) return data.value;
@@ -41,42 +46,55 @@ export function useValidJustificationsViewModel() {
 
                 const user = await getCurrentUser();
                 const actors = await ActorService.getByPerson(user?.personId);
-                const actorId = actors?.length > 0 ? actors[0].academicActorId : null;
 
-                const jData = await request({ method: GET, url: 'justification', params: { _limit: 100 }, requiresAuth: false });
-                let records = unwrap(jData);
-
-                if (actorId) {
-                    const arDataAll = await request({ method: GET, url: 'attendance_record', params: { academic_actor_id: actorId }, requiresAuth: false });
-                    const myArIds = new Set(unwrap(arDataAll).map(r => r.attendance_record_id));
-                    records = records.filter(j => myArIds.has(j.attendance_record_id));
+                let records;
+                if (actors?.length > 0) {
+                    const mine = [];
+                    for (const actor of actors) {
+                        mine.push(...await JustificationService.getByActor(actor.academicActorId));
+                    }
+                    records = mine;
+                } else {
+                    records = await JustificationService.getAll();
                 }
+
+                const typeMap = await getJustificationTypeMap();
+
+                const built = await mapConcurrent(records, async (j) => {
+                    const jd = {
+                        justification_id: j.justificationId ?? j.justification_id,
+                        justification_type_id: j.justificationTypeId ?? j.justification_type_id,
+                        reason: j.reason,
+                        submitted_at: j.submittedAt ?? j.submitted_at,
+                        review_status: j.reviewStatus ?? j.review_status,
+                        attendance_record_id: j.attendanceRecordId ?? j.attendance_record_id,
+                    };
+                    const ar = await getAttendanceRecordCached(jd.attendance_record_id);
+                    const jType = typeMap[jd.justification_type_id] || {};
+                    const statusMap = { Pending: 'pending', Approved: 'approved', Rejected: 'rejected' };
+                    return {
+                        id: jd.justification_id,
+                        fecha: jd.submitted_at ? jd.submitted_at.split('T')[0] : '',
+                        motivo: jType.name || jd.reason || '—',
+                        estado: statusMap[jd.review_status] || 'pending',
+                        isLate: ar?.attendance_status === 'Late',
+                        submitted_at: jd.submitted_at,
+                    };
+                });
 
                 const absences = [];
                 const lates = [];
-
-                for (const j of records) {
-                    try {
-                        const typeData = await request({ method: GET, url: 'justification_type', params: { justification_type_id: j.justification_type_id }, requiresAuth: false });
-                        const jType = unwrap(typeData)[0] || {};
-
-                        const statusMap = { Pending: 'pending', Approved: 'approved', Rejected: 'rejected' };
-                        const entry = {
-                            id: j.justification_id,
-                            fecha: j.submitted_at ? j.submitted_at.split('T')[0] : '',
-                            motivo: jType.name || j.reason || '—',
-                            estado: statusMap[j.review_status] || 'pending',
-                        };
-
-                        if (j.justification_type_id === 3) {
-                            entry.hora = j.submitted_at ? new Date(j.submitted_at).toLocaleTimeString(timeLocale, {hour: '2-digit', minute: '2-digit'}) : '—';
-                            lates.push(entry);
-                        } else {
-                            absences.push(entry);
-                        }
-                    } catch (e) {
-                        continue;
+                for (const entry of built) {
+                    if (entry.isLate) {
+                        entry.hora = entry.submitted_at
+                            ? new Date(entry.submitted_at).toLocaleTimeString(timeLocale, {hour: '2-digit', minute: '2-digit'})
+                            : '—';
+                        lates.push(entry);
+                    } else {
+                        absences.push(entry);
                     }
+                    delete entry.isLate;
+                    delete entry.submitted_at;
                 }
 
                 setInasistenciasData(absences);

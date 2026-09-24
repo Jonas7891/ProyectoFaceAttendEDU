@@ -6,7 +6,7 @@ import {useTheme} from "../view/components/common/ThemeContext";
 import {getCurrentUserRole, getCurrentUser} from "../services/UserService";
 import {ActorService} from "../services/ActorService";
 import {PeriodService} from "../services/PeriodService";
-import {request, GET} from "../api/apiClient";
+import {backendGet, request, POST} from "../api/backend";
 
 function unwrap(data) {
   if (data && Array.isArray(data.value)) return data.value;
@@ -71,7 +71,6 @@ export function getDayLabel(dayOfWeek, locale = 'es-ES') {
     const day = Number(dayOfWeek);
     if (!day || day < 1 || day > 7) return '—';
     try {
-        // 2024-01-01 fue lunes; desplazar para obtener el día de la semana.
         const ref = new Date(2024, 0, day);
         const label = ref.toLocaleDateString(locale, {weekday: 'long'});
         return label ? label.charAt(0).toUpperCase() + label.slice(1) : '—';
@@ -118,23 +117,23 @@ export function useAttendanceViewModel() {
             let records = [];
 
             if (isAdminRole) {
-                const arData = await request({ method: GET, url: 'attendance_record', params: { _limit: 200 }, requiresAuth: false });
+                const arData = await backendGet(ENV.ATTENDANCE_BASE_URL, 'api/v1/attendance-records', {_limit: 200});
                 records = unwrap(arData);
             } else if (isTeacherRole && myActor) {
-                const blockData = await request({ method: GET, url: 'schedule_block', params: { instructor_actor_id: myActor.academicActorId }, requiresAuth: false });
+                const blockData = await backendGet(ENV.SCHEDULING_BASE_URL, 'api/v1/schedule-blocks', {instructor_actor_id: myActor.academicActorId});
                 const blocks = unwrap(blockData);
                 const blockIds = blocks.map(b => b.schedule_block_id);
 
                 for (const blockId of blockIds) {
-                    const sessionData = await request({ method: GET, url: 'class_session', params: { schedule_block_id: blockId }, requiresAuth: false });
+                    const sessionData = await backendGet(ENV.SCHEDULING_BASE_URL, 'api/v1/class-sessions', {schedule_block_id: blockId});
                     const sessions = unwrap(sessionData);
                     for (const session of sessions) {
-                        const arData = await request({ method: GET, url: 'attendance_record', params: { class_session_id: session.class_session_id }, requiresAuth: false });
+                        const arData = await backendGet(ENV.ATTENDANCE_BASE_URL, 'api/v1/attendance-records', {class_session_id: session.class_session_id});
                         records.push(...unwrap(arData));
                     }
                 }
             } else if (myActor) {
-                const arData = await request({ method: GET, url: 'attendance_record', params: { academic_actor_id: myActor.academicActorId, _limit: 200 }, requiresAuth: false });
+                const arData = await backendGet(ENV.ATTENDANCE_BASE_URL, 'api/v1/attendance-records', {academic_actor_id: myActor.academicActorId, _limit: 200});
                 records = unwrap(arData);
             }
 
@@ -148,31 +147,31 @@ export function useAttendanceViewModel() {
             const enriched = [];
             for (const record of records.slice(-50)) {
                 try {
-                    const sessionData = await request({ method: GET, url: 'class_session', params: { class_session_id: record.class_session_id }, requiresAuth: false });
+                    const sessionData = await backendGet(ENV.SCHEDULING_BASE_URL, 'api/v1/class-sessions', {class_session_id: record.class_session_id});
                     const session = unwrap(sessionData)[0] || {};
 
-                    const blockData = await request({ method: GET, url: 'schedule_block', params: { schedule_block_id: session.schedule_block_id }, requiresAuth: false });
+                    const blockData = await backendGet(ENV.SCHEDULING_BASE_URL, 'api/v1/schedule-blocks', {schedule_block_id: session.schedule_block_id});
                     const block = unwrap(blockData)[0] || {};
 
-                    const courseData = await request({ method: GET, url: 'course', params: { course_id: block.course_id }, requiresAuth: false });
+                    const courseData = await backendGet(ENV.ACADEMIC_BASE_URL, 'api/v1/courses', {course_id: block.course_id});
                     const course = unwrap(courseData)[0] || {};
 
-                    const envData = await request({ method: GET, url: 'environment', params: { environment_id: block.environment_id }, requiresAuth: false });
+                    const envData = await backendGet(ENV.ACADEMIC_BASE_URL, 'api/v1/environments', {environment_id: block.environment_id});
                     const env = unwrap(envData)[0] || {};
 
-                    const actorData = await request({ method: GET, url: 'academic_actor', params: { academic_actor_id: record.academic_actor_id }, requiresAuth: false });
+                    const actorData = await backendGet(ENV.ACADEMIC_BASE_URL, 'api/v1/academic-actors', {academic_actor_id: record.academic_actor_id});
                     const actor = unwrap(actorData)[0] || {};
 
-                    const personData = await request({ method: GET, url: 'person', params: { person_id: actor.person_id }, requiresAuth: false });
+                    const personData = await backendGet(ENV.API_BASE_URL, 'api/v1/persons', {person_id: actor.person_id});
                     const person = unwrap(personData)[0] || {};
 
                     let docenteName = '—';
                     if (block.instructor_actor_id) {
                         try {
-                            const instrActorData = await request({ method: GET, url: 'academic_actor', params: { academic_actor_id: block.instructor_actor_id }, requiresAuth: false });
+                            const instrActorData = await backendGet(ENV.ACADEMIC_BASE_URL, 'api/v1/academic-actors', {academic_actor_id: block.instructor_actor_id});
                             const instrActor = unwrap(instrActorData)[0];
                             if (instrActor?.person_id) {
-                                const instrPersonData = await request({ method: GET, url: 'person', params: { person_id: instrActor.person_id }, requiresAuth: false });
+                                const instrPersonData = await backendGet(ENV.API_BASE_URL, 'api/v1/persons', {person_id: instrActor.person_id});
                                 const instrPerson = unwrap(instrPersonData)[0];
                                 if (instrPerson) {
                                     docenteName = `${instrPerson.name || ''} ${instrPerson.last_name || ''}`.trim() || '—';

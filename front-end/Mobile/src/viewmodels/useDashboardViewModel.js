@@ -6,7 +6,6 @@ import {useFocusEffect} from '@react-navigation/native';
 import {getCurrentUserRole, getCurrentUser} from "../services/UserService";
 import {ActorService} from '../services/ActorService';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
-import {request, GET} from '../api/apiClient';
 import {backendGet} from '../api/backend';
 import ENV from '../config/env';
 
@@ -86,7 +85,7 @@ async function fetchRecentNovedades(t) {
       try {
         const actor = actorById[String(a.academic_actor_id)];
         if (actor?.person_id) {
-          const person = unwrap(await request({ method: GET, url: `${API()}api/v1/persons/${actor.person_id}`, requiresAuth: false }))[0];
+          const person = unwrap(await backendGet(API(), `api/v1/persons/${actor.person_id}`))[0];
           if (person) personName = `${person.name || ''} ${person.last_name || person.lastName || ''}`.trim();
         }
       } catch {}
