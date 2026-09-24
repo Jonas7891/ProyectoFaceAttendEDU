@@ -1,18 +1,48 @@
+"""Fingerprint embedding — domain entity.
+
+Persisted in the MongoDB `fingerprint_embeddings` collection
+(fae-docs/06-data/domains/06-biometric.md §2).
+"""
+from __future__ import annotations
+
 from dataclasses import dataclass, field
-from datetime import datetime
-from uuid import UUID
+from datetime import datetime, timezone
+from uuid import uuid4
+
+MIN_FINGER_NUMBER = 1
+MAX_FINGER_NUMBER = 10
 
 
-@dataclass
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+@dataclass(frozen=True)
 class FingerprintEmbedding:
-    person_id: UUID
+    """One version of a person's template for a single finger.
+
+    Immutable: state transitions produce a new instance via
+    `dataclasses.replace`.
+    """
+
+    person_id: str
     finger_number: int
     encoding: list[float]
     model_version: str
-    is_active: bool = True
-    enrolled_at: datetime | None = None
+    embedding_id: str = field(default_factory=lambda: str(uuid4()))
     template_version: int = 1
+    is_active: bool = True
+    enrolled_at: datetime = field(default_factory=_utcnow)
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    deleted_at: datetime | None = None
 
     def __post_init__(self) -> None:
-        if not 1 <= self.finger_number <= 10:
-            raise ValueError("finger_number must be between 1 and 10")
+        if not MIN_FINGER_NUMBER <= self.finger_number <= MAX_FINGER_NUMBER:
+            raise ValueError(
+                f"finger_number must be between {MIN_FINGER_NUMBER} and {MAX_FINGER_NUMBER}"
+            )
+        if not self.person_id:
+            raise ValueError("person_id must not be empty")
+        if not self.encoding:
+            raise ValueError("encoding must not be empty")
