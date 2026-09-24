@@ -1,4 +1,5 @@
 import { request, GET, POST } from '../api/apiClient';
+import { toSnakeDeep } from '../api/backend';
 import ENV from '../config/env';
 import AuthResponse from '../models/identity/AuthResponse';
 import AuthRequest from '../models/identity/AuthRequest';
@@ -42,9 +43,10 @@ async function resolveUsernameByEmail(email) {
     params: { page: 1, limit: PAGE_LIMIT },
     requiresAuth: false,
   });
-  const person = unwrapPage(personsData).find(
-    (p) => (p.email || '').toLowerCase().trim() === normalized
+  const personRaw = unwrapPage(personsData).find(
+    (p) => ((p.email || p.mail || '')).toLowerCase().trim() === normalized
   );
+  const person = personRaw ? toSnakeDeep(personRaw) : null;
   if (!person) return null;
 
   const usersData = await request({
@@ -53,8 +55,32 @@ async function resolveUsernameByEmail(email) {
     params: { page: 1, limit: PAGE_LIMIT },
     requiresAuth: false,
   });
-  const user = unwrapPage(usersData).find((u) => u.person_id === person.person_id);
-  return user ? { username: user.username, person } : null;
+  const userRaw = unwrapPage(usersData).find((u) => (u.person_id || u.personId) === person.person_id);
+  return userRaw ? { username: userRaw.username, person } : null;
+}
+
+async function resolveProfile(userId) {
+  // Session responses carry no person data: match user + person from identity lists.
+  try {
+    const users = await request({
+      method: GET,
+      url: USERS_ENDPOINT,
+      params: { page: 1, limit: PAGE_LIMIT },
+      requiresAuth: false,
+    });
+    const user = unwrapPage(users).find((u) => u.userId === userId || u.user_id === userId);
+    if (!user) return { person: null, username: null };
+    const personId = user.personId || user.person_id;
+    let person = null;
+    try {
+      person = toSnakeDeep(await request({ method: GET, url: `${PERSONS_ENDPOINT}/${personId}`, requiresAuth: false }));
+    } catch {
+      person = null;
+    }
+    return { person, username: user.username };
+  } catch {
+    return { person: null, username: null };
+  }
 }
 
 async function fetchRoleNames(userId) {
@@ -106,6 +132,14 @@ export const AuthService = {
     // 3. Load roles for navigation/theming.
     const roleNames = await fetchRoleNames(userId);
 
+    // 3b. Complete the profile (person data) when login used the username directly.
+    if (!person?.person_id) {
+      const profile = await resolveProfile(userId);
+      person = profile.person ? toSnakeDeep(profile.person) : person;
+      if (profile.username) username = profile.username;
+    }
+    const personName = person ? [person.name, person.last_name].filter(Boolean).join(' ') : null;
+
     // 4. Build AuthResponse keeping the app-level shape.
     return AuthResponse.fromApi({
       token: String(sessionId),
@@ -113,6 +147,8 @@ export const AuthService = {
         user_id: userId,
         person_id: person?.person_id || null,
         username,
+        email: person?.email || (identity.includes('@') ? identity : null),
+        name: personName,
         roles: roleNames,
         person: person || null,
       },

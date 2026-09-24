@@ -50,7 +50,7 @@ export default function App() {
                 setUserRole(role);
             } else {
                 await removeToken();
-                await AsyncStorage.multiRemove(['userRole', 'userEmail', 'appLanguage', 'alertsConfig']);
+                await AsyncStorage.multiRemove(['userRole', 'userEmail', 'userProfile', 'appLanguage', 'alertsConfig']);
                 setIsAuthenticated(false);
                 setUserRole(null);
             }
@@ -74,10 +74,17 @@ export default function App() {
 
     const handleLogout = async () => {
         try {
+            try {
+                const { getToken } = require('../storage/TokenStorage');
+                const { AuthService } = require('../services/AuthService');
+                const sessionId = await getToken();
+                await AuthService.logout(sessionId);
+            } catch {}
             await removeToken();
             await AsyncStorage.multiRemove([
                 'userRole',
                 'userEmail',
+                'userProfile',
                 'appLanguage',
                 'alertsConfig',
             ]);

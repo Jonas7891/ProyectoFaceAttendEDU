@@ -17,7 +17,7 @@ export default function DangerButton({ title, disabled = false, onLogout }) {
         try {
             // Limpiar almacenamiento
             await removeToken();
-            await AsyncStorage.multiRemove(['userRole', 'userEmail', 'appLanguage', 'alertsConfig']);
+            await AsyncStorage.multiRemove(['userRole', 'userEmail', 'userProfile', 'appLanguage', 'alertsConfig']);
 
             // Ejecutar callback (que ya incluye la confirmación desde la pantalla)
             if (onLogout) {
