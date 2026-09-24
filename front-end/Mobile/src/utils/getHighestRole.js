@@ -2,6 +2,8 @@ import {DEFAULT_ROLE, ROLES_HIERARCHY} from "../services/constants/rolesHierarch
 
 const ROLE_MAP = {
   'ADMIN': 'Administrador',
+  'SUPER_ADMIN': 'Administrador',
+  'SCHOOL_ADMIN': 'Administrador',
   'RECTOR': 'Administrador',
   'COORDINATOR': 'Administrador',
   'INSTRUCTOR': 'Docente',
