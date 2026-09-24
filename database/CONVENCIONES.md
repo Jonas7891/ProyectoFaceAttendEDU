@@ -44,13 +44,13 @@ Un **esquema PostgreSQL por dominio** (bounded context). `biometric` es un schem
 
 | Dominio | Esquema | Notas |
 |---|---|
-| Identity | `identity` | 5 tablas |
+| Identity | `identity` | 4 tablas (+ `city` DDL deprecated, pendiente de remoción) |
 | Authorization | `authorization` | 4 tablas |
 | Academic | `academic` | 8 tablas |
 | Scheduling | `scheduling` | 3 tablas |
-| Attendance | `attendance` | 4 tablas |
-| Biometric | `biometric` | Solo schema, sin tablas (NoSQL en MongoDB) |
-| Configuration | `configuration` | 3 tablas (incluye `biometric_update_case`) |
+| Attendance | `attendance` | 5 tablas (`attendance_report` es proyección derivada, sin FKs) |
+| Biometric | `biometric` | Dueño lógico de `biometric_update_case` + NoSQL en MongoDB (DDL transitorio en `configuration`) |
+| Configuration | `configuration` | 2 tablas (+ hospedaje transitorio de `biometric_update_case`) |
 | Notification | `notification` | 2 tablas |
 
 ---
@@ -142,7 +142,9 @@ Las columnas que usan ENUMs referencian el tipo completo:
     defaultValue: "Present"
 ```
 
-**ENUMs del modelo (DBML v4):** `user_session_status` (Active/Closed), `authentication_type` (Local/Windows/External), `enrollment_status` (Active/Withdrawn/Completed), `class_session_status` (Open/Closed/Cancelled), `attendance_status` (Present/Absent/Late/Justified), `capture_method` (FACIAL/MANUAL/IOT/IMPORT), `review_status` (Pending/Approved/Rejected), `biometric_type` (FACIAL/FINGERPRINT), `update_status` (Pending/In_Review/Approved/Rejected).
+**ENUMs del modelo (DBML v7):** `user_session_status` (Active/Closed), `authentication_type` (Local/Windows/External), `enrollment_status` (Active/Withdrawn/Completed), `class_session_status` (Open/Closed/Cancelled), `attendance_status` (Present/Absent/Late/Justified), `capture_method` (FACIAL/MANUAL/IOT/IMPORT), `review_status` (Pending/Approved/Rejected), `biometric_type` (FACIAL/FINGERPRINT, dueño Biometric), `update_status` (Pending/In_Review/Approved/Rejected, dueño Biometric).
+
+**No todo dominio cerrado es ENUM nativo:** `person.document_type`, `person.blood_type` y `schedule_block.day_of_week` (1..7 ISO) son VARCHAR/SMALLINT + CHECK (`chk_person_document_type`, `chk_person_blood_type`, `chk_block_day_of_week`).
 
 ---
 
