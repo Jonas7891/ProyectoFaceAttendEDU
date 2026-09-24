@@ -12,8 +12,8 @@
 //     physically still hosted in `configuration` schema, see note below),
 //     person document uniqueness fixed to (document_type, document_number),
 //     CHECKs/ENUMs documented as native types, microservice-cut exclusions
-//     clarified (attendance_report = derived projection, audit/error_log =
-//     cross-cutting observability). Conventions made explicit: singular
+//     clarified (attendance_report = derived projection, Audit context
+//     removed). Conventions made explicit: singular
 //     table names, mixed PK strategy, day_of_week 1..7.
 //
 // IMPLEMENTATION MAP (DBML note -> Liquibase DDL, PostgreSQL 17):
@@ -701,66 +701,6 @@ Ref: alert.alert_type_id > alert_type.alert_type_id
 
 
 ////////////////////////////////////////////////////////////
-// AUDIT
-////////////////////////////////////////////////////////////
-
-Table audit_log {
-  audit_log_id bigint [pk, increment]
-  school_id int [null]
-  actor_id uuid [null]
-  action varchar [not null]
-  aggregate_type varchar [not null]
-  aggregate_id varchar [null]
-  description text [null]
-  source_ip varchar [null]
-  application varchar [null]
-  occurred_at datetime [not null]
-
-  created_at datetime [not null]
-  updated_at datetime [not null]
-  deleted_at datetime [null]
-  created_by uuid [null]
-  updated_by uuid [null]
-  deleted_by uuid [null]
-  row_version bigint [not null, default: 1]
-
-  indexes {
-    actor_id [name: 'idx_audit_actor']
-    (aggregate_type, aggregate_id) [name: 'idx_audit_aggregate']
-    occurred_at [name: 'idx_audit_date']
-    school_id [name: 'idx_audit_school']
-  }
-}
-
-Table error_log {
-  error_id bigint [pk, increment]
-  school_id int [null]
-  user_id uuid [null]
-  error_type varchar [not null]
-  description text [not null]
-  source_ip varchar [null]
-  application varchar [null]
-  occurred_at datetime [not null]
-
-  created_at datetime [not null]
-  updated_at datetime [not null]
-  deleted_at datetime [null]
-  created_by uuid [null]
-  updated_by uuid [null]
-  deleted_by uuid [null]
-  row_version bigint [not null, default: 1]
-
-  indexes {
-    user_id [name: 'idx_error_user']
-    occurred_at [name: 'idx_error_date']
-    school_id [name: 'idx_error_school']
-  }
-}
-
-// Cross-context (sin FK): actor_id/user_id -> Identity.app_user, school_id -> Academic.school
-
-
-////////////////////////////////////////////////////////////
 // CONFIGURATION
 ////////////////////////////////////////////////////////////
 
@@ -854,11 +794,6 @@ TableGroup Notification [color: #f1c40f] {
   alert
 }
 
-TableGroup Audit [color: #95a5a6] {
-  audit_log
-  error_log
-}
-
 TableGroup Configuration [color: #34495e] {
   academic_configuration
   security_configuration
@@ -868,8 +803,8 @@ TableGroup Configuration [color: #34495e] {
 // - attendance_report (Attendance) es una proyección derivada de reporte
 //   (filtros + resultado JSONB, sin FKs): se conserva en el modelo completo
 //   pero queda fuera del núcleo 3FN de 4 servicios.
-// - audit_log / error_log (Audit) son observabilidad transversal, no un
-//   dominio de negocio: se conservan fuera del recorte.
+// - El bounded context Audit (audit_log / error_log) fue ELIMINADO del modelo:
+//   la observabilidad la provee la plataforma, no el esquema relacional.
 // - biometric_update_case pertenece lógicamente a Biometric; el DDL Liquibase
 //   la hospeda en el schema `configuration` de forma transitoria
 //   (ver NOTA FÍSICA en la sección BIOMETRIC).
