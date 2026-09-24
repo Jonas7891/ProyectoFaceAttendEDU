@@ -43,7 +43,7 @@ Los prefijos numéricos (`001-`, `002-`, ...) determinan el **orden de ejecució
 Un **esquema PostgreSQL por dominio** (bounded context). `biometric` es un schema vacío (colecciones en MongoDB):
 
 | Dominio | Esquema | Notas |
-|---|---|
+|---|---|---|
 | Identity | `identity` | 4 tablas (+ `city` DDL deprecated, pendiente de remoción) |
 | Authorization | `authorization` | 4 tablas |
 | Academic | `academic` | 8 tablas |
