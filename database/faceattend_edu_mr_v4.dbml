@@ -15,6 +15,24 @@
 //     clarified (attendance_report = derived projection, audit/error_log =
 //     cross-cutting observability). Conventions made explicit: singular
 //     table names, mixed PK strategy, day_of_week 1..7.
+//
+// IMPLEMENTATION MAP (DBML note -> Liquibase DDL, PostgreSQL 17):
+// - Columns marked 'ENUM: ...' are native ENUM types under 02-types/
+//   (e.g. attendance.attendance_status), NOT free VARCHAR. DBML keeps
+//   `varchar + note` only because DBML has no native-enum rendering.
+// - Columns marked 'CHECK-backed' are VARCHAR + CHECK constraint
+//   (person.document_type, person.blood_type).
+// - CHECKs chk_period_dates (starts_on < ends_on), chk_block_time
+//   (starts_at < ends_at) and chk_finger_number (FINGERPRINT 1..10 /
+//   FACIAL NULL) exist in DDL; DBML repeats them as notes.
+// - Table names are SINGULAR by convention (person, school). Any plural
+//   form in external review docs (persons, schools) is a variant, not the
+//   repo standard.
+// - Mixed PK strategy (deliberate): UUID for entities referenced across
+//   contexts (person_id, user_id, case_id), INT for local catalogs,
+//   BIGINT for high-volume rows, SMALLINT for tiny catalogs.
+// - day_of_week is 1..7 (ISO, CHECK chk_block_day_of_week). External review
+//   docs mentioning 0..6 refer to an older SQL cut, not this model.
 ////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////
@@ -236,8 +254,8 @@ Table academic_period {
   academic_period_id int [pk, increment]
   school_id int [not null]
   name varchar [not null]
-  starts_on date [not null]
-  ends_on date [not null]
+  starts_on date [not null, note: 'CHECK chk_period_dates: starts_on < ends_on']
+  ends_on date [not null, note: 'CHECK chk_period_dates: starts_on < ends_on']
   is_active boolean [not null, default: false]
 
   created_at datetime [not null]
@@ -390,9 +408,9 @@ Table schedule_block {
   course_id int [not null]
   environment_id int [not null]
   instructor_actor_id bigint [not null]
-  day_of_week smallint [not null, note: '1..7']
-  starts_at time [not null]
-  ends_at time [not null]
+  day_of_week smallint [not null, note: '1..7 ISO — CHECK chk_block_day_of_week']
+  starts_at time [not null, note: 'CHECK chk_block_time: starts_at < ends_at']
+  ends_at time [not null, note: 'CHECK chk_block_time: starts_at < ends_at']
 
   created_at datetime [not null]
   updated_at datetime [not null]
@@ -603,7 +621,7 @@ Table biometric_update_case {
   case_id uuid [pk, not null]
   person_id uuid [not null]
   biometric_type varchar [not null, note: 'ENUM: FACIAL / FINGERPRINT']
-  finger_number smallint [null, note: 'Obligatorio solo si biometric_type = FINGERPRINT (1..10); nulo si es FACIAL']
+  finger_number smallint [null, note: 'CHECK chk_finger_number: FINGERPRINT 1..10, FACIAL NULL']
   current_embedding_ref varchar [null, note: '_id lógico del documento activo en facial_embedding o fingerprint_embedding (NoSQL). Sin FK real: cross-paradigm.']
   reason text [not null]
   update_status varchar [not null, default: 'Pending', note: 'ENUM: Pending / In_Review / Approved / Rejected']
