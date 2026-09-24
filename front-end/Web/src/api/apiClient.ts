@@ -132,6 +132,33 @@ function toApiError(status: number, payload: unknown): ApiError {
     return new ApiError({ status, code: `HTTP_${status}`, message: `Error ${status}` });
 }
 
+/** Sobre de paginación de fae-docs/07-api/contracts/openapi/_shared.yaml. */
+export interface PaginatedMeta {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+}
+
+export interface PageEnvelope<T> {
+    data: T[];
+    meta: PaginatedMeta;
+}
+
+function isPageEnvelope(payload: unknown): payload is PageEnvelope<unknown> {
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) return false;
+    const p = payload as { data?: unknown; meta?: unknown };
+    return Array.isArray(p.data) && !!p.meta && typeof p.meta === "object" && "total" in (p.meta as object);
+}
+
+/**
+ * Los endpoints de colección devuelven { data, meta }. Quien llama espera el arreglo,
+ * así que se desenvuelve aquí en vez de en cada servicio.
+ */
+function unwrapPage<T>(payload: unknown): T {
+    return (isPageEnvelope(payload) ? payload.data : payload) as T;
+}
+
 /** Petición genérica tipada. Lanza ApiError si !ok. */
 export async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
     const method = opts.method ?? "GET";
@@ -157,7 +184,7 @@ export async function request<T>(path: string, opts: RequestOptions = {}): Promi
             const res = await fetchWithTimeout(url, init, timeoutMs);
             const data = await parseBody(res);
             if (!res.ok) throw toApiError(res.status, data);
-            return data as T;
+            return unwrapPage<T>(data);
         } catch (e) {
             lastErr = e;
             if (e instanceof ApiError) throw e; // no reintentar errores HTTP

@@ -32,6 +32,25 @@ function buildUrl(path) {
   return `${base}/${path.replace(/^\//, '')}`;
 }
 
+/**
+ * The backend returns paginated collections as { data: [...], meta: { page, limit, total, totalPages } }
+ * (fae-docs/07-api/contracts/openapi/_shared.yaml). Callers expect a plain array, so unwrap it here
+ * instead of in every service.
+ */
+function unwrapPage(payload) {
+  if (
+    payload &&
+    !Array.isArray(payload) &&
+    Array.isArray(payload.data) &&
+    payload.meta &&
+    typeof payload.meta === 'object' &&
+    'total' in payload.meta
+  ) {
+    return payload.data;
+  }
+  return payload;
+}
+
 export async function request({ method, url, data = null, params = null, requiresAuth = false }) {
   let fullUrl = buildUrl(url);
 
@@ -71,7 +90,7 @@ export async function request({ method, url, data = null, params = null, require
       throw new ApiError(response.status, result?.message || `Error ${response.status}`, result);
     }
 
-    return result;
+    return unwrapPage(result);
   } catch (error) {
     clearTimeout(timeoutId);
 
