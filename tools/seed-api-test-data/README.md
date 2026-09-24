@@ -48,7 +48,7 @@ alerts and quality instruments created below.
 
 | Service | Records (`SEED-*` unless noted) |
 |---|---|
-| identity `:8081` | city, person `seed.student@example.com`, `/me` check |
+| identity `:8081` | city, person `seed.student@example.com`, user `seed.admin`, `/me` check |
 | authorization `:8083` | roles `SEED_ADMIN`/`SEED_TEACHER`, 2 permissions |
 | academic `:8084` | school, program, period, cohort, course, actor, enrollment |
 | scheduling `:8087` | environment, block, session (+ open) |
@@ -58,18 +58,26 @@ alerts and quality instruments created below.
 | notification `:8090` | alert type `SEED_ABSENCE`, alert |
 | quality `:8091` | project, characteristics/process/istqb instruments |
 
-In-memory services (academic, biometric, configuration, quality) lose data on
-container restart; Postgres/Mongo-backed ones persist it.
+The seeded login is `SEED_USERNAME` / `SEED_PASSWORD` (defaults `seed.admin` /
+`SeedAdmin123!`). `POST /api/v1/users` bcrypt-hashes the password server side, so
+the plaintext is never stored or returned. Override both variables per environment
+and never reuse these values outside local testing.
 
-## Known backend bugs (not fixed here, one task per branch)
+## Known backend bugs
 
-1. `POST /api/v1/users` returns `400 User.passwordHash is required`, but
-   `UserDto` exposes no password field and `UserWebMapper.toDomain` never sets
-   it, so no client can create a user.
-   Fix in: `back-end/01-ms-identity/.../web/dto/UserDto.java`,
-   `.../web/mapper/UserWebMapper.java`.
-2. `POST` writes on scheduling/attendance hang until client timeout: their
-   Kafka producer dials `localhost:9092`, unreachable inside Docker.
-   Fix in: `back-end/docker-compose.yml`, add
-   `SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092` to `ms-scheduling` and
-   `ms-attendance` (identity/authorization already set it).
+None currently whitelisted in `seed.mjs` (`KNOWN_ISSUES` is empty), so any failure
+fails the seed with exit code `1`.
+
+Previously tracked here and now fixed:
+
+1. `POST /api/v1/users` returned `400 User.passwordHash is required`. The endpoint
+   now takes `{ personId, username, password }`, hashes with bcrypt cost 12 and
+   returns `201`.
+2. `POST` writes on scheduling/attendance hung until client timeout because their
+   Kafka producer dialled `localhost:9092`. `back-end/docker-compose.yml` now sets
+   `SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092` for `ms-scheduling` and
+   `ms-attendance`, and their JDBC URLs keep `?stringtype=unspecified` so `String`
+   values still coerce into native PostgreSQL enum columns.
+
+Note: the first write that publishes to Kafka pays a one-off producer
+initialisation cost, so the request timeout is 30s rather than 10s.

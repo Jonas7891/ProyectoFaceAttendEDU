@@ -17,6 +17,10 @@ const U = {
 const results = [];
 const ids = {};
 
+// Credentials for the seeded login. Override in the environment; never reuse in production.
+const SEED_USERNAME = process.env.SEED_USERNAME ?? "seed.admin";
+const SEED_PASSWORD = process.env.SEED_PASSWORD ?? "SeedAdmin123!";
+
 async function call(service, method, path, body) {
   const url = `${U[service]}${path}`;
   const label = `${method} ${service}${path}`;
@@ -25,7 +29,7 @@ async function call(service, method, path, body) {
       method,
       headers: { "Content-Type": "application/json" },
       body: body === undefined ? undefined : JSON.stringify(body),
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(30000),
     });
     const text = await res.text();
     let data = null;
@@ -60,14 +64,20 @@ async function ensure(service, path, body, { idKey, matchKey, matchValue, listPa
 async function seedIdentity() {
   const city = await post("identity", "/api/v1/cities", { name: "Seed City", department: "Seed Dept" });
   ids.cityId = pick(city, "cityId", "id") ?? 1;
-  await post("identity", "/api/v1/persons", {
+  ids.personId = await ensure("identity", "/api/v1/persons", {
     documentNumber: "SEED-001", name: "Seed", lastName: "Student",
     email: "seed.student@example.com", documentType: "CC", status: true,
-  });
-  await post("identity", "/api/v1/users", {
-    userId: "11111111-1111-1111-1111-111111111111", username: "seed.admin", status: true,
-  });
-  await get("identity", "/api/v1/auth/me?username=seed.admin");
+  }, { idKey: "personId", matchKey: "documentNumber", matchValue: "SEED-001" });
+  if (ids.personId) {
+    // POST /api/v1/users requires personId + username + password; the password is
+    // bcrypt-hashed server side (ADR-008) and never returned by any endpoint.
+    await ensure("identity", "/api/v1/users", {
+      personId: ids.personId, username: SEED_USERNAME, password: SEED_PASSWORD,
+    }, { idKey: "userId", matchKey: "username", matchValue: SEED_USERNAME });
+  } else {
+    console.log("skip  - user needs a person id (identity person seed failed?)");
+  }
+  await get("identity", `/api/v1/auth/me?username=${SEED_USERNAME}`);
   await get("identity", "/api/v1/cities?limit=5");
 }
 
@@ -121,7 +131,12 @@ async function seedScheduling() {
       scheduleBlockId: ids.blockId, sessionDate: "2026-09-23",
     });
     ids.sessionId = pick(session, "sessionId", "classSessionId", "id");
-    if (ids.sessionId) await post("scheduling", `/api/v1/class-sessions/${ids.sessionId}/open`);
+    // A new session already defaults to session_status 'Open' (DDL default), so POST
+    // /{id}/open is a no-op the backend rejects with 400. Only open a session that
+    // is not open yet, otherwise the seed reports a false failure.
+    if (ids.sessionId && pick(session, "sessionStatus") !== "Open") {
+      await post("scheduling", `/api/v1/class-sessions/${ids.sessionId}/open`);
+    }
   }
   await get("scheduling", "/api/v1/environments");
 }
@@ -135,14 +150,16 @@ async function seedAttendance() {
     { name: "Seed Calamity", description: "Seed domestic calamity", requiresAttachment: true },
     { idKey: "justificationTypeId", matchKey: "name", matchValue: "Seed Calamity" }) ?? 1;
   if (ids.sessionId) {
+    // attendance_status is the native enum ('Present','Absent','Late','Justified') and
+    // capture_method is ('FACIAL','MANUAL','IOT','IMPORT'); casing must match exactly.
     const rec = await post("attendance", "/api/v1/attendance-records", {
       classSessionId: ids.sessionId, academicActorId: ids.actorId ?? 1,
-      attendanceStatus: "PRESENT", captureMethod: "MANUAL",
+      attendanceStatus: "Present", captureMethod: "MANUAL",
     });
     ids.recordId = pick(rec, "recordId", "attendanceRecordId", "id");
     await post("attendance", "/api/v1/attendance-records/bulk", [{
       classSessionId: ids.sessionId, academicActorId: ids.actorId ?? 1,
-      attendanceStatus: "LATE", captureMethod: "MANUAL",
+      attendanceStatus: "Late", captureMethod: "MANUAL",
     }]);
     if (ids.recordId) {
       await post("attendance", "/api/v1/justifications", {
@@ -200,19 +217,10 @@ async function seedQuality() {
   await get("quality", "/api/v1/quality/projects");
 }
 
-// Endpoints with confirmed backend defects (see README "known issues").
-// They run normally but never fail the seed: the data they would create
-// is not required by web/mobile smoke tests.
-const KNOWN_ISSUES = new Set([
-  "POST identity/api/v1/users", // 400: User.passwordHash is required, no DTO field carries it
-  "POST scheduling/api/v1/environments", // hangs: Kafka producer points to localhost:9092
-  "POST scheduling/api/v1/schedule-blocks", // same Kafka misconfiguration
-  "POST scheduling/api/v1/class-sessions", // same Kafka misconfiguration
-  "POST attendance/api/v1/justification-types", // same Kafka misconfiguration
-  "POST attendance/api/v1/attendance-records", // same Kafka misconfiguration
-  "POST attendance/api/v1/attendance-records/bulk", // same Kafka misconfiguration
-  "POST attendance/api/v1/justifications", // same Kafka misconfiguration
-]);
+// Endpoints with confirmed, still-unfixed backend defects (see README "known issues").
+// They run normally but never fail the seed. Keep this empty: an entry here hides a real
+// regression, so only add one with a comment naming the defect and where it is tracked.
+const KNOWN_ISSUES = new Set([]);
 
 async function main() {
   console.log(`seed start (${new Date().toISOString()})`);
