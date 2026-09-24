@@ -9,7 +9,7 @@ const LOGIN_ENDPOINT = 'api/v1/auth/login';
 const LOGOUT_ENDPOINT = 'api/v1/auth/logout';
 const PERSONS_ENDPOINT = 'api/v1/persons';
 const USERS_ENDPOINT = 'api/v1/users';
-const PAGE_LIMIT = 200;
+const PAGE_LIMIT = 2000;
 
 function unwrap(data) {
   if (data && Array.isArray(data.value)) return data.value;
