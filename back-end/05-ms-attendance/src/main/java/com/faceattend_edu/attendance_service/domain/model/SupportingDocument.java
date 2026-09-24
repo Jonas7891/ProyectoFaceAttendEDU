@@ -35,7 +35,7 @@ public class SupportingDocument {
         if (sizeBytes == null || sizeBytes <= 0) throw new IllegalArgumentException("sizeBytes must be > 0");
     }
     public void touchCreated(){ if(createdAt==null) createdAt=Instant.now(); if(rowVersion==0) rowVersion=1L; }
-    public void touchUpdated(){ updatedAt=Instant.now(); rowVersion++; }
+    public void touchUpdated(){ updatedAt=Instant.now(); }
     private static boolean isBlank(String s){ return s==null || s.trim().isEmpty(); }
     @Override public boolean equals(Object o){ if(this==o) return true; if(!(o instanceof SupportingDocument)) return false; SupportingDocument that=(SupportingDocument)o; return Objects.equals(supportingDocumentId, that.supportingDocumentId); }
     @Override public int hashCode(){ return Objects.hash(supportingDocumentId); }

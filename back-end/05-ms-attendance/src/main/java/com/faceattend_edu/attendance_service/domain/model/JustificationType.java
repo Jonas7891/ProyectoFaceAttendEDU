@@ -38,7 +38,7 @@ public class JustificationType {
         if (status == null) status = true;
         if (rowVersion == 0) rowVersion = 1L;
     }
-    public void touchUpdated() { updatedAt = Instant.now(); rowVersion++; }
+    public void touchUpdated() { updatedAt = Instant.now(); }
     private static boolean isBlank(String s){ return s==null || s.trim().isEmpty(); }
     @Override public boolean equals(Object o){ if(this==o) return true; if(!(o instanceof JustificationType)) return false; JustificationType that=(JustificationType)o; return Objects.equals(justificationTypeId, that.justificationTypeId); }
     @Override public int hashCode(){ return Objects.hash(justificationTypeId); }

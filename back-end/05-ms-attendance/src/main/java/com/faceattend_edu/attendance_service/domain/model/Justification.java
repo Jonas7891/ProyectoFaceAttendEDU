@@ -43,7 +43,7 @@ public class Justification {
         if (reviewStatus == null) reviewStatus = "Pending";
         if (rowVersion == 0) rowVersion = 1L;
     }
-    public void touchUpdated(){ updatedAt = Instant.now(); rowVersion++; }
+    public void touchUpdated(){ updatedAt = Instant.now(); }
     private static boolean isBlank(String s){ return s==null || s.trim().isEmpty(); }
     @Override public boolean equals(Object o){ if(this==o) return true; if(!(o instanceof Justification)) return false; Justification that=(Justification)o; return Objects.equals(justificationId, that.justificationId); }
     @Override public int hashCode(){ return Objects.hash(justificationId); }
