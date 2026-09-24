@@ -1,14 +1,15 @@
-import { request, GET, POST, DELETE } from '../api/apiClient';
+import { request, GET, POST } from '../api/apiClient';
+import ENV from '../config/env';
 import AuthResponse from '../models/identity/AuthResponse';
 import AuthRequest from '../models/identity/AuthRequest';
 import { VerificationService } from './verificationService';
 import { PasswordService } from './passwordService';
 
-const USERS_ENDPOINT = 'app_user';
-const PERSONS_ENDPOINT = 'person';
-const ROLES_ENDPOINT = 'role';
-const USER_ROLES_ENDPOINT = 'user_role';
-const SESSIONS_ENDPOINT = 'user_session';
+const LOGIN_ENDPOINT = 'api/v1/auth/login';
+const LOGOUT_ENDPOINT = 'api/v1/auth/logout';
+const PERSONS_ENDPOINT = 'api/v1/persons';
+const USERS_ENDPOINT = 'api/v1/users';
+const PAGE_LIMIT = 200;
 
 function unwrap(data) {
   if (data && Array.isArray(data.value)) return data.value;
@@ -17,102 +18,120 @@ function unwrap(data) {
   return [];
 }
 
-function unwrapFirst(data) {
-  const arr = unwrap(data);
-  return arr.length > 0 ? arr[0] : null;
+function unwrapPage(data) {
+  if (data && Array.isArray(data.data)) return data.data;
+  return unwrap(data);
+}
+
+async function doLogin(username, password) {
+  const body = new AuthRequest({ username, password }).toApi?.() ?? { username, password };
+  const session = await request({
+    method: POST,
+    url: LOGIN_ENDPOINT,
+    data: body,
+    requiresAuth: false,
+  });
+  return session;
+}
+
+async function resolveUsernameByEmail(email) {
+  const normalized = (email || '').toLowerCase().trim();
+  const personsData = await request({
+    method: GET,
+    url: PERSONS_ENDPOINT,
+    params: { page: 1, limit: PAGE_LIMIT },
+    requiresAuth: false,
+  });
+  const person = unwrapPage(personsData).find(
+    (p) => (p.email || '').toLowerCase().trim() === normalized
+  );
+  if (!person) return null;
+
+  const usersData = await request({
+    method: GET,
+    url: USERS_ENDPOINT,
+    params: { page: 1, limit: PAGE_LIMIT },
+    requiresAuth: false,
+  });
+  const user = unwrapPage(usersData).find((u) => u.person_id === person.person_id);
+  return user ? { username: user.username, person } : null;
+}
+
+async function fetchRoleNames(userId) {
+  try {
+    // Authorization routes require Kong JWT, so roles are fetched straight
+    // from ms-authorization (no JWT plugin on direct access).
+    const data = await request({
+      method: GET,
+      url: `${ENV.AUTHZ_BASE_URL}api/v1/users/${userId}/roles`,
+      requiresAuth: false,
+    });
+    return unwrap(data)
+      .map((r) => r.roleName || r.role_name)
+      .filter(Boolean);
+  } catch (e) {
+    console.warn('Could not fetch user roles:', e?.message || e);
+    return [];
+  }
 }
 
 export const AuthService = {
   login: async (email, password) => {
-    // 1. Buscar person por email
-    const personData = await request({
-      method: GET,
-      url: PERSONS_ENDPOINT,
-      params: { email },
-      requiresAuth: false,
-    });
-    const person = unwrapFirst(personData);
-    if (!person) throw new Error('Credenciales inválidas');
+    const identity = (email || '').trim();
+    let session = null;
+    let person = null;
+    let username = identity;
 
-    // 2. Buscar app_user por person_id
-    const usersData = await request({
-      method: GET,
-      url: USERS_ENDPOINT,
-      params: { person_id: person.person_id },
-      requiresAuth: false,
-    });
-    const userRaw = unwrapFirst(usersData);
-    if (!userRaw) throw new Error('Credenciales inválidas');
-
-    // 3. Obtener role_ids del usuario desde user_role
-    const userRolesData = await request({
-      method: GET,
-      url: USER_ROLES_ENDPOINT,
-      params: { user_id: userRaw.user_id },
-      requiresAuth: false,
-    });
-    const roleAssignments = unwrap(userRolesData);
-
-    // 4. Obtener role_name por cada role_id
-    const roleNames = [];
-    for (const ur of roleAssignments) {
-      const roleData = await request({
-        method: GET,
-        url: ROLES_ENDPOINT,
-        params: { role_id: ur.role_id },
-        requiresAuth: false,
-      });
-      const role = unwrapFirst(roleData);
-      if (role?.role_name) roleNames.push(role.role_name);
+    try {
+      // 1. Try the input directly as username.
+      session = await doLogin(identity, password);
+    } catch (err) {
+      // 2. Fall back to email -> username resolution.
+      if (!err || (err.status !== 400 && err.status !== 401)) throw err;
+      const resolved = await resolveUsernameByEmail(identity).catch(() => null);
+      if (!resolved) throw new Error('Credenciales inválidas');
+      person = resolved.person;
+      username = resolved.username;
+      try {
+        session = await doLogin(resolved.username, password);
+      } catch {
+        throw new Error('Credenciales inválidas');
+      }
     }
 
-    // 5. Crear sesión real en el backend y usar su token.
-    const sessionData = await request({
-      method: POST,
-      url: SESSIONS_ENDPOINT,
-      data: { user_id: userRaw.user_id },
-      requiresAuth: false,
-    });
-    const session = unwrapFirst(sessionData);
-    const token = session?.token || session?.session_token || session?.session_id || String(session?.id || '');
-    if (!token) throw new Error('No se pudo crear la sesión');
+    const sessionId = session?.sessionId || session?.session_id || session?.id;
+    const userId = session?.userId || session?.user_id;
+    if (!sessionId || !userId) throw new Error('No se pudo crear la sesión');
 
-    // 6. Construir AuthResponse
+    // 3. Load roles for navigation/theming.
+    const roleNames = await fetchRoleNames(userId);
+
+    // 4. Build AuthResponse keeping the app-level shape.
     return AuthResponse.fromApi({
-      token,
+      token: String(sessionId),
       user: {
-        user_id: userRaw.user_id,
-        person_id: userRaw.person_id,
-        username: userRaw.username,
-        authentication_type: userRaw.authentication_type,
-        status: userRaw.status,
-        last_access: userRaw.last_access,
+        user_id: userId,
+        person_id: person?.person_id || null,
+        username,
         roles: roleNames,
         person: person || null,
       },
     });
   },
 
-  refreshToken: async (refreshToken) => {
-    const data = await request({
-      method: POST,
-      url: `${SESSIONS_ENDPOINT}/refresh`,
-      data: { refresh_token: refreshToken },
-      requiresAuth: false,
-    });
-    const session = unwrapFirst(data);
-    const token = session?.token || session?.session_token || data?.token;
-    if (!token) throw new Error('No se pudo refrescar la sesión');
-    return AuthResponse.fromApi({ token });
+  refreshToken: async () => {
+    // The backend issues opaque session ids without refresh rotation.
+    throw new Error('Sesión no renovable: vuelve a iniciar sesión');
   },
 
   logout: async (sessionId) => {
     if (!sessionId) return;
     await request({
-      method: DELETE,
-      url: `${SESSIONS_ENDPOINT}/${sessionId}`,
+      method: POST,
+      url: LOGOUT_ENDPOINT,
+      params: { sessionId },
       requiresAuth: false,
-    });
+    }).catch(() => null);
   },
 
   forgotPassword: async (email) => {

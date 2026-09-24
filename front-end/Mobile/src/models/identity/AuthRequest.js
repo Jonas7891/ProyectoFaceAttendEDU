@@ -3,17 +3,17 @@ import BaseModel from '../BaseModel';
 export default class AuthRequest extends BaseModel {
   constructor(data = {}) {
     super();
-    this.email = data.email || '';
+    this.username = data.username || data.email || '';
     this.password = data.password || '';
   }
 
-  static fromCredentials(email, password) {
-    return new AuthRequest({ email, password });
+  static fromCredentials(username, password) {
+    return new AuthRequest({ username, password });
   }
 
   toApi() {
     return {
-      email: this.email,
+      username: this.username,
       password: this.password,
     };
   }
