@@ -39,7 +39,7 @@ database/
 | 07 | `07-ms-configuration-db` | Configuration | `configuration` | `academic_configuration`, `security_configuration` (+ hospedaje transitorio de `biometric_update_case`) |
 | 08 | `08-ms-notification-db` | Notification | `notification` | `alert_type`, `alert` |
 
-> `audit_log` / `error_log` (Audit) existen solo en el DBML: son observabilidad transversal sin DDL Liquibase ni carpeta propia. `attendance_report` (†) es una proyección derivada (JSONB, sin FKs), fuera del núcleo 3FN de 4 servicios.
+> El bounded context Audit (`audit_log` / `error_log`) fue eliminado del modelo relacional: la observabilidad la provee la plataforma. `attendance_report` (†) es una proyección derivada (JSONB, sin FKs), fuera del núcleo 3FN de 4 servicios.
 
 ---
 

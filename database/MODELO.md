@@ -39,14 +39,12 @@ El modelo se divide en **8 contextos**, cada uno responsable de un área de nego
 │ att_record  │  NoSQL)     │ acad_config │ alert_type       │
 │ justif_type │ biometr_case│ sec_config  │ alert            │
 │ justification│ facial_emb │             │                  │
-│ sup_document│ finger_emb  │  AUDIT (obs)│                  │
-│ att_report† │ (MongoDB)   │ audit_log   │                  │
-│             │             │ error_log   │                  │
+│ sup_document│ finger_emb  │             │                  │
+│ att_report† │ (MongoDB)   │             │                  │
 └─────────────┴─────────────┴─────────────┴──────────────────┘
 * app_user.person_id UNIQUE (1:1 con person)
 † att_report = proyección derivada (filtros + resultado JSONB, sin FKs):
   se conserva en el modelo completo pero fuera del núcleo 3FN de 4 servicios.
-AUDIT = observabilidad transversal (sin FKs), fuera del recorte a 4 servicios.
 ```
 
 ---
@@ -221,22 +219,11 @@ enrollment → cohort
 **Cross-context:**
 - `alert.academic_actor_id` → `Academic.academic_actor.academic_actor_id`
 
----
-
-## 11. Contexto: Audit (observabilidad transversal)
-
-**Responsabilidad:** Trazabilidad de acciones y registro de errores. No es un dominio de negocio: ningún otro contexto referencia estas tablas y ellas no imponen FKs hacia nadie (solo comentarios cross-context a `Identity.app_user` y `Academic.school`).
-
-| Tabla | Descripción | PK |
-|---|---|---|
-| `audit_log` | Acciones sobre agregados (actor, aggregate_type/id, app, IP, fecha) | `audit_log_id` (BIGINT) |
-| `error_log` | Errores de aplicación (tipo, descripción, usuario, sede, fecha) | `error_id` (BIGINT) |
-
-Quedan **fuera del recorte a 4 microservicios** a propósito: son infraestructura de observabilidad, no bounded contexts de negocio.
+> **Audit eliminado:** el bounded context Audit (`audit_log` / `error_log`) se removió del modelo relacional. La observabilidad (trazas, errores) la provee la plataforma, no el esquema de negocio.
 
 ---
 
-## 12. Regla más importante: Sin FK entre contextos
+## 11. Regla más importante: Sin FK entre contextos
 
 > **Toda referencia entre contextos distintos se documenta como comentario, nunca como `Ref:` activa.**
 
@@ -260,7 +247,7 @@ Esto significa que en el código SQL/Liquibase:
 
 ---
 
-## 13. Diagrama de relaciones (simplificado)
+## 12. Diagrama de relaciones (simplificado)
 
 ```
 identity.person ─────────────────────────────────────────┐
@@ -292,7 +279,7 @@ authorization.user_role                        enrollment │
 
 ---
 
-## 14. ENUMs y dominios CHECK del modelo
+## 13. ENUMs y dominios CHECK del modelo
 
 Los ENUMs se implementan como **tipos PostgreSQL nativos** (`02-types/` de cada dominio); el DBML los documenta como `varchar + note` porque no renderiza enums nativos. `document_type` y `blood_type` son VARCHAR + CHECK (no tipos nativos).
 
