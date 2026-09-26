@@ -241,7 +241,7 @@ export default function CoursesView() {
                     {[
                         { label: t("Total cursos"),     value: vm.courses.length,      color: c.brand.primary  },
                         { label: t("Estudiantes"),      value: vm.totalStudents,       color: c.status.success },
-                        { label: t("Asistencia prom."), value: `${vm.avgAttendance}%`, color: "#8B5CF6"        },
+                        { label: t("Asistencia prom."), value: `${vm.avgAttendance}%`, color: c.brand.primary  },
                         { label: t("Con alerta"),       value: vm.alertCount,          color: c.status.warning },
                     ].map(({ label, value, color }) => (
                         <Card key={label} style={{ flex: 1, minWidth: 140, alignItems: "center" }} padding={14}>

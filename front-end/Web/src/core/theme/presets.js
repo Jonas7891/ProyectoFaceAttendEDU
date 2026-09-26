@@ -8,22 +8,6 @@
 //  4. Estados iniciales y constantes de reset
 // ============================================================
 
-// ── Función auxiliar HSL → HEX ──────────────────────────────
-export function hsl(h, s, l) {
-    const sv = s / 100;
-    const lv = l / 100;
-    const k  = (n) => (n + h / 30) % 12;
-    const a  = sv * Math.min(lv, 1 - lv);
-    const f  = (n) =>
-        lv - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
-    return (
-        "#" +
-        [f(0), f(8), f(4)]
-            .map(v => Math.round(v * 255).toString(16).padStart(2, "0"))
-            .join("")
-    );
-}
-
 // ── 1. DEFINICIÓN DE SLOTS SEMÁNTICOS (genéricos, invariables) ───
 export const SEMANTIC_SLOTS = [
     { key: "primary",  label: "Primario",     description: "Color general del aplicativo, botones principales, elementos interactivos" },
@@ -37,39 +21,43 @@ export const SEMANTIC_SLOTS = [
 // Cada visión tiene colores optimizados para cada slot semántico
 const VISION_COLOR_MAP = {
     normal: {
-        primary: hsl(217, 76, 52),  // Azul
-        success: hsl(160, 65, 42),  // Verde
-        warning: hsl(258, 68, 57),  // Violeta
-        error:   hsl(24,  88, 54),  // Naranja
-        text:    hsl(220, 14, 46),  // Gris neutro
+        primary: "#1983fc", // Azul
+        success: "#19C687", // Verde
+        warning: "#FFAB00", // Ámbar
+        error:   "#F04438", // Rojo
+        text:    "#000000", // Negro
     },
+
     deuteranopia: {
-        primary: hsl(218, 80, 50),  // Azul
-        success: hsl(196, 80, 45),  // Celeste
-        warning: hsl(268, 60, 55),  // Violeta
-        error:   hsl(42,  90, 46),  // Dorado
-        text:    hsl(220, 10, 50),  // Gris neutro
+        primary: "#286FE2", // Azul
+        success: "#00A6A6", // Turquesa
+        warning: "#E6A700", // Ámbar
+        error:   "#D81B60", // Magenta
+        text:    "#000000", // Negro
     },
+
     protanopia: {
-        primary: hsl(214, 82, 48),  // Azul
-        success: hsl(192, 78, 44),  // Celeste
-        warning: hsl(260, 55, 55),  // Violeta
-        error:   hsl(48,  92, 44),  // Amarillo
-        text:    hsl(220, 10, 50),  // Gris neutro
+        primary: "#286FE2", // Azul
+        success: "#007F8B", // Teal
+        warning: "#F0A000", // Ámbar
+        error:   "#7B2CBF", // Violeta
+        text:    "#000000", // Negro
     },
+
     tritanopia: {
-        primary: hsl(330, 65, 55),  // Rosa
-        success: hsl(140, 62, 42),  // Verde
-        warning: hsl(22,  86, 52),  // Naranja
-        error:   hsl(358, 72, 52),  // Rojo
-        text:    hsl(220, 10, 50),  // Gris neutro
+        primary: "#7048D8", // Violeta
+        success: "#1B9E77", // Verde
+        warning: "#E76F00", // Naranja
+        error:   "#D73027", // Rojo
+        text:    "#000000", // Negro
     },
+
     achromatopsia: {
-        primary: hsl(220, 0, 45),   // Gris medio
-        success: hsl(220, 0, 60),   // Gris claro
-        warning: hsl(220, 0, 30),   // Gris oscuro
-        error:   hsl(0,   0, 18),   // Carbón
-        text:    hsl(220, 0, 50),   // Gris neutro
+        primary: "#5A5A5A", // Gris medio
+        success: "#808080", // Gris
+        warning: "#B0B0B0", // Gris claro
+        error:   "#303030", // Gris oscuro
+        text:    "#000000", // Negro
     },
 };
 
@@ -104,6 +92,7 @@ export const VISION_PRESETS = {
 /**
  * Estado inicial de colores customizados (empiezan con los defaults)
  * Estructura: { visionMode: { semantic: hex } }
+ * @returns {Object} Objeto con todos los modos de visión y sus colores por defecto
  */
 export function getInitialCustomColors() {
     const result = {};
@@ -115,8 +104,8 @@ export function getInitialCustomColors() {
 
 /**
  * Obtiene los colores por defecto de un modo de visión específico
- * @param {string} visionMode
- * @returns {Object} { semantic: hex }
+ * @param {string} visionMode - Modo de visión ("normal" | "deuteranopia" | "protanopia" | "tritanopia" | "achromatopsia")
+ * @returns {Object} Objeto con slots semánticos y sus colores { semantic: hex }
  */
 export function getDefaultColorsForVision(visionMode) {
     return { ...VISION_COLOR_MAP[visionMode] };
@@ -125,8 +114,8 @@ export function getDefaultColorsForVision(visionMode) {
 /**
  * Resetea un slot semántico específico a su valor por defecto
  * @param {Object} customColors - Estado actual de colores customizados
- * @param {string} visionMode - Modo de visión actual
- * @param {string} semantic - Slot semántico a resetear
+ * @param {string} visionMode - Modo de visión actual ("normal" | "deuteranopia" | "protanopia" | "tritanopia" | "achromatopsia")
+ * @param {string} semantic - Slot semántico a resetear ("primary" | "success" | "warning" | "error" | "text")
  * @returns {Object} Nuevo objeto de colores con el slot reseteado
  */
 export function resetSemanticSlot(customColors, visionMode, semantic) {
@@ -142,7 +131,7 @@ export function resetSemanticSlot(customColors, visionMode, semantic) {
 /**
  * Resetea toda la paleta de un modo de visión a sus valores por defecto
  * @param {Object} customColors - Estado actual de colores customizados
- * @param {string} visionMode - Modo de visión a resetear
+ * @param {string} visionMode - Modo de visión a resetear ("normal" | "deuteranopia" | "protanopia" | "tritanopia" | "achromatopsia")
  * @returns {Object} Nuevo objeto de colores con la paleta reseteada
  */
 export function resetVisionPalette(customColors, visionMode) {
@@ -176,6 +165,6 @@ export const VISION_MODES = [
     "achromatopsia",
 ];
 
-export const DEFAULT_ACCENT = hsl(217, 76, 52);
+export const DEFAULT_ACCENT = "#286FE2";
 export const DEFAULT_MODE = "light";
 export const DEFAULT_VISION_MODE = "normal";

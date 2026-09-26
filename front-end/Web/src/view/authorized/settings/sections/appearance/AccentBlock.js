@@ -1,13 +1,15 @@
 // ============================================================
-//  AccentBlock — Selector de paleta semántica completa
-//  UI pura que renderiza el selector autónomo.
+//  AccentBlock — Selector de tema y paleta semántica completa
+//  Editor de modo (claro/oscuro) y colores con preview aislado.
+//
+//  Los cambios solo afectan el PREVIEW hasta que el usuario presione "Guardar cambios".
+//  Entonces se aplican a toda la UI via ThemeContext.applyColors(), setMode() y setVisionMode().
 //
 //  Props:
-//   - onColorsExport  : (customColors) => void - Callback opcional para cuando el componente guarde
-//   - onHasChanges    : (hasChanges: boolean) => void - Callback para notificar cambios sin guardar
-//   - onDiscardRegister: (discardFn) => void - Callback para registrar función de descarte
-//   - onSaveSuccessRegister: (commitFn) => void - Callback para registrar función de commit
-//   - previewTheme    : Tema generado con los colores en preview
+//   - onColorsExport  : (customColors) => void - [DEPRECADO] Ya no necesario
+//   - onHasChanges    : (hasChanges: boolean) => void - Notifica cambios sin guardar
+//   - onDiscardRegister: (discardFn) => void - Registra función de descarte
+//   - onSaveSuccessRegister: (saveFn) => void - Registra función de guardado
 // ============================================================
 import React from "react";
 import { View, Text } from "react-native";
@@ -15,17 +17,17 @@ import { useTranslation } from "../../../../../core/utils/i18n/hooks/useTranslat
 import { AccentColorSelector } from "../../../../components/settings/tabs";
 import { useSettingsSectionStyles } from "../../modals/useSettingsSectionStyles";
 
-export function AccentBlock({ onColorsExport, onHasChanges, onDiscardRegister, onSaveSuccessRegister, previewTheme }) {
+export function AccentBlock({ onColorsExport, onHasChanges, onDiscardRegister, onSaveSuccessRegister }) {
     const { t } = useTranslation();
     const { labelStyle, descStyle } = useSettingsSectionStyles();
 
     return (
         <View style={{ gap: 10 }}>
-            {/* Paleta de colores semánticos */}
+            {/* Selector de tema y paleta de colores integrado */}
             <View>
-                <Text style={labelStyle}>{t("Paleta de colores")}</Text>
+                <Text style={labelStyle}>{t("Tema y paleta de colores")}</Text>
                 <Text style={descStyle}>
-                    {t("Personaliza los colores semánticos de la aplicación: Primario (interacción), Correcto (éxitos), Advertencias, Errores y Fuentes. Los cambios se previsualizan abajo — presiona \"Guardar cambios\" para aplicarlos en toda la aplicación.")}
+                    {t("Personaliza el modo de visualización (claro/oscuro) y los colores semánticos de la aplicación: Primario (interacción), Correcto (éxitos), Advertencias, Errores y Fuentes. Los cambios se previsualizan en tiempo real. Presiona \"Guardar cambios\" para aplicarlos en toda la aplicación.")}
                 </Text>
             </View>
 
@@ -35,7 +37,6 @@ export function AccentBlock({ onColorsExport, onHasChanges, onDiscardRegister, o
                 onHasChanges={onHasChanges}
                 onDiscardRegister={onDiscardRegister}
                 onSaveSuccessRegister={onSaveSuccessRegister}
-                previewTheme={previewTheme}
             />
         </View>
     );

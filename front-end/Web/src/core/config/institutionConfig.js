@@ -16,6 +16,39 @@ const INSTITUTION_CONFIG_KEY = "faceattend_institution_config";
 export const DEFAULT_ACADEMIC_PERIOD = "trimestral";
 
 /**
+ * Migrar accentColor antiguo a customColors nuevo
+ * Esta función se ejecuta automáticamente para mantener compatibilidad
+ * 
+ * @param {Object} config - Configuración institucional
+ * @returns {Object} Configuración migrada
+ */
+function migrateAccentColorToCustomColors(config) {
+    // Si ya tiene customColors, no migrar
+    if (config.customColors) {
+        return config;
+    }
+    
+    // Si tiene accentColor antiguo, migrar a customColors
+    if (config.accentColor && config.accentColor !== "#3B82F6") {
+        const visionMode = config.visionMode || "normal";
+        
+        const customColors = {
+            [visionMode]: {
+                primary: config.accentColor,
+                // Los demás colores usan defaults del tema
+            }
+        };
+        
+        return {
+            ...config,
+            customColors,
+        };
+    }
+    
+    return config;
+}
+
+/**
  * Configuración por defecto de la institución
  */
 const DEFAULT_INSTITUTION_CONFIG = {
@@ -57,8 +90,15 @@ const DEFAULT_INSTITUTION_CONFIG = {
     sessionTime: 60,
     
     // Apariencia
-    accentColor: "#3B82F6",
     theme: "light",
+    visionMode: "normal",
+    
+    // Colores personalizados por modo de visión
+    // Estructura: { visionMode: { primary, success, warning, error, text } }
+    customColors: null, // null = usar defaults, objeto = colores personalizados
+    
+    // DEPRECADO: Mantener por compatibilidad con versiones antiguas
+    accentColor: "#3B82F6",
 };
 
 /**
@@ -72,7 +112,17 @@ export function getInstitutionConfig() {
         if (stored) {
             const parsed = JSON.parse(stored);
             // Merge con defaults para agregar nuevas propiedades si se agregan después
-            return { ...DEFAULT_INSTITUTION_CONFIG, ...parsed };
+            const merged = { ...DEFAULT_INSTITUTION_CONFIG, ...parsed };
+            
+            // Migrar automáticamente accentColor antiguo a customColors
+            const migrated = migrateAccentColorToCustomColors(merged);
+            
+            // Si hubo migración, guardar para persistir
+            if (migrated !== merged) {
+                saveInstitutionConfig(migrated);
+            }
+            
+            return migrated;
         }
     } catch (error) {
         console.warn("Error loading institution config from localStorage:", error);
@@ -124,6 +174,25 @@ export function updateInstitutionConfigField(key, value) {
  */
 export function updateInstitutionConfig(updates) {
     const config = getInstitutionConfig();
+    const newConfig = { ...config, ...updates };
+    return saveInstitutionConfig(newConfig);
+}
+
+/**
+ * Guardar la configuración de tema en institutionConfig
+ * Sincroniza theme, customColors y visionMode desde ThemeContext
+ * 
+ * @param {Object} themeConfig - { theme, customColors, visionMode }
+ * @returns {boolean} True si se guardó exitosamente
+ */
+export function saveThemeConfigToInstitution({ theme, customColors, visionMode }) {
+    const config = getInstitutionConfig();
+    const updates = {};
+    
+    if (theme !== undefined) updates.theme = theme;
+    if (customColors !== undefined) updates.customColors = customColors;
+    if (visionMode !== undefined) updates.visionMode = visionMode;
+    
     const newConfig = { ...config, ...updates };
     return saveInstitutionConfig(newConfig);
 }
@@ -307,4 +376,20 @@ export function advanceToNextPeriod() {
         periodStartDate: nextPeriod.periodStartDate,
         periodEndDate: nextPeriod.periodEndDate,
     });
+}
+
+/**
+ * Sincronizar configuración institucional con ThemeContext
+ * Útil para cargar tema al iniciar la app
+ * 
+ * @returns {Object} { theme, visionMode, customColors }
+ */
+export function getThemeConfigFromInstitution() {
+    const config = getInstitutionConfig();
+    
+    return {
+        theme: config.theme || "light",
+        visionMode: config.visionMode || "normal",
+        customColors: config.customColors || null,
+    };
 }

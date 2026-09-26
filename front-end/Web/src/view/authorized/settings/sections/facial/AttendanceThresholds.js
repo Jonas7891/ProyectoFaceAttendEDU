@@ -57,7 +57,7 @@ export function AttendanceThresholds({
                     borderRadius: 14, padding: 12, flexDirection: "row", gap: 8,
                 }}>
                     <Feather name={minAttendance >= 90 ? "alert-triangle" : "info"} size={13} color={minAttendance >= 90 ? c.status.warning : c.brand.primary} style={{ marginTop: 1 }} />
-                    <Text style={{ fontSize: 11, color: minAttendance >= 90 ? "#92400E" : c.brand.primary, flex: 1, lineHeight: 18 }}>
+                    <Text style={{ fontSize: 11, color: minAttendance >= 90 ? c.status.warningDark : c.brand.primary, flex: 1, lineHeight: 18 }}>
                         {minAttendance <= 60
                             ? t("Umbral bajo — los estudiantes tendrán mucha flexibilidad de faltar. Asegúrate de que sea intencional.")
                             : `${t("Con este umbral, un estudiante puede faltar hasta")} ${Math.floor(100 - minAttendance)} ${t("clases de cada 100 sin quedar en riesgo.")}`}
@@ -100,7 +100,7 @@ export function AttendanceThresholds({
                         color={daysUntilSanction <= 7 ? c.status.danger : daysUntilSanction <= 15 ? c.status.warning : c.brand.primary}
                         style={{ marginTop: 1 }}
                     />
-                    <Text style={{ fontSize: 11, color: daysUntilSanction <= 7 ? "#991B1B" : daysUntilSanction <= 15 ? "#92400E" : c.brand.primary, flex: 1, lineHeight: 18 }}>
+                    <Text style={{ fontSize: 11, color: daysUntilSanction <= 7 ? c.status.dangerDark : daysUntilSanction <= 15 ? c.status.warningDark : c.brand.primary, flex: 1, lineHeight: 18 }}>
                         {daysUntilSanction <= 7
                             ? t("Umbral muy estricto — Los estudiantes podrían quedar en riesgo de sanción rápidamente. Recomendado para programas con asistencia obligatoria diaria.")
                             : daysUntilSanction <= 15

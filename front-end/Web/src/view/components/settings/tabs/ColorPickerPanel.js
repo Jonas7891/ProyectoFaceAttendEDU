@@ -1,11 +1,21 @@
 // ============================================================
 //  ColorPickerPanel — Panel selector de color cromático completo
-//  Replica la interfaz de Figma/herramientas de diseño:
+//  
+//  Sistema basado 100% en HEX/RGB - NO utiliza HSL.
+//  
+//  Arquitectura:
 //  - Input HEX arriba con preview + Evaluador de contraste a la derecha
-//  - Panel 2D (Saturación X, Luminosidad Y)
-//  - Slider de Matiz (Hue) arcoíris
+//  - Panel 2D (Saturación X, Luminosidad Y) basado en matemática RGB
+//  - Slider de Matiz (Hue) arcoíris - transformación directa RGB
 //  - Slider de Luminosidad con valor numérico
 //  - Barra de contraste debajo del evaluador
+//
+//  Flujo: HEX → RGB interno → interacción visual → RGB → HEX
+//
+//  Props:
+//  - currentHex: string - Color actual en formato HEX (#RRGGBB)
+//  - onColorChange: (hex: string) => void - Callback cuando cambia el color
+//  - verdict: Object - Resultado de evaluateColor() con análisis del color
 // ============================================================
 import React, { useState } from "react";
 import { View, StyleSheet, Text, TextInput } from "react-native";
@@ -14,10 +24,16 @@ import Slider from "@react-native-community/slider";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
-import { hslToHex, hexToHsl } from "../../../../core/utils/colorUtils";
+import { 
+    calculateColorFromPanel, 
+    extractPanelValues,
+    hueToRgb,
+    rgbToHex,
+    isValidHex 
+} from "../../../../core/utils/colorUtils";
 import { ColorEvaluator } from "./ColorEvaluator";
 
-export function ColorPickerPanel({ hue, sat, lum, currentHex, onColorChange, verdict }) {
+export function ColorPickerPanel({ currentHex, onColorChange, verdict }) {
     const { theme } = useTheme();
     const c = theme.colors;
     const { t } = useTranslation();
@@ -28,45 +44,92 @@ export function ColorPickerPanel({ hue, sat, lum, currentHex, onColorChange, ver
     const [hexInput, setHexInput] = useState(currentHex);
     const [panelLayout, setPanelLayout] = useState(null);
 
+    // Estado interno para los sliders (se sincroniza solo cuando currentHex cambia desde fuera)
+    const [hue, setHue] = useState(() => extractPanelValues(currentHex).hue);
+    const [saturation, setSaturation] = useState(() => extractPanelValues(currentHex).saturation);
+    const [brightness, setBrightness] = useState(() => extractPanelValues(currentHex).brightness);
+
+    // Ref para detectar si el cambio viene de FUERA (cambio de slot) o de DENTRO (slider)
+    const isInternalChangeRef = React.useRef(false);
+
+    // Sincronizar estado interno SOLO cuando currentHex cambia desde FUERA
+    React.useEffect(() => {
+        if (!isInternalChangeRef.current) {
+            const { hue: h, saturation: s, brightness: b } = extractPanelValues(currentHex);
+            setHue(h);
+            setSaturation(s);
+            setBrightness(b);
+            setHexInput(currentHex);
+        }
+        isInternalChangeRef.current = false;
+    }, [currentHex]);
+
     function handleHexChange(text) {
         setHexInput(text);
         
         // Validar y aplicar si es hex válido
         const hex = text.startsWith('#') ? text : `#${text}`;
-        if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
-            const [h, s, l] = hexToHsl(hex);
-            onColorChange(h, s, l);
+        if (isValidHex(hex)) {
+            const { hue: h, saturation: s, brightness: b } = extractPanelValues(hex);
+            setHue(h);
+            setSaturation(s);
+            setBrightness(b);
+            isInternalChangeRef.current = true;
+            onColorChange(hex);
         }
     }
-
-    // Actualizar input cuando cambia el color
-    React.useEffect(() => {
-        setHexInput(currentHex);
-    }, [currentHex]);
 
     // Handler para el panel 2D
     function handlePanelPress(evt) {
         if (!panelLayout) return;
         
         const { locationX, locationY } = evt.nativeEvent;
-        const newSat = Math.max(0, Math.min(100, (locationX / panelLayout.width) * 100));
-        const newLum = Math.max(0, Math.min(100, 100 - (locationY / panelLayout.height) * 100));
+        const newSaturation = Math.max(0, Math.min(100, (locationX / panelLayout.width) * 100));
+        const newBrightness = Math.max(0, Math.min(100, 100 - (locationY / panelLayout.height) * 100));
         
-        onColorChange(hue, newSat, newLum);
+        setSaturation(newSaturation);
+        setBrightness(newBrightness);
+        
+        // Calcular nuevo HEX desde los valores del panel (matemática RGB)
+        const newHex = calculateColorFromPanel(hue, newSaturation, newBrightness);
+        setHexInput(newHex);
+        isInternalChangeRef.current = true;
+        onColorChange(newHex);
     }
 
+    // Handler para slider de matiz
+    function handleHueChange(newHue) {
+        setHue(newHue);
+        const newHex = calculateColorFromPanel(newHue, saturation, brightness);
+        setHexInput(newHex);
+        isInternalChangeRef.current = true;
+        onColorChange(newHex);
+    }
+
+    // Handler para slider de brillo
+    function handleBrightnessChange(newBrightness) {
+        setBrightness(newBrightness);
+        const newHex = calculateColorFromPanel(hue, saturation, newBrightness);
+        setHexInput(newHex);
+        isInternalChangeRef.current = true;
+        onColorChange(newHex);
+    }
+
+    // Obtener color puro del matiz actual para el fondo del panel
+    const pureHueColor = rgbToHex(...Object.values(hueToRgb(hue)));
+
     return (
-        <View style={{ gap: 8 }}>
+        <View style={{ gap: 18 }}>
             {/* Fila superior: Input HEX + Evaluador */}
             <View style={{ flexDirection: "row", gap: 8 }}>
                 {/* Columna izquierda: Input HEX + Picker */}
-                <View style={{ gap: 8 }}>
+                <View style={{ gap: 6 }}>
                     {/* Input HEX */}
                     <View style={{ width: PANEL_WIDTH }}>
                         <View style={{
                             flexDirection: "row",
                             alignItems: "center",
-                            gap: 12,
+                            gap: 6,
                         }}>
                             {/* Preview del color */}
                             <View style={{
@@ -116,15 +179,16 @@ export function ColorPickerPanel({ hue, sat, lum, currentHex, onColorChange, ver
                         </View>
                     </View>
 
-                    {/* Panel 2D - Saturación (X) y Luminosidad (Y) */}
+                    {/* Panel 2D - Saturación (X) y Luminosidad (Y) - Matemática RGB pura */}
                     <View 
                         style={{
+                            marginTop: 4,
                             width: PANEL_WIDTH,
                             height: PANEL_HEIGHT,
                             borderRadius: 12,
                             position: "relative",
                             overflow: "hidden",
-                            backgroundColor: hslToHex(hue, 100, 50),
+                            backgroundColor: pureHueColor,
                         }}
                         onLayout={(e) => setPanelLayout(e.nativeEvent.layout)}
                         onStartShouldSetResponder={() => true}
@@ -153,8 +217,8 @@ export function ColorPickerPanel({ hue, sat, lum, currentHex, onColorChange, ver
                         <View 
                             style={{
                                 position: "absolute",
-                                left: (sat / 100) * PANEL_WIDTH - 10,
-                                top: ((100 - lum) / 100) * PANEL_HEIGHT - 10,
+                                left: (saturation / 100) * PANEL_WIDTH - 10,
+                                top: ((100 - brightness) / 100) * PANEL_HEIGHT - 10,
                                 width: 20,
                                 height: 20,
                                 borderRadius: 10,
@@ -171,7 +235,7 @@ export function ColorPickerPanel({ hue, sat, lum, currentHex, onColorChange, ver
                         />
                     </View>
 
-                    {/* Slider de Matiz (Hue) - Arcoíris */}
+                    {/* Slider de Matiz (Hue) - Arcoíris RGB */}
                     <View style={{ position: "relative", height: 24, width: PANEL_WIDTH }}>
                         <View 
                             style={{
@@ -208,14 +272,14 @@ export function ColorPickerPanel({ hue, sat, lum, currentHex, onColorChange, ver
                             minimumValue={0}
                             maximumValue={360}
                             value={hue}
-                            onValueChange={(value) => onColorChange(value, sat, lum)}
+                            onValueChange={handleHueChange}
                             minimumTrackTintColor="transparent"
                             maximumTrackTintColor="transparent"
                             thumbStyle={{
                                 width: 15,
                                 height: 15,
                                 borderRadius: 10,
-                                backgroundColor: hslToHex(hue, 100, 50),
+                                backgroundColor: pureHueColor,
                                 borderWidth: 2,
                                 borderColor: "white",
                                 shadowColor: "#000",
@@ -256,15 +320,15 @@ export function ColorPickerPanel({ hue, sat, lum, currentHex, onColorChange, ver
                                 }}
                                 minimumValue={0}
                                 maximumValue={100}
-                                value={lum}
-                                onValueChange={(value) => onColorChange(hue, sat, value)}
+                                value={brightness}
+                                onValueChange={handleBrightnessChange}
                                 minimumTrackTintColor="transparent"
                                 maximumTrackTintColor="transparent"
                                 thumbStyle={{
                                     width: 20,
                                     height: 20,
                                     borderRadius: 12,
-                                    backgroundColor: hslToHex(0, 0, lum),
+                                    backgroundColor: calculateColorFromPanel(0, 0, brightness),
                                     borderWidth: 2,
                                     borderColor: "white",
                                     shadowColor: "#000",
@@ -284,7 +348,7 @@ export function ColorPickerPanel({ hue, sat, lum, currentHex, onColorChange, ver
                             minWidth: 35,
                             textAlign: "right",
                         }}>
-                            {Math.round(lum)}
+                            {Math.round(brightness)}
                         </Text>
                     </View>
                 </View>

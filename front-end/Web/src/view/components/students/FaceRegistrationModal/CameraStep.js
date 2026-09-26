@@ -133,7 +133,7 @@ export default function CameraStep({
                         gap: 12,
                     }}>
                         <ActivityIndicator size="large" color={c.brand.primary} />
-                        <Text style={{ fontSize: 11, color: "#aaa" }}>
+                        <Text style={{ fontSize: 11, color: c.text.disabled }}>
                             {t("Solicitando acceso a la cámara…")}
                         </Text>
                     </View>
@@ -160,7 +160,7 @@ export default function CameraStep({
                         }}>
                             {t("Permiso de cámara requerido")}
                         </Text>
-                        <Text style={{ fontSize: 11, color: "#999", textAlign: "center" }}>
+                        <Text style={{ fontSize: 11, color: c.text.secondary, textAlign: "center" }}>
                             {t("Permite el acceso a la cámara desde la configuración de tu navegador")}
                         </Text>
                     </View>
@@ -214,8 +214,8 @@ export default function CameraStep({
                             </React.Fragment>
                         ) : (
                             <React.Fragment>
-                                <Feather name="search" size={11} color="#aaa" />
-                                <Text style={{ fontSize: 11, color: "#aaa" }}>
+                                <Feather name="search" size={11} color={c.text.disabled} />
+                                <Text style={{ fontSize: 11, color: c.text.disabled }}>
                                     {t("Buscando rostro…")}
                                 </Text>
                             </React.Fragment>

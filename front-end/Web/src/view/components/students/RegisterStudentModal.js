@@ -125,9 +125,9 @@ export default function RegisterStudentModal({
                         </Button>
                         <Button variant="primary" onPress={handleSubmit} disabled={saving || success}>
                             {saving
-                                ? <ActivityIndicator size="small" color="#fff" />
+                                ? <ActivityIndicator size="small" color={c.brand.textOnPrimary} />
                                 : success
-                                    ? <React.Fragment><Feather name="check" size={14} color="#fff" /> {t("�Guardado!")}</React.Fragment>
+                                    ? <React.Fragment><Feather name="check" size={14} color={c.brand.textOnPrimary} /> {t("¡Guardado!")}</React.Fragment>
                                     : t("Registrar estudiante")}
                         </Button>
                     </React.Fragment>
@@ -158,7 +158,7 @@ export default function RegisterStudentModal({
                         marginBottom: 14,
                     }}>
                         <Feather name="check-circle" size={14} color={c.status.success} />
-                        <Text style={{ fontSize: 11, color: "#065F46", flex: 1 }}>
+                        <Text style={{ fontSize: 11, color: c.status.success, flex: 1 }}>
                             {t("Estudiante registrado correctamente")}
                         </Text>
                     </View>

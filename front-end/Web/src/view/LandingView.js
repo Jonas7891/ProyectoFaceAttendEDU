@@ -341,7 +341,7 @@ function TestimonialsContent() {
                                     key={i}
                                     name="star"
                                     size={16}
-                                    color="#F59E0B"
+                                    color={c.status.warning}
                                     style={{ opacity: 1 }}
                                 />
                             ))}

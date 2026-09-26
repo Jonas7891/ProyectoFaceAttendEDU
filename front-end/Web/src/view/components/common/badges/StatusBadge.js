@@ -89,9 +89,12 @@ export default StatusBadge;
 
 // Hook para obtener color basado en porcentaje de asistencia
 export function useAttendanceColor(attendance) {
-  if (attendance >= 85) return "#10B981"; // success
-  if (attendance >= 75) return "#F59E0B"; // warning
-  return "#EF4444"; // danger
+  const { theme } = useTheme();
+  const c = theme.colors;
+  
+  if (attendance >= 85) return c.status.success;
+  if (attendance >= 75) return c.status.warning;
+  return c.status.danger;
 }
 
 /**

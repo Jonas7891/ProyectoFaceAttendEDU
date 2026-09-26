@@ -147,7 +147,7 @@ export default function EnvironmentFormModal({
                     }}
                 >
                     <Feather name="check-circle" size={16} color={c.status.success} />
-                    <Text style={{ fontSize: 13, color: "#065F46", flex: 1 }}>
+                    <Text style={{ fontSize: 13, color: c.status.successDark, flex: 1 }}>
                         {t("Ambiente guardado correctamente")}
                     </Text>
                 </View>

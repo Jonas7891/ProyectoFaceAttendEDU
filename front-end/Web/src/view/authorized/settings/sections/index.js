@@ -6,7 +6,6 @@
 // ============================================================
 
 // appearance
-export { ModeBlock }              from "./appearance/ModeBlock";
 export { AccentBlock }            from "./appearance/AccentBlock";
 
 // security

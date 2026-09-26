@@ -110,11 +110,11 @@ export function Button({
 
   // Estilos de texto por variante
   const textVariantStyles = {
-    primary: { color: theme.colors.text.inverse },
-    secondary: { color: theme.colors.text.inverse },
+    primary: { color: theme.colors.brand.textOnPrimary },
+    secondary: { color: theme.colors.brand.textOnPrimary }, // Usar el mismo que primary
     outline: { color: theme.colors.brand.primary },
     ghost: { color: theme.colors.text.primary },
-    danger: { color: theme.colors.text.inverse },
+    danger: { color: theme.colors.status.errorText },
   };
 
   // Estilos por tamaño

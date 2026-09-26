@@ -144,7 +144,7 @@ export function useDashboardViewModel() {
                 label: t("Asistencia perfecta"),
                 value: perfectCount,
                 subtitle: t("Este mes"),
-                color: "#10B981",
+                color: c.status.success,
                 icon: "award",
             },
             {
@@ -152,7 +152,7 @@ export function useDashboardViewModel() {
                 value: "91.5%",
                 subtitle: t("Estudiantes a tiempo"),
                 change: 0.8,
-                color: "#8B5CF6",
+                color: c.brand.primary,
                 icon: "clock",
             },
         ];

@@ -21,7 +21,7 @@ export function ColorPresetSelector({ visionMode, customColors, selectedSemantic
     const palette = buildPaletteForVision(visionMode);
 
     return (
-        <View style={{ gap: 10 }}>
+        <View style={{ gap: 6 }}>
             {/* Barra de colores */}
             <View style={{
                 flexDirection: "row",

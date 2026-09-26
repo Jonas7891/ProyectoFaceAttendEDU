@@ -3,67 +3,99 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
+import { generateTheme } from "../../../../core/theme/generateTheme";
 import { 
     DEFAULT_VISION_MODE, 
     getInitialCustomColors,
     getDefaultColorsForVision,
     SEMANTIC_SLOTS,
+    DEFAULT_MODE,
 } from "../../../../core/theme/presets";
-import { hslToHex, hexToHsl, evaluateColor } from "../../../../core/utils/colorUtils";
+import { evaluateColor } from "../../../../core/utils/colorUtils";
 import { Divider } from "../../common";
 import { VisionModeTabs } from "./VisionModeTabs";
 import { ColorPresetSelector } from "./ColorPresetSelector";
 import { ColorPickerPanel } from "./ColorPickerPanel";
 import { ThemePreview } from "./ThemePreview";
+import { ModeSelector } from "./ModeSelector";
 
 /**
  * AccentColorSelector
  * 
- * Componente COMPLETAMENTE AUTÓNOMO que maneja toda la lógica de:
- * - Estado de colores customizados por modo de visión
- * - Estado inicial (últimos valores guardados) para detección de cambios
- * - Descarte global se maneja desde el padre mediante callback
- * - Reset completo de paleta: resetea TODO a valores originales/default (visible si difiere del default)
- * - Reset individual por slot: restaura al último valor guardado (visible si el slot tiene cambios)
- * - Edición con picker HSL
+ * Editor de paleta de colores con preview aislado:
+ * - Lee estado inicial desde ThemeContext (appliedColors, visionMode, mode)
+ * - Cambios solo afectan el PREVIEW (no la UI global)
+ * - Padre llama saveChanges() registrado para aplicar colores, modo y visión a toda la UI
+ * - Reset completo/individual y descarte funcionan solo en estado local
+ * - Edición con picker de color basado 100% en HEX/RGB - NO usa HSL
  * 
  * Props opcionales:
- * - onColorsExport: (customColors) => void - Callback para exportar cambios
- * - onHasChanges: (hasChanges: boolean) => void - Callback para notificar cambios sin guardar
- * - onDiscardRegister: (discardFn) => void - Callback para registrar función de descarte
- * - onSaveSuccessRegister: (commitFn) => void - Callback para registrar función que actualiza initialColors
- * - previewTheme: object - Tema generado para preview en vivo
+ * - onColorsExport: (customColors) => void - [DEPRECADO] Callback para exportar
+ * - onHasChanges: (hasChanges: boolean) => void - Notifica cambios sin guardar
+ * - onDiscardRegister: (discardFn) => void - Registra función de descarte
+ * - onSaveSuccessRegister: (saveFn) => void - Registra función de guardado
  */
-export function AccentColorSelector({ onColorsExport, onHasChanges, onDiscardRegister, onSaveSuccessRegister, previewTheme }) {
+export function AccentColorSelector({ onColorsExport, onHasChanges, onDiscardRegister, onSaveSuccessRegister }) {
     const { t } = useTranslation();
-    const { theme } = useTheme();
+    const { 
+        theme, 
+        mode: contextMode,
+        appliedColors, 
+        visionMode: contextVisionMode, 
+        clearPreview,
+        applyColors,
+        setMode: setContextMode,
+        setVisionMode: setContextVisionMode 
+    } = useTheme();
     const c = theme.colors;
 
-    // ── Estado central (TODO vive aquí) ───────────────────────
-    const [customColors, setCustomColors] = useState(() => getInitialCustomColors());
-    const [initialColors, setInitialColors] = useState(() => getInitialCustomColors()); // Para "Descartar cambios"
-    const [visionMode, setVisionMode] = useState(DEFAULT_VISION_MODE);
+    // ── Estado local para edición (NO afecta la UI global hasta guardar) ──
+    const [customColors, setCustomColors] = useState(() => appliedColors || getInitialCustomColors());
+    const [initialColors, setInitialColors] = useState(() => appliedColors || getInitialCustomColors()); // Para "Descartar cambios"
+    const [visionMode, setVisionMode] = useState(() => contextVisionMode || DEFAULT_VISION_MODE);
+    const [initialVisionMode, setInitialVisionMode] = useState(() => contextVisionMode || DEFAULT_VISION_MODE);
+    const [mode, setMode] = useState(() => contextMode || "light");
+    const [initialMode, setInitialMode] = useState(() => contextMode || "light");
     const [selectedSemantic, setSelectedSemantic] = useState("primary");
 
-    // ── Color actualmente en edición ──────────────────────────
-    const currentColor = customColors[visionMode]?.[selectedSemantic] || "#286FE2";
-    const [hue, setHue] = useState(() => hexToHsl(currentColor)[0]);
-    const [sat, setSat] = useState(() => hexToHsl(currentColor)[1]);
-    const [lum, setLum] = useState(() => hexToHsl(currentColor)[2]);
-
-    const currentHex = hslToHex(hue, sat, lum);
-    const verdict = evaluateColor(currentHex, t);
-
-    // ── Actualizar HSL cuando cambia el slot o visión ─────────
+    // ── Sincronizar con ThemeContext al montar ──
     useEffect(() => {
-        const color = customColors[visionMode]?.[selectedSemantic];
-        if (!color) return;
-        
-        const [h, s, l] = hexToHsl(color);
-        setHue(h);
-        setSat(s);
-        setLum(l);
-    }, [visionMode, selectedSemantic, customColors]);
+        if (appliedColors) {
+            setCustomColors(appliedColors);
+            setInitialColors(appliedColors);
+        }
+        if (contextVisionMode) {
+            setVisionMode(contextVisionMode);
+            setInitialVisionMode(contextVisionMode);
+        }
+        if (contextMode) {
+            setMode(contextMode);
+            setInitialMode(contextMode);
+        }
+    }, []);
+
+    // ── Color actualmente en edición (NO se sincroniza automáticamente con customColors) ──
+    const currentColor = customColors[visionMode]?.[selectedSemantic] || "#286FE2";
+    
+    const verdict = evaluateColor(currentColor, t);
+
+    // ── Sincronizar cuando el usuario cambia de slot/visión manualmente ─────────
+    // NO incluir customColors para evitar sincronización automática innecesaria
+    useEffect(() => {
+        // Este efecto solo sirve para forzar re-render cuando cambia el slot
+        // El ColorPickerPanel extrae sus valores directamente desde currentColor
+    }, [visionMode, selectedSemantic]);
+
+    // ── Generar tema de preview COMPLETAMENTE local (sin tocar ThemeContext) ──
+    const localPreviewTheme = useMemo(() => {
+        const currentColors = customColors[visionMode] || {};
+        return generateTheme(currentColors, mode);
+    }, [customColors, visionMode, mode]);
+
+    // Usar SOLO el tema local para el preview (ignorar previewTheme del contexto)
+    const effectivePreviewTheme = localPreviewTheme;
+
+    // NO sincronizar con ThemeContext - el preview es completamente local
 
     // ── Exportar cambios al padre cuando se actualizan ────────
     useEffect(() => {
@@ -72,10 +104,13 @@ export function AccentColorSelector({ onColorsExport, onHasChanges, onDiscardReg
         }
     }, [customColors, onColorsExport]);
 
-    // ── Detectar si hay cambios sin guardar ───────────────────
+    // ── Detectar si hay cambios sin guardar (incluye modo y visión) ───────────────────
     const hasChanges = useMemo(() => {
-        return JSON.stringify(customColors) !== JSON.stringify(initialColors);
-    }, [customColors, initialColors]);
+        const colorsChanged = JSON.stringify(customColors) !== JSON.stringify(initialColors);
+        const visionChanged = visionMode !== initialVisionMode;
+        const modeChanged = mode !== initialMode;
+        return colorsChanged || visionChanged || modeChanged;
+    }, [customColors, initialColors, visionMode, initialVisionMode, mode, initialMode]);
 
     // ── Detectar si el slot actual difiere del último guardado ─
     const currentSlotHasChanges = useMemo(() => {
@@ -103,32 +138,36 @@ export function AccentColorSelector({ onColorsExport, onHasChanges, onDiscardReg
         if (onDiscardRegister) {
             onDiscardRegister(discardChanges);
         }
-    }, [onDiscardRegister, initialColors]);
+    }, [onDiscardRegister, initialColors, initialVisionMode, initialMode]);
 
-    // ── Registrar función de commit (actualizar initialColors) ─
+    // ── Registrar función de commit (actualizar initialColors, initialMode, initialVisionMode) ─
     useEffect(() => {
         if (onSaveSuccessRegister) {
-            onSaveSuccessRegister(() => {
-                // Actualizar initialColors al estado actual después de guardar
-                setInitialColors({ ...customColors });
-            });
+            onSaveSuccessRegister(saveChanges());
         }
-    }, [onSaveSuccessRegister, customColors]);
+    }, [onSaveSuccessRegister, customColors, mode, visionMode, applyColors, setContextMode, setContextVisionMode]);
 
     // ── Handlers ──────────────────────────────────────────────
-    function apply(h, s, l) {
-        setHue(h);
-        setSat(s);
-        setLum(l);
-        const newHex = hslToHex(h, s, l);
-        
-        setCustomColors(prev => ({
-            ...prev,
+    function handleColorChange(newHex) {
+        const updatedColors = {
+            ...customColors,
             [visionMode]: {
-                ...prev[visionMode],
+                ...customColors[visionMode],
                 [selectedSemantic]: newHex,
             },
-        }));
+        };
+        setCustomColors(updatedColors);
+        // NO sincronizar con ThemeContext aquí - solo actualizar preview via useEffect
+    }
+
+    function handleVisionModeChange(newVisionMode) {
+        setVisionMode(newVisionMode);
+        // NO actualizar en ThemeContext - solo cambiar el estado local para el preview
+    }
+
+    function handleModeChange(newMode) {
+        setMode(newMode);
+        // NO actualizar en ThemeContext - solo cambiar el estado local para el preview
     }
 
     function applyPreset(preset) {
@@ -141,20 +180,39 @@ export function AccentColorSelector({ onColorsExport, onHasChanges, onDiscardReg
         const savedColor = initialColors[visionMode]?.[selectedSemantic];
         if (!savedColor) return;
         
-        const [h, s, l] = hexToHsl(savedColor);
-        apply(h, s, l);
+        handleColorChange(savedColor);
     }
 
     function resetAllPalette() {
         // Resetear TODA la paleta a valores originales/default
-        setCustomColors(prev => ({
-            ...prev,
+        const updatedColors = {
+            ...customColors,
             [visionMode]: getDefaultColorsForVision(visionMode),
-        }));
+        };
+        setCustomColors(updatedColors);
     }
 
     function discardChanges() {
         setCustomColors({ ...initialColors });
+        setVisionMode(initialVisionMode);
+        setMode(initialMode);
+        // Restaurar en ThemeContext
+        setContextVisionMode(initialVisionMode);
+        setContextMode(initialMode);
+        clearPreview(); // Limpiar preview en ThemeContext
+    }
+
+    // ── Función para guardar (se registra en el padre) ──
+    function saveChanges() {
+        // Esta función será llamada por el padre cuando se presione "Guardar cambios"
+        return async () => {
+            await applyColors(customColors);
+            await setContextMode(mode);
+            await setContextVisionMode(visionMode);
+            setInitialColors({ ...customColors });
+            setInitialMode(mode);
+            setInitialVisionMode(visionMode);
+        };
     }
 
     // Obtener info del slot actual
@@ -162,10 +220,25 @@ export function AccentColorSelector({ onColorsExport, onHasChanges, onDiscardReg
 
     return (
         <View style={{ gap: 16 }}>
+            {/* Selector de modo claro/oscuro */}
+            <View style={{ gap: 8 }}>
+                <Text style={{ 
+                    fontSize: 13, 
+                    fontWeight: "600", 
+                    color: c.text.secondary 
+                }}>
+                    {t("Modo de visualización")}
+                </Text>
+                <ModeSelector 
+                    mode={mode} 
+                    onModeChange={handleModeChange}
+                />
+            </View>
+
             {/* Tabs de visión */}
             <VisionModeTabs 
                 visionMode={visionMode} 
-                onVisionModeChange={setVisionMode} 
+                onVisionModeChange={handleVisionModeChange} 
             />
 
             {/* Selector de presets (barra de colores) */}
@@ -177,8 +250,8 @@ export function AccentColorSelector({ onColorsExport, onHasChanges, onDiscardReg
             />
 
             {/* Vista previa en vivo */}
-            {previewTheme && (
-                <View style={{ gap: 8 }}>
+            {effectivePreviewTheme && (
+                <View style={{ gap: 8, marginBottom: -2 }}>
                     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
                         <Text style={{ 
                             fontSize: 13, 
@@ -206,14 +279,14 @@ export function AccentColorSelector({ onColorsExport, onHasChanges, onDiscardReg
                             </TouchableOpacity>
                         )}
                     </View>
-                    <ThemePreview previewTheme={previewTheme} />
+                    <ThemePreview previewTheme={effectivePreviewTheme} hasChanges={hasChanges} />
                 </View>
             )}
 
             <Divider />
 
             {/* Información del slot actual */}
-            <View style={{ gap: 6 }}>
+            <View style={{ gap: 6, marginTop: -8, marginBottom: -4}}>
                 <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
                     <Text style={{ 
                         fontSize: 14, 
@@ -244,7 +317,7 @@ export function AccentColorSelector({ onColorsExport, onHasChanges, onDiscardReg
                 <Text style={{ 
                     fontSize: 12, 
                     color: c.text.tertiary,
-                    lineHeight: 16,
+                    lineHeight: 8,
                 }}>
                     {t(currentSlot?.description || "")}
                 </Text>
@@ -252,11 +325,8 @@ export function AccentColorSelector({ onColorsExport, onHasChanges, onDiscardReg
 
             {/* Panel de selector de color completo (incluye input HEX y evaluador) */}
             <ColorPickerPanel 
-                hue={hue} 
-                sat={sat} 
-                lum={lum}
-                currentHex={currentHex}
-                onColorChange={apply}
+                currentHex={currentColor}
+                onColorChange={handleColorChange}
                 verdict={verdict}
             />
         </View>

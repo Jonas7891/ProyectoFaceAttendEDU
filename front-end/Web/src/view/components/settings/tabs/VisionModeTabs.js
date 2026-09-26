@@ -38,7 +38,7 @@ export function VisionModeTabs({ visionMode, onVisionModeChange }) {
                             <Text style={{
                                 fontSize: 10,
                                 fontWeight: active ? "600" : "400",
-                                color: active ? "#fff" : c.text.secondary,
+                                color: active ? c.brand.textOnPrimary : c.text.secondary,
                             }}>
                                 {vm === "normal" ? t("Normal") :
                                     vm === "deuteranopia" ? t("Deuteranopia") :

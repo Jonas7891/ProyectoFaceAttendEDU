@@ -8,8 +8,10 @@ import { Platform } from "react-native";
 import { DEFAULT_ACCENT, DEFAULT_MODE } from "../theme/presets";
 
 const KEYS = {
-    MODE:   "@faceattend:theme_mode",
-    ACCENT: "@faceattend:accent_color",
+    MODE:            "@faceattend:theme_mode",
+    ACCENT:          "@faceattend:accent_color",
+    CUSTOM_COLORS:   "@faceattend:custom_colors",
+    VISION_MODE:     "@faceattend:vision_mode",
 };
 
 // ── Cache para AsyncStorage (evita re-importar) ───────────────
@@ -123,4 +125,47 @@ export async function saveAccentColor(color) {
 export async function loadAccentColor() {
     const value = await storageGet(KEYS.ACCENT);
     return value ?? DEFAULT_ACCENT;
+}
+
+/**
+ * Guarda los colores personalizados semánticos
+ * @param {Object} customColors - Objeto con estructura { visionMode: { primary, success, warning, error, text } }
+ * @returns {Promise<void>}
+ */
+export async function saveCustomColors(customColors) {
+    await storageSet(KEYS.CUSTOM_COLORS, JSON.stringify(customColors));
+}
+
+/**
+ * Carga los colores personalizados semánticos guardados
+ * @returns {Promise<Object|null>} Objeto con colores personalizados o null
+ */
+export async function loadCustomColors() {
+    const value = await storageGet(KEYS.CUSTOM_COLORS);
+    if (!value) return null;
+    
+    try {
+        return JSON.parse(value);
+    } catch (error) {
+        console.warn("[themeStorage] Failed to parse custom colors:", error);
+        return null;
+    }
+}
+
+/**
+ * Guarda el modo de visión actual
+ * @param {string} visionMode - "normal" | "deuteranopia" | "protanopia" | "tritanopia" | "achromatopsia"
+ * @returns {Promise<void>}
+ */
+export async function saveVisionMode(visionMode) {
+    await storageSet(KEYS.VISION_MODE, visionMode);
+}
+
+/**
+ * Carga el modo de visión guardado
+ * @returns {Promise<string>} Modo de visión
+ */
+export async function loadVisionMode() {
+    const value = await storageGet(KEYS.VISION_MODE);
+    return value ?? "normal";
 }

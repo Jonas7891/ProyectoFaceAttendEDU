@@ -11,6 +11,18 @@ export function ColorEvaluator({ currentHex, verdict }) {
     const { t } = useTranslation();
     const c = theme.colors;
 
+    // Mapear el scoreColor semántico (string) al color real del tema
+    const getScoreColor = (semanticColor) => {
+        const colorMap = {
+            success: c.status.success,
+            warning: c.status.warning,
+            error: c.status.error,
+        };
+        return colorMap[semanticColor] || c.text.secondary;
+    };
+
+    const scoreColor = getScoreColor(verdict.scoreColor);
+
     return (
         <View style={{
             backgroundColor: c.background.app,
@@ -54,12 +66,12 @@ export function ColorEvaluator({ currentHex, verdict }) {
                             width: 8,
                             height: 8,
                             borderRadius: 14,
-                            backgroundColor: verdict.scoreColor,
+                            backgroundColor: scoreColor,
                         }} />
                         <Text style={{
                             fontSize: 10,
                             fontWeight: "600",
-                            color: verdict.scoreColor
+                            color: scoreColor
                         }}>
                             {(() => {
                                 const s = t(verdict.score);

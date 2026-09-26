@@ -13,7 +13,7 @@ export function Divider({ style }) {
         <View style={[{
             height: 1,
             backgroundColor: c.border.primary,
-            marginVertical: 8,
+            marginVertical: 0,
         }, style]} />
     );
 }

@@ -258,11 +258,11 @@ export default function ImportStudentsModal({
                                 width: 34,
                                 height: 34,
                                 borderRadius: 14,
-                                backgroundColor: "#EDE9FE",
+                                backgroundColor: c.brand.primaryLight,
                                 alignItems: "center",
                                 justifyContent: "center",
                             }}>
-                                <Feather name="upload" size={18} color="#7C3AED" />
+                                <Feather name="upload" size={18} color={c.brand.primary} />
                             </View>
                             <View>
                                 <Text style={{ fontSize: 10, fontWeight: "700", color: c.text.primary }}>
@@ -375,12 +375,12 @@ export default function ImportStudentsModal({
                                 }}>
                                     <Feather name="file" size={18} color={c.status.success} />
                                     <View style={{ flex: 1 }}>
-                                        <Text style={{ fontSize: 10, fontWeight: "600", color: "#065F46" }}>
+                                        <Text style={{ fontSize: 10, fontWeight: "600", color: c.status.success }}>
                                             {fileName}
                                         </Text>
-                                        <Text style={{ fontSize: 11, color: "#065F46", marginTop: 2 }}>
+                                        <Text style={{ fontSize: 11, color: c.status.success, marginTop: 2 }}>
                                             {preview.length} {t("estudiantes listos para importar")}
-                                            {parseErrors > 0 && ` � ${parseErrors} ${t("filas con errores omitidas")}`}
+                                            {parseErrors > 0 && ` • ${parseErrors} ${t("filas con errores omitidas")}`}
                                         </Text>
                                     </View>
                                     <TouchableOpacity onPress={() => setStep("idle")}>
@@ -398,7 +398,7 @@ export default function ImportStudentsModal({
                                         gap: 8,
                                     }}>
                                         <Feather name="alert-triangle" size={14} color={c.status.warning} />
-                                        <Text style={{ fontSize: 11, color: "#92400E", flex: 1 }}>
+                                        <Text style={{ fontSize: 11, color: c.status.warning, flex: 1 }}>
                                             {parseErrors} {t("filas con errores omitidas")}
                                             {". "}{t("Verifica que tengan name, code, email, course y grade")}
                                         </Text>
@@ -536,13 +536,13 @@ export default function ImportStudentsModal({
                         </Button>
                         {step === "preview" && (
                             <Button variant="primary" onPress={handleImport}>
-                                <Feather name="upload" size={14} color="#fff" />
+                                <Feather name="upload" size={14} color={c.brand.textOnPrimary} />
                                 {"  "}{t("Importar")} {preview.length} {t("estudiantes")}
                             </Button>
                         )}
                         {step === "idle" && (
                             <Button variant="primary" onPress={handlePickFile}>
-                                <Feather name="folder" size={14} color="#fff" />
+                                <Feather name="folder" size={14} color={c.brand.textOnPrimary} />
                                 {"  "}{t("Seleccionar archivo")}
                             </Button>
                         )}

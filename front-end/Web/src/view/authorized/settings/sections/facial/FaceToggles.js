@@ -32,7 +32,7 @@ export function FaceToggles({ confidence, autoRegister, onAutoRegister, savePhot
             {autoRegister && confidence < 75 && (
                 <View style={{ marginTop: 8, backgroundColor: c.status.warningLight, borderRadius: 14, padding: 12, flexDirection: "row", gap: 8 }}>
                     <Feather name="alert-triangle" size={13} color={c.status.warning} style={{ marginTop: 1 }} />
-                    <Text style={{ fontSize: 11, color: "#92400E", flex: 1, lineHeight: 18 }}>
+                    <Text style={{ fontSize: 11, color: c.status.warningDark, flex: 1, lineHeight: 18 }}>
                         {t("Con umbral bajo y registro automático habilitado, hay mayor riesgo de registrar asistencia incorrectamente. Considera subir el umbral a al menos 75%.")}
                     </Text>
                 </View>

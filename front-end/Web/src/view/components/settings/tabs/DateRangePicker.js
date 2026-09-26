@@ -360,24 +360,24 @@ export function DateRangePicker({
                                     fontWeight: "600",
                                     color:
                                         validation.type === "success"
-                                            ? "#065F46"
+                                            ? c.status.successDark
                                             : validation.type === "error"
-                                            ? "#991B1B"
-                                            : "#1E3A8A",
+                                            ? c.status.dangerDark
+                                            : c.status.infoDark,
                                 }}
                             >
                                 {validation.isValid ? (
                                     <>
                                         <Text>✓ </Text>
-                                        <Text style={{ fontSize: 11, color: "#065F46" }}>
+                                        <Text style={{ fontSize: 11, color: c.status.successDark }}>
                                             📅 {validation.days} {t("días")}
                                         </Text>
                                         <Text> · </Text>
-                                        <Text style={{ fontSize: 11, color: "#065F46" }}>
+                                        <Text style={{ fontSize: 11, color: c.status.successDark }}>
                                             📊 {validation.weeks} {t("semanas")}
                                         </Text>
                                         <Text> · </Text>
-                                        <Text style={{ fontSize: 11, color: "#065F46" }}>
+                                        <Text style={{ fontSize: 11, color: c.status.successDark }}>
                                             📆 ~{validation.months} {t("meses")}
                                         </Text>
                                     </>

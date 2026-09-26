@@ -24,7 +24,6 @@ import {
     DailySummaryToggle,
     TwoFactorRow,
     SessionTimeInput,
-    ModeBlock,
     AccentBlock,
 } from "./sections";
 import {
@@ -136,7 +135,6 @@ export function TeacherSettings({ section, onSave, onDiscard, onDiscardColors, o
             <AppearanceSettings
                 title={t("Apariencia")}
                 sections={[
-                    <ModeBlock />,
                     <AccentBlock
                         onHasChanges={onColorChanges}
                         onDiscardRegister={onDiscardColors}

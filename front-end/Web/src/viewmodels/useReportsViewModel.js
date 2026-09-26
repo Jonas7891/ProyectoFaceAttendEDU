@@ -299,10 +299,13 @@ export function useReportsViewModel() {
                 { 
                     key: "status", 
                     label: "Estado",
-                    render: (value) => formatStatusBadge(value, {
-                        active: { text: "Activo", color: "#10B981" },
-                        inactive: { text: "Inactivo", color: "#6B7280" }
-                    })
+                    render: (value) => {
+                        // Obtener colores del tema actual
+                        return formatStatusBadge(value, {
+                            active: { text: "Activo", color: c.status.success },
+                            inactive: { text: "Inactivo", color: c.text.disabled }
+                        });
+                    }
                 },
             ]
         );
