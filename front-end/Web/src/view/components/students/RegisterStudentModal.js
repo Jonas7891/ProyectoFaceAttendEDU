@@ -1,7 +1,8 @@
 // ============================================================
-//  FaceAttend EDU � RegisterStudentModal
-//  Usa InputField y AnimatedDropdown reutilizables.
-//  La validaci�n se hace en el ViewModel, no aqu�.
+//  FaceAttend EDU — RegisterStudentModal
+//  Modal para registrar un nuevo estudiante.
+//  Usa TextInput y AnimatedDropdown de componentes comunes.
+//  La validación se hace en el ViewModel, no aquí.
 // ============================================================
 
 import React, { useState, useRef } from "react";
@@ -9,8 +10,7 @@ import {
     View, Text, TouchableOpacity, ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Button, AnimatedDropdown, BaseModal } from "../common";
-import TextInput from "../common/inputs/TextInput";
+import { Button, AnimatedDropdown, BaseModal, TextInput } from "../common";
 import { useTheme }               from "../hooks/useTheme";
 import { useResponsive }          from "../hooks/useResponsive";
 import { useTranslation }         from "../../../core/utils/i18n/hooks/useTranslation";
@@ -20,7 +20,7 @@ import {
     validateStudentForm,
 } from "../../../viewmodels/useStudentsViewModel";
 
-// -- Roles disponibles -------------------------------------
+// ── Roles disponibles ────────────────────────────────────
 
 const ROLE_ITEMS = [
     { value: "admin",   label: "Administrador", description: "Admin",    icon: "shield"    },
@@ -28,10 +28,7 @@ const ROLE_ITEMS = [
     { value: "student", label: "Estudiante",    description: "Student",  icon: "user"      },
 ];
 
-// -- Props -------------------------------------------------
-
-
-// -- Componente principal -----------------------------------
+// ── Componente principal ─────────────────────────────────
 
 export default function RegisterStudentModal({
     visible,
@@ -68,7 +65,7 @@ export default function RegisterStudentModal({
         setShowErrors(true);
         setError(null);
 
-        // Validaci�n sin import din�mico � la funci�n es importada est�ticamente
+        // Validación — la función es importada estáticamente
         const validationErr = validateStudentForm(form);
         if (validationErr) return;
 
@@ -164,55 +161,59 @@ export default function RegisterStudentModal({
                     </View>
                 )}
 
-                {/* Fila 1 � Nombre y C�digo */}
+                {/* Fila 1 — Nombre y Código */}
                 <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
                     <View style={{ flex: 1 }}>
-                        <InputField
+                        <TextInput
                             label={t("Nombre completo") + " *"}
                             value={form.name}
                             onChangeText={v => setField("name", v)}
-                            placeholder={t("Ej: Ana Garc�a L�pez")}
+                            placeholder={t("Ej: Ana García López")}
                             error={isEmpty(form.name)}
+                            errorMessage={isEmpty(form.name) ? t("Campo requerido") : ""}
                         />
                     </View>
                     <View style={{ flex: 1 }}>
-                        <InputField
-                            label={t("C�digo estudiantil") + " *"}
+                        <TextInput
+                            label={t("Código estudiantil") + " *"}
                             value={form.code}
                             onChangeText={v => setField("code", v)}
                             placeholder={t("Ej: 2024001")}
                             error={isEmpty(form.code)}
+                            errorMessage={isEmpty(form.code) ? t("Campo requerido") : ""}
                         />
                     </View>
                 </View>
 
                 {/* Correo */}
-                <InputField
-                    label={t("Correo electr�nico") + " *"}
+                <TextInput
+                    label={t("Correo electrónico") + " *"}
                     value={form.email}
                     onChangeText={v => setField("email", v)}
                     placeholder={t("correo@universidad.edu")}
-                    keyboardType="email-address"
+                    type="email"
                     error={isEmpty(form.email)}
+                    errorMessage={isEmpty(form.email) ? t("Campo requerido") : ""}
                 />
 
-                {/* Fila 2 � Programa y Rol */}
+                {/* Fila 2 — Programa y Rol */}
                 <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
                     <View style={{ flex: 1 }}>
-                        <InputField
+                        <TextInput
                             label={t("Programa") + " *"}
                             value={form.course}
                             onChangeText={v => setField("course", v)}
-                            placeholder={t("Ej: Ingenier�a de Sistemas")}
+                            placeholder={t("Ej: Ingeniería de Sistemas")}
                             error={isEmpty(form.course)}
+                            errorMessage={isEmpty(form.course) ? t("Campo requerido") : ""}
                         />
                     </View>
                     <View style={{ flex: 1 }}>
                         <Text style={{
-                            fontSize: 10,
+                            fontSize: 14,
                             fontWeight: "600",
-                            color: showErrors && !form.role ? c.status.danger : c.text.secondary,
-                            marginBottom: 8,
+                            color: showErrors && !form.role ? c.status.error : c.text.secondary,
+                            marginBottom: 6,
                         }}>
                             {t("Rol") + " *"}
                         </Text>
@@ -226,14 +227,14 @@ export default function RegisterStudentModal({
                             value={form.role}
                             onSelect={v => setField("role", v)}
                             error={showErrors && !form.role}
-                            triggerHeight={40}
+                            triggerHeight={48}
                         />
                     </View>
                 </View>
 
                 {/* Estado */}
                 <View style={{ marginBottom: 14 }}>
-                    <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.secondary, marginBottom: 8 }}>
+                    <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.secondary, marginBottom: 6 }}>
                         {t("Estado")}
                     </Text>
                     <View style={{ flexDirection: "row", gap: 8 }}>
@@ -266,7 +267,7 @@ export default function RegisterStudentModal({
                                         : c.interactive.disabled,
                                 }} />
                                 <Text style={{
-                                    fontSize: 10,
+                                    fontSize: 13,
                                     fontWeight: "600",
                                     color: form.status === s.value
                                         ? c.brand.primary
@@ -298,10 +299,10 @@ export default function RegisterStudentModal({
                             color={form.registered ? c.status.success : c.brand.primary}
                         />
                         <View>
-                            <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary }}>
+                            <Text style={{ fontSize: 13, fontWeight: "600", color: c.text.primary }}>
                                 {t("Reconocimiento facial")}
                             </Text>
-                            <Text style={{ fontSize: 11, color: form.registered ? c.status.success : c.text.secondary }}>
+                            <Text style={{ fontSize: 12, color: form.registered ? c.status.success : c.text.secondary }}>
                                 {form.registered ? t("Rostro registrado") : t("Sin registro facial")}
                             </Text>
                         </View>
@@ -333,7 +334,7 @@ export default function RegisterStudentModal({
                     </TouchableOpacity>
                 </View>
 
-                <Text style={{ fontSize: 11, color: c.text.secondary, textAlign: "right" }}>
+                <Text style={{ fontSize: 12, color: c.text.secondary, textAlign: "right" }}>
                     * {t("Campos obligatorios")}
                 </Text>
             </BaseModal>

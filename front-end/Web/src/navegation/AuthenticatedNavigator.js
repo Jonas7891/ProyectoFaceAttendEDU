@@ -18,7 +18,7 @@ import { useNavigation } from "@react-navigation/native";
 
 // ── Importación de Screens ────────────────────────────────────
 import DashboardScreen from "../view/screens/DashboardScreen";
-import StudentsScreen from "../view/screens/StudentsScreen";
+import StudentsScreen from "../view/screens/UserScreen";
 import CoursesScreen from "../view/screens/CoursesScreen";
 import EnvironmentsScreen from "../view/screens/EnvironmentsScreen";
 import ReportsScreen from "../view/screens/ReportsScreen";

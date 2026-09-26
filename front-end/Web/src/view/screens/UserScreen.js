@@ -15,8 +15,8 @@
 // ============================================================
 
 import React from "react";
-import StudentsView from "../StudentsView";
+import UsersView from "../UsersView";
 
 export default function StudentsScreen() {
-    return <StudentsView />;
+    return <UsersView />;
 }

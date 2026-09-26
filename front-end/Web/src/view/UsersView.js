@@ -21,9 +21,8 @@ import {
 import { Feather } from "@expo/vector-icons";
 import {
     Card, Badge, Avatar, ProgressBar, EmptyState,
-    Button, AnimatedDropdown, useAttendanceColor,
+    Button, AnimatedDropdown, useAttendanceColor, PageHeader,
 } from "./components/common";
-import { Navbar as PageHeader } from "./components/common/navigation/Navbar";
 import { useTheme }               from "./components/hooks/useTheme";
 import { useResponsive }          from "./components/hooks/useResponsive";
 import { useStudentsViewModel }   from "../viewmodels/useStudentsViewModel";
@@ -61,28 +60,28 @@ function StudentRow({
             }}
         >
             <View style={{ flex: isSmall ? 1 : 2, flexDirection: "row", alignItems: "center", gap: 10 }}>
-                <Avatar name={student.name} size={32} />
+                <Avatar name={student.name} size={36} />
                 <View>
-                    <Text style={{ fontWeight: "600", fontSize: 11, color: c.text.primary }}>
+                    <Text style={{ fontWeight: "600", fontSize: 14, color: c.text.primary }}>
                         {student.name}
                     </Text>
-                    <Text style={{ fontSize: 11, color: c.text.secondary }}>{student.code}</Text>
+                    <Text style={{ fontSize: 12, color: c.text.secondary }}>{student.code}</Text>
                 </View>
             </View>
 
             {!isSmall && (
                 <React.Fragment>
-                    <Text style={{ flex: 1, fontSize: 11, color: c.text.secondary, paddingHorizontal: 14 }} numberOfLines={1}>
+                    <Text style={{ flex: 1, fontSize: 13, color: c.text.secondary, paddingHorizontal: 14 }} numberOfLines={1}>
                         {student.email}
                     </Text>
-                    <Text style={{ flex: 1, fontSize: 11, color: c.text.primary, paddingHorizontal: 14 }} numberOfLines={1}>
+                    <Text style={{ flex: 1, fontSize: 13, color: c.text.primary, paddingHorizontal: 14 }} numberOfLines={1}>
                         {student.course}
                     </Text>
                     <View style={{ flex: 1, paddingHorizontal: 14 }}>
-                        <Text style={{ fontSize: 10, fontWeight: "700", color: attColor, marginBottom: 4 }}>
+                        <Text style={{ fontSize: 13, fontWeight: "700", color: attColor, marginBottom: 4 }}>
                             {student.attendance}%
                         </Text>
-                        <ProgressBar value={student.attendance} color={attColor} height={4} />
+                        <ProgressBar value={student.attendance} color={attColor} height={5} />
                     </View>
                     {/* Columna Facial — solo para quienes pueden gestionar */}
                     {canManage && (
@@ -102,7 +101,7 @@ function StudentRow({
 
             {isSmall && (
                 <View style={{ alignItems: "flex-end", gap: 4 }}>
-                    <Text style={{ fontSize: 10, fontWeight: "700", color: attColor }}>
+                    <Text style={{ fontSize: 12, fontWeight: "700", color: attColor }}>
                         {student.attendance}%
                     </Text>
                     {canManage && (
@@ -134,6 +133,9 @@ export default function StudentsView() {
         );
     }
 
+    // Título dinámico según el rol del usuario
+    const pageTitle = permissions.getTabLabel("students") || t("Usuarios");
+
     // Columnas de la tabla según permisos
     const columns = [
         t("Estudiante"),
@@ -147,39 +149,49 @@ export default function StudentsView() {
     // Ítems del dropdown de cursos
     const courseItems = [
         { value: "", label: t("Todos"), icon: "layers" },
-        ...vm.courses.map(c => ({ value: c.value, label: c.label, icon: "book-open" })),
+        ...vm.courses,
     ];
 
     return (
         <View style={{ flex: 1, backgroundColor: c.background.app }}>
-            <ScrollView
-                contentContainerStyle={{ padding: isSmall ? 16 : 24, gap: 16 }}
-                showsVerticalScrollIndicator={false}
-            >
-                <PageHeader
-                    title={t("Estudiantes")}
-                    subtitle={`${vm.filtered.length} ${
-                        vm.filtered.length !== 1 ? t("estudiantes") : t("estudiante")
-                    } ${
-                        vm.filtered.length !== 1 ? t("encontrados") : t("encontrado")
-                    }`}
-                    actions={
-                        <React.Fragment>
+            <PageHeader
+                title={pageTitle}
+                subtitle={`${vm.filtered.length} ${
+                    vm.filtered.length !== 1 ? t("estudiantes") : t("estudiante")
+                } ${
+                    vm.filtered.length !== 1 ? t("encontrados") : t("encontrado")
+                }`}
+                actions={
+                    <>
                         {/* Importar — solo admin */}
                         {permissions.canImportStudents && (
-                            <Button variant="ghost" size="sm" onPress={vm.openImportModal}>
-                                <Feather name="upload" size={13} color={c.text.secondary} />
-                                {"  "}{t("Importar")}
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onPress={vm.openImportModal}
+                                leftIcon={<Feather name="upload" size={16} color={c.text.secondary} />}
+                            >
+                                {t("Importar")}
                             </Button>
                         )}
                         {/* Nuevo estudiante — solo admin */}
                         {permissions.canManageStudents && (
-                            <Button variant="primary" size="sm" onPress={vm.openRegisterModal}>
-                                + {t("Nuevo estudiante")}
+                            <Button 
+                                variant="primary" 
+                                size="sm" 
+                                onPress={vm.openRegisterModal}
+                                leftIcon={<Feather name="plus" size={16} color="#fff" />}
+                            >
+                                {t("Nuevo estudiante")}
                             </Button>
                         )}
-                    </React.Fragment>}
-                />
+                    </>
+                }
+            />
+            <ScrollView
+                contentContainerStyle={{ padding: isSmall ? 16 : 24, gap: 16 }}
+                showsVerticalScrollIndicator={false}
+            >
 
                 {/* Filtros */}
                 <Card padding={14}>
@@ -187,16 +199,16 @@ export default function StudentsView() {
                         {/* Búsqueda */}
                         <View style={{ flex: 1, minWidth: 200, position: "relative", justifyContent: "center" }}>
                             <View style={{ position: "absolute", left: 14, zIndex: 1 }}>
-                                <Feather name="search" size={14} color={c.text.secondary} />
+                                <Feather name="search" size={16} color={c.text.secondary} />
                             </View>
                             <TextInput
                                 placeholder={t("Buscar por nombre o código...")}
                                 value={vm.search}
                                 onChangeText={vm.setSearch}
                                 style={{
-                                    height: 40, borderWidth: 1, borderColor: c.border.primary,
+                                    height: 48, borderWidth: 1.5, borderColor: c.border.primary,
                                     borderRadius: 14, paddingLeft: 40, paddingRight: 14,
-                                    fontSize: 13, backgroundColor: c.background.surface,
+                                    fontSize: 14, backgroundColor: c.background.surface,
                                     color: c.text.primary,
                                 }}
                                 placeholderTextColor={c.text.disabled}
@@ -209,7 +221,7 @@ export default function StudentsView() {
                             value={vm.courseFilter}
                             onSelect={vm.setCourseFilter}
                             triggerIcon="book-open"
-                            style={{ minWidth: 160 }}
+                            style={{ minWidth: 200 }}
                         />
                     </View>
                 </Card>
@@ -227,7 +239,7 @@ export default function StudentsView() {
                             {columns.map((col, idx) => (
                                 <Text key={col} style={{
                                     flex: idx === 0 ? 2 : 1,
-                                    fontSize: 10, fontWeight: "600", color: c.text.secondary,
+                                    fontSize: 11, fontWeight: "600", color: c.text.secondary,
                                     textTransform: "uppercase", letterSpacing: 0.5,
                                     paddingHorizontal: 14,
                                 }}>

@@ -34,8 +34,15 @@ export function useStudentsViewModel() {
     const [showRegisterModal, setShowRegisterModal] = useState(false);
     const [showImportModal, setShowImportModal] = useState(false);
 
-    // Programas únicos — derivados del contexto global
-    const courses = useMemo(() => appData.programs.map((p) => p.name), [appData.programs]);
+    // Programas únicos — derivados del contexto global con formato para AnimatedDropdown
+    const courses = useMemo(
+        () => appData.programs.map((p) => ({
+            value: p.name,
+            label: p.name,
+            icon: "book-open"
+        })),
+        [appData.programs]
+    );
 
     const filtered = useMemo(
         () =>

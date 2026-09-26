@@ -51,7 +51,7 @@ function AppContent() {
                                 'FaceAttendEDU-Login': 'Iniciar Sesión | FaceAttend EDU',
                                 'FaceAttendEDU-Register': 'Registrarse | FaceAttend EDU',
                                 'Dashboard': 'Dashboard | FaceAttend EDU',
-                                'Students': 'Usuarios | FaceAttend EDU',
+                                'Users': 'Usuarios | FaceAttend EDU',
                                 'Courses': 'Cursos | FaceAttend EDU',
                                 'Environments': 'Ambientes | FaceAttend EDU',
                                 'Reports': 'Reportes | FaceAttend EDU',

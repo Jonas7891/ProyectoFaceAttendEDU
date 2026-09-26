@@ -1,7 +1,7 @@
 // ============================================================
-//  FaceAttend EDU � StudentDetailModal
+//  FaceAttend EDU — StudentDetailModal
 //  Modal de detalle de estudiante.
-//  Los botones de gesti�n se muestran seg�n permisos.
+//  Los botones de gestión se muestran según permisos.
 // ============================================================
 
 import React from "react";
@@ -62,10 +62,10 @@ export default function StudentDetailModal({
                         }}>
                             <Avatar name={student.name} size={52} />
                             <View style={{ flex: 1 }}>
-                                <Text style={{ fontSize: 10, fontWeight: "700", color: c.text.primary }}>
+                                <Text style={{ fontSize: 16, fontWeight: "700", color: c.text.primary }}>
                                     {student.name}
                                 </Text>
-                                <Text style={{ fontSize: 11, color: c.text.secondary, marginTop: 2 }}>
+                                <Text style={{ fontSize: 13, color: c.text.secondary, marginTop: 2 }}>
                                     {student.code}
                                 </Text>
                                 <View style={{ marginTop: 6 }}>
@@ -88,9 +88,9 @@ export default function StudentDetailModal({
                                     { label: t("Semestre"), value: student.grade, icon: "trending-up" },
                                 ].map(({ label, value, icon }) => (
                                     <View key={label} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                                        <Feather name={icon} size={14} color={c.text.secondary} />
-                                        <Text style={{ fontSize: 11, color: c.text.secondary, width: 72 }}>{label}</Text>
-                                        <Text style={{ fontSize: 10, fontWeight: "500", color: c.text.primary, flex: 1 }}>
+                                        <Feather name={icon} size={16} color={c.text.secondary} />
+                                        <Text style={{ fontSize: 13, color: c.text.secondary, width: 80 }}>{label}</Text>
+                                        <Text style={{ fontSize: 14, fontWeight: "500", color: c.text.primary, flex: 1 }}>
                                             {value}
                                         </Text>
                                     </View>
@@ -105,22 +105,22 @@ export default function StudentDetailModal({
                                 marginBottom: 16,
                             }}>
                                 <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 10 }}>
-                                    <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary }}>
+                                    <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary }}>
                                         {t("Asistencia")}
                                     </Text>
-                                    <Text style={{ fontSize: 10, fontWeight: "800", color: attColor }}>
+                                    <Text style={{ fontSize: 16, fontWeight: "800", color: attColor }}>
                                         {student.attendance}%
                                     </Text>
                                 </View>
                                 <ProgressBar value={student.attendance} color={attColor} height={8} />
-                                <Text style={{ fontSize: 11, color: c.text.secondary, marginTop: 8 }}>
+                                <Text style={{ fontSize: 12, color: c.text.secondary, marginTop: 8 }}>
                                     {student.attendance >= ATTENDANCE_THRESHOLDS.MIN_ACCEPTABLE
-                                        ? t("Cumple el m�nimo requerido (80%)")
-                                        : t("? Por debajo del m�nimo requerido (80%)")}
+                                        ? t("Cumple el mínimo requerido (80%)")
+                                        : t("⚠ Por debajo del mínimo requerido (80%)")}
                                 </Text>
                             </View>
 
-                            {/* Bloque facial � solo para quienes pueden registrar */}
+                            {/* Bloque facial — solo para quienes pueden registrar */}
                             {canRegisterFace && (
                                 <View style={{
                                     flexDirection: "row",
@@ -135,10 +135,10 @@ export default function StudentDetailModal({
                                     <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                                         <Feather name="aperture" size={18} color={c.brand.primary} />
                                         <View>
-                                            <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary }}>
+                                            <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary }}>
                                                 {t("Reconocimiento facial")}
                                             </Text>
-                                            <Text style={{ fontSize: 11, color: c.text.secondary }}>
+                                            <Text style={{ fontSize: 13, color: c.text.secondary }}>
                                                 {student.registered
                                                     ? t("Rostro registrado")
                                                     : t("Sin registro facial")}
@@ -146,7 +146,7 @@ export default function StudentDetailModal({
                                         </View>
                                     </View>
                                     {student.registered
-                                        ? <Feather name="check-circle" size={16} color={c.status.success} />
+                                        ? <Feather name="check-circle" size={18} color={c.status.success} />
                                         : <Button variant="primary" size="sm">{t("Registrar")}</Button>
                                     }
                                 </View>
