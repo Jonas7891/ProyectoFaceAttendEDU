@@ -26,15 +26,20 @@ export function useMenuJustifyViewModel() {
             const loadData = async () => {
                 try {
                     const role = await getCurrentUserRole();
-                    const finalRole = role || 'Estudiante';
-                    setUserRole(finalRole);
-                    await saveLanguageForRole(finalRole);
+                    if (!role) {
+                        console.error('useMenuJustify: sin rol de usuario verificado');
+                        setUserRole(null);
+                        setPendingCount(0);
+                        return;
+                    }
+                    setUserRole(role);
+                    await saveLanguageForRole(role);
 
                     const pending = (await JustificationService.getPending()).length;
                     setPendingCount(pending);
                 } catch (error) {
                     console.error('Error loading data:', error);
-                    setUserRole('Estudiante');
+                    setUserRole(null);
                 }
             };
             loadData();
@@ -46,7 +51,12 @@ export function useMenuJustifyViewModel() {
     const handlePendingJustificationScreen = useCallback(() => navigation.navigate('PendingJustificationScreen'), [navigation]);
 
     const handleAddOrEditJustify = useCallback(() => {
-        const screenName = (userRole || '').toLowerCase().includes('estudiante') ? 'AddJustification' : 'AddValidJustification';
+        if (!userRole) {
+            console.error('useMenuJustify: sin rol verificado, no se navega');
+            return;
+        }
+        const lower = String(userRole).toLowerCase();
+        const screenName = (lower.includes('aprendiz') || lower.includes('estud')) ? 'AddJustification' : 'AddValidJustification';
         navigation.navigate(screenName);
     }, [navigation, userRole]);
 

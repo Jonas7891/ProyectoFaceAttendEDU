@@ -67,7 +67,7 @@ export interface RolePermissions {
     visibleTabs:         TabKey[];
 
     // ── Metadatos ─────────────────────────────────────────────
-    role: AppUserRole;
+    role: AppUserRole | null;
     isAdmin:   boolean;
     isTeacher: boolean;
     isStudent: boolean;
@@ -130,9 +130,30 @@ function buildPermissions(role: AppUserRole): RolePermissions {
     };
 }
 
-// ── Permisos de invitado (sin sesión) ────────────────────────
+// ── Sin sesión no hay permisos: denegar todo explícito (sin fallback a "student") ──
 
-const GUEST_PERMISSIONS: RolePermissions = buildPermissions("student");
+const GUEST_PERMISSIONS: RolePermissions = {
+    canViewStudents: false,
+    canManageStudents: false,
+    canImportStudents: false,
+    canRegisterFace: false,
+    canViewCourses: false,
+    canManageCourses: false,
+    canViewEnvironments: false,
+    canManageEnvironments: false,
+    canViewReports: false,
+    canExportReports: false,
+    canNotifyAll: false,
+    canViewAllReports: false,
+    canEditAppearance: false,
+    canManageUsers: false,
+    canViewSettings: false,
+    visibleTabs: [],
+    role: null,
+    isAdmin: false,
+    isTeacher: false,
+    isStudent: false,
+};
 
 // ── Hook ──────────────────────────────────────────────────────
 

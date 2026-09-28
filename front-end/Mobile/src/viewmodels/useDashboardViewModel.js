@@ -167,8 +167,9 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
         }, [loadUserData])
     );
 
-    const isAdmin = userRole === 'Administrador' || userRole === 'admin';
-    const isTeacher = userRole === 'teacher' || userRole === 'Docente';
+    const roleLower = String(userRole || '').toLowerCase();
+    const isAdmin = roleLower === 'administrador' || roleLower === 'admin';
+    const isTeacher = roleLower === 'teacher' || roleLower === 'docente' || roleLower === 'instructor';
 
     useEffect(() => {
         const fetchDashboardData = async () => {

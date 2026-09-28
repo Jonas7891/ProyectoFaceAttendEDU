@@ -111,8 +111,9 @@ export function useAttendanceViewModel() {
             const actors = user?.personId ? await ActorService.getByPerson(user.personId) : [];
             const myActor = actors?.length > 0 ? actors[0] : null;
 
-            const isTeacherRole = role === 'Docente' || role === 'teacher' || role === 'INSTRUCTOR';
-            const isAdminRole = role === 'Administrador' || role === 'admin';
+            const roleLower = String(role || '').toLowerCase();
+            const isTeacherRole = roleLower === 'docente' || roleLower === 'teacher' || roleLower === 'instructor';
+            const isAdminRole = roleLower === 'administrador' || roleLower === 'admin';
 
             let records = [];
 
@@ -229,7 +230,7 @@ export function useAttendanceViewModel() {
         init();
     }, [fetchAttendance, loadThemeForRole]);
 
-    const isAdmin = userRole === "Administrador" || userRole === "admin";
+    const isAdmin = String(userRole || '').toLowerCase() === 'administrador' || String(userRole || '').toLowerCase() === 'admin';
 
     const filteredTeachers = teacherData.filter(item =>
         (!searchText || item.nombre.toLowerCase().includes(searchText.toLowerCase())) &&

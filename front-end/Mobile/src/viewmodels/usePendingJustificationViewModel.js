@@ -49,8 +49,9 @@ const normalizeRole = (role = '') => {
     if (r.includes('admin')) return USER_ROLE.ADMIN;
     if (r.includes('docen') || r.includes('profesor') || r.includes('teacher') || r.includes('instructor'))
         return USER_ROLE.TEACHER;
-    if (r.includes('estud') || r.includes('student')) return USER_ROLE.STUDENT;
-    return USER_ROLE.ADMIN;
+    if (r.includes('estud') || r.includes('student') || r.includes('aprendiz')) return USER_ROLE.STUDENT;
+    // Sin fallback silencioso: rol desconocido o ausente bloquea el acceso.
+    return null;
 };
 
 const getLocaleForLanguage = (lang) => {
@@ -74,6 +75,11 @@ export const usePendingJustificationViewModel = () => {
             setLoading(true);
 
             const normalizedRole = normalizeRole(role);
+            if (!normalizedRole) {
+                console.error('usePendingJustification: rol no verificado, sin acceso');
+                setJustifications([]);
+                return;
+            }
             let records;
             if (normalizedRole === USER_ROLE.STUDENT) {
                 const user = await getCurrentUser();
@@ -149,12 +155,20 @@ export const usePendingJustificationViewModel = () => {
         const init = async () => {
             try {
                 const role = await getCurrentUserRole();
+                if (!role) {
+                    console.error('usePendingJustification: sin rol verificado');
+                    setUserRole(null);
+                    setJustifications([]);
+                    setLoading(false);
+                    return;
+                }
                 setUserRole(normalizeRole(role));
                 await fetchJustifications(role);
             } catch (error) {
                 console.error('Error cargando rol:', error);
-                setUserRole(USER_ROLE.ADMIN);
-                await fetchJustifications(null);
+                setUserRole(null);
+                setJustifications([]);
+                setLoading(false);
             }
         };
         init();

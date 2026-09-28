@@ -96,9 +96,21 @@ async function fetchRoleNames(userId) {
       .map((r) => r.roleName || r.role_name)
       .filter(Boolean);
   } catch (e) {
-    console.warn('Could not fetch user roles:', e?.message || e);
-    return [];
+    throw new Error('No se pudieron verificar los roles del usuario en el backend');
   }
+}
+
+// Verifica que el rol tenga efecto real vía /auth/evaluate.
+// Falla cerrado: sin verificación no hay login.
+async function evaluatePermission(userId, permission) {
+  const data = await request({
+    method: GET,
+    url: `${ENV.AUTHZ_BASE_URL}api/v1/auth/evaluate?userId=${encodeURIComponent(userId)}&permission=${encodeURIComponent(permission)}`,
+    requiresAuth: false,
+  });
+  const allowed = data?.allowed ?? data?.[0]?.allowed ?? false;
+  if (!allowed) throw new Error('Rol sin permisos verificados en el backend');
+  return true;
 }
 
 export const AuthService = {
@@ -129,8 +141,14 @@ export const AuthService = {
     const userId = session?.userId || session?.user_id;
     if (!sessionId || !userId) throw new Error('No se pudo crear la sesión');
 
-    // 3. Load roles for navigation/theming.
+    // 3. Load roles for navigation/theming. Sin fallback: sin roles no hay login.
     const roleNames = await fetchRoleNames(userId);
+    if (!roleNames || roleNames.length === 0) {
+      throw new Error('El usuario no tiene roles asignados en el backend');
+    }
+
+    // 3b. Verificar que el rol tenga permisos efectivos.
+    await evaluatePermission(userId, 'attendance.record:read');
 
     // 3b. Complete the profile (person data) when login used the username directly.
     if (!person?.person_id) {
