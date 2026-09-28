@@ -1,1 +1,4 @@
-databaseChangeLog: []
+databaseChangeLog:
+  - include:
+      file: 001-bootstrap-admin-user.yaml
+      relativeToChangelogFile: true
