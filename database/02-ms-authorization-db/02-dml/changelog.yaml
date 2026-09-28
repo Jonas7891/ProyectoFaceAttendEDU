@@ -14,3 +14,6 @@ databaseChangeLog:
   - include:
       file: 005-bootstrap-admin-role-assignment.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 006-bootstrap-demo-role-assignments.yaml
+      relativeToChangelogFile: true

@@ -22,7 +22,7 @@ RBAC roles. Assigned via `user_role`.
 
 **File:** `02-ms-authorization-db/02-dml/001-seed-role-table.yaml` (legado de 4 roles) + `004-unify-mobile-roles.yaml` (unificación a 3 roles Mobile; renombra `SUPER_ADMIN`→`Administrador`, `INSTRUCTOR`→`Instructor`, `STUDENT`→`Aprendiz`, fusiona `SCHOOL_ADMIN` en `Administrador` y carga la matriz `role_permission`)
 
-> Bootstrap: `01-ms-identity-db/02-dml/001-bootstrap-admin-user.yaml` crea `person` + `app_user` (`admin.faceattend` / `Admin123!ChangeMe`, **cambiar en producción**) y `005-bootstrap-admin-role-assignment.yaml` le asigna `Administrador`. Sin este admin inicial ningún endpoint protegido sería alcanzable.
+> Bootstrap: `01-ms-identity-db/02-dml/001-bootstrap-admin-user.yaml` crea `person` + `app_user` (`admin.faceattend` / `Admin123!ChangeMe`, **cambiar en producción**), `002-bootstrap-demo-users.yaml` crea `instructor.faceattend` / `Instructor123!ChangeMe` y `aprendiz.faceattend` / `Aprendiz123!ChangeMe`, y `005/006-bootstrap-*-role-assignment.yaml` les asignan `Administrador`, `Instructor` y `Aprendiz`. Sin estos usuarios iniciales ningún endpoint protegido sería alcanzable.
 
 ---
 

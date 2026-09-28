@@ -2,3 +2,6 @@ databaseChangeLog:
   - include:
       file: 001-bootstrap-admin-user.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 002-bootstrap-demo-users.yaml
+      relativeToChangelogFile: true
