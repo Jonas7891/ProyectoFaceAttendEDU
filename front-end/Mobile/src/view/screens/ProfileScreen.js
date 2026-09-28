@@ -225,7 +225,7 @@ export default function ProfileScreen() {
         toggleTheme,
     } = useProfileViewModel();
 
-    const isStudent = (userRole || '').toLowerCase().includes('estudiante') || (userRole || '').toLowerCase().includes('student');
+    const isStudent = (userRole || '').toLowerCase().includes('estudiante') || (userRole || '').toLowerCase().includes('student') || (userRole || '').toLowerCase().includes('aprendiz');
     const isTeacher = (userRole || '').toLowerCase().includes('docente') || (userRole || '').toLowerCase().includes('teacher') || (userRole || '').toLowerCase().includes('instructor');
     const isAdmin   = (userRole || '').toLowerCase().includes('admin');
     const isDark    = theme === 'dark';

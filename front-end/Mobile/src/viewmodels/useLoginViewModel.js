@@ -82,6 +82,9 @@ export function useLoginViewModel({onLogin}) {
 
             const userData = authResponse.user;
             const role = getHighestRole(userData?.roles ?? []);
+            if (!role) {
+                throw new Error('El usuario no tiene un rol válido asignado');
+            }
 
             setFailedAttempts(0);
             await AsyncStorage.setItem('userEmail', userData?.email || email);

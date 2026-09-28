@@ -1,3 +1,5 @@
 // constants/rolesHierarchy.js
-export const ROLES_HIERARCHY = ["Administrador", "Docente", "Estudiante"];
-export const DEFAULT_ROLE = "Estudiante"; // rol más bajo como seguros
+// Roles canónicos del backend (004-unify-mobile-roles):
+// Administrador > Instructor > Aprendiz.
+export const ROLES_HIERARCHY = ["Administrador", "Instructor", "Aprendiz"];
+export const CANONICAL_ROLES = [...ROLES_HIERARCHY];

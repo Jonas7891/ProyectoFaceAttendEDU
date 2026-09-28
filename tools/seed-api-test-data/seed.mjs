@@ -20,17 +20,25 @@ const ids = {};
 // Credentials for the seeded login. Override in the environment; never reuse in production.
 const SEED_USERNAME = process.env.SEED_USERNAME ?? "seed.admin";
 const SEED_PASSWORD = process.env.SEED_PASSWORD ?? "SeedAdmin123!";
+// Bootstrap admin from DB seeds (01-bootstrap-admin-user + 005 role assignment).
+// The seed needs its session token: protected endpoints require Bearer + permissions.
+const BOOTSTRAP_USERNAME = process.env.BOOTSTRAP_USERNAME ?? "admin.faceattend";
+const BOOTSTRAP_PASSWORD = process.env.BOOTSTRAP_PASSWORD ?? "Admin123!ChangeMe";
+let TOKEN = null;
 
 async function call(service, method, path, body) {
   const url = `${U[service]}${path}`;
   const label = `${method} ${service}${path}`;
   try {
+    const headers = { "Content-Type": "application/json" };
+    if (TOKEN) headers.Authorization = `Bearer ${TOKEN}`;
     const res = await fetch(url, {
       method,
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: body === undefined ? undefined : JSON.stringify(body),
       signal: AbortSignal.timeout(30000),
     });
+
     const text = await res.text();
     let data = null;
     try { data = text ? JSON.parse(text) : null; } catch { data = text; }
@@ -60,6 +68,14 @@ async function ensure(service, path, body, { idKey, matchKey, matchValue, listPa
   return found ? found[idKey] : null;
 }
 
+// Login as bootstrap admin: protected endpoints require Bearer + permissions.
+// Runs before any seed step; without TOKEN the calls below fail with 401/403.
+async function loginSeed() {
+  const session = await post("identity", "/api/v1/auth/login", { username: BOOTSTRAP_USERNAME, password: BOOTSTRAP_PASSWORD });
+  TOKEN = session ? (pick(session, "sessionId", "session_id", "id") ? String(pick(session, "sessionId", "session_id", "id")) : null) : null;
+  if (!TOKEN) console.log("WARN no bootstrap session: protected calls will fail (run DB seeds first)");
+}
+
 // Identity: cities, persons, users (auth surface stays testable via /me).
 async function seedIdentity() {
   const city = await post("identity", "/api/v1/cities", { name: "Seed City", department: "Seed Dept" });
@@ -71,7 +87,7 @@ async function seedIdentity() {
   if (ids.personId) {
     // POST /api/v1/users requires personId + username + password; the password is
     // bcrypt-hashed server side (ADR-008) and never returned by any endpoint.
-    await ensure("identity", "/api/v1/users", {
+    ids.userId = await ensure("identity", "/api/v1/users", {
       personId: ids.personId, username: SEED_USERNAME, password: SEED_PASSWORD,
     }, { idKey: "userId", matchKey: "username", matchValue: SEED_USERNAME });
   } else {
@@ -81,13 +97,26 @@ async function seedIdentity() {
   await get("identity", "/api/v1/cities?limit=5");
 }
 
-// Authorization: roles and permissions used by web/mobile role guards.
+// Authorization: canonical Mobile roles (Administrador, Instructor, Aprendiz).
+// The seed user gets Administrador so role-guarded logins resolve a role.
 async function seedAuthorization() {
-  const admin = await post("authorization", "/api/v1/roles", { roleName: "SEED_ADMIN", description: "Seed admin role" });
-  const teacher = await post("authorization", "/api/v1/roles", { roleName: "SEED_TEACHER", description: "Seed teacher role" });
-  ids.roleId = pick(admin, "roleId", "id") ?? pick(teacher, "roleId", "id");
+  const adminRoleId = await ensure("authorization", "/api/v1/roles",
+    { roleName: "Administrador", description: "Rol Mobile: acceso total" },
+    { idKey: "roleId", matchKey: "roleName", matchValue: "Administrador" });
+  await ensure("authorization", "/api/v1/roles",
+    { roleName: "Instructor", description: "Rol Mobile: docencia y asistencia" },
+    { idKey: "roleId", matchKey: "roleName", matchValue: "Instructor" });
+  await ensure("authorization", "/api/v1/roles",
+    { roleName: "Aprendiz", description: "Rol Mobile: consulta propia" },
+    { idKey: "roleId", matchKey: "roleName", matchValue: "Aprendiz" });
+  ids.roleId = adminRoleId;
   await post("authorization", "/api/v1/permissions", { permissionName: "seed.attendance.read", description: "Read attendance" });
   await post("authorization", "/api/v1/permissions", { permissionName: "seed.attendance.write", description: "Write attendance" });
+  if (ids.userId && adminRoleId) {
+    await post("authorization", `/api/v1/users/${ids.userId}/roles`, { roleId: adminRoleId });
+  } else {
+    console.log("skip  - role assignment needs a user id and role id");
+  }
   await get("authorization", "/api/v1/roles");
 }
 
@@ -224,6 +253,7 @@ const KNOWN_ISSUES = new Set([]);
 
 async function main() {
   console.log(`seed start (${new Date().toISOString()})`);
+  await loginSeed();
   await seedIdentity();
   await seedAuthorization();
   await seedAcademic();

@@ -5,6 +5,7 @@ import com.faceattend_edu.identity_service.adapter.in.web.dto.UserSessionDto;
 import com.faceattend_edu.identity_service.adapter.in.web.mapper.UserSessionWebMapper;
 import com.faceattend_edu.identity_service.application.port.in.CloseUserSessionUseCase;
 import com.faceattend_edu.identity_service.application.port.in.CreateUserSessionUseCase;
+import com.faceattend_edu.identity_service.application.port.in.GetUserSessionUseCase;
 import com.faceattend_edu.identity_service.application.port.in.GetUserSessionsUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ListUserSessionsUseCase;
 import jakarta.validation.constraints.NotNull;
@@ -25,6 +26,7 @@ public class SessionController {
 
     private final CreateUserSessionUseCase createUserSessionUseCase;
     private final CloseUserSessionUseCase closeUserSessionUseCase;
+    private final GetUserSessionUseCase getUserSessionUseCase;
     private final GetUserSessionsUseCase getUserSessionsUseCase;
     private final ListUserSessionsUseCase listUserSessionsUseCase;
     private final UserSessionWebMapper sessionWebMapper;
@@ -50,6 +52,11 @@ public class SessionController {
     public ResponseEntity<Void> closeSession(@PathVariable UUID id) {
         closeUserSessionUseCase.closeSession(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserSessionDto> getSession(@PathVariable UUID id) {
+        return ResponseEntity.ok(sessionWebMapper.toDto(getUserSessionUseCase.getUserSession(id)));
     }
 
     @GetMapping("/user/{userId}")
