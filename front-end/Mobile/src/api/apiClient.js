@@ -16,11 +16,13 @@ class ApiError extends Error {
 async function buildHeaders(requiresAuth) {
   const headers = { 'Content-Type': 'application/json' };
 
-  if (requiresAuth) {
-    const token = await getToken();
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
+  // El token se adjunta siempre que exista: los MS exigen Bearer en /api/**
+  // y requiresAuth:true además falla si no hay sesión guardada.
+  const token = await getToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  } else if (requiresAuth) {
+    throw new ApiError(401, 'Sin sesión: inicia sesión de nuevo', null);
   }
 
   return headers;

@@ -3,6 +3,7 @@ import { toSnakeDeep } from '../api/backend';
 import ENV from '../config/env';
 import AuthResponse from '../models/identity/AuthResponse';
 import AuthRequest from '../models/identity/AuthRequest';
+import { saveToken } from '../storage/TokenStorage';
 import { VerificationService } from './verificationService';
 import { PasswordService } from './passwordService';
 
@@ -35,45 +36,23 @@ async function doLogin(username, password) {
   return session;
 }
 
-async function resolveUsernameByEmail(email) {
-  const normalized = (email || '').toLowerCase().trim();
-  const personsData = await request({
-    method: GET,
-    url: PERSONS_ENDPOINT,
-    params: { page: 1, limit: PAGE_LIMIT },
-    requiresAuth: false,
-  });
-  const personRaw = unwrapPage(personsData).find(
-    (p) => ((p.email || p.mail || '')).toLowerCase().trim() === normalized
-  );
-  const person = personRaw ? toSnakeDeep(personRaw) : null;
-  if (!person) return null;
-
-  const usersData = await request({
-    method: GET,
-    url: USERS_ENDPOINT,
-    params: { page: 1, limit: PAGE_LIMIT },
-    requiresAuth: false,
-  });
-  const userRaw = unwrapPage(usersData).find((u) => (u.person_id || u.personId) === person.person_id);
-  return userRaw ? { username: userRaw.username, person } : null;
-}
-
 async function resolveProfile(userId) {
   // Session responses carry no person data: match user + person from identity lists.
+  // Requiere sesión (los listados ya no son públicos); el token se guarda
+  // en login antes de llamar aquí.
   try {
     const users = await request({
       method: GET,
       url: USERS_ENDPOINT,
       params: { page: 1, limit: PAGE_LIMIT },
-      requiresAuth: false,
+      requiresAuth: true,
     });
     const user = unwrapPage(users).find((u) => u.userId === userId || u.user_id === userId);
     if (!user) return { person: null, username: null };
     const personId = user.personId || user.person_id;
     let person = null;
     try {
-      person = toSnakeDeep(await request({ method: GET, url: `${PERSONS_ENDPOINT}/${personId}`, requiresAuth: false }));
+      person = toSnakeDeep(await request({ method: GET, url: `${PERSONS_ENDPOINT}/${personId}`, requiresAuth: true }));
     } catch {
       person = null;
     }
@@ -85,12 +64,11 @@ async function resolveProfile(userId) {
 
 async function fetchRoleNames(userId) {
   try {
-    // Authorization routes require Kong JWT, so roles are fetched straight
-    // from ms-authorization (no JWT plugin on direct access).
+    // Roles directos a ms-authorization con el Bearer de la sesión.
     const data = await request({
       method: GET,
       url: `${ENV.AUTHZ_BASE_URL}api/v1/users/${userId}/roles`,
-      requiresAuth: false,
+      requiresAuth: true,
     });
     return unwrap(data)
       .map((r) => r.roleName || r.role_name)
@@ -106,7 +84,7 @@ async function evaluatePermission(userId, permission) {
   const data = await request({
     method: GET,
     url: `${ENV.AUTHZ_BASE_URL}api/v1/auth/evaluate?userId=${encodeURIComponent(userId)}&permission=${encodeURIComponent(permission)}`,
-    requiresAuth: false,
+    requiresAuth: true,
   });
   const allowed = data?.allowed ?? data?.[0]?.allowed ?? false;
   if (!allowed) throw new Error('Rol sin permisos verificados en el backend');
@@ -115,31 +93,27 @@ async function evaluatePermission(userId, permission) {
 
 export const AuthService = {
   login: async (email, password) => {
+    // Login directo por username: los listados de persons/users ya no son
+    // públicos, así que no hay resolución email->username sin sesión.
     const identity = (email || '').trim();
     let session = null;
     let person = null;
     let username = identity;
 
     try {
-      // 1. Try the input directly as username.
       session = await doLogin(identity, password);
     } catch (err) {
-      // 2. Fall back to email -> username resolution.
-      if (!err || (err.status !== 400 && err.status !== 401)) throw err;
-      const resolved = await resolveUsernameByEmail(identity).catch(() => null);
-      if (!resolved) throw new Error('Credenciales inválidas');
-      person = resolved.person;
-      username = resolved.username;
-      try {
-        session = await doLogin(resolved.username, password);
-      } catch {
-        throw new Error('Credenciales inválidas');
-      }
+      if (err && (err.status === 400 || err.status === 401)) throw new Error('Credenciales inválidas');
+      throw err;
     }
 
     const sessionId = session?.sessionId || session?.session_id || session?.id;
     const userId = session?.userId || session?.user_id;
     if (!sessionId || !userId) throw new Error('No se pudo crear la sesión');
+
+    // Guardar el token ANTES de las llamadas autenticadas (roles, perfil, evaluate).
+    const saved = await saveToken(String(sessionId));
+    if (!saved) throw new Error('No se pudo guardar la sesión');
 
     // 3. Load roles for navigation/theming. Sin fallback: sin roles no hay login.
     const roleNames = await fetchRoleNames(userId);
