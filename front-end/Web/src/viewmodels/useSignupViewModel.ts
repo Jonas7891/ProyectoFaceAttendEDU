@@ -123,10 +123,9 @@ export function useSignupViewModel({ onSignup }: UseSignupViewModelProps) {
             // Guardar token
             await saveToken(authResponse.token);
 
-            // Extraer rol más alto (sin fallback: sin rol no hay registro válido)
+            // Extraer rol más alto
             const userRoles = authResponse.user?.[0]?.roles ?? [];
             const role = getHighestRole(userRoles);
-            if (!role) throw new Error("El usuario no tiene un rol válido asignado");
             console.log("Usuario registrado - Rol:", role);
 
             // Guardar datos en localStorage/sessionStorage

@@ -88,10 +88,9 @@ export function useLoginViewModel({ onLogin }: UseLoginViewModelProps) {
             // Guardar token
             await saveToken(authResponse.token);
 
-            // Extraer rol más alto (sin fallback: sin rol no hay login)
+            // Extraer rol más alto
             const userRoles = authResponse.user?.[0]?.roles ?? [];
             const role = getHighestRole(userRoles);
-            if (!role) throw new Error("El usuario no tiene un rol válido asignado");
             console.log("Rol seleccionado:", role);
 
             // Guardar datos en localStorage/sessionStorage

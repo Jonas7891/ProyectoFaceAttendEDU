@@ -108,31 +108,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         try {
             const { login: loginRequest } = await import("../services/AuthService");
-            const result = await loginRequest({ email: credentials.email, password: credentials.password });
-            // Rol verificado contra GET /users/{id}/roles + /auth/evaluate.
-            // Sin rol no hay sesión: falla explícito, sin fallback a "student".
-            if (!result?.appRole) {
-                return "El usuario no tiene un rol asignado en el backend";
-            }
-
-            // Perfil UI: nombre desde mock local; el rol siempre es el verificado.
-            const found = mockAppUsers.find(
-                (u) => u.email.toLowerCase() === credentials.email.toLowerCase()
-            );
-            const profile: AppUser = {
-                id: result.userId ?? credentials.email,
-                name: found?.name ?? credentials.email.split("@")[0] ?? credentials.email,
-                email: credentials.email,
-                role: result.appRole,
-                status: "active",
-            };
-
-            await sessionSet(JSON.stringify(profile));
-            setUser(profile);
-            return null;
+            await loginRequest({ email: credentials.email, password: credentials.password });
         } catch (e) {
             return e instanceof Error ? e.message : "Credenciales incorrectas";
         }
+
+        // Perfil UI: se resuelve desde mock local por email (el backend
+        // identity aún no expone perfil completo por username en login).
+        const found = mockAppUsers.find(
+            (u) => u.email.toLowerCase() === credentials.email.toLowerCase()
+        );
+        const profile: AppUser = found ?? {
+            id: credentials.email,
+            name: credentials.email.split("@")[0] ?? credentials.email,
+            email: credentials.email,
+            role: "student",
+            status: "active",
+        };
+
+        await sessionSet(JSON.stringify(profile));
+        setUser(profile);
+        return null;
     }, []);
 
     const logout = useCallback(async () => {
