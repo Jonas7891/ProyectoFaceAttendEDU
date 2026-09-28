@@ -47,32 +47,42 @@ export const UserService = {
   },
 };
 
+export const USER_PROFILE_KEY = 'userProfile';
+
+async function readStoredProfile() {
+  try {
+    const raw = await AsyncStorage.getItem(USER_PROFILE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
 export const getCurrentUser = async () => {
   try {
-    const role = await AsyncStorage.getItem('userRole');
-    const email = await AsyncStorage.getItem('userEmail');
-    if (!role && !email) return null;
-
-    const user = await getUserByEmail(email);
-
-    let name = null;
-    let personId = user?.personId || null;
-    if (email) {
-      const { request, GET } = require('../api/apiClient');
-      const personData = await request({ method: GET, url: 'person', params: { email }, requiresAuth: false });
-      const personArr = personData && Array.isArray(personData.value) ? personData.value : Array.isArray(personData) ? personData : [];
-      if (personArr.length > 0) {
-        const person = personArr[0];
-        name = [person.name, person.last_name].filter(Boolean).join(' ');
-        personId = person.person_id || personId;
-      }
+    const profile = await readStoredProfile();
+    if (profile?.userId || profile?.email) {
+      const role = await AsyncStorage.getItem('userRole');
+      return {
+        userId: profile.userId || null,
+        personId: profile.personId || null,
+        email: profile.email || null,
+        username: profile.username || null,
+        name: profile.name || null,
+        roles: role ? [role] : profile.roles || [],
+      };
     }
-
+    const email = await AsyncStorage.getItem('userEmail');
+    if (!email) return null;
+    const user = await getUserByEmail(email);
+    if (!user) return null;
+    const role = await AsyncStorage.getItem('userRole');
     return {
       userId: user?.userId || null,
-      personId: personId,
-      email: email,
-      name: name,
+      personId: user?.personId || null,
+      email,
+      username: user?.username || null,
+      name: null,
       roles: role ? [role] : [],
     };
   } catch {
@@ -90,14 +100,17 @@ export const getCurrentUserRole = async () => {
 };
 
 export const getUserByEmail = async (email) => {
-  const { request, GET } = require('../api/apiClient');
-  const personData = await request({ method: GET, url: 'person', params: { email }, requiresAuth: false });
-  const personArr = personData && Array.isArray(personData.value) ? personData.value : Array.isArray(personData) ? personData : [];
-  if (personArr.length === 0) return null;
-  const person = personArr[0];
-  const userData = await request({ method: GET, url: ENDPOINT, params: { person_id: person.person_id }, requiresAuth: false });
-  const userArr = userData && Array.isArray(userData.value) ? userData.value : Array.isArray(userData) ? userData : [];
-  return userArr.length > 0 ? AppUser.fromApi(userArr[0]) : null;
+  const normalized = (email || '').toLowerCase().trim();
+  if (!normalized) return null;
+  // Real identity API has no email search: page through persons, then match the user.
+  const { backendGet } = require('../api/backend');
+  const ENV = require('../config/env').default;
+  const persons = await backendGet(ENV.API_BASE_URL, 'api/v1/persons', { page: 1, limit: 2000 });
+  const person = persons.find((p) => (p.email || '').toLowerCase().trim() === normalized);
+  if (!person) return null;
+  const users = await backendGet(ENV.API_BASE_URL, 'api/v1/users', { page: 1, limit: 2000 });
+  const user = users.find((u) => u.person_id === person.person_id);
+  return user ? AppUser.fromApi(user) : null;
 };
 
 export const hasRole = async (roleName) => {

@@ -40,7 +40,7 @@ export const UserProvider = ({ children }) => {
     const normalizedRole = (userRole || '').toLowerCase().trim();
 
     const isAdmin = normalizedRole === 'admin' || normalizedRole === 'administrador';
-    const isTeacher = normalizedRole === 'teacher' || normalizedRole === 'docente';
+    const isTeacher = normalizedRole === 'teacher' || normalizedRole === 'docente' || normalizedRole === 'instructor';
     const isStudent = normalizedRole === 'student' || normalizedRole === 'estudiante' || normalizedRole === 'aprendiz';
 
     const value = {

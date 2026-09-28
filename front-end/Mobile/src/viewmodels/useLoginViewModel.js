@@ -82,9 +82,22 @@ export function useLoginViewModel({onLogin}) {
 
             const userData = authResponse.user;
             const role = getHighestRole(userData?.roles ?? []);
+            if (!role) {
+                throw new Error('El usuario no tiene un rol válido asignado');
+            }
 
             setFailedAttempts(0);
-            await AsyncStorage.setItem('userEmail', email);
+            await AsyncStorage.setItem('userEmail', userData?.email || email);
+            try {
+              await AsyncStorage.setItem('userProfile', JSON.stringify({
+                userId: userData?.user_id || null,
+                personId: userData?.person_id || null,
+                username: userData?.username || null,
+                email: userData?.email || email,
+                name: userData?.name || null,
+                roles: userData?.roles ?? [],
+              }));
+            } catch {}
             await loadThemeForRole(role);
             await restoreLanguageForRole(role);
 

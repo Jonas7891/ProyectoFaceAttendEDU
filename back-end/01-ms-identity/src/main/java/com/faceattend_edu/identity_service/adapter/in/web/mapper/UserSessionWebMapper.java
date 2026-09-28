@@ -11,8 +11,11 @@ public class UserSessionWebMapper {
         if (domain == null) return null;
         UserSessionDto dto = new UserSessionDto();
         dto.setSessionId(domain.getSessionId());
-        dto.setUserId(domain.getUserId().getUserId());
+        dto.setUserId(domain.getUserId() != null ? domain.getUserId().getUserId() : null);
         dto.setSessionStatus(domain.getSessionStatus());
+        dto.setStartDate(domain.getStartDate());
+        dto.setEndDate(domain.getEndDate());
+        dto.setSourceIp(domain.getSourceIp());
         return dto;
     }
 }

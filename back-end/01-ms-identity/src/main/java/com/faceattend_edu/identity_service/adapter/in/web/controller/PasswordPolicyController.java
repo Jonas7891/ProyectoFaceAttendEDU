@@ -1,5 +1,6 @@
 package com.faceattend_edu.identity_service.adapter.in.web.controller;
 
+import com.faceattend_edu.identity_service.adapter.in.web.dto.PageResponse;
 import com.faceattend_edu.identity_service.adapter.in.web.dto.PasswordPolicyDto;
 import com.faceattend_edu.identity_service.adapter.in.web.mapper.PasswordPolicyWebMapper;
 import com.faceattend_edu.identity_service.application.port.in.CreatePasswordPolicyUseCase;
@@ -31,10 +32,13 @@ public class PasswordPolicyController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PasswordPolicyDto>> listPolicies() {
-        return ResponseEntity.ok(listPasswordPoliciesUseCase.listPolicies().stream()
+    public ResponseEntity<PageResponse<PasswordPolicyDto>> listPolicies(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer limit) {
+        List<PasswordPolicyDto> all = listPasswordPoliciesUseCase.listPolicies().stream()
                 .map(passwordPolicyWebMapper::toDto)
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(PageResponse.of(all, page, limit));
     }
 
     @GetMapping("/{id}")
