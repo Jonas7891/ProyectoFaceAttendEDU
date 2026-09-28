@@ -20,17 +20,25 @@ const ids = {};
 // Credentials for the seeded login. Override in the environment; never reuse in production.
 const SEED_USERNAME = process.env.SEED_USERNAME ?? "seed.admin";
 const SEED_PASSWORD = process.env.SEED_PASSWORD ?? "SeedAdmin123!";
+// Bootstrap admin from DB seeds (01-bootstrap-admin-user + 005 role assignment).
+// The seed needs its session token: protected endpoints require Bearer + permissions.
+const BOOTSTRAP_USERNAME = process.env.BOOTSTRAP_USERNAME ?? "admin.faceattend";
+const BOOTSTRAP_PASSWORD = process.env.BOOTSTRAP_PASSWORD ?? "Admin123!ChangeMe";
+let TOKEN = null;
 
 async function call(service, method, path, body) {
   const url = `${U[service]}${path}`;
   const label = `${method} ${service}${path}`;
   try {
+    const headers = { "Content-Type": "application/json" };
+    if (TOKEN) headers.Authorization = `Bearer ${TOKEN}`;
     const res = await fetch(url, {
       method,
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: body === undefined ? undefined : JSON.stringify(body),
       signal: AbortSignal.timeout(30000),
     });
+
     const text = await res.text();
     let data = null;
     try { data = text ? JSON.parse(text) : null; } catch { data = text; }
@@ -58,6 +66,14 @@ async function ensure(service, path, body, { idKey, matchKey, matchValue, listPa
   const list = await get(service, listPath ?? path);
   const found = asArray(list).find((e) => e?.[matchKey] === matchValue);
   return found ? found[idKey] : null;
+}
+
+// Login as bootstrap admin: protected endpoints require Bearer + permissions.
+// Runs before any seed step; without TOKEN the calls below fail with 401/403.
+async function loginSeed() {
+  const session = await post("identity", "/api/v1/auth/login", { username: BOOTSTRAP_USERNAME, password: BOOTSTRAP_PASSWORD });
+  TOKEN = session ? (pick(session, "sessionId", "session_id", "id") ? String(pick(session, "sessionId", "session_id", "id")) : null) : null;
+  if (!TOKEN) console.log("WARN no bootstrap session: protected calls will fail (run DB seeds first)");
 }
 
 // Identity: cities, persons, users (auth surface stays testable via /me).
@@ -237,6 +253,7 @@ const KNOWN_ISSUES = new Set([]);
 
 async function main() {
   console.log(`seed start (${new Date().toISOString()})`);
+  await loginSeed();
   await seedIdentity();
   await seedAuthorization();
   await seedAcademic();
