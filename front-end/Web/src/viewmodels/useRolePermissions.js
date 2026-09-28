@@ -24,13 +24,13 @@ import { useAuth } from "../context/AuthContext";
 
 const TAB_LABELS_BY_ROLE = {
     admin: {
-        students: "Usuarios",
+        users: "Usuarios",
     },
     teacher: {
-        students: "Alumnos",
+        users: "Alumnos",
     },
     student: {
-        students: "Compañeros",
+        users: "Compañeros",
     },
 };
 
@@ -43,13 +43,13 @@ function getTabLabel(tabKey, role) {
 function getVisibleTabs(role) {
     switch (role) {
         case "admin":
-            return ["dashboard", "students", "courses", "environments", "reports", "settings"];
+            return ["dashboard", "users", "courses", "environments", "reports", "settings"];
         case "teacher":
-            return ["dashboard", "students", "courses", "reports", "settings"];
+            return ["dashboard", "users", "courses", "reports", "settings"];
         case "student":
             return ["dashboard", "courses", "settings"];
         default:
-            return ["dashboard", "courses", "settings"];
+            return []; //Vacio aproposito, no queremos fugas aunque alguien logre pasar las validaciones
     }
 }
 

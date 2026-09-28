@@ -8,7 +8,18 @@ import { useTranslation }     from "../core/utils/i18n/hooks/useTranslation";
 // Soporta estructura jerárquica mediante la propiedad "children"
 const ALL_TABS = [
     { key: "dashboard",    label: "Inicio",        icon: "layout"      },
-    { key: "students",     label: "Alumnos",       icon: "users"       },
+    { 
+        key: "users",     
+        label: "Usuarios",       
+        icon: "users",
+        // SIN optionalNavigation - el item padre navega directamente a "todos los usuarios"
+        // Sub-secciones de usuarios (se renderizarán como sub-items en la sidebar)
+        children: [
+            { key: "students",   label: "Estudiantes",  icon: "user",       adminOnly: false },
+            { key: "teachers",   label: "Profesores",   icon: "user-check", adminOnly: true  },
+            { key: "admins",     label: "Admins",       icon: "shield",     adminOnly: true  },
+        ]
+    },
     { key: "courses",      label: "Cursos",        icon: "book-open"   },
     { key: "environments", label: "Ambientes",     icon: "home"        },
     { key: "reports",      label: "Reportes",      icon: "bar-chart-2" },

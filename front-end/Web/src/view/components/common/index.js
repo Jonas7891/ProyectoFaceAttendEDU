@@ -39,6 +39,9 @@ export * from './feedback';
 // Animation
 export * from './animation';
 
+// Filters
+export * from './filters';
+
 // Otros componentes comunes
 export { Avatar } from './Avatar';
 export { Divider } from './Divider';
