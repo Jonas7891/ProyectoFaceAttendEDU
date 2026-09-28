@@ -1,7 +1,10 @@
 import { request, GET, POST, PUT, DELETE } from '../api/apiClient';
+import { backendGet } from '../api/backend';
+import ENV from '../config/env';
 import AcademicActor from '../models/academic/AcademicActor';
 
-const ENDPOINT = 'academic_actor';
+const ENDPOINT = 'api/v1/academic-actors';
+const BASE = () => ENV.ACADEMIC_BASE_URL;
 
 function unwrap(data) {
   if (data && Array.isArray(data.value)) return data.value;
@@ -34,8 +37,11 @@ export const ActorService = {
   },
 
   getByPerson: async (personId) => {
-    const data = await request({ method: GET, url: ENDPOINT, params: { person_id: personId }, requiresAuth: false });
-    return unwrap(data).map(AcademicActor.fromApi);
+    if (!personId) return [];
+    const actors = await backendGet(BASE(), ENDPOINT, { limit: 2000 });
+    return actors
+      .filter((a) => a.person_id === personId)
+      .map(AcademicActor.fromApi);
   },
 
   getStudents: async (schoolId) => {
