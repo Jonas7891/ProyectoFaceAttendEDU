@@ -16,12 +16,11 @@ RBAC roles. Assigned via `user_role`.
 
 | ID | Role | Description |
 |----|------|-------------|
-| 1 | `SUPER_ADMIN` | Super administrator |
-| 2 | `SCHOOL_ADMIN` | School administrator |
-| 3 | `INSTRUCTOR` | Instructor |
-| 4 | `STUDENT` | Student |
+| 1 | `Administrador` | Rol Mobile: acceso total |
+| 2 | `Instructor` | Rol Mobile: docencia y asistencia |
+| 3 | `Aprendiz` | Rol Mobile: consulta propia |
 
-**File:** `02-ms-authorization-db/02-dml/001-seed-role-table.yaml`
+**File:** `02-ms-authorization-db/02-dml/001-seed-role-table.yaml` (legado de 4 roles) + `004-unify-mobile-roles.yaml` (unificación a 3 roles Mobile; renombra `SUPER_ADMIN`→`Administrador`, `INSTRUCTOR`→`Instructor`, `STUDENT`→`Aprendiz`, fusiona `SCHOOL_ADMIN` en `Administrador` y carga la matriz `role_permission`)
 
 ---
 
@@ -46,24 +45,22 @@ Atomic permissions with bounded-context prefix (`context.resource:action`). Assi
 
 **File:** `02-ms-authorization-db/02-dml/002-seed-permission-table.yaml`
 
-### Suggested role × permission matrix
+### Role × permission matrix (enforced by `004-unify-mobile-roles.yaml`)
 
-| Permission | SUPER_ADMIN | SCHOOL_ADMIN | INSTRUCTOR | STUDENT |
-|---------|:-----------:|:------------:|:----------:|:-------:|
-| `identity.person:read` | ✅ | ✅ | ✅ | ✅ |
-| `identity.person:write` | ✅ | ✅ | ❌ | ❌ |
-| `academic.school:manage` | ✅ | ✅ | ❌ | ❌ |
-| `academic.enrollment:manage` | ✅ | ✅ | ❌ | ❌ |
-| `scheduling.session:manage` | ✅ | ✅ | ✅ | ❌ |
-| `attendance.record:read` | ✅ | ✅ | ✅ | ✅ |
-| `attendance.record:write` | ✅ | ✅ | ✅ | ❌ |
-| `attendance.justification:approve` | ✅ | ✅ | ✅ | ❌ |
-| `biometric.case:request` | ✅ | ✅ | ✅ | ✅ |
-| `biometric.case:review` | ✅ | ✅ | ✅ | ❌ |
-| `configuration:manage` | ✅ | ❌ | ❌ | ❌ |
-| `notification.alert:read` | ✅ | ✅ | ✅ | ✅ |
-
-> Assignment via `role_permission` is customizable.
+| Permission | Administrador | Instructor | Aprendiz |
+|---------|:-------------:|:----------:|:--------:|
+| `identity.person:read` | ✅ | ✅ | ✅ |
+| `identity.person:write` | ✅ | ❌ | ❌ |
+| `academic.school:manage` | ✅ | ❌ | ❌ |
+| `academic.enrollment:manage` | ✅ | ❌ | ❌ |
+| `scheduling.session:manage` | ✅ | ✅ | ❌ |
+| `attendance.record:read` | ✅ | ✅ | ✅ |
+| `attendance.record:write` | ✅ | ✅ | ❌ |
+| `attendance.justification:approve` | ✅ | ✅ | ❌ |
+| `biometric.case:request` | ✅ | ✅ | ✅ |
+| `biometric.case:review` | ✅ | ✅ | ❌ |
+| `configuration:manage` | ✅ | ❌ | ❌ |
+| `notification.alert:read` | ✅ | ✅ | ✅ |
 
 ---
 
@@ -128,14 +125,14 @@ Alert types with `severity` and `channel` for `AlertsConfigContext` mapping.
 
 | Domain | Catalog table | Records | Seed file |
 |---------|---------------|:---------:|--------------|
-| Authorization | `role` | 4 | `02-ms-authorization-db/02-dml/001-seed-role-table.yaml` |
+| Authorization | `role` | 3 | `02-ms-authorization-db/02-dml/001-seed-role-table.yaml` + `004-unify-mobile-roles.yaml` |
 | Authorization | `permission` | 12 | `02-ms-authorization-db/02-dml/002-seed-permission-table.yaml` |
 | Academic | `academic_actor_type` | 2 | `03-ms-academic-db/02-dml/001-seed-academic-actor-type-table.yaml` |
 | Attendance | `justification_type` | 3 | `05-ms-attendance-db/02-dml/001-seed-justification-type-table.yaml` |
 | Configuration | `security_configuration` | 3 | `07-ms-configuration-db/02-dml/001-seed-security-configuration-table.yaml` |
 | Notification | `alert_type` | 5 | `08-ms-notification-db/02-dml/001-seed-alert-type-table.yaml` |
 
-**Total: 29 seed records in 6 catalog tables.** `identity.city` removed (external API).
+**Total: 28 seed records in 6 catalog tables.** `identity.city` removed (external API).
 
 ---
 

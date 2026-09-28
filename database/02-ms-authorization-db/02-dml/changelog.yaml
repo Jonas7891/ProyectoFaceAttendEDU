@@ -8,3 +8,6 @@ databaseChangeLog:
   - include:
       file: 003-sync-catalog-sequences.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 004-unify-mobile-roles.yaml
+      relativeToChangelogFile: true

@@ -71,7 +71,7 @@ async function seedIdentity() {
   if (ids.personId) {
     // POST /api/v1/users requires personId + username + password; the password is
     // bcrypt-hashed server side (ADR-008) and never returned by any endpoint.
-    await ensure("identity", "/api/v1/users", {
+    ids.userId = await ensure("identity", "/api/v1/users", {
       personId: ids.personId, username: SEED_USERNAME, password: SEED_PASSWORD,
     }, { idKey: "userId", matchKey: "username", matchValue: SEED_USERNAME });
   } else {
@@ -81,13 +81,26 @@ async function seedIdentity() {
   await get("identity", "/api/v1/cities?limit=5");
 }
 
-// Authorization: roles and permissions used by web/mobile role guards.
+// Authorization: canonical Mobile roles (Administrador, Instructor, Aprendiz).
+// The seed user gets Administrador so role-guarded logins resolve a role.
 async function seedAuthorization() {
-  const admin = await post("authorization", "/api/v1/roles", { roleName: "SEED_ADMIN", description: "Seed admin role" });
-  const teacher = await post("authorization", "/api/v1/roles", { roleName: "SEED_TEACHER", description: "Seed teacher role" });
-  ids.roleId = pick(admin, "roleId", "id") ?? pick(teacher, "roleId", "id");
+  const adminRoleId = await ensure("authorization", "/api/v1/roles",
+    { roleName: "Administrador", description: "Rol Mobile: acceso total" },
+    { idKey: "roleId", matchKey: "roleName", matchValue: "Administrador" });
+  await ensure("authorization", "/api/v1/roles",
+    { roleName: "Instructor", description: "Rol Mobile: docencia y asistencia" },
+    { idKey: "roleId", matchKey: "roleName", matchValue: "Instructor" });
+  await ensure("authorization", "/api/v1/roles",
+    { roleName: "Aprendiz", description: "Rol Mobile: consulta propia" },
+    { idKey: "roleId", matchKey: "roleName", matchValue: "Aprendiz" });
+  ids.roleId = adminRoleId;
   await post("authorization", "/api/v1/permissions", { permissionName: "seed.attendance.read", description: "Read attendance" });
   await post("authorization", "/api/v1/permissions", { permissionName: "seed.attendance.write", description: "Write attendance" });
+  if (ids.userId && adminRoleId) {
+    await post("authorization", `/api/v1/users/${ids.userId}/roles`, { roleId: adminRoleId });
+  } else {
+    console.log("skip  - role assignment needs a user id and role id");
+  }
   await get("authorization", "/api/v1/roles");
 }
 
