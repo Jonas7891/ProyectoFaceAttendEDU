@@ -1,6 +1,7 @@
 import {useCallback, useEffect, useState} from 'react';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
-import {backendGet, ENV} from '../api/backend';
+import {backendGet} from '../api/backend';
+import ENV from '../config/env';
 import {PersonService} from '../services/PersonService';
 import {UserService} from '../services/UserService';
 import Person from '../models/identity/Person';
@@ -22,44 +23,47 @@ export function useManageUsersViewModel() {
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const usersData = await backendGet(ENV.API_BASE_URL, 'api/v1/app-users', {_limit: 50});
+      // Contratos gateway Kong: GET /api/v1/users?page=&limit=, GET
+      // /api/v1/users/{id}/roles -> [{roleId, roleName}], GET /api/v1/persons/{id}.
+      const usersData = await backendGet(ENV.API_BASE_URL, 'api/v1/users', {page: 1, limit: 50});
       const users = unwrap(usersData);
 
-      const personIds = users.map(u => u.person_id).filter(Boolean);
-      const studentsList = [];
-      const teachersList = [];
-
-      for (const userId of users.map(u => u.user_id)) {
-        const rolesData = await backendGet(ENV.AUTHZ_BASE_URL, 'api/v1/user-roles', {user_id: userId});
-        const roles = unwrap(rolesData);
-        const roleIds = roles.map(r => r.role_id);
-
-        for (const user of users.filter(u => u.user_id === userId)) {
-          const personData = await backendGet(ENV.API_BASE_URL, 'api/v1/persons', {person_id: user.person_id});
-          const personArr = unwrap(personData);
-          const person = personArr[0] || {};
-
-          const entry = {
-            id: user.user_id,
-            userId: user.user_id,
-            personId: user.person_id,
-            nombre: `${person.name || ''} ${person.last_name || ''}`.trim(),
-            email: person.email || '',
-            telefono: person.phone || '',
-            username: user.username,
-            status: user.status,
-          };
-
-          if (roleIds.includes(5)) {
-            studentsList.push({ ...entry, grado: '—' });
-          } else if (roleIds.includes(4) || roleIds.includes(1)) {
-            teachersList.push({ ...entry, materia: '—' });
+      const entries = await Promise.all(users.map(async (u) => {
+        const uid = u.user_id || u.userId;
+        const pid = u.person_id || u.personId;
+        let roleNames = [];
+        try {
+          const roles = unwrap(await backendGet(ENV.API_BASE_URL, `api/v1/users/${uid}/roles`));
+          roleNames = roles.map(r => r.roleName || r.role_name).filter(Boolean);
+        } catch {
+          roleNames = [];
+        }
+        let person = {};
+        if (pid) {
+          try {
+            const personArr = unwrap(await backendGet(ENV.API_BASE_URL, `api/v1/persons/${pid}`));
+            person = personArr[0] || {};
+          } catch {
+            person = {};
           }
         }
-      }
+        return {
+          id: uid,
+          userId: uid,
+          personId: pid,
+          nombre: `${person.name || ''} ${person.last_name || person.lastName || ''}`.trim(),
+          email: person.email || '',
+          telefono: person.phone || '',
+          username: u.username,
+          status: u.status,
+          roleNames,
+        };
+      }));
 
-      setStudents(studentsList);
-      setTeachers(teachersList);
+      const isStudent = (e) => e.roleNames.some(n => String(n).toLowerCase() === 'aprendiz');
+      const isTeacher = (e) => e.roleNames.some(n => ['instructor', 'administrador'].includes(String(n).toLowerCase()));
+      setStudents(entries.filter(isStudent).map(e => ({...e, grado: '—'})));
+      setTeachers(entries.filter(e => !isStudent(e) && isTeacher(e)).map(e => ({...e, materia: '—'})));
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {

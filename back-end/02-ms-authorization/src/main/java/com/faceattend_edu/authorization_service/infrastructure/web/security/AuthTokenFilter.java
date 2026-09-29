@@ -63,7 +63,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
         String path = request.getRequestURI();
-        if (!path.startsWith("/api/") || isPublic(path)) {
+        if (!path.startsWith("/api/") || isPublic(request.getMethod(), path)) {
             chain.doFilter(request, response);
             return;
         }
@@ -189,11 +189,20 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         }
     }
 
-    private boolean isPublic(String path) {
+    /**
+     * Primitivas de lectura (roles propios y evaluate) con bypass: las usa el propio
+     * filtro (fetchRoles/evaluate) en cada MS. Sin bypass, la validación se llamaría
+     * a sí misma por HTTP en bucle y toda petición autenticada terminaría en 401.
+     * Solo GET; POST/DELETE sobre roles siguen exigiendo sesión + permisos.
+     * Los userId son UUID opacos e indivinables (equivalen al bearer).
+     */
+    private boolean isPublic(String method, String path) {
         for (String prefix : PUBLIC_PREFIXES) {
             if (path.equals(prefix) || path.startsWith(prefix)) return true;
         }
-        return false;
+        if (!method.equalsIgnoreCase("GET")) return false;
+        if (path.equals("/api/v1/auth/evaluate") || path.equals("/auth/evaluate")) return true;
+        return USER_ROLES_PATH.matcher(path).matches();
     }
 
     private void deny(HttpServletResponse response, int status, String message, String path) throws IOException {

@@ -1,7 +1,9 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useCustomAlert} from '../view/components/common/useCustomAlert';
-import {backendGet, ENV, request, POST} from '../api/backend';
+import {backendGet} from '../api/backend';
+import {request, POST} from '../api/apiClient';
+import ENV from '../config/env';
 import {getCurrentUserRole, getCurrentUser} from '../services/UserService';
 import {ActorService} from '../services/ActorService';
 

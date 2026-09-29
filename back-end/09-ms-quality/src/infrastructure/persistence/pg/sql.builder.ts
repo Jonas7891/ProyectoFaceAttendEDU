@@ -78,7 +78,7 @@ export function buildAndFilters(conditions: readonly FilterCondition[], startInd
  * `Record<string, number|string>` en una tabla hija sin SQL dinámico.
  * Devuelve los dos arrays alineados (mismas claves, mismo orden).
  */
-export function recordToArrays<T>(record: Readonly<Record<string, T>>): { keys: string[]; values: T[] } {
-  const keys = Object.keys(record);
-  return { keys, values: keys.map((key) => record[key]) };
+export function recordToArrays<T>(record: Readonly<Record<string, T>>): { codes: string[]; values: T[] } {
+  const codes = Object.keys(record);
+  return { codes, values: codes.map((code) => record[code]) };
 }

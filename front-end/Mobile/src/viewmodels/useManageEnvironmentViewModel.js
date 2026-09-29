@@ -1,5 +1,6 @@
 import {useCallback, useEffect, useState} from 'react';
-import {backendGet, ENV} from '../api/backend';
+import {backendGet} from '../api/backend';
+import ENV from '../config/env';
 
 function unwrap(data) {
   if (data && Array.isArray(data.value)) return data.value;

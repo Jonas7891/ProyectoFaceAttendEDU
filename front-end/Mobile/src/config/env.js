@@ -2,11 +2,6 @@ import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
 const API_PORT = 8080;
-const AUTHZ_PORT = 8083;
-const ACADEMIC_PORT = 8084;
-const ATTENDANCE_PORT = 8085;
-const SCHEDULING_PORT = 8087;
-const NOTIFY_PORT = 8090;
 const DEFAULT_HOST = '10.3.233.33';
 
 /**
@@ -15,13 +10,27 @@ const DEFAULT_HOST = '10.3.233.33';
  * 2. En desarrollo (Expo Go / dev build), hostUri contiene la IP de la máquina
  *    que levanta Metro, así el app se conecta igual en emulador y dispositivo físico
  *    de la misma red, aunque la IP cambie.
- * 3. En Android emulator sin hostUri, 10.0.2.2 es la forma de llegar al host.
- * 4. Último recurso: la IP LAN por defecto.
+ * 3. Fallback a debuggerHost / manifest (SDK antiguos) para no quedar atado a
+ *    una IP LAN hardcodeada que expira y causa 'fetch failed: timed out' en iOS.
+ * 4. En Android emulator sin hostUri, 10.0.2.2 es la forma de llegar al host.
+ * 5. Último recurso: la IP LAN por defecto.
+ *
+ * Todo el tráfico Mobile pasa por el gateway Kong (:8080). Los puertos directos
+ * de microservicios (:8083, :8084, ...) no se publican en todos los entornos
+ * (ms-identity expone solo 8081/tcp interno) y el firewall del dispositivo los
+ * bloquea, lo que dejaba el login colgado en los 3 roles.
  */
 function resolveHost() {
   const hostUri = Constants.expoConfig?.hostUri;
   if (hostUri) {
     const host = hostUri.split(':')[0];
+    if (host) return host;
+  }
+
+  const debuggerHost =
+    Constants.manifest?.debuggerHost ?? Constants.manifest2?.extra?.expoGo?.debuggerHost;
+  if (typeof debuggerHost === 'string') {
+    const host = debuggerHost.split(':')[0];
     if (host) return host;
   }
 
@@ -46,18 +55,17 @@ function resolveServiceUrl(envName, port) {
   return `http://${resolveHost()}:${port}/`;
 }
 
-function resolveAuthzUrl() {
-  return resolveServiceUrl('EXPO_PUBLIC_AUTHZ_URL', AUTHZ_PORT);
-}
-
 const ENV = {
   API_BASE_URL: resolveBaseUrl(),
-  AUTHZ_BASE_URL: resolveAuthzUrl(),
-  ACADEMIC_BASE_URL: resolveServiceUrl('EXPO_PUBLIC_ACADEMIC_URL', ACADEMIC_PORT),
-  ATTENDANCE_BASE_URL: resolveServiceUrl('EXPO_PUBLIC_ATTENDANCE_URL', ATTENDANCE_PORT),
-  SCHEDULING_BASE_URL: resolveServiceUrl('EXPO_PUBLIC_SCHEDULING_URL', SCHEDULING_PORT),
-  NOTIFY_BASE_URL: resolveServiceUrl('EXPO_PUBLIC_NOTIFY_URL', NOTIFY_PORT),
+  // Compat: antes apuntaba directo a ms-authorization (:8083). Ahora alias del
+  // gateway para no romper imports, pero el login ya no lo usa.
+  AUTHZ_BASE_URL: resolveBaseUrl(),
+  ACADEMIC_BASE_URL: resolveBaseUrl(),
+  ATTENDANCE_BASE_URL: resolveBaseUrl(),
+  SCHEDULING_BASE_URL: resolveBaseUrl(),
+  NOTIFY_BASE_URL: resolveBaseUrl(),
   API_TIMEOUT: 15000,
+  API_HEALTH_PATH: 'api/v1/health',
 };
 
 export default ENV;

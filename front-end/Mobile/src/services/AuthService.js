@@ -1,6 +1,5 @@
 import { request, GET, POST } from '../api/apiClient';
 import { toSnakeDeep } from '../api/backend';
-import ENV from '../config/env';
 import AuthResponse from '../models/identity/AuthResponse';
 import AuthRequest from '../models/identity/AuthRequest';
 import { saveToken } from '../storage/TokenStorage';
@@ -37,37 +36,53 @@ async function doLogin(username, password) {
 }
 
 async function resolveProfile(userId) {
-  // Session responses carry no person data: match user + person from identity lists.
-  // Requiere sesión (los listados ya no son públicos); el token se guarda
-  // en login antes de llamar aquí.
   try {
-    const users = await request({
-      method: GET,
-      url: USERS_ENDPOINT,
-      params: { page: 1, limit: PAGE_LIMIT },
-      requiresAuth: true,
-    });
-    const user = unwrapPage(users).find((u) => u.userId === userId || u.user_id === userId);
-    if (!user) return { person: null, username: null };
-    const personId = user.personId || user.person_id;
+    const user = toSnakeDeep(
+      await request({ method: GET, url: `${USERS_ENDPOINT}/${userId}`, requiresAuth: true }),
+    );
+    const personId = user.person_id || user.personId;
     let person = null;
-    try {
-      person = toSnakeDeep(await request({ method: GET, url: `${PERSONS_ENDPOINT}/${personId}`, requiresAuth: true }));
-    } catch {
-      person = null;
+    if (personId) {
+      try {
+        person = toSnakeDeep(
+          await request({ method: GET, url: `${PERSONS_ENDPOINT}/${personId}`, requiresAuth: true }),
+        );
+      } catch {
+        person = null;
+      }
     }
-    return { person, username: user.username };
+    return { person, username: user.username || null };
   } catch {
-    return { person: null, username: null };
+    try {
+      const users = await request({
+        method: GET,
+        url: USERS_ENDPOINT,
+        params: { page: 1, limit: PAGE_LIMIT },
+        requiresAuth: true,
+      });
+      const user = unwrapPage(users).find((u) => u.userId === userId || u.user_id === userId);
+      if (!user) return { person: null, username: null };
+      const personId = user.personId || user.person_id;
+      let person = null;
+      try {
+        person = toSnakeDeep(await request({ method: GET, url: `${PERSONS_ENDPOINT}/${personId}`, requiresAuth: true }));
+      } catch {
+        person = null;
+      }
+      return { person, username: user.username };
+    } catch {
+      return { person: null, username: null };
+    }
   }
 }
 
 async function fetchRoleNames(userId) {
   try {
-    // Roles directos a ms-authorization con el Bearer de la sesión.
+    // Vía gateway Kong (relativo): el puerto directo :8083 no es alcanzable
+    // desde el dispositivo en todos los entornos y rompía el login.
     const data = await request({
       method: GET,
-      url: `${ENV.AUTHZ_BASE_URL}api/v1/users/${userId}/roles`,
+      url: `api/v1/users/${userId}/roles`,
       requiresAuth: true,
     });
     return unwrap(data)
@@ -83,7 +98,7 @@ async function fetchRoleNames(userId) {
 async function evaluatePermission(userId, permission) {
   const data = await request({
     method: GET,
-    url: `${ENV.AUTHZ_BASE_URL}api/v1/auth/evaluate?userId=${encodeURIComponent(userId)}&permission=${encodeURIComponent(permission)}`,
+    url: `api/v1/auth/evaluate?userId=${encodeURIComponent(userId)}&permission=${encodeURIComponent(permission)}`,
     requiresAuth: true,
   });
   const allowed = data?.allowed ?? data?.[0]?.allowed ?? false;
@@ -115,8 +130,10 @@ export const AuthService = {
     const saved = await saveToken(String(sessionId));
     if (!saved) throw new Error('No se pudo guardar la sesión');
 
-    // 3. Load roles for navigation/theming. Sin fallback: sin roles no hay login.
-    const roleNames = await fetchRoleNames(userId);
+    // 3. Load roles + profile in parallel (una sola ronda tras guardar el
+    // token). Antes eran 3 llamadas secuenciales pesadas que excedían el
+    // timeout en dispositivos físicos.
+    const [roleNames, profile] = await Promise.all([fetchRoleNames(userId), resolveProfile(userId)]);
     if (!roleNames || roleNames.length === 0) {
       throw new Error('El usuario no tiene roles asignados en el backend');
     }
@@ -124,9 +141,8 @@ export const AuthService = {
     // 3b. Verificar que el rol tenga permisos efectivos.
     await evaluatePermission(userId, 'attendance.record:read');
 
-    // 3b. Complete the profile (person data) when login used the username directly.
+    // 3c. Complete the profile (person data) when login used the username directly.
     if (!person?.person_id) {
-      const profile = await resolveProfile(userId);
       person = profile.person ? toSnakeDeep(profile.person) : person;
       if (profile.username) username = profile.username;
     }
