@@ -6,7 +6,8 @@ import {useTheme} from "../view/components/common/ThemeContext";
 import {getCurrentUserRole, getCurrentUser} from "../services/UserService";
 import {ActorService} from "../services/ActorService";
 import {PeriodService} from "../services/PeriodService";
-import {backendGet, request, POST} from "../api/backend";
+import {backendGet} from "../api/backend";
+import ENV from "../config/env";
 
 function unwrap(data) {
   if (data && Array.isArray(data.value)) return data.value;

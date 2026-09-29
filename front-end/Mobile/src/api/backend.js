@@ -41,13 +41,15 @@ function cacheKey(base, path, params) {
   return `${base}${path}?${JSON.stringify(params || {})}`;
 }
 
+// Todo pasa por el gateway Kong (:8080), que exige Bearer en /api/**.
+// El token se guarda en login (TokenStorage) y apiClient lo adjunta.
 export async function backendGet(base, path, params = null, { useCache = false } = {}) {
   const key = cacheKey(base, path, params);
   if (useCache) {
     const hit = cache.get(key);
     if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.value;
   }
-  const data = await request({ method: GET, url: `${base}${path}`, params, requiresAuth: false });
+  const data = await request({ method: GET, url: `${base}${path}`, params, requiresAuth: true });
   const list = asList(data);
   if (useCache) cache.set(key, { at: Date.now(), value: list });
   return list;
