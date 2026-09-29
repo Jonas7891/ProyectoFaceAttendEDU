@@ -3,6 +3,7 @@ package com.faceattend_edu.identity_service.config;
 import com.faceattend_edu.identity_service.adapter.in.web.security.AuthTokenFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -27,6 +28,13 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/health", "/api/v1/health", "/api/health",
                                  "/actuator/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                // Bootstrap público (igual que AuthTokenFilter.isPublic): sin sesión
+                // no hay Authentication y anyRequest().authenticated() devolvería 403.
+                .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/logout").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").permitAll()
+                // Lectura de sesión por UUID (ver AuthTokenFilter.isPublic): rompe la
+                // recursión de validación entre microservicios.
+                .requestMatchers(HttpMethod.GET, "/api/v1/sessions/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);

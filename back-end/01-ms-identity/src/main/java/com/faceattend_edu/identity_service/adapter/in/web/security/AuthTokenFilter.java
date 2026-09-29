@@ -123,7 +123,13 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         // Bootstrap: login/logout/me públicos; el resto de /api/** exige sesión.
         if (path.equals("/api/v1/auth/login") && method.equalsIgnoreCase("POST")) return true;
         if (path.equals("/api/v1/auth/logout") && method.equalsIgnoreCase("POST")) return true;
-        return path.equals("/api/v1/auth/me") && method.equalsIgnoreCase("GET");
+        if (path.equals("/api/v1/auth/me") && method.equalsIgnoreCase("GET")) return true;
+        // Lectura de sesión por UUID: la usa el propio filtro (fetchSession) en cada
+        // MS. Sin bypass, la validación se llamaría a sí misma por HTTP en bucle
+        // hasta agotar timeouts y toda petición autenticada terminaría en 401.
+        // El UUID es opaco e indivinable (equivale al bearer); el listado POST/DELETE
+        // y GET /api/v1/sessions (lista) siguen protegidos.
+        return method.equalsIgnoreCase("GET") && path.startsWith("/api/v1/sessions/");
     }
 
     private String requiredPermission(String method) {
