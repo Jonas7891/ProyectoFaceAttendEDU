@@ -177,11 +177,30 @@ export async function request({ method, url, data = null, params = null, require
     clearTimeout(timeoutId);
 
     if (error.name === 'AbortError') {
-      throw new ApiError(408, 'La petición tardó demasiado (timeout)', null);
+      throw new ApiError(
+        408,
+        `La petición tardó demasiado (timeout). Verifica que el backend responda en ${BASE_URL}`,
+        null,
+      );
     }
     if (error instanceof ApiError) throw error;
 
-    throw new ApiError(0, error.message || 'Error de conexión', null);
+    // fetch failed / Network request failed / timed out en iOS (Promise.swift:56):
+    // el gateway Kong (:8080) está caído o el host es inalcanzable desde el
+    // dispositivo. Mensaje accionable en vez del genérico 'fetch failed'.
+    const raw = error.message || 'Error de conexión';
+    const isConnectivity = /fetch failed|network request failed|timed out|timeout|abort|connection refused|failed to connect/i.test(
+      raw,
+    );
+    if (isConnectivity) {
+      throw new ApiError(
+        0,
+        `No se pudo conectar al servidor en ${BASE_URL}. Revisa que el backend (Kong :8080) esté corriendo y que el dispositivo esté en la misma red.`,
+        null,
+      );
+    }
+
+    throw new ApiError(0, raw, null);
   }
 }
 
