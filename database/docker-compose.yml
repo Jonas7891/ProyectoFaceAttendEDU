@@ -16,6 +16,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
+    networks:
+      - faceattend-net
 
   identity-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
@@ -32,6 +34,8 @@ services:
       - --password=${POSTGRES_PASSWORD:-postgres}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
+    networks:
+      - faceattend-net
 
   authorization-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
@@ -48,6 +52,8 @@ services:
       - --password=${POSTGRES_PASSWORD:-postgres}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
+    networks:
+      - faceattend-net
 
   academic-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
@@ -64,6 +70,8 @@ services:
       - --password=${POSTGRES_PASSWORD:-postgres}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
+    networks:
+      - faceattend-net
 
   scheduling-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
@@ -80,6 +88,8 @@ services:
       - --password=${POSTGRES_PASSWORD:-postgres}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
+    networks:
+      - faceattend-net
 
   attendance-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
@@ -96,6 +106,8 @@ services:
       - --password=${POSTGRES_PASSWORD:-postgres}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
+    networks:
+      - faceattend-net
 
   biometric-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
@@ -112,6 +124,8 @@ services:
       - --password=${POSTGRES_PASSWORD:-postgres}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
+    networks:
+      - faceattend-net
 
   configuration-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
@@ -128,6 +142,8 @@ services:
       - --password=${POSTGRES_PASSWORD:-postgres}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
+    networks:
+      - faceattend-net
 
   notification-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
@@ -144,6 +160,12 @@ services:
       - --password=${POSTGRES_PASSWORD:-postgres}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
+    networks:
+      - faceattend-net
+
+networks:
+  faceattend-net:
+    driver: bridge
 
 volumes:
   postgres_data:
