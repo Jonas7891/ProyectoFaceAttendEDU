@@ -13,6 +13,8 @@ export interface QualityEvaluation {
   percentage?: number;
   level?: string;
   byCharacteristic?: Record<string, number>;
+  // Trazabilidad con ISO 29110 (la columna project_id existe en BD y el HTTP la acepta).
+  projectId?: number;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
