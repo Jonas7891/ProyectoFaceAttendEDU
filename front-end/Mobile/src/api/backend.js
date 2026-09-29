@@ -29,6 +29,9 @@ export function asList(data) {
     if (Array.isArray(norm.items)) return norm.items;
     const singleArray = Object.values(norm).find((v) => Array.isArray(v));
     if (singleArray) return singleArray;
+    // Servicios Go devuelven {"alerts": null} en colecciones vacías:
+    // no es un objeto único, es lista vacía.
+    if (Object.values(norm).every((v) => v === null || v === undefined)) return [];
     return [norm];
   }
   return [];

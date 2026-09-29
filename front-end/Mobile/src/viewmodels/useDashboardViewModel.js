@@ -70,6 +70,7 @@ async function fetchRecentNovedades(t) {
 
     const all = await backendGet(NOTIFY(), 'api/v1/alerts', { limit: 50 });
     const alerts = [...all]
+      .filter((a) => a && (a.alert_id ?? a.alertId) != null)
       .sort((a, b) => new Date(b.raised_at || 0) - new Date(a.raised_at || 0))
       .slice(0, 5);
 
@@ -188,8 +189,10 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                 }
 
                 if (isAdmin) {
-                    // No server-side paging: fetch once (cached) and slice client-side.
-                    const records = await backendGet(ATT(), 'api/v1/attendance-records', null, { useCache: true });
+                    // Paginado (caché): la tabla completa son decenas de miles de
+                    // filas y tumba la petición en el dispositivo (timeout).
+                    try {
+                        const records = await backendGet(ATT(), 'api/v1/attendance-records', {page: 1, limit: 200}, { useCache: true });
                     const present = records.filter(r => r.attendance_status === 'Present').length;
                     const absent = records.filter(r => r.attendance_status === 'Absent').length;
                     const late = records.filter(r => r.attendance_status === 'Late').length;
@@ -209,7 +212,11 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                         estado: r.attendance_status === 'Present' ? 'presente' : r.attendance_status === 'Late' ? 'tarde' : 'ausente',
                     }));
                     setAsistenciasRecientes(recentRecords);
+                    } catch (sectionError) {
+                        console.error('Error fetching admin dashboard section:', sectionError);
+                    }
                 } else if (isTeacher) {
+                    try {
                     const user = await getCurrentUser();
                     const actors = await ActorService.getByPerson(user?.personId);
                     const myActor = actors?.length > 0 ? actors[0] : null;
@@ -251,7 +258,11 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                         estado: r.attendance_status === 'Present' ? 'presente' : r.attendance_status === 'Late' ? 'tarde' : 'ausente',
                     }));
                     setAsistenciasRecientes(recentRecords);
+                    } catch (sectionError) {
+                        console.error('Error fetching teacher dashboard section:', sectionError);
+                    }
                 } else {
+                    try {
                     const records = studentActorId
                         ? await backendGet(ATT(), 'api/v1/attendance-records', { academicActorId: studentActorId })
                         : [];
@@ -279,9 +290,16 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                         });
                     }
                     setMisRegistrosRecientes(myRecords);
+                    } catch (sectionError) {
+                        console.error('Error fetching student dashboard section:', sectionError);
+                    }
                 }
 
-                setNovedades(await fetchRecentNovedades(t));
+                try {
+                    setNovedades(await fetchRecentNovedades(t));
+                } catch (sectionError) {
+                    console.error('Error fetching dashboard news section:', sectionError);
+                }
             } catch (error) {
                 console.error('Error fetching dashboard data:', error);
             }
