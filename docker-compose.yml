@@ -1,9 +1,11 @@
+# FaceAttend EDU — root orchestrator (run every stack command from FULL/).
+# Includes database/ (postgres + liquibase) and back-end/ (microservices +
+# Kong). Interpolation variables for ALL included files resolve from FULL/.env
+# (see .env.example). Start everything with:  docker compose up --build -d
 include:
   - ./database/docker-compose.yml
   - ./back-end/docker-compose.yml
-  # frontend-web (:8090 → nginx :80) viene de back-end/docker-compose.yml
-  # y consume el gateway Kong (:8080). Levantar todo con:
-  #   docker compose up --build
+  # frontend-web (:8090 → nginx :80) y kong-gateway (:8080) se sirven desde aquí.
   # Solo frontend + gateway (tras primer build del backend):
   #   docker compose up frontend-web kong-gateway
 
@@ -87,3 +89,31 @@ services:
     depends_on:
       notification-liquibase:
         condition: service_completed_successfully
+
+  # ──────────────────────────────────────────────────────────────
+  # Frontend — Expo Web estático + nginx (SPA /, /login, /register,
+  # /dashboard). Lives here (not in back-end/): it is a presentation
+  # concern and consumes the backend only via gateway Kong :8080.
+  # ──────────────────────────────────────────────────────────────
+  frontend-web:
+    build:
+      context: ./front-end/Web
+      dockerfile: Dockerfile
+      args:
+        EXPO_PUBLIC_API_URL: ${EXPO_PUBLIC_API_URL:-http://localhost:8080}
+    image: faceattend/frontend-web:latest
+    container_name: faceattend-frontend-web
+    depends_on:
+      kong-gateway:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-8090}:80"
+    networks:
+      - faceattend-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
