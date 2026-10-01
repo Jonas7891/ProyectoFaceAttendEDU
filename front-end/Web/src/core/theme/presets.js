@@ -20,7 +20,7 @@ export const SEMANTIC_SLOTS = [
 // ── 2. MAPA DE COLORES POR TIPO DE VISIÓN ────────────────────────
 // Cada visión tiene colores optimizados para cada slot semántico
 const VISION_COLOR_MAP = {
-    normal: {
+    base: {
         primary: "#1983fc", // Azul
         success: "#19C687", // Verde
         warning: "#FFAB00", // Ámbar
@@ -64,7 +64,7 @@ const VISION_COLOR_MAP = {
 // ── 3. CONSTRUCCIÓN DINÁMICA DE PALETAS ───────────────────────────
 /**
  * Genera la paleta completa para un tipo de visión específico
- * @param {string} visionMode - "normal" | "deuteranopia" | "protanopia" | "tritanopia" | "achromatopsia"
+ * @param {string} visionMode - "base" | "deuteranopia" | "protanopia" | "tritanopia" | "achromatopsia"
  * @returns {Array} Array de objetos con { key, label, description, color, semantic }
  */
 export function buildPaletteForVision(visionMode) {
@@ -81,7 +81,7 @@ export function buildPaletteForVision(visionMode) {
 
 // ── 4. PALETAS PRECONSTRUIDAS (para acceso rápido) ────────────────
 export const VISION_PRESETS = {
-    normal:        buildPaletteForVision("normal"),
+    base:        buildPaletteForVision("base"),
     deuteranopia:  buildPaletteForVision("deuteranopia"),
     protanopia:    buildPaletteForVision("protanopia"),
     tritanopia:    buildPaletteForVision("tritanopia"),
@@ -104,7 +104,7 @@ export function getInitialCustomColors() {
 
 /**
  * Obtiene los colores por defecto de un modo de visión específico
- * @param {string} visionMode - Modo de visión ("normal" | "deuteranopia" | "protanopia" | "tritanopia" | "achromatopsia")
+ * @param {string} visionMode - Modo de visión ("base" | "deuteranopia" | "protanopia" | "tritanopia" | "achromatopsia")
  * @returns {Object} Objeto con slots semánticos y sus colores { semantic: hex }
  */
 export function getDefaultColorsForVision(visionMode) {
@@ -114,7 +114,7 @@ export function getDefaultColorsForVision(visionMode) {
 /**
  * Resetea un slot semántico específico a su valor por defecto
  * @param {Object} customColors - Estado actual de colores customizados
- * @param {string} visionMode - Modo de visión actual ("normal" | "deuteranopia" | "protanopia" | "tritanopia" | "achromatopsia")
+ * @param {string} visionMode - Modo de visión actual ("base" | "deuteranopia" | "protanopia" | "tritanopia" | "achromatopsia")
  * @param {string} semantic - Slot semántico a resetear ("primary" | "success" | "warning" | "error" | "text")
  * @returns {Object} Nuevo objeto de colores con el slot reseteado
  */
@@ -131,7 +131,7 @@ export function resetSemanticSlot(customColors, visionMode, semantic) {
 /**
  * Resetea toda la paleta de un modo de visión a sus valores por defecto
  * @param {Object} customColors - Estado actual de colores customizados
- * @param {string} visionMode - Modo de visión a resetear ("normal" | "deuteranopia" | "protanopia" | "tritanopia" | "achromatopsia")
+ * @param {string} visionMode - Modo de visión a resetear ("base" | "deuteranopia" | "protanopia" | "tritanopia" | "achromatopsia")
  * @returns {Object} Nuevo objeto de colores con la paleta reseteada
  */
 export function resetVisionPalette(customColors, visionMode) {
@@ -142,7 +142,7 @@ export function resetVisionPalette(customColors, visionMode) {
 }
 
 export const VISION_LABELS = {
-    normal:        "Normal",
+    base:        "Base",
     deuteranopia:  "Deuteranopia (rojo/verde)",
     protanopia:    "Protanopia (rojo)",
     tritanopia:    "Tritanopia (azul/amarillo)",
@@ -150,7 +150,7 @@ export const VISION_LABELS = {
 };
 
 export const VISION_DESCRIPTIONS = {
-    normal:        "Paleta base, optimizada para visión estándar.",
+    base:        "Paleta base, optimizada para visión estándar.",
     deuteranopia:  "Tipo más común (~6% hombres). Afecta percepción del verde. Usa azul + dorado + violeta.",
     protanopia:    "Afecta percepción del rojo (~1% hombres). Azul + amarillo son los más distinguibles.",
     tritanopia:    "Afecta percepción del azul/amarillo (~0.01%). Rojo + verde son los más distinguibles.",
@@ -158,7 +158,7 @@ export const VISION_DESCRIPTIONS = {
 };
 
 export const VISION_MODES = [
-    "normal",
+    "base",
     "deuteranopia",
     "protanopia",
     "tritanopia",
@@ -167,4 +167,4 @@ export const VISION_MODES = [
 
 export const DEFAULT_ACCENT = "#286FE2";
 export const DEFAULT_MODE = "light";
-export const DEFAULT_VISION_MODE = "normal";
+export const DEFAULT_VISION_MODE = "base";

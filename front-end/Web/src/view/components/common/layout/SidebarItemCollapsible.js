@@ -56,6 +56,29 @@ export default function SidebarItemCollapsible({
     const animatedHeight = useRef(new Animated.Value(defaultExpanded ? 1 : 0)).current;
     const rotateAnim = useRef(new Animated.Value(defaultExpanded ? 1 : 0)).current;
 
+    // Sincronizar estado interno con prop defaultExpanded cuando cambie
+    useEffect(() => {
+        if (defaultExpanded !== isExpanded) {
+            setIsExpanded(defaultExpanded);
+            
+            // Animar a la nueva posición sin esperar interacción
+            Animated.parallel([
+                Animated.spring(animatedHeight, {
+                    toValue: defaultExpanded ? 1 : 0,
+                    useNativeDriver: false,
+                    tension: 100,
+                    friction: 10,
+                }),
+                Animated.spring(rotateAnim, {
+                    toValue: defaultExpanded ? 1 : 0,
+                    useNativeDriver: true,
+                    tension: 100,
+                    friction: 10,
+                }),
+            ]).start();
+        }
+    }, [defaultExpanded, isExpanded, animatedHeight, rotateAnim]);
+
     // Usar utility centralizada de colores
     const colors = getVariantColors({
         variant,
@@ -110,9 +133,20 @@ export default function SidebarItemCollapsible({
         if (onPress) {
             onPress();
         }
-        // Si hay hijos, hacer toggle
+        
+        // Lógica de colapso inteligente:
+        // - Si está expandido Y el item padre está activo: es un "segundo click" → colapsar
+        // - Si está expandido Y algún hijo está activo: navegando desde hijo a padre → NO colapsar
+        // - Si está colapsado: expandir
         if (children.length > 0) {
-            handleToggle();
+            if (isExpanded && active && !hasActiveChild) {
+                // Segundo click en el item padre cuando ya está activo → colapsar
+                handleToggle();
+            } else if (!isExpanded) {
+                // Está colapsado → expandir
+                handleToggle();
+            }
+            // Si está expandido y navegando desde hijo → no hacer nada (mantener expandido)
         }
     };
 

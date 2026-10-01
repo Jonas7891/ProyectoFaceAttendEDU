@@ -30,7 +30,7 @@ function migrateAccentColorToCustomColors(config) {
     
     // Si tiene accentColor antiguo, migrar a customColors
     if (config.accentColor && config.accentColor !== "#3B82F6") {
-        const visionMode = config.visionMode || "normal";
+        const visionMode = config.visionMode || "base";
         
         const customColors = {
             [visionMode]: {
@@ -91,7 +91,7 @@ const DEFAULT_INSTITUTION_CONFIG = {
     
     // Apariencia
     theme: "light",
-    visionMode: "normal",
+    visionMode: "base",
     
     // Colores personalizados por modo de visión
     // Estructura: { visionMode: { primary, success, warning, error, text } }
@@ -389,7 +389,7 @@ export function getThemeConfigFromInstitution() {
     
     return {
         theme: config.theme || "light",
-        visionMode: config.visionMode || "normal",
+        visionMode: config.visionMode || "base",
         customColors: config.customColors || null,
     };
 }

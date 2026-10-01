@@ -23,30 +23,30 @@ import { useRolePermissions } from "../viewmodels/useRolePermissions";
 import { useUsersViewModel } from "../viewmodels/useUsersViewModel";
 import { AdminUsers, TeacherUsers, StudentUsers } from "./authorized/users";
 
-export default function UsersView({ section = "all" }) {
+export default function UsersView({ section = "all", attendanceFilter = null }) {
     const { isSmall } = useResponsive();
     const { theme } = useTheme();
     const { t } = useTranslation();
     const permissions = useRolePermissions();
-    const vm = useUsersViewModel();
+    const vm = useUsersViewModel(section, attendanceFilter);
     const c = theme.colors;
 
     // Título dinámico según el rol del usuario
     const pageTitle = permissions.getTabLabel("users") || t("Usuarios");
 
-    // Subtitle dinámico con contador
+    // Subtitle dinámico con contador de usuarios filtrados
     const pageSubtitle = `${t("Gestiona los usuarios del sistema")} (${vm.filteredUsers.length} ${
-        vm.filteredUsers.length !== 1 ? t("usuarios") : t("usuario")
-    } ${vm.filteredUsers.length !== 1 ? t("encontrados") : t("encontrado")})`;
+        vm.filteredUsers.length !== 1 ? t("usuarios encontrados") : t("usuario encontrado")
+    })`;
 
     // Determinar qué componente de users renderizar según rol
     let UsersComponent;
     if (permissions.isAdmin) {
-        UsersComponent = <AdminUsers />;
+        UsersComponent = <AdminUsers section={section} vm={vm} />;
     } else if (permissions.isTeacher) {
-        UsersComponent = <TeacherUsers />;
+        UsersComponent = <TeacherUsers section={section} vm={vm} />;
     } else {
-        UsersComponent = <StudentUsers />;
+        UsersComponent = <StudentUsers section={section} vm={vm} />;
     }
 
     // Renderizar UI completa para usuarios autorizados

@@ -4,16 +4,17 @@ import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useAuth } from "../context/AuthContext";
 import { useAppData } from "../context/AppDataContext";
 import {
-    mockStudents,
     mockCourses,
     mockAttendanceByDay,
     mockAttendanceByWeek,
     mockCourseAttendance,
     mockRecentActivity,
-    mockInstructorAttendance,
-    mockAtRiskStudents,
-    mockPerfectAttendanceStudents,
 } from "../models/data/mockData";
+import {
+    getAtRiskStudents,
+    getPerfectAttendanceStudents,
+    getInstructorAttendance,
+} from "../models/data/userDerivedData";
 
 /**
  * ViewModel del Dashboard con datos específicos por rol
@@ -38,7 +39,7 @@ export function useDashboardViewModel() {
     const { theme } = useTheme();
     const { t } = useTranslation();
     const { user } = useAuth();
-    const { fichas } = useAppData();
+    const { fichas, students, teachers } = useAppData();
     const c = theme.colors;
 
     const userRole = user?.role || "student";
@@ -58,17 +59,22 @@ export function useDashboardViewModel() {
     const adminStats = useMemo(() => {
         if (userRole !== "admin") return [];
 
+        // Calcular datos derivados dinámicamente
+        const instructorAttendance = getInstructorAttendance(teachers);
+        const atRiskStudents = getAtRiskStudents(students);
+        const perfectAttendanceStudents = getPerfectAttendanceStudents(students);
+
         // Validaciones defensivas
-        if (!mockInstructorAttendance || mockInstructorAttendance.length === 0) return [];
+        if (!instructorAttendance || instructorAttendance.length === 0) return [];
         if (!fichas || fichas.length === 0) return [];
         if (!mockAttendanceByDay || mockAttendanceByDay.length === 0) return [];
 
-        const totalInstructors = mockInstructorAttendance.length;
+        const totalInstructors = instructorAttendance.length;
         const totalFichas = fichas.length;
         const totalStudents = fichas.reduce((sum, f) => sum + (f.totalStudents || 0), 0);
         const activeStudents = fichas.reduce((sum, f) => sum + (f.activeStudents || 0), 0);
-        const atRiskCount = mockAtRiskStudents?.length || 0;
-        const perfectCount = mockPerfectAttendanceStudents?.length || 0;
+        const atRiskCount = atRiskStudents?.length || 0;
+        const perfectCount = perfectAttendanceStudents?.length || 0;
 
         // Calcular asistencia promedio global
         const globalAvgAttendance = fichas.reduce((sum, f) => sum + (f.avgAttendance || 0), 0) / (fichas.length || 1);
@@ -156,16 +162,19 @@ export function useDashboardViewModel() {
                 icon: "clock",
             },
         ];
-    }, [c, t, userRole, fichas]);
+    }, [c, t, userRole, fichas, students, teachers]);
 
     // ── TEACHER: Métricas de sus cursos/fichas asignadas ──────
 
     const teacherStats = useMemo(() => {
         if (userRole !== "teacher") return [];
 
+        // Calcular datos derivados dinámicamente
+        const atRiskStudents = getAtRiskStudents(students);
+
         // Validaciones defensivas
         if (!fichas || fichas.length === 0) return [];
-        if (!mockAtRiskStudents) return [];
+        if (!atRiskStudents) return [];
 
         // Mock: Filtrar solo las fichas asignadas al instructor
         // TODO: En producción, filtrar por user.assignedFichas o similar
@@ -175,7 +184,7 @@ export function useDashboardViewModel() {
         const avgAttendance = teacherFichas.reduce((sum, f) => sum + (f.avgAttendance || 0), 0) / (teacherFichas.length || 1);
         
         // Estudiantes en riesgo de mis fichas
-        const myAtRiskStudents = mockAtRiskStudents.filter(s =>
+        const myAtRiskStudents = atRiskStudents.filter(s =>
             teacherFichas.some(f => f.code === s.ficha)
         );
         
@@ -232,20 +241,23 @@ export function useDashboardViewModel() {
                 icon: "alert-circle",
             },
         ];
-    }, [c, t, userRole, fichas]);
+    }, [c, t, userRole, fichas, students]);
 
     // ── STUDENT: Métricas personales del día ──────────────────
 
     const studentStats = useMemo(() => {
         if (userRole !== "student") return [];
 
+        // Calcular datos derivados dinámicamente
+        const instructorAttendance = getInstructorAttendance(teachers);
+
         // Validaciones defensivas
-        if (!mockStudents || mockStudents.length === 0) return [];
+        if (!students || students.length === 0) return [];
         if (!mockCourses || mockCourses.length === 0) return [];
-        if (!mockInstructorAttendance || mockInstructorAttendance.length === 0) return [];
+        if (!instructorAttendance || instructorAttendance.length === 0) return [];
 
         // Mock: datos del estudiante actual
-        const studentData = mockStudents[0];
+        const studentData = students[0];
         
         // Mock: Datos del día actual
         const todayDate = new Date().toLocaleDateString("es-CO", { 
@@ -256,7 +268,7 @@ export function useDashboardViewModel() {
         
         // Mock: Información de la clase/ambiente actual
         const currentClass = mockCourses[0]; // Primera clase del día
-        const currentInstructor = mockInstructorAttendance[0]; // Primer instructor
+        const currentInstructor = instructorAttendance[0]; // Primer instructor
         
         // Estado de asistencia hoy
         const todayStatus = "present"; // mock: puede ser "present", "late", "absent", "pending"
@@ -330,7 +342,7 @@ export function useDashboardViewModel() {
                 icon: "book-open",
             },
         ];
-    }, [c, t, userRole, mockStudents]);
+    }, [c, t, userRole, students, teachers]);
 
     // Seleccionar stats según rol
     const stats = useMemo(() => {
@@ -411,7 +423,7 @@ export function useDashboardViewModel() {
         // Student: sus datos personales
         if (userRole === "student") {
             // Mock: datos personales del estudiante
-            const baseAttendance = mockStudents?.[0]?.attendance || 85;
+            const baseAttendance = students?.[0]?.attendance || 85;
             return mockAttendanceByWeek.map((week, index) => ({
                 week: week.week,
                 rate: Math.max(60, Math.min(100, baseAttendance + (Math.random() * 20 - 10))),
@@ -473,14 +485,19 @@ export function useDashboardViewModel() {
     const adminData = useMemo(() => {
         if (userRole !== "admin") return null;
         
+        // Calcular datos derivados dinámicamente
+        const instructorAttendance = getInstructorAttendance(teachers);
+        const atRiskStudents = getAtRiskStudents(students);
+        const perfectAttendanceStudents = getPerfectAttendanceStudents(students);
+        
         // Validaciones defensivas
         if (!fichas || fichas.length === 0) return null;
 
         return {
-            instructorAttendance: mockInstructorAttendance || [],
+            instructorAttendance: instructorAttendance || [],
             fichas: fichas || [],
-            atRiskStudents: mockAtRiskStudents || [],
-            perfectAttendanceStudents: mockPerfectAttendanceStudents || [],
+            atRiskStudents: atRiskStudents || [],
+            perfectAttendanceStudents: perfectAttendanceStudents || [],
             
             // Top 5 fichas
             topFichas: [...fichas]
@@ -492,12 +509,15 @@ export function useDashboardViewModel() {
                 .sort((a, b) => (a.avgAttendance || 0) - (b.avgAttendance || 0))
                 .slice(0, 3),
         };
-    }, [userRole, fichas]);
+    }, [userRole, fichas, students, teachers]);
 
     // ── Datos específicos de TEACHER ──────────────────────────
 
     const teacherData = useMemo(() => {
         if (userRole !== "teacher") return null;
+        
+        // Calcular datos derivados dinámicamente
+        const atRiskStudents = getAtRiskStudents(students);
         
         // Validaciones defensivas
         if (!fichas || fichas.length === 0) return null;
@@ -506,7 +526,7 @@ export function useDashboardViewModel() {
         const teacherFichas = fichas.slice(0, 2);
         
         // Estudiantes en riesgo de las fichas del teacher
-        const teacherAtRiskStudents = (mockAtRiskStudents || []).filter(s =>
+        const teacherAtRiskStudents = (atRiskStudents || []).filter(s =>
             teacherFichas.some(f => f.code === s.ficha)
         );
 
@@ -514,7 +534,7 @@ export function useDashboardViewModel() {
             myFichas: teacherFichas,
             myAtRiskStudents: teacherAtRiskStudents,
         };
-    }, [userRole, fichas]);
+    }, [userRole, fichas, students]);
 
     // ── Datos específicos de STUDENT ──────────────────────────
 
@@ -522,16 +542,16 @@ export function useDashboardViewModel() {
         if (userRole !== "student") return null;
         
         // Validaciones defensivas
-        if (!mockStudents || mockStudents.length === 0) return null;
+        if (!students || students.length === 0) return null;
         if (!mockCourses || mockCourses.length === 0) return null;
 
-        const studentInfo = mockStudents[0];
+        const studentInfo = students[0];
 
         return {
             personalInfo: studentInfo,
             upcomingClasses: mockCourses.slice(0, 3),
         };
-    }, [userRole]);
+    }, [userRole, students]);
 
     return {
         // Datos comunes

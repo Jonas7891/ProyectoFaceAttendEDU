@@ -18,6 +18,7 @@
 import React from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import {
     Card,
     StatCard,
@@ -96,11 +97,67 @@ function getWeeklyTrendSubtitle(periodType, t) {
     return `${periodLabel}${manualIndicator} (${t(config.labelKey)}) • ${t("Selecciona para ver detalles")}`;
 }
 
+/**
+ * Componente reutilizable para headers de sección con "Ver todos" condicional
+ * 
+ * @param {string} title - Título de la sección
+ * @param {string} subtitle - Subtítulo descriptivo
+ * @param {number} totalItems - Total de items disponibles
+ * @param {number} maxItems - Máximo de items mostrados
+ * @param {function} onSeeAll - Callback al presionar "Ver todos"
+ * @param {object} colors - Objeto de colores del tema
+ * @param {function} t - Función de traducción
+ */
+function SectionHeader({ title, subtitle, totalItems, maxItems, onSeeAll, colors, t }) {
+    const showSeeAll = totalItems > maxItems;
+    
+    return (
+        <View style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 12,
+            zIndex: 1000,
+        }}>
+            <View style={{ flex: 1 }}>
+                <Text style={{
+                    fontSize: 16,
+                    fontWeight: "700",
+                    color: colors.text.primary,
+                }}>
+                    {title}
+                </Text>
+                <Text style={{
+                    fontSize: 13,
+                    color: colors.text.secondary,
+                    marginTop: 2,
+                }}>
+                    {subtitle}
+                </Text>
+            </View>
+            {showSeeAll && onSeeAll && (
+                <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={onSeeAll}
+                >
+                    <Text style={{
+                        fontSize: 13,
+                        fontWeight: "600",
+                        color: colors.brand.primary,
+                    }}>
+                        {t("Ver todos →")}
+                    </Text>
+                </TouchableOpacity>
+            )}
+        </View>
+    );
+}
+
 // ──────────────────────────────────────────────────────────────
 // ADMIN DASHBOARD — Vista completa del sistema
 // ──────────────────────────────────────────────────────────────
 
-function AdminDashboard({ vm, permissions, isSmall, c, t }) {
+function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
     // Hook para orquestar selección de semanas - DEBE ejecutarse siempre
     const {
         selectedWeek,
@@ -160,32 +217,15 @@ function AdminDashboard({ vm, permissions, isSmall, c, t }) {
 
             {/* Sección: Asistencia de Instructores */}
             <View>
-                <View style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    marginBottom: 12,
-                }}>
-                    <View>
-                        <Text style={{
-                            fontSize: 16,
-                            fontWeight: "700",
-                            color: c.text.primary,
-                        }}>
-                            {t("Asistencia de Instructores")}
-                        </Text>
-                        <Text style={{
-                            fontSize: 13,
-                            color: c.text.secondary,
-                            marginTop: 2,
-                        }}>
-                            {t("Resumen de asistencia del personal docente")}
-                        </Text>
-                    </View>
-                    <Button variant="ghost" size="sm">
-                        {t("Ver todos → ")}
-                    </Button>
-                </View>
+                <SectionHeader
+                    title={t("Asistencia de Instructores")}
+                    subtitle={t("Resumen de asistencia del personal docente")}
+                    totalItems={vm.adminData.instructorAttendance?.length || 0}
+                    maxItems={5}
+                    onSeeAll={() => navigation.navigate("Users", { section: "teachers" })}
+                    colors={c}
+                    t={t}
+                />
                 
                 <InstructorAttendanceList
                     instructors={vm.adminData.instructorAttendance}
@@ -328,22 +368,18 @@ function AdminDashboard({ vm, permissions, isSmall, c, t }) {
             {/* Sección: Estudiantes en Riesgo y Destacados */}
             <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
                 <View style={{ flex: 1 }}>
-                    <View style={{ marginBottom: 12 }}>
-                        <Text style={{
-                            fontSize: 16,
-                            fontWeight: "700",
-                            color: c.text.primary,
-                        }}>
-                            {t("Estudiantes en Riesgo")} 🚨
-                        </Text>
-                        <Text style={{
-                            fontSize: 13,
-                            color: c.text.secondary,
-                            marginTop: 2,
-                        }}>
-                            {t("Requieren intervención urgente")}
-                        </Text>
-                    </View>
+                    <SectionHeader
+                        title={`${t("Estudiantes en Riesgo")} 🚨`}
+                        subtitle={t("Requieren intervención urgente")}
+                        totalItems={vm.adminData.atRiskStudents?.length || 0}
+                        maxItems={5}
+                        onSeeAll={() => navigation.navigate("Users", { 
+                            section: "students",
+                            attendanceFilter: "lt" // lt = less than (menor que)
+                        })}
+                        colors={c}
+                        t={t}
+                    />
                     
                     <AtRiskStudentsList
                         students={vm.adminData.atRiskStudents}
@@ -355,22 +391,18 @@ function AdminDashboard({ vm, permissions, isSmall, c, t }) {
                 </View>
 
                 <View style={{ flex: 1 }}>
-                    <View style={{ marginBottom: 12 }}>
-                        <Text style={{
-                            fontSize: 16,
-                            fontWeight: "700",
-                            color: c.text.primary,
-                        }}>
-                            {t("Estudiantes Destacados")} ⭐
-                        </Text>
-                        <Text style={{
-                            fontSize: 13,
-                            color: c.text.secondary,
-                            marginTop: 2,
-                        }}>
-                            {t("Excelencia en asistencia")}
-                        </Text>
-                    </View>
+                    <SectionHeader
+                        title={`${t("Estudiantes Destacados")} ⭐`}
+                        subtitle={t("Excelencia en asistencia")}
+                        totalItems={vm.adminData.perfectAttendanceStudents?.length || 0}
+                        maxItems={5}
+                        onSeeAll={() => navigation.navigate("Users", { 
+                            section: "students",
+                            attendanceFilter: "gt" // gt = greater than (mayor que)
+                        })}
+                        colors={c}
+                        t={t}
+                    />
                     
                     <PerfectAttendanceList
                         students={vm.adminData.perfectAttendanceStudents}
@@ -791,9 +823,12 @@ function StudentDashboard({ vm, permissions, isSmall, c, t }) {
 // DASHBOARD VIEW PRINCIPAL
 // ──────────────────────────────────────────────────────────────
 
-export default function DashboardView() {
+export default function DashboardView({ navigation: navigationProp }) {
     const { isSmall } = useResponsive();
     const { theme }   = useTheme();
+    const navigationFromHook = useNavigation();
+    const navigation = navigationProp || navigationFromHook;
+    
     const c           = theme.colors;
     const vm          = useDashboardViewModel();
     const { t }       = useTranslation();
@@ -842,6 +877,7 @@ export default function DashboardView() {
                     isSmall={isSmall}
                     c={c}
                     t={t}
+                    navigation={navigation}
                 />
             )}
 

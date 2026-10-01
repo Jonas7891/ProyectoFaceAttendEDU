@@ -14,7 +14,7 @@ import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 
-const ITEM_HEIGHT = 44;
+const ITEM_HEIGHT = 40;
 const SEARCH_HEIGHT = 56;
 
 /**
@@ -43,6 +43,7 @@ export function AnimatedDropdown({
   disabled = false,
   error = false,
   triggerHeight = 40,
+  triggerPadding,
   maxVisible = 6,
   searchable = false,
   searchPlaceholder = "Buscar...",
@@ -72,20 +73,25 @@ export function AnimatedDropdown({
   const PANEL_HEIGHT = Math.min(filteredItems.length, maxVisible) * ITEM_HEIGHT + (searchable ? SEARCH_HEIGHT : 0);
 
   const animateOpen = useCallback(() => {
-    triggerRef.current?.measureInWindow((x, y, width, height) => {
-      setTriggerRect({ x, y, width, height });
-      setOpen(true);
-      setSearchQuery("");
-      Animated.timing(dropdownAnim, {
-        toValue: 1,
-        duration: 280,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: false,
-      }).start(() => {
-        // Auto-focus en el buscador si está habilitado
-        if (searchable) {
-          setTimeout(() => searchInputRef.current?.focus(), 100);
-        }
+    // Primero abrir para que se aplique borderWidth: 2
+    setOpen(true);
+    setSearchQuery("");
+    
+    // Luego medir en el siguiente frame cuando ya se aplicó el borderWidth: 2
+    requestAnimationFrame(() => {
+      triggerRef.current?.measureInWindow((x, y, width, height) => {
+        setTriggerRect({ x, y, width, height });
+        Animated.timing(dropdownAnim, {
+          toValue: 1,
+          duration: 280,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: false,
+        }).start(() => {
+          // Auto-focus en el buscador si está habilitado
+          if (searchable) {
+            setTimeout(() => searchInputRef.current?.focus(), 100);
+          }
+        });
       });
     });
   }, [dropdownAnim, searchable]);
@@ -102,15 +108,27 @@ export function AnimatedDropdown({
     });
   }, [dropdownAnim]);
 
-  const handleToggle = useCallback(() => {
+  const handleToggle = useCallback((force = false) => {
     if (disabled) return;
+    
+    // Si renderTrigger está presente y no es forzado, delegar la decisión
+    if (renderTrigger && !force) {
+      // renderTrigger decidirá si llamar handleToggle(true) o no
+      return;
+    }
+    
     open ? animateClose() : animateOpen();
-  }, [open, disabled, animateOpen, animateClose]);
+  }, [open, disabled, animateOpen, animateClose, renderTrigger]);
 
   const handleSelect = useCallback(
     (v) => {
-      onSelect(v);
+      // Primero cerrar con animación
       animateClose();
+      
+      // Luego ejecutar onSelect después de que termine la animación
+      setTimeout(() => {
+        onSelect(v);
+      }, 200); // Debe coincidir con la duración de animateClose
     },
     [onSelect, animateClose]
   );
@@ -139,10 +157,8 @@ export function AnimatedDropdown({
       {/* Trigger */}
       <View ref={triggerRef} collapsable={false}>
         {renderTrigger ? (
-          // Trigger personalizado
-          <TouchableOpacity onPress={handleToggle} activeOpacity={0.8} disabled={disabled}>
-            {renderTrigger({ selected, open, disabled })}
-          </TouchableOpacity>
+          // Trigger personalizado - maneja su propia interacción
+          renderTrigger({ selected, open, disabled, handleToggle, dropdownAnim })
         ) : (
           // Trigger por defecto
           <TouchableOpacity
@@ -152,7 +168,7 @@ export function AnimatedDropdown({
               styles.trigger,
               {
                 height: triggerHeight,
-                borderWidth: open ? 2 : 1.5,
+                borderWidth: 1.5, // Siempre 2 para consistencia
                 borderColor,
                 backgroundColor: open
                   ? theme.colors.brand.primaryLight
@@ -162,6 +178,7 @@ export function AnimatedDropdown({
                 borderBottomLeftRadius: open ? 0 : DESIGN_TOKENS.borderRadius.lg,
                 borderBottomRightRadius: open ? 0 : DESIGN_TOKENS.borderRadius.lg,
                 opacity: disabled ? 0.5 : 1,
+                paddingHorizontal: triggerPadding ?? DESIGN_TOKENS.spacing.md,
               },
             ]}
           >
@@ -177,26 +194,28 @@ export function AnimatedDropdown({
               />
             )}
             {selected?.prefix && (
-              <Text style={{ fontSize: 16 }}>{selected.prefix}</Text>
+              <Text style={{ fontSize: 18, fontWeight: "600" }}>{selected.prefix}</Text>
             )}
-            <View style={styles.labelContainer}>
-              <Text
-                style={[
-                  styles.label,
-                  {
-                    fontWeight: selected ? "600" : "400",
-                    color: open
-                      ? theme.colors.brand.primary
-                      : selected
-                      ? theme.colors.text.primary
-                      : theme.colors.text.secondary,
-                  },
-                ]}
-                numberOfLines={1}
-              >
-                {label}
-              </Text>
-            </View>
+            {(label && !selected?.prefix) && (
+              <View style={styles.labelContainer}>
+                <Text
+                  style={[
+                    styles.label,
+                    {
+                      fontWeight: selected ? "600" : "400",
+                      color: open
+                        ? theme.colors.brand.primary
+                        : selected
+                        ? theme.colors.text.primary
+                        : theme.colors.text.secondary,
+                    },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {label}
+                </Text>
+              </View>
+            )}
             <Animated.View
               style={{
                 transform: [
@@ -244,7 +263,7 @@ export function AnimatedDropdown({
               style={[
                 styles.panel,
                 {
-                  top: triggerRect.y + triggerRect.height - 1,
+                  top: triggerRect.y + triggerRect.height,
                   left: triggerRect.x,
                   width: triggerRect.width,
                   height: panelHeight,
@@ -330,11 +349,11 @@ export function AnimatedDropdown({
                           ]}
                         >
                           {item.prefix && (
-                            <Text style={{ fontSize: 16, width: 28, textAlign: "center" }}>
+                            <Text style={{ fontSize: 18, fontWeight: "600", flex: 1, textAlign: "center" }}>
                               {item.prefix}
                             </Text>
                           )}
-                          {item.icon && (
+                          {item.icon && !item.prefix && (
                             <Feather
                               name={item.icon}
                               size={13}
@@ -345,38 +364,41 @@ export function AnimatedDropdown({
                               }
                             />
                           )}
-                          <View style={styles.itemLabel}>
-                            <Text
-                              style={[
-                                styles.itemText,
-                                {
-                                  fontWeight: active ? "600" : "400",
-                                  color: active
-                                    ? theme.colors.brand.primary
-                                    : theme.colors.text.primary,
-                                },
-                              ]}
-                              numberOfLines={1}
-                            >
-                              {item.label}
-                            </Text>
-                            {item.description && (
+                          {item.label && !item.prefix && (
+                            <View style={[styles.itemLabel, { paddingRight: active ? 20 : 0 }]}>
                               <Text
                                 style={[
-                                  styles.itemDescription,
-                                  { color: theme.colors.text.secondary },
+                                  styles.itemText,
+                                  {
+                                    fontWeight: active ? "600" : "400",
+                                    color: active
+                                      ? theme.colors.brand.primary
+                                      : theme.colors.text.primary,
+                                  },
                                 ]}
                                 numberOfLines={1}
                               >
-                                {item.description}
+                                {item.label}
                               </Text>
-                            )}
-                          </View>
+                              {item.description && (
+                                <Text
+                                  style={[
+                                    styles.itemDescription,
+                                    { color: theme.colors.text.secondary },
+                                  ]}
+                                  numberOfLines={1}
+                                >
+                                  {item.description}
+                                </Text>
+                              )}
+                            </View>
+                          )}
                           {active && (
                             <Feather
                               name="check"
-                              size={13}
+                              size={14}
                               color={theme.colors.brand.primary}
+                              style={{ position: "absolute", right: 8 }}
                             />
                           )}
                         </TouchableOpacity>
@@ -423,8 +445,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: DESIGN_TOKENS.spacing.sm,
-    paddingHorizontal: DESIGN_TOKENS.spacing.md,
+    paddingLeft: 8,
+    paddingRight: 8,
     height: ITEM_HEIGHT,
+    position: "relative",
   },
   itemLabel: {
     flex: 1,

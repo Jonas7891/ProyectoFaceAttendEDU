@@ -23,9 +23,10 @@ import UsersView from "../UsersView";
 export default function UsersScreen() {
     const route = useRoute();
     const section = route.params?.section;
+    const attendanceFilter = route.params?.attendanceFilter; // "gt" | "lt" | null
     
     // La validación de autorización se hace GLOBALMENTE en AuthenticatedNavigator
     // Este componente solo se renderiza si el usuario YA está autorizado
     
-    return <UsersView section={section} />;
+    return <UsersView section={section} attendanceFilter={attendanceFilter} />;
 }

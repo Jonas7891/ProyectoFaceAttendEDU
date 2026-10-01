@@ -46,6 +46,8 @@ import {
     deleteFicha as storageDeleteFicha,
 } from "../models/data/FichaStorage";
 
+import { mockTeachers, mockAdmins } from "../models/data/mockData";
+
 // ── Context ───────────────────────────────────────────────
 
 const AppDataContext = createContext(null);
@@ -54,6 +56,8 @@ const AppDataContext = createContext(null);
 
 export function AppDataProvider({ children }) {
     const [students, setStudents] = useState([]);
+    const [teachers] = useState(mockTeachers); // Mock data - TODO: cargar desde storage
+    const [admins] = useState(mockAdmins); // Mock data - TODO: cargar desde storage
     const [users, setUsers] = useState([]);
     const [environments, setEnvironments] = useState([]);
     const [fichas, setFichas] = useState([]);
@@ -243,6 +247,9 @@ export function AppDataProvider({ children }) {
             updateStudent: updateStudentFn,
             removeStudent: removeStudentFn,
 
+            teachers, // Mock data de profesores
+            admins,   // Mock data de administradores
+
             programs,
 
             users,
@@ -271,6 +278,8 @@ export function AppDataProvider({ children }) {
             importStudentsFn,
             updateStudentFn,
             removeStudentFn,
+            teachers,
+            admins,
             programs,
             users,
             addUserFn,

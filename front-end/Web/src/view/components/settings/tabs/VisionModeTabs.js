@@ -40,7 +40,7 @@ export function VisionModeTabs({ visionMode, onVisionModeChange }) {
                                 fontWeight: active ? "600" : "400",
                                 color: active ? c.brand.textOnPrimary : c.text.secondary,
                             }}>
-                                {vm === "normal" ? t("Normal") :
+                                {vm === "base" ? t("Base") :
                                     vm === "deuteranopia" ? t("Deuteranopia") :
                                         vm === "protanopia" ? t("Protanopia") :
                                             vm === "tritanopia" ? t("Tritanopia") : t("Acromatopsia")}

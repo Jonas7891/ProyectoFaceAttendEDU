@@ -21,6 +21,12 @@ import {
     Card, Badge, Avatar, ProgressBar, EmptyState,
     AnimatedDropdown, useAttendanceColor,
 } from "../../components/common";
+import {
+    ColumnFilterDropdown,
+    ContextualFilterDropdown,
+    AttendanceFilterInput,
+    AttendanceFilterBadge,
+} from "../../components/common/filters";
 import { useTheme } from "../../components/hooks/useTheme";
 import { useResponsive } from "../../components/hooks/useResponsive";
 import { useUsersViewModel } from "../../../viewmodels/useUsersViewModel";
@@ -43,8 +49,8 @@ const LAYOUT = {
 
 const ROLE_VARIANT = {
     student: "default",
-    teacher: "info",
-    admin: "primary",
+    teacher: "default",
+    admin: "default",
 };
 
 // ── Definición de columnas ────────────────────────────────
@@ -376,17 +382,27 @@ function UserCompactRow({ user, onPress, isLast, showRole, canManage }) {
 
 // ── AdminUsers ─────────────────────────────────────────────
 
-export function AdminUsers() {
+export function AdminUsers({ section, vm: vmProp }) {
     const { isSmall } = useResponsive();
     const { theme } = useTheme();
     const c = theme.colors;
-    const vm = useUsersViewModel();
+    const vmLocal = useUsersViewModel();
+    const vm = vmProp || vmLocal; // Usar el vm pasado por props o crear uno local
     const { t } = useTranslation();
     const permissions = useRolePermissions();
 
-    // Filtro de tipo de usuario desde el ViewModel
-    // (falsy / "" / "all" = sin filtro, se muestran todos los tipos)
-    const roleFilter = vm.userTypeFilter && vm.userTypeFilter !== "all" ? vm.userTypeFilter : null;
+    // Determinar el filtro de rol: prioritario desde section (sidebar), secundario desde dropdown
+    // section: undefined/"all" (todos), "students", "teachers", "admins"
+    const sectionToUserType = {
+        students: "student",
+        teachers: "teacher",
+        admins: "admin",
+    };
+    
+    const roleFilterFromSection = section && section !== "all" ? sectionToUserType[section] : null;
+    const roleFilterFromDropdown = vm.userTypeFilter && vm.userTypeFilter !== "all" ? vm.userTypeFilter : null;
+    const roleFilter = roleFilterFromSection || roleFilterFromDropdown;
+    
     const canManage = permissions.canManageStudents;
 
     // Columnas visibles según filtro y permisos
@@ -403,11 +419,20 @@ export function AdminUsers() {
         );
     }
 
-    const courseItems = [
-        { value: "", label: t("Todos"), icon: "layers" },
-        ...vm.courses,
-    ];
+    // Configuración de columnas para el filtro avanzado
+    const filterColumns = useMemo(() => {
+        const allColumns = [
+            { key: "name", label: t("Nombre"), icon: "type" },
+            { key: "program", label: t("Programa"), icon: "book" },
+            { key: "attendance", label: t("Asistencia"), icon: "percent" },
+            { key: "status", label: t("Estado"), icon: "activity" },
+        ];
+        
+        return allColumns;
+    }, [t]);
 
+    // Aplicar filtro adicional por roleFilter (desde sidebar section)
+    // YA NO ES NECESARIO - el viewmodel ya filtra por section
     const users = vm.filteredUsers;
 
     return (
@@ -417,7 +442,8 @@ export function AdminUsers() {
         >
             {/* Filtros */}
             <Card padding={14}>
-                <View style={{ flexDirection: isSmall ? "column" : "row", gap: 12, flexWrap: "wrap" }}>
+                <View style={{ flexDirection: isSmall ? "column" : "row", gap: 12, alignItems: "center" }}>
+                    {/* Buscador */}
                     <View style={{ flex: 1, minWidth: 200, position: "relative", justifyContent: "center" }}>
                         <View style={{ position: "absolute", left: 14, zIndex: 1 }}>
                             <Feather name="search" size={16} color={c.text.secondary} />
@@ -434,15 +460,40 @@ export function AdminUsers() {
                             }}
                             placeholderTextColor={c.text.disabled}
                         />
+                        {/* Badge de filtro activo de asistencia */}
+                        {vm.advancedFilter.column === "attendance" && (
+                            <View style={{ position: "absolute", right: 12, zIndex: 1 }}>
+                                <AttendanceFilterBadge
+                                    value={vm.advancedFilter.attendanceFilter}
+                                    onChange={vm.setAttendanceFilter}
+                                />
+                            </View>
+                        )}
                     </View>
 
-                    <AnimatedDropdown
-                        items={courseItems}
-                        value={vm.courseFilter}
-                        onSelect={vm.setCourseFilter}
-                        triggerIcon="book-open"
-                        style={{ minWidth: 200 }}
+                    {/* Selector de columna a filtrar */}
+                    <ColumnFilterDropdown
+                        value={vm.advancedFilter.column}
+                        onChange={vm.setAdvancedFilterColumn}
+                        columns={filterColumns}
                     />
+
+                    {/* Filtro contextual (aparece solo si hay columna seleccionada y no es attendance) */}
+                    {vm.advancedFilter.column && vm.advancedFilter.column !== "attendance" && (
+                        <ContextualFilterDropdown
+                            columnType={vm.advancedFilter.column}
+                            value={vm.advancedFilter.value}
+                            onChange={vm.setAdvancedFilterValue}
+                        />
+                    )}
+
+                    {/* Filtro especializado de asistencia */}
+                    {vm.advancedFilter.column === "attendance" && (
+                        <AttendanceFilterInput
+                            value={vm.advancedFilter.attendanceFilter}
+                            onChange={vm.setAttendanceFilter}
+                        />
+                    )}
                 </View>
             </Card>
 

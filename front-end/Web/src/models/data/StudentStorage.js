@@ -33,6 +33,12 @@ function generateId() {
  */
 export async function loadStudents() {
     try {
+        // DESARROLLO: Siempre usar mocks actualizados
+        // TODO: Comentar esta línea en producción
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(mockStudents));
+        return mockStudents;
+        
+        /* PRODUCCIÓN: Descomentar este bloque
         const raw = await AsyncStorage.getItem(STORAGE_KEY);
         if (raw) {
             const parsed = JSON.parse(raw);
@@ -43,6 +49,7 @@ export async function loadStudents() {
         // Primera vez: inicializar con los mocks y persistirlos
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(mockStudents));
         return mockStudents;
+        */
     } catch (error) {
         return mockStudents;
     }

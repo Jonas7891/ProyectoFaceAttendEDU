@@ -154,7 +154,7 @@ export async function loadCustomColors() {
 
 /**
  * Guarda el modo de visión actual
- * @param {string} visionMode - "normal" | "deuteranopia" | "protanopia" | "tritanopia" | "achromatopsia"
+ * @param {string} visionMode - "base" | "deuteranopia" | "protanopia" | "tritanopia" | "achromatopsia"
  * @returns {Promise<void>}
  */
 export async function saveVisionMode(visionMode) {
@@ -167,5 +167,5 @@ export async function saveVisionMode(visionMode) {
  */
 export async function loadVisionMode() {
     const value = await storageGet(KEYS.VISION_MODE);
-    return value ?? "normal";
+    return value ?? "base";
 }

@@ -121,7 +121,7 @@ export const DESIGN_TOKENS = {
  * 
  * El tema ahora se genera dinámicamente según:
  * - Colores semánticos personalizados (primary, success, warning, error, text)
- * - Modo de visión (normal, deuteranopia, protanopia, tritanopia, achromatopsia)
+ * - Modo de visión (base, deuteranopia, protanopia, tritanopia, achromatopsia)
  * - Tema claro/oscuro
  * 
  * Para obtener el tema actual, usa el hook useTheme():

@@ -5,7 +5,7 @@
 //  Expone:
 //    · theme         → ThemeTokens completo (todos los colores)
 //    · mode          → "light" | "dark"
-//    · visionMode    → "normal" | "deuteranopia" | "protanopia" | "tritanopia" | "achromatopsia"
+//    · visionMode    → "base" | "deuteranopia" | "protanopia" | "tritanopia" | "achromatopsia"
 //    · customColors  → { visionMode: { primary, success, warning, error, text } }
 //    · accentColor   → hex del color de acento actual (DEPRECADO - usar customColors)
 //    · setMode()     → cambia el modo y lo persiste
