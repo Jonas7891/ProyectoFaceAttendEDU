@@ -168,10 +168,20 @@ async function seedScheduling() {
     dayOfWeek: 1, startsAt: "08:00:00", endsAt: "10:00:00",
   }, { idKey: "scheduleBlockId", matchKey: "environmentId", matchValue: ids.environmentId });
   if (ids.blockId) {
+    const SESSION_DATE = "2026-09-23";
     const session = await post("scheduling", "/api/v1/class-sessions", {
-      scheduleBlockId: ids.blockId, sessionDate: "2026-09-23",
+      scheduleBlockId: ids.blockId, sessionDate: SESSION_DATE,
     });
     ids.sessionId = pick(session, "sessionId", "classSessionId", "id");
+    if (!ids.sessionId) {
+      // Rerun: POST answers 409 without an id, so resolve the existing session
+      // of this block by date (GET supports ?scheduleBlockId=).
+      const list = await get("scheduling", `/api/v1/class-sessions?scheduleBlockId=${ids.blockId}`);
+      const found = asArray(list).find((e) =>
+        String(e?.sessionDate ?? e?.session_date ?? "").slice(0, 10) === SESSION_DATE &&
+        String(e?.scheduleBlockId ?? e?.schedule_block_id ?? "") === String(ids.blockId));
+      ids.sessionId = found ? pick(found, "sessionId", "classSessionId", "id") : null;
+    }
     // A new session already defaults to session_status 'Open' (DDL default), so POST
     // /{id}/open is a no-op the backend rejects with 400. Only open a session that
     // is not open yet, otherwise the seed reports a false failure.
