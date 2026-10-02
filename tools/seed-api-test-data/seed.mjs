@@ -17,6 +17,21 @@ const U = {
 const results = [];
 const ids = {};
 
+// Realistic Colombian demo catalog (stable keys keep reruns idempotent).
+const CITIES = [
+  { name: "Bogotá", department: "Cundinamarca" },
+  { name: "Medellín", department: "Antioquia" },
+  { name: "Cali", department: "Valle del Cauca" },
+];
+
+const PEOPLE = [
+  { documentNumber: "1014287635", name: "Valentina", lastName: "Ríos Herrera", email: "valentina.rios@example.com", documentType: "CC", actorCode: "EST-2026-001", biometricId: "est-2026-001" },
+  { documentNumber: "1014298812", name: "Santiago", lastName: "Herrera Mora", email: "santiago.herrera@example.com", documentType: "CC", actorCode: "EST-2026-002", biometricId: "est-2026-002" },
+  { documentNumber: "1020804451", name: "Camila", lastName: "Torres Vargas", email: "camila.torres@example.com", documentType: "CC", actorCode: "EST-2026-003", biometricId: "est-2026-003" },
+  { documentNumber: "1020812398", name: "Daniel", lastName: "Vargas Castillo", email: "daniel.vargas@example.com", documentType: "CC", actorCode: "EST-2026-004", biometricId: "est-2026-004" },
+  { documentNumber: "1030665124", name: "Lucía", lastName: "Fernández Rojas", email: "lucia.fernandez@example.com", documentType: "CC", actorCode: "EST-2026-005", biometricId: "est-2026-005" },
+  { documentNumber: "1030678903", name: "Mateo", lastName: "Castillo Ospina", email: "mateo.castillo@example.com", documentType: "CC", actorCode: "EST-2026-006", biometricId: "est-2026-006" },
+];
 // Credentials for the seeded login. Override in the environment; never reuse in production.
 const SEED_USERNAME = process.env.SEED_USERNAME ?? "seed.admin";
 const SEED_PASSWORD = process.env.SEED_PASSWORD ?? "SeedAdmin123!";
@@ -78,12 +93,21 @@ async function loginSeed() {
 
 // Identity: cities, persons, users (auth surface stays testable via /me).
 async function seedIdentity() {
-  const city = await post("identity", "/api/v1/cities", { name: "Seed City", department: "Seed Dept" });
-  ids.cityId = pick(city, "cityId", "id") ?? 1;
-  ids.personId = await ensure("identity", "/api/v1/persons", {
-    documentNumber: "SEED-001", name: "Seed", lastName: "Student",
-    email: "seed.student@example.com", documentType: "CC", status: true,
-  }, { idKey: "personId", matchKey: "documentNumber", matchValue: "SEED-001" });
+  for (const c of CITIES) {
+    await ensure("identity", "/api/v1/cities", c,
+      { idKey: "cityId", matchKey: "name", matchValue: c.name, listPath: "/api/v1/cities?limit=100" });
+  }
+  const city = await get("identity", "/api/v1/cities?limit=5");
+  ids.cityId = pick(asArray(city)[0], "cityId", "id") ?? 1;
+  ids.personIds = [];
+  for (const p of PEOPLE) {
+    const pid = await ensure("identity", "/api/v1/persons", {
+      documentNumber: p.documentNumber, name: p.name, lastName: p.lastName,
+      email: p.email, documentType: p.documentType, status: true,
+    }, { idKey: "personId", matchKey: "documentNumber", matchValue: p.documentNumber });
+    if (pid) ids.personIds.push(pid);
+  }
+  ids.personId = ids.personIds[0] ?? null;
   if (ids.personId) {
     // POST /api/v1/users requires personId + username + password; the password is
     // bcrypt-hashed server side (ADR-008) and never returned by any endpoint.
