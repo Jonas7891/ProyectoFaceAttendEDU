@@ -1,4 +1,4 @@
-# Quality Service (`09-ms-quality`) — TypeScript Fastify 8091
+# Quality Service (`09-ms-quality`) — TypeScript Fastify 8089
 
 ## Responsabilidad
 CRUD del **instrumento de valoración ISO/IEC 25010:2011** (calidad de producto), del
@@ -8,7 +8,7 @@ Tablas lógicas (in-memory, patrón 03/07): `quality_evaluation`, `quality_proje
 `process_assessment`, `istqb_assessment` (soft-delete `deletedAt`).
 
 ## Stack
-TypeScript + Fastify + Zod (igual que `07-ms-configuration`). Puerto **8091**. Sin FK cross-context.
+TypeScript + Fastify + Zod (igual que `07-ms-configuration`). Puerto **8089**. Sin FK cross-context.
 
 ## Endpoints
 | Método | Ruta | Descripción |
@@ -56,7 +56,7 @@ Las evaluaciones ISTQB aceptan `projectId` opcional (trazabilidad SI.O2/SI.O7).
 ## Ejecución
 ```bash
 npm install
-npm run dev    # :8091
+npm run dev    # :8089
 npm run build && npm start
 ```
 Gateway: ruta `/api/v1/quality` en `99-api-gateway/kong/kong.yml` (servicio `quality-service`).

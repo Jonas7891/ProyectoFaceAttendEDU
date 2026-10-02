@@ -22,7 +22,7 @@ ids are resolved by looking up the `SEED-*` records.
 
 ## Why direct microservice URLs
 
-The script targets microservice ports (`8081`, `8083`-`8091`) instead of the
+The script targets microservice ports (`8081`-`8089`) instead of the
 Kong gateway (`:8080`) because most gateway routes require a JWT. Apps keep
 using the gateway. Override any target in `.env` (`IDENTITY_URL`, ...).
 
@@ -49,14 +49,14 @@ alerts and quality instruments created below.
 | Service | Records |
 |---|---|
 | identity `:8081` | 3 cities (Bogotá, Medellín, Cali), 8 persons, 3 users (admin, docente, estudiante), `/me` checks |
-| authorization `:8083` | roles `Administrador`/`Instructor`/`Aprendiz` assigned to each demo login, 2 permissions |
-| academic `:8084` | 3 schools, 2 programs, period `2026-I`, cohort, 5 courses, 6 student actors (`EST-2026-00x`) + instructor actor (`DOC-2026-001`), enrollments |
-| scheduling `:8087` | 3 environments, 2 blocks, 6 sessions (3 dates x 2 blocks) |
+| authorization `:8082` | roles `Administrador`/`Instructor`/`Aprendiz` assigned to each demo login, 2 permissions |
+| academic `:8083` | 3 schools, 2 programs, period `2026-I`, cohort, 5 courses, 6 student actors (`EST-2026-00x`) + instructor actor (`DOC-2026-001`), enrollments |
+| scheduling `:8084` | 3 environments, 2 blocks, 6 sessions (3 dates x 2 blocks) |
 | attendance `:8085` | roll call per session (rotated statuses/methods), justification types, justification |
 | biometric `:8086` | facial enroll x7 (`seed-student-01` legacy + `est-2026-00x`), verify, identify |
-| configuration `:8089` | academic + security configs, biometric update case |
-| notification `:8090` | alert type `ABSENTEEISM`, alerts |
-| quality `:8091` | project `Evaluación institucional 2026-I`, characteristics/process/istqb instruments |
+| configuration `:8087` | academic + security configs, biometric update case |
+| notification `:8088` | alert type `ABSENTEEISM`, alerts |
+| quality `:8089` | project `Evaluación institucional 2026-I`, characteristics/process/istqb instruments |
 
 Demo logins (local testing only, also documented in a comment in `seed.mjs`):
 

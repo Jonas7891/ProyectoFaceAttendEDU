@@ -22,7 +22,7 @@ Hallazgos principales (antes de intervenir):
 | 8 | Portabilidad | Nuevo dominio de calidad sin ruta en Kong; `09-ms-quality` no existía como instrumento continuo | Media |
 
 ## 2. Qué se agregó (integración al CRUD)
-**Nuevo microservicio `09-ms-quality` (puerto 8091, TS Fastify+Zod):**
+**Nuevo microservicio `09-ms-quality` (puerto 8089, TS Fastify+Zod):**
 - `GET /api/v1/quality/characteristics` — instrumento (8 características, 24 preguntas, pesos).
 - `POST /api/v1/quality/evaluations` — crea evaluación exigiendo los 24 ítems (201).
 - `GET /api/v1/quality/evaluations?service=&status=&limit=&offset=` — listado paginado (máx 100).
@@ -69,12 +69,12 @@ Verificado por ejecución:
 ## 4. Cómo usar el instrumento desde ahora
 ```bash
 # 1) Ver el instrumento
-curl http://localhost:8091/api/v1/quality/characteristics
+curl http://localhost:8089/api/v1/quality/characteristics
 # 2) Crear evaluación (24 ítems 1-5)
-curl -X POST http://localhost:8091/api/v1/quality/evaluations -H "Content-Type: application/json" -d "{...}"
+curl -X POST http://localhost:8089/api/v1/quality/evaluations -H "Content-Type: application/json" -d "{...}"
 # 3) Listar y ver promedio por servicio
-curl "http://localhost:8091/api/v1/quality/evaluations?service=01-ms-identity&limit=20&offset=0"
-curl http://localhost:8091/api/v1/quality/services/01-ms-identity/summary
+curl "http://localhost:8089/api/v1/quality/evaluations?service=01-ms-identity&limit=20&offset=0"
+curl http://localhost:8089/api/v1/quality/services/01-ms-identity/summary
 # Vía gateway: http://localhost:8080/api/v1/quality/...
 ```
 Recomendación: evaluar cada servicio tras cada cambio de CRUD y exigir nivel ≥ Aceptable (≥3.0)

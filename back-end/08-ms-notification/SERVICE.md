@@ -194,7 +194,7 @@ Notification Service genera alert
 
 ```yaml
 server:
-  port: 8089
+  port: 8088
 
 spring:
   datasource:
@@ -241,7 +241,7 @@ notification:
 
 | Puerto | Servicio |
 |--------|----------|
-| 8089 | REST API |
+| 8088 | REST API |
 | 9092 | Kafka (externo) |
 | 5432 | PostgreSQL (externo) |
 | 587 | SMTP (externo) |

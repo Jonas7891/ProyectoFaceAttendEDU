@@ -1,6 +1,6 @@
 # DATA_MODEL — 07-ms-configuration
 
-> **Servicio:** `07-ms-configuration` · **Schema:** `configuration` · **Puerto ADR-005:** `8089`
+> **Servicio:** `07-ms-configuration` · **Schema:** `configuration` · **Puerto ADR-005:** `8087`
 > **Fuente canónica:** `../database/07-ms-configuration-db/01-ddl/03-tables/` + `../../fae-docs/06-data/domains/09-configuration.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **Stack:** `TypeScript + Fastify` → `../../fae-docs/_stacks/node-typescript.md`
 
