@@ -27,6 +27,7 @@ import {
     AttendanceThresholds,
     GeneralSummary,
     LanguageBlock,
+    DateFormatBlock,
     ConfidenceSlider,
     FaceToggles,
     EmailAlertToggle,
@@ -64,6 +65,8 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
             periodStartDate: config.periodStartDate || "",
             periodEndDate: config.periodEndDate || "",
             isAutomaticPeriod: config.isAutomaticPeriod ?? true,
+            dateFormat: config.dateFormat || "DD/MM/YYYY",
+            timeFormat24h: config.timeFormat24h ?? false,
             minAttendance: config.minAttendance,
             daysUntilSanction: config.daysUntilSanction,
             confidence: config.confidenceThreshold,
@@ -140,6 +143,12 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                         isSmall={isSmall}
                     />,
                     <LanguageBlock />,
+                    <DateFormatBlock
+                        dateFormat={config.dateFormat}
+                        onDateFormatChange={(value) => updateConfig("dateFormat", value)}
+                        timeFormat24h={config.timeFormat24h}
+                        onTimeFormatChange={(value) => updateConfig("timeFormat24h", value)}
+                    />,
                     <PeriodConfig
                         periodStartDate={config.periodStartDate}
                         onStartDateChange={(value) => updateConfig("periodStartDate", value)}
@@ -161,6 +170,8 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                         isAutomaticPeriod={config.isAutomaticPeriod}
                         automaticPeriod={automaticPeriod}
                         currentLanguageLabel={currentLanguage?.labelES}
+                        dateFormat={config.dateFormat}
+                        timeFormat24h={config.timeFormat24h}
                     />,
                 ]}
             />

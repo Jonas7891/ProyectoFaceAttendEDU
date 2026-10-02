@@ -50,14 +50,19 @@ export default function EnvironmentsView() {
     const totalSchedules = vm.environments.reduce((acc, env) => acc + env.schedules.length, 0);
     const withoutSchedules = vm.environments.filter((env) => env.schedules.length === 0).length;
 
+    // Subtitle dinámico con estadísticas
+    const pageSubtitle = vm.isLoading
+        ? t("Cargando ambientes...")
+        : `${vm.filtered.length} ${
+              vm.filtered.length !== 1 ? t("ambientes registrados") : t("ambiente registrado")
+          }`;
+
     return (
         <View style={{ flex: 1, backgroundColor: c.background.app }}>
             {/* Page Header */}
             <PageHeader
                 title={t("Ambientes")}
-                subtitle={`${vm.filtered.length} ${
-                    vm.filtered.length !== 1 ? t("ambientes registrados") : t("ambiente registrado")
-                }`}
+                subtitle={pageSubtitle}
                 actions={
                     permissions.canManageEnvironments && (
                         <Button 
@@ -218,6 +223,8 @@ export default function EnvironmentsView() {
                 searchFn={vm.searchInstructors}
                 onClose={vm.closeScheduleModal}
                 onSave={vm.saveSchedule}
+                getCurrentEnvironment={vm.getCurrentEnvironment}
+                getCourseByCode={vm.getCourseByCode}
             />
         </View>
     );

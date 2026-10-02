@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
+import { getInstitutionConfig } from "../core/config/institutionConfig";
 
 // ── Formulario de ambiente ────────────────────────────────
 
@@ -17,8 +18,8 @@ export const EMPTY_SCHEDULE_FORM = {
     instructorQuery: "",
     instructorId: "",
     instructorName: "",
-    startTime: "08:00",
-    endTime: "10:00",
+    startTime: "", // Vacío por defecto - se llenará dinámicamente
+    endTime: "",   // Vacío por defecto - se llenará dinámicamente
     days: [],
 };
 
@@ -27,18 +28,245 @@ export const WEEK_DAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 // ── Validación ────────────────────────────────────────────
 
 export function validateEnvironmentForm(form) {
-    if (!form.number.trim()) return "Completa todos los campos";
-    if (!form.description.trim()) return "Completa todos los campos";
+    // Solo el número del ambiente es requerido
+    if (!form.number.trim()) return "El número del ambiente es requerido";
     return null;
 }
 
-export function validateScheduleForm(form) {
+/**
+ * Convierte tiempo en formato 12h (AM/PM) a formato 24h
+ * @param {string} time12h - Tiempo en formato "HH:MM AM/PM"
+ * @returns {string} - Tiempo en formato "HH:MM" (24h)
+ */
+function convertTo24Hour(time12h) {
+    // Si ya está en formato 24h, retornar tal cual
+    if (!time12h.includes('AM') && !time12h.includes('PM')) {
+        return time12h;
+    }
+    
+    const timeUpper = time12h.toUpperCase().trim();
+    const isPM = timeUpper.includes('PM');
+    const isAM = timeUpper.includes('AM');
+    
+    // Extraer HH:MM
+    const timePart = timeUpper.replace(/\s*(AM|PM)\s*$/i, '').trim();
+    const [hoursStr, minutesStr] = timePart.split(':');
+    let hours = parseInt(hoursStr, 10);
+    const minutes = minutesStr || '00';
+    
+    // Conversión AM/PM a 24h
+    if (isAM) {
+        if (hours === 12) {
+            hours = 0; // 12 AM = 00:00 (medianoche)
+        }
+    } else if (isPM) {
+        if (hours !== 12) {
+            hours += 12; // 1 PM = 13:00, 11 PM = 23:00
+        }
+        // 12 PM = 12:00 (mediodía) - no cambia
+    }
+    
+    return `${String(hours).padStart(2, '0')}:${minutes}`;
+}
+
+/**
+ * Valida solapamiento de horarios y capacidad
+ * @param {Object} form - Formulario del horario
+ * @param {Array} existingSchedules - Horarios existentes en el ambiente
+ * @param {number} environmentCapacity - Capacidad del ambiente
+ * @param {Object} selectedCourse - Curso seleccionado
+ * @param {string} editingScheduleId - ID del horario en edición (null si es nuevo)
+ * @returns {string|null} - Mensaje de error o null si es válido
+ */
+export function validateScheduleForm(form, existingSchedules = [], environmentCapacity = 0, selectedCourse = null, editingScheduleId = null) {
+    // Validaciones básicas
     if (!form.courseCode.trim()) return "Completa todos los campos";
     if (!form.courseName.trim()) return "Completa todos los campos";
     if (!form.instructorId.trim()) return "Selecciona un instructor";
     if (form.days.length === 0) return "Selecciona al menos un día";
     if (!form.startTime || !form.endTime) return "Completa el horario";
+    
+    // Validar formato de hora (acepta 24h y 12h con AM/PM)
+    const time24Regex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    const time12Regex = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s*(AM|PM)$/i;
+    
+    const isValidStart = time24Regex.test(form.startTime) || time12Regex.test(form.startTime);
+    const isValidEnd = time24Regex.test(form.endTime) || time12Regex.test(form.endTime);
+    
+    if (!isValidStart || !isValidEnd) {
+        const config = getInstitutionConfig();
+        const exampleFormat = config.timeFormat24h ? "14:30" : "02:30 PM";
+        return `Formato de hora inválido. Ejemplo: ${exampleFormat}`;
+    }
+    
+    // Convertir ambas horas a formato 24h para comparación
+    const startTime24 = convertTo24Hour(form.startTime);
+    const endTime24 = convertTo24Hour(form.endTime);
+    
+    // Convertir horas a minutos para comparación
+    const parseTime = (timeStr) => {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        return hours * 60 + minutes;
+    };
+    
+    const newStart = parseTime(startTime24);
+    const newEnd = parseTime(endTime24);
+    
+    // Validar que hora fin > hora inicio
+    if (newEnd <= newStart) {
+        return "La hora de fin debe ser mayor a la hora de inicio";
+    }
+    
+    // Validar capacidad del ambiente vs estudiantes del curso
+    if (selectedCourse && selectedCourse.students && environmentCapacity > 0) {
+        if (selectedCourse.students > environmentCapacity) {
+            return `Este curso excede la capacidad maxima del ambiente de ${environmentCapacity} personas porque tiene ${selectedCourse.students} estudiantes`;
+        }
+    }
+    
+    // Validar solapamiento de horarios
+    for (const schedule of existingSchedules) {
+        // Si estamos editando, no comparar con el mismo horario
+        if (editingScheduleId && schedule.id === editingScheduleId) continue;
+        
+        // Verificar si hay días en común
+        const hasCommonDays = form.days.some(day => schedule.days.includes(day));
+        if (!hasCommonDays) continue;
+        
+        // Convertir horario existente a 24h también
+        const scheduleStart24 = convertTo24Hour(schedule.startTime);
+        const scheduleEnd24 = convertTo24Hour(schedule.endTime);
+        
+        const existingStart = parseTime(scheduleStart24);
+        const existingEnd = parseTime(scheduleEnd24);
+        
+        // Verificar solapamiento de horarios
+        const overlaps = (
+            (newStart >= existingStart && newStart < existingEnd) || // Empieza durante horario existente
+            (newEnd > existingStart && newEnd <= existingEnd) ||     // Termina durante horario existente
+            (newStart <= existingStart && newEnd >= existingEnd)     // Cubre completamente horario existente
+        );
+        
+        if (overlaps) {
+            const daysText = form.days.filter(day => schedule.days.includes(day)).join(", ");
+            return `Conflicto de horarios: El curso "${schedule.courseName}" ya ocupa este ambiente los días ${daysText} de ${schedule.startTime} a ${schedule.endTime}`;
+        }
+    }
+    
     return null;
+}
+
+/**
+ * Genera placeholders dinámicos para hora inicio/fin basados en disponibilidad
+ * @param {string} shift - Jornada del curso: "mañana" | "tarde" | "noche" (solo para sugerencias)
+ * @param {Array} existingSchedules - Horarios existentes para calcular disponibilidad
+ * @param {Array} selectedDays - Días seleccionados
+ * @param {boolean} is24Hour - Si usa formato 24h (true) o 12h AM/PM (false)
+ * @returns {Object} - { startPlaceholder, endPlaceholder, suggestedStart, suggestedEnd }
+ */
+export function getTimePlaceholders(shift, existingSchedules = [], selectedDays = [], is24Hour = false) {
+    // Rango global permitido: 06:00 - 24:00
+    const GLOBAL_START = "06:00";
+    const GLOBAL_END = "24:00";
+    
+    // Rangos sugeridos por jornada (solo para sugerencias iniciales)
+    const shiftRanges = {
+        "mañana": { defaultStart: "06:00", defaultEnd: "12:00" },
+        "tarde": { defaultStart: "12:00", defaultEnd: "18:00" },
+        "noche": { defaultStart: "18:00", defaultEnd: "22:00" },
+    };
+    
+    const range = shiftRanges[shift] || shiftRanges["mañana"];
+    
+    const parseTime = (timeStr) => {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        return hours * 60 + minutes;
+    };
+    
+    const formatTime = (minutes) => {
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        
+        if (is24Hour) {
+            return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+        } else {
+            const hours12 = hours % 12 || 12;
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            return `${hours12}:${String(mins).padStart(2, '0')} ${ampm}`;
+        }
+    };
+    
+    // Si no hay días seleccionados, retornar placeholders por defecto de la jornada
+    if (selectedDays.length === 0) {
+        const startMinutes = parseTime(range.defaultStart);
+        const endMinutes = parseTime(range.defaultEnd);
+        return {
+            startPlaceholder: formatTime(startMinutes),
+            endPlaceholder: formatTime(endMinutes),
+            suggestedStart: formatTime(startMinutes),
+            suggestedEnd: formatTime(endMinutes),
+        };
+    }
+    
+    // Filtrar horarios que comparten días con los seleccionados
+    const relevantSchedules = existingSchedules.filter(schedule =>
+        schedule.days.some(day => selectedDays.includes(day))
+    );
+    
+    // Si no hay conflictos, usar horario por defecto de la jornada
+    if (relevantSchedules.length === 0) {
+        const startMinutes = parseTime(range.defaultStart);
+        const endMinutes = parseTime(range.defaultEnd);
+        return {
+            startPlaceholder: formatTime(startMinutes),
+            endPlaceholder: formatTime(endMinutes),
+            suggestedStart: formatTime(startMinutes),
+            suggestedEnd: formatTime(endMinutes),
+        };
+    }
+    
+    // Ordenar horarios existentes por hora de inicio
+    const sortedSchedules = relevantSchedules
+        .map(s => ({
+            start: parseTime(s.startTime),
+            end: parseTime(s.endTime),
+        }))
+        .sort((a, b) => a.start - b.start);
+    
+    const globalStart = parseTime(GLOBAL_START);
+    const globalEnd = parseTime(GLOBAL_END);
+    const defaultDuration = 120; // 2 horas por defecto
+    
+    // Buscar primer slot libre de al menos 2 horas dentro del rango global
+    let suggestedStart = globalStart;
+    
+    for (const schedule of sortedSchedules) {
+        // Si hay espacio antes de este horario
+        if (suggestedStart + defaultDuration <= schedule.start) {
+            break; // Encontramos un slot
+        }
+        // Mover después de este horario
+        suggestedStart = Math.max(suggestedStart, schedule.end);
+    }
+    
+    // Validar que el slot sugerido esté dentro del rango global
+    if (suggestedStart + defaultDuration > globalEnd) {
+        // No hay espacio suficiente, sugerir el horario por defecto de la jornada
+        // La validación capturará el conflicto cuando intente guardar
+        return {
+            startPlaceholder: range.defaultStart,
+            endPlaceholder: range.defaultEnd,
+            suggestedStart: range.defaultStart,
+            suggestedEnd: range.defaultEnd,
+        };
+    }
+    
+    return {
+        startPlaceholder: formatTime(suggestedStart),
+        endPlaceholder: formatTime(suggestedStart + defaultDuration),
+        suggestedStart: formatTime(suggestedStart),
+        suggestedEnd: formatTime(suggestedStart + defaultDuration),
+    };
 }
 
 // ── ViewModel ─────────────────────────────────────────────
@@ -53,9 +281,9 @@ export function useEnvironmentsViewModel() {
     const [editingSchedule, setEditingSchedule] = useState(null);
     const [scheduleTargetEnvId, setScheduleTargetEnvId] = useState(null);
 
-    // Instructores: usuarios activos con rol teacher o admin del contexto global
+    // Instructores: usuarios activos con rol teacher (solo profesores, NO admins)
     const instructors = useMemo(
-        () => appData.users.filter((u) => (u.role === "teacher" || u.role === "admin") && u.status === "active"),
+        () => appData.users.filter((u) => u.role === "teacher" && u.status === "active"),
         [appData.users]
     );
 
@@ -100,10 +328,15 @@ export function useEnvironmentsViewModel() {
         async (form) => {
             const err = validateEnvironmentForm(form);
             if (err) return err;
+            
+            // Aplicar valores por defecto si están vacíos
+            const description = form.description.trim() || "Sin descripción";
+            const capacity = form.capacity ? parseInt(form.capacity, 10) : 30;
+            
             await appData.addEnvironment({
                 number: form.number.trim(),
-                description: form.description.trim(),
-                capacity: form.capacity ? parseInt(form.capacity, 10) : undefined,
+                description,
+                capacity,
                 schedules: [],
             });
             return null;
@@ -115,15 +348,20 @@ export function useEnvironmentsViewModel() {
         async (id, form) => {
             const err = validateEnvironmentForm(form);
             if (err) return err;
+            
+            // Aplicar valores por defecto si están vacíos
+            const description = form.description.trim() || "Sin descripción";
+            const capacity = form.capacity ? parseInt(form.capacity, 10) : 30;
+            
             await appData.updateEnvironment(id, {
                 number: form.number.trim(),
-                description: form.description.trim(),
-                capacity: form.capacity ? parseInt(form.capacity, 10) : undefined,
+                description,
+                capacity,
             });
             // Actualiza el selected sincronizando con el nuevo estado global
             const updatedEnv = appData.environments.find((e) => e.id === id);
             if (updatedEnv)
-                setSelected({ ...updatedEnv, number: form.number.trim(), description: form.description.trim() });
+                setSelected({ ...updatedEnv, number: form.number.trim(), description });
             return null;
         },
         [appData]
@@ -142,17 +380,56 @@ export function useEnvironmentsViewModel() {
 
     const saveSchedule = useCallback(
         async (form) => {
-            const err = validateScheduleForm(form);
-            if (err) return err;
             if (!scheduleTargetEnvId) return "Error interno";
+            
+            // Obtener ambiente y curso seleccionado
+            const environment = appData.environments.find(e => e.id === scheduleTargetEnvId);
+            if (!environment) return "Ambiente no encontrado";
+            
+            const selectedCourse = appData.courses.find(c => c.code === form.courseCode);
+            
+            // Validación completa con solapamiento y capacidad
+            const err = validateScheduleForm(
+                form,
+                environment.schedules,
+                environment.capacity,
+                selectedCourse,
+                editingSchedule?.id || null
+            );
+            if (err) return err;
 
+            // Función de conversión 12h → 24h (inline)
+            const convertTo24Hour = (time12h) => {
+                if (!time12h.includes('AM') && !time12h.includes('PM')) {
+                    return time12h;
+                }
+                
+                const timeUpper = time12h.toUpperCase().trim();
+                const isPM = timeUpper.includes('PM');
+                const isAM = timeUpper.includes('AM');
+                
+                const timePart = timeUpper.replace(/\s*(AM|PM)\s*$/i, '').trim();
+                const [hoursStr, minutesStr] = timePart.split(':');
+                let hours = parseInt(hoursStr, 10);
+                const minutes = minutesStr || '00';
+                
+                if (isAM) {
+                    if (hours === 12) hours = 0;
+                } else if (isPM) {
+                    if (hours !== 12) hours += 12;
+                }
+                
+                return `${String(hours).padStart(2, '0')}:${minutes}`;
+            };
+
+            // Convertir horarios a formato 24h antes de guardar
             const draft = {
                 courseCode: form.courseCode.trim(),
                 courseName: form.courseName.trim(),
                 instructor: form.instructorId,
                 instructorName: form.instructorName,
-                startTime: form.startTime,
-                endTime: form.endTime,
+                startTime: convertTo24Hour(form.startTime),
+                endTime: convertTo24Hour(form.endTime),
                 days: form.days,
             };
 
@@ -239,5 +516,9 @@ export function useEnvironmentsViewModel() {
         saveSchedule,
         removeSchedule,
         searchInstructors,
+        
+        // Exponer datos para el modal
+        getCurrentEnvironment: () => appData.environments.find(e => e.id === scheduleTargetEnvId),
+        getCourseByCode: (code) => appData.courses.find(c => c.code === code),
     };
 }

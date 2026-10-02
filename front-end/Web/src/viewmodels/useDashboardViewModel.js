@@ -3,6 +3,7 @@ import { useTheme } from "../view/components/hooks/useTheme";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useAuth } from "../context/AuthContext";
 import { useAppData } from "../context/AppDataContext";
+import { useDateFormat } from "../core/utils/hooks/useDateFormat";
 import {
     mockAttendanceByDay,
     mockAttendanceByWeek,
@@ -39,19 +40,18 @@ export function useDashboardViewModel() {
     const { t } = useTranslation();
     const { user } = useAuth();
     const { fichas, students, teachers, courses } = useAppData();
+    const { formatDate } = useDateFormat();
     const c = theme.colors;
 
     const userRole = user?.role || "student";
 
     const todayLabel = useMemo(() => {
-        const d = new Date().toLocaleDateString("es-CO", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-        });
-        return d.charAt(0).toUpperCase() + d.slice(1);
-    }, []);
+        const d = formatDate(new Date());
+        const today = new Date();
+        const weekday = today.toLocaleDateString("es-CO", { weekday: "long" });
+        const fullLabel = `${weekday}, ${d}`;
+        return fullLabel.charAt(0).toUpperCase() + fullLabel.slice(1);
+    }, [formatDate]);
 
     // ── ADMIN: Métricas globales del sistema (detalladas) ─────
 
@@ -258,12 +258,9 @@ export function useDashboardViewModel() {
         // Mock: datos del estudiante actual
         const studentData = students[0];
         
-        // Mock: Datos del día actual
-        const todayDate = new Date().toLocaleDateString("es-CO", { 
-            weekday: "long", 
-            day: "numeric", 
-            month: "long" 
-        });
+        // Mock: Datos del día actual (usando formato configurado)
+        const today = new Date();
+        const todayDate = `${today.toLocaleDateString("es-CO", { weekday: "long" })}, ${formatDate(today)}`;
         
         // Mock: Información de la clase/ambiente actual
         const currentClass = courses[0]; // Primera clase del día

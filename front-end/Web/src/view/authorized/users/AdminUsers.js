@@ -19,6 +19,7 @@ import { useResponsive } from "../../components/hooks/useResponsive";
 import { useUsersViewModel } from "../../../viewmodels/useUsersViewModel";
 import { useRolePermissions } from "../../../viewmodels/useRolePermissions";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
+import { useAppData } from "../../../context/AppDataContext";
 import RegisterStudentModal from "../../components/students/RegisterStudentModal";
 import ImportStudentsModal from "../../components/students/ImportStudentsModal";
 import StudentDetailModal from "../../components/students/StudentDetailModal";
@@ -35,6 +36,7 @@ export function AdminUsers({ section, vm: vmProp }) {
     const vm = vmProp || vmLocal; // Usar el vm pasado por props o crear uno local
     const { t } = useTranslation();
     const permissions = useRolePermissions();
+    const appData = useAppData();
 
     // Determinar el filtro de rol: prioritario desde section (sidebar), secundario desde dropdown
     // section: undefined/"all" (todos), "students", "teachers", "admins"
@@ -62,7 +64,7 @@ export function AdminUsers({ section, vm: vmProp }) {
     
     // Contexto para renderizado de columnas
     const roleVariant = ROLE_VARIANT[users[0]?.userType] || "default";
-    const renderContext = { t, c, roleVariant };
+    const renderContext = { t, c, roleVariant, courses: appData.courses };
     
     // Contexto para visibilidad de columnas
     const visibilityContext = { roleFilter, canManage };

@@ -54,6 +54,9 @@ import {
 } from "../models/data/CourseStorage";
 
 import { mockTeachers, mockAdmins } from "../models/data/mockData";
+import { calculateStudentCurrentPeriod } from "../core/utils/studentPeriodCalculator";
+import { getConfiguredAcademicPeriodType } from "../core/constants/academicPeriods";
+import { getStudentPeriodFromData } from "../core/utils/studentPeriodCalculator";
 
 // ── Context ───────────────────────────────────────────────
 
@@ -94,20 +97,72 @@ export function AppDataProvider({ children }) {
             setIsLoading(false);
             
             // Iniciar carga progresiva de usuarios después de cargar datos base
-            startProgressiveUserLoading(s);
+            startProgressiveUserLoading(s, c);
         });
     }, []);
     
+    // Obtener tipo de período académico
+    const periodType = useMemo(() => getConfiguredAcademicPeriodType(), []);
+    
+    // Cursos enriquecidos con período calculado (fuente de verdad)
+    const enrichedCourses = useMemo(() => {
+        if (!courses || courses.length === 0) return courses;
+        
+        return courses.map(course => {
+            // Calcular período actual del curso
+            const periodInfo = calculateStudentCurrentPeriod(
+                course.startDate,
+                course.endDate,
+                periodType
+            );
+            
+            return {
+                ...course,
+                currentPeriod: periodInfo.label || '—',
+                periodInfo, // Info completa del período
+            };
+        });
+    }, [courses, periodType]);
+    
     // Carga progresiva de usuarios (efecto persiana)
-    const startProgressiveUserLoading = useCallback((allStudents) => {
+    const startProgressiveUserLoading = useCallback((allStudents, allCourses) => {
         setIsLoadingUsers(true);
         setLoadedStudents([]);
         setLoadedTeachers([]);
         setLoadedAdmins([]);
         
+        // Primero, enriquecer cursos con su período (fuente de verdad)
+        const coursesWithPeriod = allCourses.map(course => {
+            const periodInfo = calculateStudentCurrentPeriod(
+                course.startDate,
+                course.endDate,
+                periodType
+            );
+            return {
+                ...course,
+                currentPeriod: periodInfo.label || '—',
+                periodInfo,
+            };
+        });
+        
+        // Luego, estudiantes heredan el período de su curso
+        const enrichedStudents = allStudents.map(student => {
+            // Buscar el curso del estudiante
+            const studentCourse = coursesWithPeriod.find(
+                c => c.code === student.course || c.name === student.course || c.id === student.course
+            );
+            
+            // Heredar el período del curso
+            return {
+                ...student,
+                grade: studentCourse?.currentPeriod || student.grade || '—',
+                periodInfo: studentCourse?.periodInfo || null,
+            };
+        });
+        
         // Combinar todos los usuarios
         const allUsersToLoad = [
-            ...allStudents,
+            ...enrichedStudents,
             ...mockTeachers,
             ...mockAdmins,
         ];
@@ -119,9 +174,9 @@ export function AppDataProvider({ children }) {
                 const user = allUsersToLoad[currentIndex];
                 
                 // Agregar al array correspondiente según tipo
-                if (currentIndex < allStudents.length) {
+                if (currentIndex < enrichedStudents.length) {
                     setLoadedStudents(prev => [...prev, user]);
-                } else if (currentIndex < allStudents.length + mockTeachers.length) {
+                } else if (currentIndex < enrichedStudents.length + mockTeachers.length) {
                     setLoadedTeachers(prev => [...prev, user]);
                 } else {
                     setLoadedAdmins(prev => [...prev, user]);
@@ -136,7 +191,7 @@ export function AppDataProvider({ children }) {
         }, 150); // 150ms entre cada usuario (ajustable)
         
         return () => clearInterval(loadInterval);
-    }, []);
+    }, [periodType]);
 
     // ── Programs derivados (sin storage propio) ───────────
 
@@ -145,48 +200,100 @@ export function AppDataProvider({ children }) {
         // Usar loadedStudents para que se actualice progresivamente
         for (const s of loadedStudents) {
             if (!s.course?.trim()) continue;
-            if (!map.has(s.course)) map.set(s.course, { attendance: [], active: 0 });
-            const entry = map.get(s.course);
+            
+            // Buscar el curso completo para obtener su nombre
+            const course = courses.find(c => c.code === s.course || c.name === s.course);
+            const courseName = course ? course.name : s.course;
+            
+            if (!map.has(courseName)) map.set(courseName, { attendance: [], active: 0, code: s.course });
+            const entry = map.get(courseName);
             entry.attendance.push(s.attendance);
             if (s.status === "active") entry.active += 1;
         }
         return Array.from(map.entries())
-            .map(([name, { attendance, active }]) => ({
+            .map(([name, { attendance, active, code }]) => ({
                 name,
+                code, // Incluir el código del curso
                 studentCount: attendance.length,
                 avgAttendance: Math.round(attendance.reduce((a, b) => a + b, 0) / attendance.length),
                 activeCount: active,
             }))
             .sort((a, b) => a.name.localeCompare(b.name));
-    }, [loadedStudents]);
+    }, [loadedStudents, courses]);
 
     // ── Students ──────────────────────────────────────────
 
     const addStudentFn = useCallback(
         async (draft) => {
             const updated = await storageAddStudent(students, draft);
-            setStudents(updated);
+            
+            // Enriquecer: estudiantes heredan período del curso
+            const enrichedUpdated = updated.map(student => {
+                const studentCourse = enrichedCourses.find(
+                    c => c.code === student.course || c.name === student.course || c.id === student.course
+                );
+                return {
+                    ...student,
+                    grade: studentCourse?.currentPeriod || student.grade || '—',
+                    periodInfo: studentCourse?.periodInfo || null,
+                };
+            });
+            
+            setStudents(enrichedUpdated);
+            setLoadedStudents(enrichedUpdated);
         },
-        [students]
+        [students, enrichedCourses]
     );
 
     const importStudentsFn = useCallback(
         async (drafts) => {
             if (drafts.length === 0) return 0;
             const updated = await storageAddStudentsBulk(students, drafts);
-            setStudents(updated);
+            
+            // Enriquecer: estudiantes heredan período del curso
+            const enrichedUpdated = updated.map(student => {
+                const studentCourse = enrichedCourses.find(
+                    c => c.code === student.course || c.name === student.course || c.id === student.course
+                );
+                return {
+                    ...student,
+                    grade: studentCourse?.currentPeriod || student.grade || '—',
+                    periodInfo: studentCourse?.periodInfo || null,
+                };
+            });
+            
+            setStudents(enrichedUpdated);
+            setLoadedStudents(enrichedUpdated);
+            
             return drafts.length;
         },
-        [students]
+        [students, enrichedCourses]
     );
 
     const updateStudentFn = useCallback(
         async (id, patch) => {
             const updated = students.map((s) => (s.id === id ? { ...s, ...patch } : s));
-            await saveStudents(updated);
-            setStudents(updated);
+            
+            // Re-heredar período del curso para el estudiante actualizado
+            const enrichedUpdated = updated.map(student => {
+                if (student.id === id) {
+                    const studentCourse = enrichedCourses.find(
+                        c => c.code === student.course || c.name === student.course || c.id === student.course
+                    );
+                    return {
+                        ...student,
+                        grade: studentCourse?.currentPeriod || student.grade || '—',
+                        periodInfo: studentCourse?.periodInfo || null,
+                    };
+                }
+                return student;
+            });
+            
+            await saveStudents(enrichedUpdated);
+            setStudents(enrichedUpdated);
+            setLoadedStudents(enrichedUpdated);
         },
-        [students]
+        [students, enrichedCourses]
     );
 
     const removeStudentFn = useCallback(
@@ -194,6 +301,7 @@ export function AppDataProvider({ children }) {
             const updated = students.filter((s) => s.id !== id);
             await saveStudents(updated);
             setStudents(updated);
+            setLoadedStudents(prev => prev.filter(s => s.id !== id));
         },
         [students]
     );
@@ -362,7 +470,7 @@ export function AppDataProvider({ children }) {
             updateFicha: updateFichaFn,
             removeFicha: removeFichaFn,
 
-            courses,
+            courses: enrichedCourses, // Cursos enriquecidos con período calculado
             addCourse: addCourseFn,
             updateCourse: updateCourseFn,
             removeCourse: removeCourseFn,
@@ -393,7 +501,7 @@ export function AppDataProvider({ children }) {
             addFichaFn,
             updateFichaFn,
             removeFichaFn,
-            courses,
+            enrichedCourses,
             addCourseFn,
             updateCourseFn,
             removeCourseFn,

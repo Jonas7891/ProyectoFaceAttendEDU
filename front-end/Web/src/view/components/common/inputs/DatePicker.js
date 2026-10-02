@@ -4,6 +4,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
+import { formatDate as formatDateWithConfig, formatTime as formatTimeWithConfig, formatDateTime as formatDateTimeWithConfig } from "../../../../core/constants/dateFormats";
 
 /**
  * DatePicker component para selección de fechas
@@ -75,18 +76,15 @@ export function DatePicker({
   const formatDate = (date) => {
     if (!date) return "";
     
-    const d = new Date(date);
-    const day = String(d.getDate()).padStart(2, "0");
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const year = d.getFullYear();
-    
     if (mode === "datetime") {
-      const hours = String(d.getHours()).padStart(2, "0");
-      const minutes = String(d.getMinutes()).padStart(2, "0");
-      return `${day}/${month}/${year} ${hours}:${minutes}`;
+      return formatDateTimeWithConfig(date);
     }
     
-    return `${day}/${month}/${year}`;
+    if (mode === "time") {
+      return formatTimeWithConfig(date);
+    }
+    
+    return formatDateWithConfig(date);
   };
 
   const displayText = value ? formatDate(value) : placeholder;

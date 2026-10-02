@@ -4,12 +4,13 @@
 //  Los botones de gestión se muestran según permisos.
 // ============================================================
 
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Badge, Avatar, Button, ProgressBar, useAttendanceColor, ATTENDANCE_THRESHOLDS } from "../common";
 import { useTheme }       from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
+import { useAppData } from "../../../context/AppDataContext";
 
 
 export default function StudentDetailModal({
@@ -21,8 +22,16 @@ export default function StudentDetailModal({
     const { theme } = useTheme();
     const { t }     = useTranslation();
     const c         = theme.colors;
+    const { courses } = useAppData();
 
     const attColor = useAttendanceColor(student?.attendance ?? 0);
+    
+    // Obtener nombre completo del curso
+    const courseName = useMemo(() => {
+        if (!student?.course) return '—';
+        const course = courses.find(c => c.code === student.course || c.name === student.course);
+        return course ? course.name : student.course;
+    }, [student?.course, courses]);
 
     if (!student) return null;
 
@@ -84,7 +93,7 @@ export default function StudentDetailModal({
                             <View style={{ gap: 10, marginBottom: 16 }}>
                                 {[
                                     { label: t("Correo"), value: student.email, icon: "mail" },
-                                    { label: t("Programa"), value: student.course, icon: "book-open" },
+                                    { label: t("Programa"), value: courseName, icon: "book-open" },
                                     { label: t("Semestre"), value: student.grade, icon: "trending-up" },
                                 ].map(({ label, value, icon }) => (
                                     <View key={label} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>

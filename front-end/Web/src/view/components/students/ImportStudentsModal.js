@@ -117,8 +117,9 @@ function parseFileContent(text) {
 
 const CSV_TEMPLATE =
     "name,code,email,course,grade,attendance,registered,status\n" +
-    "Ana García López,2024001,a.garcia@uni.edu,Ingeniería de Sistemas,3er semestre,95,false,active\n" +
-    "Carlos Pérez,2024002,c.perez@uni.edu,Matemáticas,2do semestre,88,true,active\n";
+    "Ana García López,AED-401001,a.garcia@uni.edu,AED-401,3er semestre,95,false,active\n" +
+    "Carlos Pérez,AED-401002,c.perez@uni.edu,AED-401,2do semestre,88,true,active\n" +
+    "# Nota: código = códigoCurso + 00 + nnn (ej: AED-401001, AED-401020, etc.)\n";
 
 function downloadTemplate() {
     if (Platform.OS !== "web") return;

@@ -80,28 +80,34 @@ export default function RegisterStudentModal({
     }, [fichaItems, fichaSearch]);
 
     // Calcular código estudiantil auto-incremental cuando se selecciona una ficha
+    // Formato: códigoCurso + "00" + n (ej: "AED-401001", "AED-401002", ..., "AED-40120", etc.)
+    // donde "00" es fijo y "n" es el número incremental (1, 2, 3, ..., 20, ..., 100)
     const generateStudentCode = (fichaCode) => {
         if (!fichaCode || !appData.students) return "";
         
-        // Buscar el máximo número de estudiante en esta ficha
+        // Buscar todos los estudiantes que pertenecen a esta ficha
+        // El patrón esperado es: fichaCode + "00" + n
+        const prefix = `${fichaCode}00`;
         const studentsInFicha = appData.students.filter(s => 
-            s.code && s.code.startsWith(fichaCode)
+            s.code && s.code.startsWith(prefix)
         );
         
+        // Extraer el número "n" de cada código y encontrar el máximo
         let maxNumber = 0;
         studentsInFicha.forEach(s => {
-            const numberPart = s.code.replace(fichaCode, "");
+            // Remover el prefijo completo (fichaCode + "00") y obtener solo el número incremental
+            const numberPart = s.code.substring(prefix.length);
             const num = parseInt(numberPart, 10);
             if (!isNaN(num) && num > maxNumber) {
                 maxNumber = num;
             }
         });
         
-        // Incrementar y formatear con 3 dígitos
+        // Incrementar (1, 2, 3, ..., 20, ..., 100)
         const nextNumber = maxNumber + 1;
-        const paddedNumber = nextNumber.toString().padStart(3, "0");
         
-        return `${fichaCode}${paddedNumber}`;
+        // Formato final: fichaCode + "00" + nextNumber
+        return `${fichaCode}00${nextNumber}`;
     };
 
     // Sincronizar el rol del formulario cuando cambia initialRole (solo si el modal se abre de nuevo)
@@ -115,11 +121,16 @@ export default function RegisterStudentModal({
         setForm((prev) => {
             const updated = { ...prev, [key]: value };
             
-            // Auto-generar código estudiantil SOLO cuando:
-            // 1. Se selecciona una ficha/curso (key === "course")
-            // 2. El rol actual es "student"
-            if (key === "course" && value && updated.role === "student") {
-                const generatedCode = generateStudentCode(value);
+            // Auto-generar código estudiantil en dos casos:
+            // 1. Cuando se selecciona una ficha/curso Y el rol es "student"
+            // 2. Cuando se cambia el rol a "student" Y ya hay una ficha seleccionada
+            const shouldGenerateCode = 
+                (key === "course" && value && updated.role === "student") ||
+                (key === "role" && value === "student" && updated.course);
+            
+            if (shouldGenerateCode) {
+                const fichaCode = key === "course" ? value : updated.course;
+                const generatedCode = generateStudentCode(fichaCode);
                 if (generatedCode) {
                     updated.code = generatedCode;
                 }
@@ -185,7 +196,7 @@ export default function RegisterStudentModal({
             buttonLabel: t("Registrar usuario"),
             successMessage: t("Usuario registrado correctamente"),
             codeLabel: t("Código"),
-            codePlaceholder: t("Ej: 2024001 o PROF001"),
+            codePlaceholder: t("Ej: AED-401001 o PROF001"),
             programLabel: t("Programa/Departamento"),
             programPlaceholder: t("Ej: Ingeniería de Sistemas"),
             showProgram: true,
@@ -199,7 +210,7 @@ export default function RegisterStudentModal({
             buttonLabel: t("Registrar estudiante"),
             successMessage: t("Estudiante registrado correctamente"),
             codeLabel: t("Código estudiantil"),
-            codePlaceholder: t("Ej: 2024001"),
+            codePlaceholder: t("Ej: AED-401001"),
             programLabel: t("Programa"),
             programPlaceholder: t("Ej: Ingeniería de Sistemas"),
             showProgram: true,

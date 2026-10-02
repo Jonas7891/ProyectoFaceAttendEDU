@@ -12,10 +12,12 @@ import { useTheme } from "../hooks/useTheme";
 import { useResponsive } from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../../../context/AppDataContext";
+import { getInstitutionConfig } from "../../../core/config/institutionConfig";
 import InstructorAutocomplete from "./InstructorAutocomplete";
 import {
     EMPTY_SCHEDULE_FORM,
     WEEK_DAYS,
+    getTimePlaceholders,
 } from "../../../viewmodels/useEnvironmentsViewModel";
 
 export default function ScheduleModal({
@@ -26,6 +28,8 @@ export default function ScheduleModal({
     searchFn,
     onClose,
     onSave,
+    getCurrentEnvironment, // Nueva prop
+    getCourseByCode,       // Nueva prop
 }) {
     const { theme } = useTheme();
     const { isSmall } = useResponsive();
@@ -39,6 +43,23 @@ export default function ScheduleModal({
     const [showErrors, setShowErrors] = useState(false);
     const [courseNameInput, setCourseNameInput] = useState(""); // Para búsqueda bidireccional
     const [dropdownOpen, setDropdownOpen] = useState(false); // Controlar apertura del dropdown
+
+    // Obtener curso seleccionado y calcular placeholders dinámicos
+    const selectedCourse = useMemo(() => {
+        if (!form.courseCode) return null;
+        return getCourseByCode?.(form.courseCode) || null;
+    }, [form.courseCode, getCourseByCode]);
+
+    // Calcular placeholders dinámicos basados en jornada y horarios existentes
+    const timePlaceholders = useMemo(() => {
+        const config = getInstitutionConfig();
+        const is24Hour = config.timeFormat24h ?? false;
+        const environment = getCurrentEnvironment?.();
+        const existingSchedules = environment?.schedules || [];
+        const shift = selectedCourse?.schedule || "mañana";
+        
+        return getTimePlaceholders(shift, existingSchedules, form.days, is24Hour);
+    }, [selectedCourse, form.days, getCurrentEnvironment]);
 
     // Generar items de fichas desde los cursos disponibles
     const fichaItems = useMemo(() => {
@@ -94,6 +115,231 @@ export default function ScheduleModal({
         if (showErrors) setError(null);
     };
 
+    // Auto-formato para campos de hora con soporte para 24h y 12h (AM/PM)
+    const handleTimeInput = (field, rawValue) => {
+        const config = getInstitutionConfig();
+        const is24Hour = config.timeFormat24h ?? true;
+        
+        if (is24Hour) {
+            handleTimeInput24h(field, rawValue);
+        } else {
+            handleTimeInput12h(field, rawValue);
+        }
+    };
+    
+    // Formato 24 horas (00:00 - 23:59)
+    const handleTimeInput24h = (field, rawValue) => {
+        const numbers = rawValue.replace(/[^\d]/g, '');
+        
+        if (numbers.length === 0) {
+            setField(field, '');
+            return;
+        }
+        
+        let formatted = numbers;
+        
+        if (numbers.length === 1) {
+            const firstDigit = parseInt(numbers[0]);
+            if (firstDigit > 2) {
+                formatted = `0${numbers[0]}:`;
+            } else {
+                formatted = numbers;
+            }
+        }
+        else if (numbers.length === 2) {
+            const hours = parseInt(numbers);
+            if (hours > 23) {
+                formatted = numbers[0];
+            } else {
+                formatted = numbers;
+            }
+        }
+        else if (numbers.length === 3) {
+            const hours = parseInt(numbers.slice(0, 2));
+            const firstMinuteDigit = parseInt(numbers[2]);
+            
+            if (hours > 23) {
+                formatted = numbers.slice(0, 2);
+            } else if (firstMinuteDigit > 5) {
+                formatted = `${numbers.slice(0, 2)}:0`;
+            } else {
+                formatted = `${numbers.slice(0, 2)}:${numbers[2]}`;
+            }
+        }
+        else if (numbers.length >= 4) {
+            const hours = parseInt(numbers.slice(0, 2));
+            const minutes = parseInt(numbers.slice(2, 4));
+            
+            if (hours > 23) {
+                formatted = numbers.slice(0, 2);
+            } else if (minutes > 59) {
+                formatted = `${numbers.slice(0, 2)}:${numbers[2]}`;
+            } else {
+                formatted = `${numbers.slice(0, 2)}:${numbers.slice(2, 4)}`;
+            }
+        }
+        
+        formatted = formatted.slice(0, 5);
+        setField(field, formatted);
+    };
+    
+    // Formato 12 horas (01:00 AM - 12:59 PM) con conversión automática desde formato 24h
+    const handleTimeInput12h = (field, rawValue) => {
+        const currentValue = form[field] || '';
+        
+        // Si está vacío, limpiar
+        if (rawValue.length === 0) {
+            setField(field, '');
+            return;
+        }
+        
+        // Detectar backspace/delete sobre el AM/PM para eliminarlo completamente
+        const hadAMPM = currentValue.includes(' AM') || currentValue.includes(' PM');
+        const inputLength = rawValue.length;
+        const prevLength = currentValue.length;
+        
+        // Si tenía AM/PM y el input es más corto (está borrando) y no tiene AM/PM completo
+        if (hadAMPM && inputLength < prevLength) {
+            const hasCompleteAMPM = rawValue.endsWith(' AM') || rawValue.endsWith(' PM');
+            if (!hasCompleteAMPM) {
+                // Borrar todo el AM/PM, dejar solo números y dos puntos
+                const cleaned = rawValue.replace(/[^0-9:]/g, '');
+                if (cleaned.length === 0) {
+                    setField(field, '');
+                    return;
+                }
+                // Formatear sin AM/PM para que el usuario pueda seguir editando
+                const numbersOnly = cleaned.replace(/:/g, '');
+                if (numbersOnly.length <= 4) {
+                    setField(field, cleaned);
+                    return;
+                }
+            }
+        }
+        
+        // Extraer números
+        const numbers = rawValue.replace(/[^\d]/g, '');
+        
+        if (numbers.length === 0) {
+            setField(field, '');
+            return;
+        }
+        
+        // Detectar si el usuario especificó AM o PM manualmente
+        const upperValue = rawValue.toUpperCase();
+        const hasManualAM = upperValue.includes('AM') || upperValue.includes('A');
+        const hasManualPM = upperValue.includes('PM') || upperValue.includes('P');
+        
+        let formatted = '';
+        let hours = 0;
+        let minutes = 0;
+        let ampm = '';
+        
+        // Parsear números según longitud
+        if (numbers.length === 1) {
+            hours = parseInt(numbers[0]);
+        } else if (numbers.length === 2) {
+            hours = parseInt(numbers);
+        } else if (numbers.length === 3) {
+            hours = parseInt(numbers.slice(0, 2));
+            minutes = parseInt(numbers[2]);
+        } else if (numbers.length >= 4) {
+            hours = parseInt(numbers.slice(0, 2));
+            minutes = parseInt(numbers.slice(2, 4));
+        }
+        
+        // Validar minutos
+        if (minutes > 59) {
+            minutes = 5; // Primer dígito válido
+        }
+        
+        // CONVERSIÓN AUTOMÁTICA DE 24H A 12H
+        // Solo agregar AM/PM cuando el formato esté completo (HH:MM) o haya AM/PM manual
+        let shouldAddAMPM = false;
+        
+        if (numbers.length >= 4 || hasManualAM || hasManualPM) {
+            shouldAddAMPM = true;
+            
+            if (hours === 0) {
+                // 00:xx → 12:xx AM (medianoche)
+                hours = 12;
+                ampm = ' AM';
+            } else if (hours >= 1 && hours <= 11) {
+                // 01:xx - 11:xx → mantener, AM
+                ampm = ' AM';
+            } else if (hours === 12) {
+                // 12:xx → 12:xx PM (mediodía)
+                ampm = ' PM';
+            } else if (hours >= 13 && hours <= 23) {
+                // 13:xx - 23:xx → convertir a 1:xx - 11:xx PM
+                hours = hours - 12;
+                ampm = ' PM';
+            } else if (hours > 23) {
+                // Inválido, tomar solo primer dígito
+                hours = parseInt(numbers[0]);
+                ampm = '';
+                shouldAddAMPM = false;
+            }
+            
+            // Si el usuario especificó manualmente AM/PM, respetar su elección
+            if (hasManualAM) {
+                ampm = ' AM';
+            } else if (hasManualPM) {
+                ampm = ' PM';
+            }
+        }
+        
+        // Formatear salida
+        if (numbers.length === 1) {
+            formatted = `${hours}`;
+        } else if (numbers.length === 2) {
+            formatted = `${hours}`;
+        } else if (numbers.length === 3) {
+            formatted = `${String(hours).padStart(2, '0')}:${minutes}`;
+        } else if (numbers.length >= 4) {
+            formatted = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}${shouldAddAMPM ? ampm : ''}`;
+        }
+        
+        setField(field, formatted);
+    };
+    
+    // Handler para onBlur: completa el formato con AM/PM si falta
+    const handleTimeBlur = (field) => {
+        const config = getInstitutionConfig();
+        const is24Hour = config.timeFormat24h ?? true;
+        
+        // Solo aplicar para formato 12h
+        if (is24Hour) return;
+        
+        const value = form[field] || '';
+        
+        // Si ya tiene AM/PM o está vacío, no hacer nada
+        if (!value || value.includes('AM') || value.includes('PM')) return;
+        
+        // Si tiene formato HH:MM sin AM/PM, agregar según corresponda
+        const timeMatch = value.match(/^(\d{1,2}):(\d{2})$/);
+        if (timeMatch) {
+            let hours = parseInt(timeMatch[1], 10);
+            const minutes = timeMatch[2];
+            let ampm = ' AM';
+            
+            // Conversión de 24h a 12h si es necesario
+            if (hours === 0) {
+                hours = 12;
+                ampm = ' AM';
+            } else if (hours >= 1 && hours <= 11) {
+                ampm = ' AM';
+            } else if (hours === 12) {
+                ampm = ' PM';
+            } else if (hours >= 13 && hours <= 23) {
+                hours = hours - 12;
+                ampm = ' PM';
+            }
+            
+            setField(field, `${String(hours).padStart(2, '0')}:${minutes}${ampm}`);
+        }
+    };
+
     // Handler para cuando se selecciona una ficha del dropdown
     const handleFichaSelect = (fichaCode) => {
         const selectedFicha = appData.courses.find(c => c.code === fichaCode);
@@ -128,12 +374,11 @@ export default function ScheduleModal({
     };
 
     const toggleDay = (day) => {
-        setField(
-            "days",
-            form.days.includes(day)
-                ? form.days.filter((d) => d !== day)
-                : [...form.days, day]
-        );
+        const newDays = form.days.includes(day)
+            ? form.days.filter((d) => d !== day)
+            : [...form.days, day];
+        
+        setField("days", newDays);
     };
 
     const handleSave = async () => {
@@ -207,9 +452,9 @@ export default function ScheduleModal({
             )}
 
             {/* Course info - Dropdown bidireccional */}
-            <View style={{ marginBottom: 14, zIndex: (courseNameInput.trim().length > 0 && dropdownOpen) ? 1000 : 1 }}>
+            <View style={{ marginBottom: 14, position: 'relative', zIndex: 10 }}>
                 <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 14, marginBottom: isSmall ? 0 : 14 }}>
-                    <View style={{ flex: 1, minWidth: 160 }}>
+                    <View style={{ flex: 1, minWidth: 160, zIndex: 10 }}>
                         <Text style={{
                             fontSize: 14,
                             fontWeight: "600",
@@ -233,7 +478,7 @@ export default function ScheduleModal({
                             onOpenChange={setDropdownOpen}
                         />
                     </View>
-                    <View style={{ flex: 2, minWidth: 200 }}>
+                    <View style={{ flex: 2, minWidth: 200, zIndex: 1 }}>
                         <TextInput
                             label={t("Nombre del programa") + " *"}
                             value={courseNameInput}
@@ -247,14 +492,9 @@ export default function ScheduleModal({
             </View>
 
             {/* Instructor autocomplete */}
-            <View style={{ zIndex: (courseNameInput.trim().length > 0 && dropdownOpen) ? -1 : 1 }}>
+            <View style={{ marginBottom: 8, position: 'relative', zIndex: 5 }}>
                 <InstructorAutocomplete
-                    query={form.instructorQuery}
-                    onChangeQuery={(v) => {
-                        setField("instructorQuery", v);
-                        setField("instructorId", "");
-                        setField("instructorName", "");
-                    }}
+                    instructorId={form.instructorId}
                     onSelect={(u) => {
                         setField("instructorId", u.id);
                         setField("instructorName", u.name);
@@ -266,29 +506,33 @@ export default function ScheduleModal({
             </View>
 
             {/* Time range */}
-            <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 14, zIndex: (courseNameInput.trim().length > 0 && dropdownOpen) ? -1 : 1 }}>
+            <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 14, marginBottom: 14, position: 'relative', zIndex: 1 }}>
                 <View style={{ flex: 1 }}>
                     <TextInput
                         label={t("Hora inicio") + " *"}
                         value={form.startTime}
-                        onChangeText={(v) => setField("startTime", v)}
-                        placeholder="08:00"
+                        onChangeText={(v) => handleTimeInput("startTime", v)}
+                        onBlur={() => handleTimeBlur("startTime")}
+                        placeholder={timePlaceholders.startPlaceholder}
                         error={isEmpty(form.startTime)}
+                        maxLength={8} // "HH:MM AM" = 8 caracteres
                     />
                 </View>
                 <View style={{ flex: 1 }}>
                     <TextInput
                         label={t("Hora fin") + " *"}
                         value={form.endTime}
-                        onChangeText={(v) => setField("endTime", v)}
-                        placeholder="10:00"
+                        onChangeText={(v) => handleTimeInput("endTime", v)}
+                        onBlur={() => handleTimeBlur("endTime")}
+                        placeholder={timePlaceholders.endPlaceholder}
                         error={isEmpty(form.endTime)}
+                        maxLength={8} // "HH:MM AM" = 8 caracteres
                     />
                 </View>
             </View>
 
             {/* Days selector */}
-            <View style={{ marginBottom: 14, zIndex: (courseNameInput.trim().length > 0 && dropdownOpen) ? -1 : 1 }}>
+            <View style={{ marginBottom: 0, position: 'relative', zIndex: 1 }}>
                 <Text
                     style={{
                         fontSize: 13,
@@ -329,10 +573,6 @@ export default function ScheduleModal({
                     })}
                 </View>
             </View>
-
-            <Text style={{ fontSize: 12, color: c.text.secondary, marginTop: 8, textAlign: "right" }}>
-                * {t("Campos obligatorios")}
-            </Text>
         </BaseModal>
     );
 }

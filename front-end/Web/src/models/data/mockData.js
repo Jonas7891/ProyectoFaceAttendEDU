@@ -9,9 +9,9 @@ export const mockStudents = [
         id: "1",
         name: "María García López",
         email: "m.garcia@uni.edu",
-        code: "2021001",
-        course: "ADSO", // Tecnología en Análisis y Desarrollo de Software
-        grade: "4to semestre",
+        code: "AED-401001",
+        course: "AED-401", // Algoritmos y Estructuras de Datos (curso con código)
+        grade: null, // Será calculado dinámicamente
         attendance: 92,
         status: "active",
         registered: true,
@@ -20,9 +20,9 @@ export const mockStudents = [
         id: "2",
         name: "Carlos Rodríguez Mora",
         email: "c.rodriguez@uni.edu",
-        code: "2021002",
-        course: "ADSO",
-        grade: "4to semestre",
+        code: "AED-401002",
+        course: "AED-401", // Algoritmos y Estructuras de Datos
+        grade: null, // Será calculado dinámicamente
         attendance: 88,
         status: "active",
         registered: true,
@@ -31,9 +31,9 @@ export const mockStudents = [
         id: "3",
         name: "Ana Martínez Ríos",
         email: "a.martinez@uni.edu",
-        code: "2021003",
-        course: "Redes", // Tecnología en Gestión de Redes
-        grade: "3er semestre",
+        code: "MAT-201001",
+        course: "MAT-201", // Cálculo Diferencial
+        grade: null, // Será calculado dinámicamente
         attendance: 95,
         status: "active",
         registered: true,
@@ -42,9 +42,9 @@ export const mockStudents = [
         id: "4",
         name: "Luis Herrera Díaz",
         email: "l.herrera@uni.edu",
-        code: "2021004",
-        course: "Electrónica",
-        grade: "2do semestre",
+        code: "FIS-101001",
+        course: "FIS-101", // Física I
+        grade: null, // Será calculado dinámicamente
         attendance: 75,
         status: "active",
         registered: false,
@@ -53,9 +53,9 @@ export const mockStudents = [
         id: "5",
         name: "Sofia Pérez Muñoz",
         email: "s.perez@uni.edu",
-        code: "2021005",
-        course: "Programación",
-        grade: "3er semestre",
+        code: "POO-301001",
+        course: "POO-301", // Programación Orientada a Objetos
+        grade: null, // Será calculado dinámicamente
         attendance: 60,
         status: "inactive",
         registered: true,
@@ -64,9 +64,9 @@ export const mockStudents = [
         id: "6",
         name: "Andrés Vargas Castro",
         email: "a.vargas@uni.edu",
-        code: "2021006",
-        course: "Bases de Datos",
-        grade: "5to semestre",
+        code: "BD-401001",
+        course: "BD-401", // Bases de Datos
+        grade: null, // Será calculado dinámicamente
         attendance: 85,
         status: "active",
         registered: true,
@@ -75,9 +75,9 @@ export const mockStudents = [
         id: "7",
         name: "Valentina Cruz Lozano",
         email: "v.cruz@uni.edu",
-        code: "2021007",
-        course: "ADSO",
-        grade: "4to semestre",
+        code: "AED-401003",
+        course: "AED-401", // Algoritmos y Estructuras de Datos
+        grade: null, // Será calculado dinámicamente
         attendance: 91,
         status: "active",
         registered: true,
@@ -86,9 +86,9 @@ export const mockStudents = [
         id: "8",
         name: "Daniel Ramírez Pinto",
         email: "d.ramirez@uni.edu",
-        code: "2021008",
-        course: "Diseño",
-        grade: "1er semestre",
+        code: "PD-101001",
+        course: "PD-101", // Pizzas de Datos
+        grade: null, // Será calculado dinámicamente
         attendance: 78,
         status: "active",
         registered: false,
@@ -98,9 +98,9 @@ export const mockStudents = [
         id: "9",
         name: "Andrea Morales Cruz",
         email: "a.morales@uni.edu",
-        code: "2021009",
-        course: "Diseño", // Tecnología en Diseño Gráfico
-        grade: "2do semestre",
+        code: "PD-101002",
+        course: "PD-101", // Pizzas de Datos
+        grade: null, // Será calculado dinámicamente
         attendance: 68,
         status: "active",
         registered: true,
@@ -109,9 +109,9 @@ export const mockStudents = [
         id: "10",
         name: "Roberto Silva Gómez",
         email: "r.silva@uni.edu",
-        code: "2021010",
-        course: "Electrónica",
-        grade: "3er semestre",
+        code: "FIS-101002",
+        course: "FIS-101", // Física I
+        grade: null, // Será calculado dinámicamente
         attendance: 73,
         status: "active",
         registered: true,
@@ -120,9 +120,9 @@ export const mockStudents = [
         id: "11",
         name: "Camila Ruiz Torres",
         email: "c.ruiz@uni.edu",
-        code: "2021011",
-        course: "Redes", // Gestión de Redes
-        grade: "4to semestre",
+        code: "MAT-201002",
+        course: "MAT-201", // Cálculo Diferencial
+        grade: null, // Será calculado dinámicamente
         attendance: 97.5,
         status: "active",
         registered: true,
@@ -131,9 +131,9 @@ export const mockStudents = [
         id: "12",
         name: "Santiago Ospina León",
         email: "s.ospina@uni.edu",
-        code: "2021012",
-        course: "Bases de Datos",
-        grade: "3er semestre",
+        code: "BD-401002",
+        course: "BD-401", // Bases de Datos
+        grade: null, // Será calculado dinámicamente
         attendance: 96.7,
         status: "active",
         registered: true,
@@ -143,9 +143,9 @@ export const mockStudents = [
         id: "13",
         name: "Isabella Moreno Ruiz",
         email: "i.moreno@uni.edu",
-        code: "2021013",
-        course: "ADSO",
-        grade: "2do semestre",
+        code: "AED-401004",
+        course: "AED-401", // Algoritmos y Estructuras de Datos
+        grade: null, // Será calculado dinámicamente
         attendance: 94,
         status: "active",
         registered: true,
@@ -154,9 +154,9 @@ export const mockStudents = [
         id: "14",
         name: "Mateo Fernández Castro",
         email: "m.fernandez@uni.edu",
-        code: "2021014",
-        course: "Programación",
-        grade: "3er semestre",
+        code: "POO-301002",
+        course: "POO-301", // Programación Orientada a Objetos
+        grade: null, // Será calculado dinámicamente
         attendance: 89,
         status: "active",
         registered: true,
@@ -165,9 +165,9 @@ export const mockStudents = [
         id: "15",
         name: "Lucía Jiménez Parra",
         email: "l.jimenez@uni.edu",
-        code: "2021015",
-        course: "Redes",
-        grade: "1er semestre",
+        code: "MAT-201003",
+        course: "MAT-201", // Cálculo Diferencial
+        grade: null, // Será calculado dinámicamente
         attendance: 55,
         status: "active",
         registered: false,
@@ -176,9 +176,9 @@ export const mockStudents = [
         id: "16",
         name: "Diego Ramírez Ortiz",
         email: "d.ramirez2@uni.edu",
-        code: "2021016",
-        course: "Electrónica",
-        grade: "4to semestre",
+        code: "FIS-101003",
+        course: "FIS-101", // Física I
+        grade: null, // Será calculado dinámicamente
         attendance: 82,
         status: "active",
         registered: true,
@@ -187,9 +187,9 @@ export const mockStudents = [
         id: "17",
         name: "Valentina Sánchez Mejía",
         email: "v.sanchez@uni.edu",
-        code: "2021017",
-        course: "Diseño",
-        grade: "2do semestre",
+        code: "PD-101003",
+        course: "PD-101", // Pizzas de Datos
+        grade: null, // Será calculado dinámicamente
         attendance: 98,
         status: "active",
         registered: true,
@@ -198,9 +198,9 @@ export const mockStudents = [
         id: "18",
         name: "Sebastián Torres Ávila",
         email: "s.torres@uni.edu",
-        code: "2021018",
-        course: "Electrónica",
-        grade: "3er semestre",
+        code: "FIS-101004",
+        course: "FIS-101", // Física I
+        grade: null, // Será calculado dinámicamente
         attendance: 65,
         status: "active",
         registered: true,
@@ -209,9 +209,9 @@ export const mockStudents = [
         id: "19",
         name: "Emma Rodríguez Villa",
         email: "e.rodriguez@uni.edu",
-        code: "2021019",
-        course: "Redes",
-        grade: "4to semestre",
+        code: "MAT-201004",
+        course: "MAT-201", // Cálculo Diferencial
+        grade: null, // Será calculado dinámicamente
         attendance: 93,
         status: "active",
         registered: true,
@@ -220,9 +220,9 @@ export const mockStudents = [
         id: "20",
         name: "Nicolás Gómez Peña",
         email: "n.gomez@uni.edu",
-        code: "2021020",
-        course: "Bases de Datos",
-        grade: "1er semestre",
+        code: "BD-401003",
+        course: "BD-401", // Bases de Datos
+        grade: null, // Será calculado dinámicamente
         attendance: 71,
         status: "active",
         registered: false,
@@ -238,8 +238,8 @@ export const mockCourses = [
         students: 45,
         schedule: "mañana",
         room: "env1", // ID del ambiente "301"
-        startDate: "2024-01-15",
-        endDate: "2024-06-30",
+        startDate: "2025-02-10",
+        endDate: "2027-04-11",
         semester: "2024-2",
         avgAttendance: 87,
         status: "active",
@@ -253,8 +253,8 @@ export const mockCourses = [
         students: 38,
         schedule: "tarde",
         room: "env2", // ID del ambiente "105"
-        startDate: "2024-01-15",
-        endDate: "2024-06-30",
+        startDate: "2024-08-01",
+        endDate: "2026-12-31",
         semester: "2024-2",
         avgAttendance: 92,
         status: "active",
@@ -268,8 +268,8 @@ export const mockCourses = [
         students: 42,
         schedule: "mañana",
         room: "env3", // ID del ambiente "Lab. Física"
-        startDate: "2024-01-15",
-        endDate: "2024-06-30",
+        startDate: "2026-01-15",
+        endDate: "2026-06-30",
         semester: "2024-2",
         avgAttendance: 78,
         status: "active",
@@ -283,8 +283,8 @@ export const mockCourses = [
         students: 35,
         schedule: "tarde",
         room: "env4", // ID del ambiente "Lab. Computación"
-        startDate: "2024-01-15",
-        endDate: "2024-06-30",
+        startDate: "2025-07-01",
+        endDate: "2027-01-15",
         semester: "2024-2",
         avgAttendance: 85,
         status: "active",
@@ -299,7 +299,7 @@ export const mockCourses = [
         schedule: "mañana",
         room: "env4", // ID del ambiente "Lab. Computación"
         startDate: "2024-01-15",
-        endDate: "2024-06-30",
+        endDate: "2025-07-30",
         semester: "2024-2",
         avgAttendance: 90,
         status: "active",
@@ -313,8 +313,8 @@ export const mockCourses = [
         students: 30,
         schedule: "mañana",
         room: "env1", // ID del ambiente "301"
-        startDate: "2024-01-15",
-        endDate: "2024-06-30",
+        startDate: "2026-03-01",
+        endDate: "2027-11-30",
         semester: "2024-2",
         avgAttendance: 83,
         status: "active",
@@ -616,7 +616,7 @@ export const mockAtRiskStudents = [
         id: "ars1",
         studentId: "5",
         name: "Sofia Pérez Muñoz",
-        code: "2021005",
+        code: "POO-301001",
         ficha: "2240003",
         fichaName: "Electrónica",
         attendanceRate: 60,
@@ -631,7 +631,7 @@ export const mockAtRiskStudents = [
         id: "ars2",
         studentId: "9",
         name: "Andrea Morales Cruz",
-        code: "2021009",
+        code: "PD-101002",
         ficha: "2240006",
         fichaName: "Diseño Gráfico",
         attendanceRate: 68,
@@ -646,7 +646,7 @@ export const mockAtRiskStudents = [
         id: "ars3",
         studentId: "10",
         name: "Roberto Silva Gómez",
-        code: "2021010",
+        code: "FIS-101002",
         ficha: "2240003",
         fichaName: "Electrónica",
         attendanceRate: 73,
@@ -661,7 +661,7 @@ export const mockAtRiskStudents = [
         id: "ars4",
         studentId: "4",
         name: "Luis Herrera Díaz",
-        code: "2021004",
+        code: "FIS-101001",
         ficha: "2240004",
         fichaName: "Programación",
         attendanceRate: 75,
@@ -676,7 +676,7 @@ export const mockAtRiskStudents = [
         id: "ars5",
         studentId: "8",
         name: "Daniel Ramírez Pinto",
-        code: "2021008",
+        code: "PD-101001",
         ficha: "2240006",
         fichaName: "Diseño Gráfico",
         attendanceRate: 78,
@@ -696,7 +696,7 @@ export const mockPerfectAttendanceStudents = [
         id: "pas1",
         studentId: "3",
         name: "Ana Martínez Ríos",
-        code: "2021003",
+        code: "MAT-201001",
         ficha: "2240002",
         fichaName: "Gestión de Redes",
         attendanceRate: 95,
@@ -708,7 +708,7 @@ export const mockPerfectAttendanceStudents = [
         id: "pas2",
         studentId: "11",
         name: "Camila Ruiz Torres",
-        code: "2021011",
+        code: "MAT-201002",
         ficha: "2240002",
         fichaName: "Gestión de Redes",
         attendanceRate: 97.5,
@@ -720,7 +720,7 @@ export const mockPerfectAttendanceStudents = [
         id: "pas3",
         studentId: "12",
         name: "Santiago Ospina León",
-        code: "2021012",
+        code: "BD-401002",
         ficha: "2240005",
         fichaName: "Bases de Datos",
         attendanceRate: 96.7,
@@ -732,7 +732,7 @@ export const mockPerfectAttendanceStudents = [
         id: "pas4",
         studentId: "1",
         name: "María García López",
-        code: "2021001",
+        code: "AED-401001",
         ficha: "2240001",
         fichaName: "ADSO",
         attendanceRate: 92,
@@ -744,7 +744,7 @@ export const mockPerfectAttendanceStudents = [
         id: "pas5",
         studentId: "7",
         name: "Valentina Cruz Lozano",
-        code: "2021007",
+        code: "AED-401003",
         ficha: "2240001",
         fichaName: "ADSO",
         attendanceRate: 91,
@@ -832,7 +832,7 @@ export const mockAppUsers = [
         name: "María García López",
         email: "m.garcia@uni.edu",
         role: "student",
-        code: "2021001",
+        code: "AED-401001",
         status: "active",
     },
     {
@@ -840,7 +840,7 @@ export const mockAppUsers = [
         name: "Carlos Rodríguez",
         email: "c.rodriguez@uni.edu",
         role: "student",
-        code: "2021002",
+        code: "AED-401002",
         status: "inactive",
     },
 ];
@@ -857,7 +857,7 @@ export const mockEnvironments = [
         schedules: [
             {
                 id: "sch1",
-                courseCode: "2240001",
+                courseCode: "AED-401",
                 courseName: "Algoritmos y Estructuras de Datos",
                 instructor: "au1",
                 instructorName: "Dr. Felipe Torres",
@@ -867,7 +867,7 @@ export const mockEnvironments = [
             },
             {
                 id: "sch2",
-                courseCode: "2240006",
+                courseCode: "BD-401",
                 courseName: "Bases de Datos",
                 instructor: "au5",
                 instructorName: "Dr. Hugo Méndez",
@@ -885,7 +885,7 @@ export const mockEnvironments = [
         schedules: [
             {
                 id: "sch3",
-                courseCode: "2240002",
+                courseCode: "MAT-201",
                 courseName: "Cálculo Diferencial",
                 instructor: "au2",
                 instructorName: "Dra. Patricia Soto",
@@ -903,7 +903,7 @@ export const mockEnvironments = [
         schedules: [
             {
                 id: "sch4",
-                courseCode: "2240003",
+                courseCode: "FIS-101",
                 courseName: "Física I",
                 instructor: "au3",
                 instructorName: "Dr. Mauricio Reyes",
@@ -921,7 +921,7 @@ export const mockEnvironments = [
         schedules: [
             {
                 id: "sch5",
-                courseCode: "2240004",
+                courseCode: "POO-301",
                 courseName: "Programación Orientada a Objetos",
                 instructor: "au4",
                 instructorName: "Ing. Sandra Varela",

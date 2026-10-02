@@ -13,6 +13,7 @@ import { useTheme } from "../../../components/hooks/useTheme";
 import { useResponsive } from "../../../components/hooks/useResponsive";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../../../../context/AppDataContext";
+import { useDateFormat } from "../../../../core/utils/hooks/useDateFormat";
 import { getInstitutionConfig } from "../../../../core/config/institutionConfig";
 import {
     EMPTY_COURSE_FORM,
@@ -50,6 +51,7 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
     const [saving, setSaving] = useState(false);
     const [showErrors, setShowErrors] = useState(false);
     const [success, setSuccess] = useState(false);
+    const { formatDate } = useDateFormat();
 
     // Calcular placeholders dinámicos basados en HOY y el período configurado
     const [datePlaceholders, setDatePlaceholders] = useState({ start: "", end: "" });
@@ -57,7 +59,7 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
     useEffect(() => {
         // Fecha de inicio: HOY
         const today = new Date();
-        const startPlaceholder = today.toISOString().split('T')[0];
+        const startPlaceholder = formatDate(today);
         
         // Fecha de finalización: calculada según tipo de período
         const config = getInstitutionConfig();
@@ -71,10 +73,10 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
         const daysToAdd = periodConfig[config.academicPeriodType] || 90;
         const endDate = new Date(today);
         endDate.setDate(endDate.getDate() + daysToAdd);
-        const endPlaceholder = endDate.toISOString().split('T')[0];
+        const endPlaceholder = formatDate(endDate);
         
         setDatePlaceholders({ start: startPlaceholder, end: endPlaceholder });
-    }, []);
+    }, [formatDate]);
 
     // Programas disponibles desde el contexto
     const programItems = appData.programs.map((p) => ({

@@ -6,9 +6,11 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useDateFormat } from "../../../../core/utils/hooks/useDateFormat";
 
 export default function DoneStep({ c, t, descriptor, onDownload, onConfirm }) {
     const hasRealDesc = descriptor?.descriptor?.length === 128;
+    const { formatDateTime } = useDateFormat();
 
     return (
         <View style={{ padding: 24 }}>
@@ -52,7 +54,7 @@ export default function DoneStep({ c, t, descriptor, onDownload, onConfirm }) {
                 {[
                     { label: t("Estudiante:"), value: descriptor.studentName },
                     { label: "ID:", value: descriptor.studentId },
-                    { label: t("Capturado:"), value: new Date(descriptor.timestamp).toLocaleString() },
+                    { label: t("Capturado:"), value: formatDateTime(new Date(descriptor.timestamp)) },
                     { label: t("Dimensiones:"), value: hasRealDesc ? "128D — face-api.js real" : "—" },
                     { label: t("Formato:"), value: descriptor.version },
                 ].map(({ label, value }) => (

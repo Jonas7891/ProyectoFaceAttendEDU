@@ -1,11 +1,12 @@
 import React from "react";
 import { DatePicker } from "./DatePicker";
+import { formatTime } from "../../../../core/constants/dateFormats";
 
 /**
  * TimePicker component para selección de hora
  * 
  * Wrapper de DatePicker en mode='time'. Proporciona una API específica
- * para selección de horas con formato optimizado.
+ * para selección de horas con formato optimizado según configuración institucional.
  * 
  * @param {Date} value - Hora seleccionada
  * @param {function} onChange - Callback al cambiar hora
@@ -51,15 +52,7 @@ export function TimePicker({
   required,
   style,
 }) {
-  const formatTime = (date) => {
-    if (!date) return "";
-    const d = new Date(date);
-    const hours = String(d.getHours()).padStart(2, "0");
-    const minutes = String(d.getMinutes()).padStart(2, "0");
-    return `${hours}:${minutes}`;
-  };
-
-  // Override placeholder para mostrar formato de hora
+  // Override placeholder para mostrar formato de hora según configuración (24h o 12h AM/PM)
   const timePlaceholder = value ? formatTime(value) : placeholder;
 
   return (

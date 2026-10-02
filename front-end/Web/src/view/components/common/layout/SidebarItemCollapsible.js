@@ -339,7 +339,7 @@ export default function SidebarItemCollapsible({
                                         <Feather 
                                             name={child.icon} 
                                             size={16} 
-                                            color={child.active ? childColors.icon : c.text.tertiary} 
+                                            color={child.active ? childColors.icon : c.text.secondary} 
                                         />
                                     )}
 

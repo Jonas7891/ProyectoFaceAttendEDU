@@ -12,6 +12,7 @@
 import React from "react";
 import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import { Card, Badge, Button, ProgressBar, EmptyState, useAttendanceColor } from "../../components/common";
 import { Navbar as PageHeader } from "../../components/common/navigation/Navbar";
 import { useTheme } from "../../components/hooks/useTheme";
@@ -23,7 +24,7 @@ import { CourseDetailModal, RegisterCourseModal, ImportCoursesModal } from "./mo
 
 // ── CourseCard (diseño original) ──────────────────────────
 
-function CourseCard({ course, onPress }) {
+function CourseCard({ course, onPress, onStudentsPress }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
     const c = theme.colors;
@@ -44,10 +45,10 @@ function CourseCard({ course, onPress }) {
                     >
                         <Text
                             style={{
-                                fontSize: 10,
+                                fontSize: 14,
                                 fontWeight: "700",
                                 color: course.color,
-                                letterSpacing: 1,
+                                letterSpacing: 0.5,
                             }}
                         >
                             {course.code}
@@ -56,7 +57,7 @@ function CourseCard({ course, onPress }) {
                     </View>
                     <Text
                         style={{
-                            fontSize: 10,
+                            fontSize: 15,
                             fontWeight: "700",
                             color: c.text.primary,
                             marginBottom: 8,
@@ -65,7 +66,7 @@ function CourseCard({ course, onPress }) {
                     >
                         {course.name}
                     </Text>
-                    <Text style={{ fontSize: 11, color: c.text.secondary, marginBottom: 14 }}>
+                    <Text style={{ fontSize: 13, color: c.text.secondary, marginBottom: 14 }}>
                         {course.professor}
                     </Text>
 
@@ -79,8 +80,8 @@ function CourseCard({ course, onPress }) {
                                 key={icon}
                                 style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
                             >
-                                <Feather name={icon} size={13} color={c.text.secondary} />
-                                <Text style={{ fontSize: 11, color: c.text.secondary }}>{text}</Text>
+                                <Feather name={icon} size={14} color={c.text.secondary} />
+                                <Text style={{ fontSize: 13, color: c.text.secondary }}>{text}</Text>
                             </View>
                         ))}
                     </View>
@@ -93,10 +94,10 @@ function CourseCard({ course, onPress }) {
                                 marginBottom: 6,
                             }}
                         >
-                            <Text style={{ fontSize: 11, color: c.text.secondary }}>
+                            <Text style={{ fontSize: 12, color: c.text.secondary }}>
                                 {t("Asistencia promedio")}
                             </Text>
-                            <Text style={{ fontSize: 10, fontWeight: "700", color: barColor }}>
+                            <Text style={{ fontSize: 13, fontWeight: "700", color: barColor }}>
                                 {course.avgAttendance}%
                             </Text>
                         </View>
@@ -121,13 +122,17 @@ function CourseCard({ course, onPress }) {
                             padding: 12,
                         }}
                     >
-                        <Feather name="bar-chart-2" size={13} color={c.text.secondary} />
-                        <Text style={{ fontSize: 11, color: c.text.secondary }}>
+                        <Feather name="bar-chart-2" size={14} color={c.text.secondary} />
+                        <Text style={{ fontSize: 13, color: c.text.secondary }}>
                             {t("Reportes")}
                         </Text>
                     </TouchableOpacity>
                     <View style={{ width: 1, backgroundColor: c.border.primary }} />
                     <TouchableOpacity
+                        onPress={(e) => {
+                            e.stopPropagation(); // Evitar que se dispare el onPress del Card
+                            onStudentsPress(course);
+                        }}
                         style={{
                             flex: 1,
                             flexDirection: "row",
@@ -137,10 +142,10 @@ function CourseCard({ course, onPress }) {
                             padding: 12,
                         }}
                     >
-                        <Feather name="users" size={13} color={c.brand.primary} />
+                        <Feather name="users" size={14} color={c.brand.primary} />
                         <Text
                             style={{
-                                fontSize: 11,
+                                fontSize: 13,
                                 color: c.brand.primary,
                                 fontWeight: "600",
                             }}
@@ -164,8 +169,24 @@ export function AdminCourses({ vm: vmProp }) {
     const vm = vmProp || vmLocal;
     const { t } = useTranslation();
     const permissions = useRolePermissions();
+    const navigation = useNavigation();
 
     const canManage = permissions.canManageCourses;
+
+    // Handler para navegar a estudiantes filtrados por curso
+    const handleNavigateToStudents = React.useCallback((course) => {
+        // Navegar a la vista de Usuarios con el subtab de Estudiantes y filtros pre-configurados:
+        // - Búsqueda por código del curso
+        // - Ordenar por nombre (A → Z)
+        // - Filtro avanzado en columna "Nombre"
+        navigation.navigate('Users', { 
+            section: 'students',
+            searchQuery: course.code,
+            sortBy: 'name',
+            sortOrder: 'asc',
+            filterColumn: 'name'
+        });
+    }, [navigation]);
 
     if (vm.isLoading) {
         return (
@@ -348,6 +369,7 @@ export function AdminCourses({ vm: vmProp }) {
                             <CourseCard
                                 course={course}
                                 onPress={() => vm.selectCourse(course)}
+                                onStudentsPress={handleNavigateToStudents}
                             />
                         </View>
                     ))}

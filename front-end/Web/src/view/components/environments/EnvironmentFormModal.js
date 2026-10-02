@@ -3,7 +3,7 @@
 //  Modal para crear/editar ambientes (salones)
 // ============================================================
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { View, Text, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Button, BaseModal } from "../common";
@@ -12,6 +12,20 @@ import { useTheme } from "../hooks/useTheme";
 import { useResponsive } from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { EMPTY_ENV_FORM } from "../../../viewmodels/useEnvironmentsViewModel";
+
+// Placeholders rotativos para mostrar variedad de identificadores
+const IDENTIFIER_PLACEHOLDERS = [
+    "301",
+    "A-205",
+    "Lab 3",
+    "B2-104",
+    "Aula 12",
+    "301-3",
+    "Sala A",
+    "L-102",
+];
+
+const MAX_CAPACITY = 400;
 
 export default function EnvironmentFormModal({
     visible,
@@ -30,6 +44,8 @@ export default function EnvironmentFormModal({
     const [saving, setSaving] = useState(false);
     const [success, setSuccess] = useState(false);
     const [showErrors, setShowErrors] = useState(false);
+    const [placeholderIndex, setPlaceholderIndex] = useState(0);
+    const placeholderIntervalRef = useRef(null);
 
     useEffect(() => {
         if (visible && mode === "edit" && environment) {
@@ -47,8 +63,39 @@ export default function EnvironmentFormModal({
         setShowErrors(false);
     }, [visible, mode, environment]);
 
+    // Rotación automática de placeholders cada 3 segundos
+    useEffect(() => {
+        if (visible) {
+            placeholderIntervalRef.current = setInterval(() => {
+                setPlaceholderIndex((prev) => (prev + 1) % IDENTIFIER_PLACEHOLDERS.length);
+            }, 3000);
+        }
+
+        return () => {
+            if (placeholderIntervalRef.current) {
+                clearInterval(placeholderIntervalRef.current);
+            }
+        };
+    }, [visible]);
+
     const setField = (key, value) => {
-        setForm((prev) => ({ ...prev, [key]: value }));
+        // Validación especial para capacidad
+        if (key === "capacity") {
+            // Solo permitir números
+            const numericValue = value.replace(/[^0-9]/g, "");
+            
+            // Limitar a máximo 400
+            if (numericValue === "") {
+                setForm((prev) => ({ ...prev, [key]: "" }));
+            } else {
+                const numValue = parseInt(numericValue, 10);
+                const cappedValue = Math.min(numValue, MAX_CAPACITY);
+                setForm((prev) => ({ ...prev, [key]: String(cappedValue) }));
+            }
+        } else {
+            setForm((prev) => ({ ...prev, [key]: value }));
+        }
+        
         if (showErrors) setError(null);
     };
 
@@ -157,10 +204,10 @@ export default function EnvironmentFormModal({
             <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 14 }}>
                 <View style={{ flex: 1 }}>
                     <TextInput
-                        label={t("Número / Nombre del ambiente") + " *"}
+                        label={t("Identificador del ambiente") + " *"}
                         value={form.number}
                         onChangeText={(v) => setField("number", v)}
-                        placeholder="301"
+                        placeholder={IDENTIFIER_PLACEHOLDERS[placeholderIndex]}
                         error={isEmpty(form.number)}
                     />
                 </View>
@@ -169,20 +216,20 @@ export default function EnvironmentFormModal({
                         label={t("Capacidad (personas)")}
                         value={form.capacity}
                         onChangeText={(v) => setField("capacity", v)}
-                        placeholder="40"
+                        placeholder="30"
                         keyboardType="numeric"
-                        hint={t("Opcional")}
+                        hint={form.capacity.trim() === "" && showErrors ? t("*Se usará capacidad de 30 por defecto") : t(`Opcional • Máx. ${MAX_CAPACITY}`)}
                     />
                 </View>
             </View>
 
             <TextInput
-                label={t("Descripción / Ubicación") + " *"}
+                label={t("Descripción / Ubicación")}
                 value={form.description}
                 onChangeText={(v) => setField("description", v)}
                 placeholder={t("Bloque A, piso 3. Aula de teoría con videobeam.")}
-                error={isEmpty(form.description)}
                 multiline
+                hint={form.description.trim() === "" && showErrors ? t("*Se guardará como 'Sin descripción'") : t("Opcional")}
             />
         </BaseModal>
     );

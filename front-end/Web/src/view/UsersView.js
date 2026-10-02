@@ -23,12 +23,19 @@ import { useRolePermissions } from "../viewmodels/useRolePermissions";
 import { useUsersViewModel } from "../viewmodels/useUsersViewModel";
 import { AdminUsers, TeacherUsers, StudentUsers } from "./authorized/users";
 
-export default function UsersView({ section = "all", attendanceFilter = null }) {
+export default function UsersView({ 
+    section = "all", 
+    attendanceFilter = null, 
+    searchQuery = null,
+    sortBy = null,
+    sortOrder = null,
+    filterColumn = null 
+}) {
     const { isSmall } = useResponsive();
     const { theme } = useTheme();
     const { t } = useTranslation();
     const permissions = useRolePermissions();
-    const vm = useUsersViewModel(section, attendanceFilter);
+    const vm = useUsersViewModel(section, attendanceFilter, searchQuery, sortBy, sortOrder, filterColumn);
     const c = theme.colors;
 
     // Helper para obtener el label de la sección

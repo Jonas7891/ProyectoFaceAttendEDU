@@ -192,14 +192,16 @@ export function TextInput({
         )}
       </View>
 
+      {/* Mensaje de error (normal) */}
       {error && errorMessage && (
         <Text style={[styles.message, { color: theme.colors.status.error }]}>
           {errorMessage}
         </Text>
       )}
 
+      {/* Helper text - posicionado absolutamente para NO afectar el layout */}
       {!error && helperText && (
-        <Text style={[styles.message, { color: theme.colors.text.secondary }]}>
+        <Text style={[styles.helperText, { color: theme.colors.text.secondary }]}>
           {helperText}
         </Text>
       )}
@@ -210,6 +212,7 @@ export function TextInput({
 const styles = StyleSheet.create({
   container: {
     marginBottom: 0,
+    position: 'relative', // Para que el helperText se posicione respecto a este contenedor
   },
   label: {
     fontSize: 14,
@@ -221,7 +224,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: DESIGN_TOKENS.borderRadius.lg,
     paddingLeft: DESIGN_TOKENS.spacing.sm,
-    paddingRight: DESIGN_TOKENS.spacing.sm, // Reducido para aprovechar espacio
+    paddingRight: DESIGN_TOKENS.spacing.sm,
     height: 48,
     maxWidth: '100%',
     alignSelf: 'stretch',
@@ -231,8 +234,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     paddingVertical: 0,
     height: '100%',
-    outlineWidth: 0, // ESTO ELIMINA EL OUTLINE NATIVO DEL NAVEGADOR
-    outlineStyle: 'none', // Doble seguridad para web
+    outlineWidth: 0,
+    outlineStyle: 'none',
     flexShrink: 1,
     minWidth: 0,
   },
@@ -245,6 +248,14 @@ const styles = StyleSheet.create({
   message: {
     fontSize: 12,
     marginTop: 3,
+  },
+  helperText: {
+    fontSize: 11,
+    position: 'absolute',
+    top: '100%', // Justo debajo del input
+    left: 0,
+    marginTop: 2,
+    opacity: 0.8,
   },
 });
 

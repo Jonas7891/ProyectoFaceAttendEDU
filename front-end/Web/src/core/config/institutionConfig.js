@@ -72,6 +72,10 @@ const DEFAULT_INSTITUTION_CONFIG = {
     // Idioma
     language: "es",
     
+    // Formato de fecha y hora (SIMPLIFICADO)
+    dateFormat: "DD/MM/YYYY", // DD/MM/YYYY | MM/DD/YYYY | YYYY-MM-DD
+    timeFormat24h: true,      // true = 24h (militar) | false = 12h (AM/PM)
+    
     // Reconocimiento facial
     confidenceThreshold: 85,
     autoRegister: true,

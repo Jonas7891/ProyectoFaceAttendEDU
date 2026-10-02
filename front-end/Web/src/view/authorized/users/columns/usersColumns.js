@@ -98,14 +98,22 @@ export const COLUMNS = [
         align: "left",
         contentWidth: 150,
         headerOffsetX: -10,
-        render: (user, { c }) => (
-            <Text
-                numberOfLines={1}
-                style={{ flexShrink: 1, fontSize: 13, color: c.text.primary }}
-            >
-                {user.course || "—"}
-            </Text>
-        ),
+        render: (user, { c, courses }) => {
+            // Buscar el curso por código o nombre
+            const course = courses?.find(
+                co => co.code === user.course || co.name === user.course || co.id === user.course
+            );
+            const displayName = course ? course.name : user.course || "—";
+            
+            return (
+                <Text
+                    numberOfLines={1}
+                    style={{ flexShrink: 1, fontSize: 13, color: c.text.primary }}
+                >
+                    {displayName}
+                </Text>
+            );
+        },
     },
     {
         id: "attendance",

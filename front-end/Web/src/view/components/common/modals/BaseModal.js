@@ -29,6 +29,7 @@ import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
  * @param {string} size - Tamaño: 'sm' | 'md' | 'lg' | 'xl' | 'full'
  * @param {boolean} closeOnBackdrop - Si se cierra al tocar fuera
  * @param {boolean} showCloseButton - Si muestra botón de cerrar
+ * @param {boolean} bodyScrollEnabled - Si el body puede hacer scroll (default: true)
  * @param {ReactNode} children - Contenido del modal
  */
 export function BaseModal({
@@ -44,6 +45,7 @@ export function BaseModal({
   size = "md",
   closeOnBackdrop = true,
   showCloseButton = true,
+  bodyScrollEnabled = true,
   children,
   style,
 }) {
@@ -151,8 +153,10 @@ export function BaseModal({
             {/* Body */}
             <ScrollView
               style={styles.body}
+              contentContainerStyle={styles.bodyContent}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
+              scrollEnabled={bodyScrollEnabled}
             >
               {children}
             </ScrollView>
@@ -187,7 +191,7 @@ const styles = StyleSheet.create({
   },
   modal: {
     borderRadius: DESIGN_TOKENS.borderRadius.lg,
-    maxHeight: "92%",
+    maxHeight: "100%",
     overflow: "hidden",
   },
   accent: {
@@ -225,13 +229,16 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   body: {
+    // Sin padding aquí - el padding va en contentContainerStyle
+  },
+  bodyContent: {
     padding: DESIGN_TOKENS.spacing.lg,
   },
   footer: {
     flexDirection: "row",
     gap: DESIGN_TOKENS.spacing.md,
     justifyContent: "flex-end",
-    padding: DESIGN_TOKENS.spacing.lg,
+    padding: DESIGN_TOKENS.spacing.sm,
     borderTopWidth: 1,
   },
 });

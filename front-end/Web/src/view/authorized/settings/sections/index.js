@@ -21,6 +21,7 @@ export { InstitutionInfo }        from "./general/InstitutionInfo";
 export { PeriodConfig }           from "./general/PeriodConfig";
 export { GeneralSummary }         from "./general/GeneralSummary";
 export { LanguageBlock }          from "./general/LanguageBlock";
+export { DateFormatBlock }        from "./general/DateFormatBlock";
 
 // facial
 export { ConfidenceSlider }       from "./facial/ConfidenceSlider";

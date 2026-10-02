@@ -130,22 +130,33 @@ export function validateUserForm(form) {
 
 // ── ViewModel ─────────────────────────────────────────────
 
-export function useUsersViewModel(section = "all", initialAttendanceFilter = null) {
+export function useUsersViewModel(
+    section = "all", 
+    initialAttendanceFilter = null, 
+    initialSearchQuery = null,
+    initialSortBy = null,
+    initialSortOrder = null,
+    initialFilterColumn = null
+) {
     const appData = useAppData();
 
-    const [search, setSearch] = useState("");
+    const [search, setSearch] = useState(initialSearchQuery || "");
     const [userTypeFilter, setUserTypeFilter] = useState(USER_TYPES.ALL);
     const [courseFilter, setCourseFilter] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
     const [selected, setSelected] = useState(null);
     const [showRegisterModal, setShowRegisterModal] = useState(false);
     const [showImportModal, setShowImportModal] = useState(false);
+    
+    // Estado de ordenamiento (inicializado desde parámetros de navegación)
+    const [sortBy, setSortBy] = useState(initialSortBy || null);
+    const [sortOrder, setSortOrder] = useState(initialSortOrder || "asc");
 
     // ── Estado de filtrado avanzado ────────────────────────────
-    
+    // Inicializar desde parámetros de navegación si existen
     const [advancedFilter, setAdvancedFilter] = useState({
-        column: initialAttendanceFilter ? "attendance" : null,
-        value: null,
+        column: initialFilterColumn || (initialAttendanceFilter ? "attendance" : null),
+        value: initialFilterColumn && initialSortOrder ? initialSortOrder : null,
         attendanceFilter: {
             mode: "preset",
             comparator: initialAttendanceFilter || "eq", // "gt" | "lt" | "eq"
@@ -284,6 +295,12 @@ export function useUsersViewModel(section = "all", initialAttendanceFilter = nul
                 result = sortByColumn(result, "role", advancedFilter.value);
             }
             
+            // ── Ordenamiento desde parámetros de navegación ────────
+            // Se aplica solo si no hay filtro avanzado activo
+            if (!advancedFilter.column && sortBy) {
+                result = sortByColumn(result, sortBy, sortOrder);
+            }
+            
             // ── Ordenamiento automático por asistencia cuando hay filtro sin valor específico ──
             if (advancedFilter.column === "attendance" && 
                 advancedFilter.attendanceFilter.percentage === null) {
@@ -305,7 +322,7 @@ export function useUsersViewModel(section = "all", initialAttendanceFilter = nul
             
             return result;
         },
-        [allUsers, search, userTypeFilter, courseFilter, statusFilter, advancedFilter, roleFilterFromSection]
+        [allUsers, search, userTypeFilter, courseFilter, statusFilter, advancedFilter, roleFilterFromSection, sortBy, sortOrder]
     );
 
     // ── Estadísticas derivadas ─────────────────────────────────
