@@ -32,9 +32,23 @@ const PEOPLE = [
   { documentNumber: "1030665124", name: "Lucía", lastName: "Fernández Rojas", email: "lucia.fernandez@example.com", documentType: "CC", actorCode: "EST-2026-005", biometricId: "est-2026-005" },
   { documentNumber: "1030678903", name: "Mateo", lastName: "Castillo Ospina", email: "mateo.castillo@example.com", documentType: "CC", actorCode: "EST-2026-006", biometricId: "est-2026-006" },
 ];
-// Credentials for the seeded login. Override in the environment; never reuse in production.
-const SEED_USERNAME = process.env.SEED_USERNAME ?? "seed.admin";
-const SEED_PASSWORD = process.env.SEED_PASSWORD ?? "SeedAdmin123!";
+// Staff personas (linked to users + roles below).
+const STAFF = [
+  { documentNumber: "79852314", name: "Carolina", lastName: "Mendoza Ruiz", email: "carolina.mendoza@example.com", documentType: "CC", key: "admin" },
+  { documentNumber: "79981245", name: "Carlos", lastName: "Restrepo Álvarez", email: "carlos.restrepo@example.com", documentType: "CC", key: "instructor" },
+];
+// Demo logins (local testing only, never reuse in production):
+//   Administrador: Carolina Mendoza Ruiz / username carolina.mendoza / password Admin2026*
+//   Docente:       Carlos Restrepo Álvarez / username carlos.restrepo / password Docente2026*
+//   Estudiante:    Valentina Ríos Herrera  / username valentina.rios  / password Estudiante2026*
+// Override any of them via SEED_USERNAME / SEED_PASSWORD, INSTRUCTOR_USERNAME /
+// INSTRUCTOR_PASSWORD, STUDENT_USERNAME / STUDENT_PASSWORD.
+const SEED_USERNAME = process.env.SEED_USERNAME ?? "carolina.mendoza";
+const SEED_PASSWORD = process.env.SEED_PASSWORD ?? "Admin2026*";
+const INSTRUCTOR_USERNAME = process.env.INSTRUCTOR_USERNAME ?? "carlos.restrepo";
+const INSTRUCTOR_PASSWORD = process.env.INSTRUCTOR_PASSWORD ?? "Docente2026*";
+const STUDENT_USERNAME = process.env.STUDENT_USERNAME ?? "valentina.rios";
+const STUDENT_PASSWORD = process.env.STUDENT_PASSWORD ?? "Estudiante2026*";
 // Bootstrap admin from DB seeds (01-bootstrap-admin-user + 005 role assignment).
 // The seed needs its session token: protected endpoints require Bearer + permissions.
 const BOOTSTRAP_USERNAME = process.env.BOOTSTRAP_USERNAME ?? "admin.faceattend";
@@ -111,38 +125,64 @@ async function seedIdentity() {
     if (pid) ids.personIds.push(pid);
   }
   ids.personId = ids.personIds[0] ?? null;
-  if (ids.personId) {
-    // POST /api/v1/users requires personId + username + password; the password is
-    // bcrypt-hashed server side (ADR-008) and never returned by any endpoint.
-    ids.userId = await ensure("identity", "/api/v1/users", {
-      personId: ids.personId, username: SEED_USERNAME, password: SEED_PASSWORD,
-    }, { idKey: "userId", matchKey: "username", matchValue: SEED_USERNAME });
-  } else {
-    console.log("skip  - user needs a person id (identity person seed failed?)");
+  // Staff personas: Carolina Mendoza (admin) + Carlos Restrepo (instructor).
+  ids.staffPersonIds = {};
+  for (const s of STAFF) {
+    const pid = await ensure("identity", "/api/v1/persons", {
+      documentNumber: s.documentNumber, name: s.name, lastName: s.lastName,
+      email: s.email, documentType: s.documentType, status: true,
+    }, { idKey: "personId", matchKey: "documentNumber", matchValue: s.documentNumber });
+    if (pid) ids.staffPersonIds[s.key] = pid;
+  }
+  // POST /api/v1/users requires personId + username + password; the password is
+  // bcrypt-hashed server side (ADR-008) and never returned by any endpoint.
+  // Admin reuses SEED_USERNAME so existing smoke tests keep working.
+  const logins = [
+    { key: "userId", personId: ids.staffPersonIds.admin, username: SEED_USERNAME, password: SEED_PASSWORD },
+    { key: "instructorUserId", personId: ids.staffPersonIds.instructor, username: INSTRUCTOR_USERNAME, password: INSTRUCTOR_PASSWORD },
+    { key: "studentUserId", personId: ids.personId, username: STUDENT_USERNAME, password: STUDENT_PASSWORD },
+  ];
+  for (const l of logins) {
+    if (!l.personId) {
+      console.log(`skip  - user ${l.username} needs a person id (identity person seed failed?)`);
+      continue;
+    }
+    ids[l.key] = await ensure("identity", "/api/v1/users", {
+      personId: l.personId, username: l.username, password: l.password,
+    }, { idKey: "userId", matchKey: "username", matchValue: l.username });
   }
   await get("identity", `/api/v1/auth/me?username=${SEED_USERNAME}`);
+  await get("identity", `/api/v1/auth/me?username=${INSTRUCTOR_USERNAME}`);
+  await get("identity", `/api/v1/auth/me?username=${STUDENT_USERNAME}`);
   await get("identity", "/api/v1/cities?limit=5");
 }
 
 // Authorization: canonical Mobile roles (Administrador, Instructor, Aprendiz).
-// The seed user gets Administrador so role-guarded logins resolve a role.
+// Each demo login gets its role so role-guarded logins resolve correctly.
 async function seedAuthorization() {
   const adminRoleId = await ensure("authorization", "/api/v1/roles",
     { roleName: "Administrador", description: "Rol Mobile: acceso total" },
     { idKey: "roleId", matchKey: "roleName", matchValue: "Administrador" });
-  await ensure("authorization", "/api/v1/roles",
+  const instructorRoleId = await ensure("authorization", "/api/v1/roles",
     { roleName: "Instructor", description: "Rol Mobile: docencia y asistencia" },
     { idKey: "roleId", matchKey: "roleName", matchValue: "Instructor" });
-  await ensure("authorization", "/api/v1/roles",
+  const aprendizRoleId = await ensure("authorization", "/api/v1/roles",
     { roleName: "Aprendiz", description: "Rol Mobile: consulta propia" },
     { idKey: "roleId", matchKey: "roleName", matchValue: "Aprendiz" });
   ids.roleId = adminRoleId;
   await post("authorization", "/api/v1/permissions", { permissionName: "seed.attendance.read", description: "Read attendance" });
   await post("authorization", "/api/v1/permissions", { permissionName: "seed.attendance.write", description: "Write attendance" });
-  if (ids.userId && adminRoleId) {
-    await post("authorization", `/api/v1/users/${ids.userId}/roles`, { roleId: adminRoleId });
-  } else {
-    console.log("skip  - role assignment needs a user id and role id");
+  const assignments = [
+    { userId: ids.userId, roleId: adminRoleId },
+    { userId: ids.instructorUserId, roleId: instructorRoleId },
+    { userId: ids.studentUserId, roleId: aprendizRoleId },
+  ];
+  for (const a of assignments) {
+    if (a.userId && a.roleId) {
+      await post("authorization", `/api/v1/users/${a.userId}/roles`, { roleId: a.roleId });
+    } else {
+      console.log("skip  - role assignment needs a user id and role id");
+    }
   }
   await get("authorization", "/api/v1/roles");
 }
@@ -183,6 +223,13 @@ async function seedAcademic() {
     }
     ids.actorId = ids.actorIds[0] ?? null;
   }
+  // Docente Carlos Restrepo teaches the block: actor type 2 = INSTRUCTOR.
+  ids.instructorActorId = null;
+  if (ids.staffPersonIds?.instructor) {
+    ids.instructorActorId = await ensure("academic", "/api/v1/academic-actors",
+      { personId: ids.staffPersonIds.instructor, actorTypeId: 2, schoolId: ids.schoolId, actorCode: "DOC-2026-001" },
+      { idKey: "academicActorId", matchKey: "actorCode", matchValue: "DOC-2026-001" }) ?? null;
+  }
   if (ids.actorIds?.length) {
     for (const actorId of ids.actorIds) {
       await post("academic", "/api/v1/enrollments", { academicActorId: actorId, cohortId: ids.cohortId });
@@ -204,7 +251,7 @@ async function seedScheduling() {
     { idKey: "environmentId", matchKey: "code", matchValue: "LAB-201-A" });
   ids.blockId = await ensure("scheduling", "/api/v1/schedule-blocks", {
     cohortId: ids.cohortId ?? 1, courseId: ids.courseId ?? 1,
-    environmentId: ids.environmentId, instructorActorId: ids.actorId ?? 1,
+    environmentId: ids.environmentId, instructorActorId: ids.instructorActorId ?? ids.actorId ?? 1,
     dayOfWeek: 1, startsAt: "08:00:00", endsAt: "10:00:00",
   }, { idKey: "scheduleBlockId", matchKey: "environmentId", matchValue: ids.environmentId });
   if (ids.blockId) {
