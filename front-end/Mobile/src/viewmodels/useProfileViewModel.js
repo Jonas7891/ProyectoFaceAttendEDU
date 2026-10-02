@@ -4,7 +4,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {saveLanguageForRole} from '../view/components/common/languageByRole';
 import {useTheme} from '../view/components/common/ThemeContext';
-import {getCurrentUser, getUserByEmail} from "../services/UserService";
+import {getCurrentUserRole, getCurrentUser} from "../services/UserService";
+import {ActorService} from '../services/ActorService';
+import {SchoolService} from '../services/SchoolService';
+import {backendGet} from '../api/backend';
+import ENV from '../config/env';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 
 export function useProfileViewModel() {
@@ -18,39 +22,58 @@ export function useProfileViewModel() {
     const [userInfo, setUserInfo] = useState({
         name: '',
         email: '',
+        phone: '',
         role: '',
         joinDate: '',
-        colegio: '',
+        school: '',
         employeeId: '',
     });
 
-    // Cargar datos del usuario al recibir foco
+    // Cargar datos del usuario al recibir foco:
+    // persona (nombre/teléfono) -> actor académico -> colegio.
     useFocusEffect(
         useCallback(() => {
             const loadUserData = async () => {
                 try {
-                    const userInfo = await getCurrentUser();
-                    const email = userInfo?.email;
-                    const user = await getUserByEmail(email);
-                    setUserInfo(user ? {
-                        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username || '',
-                        email: user.email || email || '',
-                        role: userRole || '',
-                        joinDate: user.createdAt || '',
-                        colegio: '',
-                        employeeId: user.userId || '',
-                    } : {
-                        name: '',
-                        email: email || '',
-                        role: userRole || '',
-                        joinDate: '',
-                        colegio: '',
-                        employeeId: '',
-                    });
-
-                    if (user && user.role) {
-                        await loadThemeForRole(user.role);
+                    const current = await getCurrentUser();
+                    const role = await getCurrentUserRole();
+                    if (role) {
+                        setUserRole(role);
+                        await loadThemeForRole(role);
                     }
+
+                    let person = null;
+                    if (current?.personId) {
+                        try {
+                            const arr = await backendGet(ENV.API_BASE_URL, `api/v1/persons/${current.personId}`);
+                            person = arr[0] || null;
+                        } catch {}
+                    }
+
+                    let schoolName = '';
+                    let actorCode = '';
+                    if (person?.person_id) {
+                        try {
+                            const actors = await ActorService.getByPerson(person.person_id);
+                            const actor = actors?.[0] || null;
+                            actorCode = actor?.actorCode || '';
+                            if (actor?.schoolId) {
+                                const school = await SchoolService.getById(actor.schoolId);
+                                schoolName = school?.name || '';
+                            }
+                        } catch {}
+                    }
+
+                    setUserInfo({
+                        name: `${person?.name || ''} ${person?.last_name || ''}`.trim() || current?.username || current?.name || '',
+                        email: person?.email || current?.email || '',
+                        phone: person?.phone || '',
+                        role: role || '',
+                        joinDate: '',
+                        school: schoolName,
+                        employeeId: person?.document_number || '',
+                        actorCode,
+                    });
                 } catch (error) {
                     console.error('Error cargando datos de usuario:', error);
                 }
