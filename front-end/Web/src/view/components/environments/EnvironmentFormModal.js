@@ -160,7 +160,7 @@ export default function EnvironmentFormModal({
                         label={t("Número / Nombre del ambiente") + " *"}
                         value={form.number}
                         onChangeText={(v) => setField("number", v)}
-                        placeholder={t("Ej: 301")}
+                        placeholder="301"
                         error={isEmpty(form.number)}
                     />
                 </View>
@@ -180,14 +180,10 @@ export default function EnvironmentFormModal({
                 label={t("Descripción / Ubicación") + " *"}
                 value={form.description}
                 onChangeText={(v) => setField("description", v)}
-                placeholder={t("Ej: Bloque A, piso 3. Aula de teoría con videobeam.")}
+                placeholder={t("Bloque A, piso 3. Aula de teoría con videobeam.")}
                 error={isEmpty(form.description)}
                 multiline
             />
-
-            <Text style={{ fontSize: 12, color: c.text.secondary, marginTop: 8, textAlign: "right" }}>
-                * {t("Campos obligatorios")}
-            </Text>
         </BaseModal>
     );
 }
