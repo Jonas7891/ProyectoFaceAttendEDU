@@ -17,9 +17,38 @@ const U = {
 const results = [];
 const ids = {};
 
-// Credentials for the seeded login. Override in the environment; never reuse in production.
-const SEED_USERNAME = process.env.SEED_USERNAME ?? "seed.admin";
-const SEED_PASSWORD = process.env.SEED_PASSWORD ?? "SeedAdmin123!";
+// Realistic Colombian demo catalog (stable keys keep reruns idempotent).
+const CITIES = [
+  { name: "Bogotá", department: "Cundinamarca" },
+  { name: "Medellín", department: "Antioquia" },
+  { name: "Cali", department: "Valle del Cauca" },
+];
+
+const PEOPLE = [
+  { documentNumber: "1014287635", name: "Valentina", lastName: "Ríos Herrera", email: "valentina.rios@example.com", documentType: "CC", actorCode: "EST-2026-001", biometricId: "est-2026-001" },
+  { documentNumber: "1014298812", name: "Santiago", lastName: "Herrera Mora", email: "santiago.herrera@example.com", documentType: "CC", actorCode: "EST-2026-002", biometricId: "est-2026-002" },
+  { documentNumber: "1020804451", name: "Camila", lastName: "Torres Vargas", email: "camila.torres@example.com", documentType: "CC", actorCode: "EST-2026-003", biometricId: "est-2026-003" },
+  { documentNumber: "1020812398", name: "Daniel", lastName: "Vargas Castillo", email: "daniel.vargas@example.com", documentType: "CC", actorCode: "EST-2026-004", biometricId: "est-2026-004" },
+  { documentNumber: "1030665124", name: "Lucía", lastName: "Fernández Rojas", email: "lucia.fernandez@example.com", documentType: "CC", actorCode: "EST-2026-005", biometricId: "est-2026-005" },
+  { documentNumber: "1030678903", name: "Mateo", lastName: "Castillo Ospina", email: "mateo.castillo@example.com", documentType: "CC", actorCode: "EST-2026-006", biometricId: "est-2026-006" },
+];
+// Staff personas (linked to users + roles below).
+const STAFF = [
+  { documentNumber: "79852314", name: "Carolina", lastName: "Mendoza Ruiz", email: "carolina.mendoza@example.com", documentType: "CC", key: "admin" },
+  { documentNumber: "79981245", name: "Carlos", lastName: "Restrepo Álvarez", email: "carlos.restrepo@example.com", documentType: "CC", key: "instructor" },
+];
+// Demo logins (local testing only, never reuse in production):
+//   Administrador: Carolina Mendoza Ruiz / username carolina.mendoza / password Admin2026*
+//   Docente:       Carlos Restrepo Álvarez / username carlos.restrepo / password Docente2026*
+//   Estudiante:    Valentina Ríos Herrera  / username valentina.rios  / password Estudiante2026*
+// Override any of them via SEED_USERNAME / SEED_PASSWORD, INSTRUCTOR_USERNAME /
+// INSTRUCTOR_PASSWORD, STUDENT_USERNAME / STUDENT_PASSWORD.
+const SEED_USERNAME = process.env.SEED_USERNAME ?? "carolina.mendoza";
+const SEED_PASSWORD = process.env.SEED_PASSWORD ?? "Admin2026*";
+const INSTRUCTOR_USERNAME = process.env.INSTRUCTOR_USERNAME ?? "carlos.restrepo";
+const INSTRUCTOR_PASSWORD = process.env.INSTRUCTOR_PASSWORD ?? "Docente2026*";
+const STUDENT_USERNAME = process.env.STUDENT_USERNAME ?? "valentina.rios";
+const STUDENT_PASSWORD = process.env.STUDENT_PASSWORD ?? "Estudiante2026*";
 // Bootstrap admin from DB seeds (01-bootstrap-admin-user + 005 role assignment).
 // The seed needs its session token: protected endpoints require Bearer + permissions.
 const BOOTSTRAP_USERNAME = process.env.BOOTSTRAP_USERNAME ?? "admin.faceattend";
@@ -78,44 +107,82 @@ async function loginSeed() {
 
 // Identity: cities, persons, users (auth surface stays testable via /me).
 async function seedIdentity() {
-  const city = await post("identity", "/api/v1/cities", { name: "Seed City", department: "Seed Dept" });
-  ids.cityId = pick(city, "cityId", "id") ?? 1;
-  ids.personId = await ensure("identity", "/api/v1/persons", {
-    documentNumber: "SEED-001", name: "Seed", lastName: "Student",
-    email: "seed.student@example.com", documentType: "CC", status: true,
-  }, { idKey: "personId", matchKey: "documentNumber", matchValue: "SEED-001" });
-  if (ids.personId) {
-    // POST /api/v1/users requires personId + username + password; the password is
-    // bcrypt-hashed server side (ADR-008) and never returned by any endpoint.
-    ids.userId = await ensure("identity", "/api/v1/users", {
-      personId: ids.personId, username: SEED_USERNAME, password: SEED_PASSWORD,
-    }, { idKey: "userId", matchKey: "username", matchValue: SEED_USERNAME });
-  } else {
-    console.log("skip  - user needs a person id (identity person seed failed?)");
+  // Cities have no unique constraint on name, so look up first to avoid
+  // creating duplicates on every rerun (other catalogs answer 409).
+  const knownCities = asArray(await get("identity", "/api/v1/cities?limit=100"));
+  for (const c of CITIES) {
+    if (knownCities.some((e) => e?.name === c.name)) continue;
+    await post("identity", "/api/v1/cities", c);
+  }
+  const city = await get("identity", "/api/v1/cities?limit=5");
+  ids.cityId = pick(asArray(city)[0], "cityId", "id") ?? 1;
+  ids.personIds = [];
+  for (const p of PEOPLE) {
+    const pid = await ensure("identity", "/api/v1/persons", {
+      documentNumber: p.documentNumber, name: p.name, lastName: p.lastName,
+      email: p.email, documentType: p.documentType, status: true,
+    }, { idKey: "personId", matchKey: "documentNumber", matchValue: p.documentNumber });
+    if (pid) ids.personIds.push(pid);
+  }
+  ids.personId = ids.personIds[0] ?? null;
+  // Staff personas: Carolina Mendoza (admin) + Carlos Restrepo (instructor).
+  ids.staffPersonIds = {};
+  for (const s of STAFF) {
+    const pid = await ensure("identity", "/api/v1/persons", {
+      documentNumber: s.documentNumber, name: s.name, lastName: s.lastName,
+      email: s.email, documentType: s.documentType, status: true,
+    }, { idKey: "personId", matchKey: "documentNumber", matchValue: s.documentNumber });
+    if (pid) ids.staffPersonIds[s.key] = pid;
+  }
+  // POST /api/v1/users requires personId + username + password; the password is
+  // bcrypt-hashed server side (ADR-008) and never returned by any endpoint.
+  // Admin reuses SEED_USERNAME so existing smoke tests keep working.
+  const logins = [
+    { key: "userId", personId: ids.staffPersonIds.admin, username: SEED_USERNAME, password: SEED_PASSWORD },
+    { key: "instructorUserId", personId: ids.staffPersonIds.instructor, username: INSTRUCTOR_USERNAME, password: INSTRUCTOR_PASSWORD },
+    { key: "studentUserId", personId: ids.personId, username: STUDENT_USERNAME, password: STUDENT_PASSWORD },
+  ];
+  for (const l of logins) {
+    if (!l.personId) {
+      console.log(`skip  - user ${l.username} needs a person id (identity person seed failed?)`);
+      continue;
+    }
+    ids[l.key] = await ensure("identity", "/api/v1/users", {
+      personId: l.personId, username: l.username, password: l.password,
+    }, { idKey: "userId", matchKey: "username", matchValue: l.username });
   }
   await get("identity", `/api/v1/auth/me?username=${SEED_USERNAME}`);
+  await get("identity", `/api/v1/auth/me?username=${INSTRUCTOR_USERNAME}`);
+  await get("identity", `/api/v1/auth/me?username=${STUDENT_USERNAME}`);
   await get("identity", "/api/v1/cities?limit=5");
 }
 
 // Authorization: canonical Mobile roles (Administrador, Instructor, Aprendiz).
-// The seed user gets Administrador so role-guarded logins resolve a role.
+// Each demo login gets its role so role-guarded logins resolve correctly.
 async function seedAuthorization() {
   const adminRoleId = await ensure("authorization", "/api/v1/roles",
     { roleName: "Administrador", description: "Rol Mobile: acceso total" },
     { idKey: "roleId", matchKey: "roleName", matchValue: "Administrador" });
-  await ensure("authorization", "/api/v1/roles",
+  const instructorRoleId = await ensure("authorization", "/api/v1/roles",
     { roleName: "Instructor", description: "Rol Mobile: docencia y asistencia" },
     { idKey: "roleId", matchKey: "roleName", matchValue: "Instructor" });
-  await ensure("authorization", "/api/v1/roles",
+  const aprendizRoleId = await ensure("authorization", "/api/v1/roles",
     { roleName: "Aprendiz", description: "Rol Mobile: consulta propia" },
     { idKey: "roleId", matchKey: "roleName", matchValue: "Aprendiz" });
   ids.roleId = adminRoleId;
   await post("authorization", "/api/v1/permissions", { permissionName: "seed.attendance.read", description: "Read attendance" });
   await post("authorization", "/api/v1/permissions", { permissionName: "seed.attendance.write", description: "Write attendance" });
-  if (ids.userId && adminRoleId) {
-    await post("authorization", `/api/v1/users/${ids.userId}/roles`, { roleId: adminRoleId });
-  } else {
-    console.log("skip  - role assignment needs a user id and role id");
+  const assignments = [
+    { userId: ids.userId, roleId: adminRoleId },
+    { userId: ids.instructorUserId, roleId: instructorRoleId },
+    { userId: ids.studentUserId, roleId: aprendizRoleId },
+  ];
+  for (const a of assignments) {
+    if (a.userId && a.roleId) {
+      await post("authorization", `/api/v1/users/${a.userId}/roles`, { roleId: a.roleId });
+    } else {
+      console.log("skip  - role assignment needs a user id and role id");
+    }
   }
   await get("authorization", "/api/v1/roles");
 }
@@ -123,35 +190,52 @@ async function seedAuthorization() {
 // Academic: full chain schools -> programs -> periods -> cohorts -> courses -> actors -> enrollments.
 async function seedAcademic() {
   ids.schoolId = await ensure("academic", "/api/v1/schools",
-    { code: "SEED-SCH", name: "Seed School", cityId: 1 },
-    { idKey: "schoolId", matchKey: "code", matchValue: "SEED-SCH" }) ?? 1;
+    { code: "ANDES-01", name: "Colegio Los Andes", cityId: 1 },
+    { idKey: "schoolId", matchKey: "code", matchValue: "ANDES-01" }) ?? 1;
   ids.programId = await ensure("academic", "/api/v1/programs",
-    { schoolId: ids.schoolId, code: "SEED-PROG", name: "Seed Program" },
-    { idKey: "programId", matchKey: "code", matchValue: "SEED-PROG" }) ?? 1;
+    { schoolId: ids.schoolId, code: "IS-2026", name: "Ingeniería de Sistemas" },
+    { idKey: "programId", matchKey: "code", matchValue: "IS-2026" }) ?? 1;
   ids.periodId = await ensure("academic", "/api/v1/academic-periods",
-    { schoolId: ids.schoolId, name: "Seed Period 2026", startsOn: "2026-01-01", endsOn: "2026-12-31", isActive: true },
-    { idKey: "academicPeriodId", matchKey: "name", matchValue: "Seed Period 2026" }) ?? 1;
+    { schoolId: ids.schoolId, name: "Periodo Académico 2026-I", startsOn: "2026-01-01", endsOn: "2026-06-30", isActive: true },
+    { idKey: "academicPeriodId", matchKey: "name", matchValue: "Periodo Académico 2026-I" }) ?? 1;
   ids.cohortId = await ensure("academic", "/api/v1/cohorts",
-    { programId: ids.programId, academicPeriodId: ids.periodId, code: "SEED-COH-01" },
-    { idKey: "cohortId", matchKey: "code", matchValue: "SEED-COH-01" }) ?? 1;
+    { programId: ids.programId, academicPeriodId: ids.periodId, code: "COH-2026-I-01" },
+    { idKey: "cohortId", matchKey: "code", matchValue: "COH-2026-I-01" }) ?? 1;
   ids.courseId = await ensure("academic", "/api/v1/courses",
-    { programId: ids.programId, code: "SEED-CUR-01", name: "Seed Course", creditHours: 3 },
-    { idKey: "courseId", matchKey: "code", matchValue: "SEED-CUR-01" }) ?? 1;
+    { programId: ids.programId, code: "CALC-101", name: "Cálculo Diferencial", creditHours: 3 },
+    { idKey: "courseId", matchKey: "code", matchValue: "CALC-101" }) ?? 1;
+  await ensure("academic", "/api/v1/courses",
+    { programId: ids.programId, code: "PROG-101", name: "Programación I", creditHours: 4 },
+    { idKey: "courseId", matchKey: "code", matchValue: "PROG-101" });
   // academic_actor.person_id is a native UUID column (cross-context reference to
   // identity.person, no FK): it must be the UUID from seedIdentity(), not the
-  // biometric string id ("seed-student-01" lives only in MongoDB).
-  if (!ids.personId) {
-    console.log("skip  - academic actor needs a person id (identity person seed failed?)");
+  // biometric string id (which lives only in MongoDB).
+  ids.actorIds = [];
+  if (!ids.personIds?.length) {
+    console.log("skip  - academic actors need person ids (identity person seed failed?)");
     ids.actorId = null;
   } else {
-    ids.actorId = await ensure("academic", "/api/v1/academic-actors",
-      { personId: ids.personId, actorTypeId: 1, schoolId: ids.schoolId, actorCode: "SEED-STU-01" },
-      { idKey: "academicActorId", matchKey: "actorCode", matchValue: "SEED-STU-01" }) ?? null;
+    for (let i = 0; i < PEOPLE.length && i < ids.personIds.length; i++) {
+      const actorId = await ensure("academic", "/api/v1/academic-actors",
+        { personId: ids.personIds[i], actorTypeId: 1, schoolId: ids.schoolId, actorCode: PEOPLE[i].actorCode },
+        { idKey: "academicActorId", matchKey: "actorCode", matchValue: PEOPLE[i].actorCode }) ?? null;
+      if (actorId) ids.actorIds.push(actorId);
+    }
+    ids.actorId = ids.actorIds[0] ?? null;
   }
-  if (ids.actorId) {
-    await post("academic", "/api/v1/enrollments", { academicActorId: ids.actorId, cohortId: ids.cohortId });
+  // Docente Carlos Restrepo teaches the block: actor type 2 = INSTRUCTOR.
+  ids.instructorActorId = null;
+  if (ids.staffPersonIds?.instructor) {
+    ids.instructorActorId = await ensure("academic", "/api/v1/academic-actors",
+      { personId: ids.staffPersonIds.instructor, actorTypeId: 2, schoolId: ids.schoolId, actorCode: "DOC-2026-001" },
+      { idKey: "academicActorId", matchKey: "actorCode", matchValue: "DOC-2026-001" }) ?? null;
+  }
+  if (ids.actorIds?.length) {
+    for (const actorId of ids.actorIds) {
+      await post("academic", "/api/v1/enrollments", { academicActorId: actorId, cohortId: ids.cohortId });
+    }
   } else {
-    console.log("skip  - enrollment needs an academic actor (academic actor seed failed?)");
+    console.log("skip  - enrollments need academic actors (academic actor seed failed?)");
   }
   await get("academic", "/api/v1/schools");
   await get("academic", `/api/v1/cohorts/${ids.cohortId}/enrollments`);
@@ -160,11 +244,14 @@ async function seedAcademic() {
 // Scheduling: environments -> blocks -> sessions -> open session.
 async function seedScheduling() {
   ids.environmentId = await ensure("scheduling", "/api/v1/environments",
-    { schoolId: ids.schoolId ?? 1, code: "SEED-ENV-301", name: "Seed Room 301", capacity: 30 },
-    { idKey: "environmentId", matchKey: "code", matchValue: "SEED-ENV-301" }) ?? 1;
+    { schoolId: ids.schoolId ?? 1, code: "AULA-301-B", name: "Aula 301 - Bloque B", capacity: 30 },
+    { idKey: "environmentId", matchKey: "code", matchValue: "AULA-301-B" }) ?? 1;
+  await ensure("scheduling", "/api/v1/environments",
+    { schoolId: ids.schoolId ?? 1, code: "LAB-201-A", name: "Laboratorio 201 - Bloque A", capacity: 24 },
+    { idKey: "environmentId", matchKey: "code", matchValue: "LAB-201-A" });
   ids.blockId = await ensure("scheduling", "/api/v1/schedule-blocks", {
     cohortId: ids.cohortId ?? 1, courseId: ids.courseId ?? 1,
-    environmentId: ids.environmentId, instructorActorId: ids.actorId ?? 1,
+    environmentId: ids.environmentId, instructorActorId: ids.instructorActorId ?? ids.actorId ?? 1,
     dayOfWeek: 1, startsAt: "08:00:00", endsAt: "10:00:00",
   }, { idKey: "scheduleBlockId", matchKey: "environmentId", matchValue: ids.environmentId });
   if (ids.blockId) {
@@ -197,26 +284,28 @@ async function seedScheduling() {
 // Attendance: records (bulk), justification types, justifications.
 async function seedAttendance() {
   await post("attendance", "/api/v1/justification-types", {
-    name: "Seed Medical", description: "Seed medical excuse", requiresAttachment: false,
+    name: "Incapacidad médica EPS", description: "Excusa médica certificada por la EPS", requiresAttachment: true,
   });
   ids.justificationTypeId = await ensure("attendance", "/api/v1/justification-types",
-    { name: "Seed Calamity", description: "Seed domestic calamity", requiresAttachment: true },
-    { idKey: "justificationTypeId", matchKey: "name", matchValue: "Seed Calamity" }) ?? 1;
+    { name: "Calamidad doméstica", description: "Calamidad doméstica debidamente soportada", requiresAttachment: true },
+    { idKey: "justificationTypeId", matchKey: "name", matchValue: "Calamidad doméstica" }) ?? 1;
   if (ids.sessionId) {
     // attendance_status is the native enum ('Present','Absent','Late','Justified') and
     // capture_method is ('FACIAL','MANUAL','IOT','IMPORT'); casing must match exactly.
+    const actors = ids.actorIds?.length ? ids.actorIds : [ids.actorId ?? 1];
+    const statuses = ["Present", "Present", "Late", "Absent", "Present", "Late"];
     const rec = await post("attendance", "/api/v1/attendance-records", {
-      classSessionId: ids.sessionId, academicActorId: ids.actorId ?? 1,
+      classSessionId: ids.sessionId, academicActorId: actors[0],
       attendanceStatus: "Present", captureMethod: "MANUAL",
     });
     ids.recordId = pick(rec, "recordId", "attendanceRecordId", "id");
-    await post("attendance", "/api/v1/attendance-records/bulk", [{
-      classSessionId: ids.sessionId, academicActorId: ids.actorId ?? 1,
-      attendanceStatus: "Late", captureMethod: "MANUAL",
-    }]);
+    await post("attendance", "/api/v1/attendance-records/bulk", actors.map((academicActorId, i) => ({
+      classSessionId: ids.sessionId, academicActorId,
+      attendanceStatus: statuses[i % statuses.length], captureMethod: "MANUAL",
+    })));
     if (ids.recordId) {
       await post("attendance", "/api/v1/justifications", {
-        attendanceRecordId: ids.recordId, justificationTypeId: ids.justificationTypeId, reason: "Seed excuse",
+        attendanceRecordId: ids.recordId, justificationTypeId: ids.justificationTypeId, reason: "Cita médica prioritaria",
       });
     }
     await get("attendance", `/api/v1/class-sessions/${ids.sessionId}/attendance`);
@@ -227,25 +316,33 @@ async function seedAttendance() {
 
 // Biometric: facial enroll, verify, identify with synthetic encodings.
 async function seedBiometric() {
-  const encoding = [0.12, 0.45, 0.78, 0.23, 0.56, 0.89, 0.34, 0.67];
+  const base = [0.12, 0.45, 0.78, 0.23, 0.56, 0.89, 0.34, 0.67];
+  const encodingFor = (i) => base.map((v, j) => +(v + i * 0.01 + j * 0.001).toFixed(4));
+  // Legacy id kept for backward compatibility with existing frontends/dashboards.
   await post("biometric", "/api/v1/biometric/facial/enroll", {
-    person_id: "seed-student-01", encoding, model_version: "seed-v1",
+    person_id: "seed-student-01", encoding: base, model_version: "seed-v1",
   });
-  await post("biometric", "/api/v1/biometric/facial/verify", { person_id: "seed-student-01", encoding });
-  await post("biometric", "/api/v1/biometric/facial/identify", { encoding });
-  await get("biometric", "/api/v1/biometric/facial/seed-student-01/history");
+  for (let i = 0; i < PEOPLE.length; i++) {
+    await post("biometric", "/api/v1/biometric/facial/enroll", {
+      person_id: PEOPLE[i].biometricId, encoding: encodingFor(i), model_version: "seed-v1",
+    });
+  }
+  const first = PEOPLE[0].biometricId;
+  await post("biometric", "/api/v1/biometric/facial/verify", { person_id: first, encoding: encodingFor(0) });
+  await post("biometric", "/api/v1/biometric/facial/identify", { encoding: encodingFor(0) });
+  await get("biometric", `/api/v1/biometric/facial/${first}/history`);
 }
 
 // Configuration: academic/security configs plus a biometric update case.
 async function seedConfiguration() {
   await post("configuration", "/api/v1/configurations/academic", {
-    schoolId: ids.schoolId ?? 1, configurationName: "seed.attendance.tolerance", configurationValue: "10",
+    schoolId: ids.schoolId ?? 1, configurationName: "attendance.tolerance.minutes", configurationValue: "10",
   });
   await post("configuration", "/api/v1/configurations/security", {
-    configurationName: "seed.jwt.ttl", configurationValue: "3600",
+    configurationName: "jwt.ttl.seconds", configurationValue: "3600",
   });
   await post("configuration", "/api/v1/biometric-update-cases", {
-    personId: "seed-student-01", biometricType: "FACIAL", reason: "Seed re-enrollment",
+    personId: PEOPLE[0].biometricId, biometricType: "FACIAL", reason: "Re-enrolamiento por actualización de documento",
   });
   await get("configuration", "/api/v1/biometric-update-cases?status=Pending");
 }
@@ -253,17 +350,20 @@ async function seedConfiguration() {
 // Notification: alert type then alert (needs a type id first).
 async function seedNotification() {
   ids.alertTypeId = await ensure("notification", "/api/v1/alert-types",
-    { code: "SEED_ABSENCE", name: "Seed absence", severity: "MEDIUM", channel: "APP" },
-    { idKey: "AlertTypeID", matchKey: "Code", matchValue: "SEED_ABSENCE" });
+    { code: "ABSENTEEISM", name: "Inasistencia recurrente", severity: "MEDIUM", channel: "APP" },
+    { idKey: "AlertTypeID", matchKey: "Code", matchValue: "ABSENTEEISM" });
   if (ids.alertTypeId) {
-    await post("notification", "/api/v1/alerts", { academic_actor_id: 1, alert_type_id: ids.alertTypeId });
+    const actors = ids.actorIds?.length ? ids.actorIds.slice(0, 2) : [1];
+    for (const academicActorId of actors) {
+      await post("notification", "/api/v1/alerts", { academic_actor_id: academicActorId, alert_type_id: ids.alertTypeId });
+    }
   }
   await get("notification", "/api/v1/alerts?limit=5");
 }
 
 // Quality: project plus read-only instruments used by frontend forms.
 async function seedQuality() {
-  await post("quality", "/api/v1/quality/projects", { name: "Seed Quality Project", status: "Active" });
+  await post("quality", "/api/v1/quality/projects", { name: "Evaluación institucional 2026-I", status: "Active" });
   await get("quality", "/api/v1/quality/characteristics");
   await get("quality", "/api/v1/quality/process/profile");
   await get("quality", "/api/v1/quality/istqb/categories");
