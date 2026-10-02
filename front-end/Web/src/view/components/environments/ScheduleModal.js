@@ -3,14 +3,15 @@
 //  Modal para agregar/editar horarios en ambientes
 // ============================================================
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Button, BaseModal } from "../common";
+import { Button, BaseModal, AnimatedDropdown } from "../common";
 import TextInput from "../common/inputs/TextInput";
 import { useTheme } from "../hooks/useTheme";
 import { useResponsive } from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
+import { useAppData } from "../../../context/AppDataContext";
 import InstructorAutocomplete from "./InstructorAutocomplete";
 import {
     EMPTY_SCHEDULE_FORM,
@@ -30,11 +31,41 @@ export default function ScheduleModal({
     const { isSmall } = useResponsive();
     const { t } = useTranslation();
     const c = theme.colors;
+    const appData = useAppData();
 
     const [form, setForm] = useState(EMPTY_SCHEDULE_FORM);
     const [error, setError] = useState(null);
     const [saving, setSaving] = useState(false);
     const [showErrors, setShowErrors] = useState(false);
+    const [courseNameInput, setCourseNameInput] = useState(""); // Para búsqueda bidireccional
+    const [dropdownOpen, setDropdownOpen] = useState(false); // Controlar apertura del dropdown
+
+    // Generar items de fichas desde los cursos disponibles
+    const fichaItems = useMemo(() => {
+        if (!appData.courses || appData.courses.length === 0) return [];
+        
+        return appData.courses
+            .filter(course => course.status === "active")
+            .map(course => ({
+                value: course.code,
+                label: course.name,
+                description: `Ficha ${course.code}`,
+                icon: "book-open",
+            }));
+    }, [appData.courses]);
+
+    // Filtrar fichas según el input de "Nombre del programa" (búsqueda bidireccional)
+    const filteredFichaItems = useMemo(() => {
+        if (!courseNameInput.trim()) return fichaItems.slice(0, 5); // Máximo 5 por defecto
+        
+        const query = courseNameInput.toLowerCase();
+        return fichaItems
+            .filter(item => 
+                item.label.toLowerCase().includes(query) ||
+                item.value.toLowerCase().includes(query)
+            )
+            .slice(0, 5); // Máximo 5 resultados
+    }, [fichaItems, courseNameInput]);
 
     useEffect(() => {
         if (visible && editing) {
@@ -48,8 +79,10 @@ export default function ScheduleModal({
                 endTime: editing.endTime,
                 days: [...editing.days],
             });
+            setCourseNameInput(editing.courseName); // Sincronizar input de nombre
         } else if (visible) {
             setForm(EMPTY_SCHEDULE_FORM);
+            setCourseNameInput(""); // Limpiar input de nombre
         }
         setError(null);
         setShowErrors(false);
@@ -58,6 +91,39 @@ export default function ScheduleModal({
 
     const setField = (key, value) => {
         setForm((prev) => ({ ...prev, [key]: value }));
+        if (showErrors) setError(null);
+    };
+
+    // Handler para cuando se selecciona una ficha del dropdown
+    const handleFichaSelect = (fichaCode) => {
+        const selectedFicha = appData.courses.find(c => c.code === fichaCode);
+        if (selectedFicha) {
+            setForm(prev => ({
+                ...prev,
+                courseCode: selectedFicha.code,
+                courseName: selectedFicha.name,
+            }));
+            setCourseNameInput(selectedFicha.name); // Sincronizar input
+        }
+        setDropdownOpen(false); // Cerrar dropdown al seleccionar
+        if (showErrors) setError(null);
+    };
+
+    // Handler para cuando se escribe en "Nombre del programa"
+    const handleCourseNameChange = (value) => {
+        setCourseNameInput(value); // Actualizar búsqueda para filtrar dropdown
+        setForm(prev => ({
+            ...prev,
+            courseName: value,
+        }));
+        
+        // Abrir dropdown cuando se escribe (mínimo 1 carácter)
+        if (value.trim().length > 0) {
+            setDropdownOpen(true);
+        } else {
+            setDropdownOpen(false);
+        }
+        
         if (showErrors) setError(null);
     };
 
@@ -140,47 +206,67 @@ export default function ScheduleModal({
                 </View>
             )}
 
-            {/* Course info */}
-            <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 14 }}>
-                <View style={{ flex: 1 }}>
-                    <TextInput
-                        label={t("Nº Ficha / Código") + " *"}
-                        value={form.courseCode}
-                        onChangeText={(v) => setField("courseCode", v)}
-                        placeholder="Ej: 2240001"
-                        error={isEmpty(form.courseCode)}
-                    />
-                </View>
-                <View style={{ flex: 2 }}>
-                    <TextInput
-                        label={t("Nombre del programa") + " *"}
-                        value={form.courseName}
-                        onChangeText={(v) => setField("courseName", v)}
-                        placeholder={t("Ej: Tecnología en Sistemas")}
-                        error={isEmpty(form.courseName)}
-                    />
+            {/* Course info - Dropdown bidireccional */}
+            <View style={{ marginBottom: 14, zIndex: (courseNameInput.trim().length > 0 && dropdownOpen) ? 1000 : 1 }}>
+                <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 14, marginBottom: isSmall ? 0 : 14 }}>
+                    <View style={{ flex: 1, minWidth: 160 }}>
+                        <Text style={{
+                            fontSize: 14,
+                            fontWeight: "600",
+                            color: showErrors && !form.courseCode ? c.status.danger : c.text.secondary,
+                            marginBottom: 6,
+                        }}>
+                            {t("Nº Ficha / Código")} *
+                        </Text>
+                        <AnimatedDropdown
+                            items={filteredFichaItems}
+                            value={form.courseCode}
+                            onSelect={handleFichaSelect}
+                            placeholder={t("Ej: 2240001")}
+                            searchable={true}
+                            searchPlaceholder={t("Buscar ficha...")}
+                            maxVisible={5}
+                            triggerIcon="book-open"
+                            error={showErrors && !form.courseCode}
+                            triggerHeight={48}
+                            controlledOpen={courseNameInput.trim().length > 0 ? dropdownOpen : undefined}
+                            onOpenChange={setDropdownOpen}
+                        />
+                    </View>
+                    <View style={{ flex: 2, minWidth: 200 }}>
+                        <TextInput
+                            label={t("Nombre del programa") + " *"}
+                            value={courseNameInput}
+                            onChangeText={handleCourseNameChange}
+                            placeholder={t("Ej: Tecnología en Sistemas")}
+                            error={isEmpty(form.courseName)}
+                            helperText={form.courseCode ? t("Vinculado a ficha ") + form.courseCode : ""}
+                        />
+                    </View>
                 </View>
             </View>
 
             {/* Instructor autocomplete */}
-            <InstructorAutocomplete
-                query={form.instructorQuery}
-                onChangeQuery={(v) => {
-                    setField("instructorQuery", v);
-                    setField("instructorId", "");
-                    setField("instructorName", "");
-                }}
-                onSelect={(u) => {
-                    setField("instructorId", u.id);
-                    setField("instructorName", u.name);
-                    setField("instructorQuery", u.name);
-                }}
-                searchFn={searchFn}
-                error={showErrors && !form.instructorId}
-            />
+            <View style={{ zIndex: (courseNameInput.trim().length > 0 && dropdownOpen) ? -1 : 1 }}>
+                <InstructorAutocomplete
+                    query={form.instructorQuery}
+                    onChangeQuery={(v) => {
+                        setField("instructorQuery", v);
+                        setField("instructorId", "");
+                        setField("instructorName", "");
+                    }}
+                    onSelect={(u) => {
+                        setField("instructorId", u.id);
+                        setField("instructorName", u.name);
+                        setField("instructorQuery", u.name);
+                    }}
+                    searchFn={searchFn}
+                    error={showErrors && !form.instructorId}
+                />
+            </View>
 
             {/* Time range */}
-            <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 14 }}>
+            <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 14, zIndex: (courseNameInput.trim().length > 0 && dropdownOpen) ? -1 : 1 }}>
                 <View style={{ flex: 1 }}>
                     <TextInput
                         label={t("Hora inicio") + " *"}
@@ -202,7 +288,7 @@ export default function ScheduleModal({
             </View>
 
             {/* Days selector */}
-            <View style={{ marginBottom: 14 }}>
+            <View style={{ marginBottom: 14, zIndex: (courseNameInput.trim().length > 0 && dropdownOpen) ? -1 : 1 }}>
                 <Text
                     style={{
                         fontSize: 13,

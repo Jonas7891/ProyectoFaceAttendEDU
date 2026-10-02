@@ -236,10 +236,13 @@ export const mockCourses = [
         code: "AED-401",
         professor: "Dr. Felipe Torres",
         students: 45,
-        schedule: "Lun/Mié 8:00–10:00",
-        room: "Aula 301",
+        schedule: "mañana",
+        room: "env1", // ID del ambiente "301"
+        startDate: "2024-01-15",
+        endDate: "2024-06-30",
         semester: "2024-2",
         avgAttendance: 87,
+        status: "active",
         color: "#4F6BED",
     },
     {
@@ -248,10 +251,13 @@ export const mockCourses = [
         code: "MAT-201",
         professor: "Dra. Patricia Soto",
         students: 38,
-        schedule: "Mar/Jue 10:00–12:00",
-        room: "Aula 105",
+        schedule: "tarde",
+        room: "env2", // ID del ambiente "105"
+        startDate: "2024-01-15",
+        endDate: "2024-06-30",
         semester: "2024-2",
         avgAttendance: 92,
+        status: "active",
         color: "#10B981",
     },
     {
@@ -260,10 +266,13 @@ export const mockCourses = [
         code: "FIS-101",
         professor: "Dr. Mauricio Reyes",
         students: 42,
-        schedule: "Lun/Mié/Vie 7:00–8:00",
-        room: "Lab. Física",
+        schedule: "mañana",
+        room: "env3", // ID del ambiente "Lab. Física"
+        startDate: "2024-01-15",
+        endDate: "2024-06-30",
         semester: "2024-2",
         avgAttendance: 78,
+        status: "active",
         color: "#F59E0B",
     },
     {
@@ -272,10 +281,13 @@ export const mockCourses = [
         code: "POO-301",
         professor: "Ing. Sandra Varela",
         students: 35,
-        schedule: "Mar/Jue 14:00–16:00",
-        room: "Lab. Computación",
+        schedule: "tarde",
+        room: "env4", // ID del ambiente "Lab. Computación"
+        startDate: "2024-01-15",
+        endDate: "2024-06-30",
         semester: "2024-2",
         avgAttendance: 85,
+        status: "active",
         color: "#8B5CF6",
     },
     {
@@ -284,10 +296,13 @@ export const mockCourses = [
         code: "BD-401",
         professor: "Dr. Hugo Méndez",
         students: 40,
-        schedule: "Vie 8:00–12:00",
-        room: "Lab. Computación",
+        schedule: "mañana",
+        room: "env4", // ID del ambiente "Lab. Computación"
+        startDate: "2024-01-15",
+        endDate: "2024-06-30",
         semester: "2024-2",
         avgAttendance: 90,
+        status: "active",
         color: "#EF4444",
     },
     {
@@ -296,10 +311,13 @@ export const mockCourses = [
         code: "PD-101",
         professor: "Dr. Hugo Verdosa",
         students: 30,
-        schedule: "Lun 8:00–12:00",
-        room: "Aula 301",
+        schedule: "mañana",
+        room: "env1", // ID del ambiente "301"
+        startDate: "2024-01-15",
+        endDate: "2024-06-30",
         semester: "2024-2",
         avgAttendance: 83,
+        status: "active",
         color: "#EF4444",
     },
 ];
@@ -912,6 +930,13 @@ export const mockEnvironments = [
                 days: ["Mar", "Jue"],
             },
         ],
+    },
+    {
+        id: "env5",
+        number: "209-3",
+        description: "Salón número 3 de adso",
+        capacity: 25,
+        schedules: [],
     },
 ];
 

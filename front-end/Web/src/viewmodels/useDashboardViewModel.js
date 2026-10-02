@@ -4,7 +4,6 @@ import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useAuth } from "../context/AuthContext";
 import { useAppData } from "../context/AppDataContext";
 import {
-    mockCourses,
     mockAttendanceByDay,
     mockAttendanceByWeek,
     mockCourseAttendance,
@@ -39,7 +38,7 @@ export function useDashboardViewModel() {
     const { theme } = useTheme();
     const { t } = useTranslation();
     const { user } = useAuth();
-    const { fichas, students, teachers } = useAppData();
+    const { fichas, students, teachers, courses } = useAppData();
     const c = theme.colors;
 
     const userRole = user?.role || "student";
@@ -253,7 +252,7 @@ export function useDashboardViewModel() {
 
         // Validaciones defensivas
         if (!students || students.length === 0) return [];
-        if (!mockCourses || mockCourses.length === 0) return [];
+        if (!courses || courses.length === 0) return [];
         if (!instructorAttendance || instructorAttendance.length === 0) return [];
 
         // Mock: datos del estudiante actual
@@ -267,7 +266,7 @@ export function useDashboardViewModel() {
         });
         
         // Mock: Información de la clase/ambiente actual
-        const currentClass = mockCourses[0]; // Primera clase del día
+        const currentClass = courses[0]; // Primera clase del día
         const currentInstructor = instructorAttendance[0]; // Primer instructor
         
         // Estado de asistencia hoy
@@ -336,13 +335,13 @@ export function useDashboardViewModel() {
             },
             {
                 label: t("Mis cursos"),
-                value: mockCourses?.length || 0,
+                value: courses?.length || 0,
                 subtitle: t("Inscritos"),
                 color: c.status.success,
                 icon: "book-open",
             },
         ];
-    }, [c, t, userRole, students, teachers]);
+    }, [c, t, userRole, students, teachers, courses]);
 
     // Seleccionar stats según rol
     const stats = useMemo(() => {
@@ -465,7 +464,7 @@ export function useDashboardViewModel() {
         }
 
         return courses.map((item) => {
-            const course = mockCourses?.find((x) => x.code === item.course);
+            const course = courses?.find((x) => x.code === item.course);
             const barColor =
                 (item.rate || 0) >= 85
                     ? c.status.success
@@ -478,7 +477,7 @@ export function useDashboardViewModel() {
                 barColor 
             };
         });
-    }, [c, userRole]);
+    }, [c, userRole, courses]);
 
     // ── Datos específicos de ADMIN ────────────────────────────
 
@@ -543,15 +542,15 @@ export function useDashboardViewModel() {
         
         // Validaciones defensivas
         if (!students || students.length === 0) return null;
-        if (!mockCourses || mockCourses.length === 0) return null;
+        if (!courses || courses.length === 0) return null;
 
         const studentInfo = students[0];
 
         return {
             personalInfo: studentInfo,
-            upcomingClasses: mockCourses.slice(0, 3),
+            upcomingClasses: courses.slice(0, 3),
         };
-    }, [userRole, students]);
+    }, [userRole, students, courses]);
 
     return {
         // Datos comunes

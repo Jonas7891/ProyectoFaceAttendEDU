@@ -110,8 +110,13 @@ export default function EnvironmentDetailModal({
                 <Text style={{ fontSize: 16, fontWeight: "700", color: c.text.primary }}>
                     {t("Horarios asignados")}
                 </Text>
-                <Button variant="primary" size="sm" onPress={onAddSchedule}>
-                    <Feather name="plus" size={14} color="#fff" /> {t("Añadir horario")}
+                <Button 
+                    variant="primary" 
+                    size="sm" 
+                    onPress={onAddSchedule}
+                    leftIcon={<Feather name="plus" size={14} color="#fff" />}
+                >
+                    {t("Añadir horario")}
                 </Button>
             </View>
 

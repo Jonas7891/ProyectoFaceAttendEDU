@@ -5,7 +5,7 @@
 //  La validación se hace en el ViewModel, no aquí.
 // ============================================================
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Button, AnimatedDropdown, BaseModal, TextInput } from "../../../components/common";
@@ -13,6 +13,7 @@ import { useTheme } from "../../../components/hooks/useTheme";
 import { useResponsive } from "../../../components/hooks/useResponsive";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../../../../context/AppDataContext";
+import { getInstitutionConfig } from "../../../../core/config/institutionConfig";
 import {
     EMPTY_COURSE_FORM,
     validateCourseForm,
@@ -25,21 +26,6 @@ const JORNADA_ITEMS = [
     { value: "tarde", label: "Tarde", icon: "sun" },
     { value: "noche", label: "Noche", icon: "moon" },
     { value: "mixta", label: "Mixta", icon: "clock" },
-];
-
-// ── Aulas disponibles (mock - TODO: traer desde contexto) ──
-
-const AULA_ITEMS = [
-    { value: "A-101", label: "A-101", icon: "map-pin" },
-    { value: "A-102", label: "A-102", icon: "map-pin" },
-    { value: "A-201", label: "A-201", icon: "map-pin" },
-    { value: "A-202", label: "A-202", icon: "map-pin" },
-    { value: "B-101", label: "B-101", icon: "map-pin" },
-    { value: "B-102", label: "B-102", icon: "map-pin" },
-    { value: "B-201", label: "B-201", icon: "map-pin" },
-    { value: "B-202", label: "B-202", icon: "map-pin" },
-    { value: "C-101", label: "C-101", icon: "map-pin" },
-    { value: "C-201", label: "C-201", icon: "map-pin" },
 ];
 
 // ── Estados disponibles ───────────────────────────────────
@@ -65,6 +51,31 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
     const [showErrors, setShowErrors] = useState(false);
     const [success, setSuccess] = useState(false);
 
+    // Calcular placeholders dinámicos basados en HOY y el período configurado
+    const [datePlaceholders, setDatePlaceholders] = useState({ start: "", end: "" });
+    
+    useEffect(() => {
+        // Fecha de inicio: HOY
+        const today = new Date();
+        const startPlaceholder = today.toISOString().split('T')[0];
+        
+        // Fecha de finalización: calculada según tipo de período
+        const config = getInstitutionConfig();
+        const periodConfig = {
+            'anual': 365,
+            'semestral': 180,
+            'cuatrimestral': 120,
+            'trimestral': 90,
+        };
+        
+        const daysToAdd = periodConfig[config.academicPeriodType] || 90;
+        const endDate = new Date(today);
+        endDate.setDate(endDate.getDate() + daysToAdd);
+        const endPlaceholder = endDate.toISOString().split('T')[0];
+        
+        setDatePlaceholders({ start: startPlaceholder, end: endPlaceholder });
+    }, []);
+
     // Programas disponibles desde el contexto
     const programItems = appData.programs.map((p) => ({
         value: p.name,
@@ -77,6 +88,13 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
         value: t.name,
         label: t.name,
         icon: "user",
+    }));
+
+    // Ambientes disponibles desde el contexto (fuente de verdad real)
+    const environmentItems = appData.environments.map((env) => ({
+        value: env.id,
+        label: `${env.number} — ${env.description.split('—')[0].trim()}`,
+        icon: "map-pin",
     }));
 
     const setField = (key, value) => {
@@ -241,10 +259,10 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
                         {t("Salón")}
                     </Text>
                     <AnimatedDropdown
-                        items={AULA_ITEMS}
+                        items={environmentItems}
                         value={form.room}
                         onSelect={v => setField("room", v)}
-                        placeholder={t("¿Cuál?")}
+                        placeholder={t("Seleccionar ambiente")}
                         triggerIcon="map-pin"
                         error={showErrors && !form.room}
                         triggerHeight={48}
@@ -259,7 +277,7 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
                         label={t("Fecha de inicio")}
                         value={form.startDate}
                         onChangeText={v => setField("startDate", v)}
-                        placeholder="2024-01-15"
+                        placeholder={datePlaceholders.start}
                         error={isEmpty(form.startDate)}
                         errorMessage={isEmpty(form.startDate) ? t("Campo requerido") : ""}
                         leftIcon={<Feather name="calendar" size={16} color={c.text.tertiary} />}
@@ -270,7 +288,7 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
                         label={t("Fecha de finalización")}
                         value={form.endDate}
                         onChangeText={v => setField("endDate", v)}
-                        placeholder="2024-06-30"
+                        placeholder={datePlaceholders.end}
                         error={isEmpty(form.endDate)}
                         errorMessage={isEmpty(form.endDate) ? t("Campo requerido") : ""}
                         leftIcon={<Feather name="calendar" size={16} color={c.text.tertiary} />}

@@ -129,6 +129,7 @@ export function AdminUsers({ section, vm: vmProp }) {
                     visible={vm.showRegisterModal}
                     onClose={vm.closeRegisterModal}
                     onSubmit={vm.registerUser}
+                    initialRole={roleFilter || null}
                 />
             )}
 

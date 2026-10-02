@@ -127,80 +127,17 @@ export function useCoursesViewModel() {
         },
     });
 
-    // ── Cursos derivados de fichas ─────────────────────────────
+    // ── Cursos desde el contexto (fuente de verdad) ────────────
     
-    // Cursos vienen directamente de las fichas del contexto
     const courses = useMemo(() => {
-        // Si aún está cargando, retornar array vacío para evitar cálculos incorrectos
+        // Si aún está cargando, retornar array vacío
         if (appData.isLoading) {
             return [];
         }
         
-        // Transformar fichas a formato de curso compatible con la vista
-        return appData.fichas.map((ficha) => {
-            // Contar estudiantes REALES que pertenecen a este curso
-            // Buscar por: name completo, código, o program (campo corto de la ficha)
-            const studentsInCourse = appData.students.filter((student) => {
-                const studentCourse = (student.course || "").toLowerCase().trim();
-                const fichaName = (ficha.name || "").toLowerCase().trim();
-                const fichaCode = (ficha.code || "").toLowerCase().trim();
-                const fichaProgram = (ficha.program || "").toLowerCase().trim();
-                
-                // Match exacto por cualquiera de los campos
-                if (studentCourse === fichaName || 
-                    studentCourse === fichaCode || 
-                    studentCourse === fichaProgram) {
-                    return true;
-                }
-                
-                // Match parcial: si el program de la ficha contiene el course del student
-                // Ejemplo: student.course="Gestión de Redes" y ficha.program="Redes"
-                if (fichaProgram && studentCourse.includes(fichaProgram)) {
-                    return true;
-                }
-                
-                // Match parcial inverso: si el course del student contiene el program
-                // Ejemplo: student.course="Bases de Datos" y ficha.program="Bases de Datos"
-                if (fichaProgram && fichaProgram.includes(studentCourse)) {
-                    return true;
-                }
-                
-                // Match parcial por palabras clave del nombre completo
-                // Ejemplo: student.course="Programación" y ficha.name="Tecnología en Programación de Software"
-                if (fichaName.includes(studentCourse) && studentCourse.length > 3) {
-                    return true;
-                }
-                
-                return false;
-            });
-            
-            const totalStudents = studentsInCourse.length;
-            
-            // Calcular asistencia promedio REAL de los estudiantes del curso
-            const avgAttendance = totalStudents > 0
-                ? Math.round(
-                    studentsInCourse.reduce((sum, s) => sum + (s.attendance || 0), 0) / totalStudents
-                )
-                : 0;
-
-            return {
-                id: ficha.id,
-                code: ficha.code,
-                name: ficha.name,
-                professor: ficha.instructor || "—",
-                program: ficha.program || ficha.name, // Programa técnico
-                semester: "2024-2", // TODO: añadir campo semester a fichas
-                schedule: ficha.schedule || "—", // TODO: añadir campo schedule a fichas
-                room: ficha.room || "—", // TODO: añadir campo room a fichas
-                students: totalStudents, // Estudiantes REALES
-                avgAttendance: avgAttendance, // Asistencia REAL calculada
-                color: ficha.color,
-                status: ficha.status || "active",
-                startDate: ficha.startDate || "",
-                endDate: ficha.endDate || "",
-            };
-        });
-    }, [appData.fichas, appData.students, appData.isLoading]); // Depende de fichas, students Y estado de carga
+        // Usar directamente los cursos del contexto
+        return appData.courses || [];
+    }, [appData.isLoading, appData.courses]);
 
     // ── Instructores únicos para filtro ────────────────────────
     
@@ -350,22 +287,16 @@ export function useCoursesViewModel() {
             const err = validateCourseForm(form);
             if (err) return err;
 
-            // TODO: Implementar addCourse en AppDataContext
-            // await appData.addCourse({
-            //     code: form.code.trim(),
-            //     name: form.name.trim(),
-            //     instructor: form.instructor.trim(),
-            //     program: form.program.trim(),
-            //     semester: form.semester,
-            //     schedule: form.schedule.trim(),
-            //     room: form.room.trim(),
-            //     startDate: form.startDate,
-            //     endDate: form.endDate,
-            //     maxStudents: form.maxStudents,
-            //     status: form.status,
-            // });
+            await appData.addCourse({
+                code: form.code.trim(),
+                name: form.name.trim(),
+                schedule: form.schedule,
+                room: form.room, // ID del ambiente
+                startDate: form.startDate,
+                endDate: form.endDate,
+                status: "active",
+            });
             
-            console.log("Registrar curso:", form);
             return null;
         },
         [appData]

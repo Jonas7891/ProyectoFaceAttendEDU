@@ -46,6 +46,13 @@ import {
     deleteFicha as storageDeleteFicha,
 } from "../models/data/FichaStorage";
 
+import {
+    loadCourses,
+    addCourse as storageAddCourse,
+    updateCourse as storageUpdateCourse,
+    deleteCourse as storageDeleteCourse,
+} from "../models/data/CourseStorage";
+
 import { mockTeachers, mockAdmins } from "../models/data/mockData";
 
 // ── Context ───────────────────────────────────────────────
@@ -61,6 +68,7 @@ export function AppDataProvider({ children }) {
     const [users, setUsers] = useState([]);
     const [environments, setEnvironments] = useState([]);
     const [fichas, setFichas] = useState([]);
+    const [courses, setCourses] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     
     // Estados para carga progresiva de usuarios
@@ -69,13 +77,20 @@ export function AppDataProvider({ children }) {
     const [loadedAdmins, setLoadedAdmins] = useState([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(true);
 
-    // Carga inicial de datos base (environments, fichas)
+    // Carga inicial de datos base (environments, fichas, courses)
     useEffect(() => {
-        Promise.all([loadStudents(), loadUsers(), loadEnvironments(), loadFichas()]).then(([s, u, e, f]) => {
+        Promise.all([
+            loadStudents(), 
+            loadUsers(), 
+            loadEnvironments(), 
+            loadFichas(),
+            loadCourses()
+        ]).then(([s, u, e, f, c]) => {
             setStudents(s);
             setUsers(u);
             setEnvironments(e);
             setFichas(f);
+            setCourses(c);
             setIsLoading(false);
             
             // Iniciar carga progresiva de usuarios después de cargar datos base
@@ -285,6 +300,32 @@ export function AppDataProvider({ children }) {
         [fichas]
     );
 
+    // ── Courses ───────────────────────────────────────────
+
+    const addCourseFn = useCallback(
+        async (draft) => {
+            const updated = await storageAddCourse(courses, draft);
+            setCourses(updated);
+        },
+        [courses]
+    );
+
+    const updateCourseFn = useCallback(
+        async (id, patch) => {
+            const updated = await storageUpdateCourse(courses, id, patch);
+            setCourses(updated);
+        },
+        [courses]
+    );
+
+    const removeCourseFn = useCallback(
+        async (id) => {
+            const updated = await storageDeleteCourse(courses, id);
+            setCourses(updated);
+        },
+        [courses]
+    );
+
     // ── Valor del contexto ────────────────────────────────
 
     const value = useMemo(
@@ -320,6 +361,11 @@ export function AppDataProvider({ children }) {
             addFicha: addFichaFn,
             updateFicha: updateFichaFn,
             removeFicha: removeFichaFn,
+
+            courses,
+            addCourse: addCourseFn,
+            updateCourse: updateCourseFn,
+            removeCourse: removeCourseFn,
         }),
         [
             isLoading,
@@ -347,6 +393,10 @@ export function AppDataProvider({ children }) {
             addFichaFn,
             updateFichaFn,
             removeFichaFn,
+            courses,
+            addCourseFn,
+            updateCourseFn,
+            removeCourseFn,
         ]
     );
 
