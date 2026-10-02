@@ -263,42 +263,69 @@ async function seedAcademic() {
   await get("academic", `/api/v1/cohorts/${ids.cohortId}/enrollments`);
 }
 
-// Scheduling: environments -> blocks -> sessions -> open session.
+// POST a session, or on 409 resolve the existing one so reruns keep the id.
+// A session defaults to 'Open', so /open is only called when it is not open yet.
+async function ensureSession(blockId, date) {
+  const created = await post("scheduling", "/api/v1/class-sessions", {
+    scheduleBlockId: blockId, sessionDate: date,
+  });
+  let id = pick(created, "sessionId", "classSessionId", "id");
+  let resolved = created;
+  if (!id) {
+    const list = await get("scheduling", `/api/v1/class-sessions?scheduleBlockId=${blockId}`);
+    const found = asArray(list).find((e) =>
+      String(e?.sessionDate ?? e?.session_date ?? "").slice(0, 10) === date &&
+      String(e?.scheduleBlockId ?? e?.schedule_block_id ?? "") === String(blockId));
+    id = found ? pick(found, "sessionId", "classSessionId", "id") : null;
+    resolved = found ?? null;
+  }
+  if (id && pick(resolved, "sessionStatus", "session_status", "status") !== "Open") {
+    await post("scheduling", `/api/v1/class-sessions/${id}/open`);
+  }
+  return id;
+}
+
+// Scheduling: environments -> blocks -> sessions -> open sessions.
 async function seedScheduling() {
-  ids.environmentId = await ensure("scheduling", "/api/v1/environments",
-    { schoolId: ids.schoolId ?? 1, code: "AULA-301-B", name: "Aula 301 - Bloque B", capacity: 30 },
-    { idKey: "environmentId", matchKey: "code", matchValue: "AULA-301-B" }) ?? 1;
-  await ensure("scheduling", "/api/v1/environments",
-    { schoolId: ids.schoolId ?? 1, code: "LAB-201-A", name: "Laboratorio 201 - Bloque A", capacity: 24 },
-    { idKey: "environmentId", matchKey: "code", matchValue: "LAB-201-A" });
-  ids.blockId = await ensure("scheduling", "/api/v1/schedule-blocks", {
-    cohortId: ids.cohortId ?? 1, courseId: ids.courseId ?? 1,
-    environmentId: ids.environmentId, instructorActorId: ids.instructorActorId ?? ids.actorId ?? 1,
-    dayOfWeek: 1, startsAt: "08:00:00", endsAt: "10:00:00",
-  }, { idKey: "scheduleBlockId", matchKey: "environmentId", matchValue: ids.environmentId });
-  if (ids.blockId) {
-    const SESSION_DATE = "2026-09-23";
-    const session = await post("scheduling", "/api/v1/class-sessions", {
-      scheduleBlockId: ids.blockId, sessionDate: SESSION_DATE,
-    });
-    ids.sessionId = pick(session, "sessionId", "classSessionId", "id");
-    let resolvedSession = session;
-    if (!ids.sessionId) {
-      // Rerun: POST answers 409 without an id, so resolve the existing session
-      // of this block by date (GET supports ?scheduleBlockId=).
-      const list = await get("scheduling", `/api/v1/class-sessions?scheduleBlockId=${ids.blockId}`);
-      const found = asArray(list).find((e) =>
-        String(e?.sessionDate ?? e?.session_date ?? "").slice(0, 10) === SESSION_DATE &&
-        String(e?.scheduleBlockId ?? e?.schedule_block_id ?? "") === String(ids.blockId));
-      ids.sessionId = found ? pick(found, "sessionId", "classSessionId", "id") : null;
-      resolvedSession = found ?? null;
+  const ENVS = [
+    { schoolIdx: 0, code: "AULA-301-B", name: "Aula 301 - Bloque B", capacity: 30 },
+    { schoolIdx: 0, code: "LAB-201-A", name: "Laboratorio 201 - Bloque A", capacity: 24 },
+    { schoolIdx: 1, code: "AULA-102-SM", name: "Aula 102 - Sede San Mateo", capacity: 28 },
+  ];
+  ids.environmentIds = {};
+  for (const e of ENVS) {
+    const eid = await ensure("scheduling", "/api/v1/environments",
+      { schoolId: ids.schoolIds?.[e.schoolIdx] ?? ids.schoolId ?? 1, code: e.code, name: e.name, capacity: e.capacity },
+      { idKey: "environmentId", matchKey: "code", matchValue: e.code }) ?? null;
+    if (eid) ids.environmentIds[e.code] = eid;
+  }
+  ids.environmentId = ids.environmentIds["AULA-301-B"] ?? 1;
+  // One block per environment keeps the rerun lookup (by environmentId) unambiguous.
+  const BLOCKS = [
+    { courseIdx: 0, envCode: "AULA-301-B", dayOfWeek: 1, startsAt: "08:00:00", endsAt: "10:00:00" },
+    { courseIdx: 1, envCode: "LAB-201-A", dayOfWeek: 3, startsAt: "10:00:00", endsAt: "12:00:00" },
+  ];
+  ids.blockIds = [];
+  for (const b of BLOCKS) {
+    const environmentId = ids.environmentIds[b.envCode] ?? 1;
+    const bid = await ensure("scheduling", "/api/v1/schedule-blocks", {
+      cohortId: ids.cohortId ?? 1, courseId: ids.courseIds?.[b.courseIdx] ?? ids.courseId ?? 1,
+      environmentId, instructorActorId: ids.instructorActorId ?? ids.actorId ?? 1,
+      dayOfWeek: b.dayOfWeek, startsAt: b.startsAt, endsAt: b.endsAt,
+    }, { idKey: "scheduleBlockId", matchKey: "environmentId", matchValue: environmentId }) ?? null;
+    if (bid) ids.blockIds.push(bid);
+  }
+  ids.blockId = ids.blockIds[0] ?? null;
+  ids.sessionIds = [];
+  if (ids.blockIds.length) {
+    const SESSION_DATES = ["2026-09-21", "2026-09-23", "2026-09-28"];
+    for (const bid of ids.blockIds) {
+      for (const date of SESSION_DATES) {
+        const sid = await ensureSession(bid, date);
+        if (sid) ids.sessionIds.push(sid);
+      }
     }
-    // A new session already defaults to session_status 'Open' (DDL default), so POST
-    // /{id}/open is a no-op the backend rejects with 400. Only open a session that
-    // is not open yet, otherwise the seed reports a false failure.
-    if (ids.sessionId && pick(resolvedSession, "sessionStatus", "session_status", "status") !== "Open") {
-      await post("scheduling", `/api/v1/class-sessions/${ids.sessionId}/open`);
-    }
+    ids.sessionId = ids.sessionIds[0] ?? null;
   }
   await get("scheduling", "/api/v1/environments");
 }
@@ -311,26 +338,36 @@ async function seedAttendance() {
   ids.justificationTypeId = await ensure("attendance", "/api/v1/justification-types",
     { name: "Calamidad doméstica", description: "Calamidad doméstica debidamente soportada", requiresAttachment: true },
     { idKey: "justificationTypeId", matchKey: "name", matchValue: "Calamidad doméstica" }) ?? 1;
-  if (ids.sessionId) {
+  await ensure("attendance", "/api/v1/justification-types",
+    { name: "Compromiso deportivo institucional", description: "Representación institucional en eventos deportivos", requiresAttachment: false },
+    { idKey: "justificationTypeId", matchKey: "name", matchValue: "Compromiso deportivo institucional" });
+  const sessionIds = ids.sessionIds?.length ? ids.sessionIds : (ids.sessionId ? [ids.sessionId] : []);
+  if (sessionIds.length) {
     // attendance_status is the native enum ('Present','Absent','Late','Justified') and
     // capture_method is ('FACIAL','MANUAL','IOT','IMPORT'); casing must match exactly.
     const actors = ids.actorIds?.length ? ids.actorIds : [ids.actorId ?? 1];
     const statuses = ["Present", "Present", "Late", "Absent", "Present", "Late"];
     const rec = await post("attendance", "/api/v1/attendance-records", {
-      classSessionId: ids.sessionId, academicActorId: actors[0],
+      classSessionId: sessionIds[0], academicActorId: actors[0],
       attendanceStatus: "Present", captureMethod: "MANUAL",
     });
     ids.recordId = pick(rec, "recordId", "attendanceRecordId", "id");
-    await post("attendance", "/api/v1/attendance-records/bulk", actors.map((academicActorId, i) => ({
-      classSessionId: ids.sessionId, academicActorId,
-      attendanceStatus: statuses[i % statuses.length], captureMethod: "MANUAL",
-    })));
+    // Each session gets its own roll call, rotated so no two lists look alike.
+    for (let s = 0; s < sessionIds.length; s++) {
+      await post("attendance", "/api/v1/attendance-records/bulk", actors.map((academicActorId, i) => ({
+        classSessionId: sessionIds[s], academicActorId,
+        attendanceStatus: statuses[(i + s) % statuses.length],
+        captureMethod: (i + s) % 4 === 0 ? "FACIAL" : "MANUAL",
+      })));
+    }
     if (ids.recordId) {
       await post("attendance", "/api/v1/justifications", {
         attendanceRecordId: ids.recordId, justificationTypeId: ids.justificationTypeId, reason: "Cita médica prioritaria",
       });
     }
-    await get("attendance", `/api/v1/class-sessions/${ids.sessionId}/attendance`);
+    for (const sid of sessionIds) {
+      await get("attendance", `/api/v1/class-sessions/${sid}/attendance`);
+    }
   } else {
     console.log("skip  - attendance records need a class session (scheduling seed failed?)");
   }
