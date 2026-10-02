@@ -5,9 +5,9 @@
 // ============================================================
 
 import React from "react";
-import { View, Text, TouchableOpacity, Modal } from "react-native";
+import { View, Text } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Badge, Button, ProgressBar, useAttendanceColor } from "../../../components/common";
+import { BaseModal, Button } from "../../../components/common";
 import { useTheme } from "../../../components/hooks/useTheme";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 
@@ -16,135 +16,176 @@ export default function CourseDetailModal({ course, onClose, canManage }) {
     const { t } = useTranslation();
     const c = theme.colors;
 
-    const barColor = useAttendanceColor(course?.avgAttendance ?? 0);
-
     if (!course) return null;
 
     return (
-        <Modal transparent animationType="fade" onRequestClose={onClose}>
-            <TouchableOpacity
+        <BaseModal
+            visible={!!course}
+            onClose={onClose}
+            title={course.name}
+            subtitle={course.code}
+            icon="book-open"
+            iconColor={course.color}
+            accentColor={course.color}
+            maxWidth={520}
+            footer={
+                <React.Fragment>
+                    <Button variant="ghost" onPress={onClose}>
+                        {t("Cerrar")}
+                    </Button>
+                    {canManage && (
+                        <Button 
+                            variant="primary"
+                            leftIcon={<Feather name="edit-3" size={14} color={c.brand.textOnPrimary} />}
+                        >
+                            {t("Editar curso")}
+                        </Button>
+                    )}
+                </React.Fragment>
+            }
+        >
+            {/* Grid de información */}
+            <View
                 style={{
-                    flex: 1,
-                    backgroundColor: c.background.overlay,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    padding: 20,
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                    gap: 12,
                 }}
-                onPress={onClose}
-                activeOpacity={1}
             >
-                <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
+                {[
+                    { label: t("Docente"), value: course.professor, icon: "user" },
+                    { label: t("Semestre"), value: course.semester, icon: "calendar" },
+                    { label: t("Horario"), value: course.schedule, icon: "clock" },
+                    { label: t("Aula"), value: course.room, icon: "map-pin" },
+                    {
+                        label: t("Estudiantes"),
+                        value: `${course.students} ${t("inscritos")}`,
+                        icon: "users",
+                    },
+                ].map(({ label, value, icon }) => (
                     <View
+                        key={label}
                         style={{
-                            backgroundColor: c.background.surface,
+                            width: "47%",
+                            backgroundColor: c.background.app,
                             borderRadius: 14,
-                            width: 500,
-                            overflow: "hidden",
-                            shadowColor: "#000",
-                            shadowOpacity: 0.15,
-                            shadowRadius: 10,
-                            elevation: 5,
+                            padding: 14,
+                            borderWidth: 1,
+                            borderColor: c.border.primary + "40",
                         }}
                     >
-                        <View style={{ height: 5, backgroundColor: course.color }} />
-                        <View style={{ padding: 24 }}>
-                            <View
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 6,
+                                marginBottom: 6,
+                            }}
+                        >
+                            <Feather name={icon} size={12} color={c.text.tertiary} />
+                            <Text
                                 style={{
-                                    flexDirection: "row",
-                                    justifyContent: "space-between",
-                                    alignItems: "flex-start",
-                                    marginBottom: 20,
+                                    fontSize: 11,
+                                    fontWeight: "600",
+                                    color: c.text.secondary,
+                                    textTransform: "uppercase",
+                                    letterSpacing: 0.5,
                                 }}
                             >
-                                <View>
-                                    <Text
-                                        style={{
-                                            fontSize: 10,
-                                            fontWeight: "700",
-                                            color: course.color,
-                                            letterSpacing: 1,
-                                        }}
-                                    >
-                                        {course.code}
-                                    </Text>
-                                    <Text
-                                        style={{
-                                            fontSize: 10,
-                                            fontWeight: "700",
-                                            color: c.text.primary,
-                                            marginTop: 4,
-                                        }}
-                                    >
-                                        {course.name}
-                                    </Text>
-                                </View>
-                                <TouchableOpacity onPress={onClose}>
-                                    <Feather name="x" size={18} color={c.text.secondary} />
-                                </TouchableOpacity>
-                            </View>
-
-                            <View
-                                style={{
-                                    flexDirection: "row",
-                                    flexWrap: "wrap",
-                                    gap: 12,
-                                    marginBottom: 20,
-                                }}
-                            >
-                                {[
-                                    { label: t("Docente"), value: course.professor },
-                                    { label: t("Semestre"), value: course.semester },
-                                    { label: t("Horario"), value: course.schedule },
-                                    { label: t("Aula"), value: course.room },
-                                    {
-                                        label: t("Estudiantes"),
-                                        value: `${course.students} ${t("inscritos")}`,
-                                    },
-                                    { label: t("Asistencia"), value: `${course.avgAttendance}%` },
-                                ].map(({ label, value }) => (
-                                    <View
-                                        key={label}
-                                        style={{
-                                            width: "47%",
-                                            backgroundColor: c.background.app,
-                                            borderRadius: 14,
-                                            padding: 12,
-                                        }}
-                                    >
-                                        <Text
-                                            style={{
-                                                fontSize: 11,
-                                                color: c.text.secondary,
-                                                marginBottom: 4,
-                                            }}
-                                        >
-                                            {label}
-                                        </Text>
-                                        <Text
-                                            style={{
-                                                fontSize: 10,
-                                                fontWeight: "600",
-                                                color: c.text.primary,
-                                            }}
-                                        >
-                                            {value}
-                                        </Text>
-                                    </View>
-                                ))}
-                            </View>
-
-                            <View
-                                style={{ flexDirection: "row", gap: 12, justifyContent: "flex-end" }}
-                            >
-                                <Button variant="ghost" onPress={onClose}>
-                                    {t("Cerrar")}
-                                </Button>
-                                {canManage && <Button variant="primary">{t("Editar curso")}</Button>}
-                            </View>
+                                {label}
+                            </Text>
                         </View>
+                        <Text
+                            style={{
+                                fontSize: 13,
+                                fontWeight: "600",
+                                color: c.text.primary,
+                            }}
+                        >
+                            {value}
+                        </Text>
                     </View>
-                </TouchableOpacity>
-            </TouchableOpacity>
-        </Modal>
+                ))}
+
+                {/* Asistencia - Tarjeta especial con progress bar */}
+                <View
+                    style={{
+                        width: "47%",
+                        backgroundColor: c.background.app,
+                        borderRadius: 14,
+                        padding: 14,
+                        borderWidth: 1,
+                        borderColor: c.border.primary + "40",
+                    }}
+                >
+                    <View
+                        style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 6,
+                            marginBottom: 6,
+                        }}
+                    >
+                        <Feather name="check-circle" size={12} color={c.text.tertiary} />
+                        <Text
+                            style={{
+                                fontSize: 11,
+                                fontWeight: "600",
+                                color: c.text.secondary,
+                                textTransform: "uppercase",
+                                letterSpacing: 0.5,
+                            }}
+                        >
+                            {t("Asistencia")}
+                        </Text>
+                    </View>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                        <Text
+                            style={{
+                                fontSize: 20,
+                                fontWeight: "700",
+                                color: course.avgAttendance >= 80 
+                                    ? c.status.success 
+                                    : course.avgAttendance >= 60 
+                                    ? c.status.warning 
+                                    : c.status.error,
+                            }}
+                        >
+                            {course.avgAttendance}%
+                        </Text>
+                        <Text
+                            style={{
+                                fontSize: 11,
+                                color: c.text.tertiary,
+                            }}
+                        >
+                            promedio
+                        </Text>
+                    </View>
+                    {/* Progress bar */}
+                    <View
+                        style={{
+                            height: 6,
+                            backgroundColor: c.border.primary + "40",
+                            borderRadius: 10,
+                            overflow: "hidden",
+                        }}
+                    >
+                        <View
+                            style={{
+                                height: "100%",
+                                width: `${course.avgAttendance}%`,
+                                backgroundColor: course.avgAttendance >= 80 
+                                    ? c.status.success 
+                                    : course.avgAttendance >= 60 
+                                    ? c.status.warning 
+                                    : c.status.error,
+                                borderRadius: 10,
+                            }}
+                        />
+                    </View>
+                </View>
+            </View>
+        </BaseModal>
     );
 }

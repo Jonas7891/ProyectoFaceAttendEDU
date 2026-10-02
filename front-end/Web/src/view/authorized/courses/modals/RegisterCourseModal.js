@@ -6,7 +6,7 @@
 // ============================================================
 
 import React, { useState } from "react";
-import { View, Text, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Button, AnimatedDropdown, BaseModal, TextInput } from "../../../components/common";
 import { useTheme } from "../../../components/hooks/useTheme";
@@ -17,6 +17,30 @@ import {
     EMPTY_COURSE_FORM,
     validateCourseForm,
 } from "../../../../viewmodels/useCoursesViewModel";
+
+// ── Jornadas disponibles ──────────────────────────────────
+
+const JORNADA_ITEMS = [
+    { value: "mañana", label: "Mañana", icon: "sunrise" },
+    { value: "tarde", label: "Tarde", icon: "sun" },
+    { value: "noche", label: "Noche", icon: "moon" },
+    { value: "mixta", label: "Mixta", icon: "clock" },
+];
+
+// ── Aulas disponibles (mock - TODO: traer desde contexto) ──
+
+const AULA_ITEMS = [
+    { value: "A-101", label: "A-101", icon: "map-pin" },
+    { value: "A-102", label: "A-102", icon: "map-pin" },
+    { value: "A-201", label: "A-201", icon: "map-pin" },
+    { value: "A-202", label: "A-202", icon: "map-pin" },
+    { value: "B-101", label: "B-101", icon: "map-pin" },
+    { value: "B-102", label: "B-102", icon: "map-pin" },
+    { value: "B-201", label: "B-201", icon: "map-pin" },
+    { value: "B-202", label: "B-202", icon: "map-pin" },
+    { value: "C-101", label: "C-101", icon: "map-pin" },
+    { value: "C-201", label: "C-201", icon: "map-pin" },
+];
 
 // ── Estados disponibles ───────────────────────────────────
 
@@ -108,39 +132,32 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
             title={t("Nuevo curso")}
             subtitle={t("Completa los datos del curso/ficha")}
             icon="book-open"
-            maxWidth={580}
+            maxWidth={520}
             footer={
-                <>
+                <React.Fragment>
                     <Button variant="ghost" onPress={handleClose} disabled={saving}>
                         {t("Cancelar")}
                     </Button>
                     <Button variant="primary" onPress={handleSubmit} disabled={saving || success}>
-                        {saving ? (
-                            <ActivityIndicator size="small" color={c.brand.textOnPrimary} />
-                        ) : success ? (
-                            <>
-                                <Feather name="check" size={14} color={c.brand.textOnPrimary} />{" "}
-                                {t("¡Guardado!")}
-                            </>
-                        ) : (
-                            t("Registrar curso")
-                        )}
+                        {saving
+                            ? <ActivityIndicator size="small" color={c.brand.textOnPrimary} />
+                            : success
+                                ? <React.Fragment><Feather name="check" size={14} color={c.brand.textOnPrimary} /> {t("¡Guardado!")}</React.Fragment>
+                                : t("Registrar curso")}
                     </Button>
-                </>
+                </React.Fragment>
             }
         >
             {/* Error global */}
             {error && (
-                <View
-                    style={{
-                        backgroundColor: c.status.errorLight || c.status.error + "20",
-                        borderRadius: 14,
-                        padding: 12,
-                        flexDirection: "row",
-                        gap: 8,
-                        marginBottom: 14,
-                    }}
-                >
+                <View style={{
+                    backgroundColor: c.status.errorLight || c.status.error + "20",
+                    borderRadius: 14,
+                    padding: 12,
+                    flexDirection: "row",
+                    gap: 8,
+                    marginBottom: 14,
+                }}>
                     <Feather name="alert-circle" size={14} color={c.status.error} />
                     <Text style={{ fontSize: 13, color: c.status.error, flex: 1 }}>{error}</Text>
                 </View>
@@ -148,16 +165,14 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
 
             {/* Éxito */}
             {success && (
-                <View
-                    style={{
-                        backgroundColor: c.status.successLight || c.status.success + "20",
-                        borderRadius: 14,
-                        padding: 12,
-                        flexDirection: "row",
-                        gap: 8,
-                        marginBottom: 14,
-                    }}
-                >
+                <View style={{
+                    backgroundColor: c.status.successLight || c.status.success + "20",
+                    borderRadius: 14,
+                    padding: 12,
+                    flexDirection: "row",
+                    gap: 8,
+                    marginBottom: 14,
+                }}>
                     <Feather name="check-circle" size={14} color={c.status.success} />
                     <Text style={{ fontSize: 13, color: c.status.success, flex: 1 }}>
                         {t("Curso registrado exitosamente")}
@@ -165,143 +180,100 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
                 </View>
             )}
 
-            {/* Formulario */}
-            <View style={{ gap: 14 }}>
-                {/* Fila 1: Código y Nombre */}
-                <View
-                    style={{
-                        flexDirection: isSmall ? "column" : "row",
-                        gap: 12,
-                    }}
-                >
-                    <TextInput
-                        label={t("Código")}
-                        placeholder="2240083"
-                        value={form.code}
-                        onChangeText={(v) => setField("code", v)}
-                        error={isEmpty(form.code)}
-                        icon="hash"
-                        style={{ flex: 1 }}
-                    />
+            {/* Fila 1 — Nombre y Código */}
+            <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
+                <View style={{ flex: 1 }}>
                     <TextInput
                         label={t("Nombre del curso")}
-                        placeholder="Tecnología en Análisis y Desarrollo de Software"
                         value={form.name}
-                        onChangeText={(v) => setField("name", v)}
+                        onChangeText={v => setField("name", v)}
+                        placeholder={t("Análisis y Desarrollo de Software")}
                         error={isEmpty(form.name)}
-                        icon="book-open"
-                        style={{ flex: 2 }}
+                        errorMessage={isEmpty(form.name) ? t("Campo requerido") : ""}
+                        leftIcon={<Feather name="book-open" size={16} color={c.text.tertiary} />}
                     />
                 </View>
-
-                {/* Fila 2: Programa e Instructor */}
-                <View
-                    style={{
-                        flexDirection: isSmall ? "column" : "row",
-                        gap: 12,
-                    }}
-                >
-                    <AnimatedDropdown
-                        label={t("Programa")}
-                        placeholder={t("Seleccionar programa")}
-                        value={form.program}
-                        onChange={(v) => setField("program", v)}
-                        items={programItems}
-                        error={isEmpty(form.program)}
-                        style={{ flex: 1 }}
-                    />
-                    <AnimatedDropdown
-                        label={t("Instructor")}
-                        placeholder={t("Seleccionar instructor")}
-                        value={form.instructor}
-                        onChange={(v) => setField("instructor", v)}
-                        items={instructorItems}
-                        error={isEmpty(form.instructor)}
-                        style={{ flex: 1 }}
+                <View style={{ width: isSmall ? "100%" : 160 }}>
+                    <TextInput
+                        label={t("Código")}
+                        value={form.code}
+                        onChangeText={v => setField("code", v)}
+                        placeholder={t("2240083")}
+                        error={isEmpty(form.code)}
+                        errorMessage={isEmpty(form.code) ? t("Campo requerido") : ""}
+                        leftIcon={<Feather name="hash" size={16} color={c.text.tertiary} />}
+                        style={{ paddingRight: 8 }}
                     />
                 </View>
+            </View>
 
-                {/* Fila 3: Semestre, Horario y Aula */}
-                <View
-                    style={{
-                        flexDirection: isSmall ? "column" : "row",
-                        gap: 12,
-                    }}
-                >
-                    <TextInput
-                        label={t("Semestre")}
-                        placeholder="2024-2"
-                        value={form.semester}
-                        onChangeText={(v) => setField("semester", v)}
-                        icon="calendar"
-                        style={{ flex: 1 }}
-                    />
-                    <TextInput
-                        label={t("Horario")}
-                        placeholder="Lun-Vie 8:00-12:00"
+            {/* Fila 2 — Jornada y Aula */}
+            <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
+                <View style={{ flex: 1 }}>
+                    <Text style={{
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: showErrors && !form.schedule ? c.status.error : c.text.secondary,
+                        marginBottom: 6,
+                    }}>
+                        {t("Jornada")}
+                    </Text>
+                    <AnimatedDropdown
+                        items={JORNADA_ITEMS.map(r => ({
+                            value: r.value,
+                            label: t(r.label),
+                            icon: r.icon,
+                        }))}
                         value={form.schedule}
-                        onChangeText={(v) => setField("schedule", v)}
-                        icon="clock"
-                        style={{ flex: 1 }}
-                    />
-                    <TextInput
-                        label={t("Aula")}
-                        placeholder="B-201"
-                        value={form.room}
-                        onChangeText={(v) => setField("room", v)}
-                        icon="map-pin"
-                        style={{ flex: 1 }}
+                        onSelect={v => setField("schedule", v)}
+                        triggerIcon="moon"
+                        error={showErrors && !form.schedule}
+                        triggerHeight={48}
                     />
                 </View>
+                <View style={{ flex: 1 }}>
+                    <Text style={{
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: showErrors && !form.room ? c.status.error : c.text.secondary,
+                        marginBottom: 6,
+                    }}>
+                        {t("Salón")}
+                    </Text>
+                    <AnimatedDropdown
+                        items={AULA_ITEMS}
+                        value={form.room}
+                        onSelect={v => setField("room", v)}
+                        placeholder={t("¿Cuál?")}
+                        triggerIcon="map-pin"
+                        error={showErrors && !form.room}
+                        triggerHeight={48}
+                    />
+                </View>
+            </View>
 
-                {/* Fila 4: Fechas */}
-                <View
-                    style={{
-                        flexDirection: isSmall ? "column" : "row",
-                        gap: 12,
-                    }}
-                >
+            {/* Fechas */}
+            <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
+                <View style={{ flex: 1 }}>
                     <TextInput
                         label={t("Fecha de inicio")}
-                        placeholder="2024-01-15"
                         value={form.startDate}
-                        onChangeText={(v) => setField("startDate", v)}
-                        icon="calendar"
-                        style={{ flex: 1 }}
-                    />
-                    <TextInput
-                        label={t("Fecha de finalización")}
-                        placeholder="2024-06-30"
-                        value={form.endDate}
-                        onChangeText={(v) => setField("endDate", v)}
-                        icon="calendar"
-                        style={{ flex: 1 }}
+                        onChangeText={v => setField("startDate", v)}
+                        placeholder="2024-01-15"
+                        error={isEmpty(form.startDate)}
+                        errorMessage={isEmpty(form.startDate) ? t("Campo requerido") : ""}
+                        leftIcon={<Feather name="calendar" size={16} color={c.text.tertiary} />}
                     />
                 </View>
-
-                {/* Fila 5: Cupo máximo y Estado */}
-                <View
-                    style={{
-                        flexDirection: isSmall ? "column" : "row",
-                        gap: 12,
-                    }}
-                >
+                <View style={{ flex: 1 }}>
                     <TextInput
-                        label={t("Cupo máximo")}
-                        placeholder="30"
-                        value={form.maxStudents.toString()}
-                        onChangeText={(v) => setField("maxStudents", parseInt(v) || 0)}
-                        keyboardType="numeric"
-                        icon="users"
-                        style={{ flex: 1 }}
-                    />
-                    <AnimatedDropdown
-                        label={t("Estado")}
-                        placeholder={t("Seleccionar estado")}
-                        value={form.status}
-                        onChange={(v) => setField("status", v)}
-                        items={STATUS_ITEMS}
-                        style={{ flex: 1 }}
+                        label={t("Fecha de finalización")}
+                        value={form.endDate}
+                        onChangeText={v => setField("endDate", v)}
+                        placeholder="2024-06-30"
+                        error={isEmpty(form.endDate)}
+                        errorMessage={isEmpty(form.endDate) ? t("Campo requerido") : ""}
+                        leftIcon={<Feather name="calendar" size={16} color={c.text.tertiary} />}
                     />
                 </View>
             </View>

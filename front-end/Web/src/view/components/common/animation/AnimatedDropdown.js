@@ -24,6 +24,7 @@ const SEARCH_HEIGHT = 56;
  * @param {Array} items - Items: [{ value, label, icon?, description?, prefix? }]
  * @param {*} value - Valor seleccionado
  * @param {function} onSelect - Callback al seleccionar
+ * @param {string} label - Label/título del campo
  * @param {string} placeholder - Placeholder cuando no hay selección
  * @param {string} triggerIcon - Icono del trigger
  * @param {boolean} disabled - Si está deshabilitado
@@ -150,7 +151,7 @@ export function AnimatedDropdown({
     ? theme.colors.status.error
     : open
     ? theme.colors.brand.primary
-    : theme.colors.border.primary;
+    : theme.colors.border.primary + '80'; // 50% opacidad en reposo
 
   return (
     <View style={style}>
@@ -168,7 +169,7 @@ export function AnimatedDropdown({
               styles.trigger,
               {
                 height: triggerHeight,
-                borderWidth: 1.5, // Siempre 2 para consistencia
+                borderWidth: 2, // SIEMPRE 2px para evitar "baile"
                 borderColor,
                 backgroundColor: open
                   ? theme.colors.brand.primaryLight
@@ -196,7 +197,7 @@ export function AnimatedDropdown({
             {selected?.prefix && (
               <Text style={{ fontSize: 18, fontWeight: "600" }}>{selected.prefix}</Text>
             )}
-            {(label && !selected?.prefix) && (
+            {!selected?.prefix && (
               <View style={styles.labelContainer}>
                 <Text
                   style={[

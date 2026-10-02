@@ -19,15 +19,10 @@ import { useAppData } from "../context/AppDataContext";
 export const EMPTY_COURSE_FORM = {
     code: "",
     name: "",
-    instructor: "",
-    program: "",
-    semester: "2024-2",
-    schedule: "",
+    schedule: "mañana",
     room: "",
     startDate: "",
     endDate: "",
-    maxStudents: 30,
-    status: "active",
 };
 
 // ── Validación de formulario ──────────────────────────────
@@ -35,8 +30,6 @@ export const EMPTY_COURSE_FORM = {
 export function validateCourseForm(form) {
     if (!form.code.trim()) return "El código es requerido";
     if (!form.name.trim()) return "El nombre es requerido";
-    if (!form.program.trim()) return "El programa es requerido";
-    if (!form.instructor.trim()) return "El instructor es requerido";
     
     return null;
 }

@@ -42,6 +42,9 @@ export * from './animation';
 // Filters
 export * from './filters';
 
+// Layout
+export * from './layout';
+
 // Otros componentes comunes
 export { Avatar } from './Avatar';
 export { Divider } from './Divider';

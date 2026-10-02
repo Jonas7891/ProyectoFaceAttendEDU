@@ -51,6 +51,7 @@ export function TextInput({
 }) {
   const { theme } = useTheme();
   const shakeAnimation = useRef(new Animated.Value(0)).current;
+  const [isFocused, setIsFocused] = React.useState(false);
 
   // Animación shake cuando hay error o warning
   useEffect(() => {
@@ -81,8 +82,9 @@ export function TextInput({
     if (error) return theme.colors.status.error;
     if (warning) return theme.colors.status.warning;
     if (success) return theme.colors.status.success;
-    if (progress > 0 && progress < 100) return theme.colors.brand.primary; // Progreso en azul
-    return theme.colors.border.primary;
+    if (isFocused) return theme.colors.text.primary; // Negro sólido al enfocar
+    // Borde semi-transparente en reposo (igual que SearchBar)
+    return theme.colors.border.primary + '80'; // 50% opacidad
   };
 
   // Determinar color del label
@@ -121,13 +123,16 @@ export function TextInput({
           styles.inputWrapper,
           {
             borderColor: getBorderColor(),
-            borderWidth: success || error || warning || isProgressing ? 2 : 1.5,
+            borderWidth: 2, // SIEMPRE 2px para evitar "baile" al hacer focus
             backgroundColor: disabled
               ? theme.colors.background.hover
               : theme.colors.background.surface,
             overflow: 'hidden',
             position: 'relative',
+            // Ajustar padding derecho si hay rightIcon
+            paddingRight: rightIcon || success ? 40 : DESIGN_TOKENS.spacing.sm,
           },
+          multiline && { height: 'auto', minHeight: 80, alignItems: 'flex-start' },
         ]}
       >
         {/* Progress bar animado en el borde */}
@@ -156,14 +161,21 @@ export function TextInput({
           editable={!disabled}
           multiline={multiline}
           numberOfLines={multiline ? numberOfLines : 1}
+          onFocus={(e) => {
+            setIsFocused(true);
+            props.onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setIsFocused(false);
+            props.onBlur?.(e);
+          }}
           style={[
             styles.input,
             {
               color: theme.colors.text.primary,
-              minHeight: multiline ? 80 : 40,
               textAlignVertical: multiline ? "top" : "center",
-              zIndex: 1,
             },
+            multiline && { minHeight: 80, paddingVertical: DESIGN_TOKENS.spacing.sm + 2 },
             inputStyle,
           ]}
           {...config}
@@ -207,18 +219,25 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1.5,
     borderRadius: DESIGN_TOKENS.borderRadius.lg,
-    paddingHorizontal: DESIGN_TOKENS.spacing.md,
-    minHeight: 48,
+    paddingLeft: DESIGN_TOKENS.spacing.sm,
+    paddingRight: DESIGN_TOKENS.spacing.sm, // Reducido para aprovechar espacio
+    height: 48,
+    maxWidth: '100%',
+    alignSelf: 'stretch',
   },
   input: {
     flex: 1,
     fontSize: 15,
-    paddingVertical: DESIGN_TOKENS.spacing.sm + 2,
+    paddingVertical: 0,
+    height: '100%',
+    outlineWidth: 0, // ESTO ELIMINA EL OUTLINE NATIVO DEL NAVEGADOR
+    outlineStyle: 'none', // Doble seguridad para web
+    flexShrink: 1,
+    minWidth: 0,
   },
   leftIcon: {
-    marginRight: DESIGN_TOKENS.spacing.sm + 2,
+    marginRight: DESIGN_TOKENS.spacing.sm,
   },
   rightIcon: {
     marginLeft: DESIGN_TOKENS.spacing.sm + 2,
