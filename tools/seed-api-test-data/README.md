@@ -50,9 +50,9 @@ alerts and quality instruments created below.
 |---|---|
 | identity `:8081` | 3 cities (Bogotá, Medellín, Cali), 8 persons, 3 users (admin, docente, estudiante), `/me` checks |
 | authorization `:8083` | roles `Administrador`/`Instructor`/`Aprendiz` assigned to each demo login, 2 permissions |
-| academic `:8084` | school `Colegio Los Andes`, program `Ingeniería de Sistemas`, period `2026-I`, cohort, 2 courses, 6 student actors (`EST-2026-00x`) + instructor actor (`DOC-2026-001`), enrollments |
-| scheduling `:8087` | 2 environments, block, session (+ open) |
-| attendance `:8085` | bulk records, justification types, justification |
+| academic `:8084` | 3 schools, 2 programs, period `2026-I`, cohort, 5 courses, 6 student actors (`EST-2026-00x`) + instructor actor (`DOC-2026-001`), enrollments |
+| scheduling `:8087` | 3 environments, 2 blocks, 6 sessions (3 dates x 2 blocks) |
+| attendance `:8085` | roll call per session (rotated statuses/methods), justification types, justification |
 | biometric `:8086` | facial enroll x7 (`seed-student-01` legacy + `est-2026-00x`), verify, identify |
 | configuration `:8089` | academic + security configs, biometric update case |
 | notification `:8090` | alert type `ABSENTEEISM`, alerts |
