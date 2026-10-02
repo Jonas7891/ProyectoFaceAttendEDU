@@ -314,6 +314,7 @@
     "confirmTitle": "Confirmar envío",
     "dateLabel": "Fecha",
     "submitError": "No se pudo enviar la justificación",
+    "noRecordForDate": "No hay registro de asistencia para esa fecha",
     "timeLabel": "Hora"
   },
   "menuJustify": {

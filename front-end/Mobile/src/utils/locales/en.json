@@ -314,7 +314,8 @@
     "missingAttachmentError": "Please upload an attachment",
     "confirmMessage": "Are you sure you want to submit this justification?",
     "confirmTitle": "Confirm submission",
-    "submitError": "Could not submit the justification"
+    "submitError": "Could not submit the justification",
+    "noRecordForDate": "No attendance record for that date",
   },
   "menuJustify": {
     "backToDashboard": "Back to Dashboard"
