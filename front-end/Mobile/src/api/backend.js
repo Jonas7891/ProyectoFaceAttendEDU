@@ -1,9 +1,8 @@
 import { request, GET } from './apiClient';
 
-// Typed access to the real microservices. Identity/authorization go through
-// the Kong gateway (API_BASE_URL / AUTHZ_BASE_URL); academic, attendance,
-// scheduling and notification are queried straight on their ports because
-// their Kong routes require a JWT the app does not issue.
+// Typed access to the real microservices through the Kong gateway
+// (API_BASE_URL / AUTHZ_BASE_URL / ... all alias the gateway :8080;
+// Kong routes by path, so the service base only matters for overrides).
 function toSnakeKey(key) {
   return String(key)
     .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2')

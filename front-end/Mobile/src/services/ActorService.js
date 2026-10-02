@@ -29,11 +29,14 @@ export const ActorService = {
     return AcademicActor.fromApi(unwrapFirst(data));
   },
 
+  // Backend: GET /api/v1/academic-actors no filtra; existe la ruta anidada
+  // GET /api/v1/schools/:schoolId/actors. actorType: 'STUDENT' (1) | 'INSTRUCTOR' (2).
   getBySchool: async (schoolId, actorType = null) => {
-    const params = { school_id: schoolId };
-    if (actorType) params.actor_type = actorType;
-    const data = await request({ method: GET, url: ENDPOINT, params, requiresAuth: false });
-    return unwrap(data).map(AcademicActor.fromApi);
+    const data = await request({ method: GET, url: `api/v1/schools/${schoolId}/actors`, requiresAuth: false });
+    const typeId = actorType === 'STUDENT' ? 1 : actorType === 'INSTRUCTOR' ? 2 : null;
+    return unwrap(data)
+      .map(AcademicActor.fromApi)
+      .filter((a) => !typeId || a?.actorTypeId === typeId);
   },
 
   getByPerson: async (personId) => {
