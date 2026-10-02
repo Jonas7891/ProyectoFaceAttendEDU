@@ -93,9 +93,12 @@ async function loginSeed() {
 
 // Identity: cities, persons, users (auth surface stays testable via /me).
 async function seedIdentity() {
+  // Cities have no unique constraint on name, so look up first to avoid
+  // creating duplicates on every rerun (other catalogs answer 409).
+  const knownCities = asArray(await get("identity", "/api/v1/cities?limit=100"));
   for (const c of CITIES) {
-    await ensure("identity", "/api/v1/cities", c,
-      { idKey: "cityId", matchKey: "name", matchValue: c.name, listPath: "/api/v1/cities?limit=100" });
+    if (knownCities.some((e) => e?.name === c.name)) continue;
+    await post("identity", "/api/v1/cities", c);
   }
   const city = await get("identity", "/api/v1/cities?limit=5");
   ids.cityId = pick(asArray(city)[0], "cityId", "id") ?? 1;
@@ -194,8 +197,11 @@ async function seedAcademic() {
 // Scheduling: environments -> blocks -> sessions -> open session.
 async function seedScheduling() {
   ids.environmentId = await ensure("scheduling", "/api/v1/environments",
-    { schoolId: ids.schoolId ?? 1, code: "SEED-ENV-301", name: "Seed Room 301", capacity: 30 },
-    { idKey: "environmentId", matchKey: "code", matchValue: "SEED-ENV-301" }) ?? 1;
+    { schoolId: ids.schoolId ?? 1, code: "AULA-301-B", name: "Aula 301 - Bloque B", capacity: 30 },
+    { idKey: "environmentId", matchKey: "code", matchValue: "AULA-301-B" }) ?? 1;
+  await ensure("scheduling", "/api/v1/environments",
+    { schoolId: ids.schoolId ?? 1, code: "LAB-201-A", name: "Laboratorio 201 - Bloque A", capacity: 24 },
+    { idKey: "environmentId", matchKey: "code", matchValue: "LAB-201-A" });
   ids.blockId = await ensure("scheduling", "/api/v1/schedule-blocks", {
     cohortId: ids.cohortId ?? 1, courseId: ids.courseId ?? 1,
     environmentId: ids.environmentId, instructorActorId: ids.actorId ?? 1,
@@ -231,26 +237,28 @@ async function seedScheduling() {
 // Attendance: records (bulk), justification types, justifications.
 async function seedAttendance() {
   await post("attendance", "/api/v1/justification-types", {
-    name: "Seed Medical", description: "Seed medical excuse", requiresAttachment: false,
+    name: "Incapacidad médica EPS", description: "Excusa médica certificada por la EPS", requiresAttachment: true,
   });
   ids.justificationTypeId = await ensure("attendance", "/api/v1/justification-types",
-    { name: "Seed Calamity", description: "Seed domestic calamity", requiresAttachment: true },
-    { idKey: "justificationTypeId", matchKey: "name", matchValue: "Seed Calamity" }) ?? 1;
+    { name: "Calamidad doméstica", description: "Calamidad doméstica debidamente soportada", requiresAttachment: true },
+    { idKey: "justificationTypeId", matchKey: "name", matchValue: "Calamidad doméstica" }) ?? 1;
   if (ids.sessionId) {
     // attendance_status is the native enum ('Present','Absent','Late','Justified') and
     // capture_method is ('FACIAL','MANUAL','IOT','IMPORT'); casing must match exactly.
+    const actors = ids.actorIds?.length ? ids.actorIds : [ids.actorId ?? 1];
+    const statuses = ["Present", "Present", "Late", "Absent", "Present", "Late"];
     const rec = await post("attendance", "/api/v1/attendance-records", {
-      classSessionId: ids.sessionId, academicActorId: ids.actorId ?? 1,
+      classSessionId: ids.sessionId, academicActorId: actors[0],
       attendanceStatus: "Present", captureMethod: "MANUAL",
     });
     ids.recordId = pick(rec, "recordId", "attendanceRecordId", "id");
-    await post("attendance", "/api/v1/attendance-records/bulk", [{
-      classSessionId: ids.sessionId, academicActorId: ids.actorId ?? 1,
-      attendanceStatus: "Late", captureMethod: "MANUAL",
-    }]);
+    await post("attendance", "/api/v1/attendance-records/bulk", actors.map((academicActorId, i) => ({
+      classSessionId: ids.sessionId, academicActorId,
+      attendanceStatus: statuses[i % statuses.length], captureMethod: "MANUAL",
+    })));
     if (ids.recordId) {
       await post("attendance", "/api/v1/justifications", {
-        attendanceRecordId: ids.recordId, justificationTypeId: ids.justificationTypeId, reason: "Seed excuse",
+        attendanceRecordId: ids.recordId, justificationTypeId: ids.justificationTypeId, reason: "Cita médica prioritaria",
       });
     }
     await get("attendance", `/api/v1/class-sessions/${ids.sessionId}/attendance`);
@@ -261,25 +269,33 @@ async function seedAttendance() {
 
 // Biometric: facial enroll, verify, identify with synthetic encodings.
 async function seedBiometric() {
-  const encoding = [0.12, 0.45, 0.78, 0.23, 0.56, 0.89, 0.34, 0.67];
+  const base = [0.12, 0.45, 0.78, 0.23, 0.56, 0.89, 0.34, 0.67];
+  const encodingFor = (i) => base.map((v, j) => +(v + i * 0.01 + j * 0.001).toFixed(4));
+  // Legacy id kept for backward compatibility with existing frontends/dashboards.
   await post("biometric", "/api/v1/biometric/facial/enroll", {
-    person_id: "seed-student-01", encoding, model_version: "seed-v1",
+    person_id: "seed-student-01", encoding: base, model_version: "seed-v1",
   });
-  await post("biometric", "/api/v1/biometric/facial/verify", { person_id: "seed-student-01", encoding });
-  await post("biometric", "/api/v1/biometric/facial/identify", { encoding });
-  await get("biometric", "/api/v1/biometric/facial/seed-student-01/history");
+  for (let i = 0; i < PEOPLE.length; i++) {
+    await post("biometric", "/api/v1/biometric/facial/enroll", {
+      person_id: PEOPLE[i].biometricId, encoding: encodingFor(i), model_version: "seed-v1",
+    });
+  }
+  const first = PEOPLE[0].biometricId;
+  await post("biometric", "/api/v1/biometric/facial/verify", { person_id: first, encoding: encodingFor(0) });
+  await post("biometric", "/api/v1/biometric/facial/identify", { encoding: encodingFor(0) });
+  await get("biometric", `/api/v1/biometric/facial/${first}/history`);
 }
 
 // Configuration: academic/security configs plus a biometric update case.
 async function seedConfiguration() {
   await post("configuration", "/api/v1/configurations/academic", {
-    schoolId: ids.schoolId ?? 1, configurationName: "seed.attendance.tolerance", configurationValue: "10",
+    schoolId: ids.schoolId ?? 1, configurationName: "attendance.tolerance.minutes", configurationValue: "10",
   });
   await post("configuration", "/api/v1/configurations/security", {
-    configurationName: "seed.jwt.ttl", configurationValue: "3600",
+    configurationName: "jwt.ttl.seconds", configurationValue: "3600",
   });
   await post("configuration", "/api/v1/biometric-update-cases", {
-    personId: "seed-student-01", biometricType: "FACIAL", reason: "Seed re-enrollment",
+    personId: PEOPLE[0].biometricId, biometricType: "FACIAL", reason: "Re-enrolamiento por actualización de documento",
   });
   await get("configuration", "/api/v1/biometric-update-cases?status=Pending");
 }
@@ -287,17 +303,20 @@ async function seedConfiguration() {
 // Notification: alert type then alert (needs a type id first).
 async function seedNotification() {
   ids.alertTypeId = await ensure("notification", "/api/v1/alert-types",
-    { code: "SEED_ABSENCE", name: "Seed absence", severity: "MEDIUM", channel: "APP" },
-    { idKey: "AlertTypeID", matchKey: "Code", matchValue: "SEED_ABSENCE" });
+    { code: "ABSENTEEISM", name: "Inasistencia recurrente", severity: "MEDIUM", channel: "APP" },
+    { idKey: "AlertTypeID", matchKey: "Code", matchValue: "ABSENTEEISM" });
   if (ids.alertTypeId) {
-    await post("notification", "/api/v1/alerts", { academic_actor_id: 1, alert_type_id: ids.alertTypeId });
+    const actors = ids.actorIds?.length ? ids.actorIds.slice(0, 2) : [1];
+    for (const academicActorId of actors) {
+      await post("notification", "/api/v1/alerts", { academic_actor_id: academicActorId, alert_type_id: ids.alertTypeId });
+    }
   }
   await get("notification", "/api/v1/alerts?limit=5");
 }
 
 // Quality: project plus read-only instruments used by frontend forms.
 async function seedQuality() {
-  await post("quality", "/api/v1/quality/projects", { name: "Seed Quality Project", status: "Active" });
+  await post("quality", "/api/v1/quality/projects", { name: "Evaluación institucional 2026-I", status: "Active" });
   await get("quality", "/api/v1/quality/characteristics");
   await get("quality", "/api/v1/quality/process/profile");
   await get("quality", "/api/v1/quality/istqb/categories");
