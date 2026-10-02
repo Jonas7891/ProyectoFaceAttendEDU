@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 
 import {useTranslation} from 'react-i18next';
+import {useNavigation} from '@react-navigation/native';
 import {useTheme} from '../components/common/ThemeContext';
 import {useAlertsConfig} from '../../utils/AlertsConfigContext';
 import ScrollViewWrapper from '../components/common/ScrollView';
@@ -23,17 +24,15 @@ export default function LanguageSettingsScreen() {
     const {t} = useTranslation();
     const {colors} = useTheme();
     const {alertsConfig, toggleAlertType} = useAlertsConfig();
+    const navigation = useNavigation();
     const [showAlertsModal, setShowAlertsModal] = React.useState(false);
 
     const {
         selectedLanguage,
         setSelectedLanguage,
-        selectedTheme,
-        setSelectedTheme,
         isLoading,
         updateKey,
         languages,
-        themes,
         handleSave,
         handleBack,
         alertData,
@@ -111,14 +110,14 @@ export default function LanguageSettingsScreen() {
                             </TouchableOpacity>
                         ))}
 
-                        {/* ═══ SECCIÓN: TEMA / APARIENCIA ═══ */}
+                        {/* ═══ SECCIÓN: APARIENCIA ═══ */}
                         <Text
                             style={[
                                 styles.languageSettingsTitle,
                                 {marginTop: 28, color: colors.text},
                             ]}
                         >
-                            {t('settings.theme')}
+                            {t('settings.appearance')}
                         </Text>
 
                         <Text
@@ -127,46 +126,35 @@ export default function LanguageSettingsScreen() {
                                 {color: colors.textSecondary},
                             ]}
                         >
-                            {t('settings.selectTheme')}
+                            {t('settings.appearanceDesc')}
                         </Text>
 
-                        {themes.map((th) => (
-                            <TouchableOpacity
-                                key={th.code}
-                                style={[
-                                    styles.languageSettingsOption,
-                                    {
-                                        backgroundColor: colors.card,
-                                        borderColor: colors.border,
-                                    },
-                                    selectedTheme === th.code && {
-                                        borderColor: colors.primary,
-                                        backgroundColor: colors.primary + '20',
-                                    },
-                                ]}
-                                onPress={() => setSelectedTheme(th.code)}
-                            >
-                                <Text
-                                    style={[
-                                        styles.languageSettingsOptionText,
-                                        {color: colors.text},
-                                    ]}
-                                >
-                                    {th.icon} {th.label}
-                                </Text>
-
-                                {selectedTheme === th.code && (
-                                    <Text
-                                        style={[
-                                            styles.languageSettingsCheckmark,
-                                            {color: colors.primary},
-                                        ]}
-                                    >
-                                        ✓
+                        {/* Tarjeta de navegación → AppearanceSettingsScreen */}
+                        <TouchableOpacity
+                            style={[
+                                styles.languageSettingsOption,
+                                {
+                                    backgroundColor: colors.card,
+                                    borderColor: colors.border,
+                                    borderWidth: 1,
+                                },
+                            ]}
+                            onPress={() => navigation.navigate('AppearanceSettingsScreen')}
+                            activeOpacity={0.75}
+                        >
+                            <View style={{flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1}}>
+                                <Text style={{fontSize: 22}}>🎨</Text>
+                                <View style={{flex: 1}}>
+                                    <Text style={[styles.languageSettingsOptionText, {color: colors.text}]}>
+                                        {t('settings.themeAndColor')}
                                     </Text>
-                                )}
-                            </TouchableOpacity>
-                        ))}
+                                    <Text style={{fontSize: 12, color: colors.textSecondary, marginTop: 2}}>
+                                        {t('settings.themeAndColorDesc')}
+                                    </Text>
+                                </View>
+                            </View>
+                            <Text style={{fontSize: 20, color: colors.primary}}>›</Text>
+                        </TouchableOpacity>
 
                         {/* ═══ SECCIÓN: CONFIGURACIÓN DE ALERTAS ═══ */}
                         <Text
