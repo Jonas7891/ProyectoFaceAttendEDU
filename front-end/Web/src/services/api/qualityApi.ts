@@ -1,4 +1,4 @@
-// Quality (ms-quality :8091). Evaluaciones ISO25010/29110/ISTQB.
+// Quality (ms-quality :8089). Evaluaciones ISO25010/29110/ISTQB.
 import { request } from "../../api/apiClient";
 import { endpoints } from "../../api/endpoints";
 

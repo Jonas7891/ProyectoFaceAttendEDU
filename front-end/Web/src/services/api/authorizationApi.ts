@@ -1,4 +1,4 @@
-// Authorization (ms-authorization :8083). Roles, permisos, asignación.
+// Authorization (ms-authorization :8082). Roles, permisos, asignación.
 import { request } from "../../api/apiClient";
 import { endpoints } from "../../api/endpoints";
 

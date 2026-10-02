@@ -1,4 +1,4 @@
-// Configuration (ms-configuration :8089). Configs + casos biométricos.
+// Configuration (ms-configuration :8087). Configs + casos biométricos.
 import { request } from "../../api/apiClient";
 import { endpoints } from "../../api/endpoints";
 

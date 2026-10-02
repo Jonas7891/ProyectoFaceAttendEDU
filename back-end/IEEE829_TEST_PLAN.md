@@ -15,13 +15,13 @@
 | Microservicio | Stack | Puerto | Endpoints | Prioridad |
 |---|---|---|---|---|
 | 01-ms-identity | Java Spring Boot | 8081 | persons, users, auth, sessions, cities | Alta |
-| 02-ms-authorization | Java Spring Boot | 8083 | roles, permissions, user-roles | Alta |
-| 03-ms-academic | TypeScript Fastify | 8084 | schools, programs, periods, cohorts, courses, actors, enrollments | Alta |
-| 04-ms-scheduling | Java Spring Boot | 8087 | environments, schedule-blocks, class-sessions | Media |
+| 02-ms-authorization | Java Spring Boot | 8082 | roles, permissions, user-roles | Alta |
+| 03-ms-academic | TypeScript Fastify | 8083 | schools, programs, periods, cohorts, courses, actors, enrollments | Alta |
+| 04-ms-scheduling | Java Spring Boot | 8084 | environments, schedule-blocks, class-sessions | Media |
 | 05-ms-attendance | Java Spring Boot | 8085 | attendance-records, justifications, justification-types, supporting-documents | Crítica |
 | 06-ms-biometric | Python FastAPI | 8086 | facial, fingerprint embeddings | Media |
-| 07-ms-configuration | TypeScript Fastify | 8089 | academic-config, security-config, biometric-update-cases | Baja |
-| 08-ms-notification | Go Gin | 8090 | alert-types, alerts | Media |
+| 07-ms-configuration | TypeScript Fastify | 8087 | academic-config, security-config, biometric-update-cases | Baja |
+| 08-ms-notification | Go Gin | 8088 | alert-types, alerts | Media |
 | 99-api-gateway | Kong OSS | 8080 | Rutas aggregadas | Alta |
 
 ### 1.3 Tipos de Prueba
@@ -242,7 +242,7 @@ cd back-end/08-ms-notification
 go test ./...
 go run cmd/server/main.go &
 # Esperar 5 segundos
-curl -X POST http://localhost:8090/api/v1/...
+curl -X POST http://localhost:8088/api/v1/...
 go test -integration ./...
 ```
 

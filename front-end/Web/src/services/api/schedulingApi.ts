@@ -1,4 +1,4 @@
-// Scheduling (ms-scheduling :8087). Ambientes, bloques y sesiones de clase.
+// Scheduling (ms-scheduling :8084). Ambientes, bloques y sesiones de clase.
 import { request } from "../../api/apiClient";
 import { endpoints } from "../../api/endpoints";
 

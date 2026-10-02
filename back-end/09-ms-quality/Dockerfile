@@ -11,6 +11,6 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=builder /app/dist ./dist
-ENV PORT=8091
-EXPOSE 8091
+ENV PORT=8089
+EXPOSE 8089
 CMD ["node","dist/main.js"]

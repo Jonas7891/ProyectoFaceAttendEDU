@@ -1,4 +1,4 @@
-// Notification (ms-notification :8090). Alertas y tipos de alerta.
+// Notification (ms-notification :8088). Alertas y tipos de alerta.
 import { request } from "../../api/apiClient";
 import { endpoints } from "../../api/endpoints";
 

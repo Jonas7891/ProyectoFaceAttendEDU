@@ -102,7 +102,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8090"
+		port = "8088"
 	}
 	log.Printf("notification-service listening on :%s", port)
 	if err := r.Run(":" + port); err != nil {

@@ -102,7 +102,7 @@ async function start() {
     await closeDatabase().catch(() => undefined);
   });
 
-  const port = Number(process.env.PORT) || 8084;
+  const port = Number(process.env.PORT) || 8083;
   await app.listen({ port, host: '0.0.0.0' });
 }
 

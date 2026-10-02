@@ -22,7 +22,7 @@ Hallazgos principales (antes de intervenir):
 | 6 | SI.6 Entrega | El servicio de calidad no exponía perfil, objetivos ni productos de trabajo consultables | Media |
 
 ## 2. Qué se agregó (integración al CRUD)
-**Módulo 29110 en `09-ms-quality` (puerto 8091, sin cambios en gateway: vive bajo `/api/v1/quality`):**
+**Módulo 29110 en `09-ms-quality` (puerto 8089, sin cambios en gateway: vive bajo `/api/v1/quality`):**
 - `GET /api/v1/quality/process/profile` — instrumento: procesos PM/SI, 20 objetivos con evidencia esperada, 11 productos, escala N/P/L/F y regla de entrega.
 - `POST /api/v1/quality/projects` — crea proyecto (201): nombre, cliente, fechas, estado Planned/Active/Closed.
 - `GET /api/v1/quality/projects?status=&limit=&offset=` — listado paginado (máx 100).
@@ -58,12 +58,12 @@ Efecto por proceso: PM.1/PM.4 (proyectos registrados con ciclo de vida), PM.3 (m
 ## 4. Cómo usar el instrumento desde ahora
 ```bash
 # 1) Ver el instrumento
-curl http://localhost:8091/api/v1/quality/process/profile
+curl http://localhost:8089/api/v1/quality/process/profile
 # 2) Crear proyecto y valorar PM + SI (N/P/L/F por objetivo)
-curl -X POST http://localhost:8091/api/v1/quality/projects -H "Content-Type: application/json" -d "{...}"
-curl -X POST http://localhost:8091/api/v1/quality/assessments -H "Content-Type: application/json" -d "{...}"
+curl -X POST http://localhost:8089/api/v1/quality/projects -H "Content-Type: application/json" -d "{...}"
+curl -X POST http://localhost:8089/api/v1/quality/assessments -H "Content-Type: application/json" -d "{...}"
 # 3) Ver resumen y preparación para entrega
-curl http://localhost:8091/api/v1/quality/projects/1/summary
+curl http://localhost:8089/api/v1/quality/projects/1/summary
 # Vía gateway: http://localhost:8080/api/v1/quality/process/... y /projects/... y /assessments/...
 ```
 Recomendación: valorar PM y SI al cierre de cada iteración, ligar cada evaluación 25010 a su

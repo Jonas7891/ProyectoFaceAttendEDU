@@ -1,6 +1,6 @@
 # DATA_MODEL — 08-ms-notification
 
-> **Servicio:** `08-ms-notification` · **Schema:** `notification` · **Puerto ADR-005:** `8090`
+> **Servicio:** `08-ms-notification` · **Schema:** `notification` · **Puerto ADR-005:** `8088`
 > **Fuente canónica:** `../database/08-ms-notification-db/01-ddl/03-tables/` + `../../fae-docs/06-data/domains/07-notification.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **Stack:** `Go 1.22 + Gin` → `../../fae-docs/_stacks/go.md`
 

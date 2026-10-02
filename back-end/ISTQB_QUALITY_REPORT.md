@@ -4,7 +4,7 @@
 
 **Fecha:** 22 de Septiembre de 2026  
 **Instrumento:** ISTQB Certified Tester Foundation Level v4.0 (6 capítulos, 30 ítems Likert 1-5, puntaje ponderado)  
-**Servicio:** `09-ms-quality` puerto 8091 — `GET /api/v1/quality/istqb/categories`
+**Servicio:** `09-ms-quality` puerto 8089 — `GET /api/v1/quality/istqb/categories`
 
 ---
 
@@ -29,7 +29,7 @@ Promedio estimado antes de intervenir: **~2.4/5 (En proceso)** — el backend ya
 
 ## 2. Qué se agregó (integración al CRUD)
 
-### Nuevo módulo ISTQB en `09-ms-quality` (puerto 8091, sin cambios en gateway: vive bajo `/api/v1/quality`)
+### Nuevo módulo ISTQB en `09-ms-quality` (puerto 8089, sin cambios en gateway: vive bajo `/api/v1/quality`)
 
 | Endpoint | Descripción |
 |----------|-------------|
@@ -86,16 +86,16 @@ Efecto por capítulo ISTQB: fundamentos (principios y proceso de prueba explíci
 
 ```bash
 # 1) Ver el instrumento ISTQB
-curl http://localhost:8091/api/v1/quality/istqb/categories
+curl http://localhost:8089/api/v1/quality/istqb/categories
 # 2) Crear evaluación (30 ítems 1-5) — ejemplo con todos en 4
-curl -X POST http://localhost:8091/api/v1/quality/istqb/assessments -H "Content-Type: application/json" -d '{
+curl -X POST http://localhost:8089/api/v1/quality/istqb/assessments -H "Content-Type: application/json" -d '{
   "service":"03-ms-academic","evaluator":"qa-lead","scope":"CRUD enrollments",
   "scores":{"fund-principles":4,"fund-activities":4,"fund-psychology":4,"fund-ethics":4,"fund-debugging-vs-testing":4,"lc-models":4,"lc-levels":4,"lc-types":4,"lc-maintenance":4,"lc-traceability":4,"static-reviews":4,"static-process":4,"static-roles":4,"static-benefits":4,"tech-ep":4,"tech-bva":4,"tech-dt":4,"tech-st":4,"tech-wb":4,"tech-eb":4,"mgmt-planning":4,"mgmt-risk":4,"mgmt-monitoring":4,"mgmt-config":4,"mgmt-defect":4,"mgmt-closure":4,"tool-classification":4,"tool-selection":4,"tool-automation":4,"tool-risks":4},
   "projectId": 1
 }'
 # 3) Listar y ver promedio por servicio
-curl "http://localhost:8091/api/v1/quality/istqb/assessments?service=03-ms-academic&limit=20&offset=0"
-curl http://localhost:8091/api/v1/quality/istqb/services/03-ms-academic/summary
+curl "http://localhost:8089/api/v1/quality/istqb/assessments?service=03-ms-academic&limit=20&offset=0"
+curl http://localhost:8089/api/v1/quality/istqb/services/03-ms-academic/summary
 # Vía gateway: http://localhost:8080/api/v1/quality/istqb/...
 ```
 

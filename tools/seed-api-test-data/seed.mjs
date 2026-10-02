@@ -4,14 +4,14 @@
 
 const U = {
   identity: process.env.IDENTITY_URL ?? "http://localhost:8081",
-  authorization: process.env.AUTHORIZATION_URL ?? "http://localhost:8083",
-  academic: process.env.ACADEMIC_URL ?? "http://localhost:8084",
-  scheduling: process.env.SCHEDULING_URL ?? "http://localhost:8087",
+  authorization: process.env.AUTHORIZATION_URL ?? "http://localhost:8082",
+  academic: process.env.ACADEMIC_URL ?? "http://localhost:8083",
+  scheduling: process.env.SCHEDULING_URL ?? "http://localhost:8084",
   attendance: process.env.ATTENDANCE_URL ?? "http://localhost:8085",
   biometric: process.env.BIOMETRIC_URL ?? "http://localhost:8086",
-  configuration: process.env.CONFIGURATION_URL ?? "http://localhost:8089",
-  notification: process.env.NOTIFICATION_URL ?? "http://localhost:8090",
-  quality: process.env.QUALITY_URL ?? "http://localhost:8091",
+  configuration: process.env.CONFIGURATION_URL ?? "http://localhost:8087",
+  notification: process.env.NOTIFICATION_URL ?? "http://localhost:8088",
+  quality: process.env.QUALITY_URL ?? "http://localhost:8089",
 };
 
 const results = [];

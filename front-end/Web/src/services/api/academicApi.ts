@@ -1,4 +1,4 @@
-// Academic (ms-academic :8084). Escuelas, programas, cohortes, cursos, actores.
+// Academic (ms-academic :8083). Escuelas, programas, cohortes, cursos, actores.
 import { request } from "../../api/apiClient";
 import { endpoints } from "../../api/endpoints";
 

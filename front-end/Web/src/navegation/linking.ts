@@ -14,7 +14,7 @@ export const RouteNames = {
 } as const;
 
 export const linking = {
-    prefixes: ["http://localhost:3000", "http://localhost:8082", "http://localhost"],
+    prefixes: ["http://localhost:3000", "http://localhost:8090", "http://localhost"],
     config: {
         screens: {
             [RouteNames.landing]: "",

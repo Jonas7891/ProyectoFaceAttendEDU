@@ -49,7 +49,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     @Value("${faceattend.auth.identity-url:http://localhost:8081}")
     private String identityUrl;
 
-    @Value("${faceattend.auth.authorization-url:http://localhost:8083}")
+    @Value("${faceattend.auth.authorization-url:http://localhost:8082}")
     private String authorizationUrl;
 
     public AuthTokenFilter() {
