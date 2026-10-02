@@ -137,10 +137,22 @@ async function seedAcademic() {
   ids.courseId = await ensure("academic", "/api/v1/courses",
     { programId: ids.programId, code: "SEED-CUR-01", name: "Seed Course", creditHours: 3 },
     { idKey: "courseId", matchKey: "code", matchValue: "SEED-CUR-01" }) ?? 1;
-  ids.actorId = await ensure("academic", "/api/v1/academic-actors",
-    { personId: "seed-student-01", actorTypeId: 1, schoolId: ids.schoolId, actorCode: "SEED-STU-01" },
-    { idKey: "academicActorId", matchKey: "actorCode", matchValue: "SEED-STU-01" }) ?? 1;
-  await post("academic", "/api/v1/enrollments", { academicActorId: ids.actorId, cohortId: ids.cohortId });
+  // academic_actor.person_id is a native UUID column (cross-context reference to
+  // identity.person, no FK): it must be the UUID from seedIdentity(), not the
+  // biometric string id ("seed-student-01" lives only in MongoDB).
+  if (!ids.personId) {
+    console.log("skip  - academic actor needs a person id (identity person seed failed?)");
+    ids.actorId = null;
+  } else {
+    ids.actorId = await ensure("academic", "/api/v1/academic-actors",
+      { personId: ids.personId, actorTypeId: 1, schoolId: ids.schoolId, actorCode: "SEED-STU-01" },
+      { idKey: "academicActorId", matchKey: "actorCode", matchValue: "SEED-STU-01" }) ?? null;
+  }
+  if (ids.actorId) {
+    await post("academic", "/api/v1/enrollments", { academicActorId: ids.actorId, cohortId: ids.cohortId });
+  } else {
+    console.log("skip  - enrollment needs an academic actor (academic actor seed failed?)");
+  }
   await get("academic", "/api/v1/schools");
   await get("academic", `/api/v1/cohorts/${ids.cohortId}/enrollments`);
 }
@@ -156,14 +168,26 @@ async function seedScheduling() {
     dayOfWeek: 1, startsAt: "08:00:00", endsAt: "10:00:00",
   }, { idKey: "scheduleBlockId", matchKey: "environmentId", matchValue: ids.environmentId });
   if (ids.blockId) {
+    const SESSION_DATE = "2026-09-23";
     const session = await post("scheduling", "/api/v1/class-sessions", {
-      scheduleBlockId: ids.blockId, sessionDate: "2026-09-23",
+      scheduleBlockId: ids.blockId, sessionDate: SESSION_DATE,
     });
     ids.sessionId = pick(session, "sessionId", "classSessionId", "id");
+    let resolvedSession = session;
+    if (!ids.sessionId) {
+      // Rerun: POST answers 409 without an id, so resolve the existing session
+      // of this block by date (GET supports ?scheduleBlockId=).
+      const list = await get("scheduling", `/api/v1/class-sessions?scheduleBlockId=${ids.blockId}`);
+      const found = asArray(list).find((e) =>
+        String(e?.sessionDate ?? e?.session_date ?? "").slice(0, 10) === SESSION_DATE &&
+        String(e?.scheduleBlockId ?? e?.schedule_block_id ?? "") === String(ids.blockId));
+      ids.sessionId = found ? pick(found, "sessionId", "classSessionId", "id") : null;
+      resolvedSession = found ?? null;
+    }
     // A new session already defaults to session_status 'Open' (DDL default), so POST
     // /{id}/open is a no-op the backend rejects with 400. Only open a session that
     // is not open yet, otherwise the seed reports a false failure.
-    if (ids.sessionId && pick(session, "sessionStatus") !== "Open") {
+    if (ids.sessionId && pick(resolvedSession, "sessionStatus", "session_status", "status") !== "Open") {
       await post("scheduling", `/api/v1/class-sessions/${ids.sessionId}/open`);
     }
   }

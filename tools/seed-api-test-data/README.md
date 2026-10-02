@@ -49,7 +49,7 @@ alerts and quality instruments created below.
 | Service | Records (`SEED-*` unless noted) |
 |---|---|
 | identity `:8081` | city, person `seed.student@example.com`, user `seed.admin`, `/me` check |
-| authorization `:8083` | roles `SEED_ADMIN`/`SEED_TEACHER`, 2 permissions |
+| authorization `:8083` | roles `Administrador`/`Instructor`/`Aprendiz`, 2 permissions |
 | academic `:8084` | school, program, period, cohort, course, actor, enrollment |
 | scheduling `:8087` | environment, block, session (+ open) |
 | attendance `:8085` | bulk records, justification types, justification |
@@ -62,6 +62,13 @@ The seeded login is `SEED_USERNAME` / `SEED_PASSWORD` (defaults `seed.admin` /
 `SeedAdmin123!`). `POST /api/v1/users` bcrypt-hashes the password server side, so
 the plaintext is never stored or returned. Override both variables per environment
 and never reuse these values outside local testing.
+
+## ID mapping
+
+`academic.academic_actor.person_id` is a native UUID column (cross-context
+reference to `identity.person`, no FK), so the seed reuses the `personId` UUID
+returned by `POST identity/api/v1/persons`. `biometric` keeps the string id
+`seed-student-01` (MongoDB only); the link between both is conventional, not a FK.
 
 ## Known backend bugs
 
