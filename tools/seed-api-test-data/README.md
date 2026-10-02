@@ -48,9 +48,9 @@ alerts and quality instruments created below.
 
 | Service | Records |
 |---|---|
-| identity `:8081` | 3 cities (Bogotá, Medellín, Cali), 6 persons, user `seed.admin`, `/me` check |
-| authorization `:8083` | roles `Administrador`/`Instructor`/`Aprendiz`, 2 permissions |
-| academic `:8084` | school `Colegio Los Andes`, program `Ingeniería de Sistemas`, period `2026-I`, cohort, 2 courses, 6 actors (`EST-2026-00x`), enrollments |
+| identity `:8081` | 3 cities (Bogotá, Medellín, Cali), 8 persons, 3 users (admin, docente, estudiante), `/me` checks |
+| authorization `:8083` | roles `Administrador`/`Instructor`/`Aprendiz` assigned to each demo login, 2 permissions |
+| academic `:8084` | school `Colegio Los Andes`, program `Ingeniería de Sistemas`, period `2026-I`, cohort, 2 courses, 6 student actors (`EST-2026-00x`) + instructor actor (`DOC-2026-001`), enrollments |
 | scheduling `:8087` | 2 environments, block, session (+ open) |
 | attendance `:8085` | bulk records, justification types, justification |
 | biometric `:8086` | facial enroll x7 (`seed-student-01` legacy + `est-2026-00x`), verify, identify |
@@ -58,9 +58,18 @@ alerts and quality instruments created below.
 | notification `:8090` | alert type `ABSENTEEISM`, alerts |
 | quality `:8091` | project `Evaluación institucional 2026-I`, characteristics/process/istqb instruments |
 
-The seeded login is `SEED_USERNAME` / `SEED_PASSWORD` (defaults `seed.admin` /
-`SeedAdmin123!`). `POST /api/v1/users` bcrypt-hashes the password server side, so
-the plaintext is never stored or returned. Override both variables per environment
+Demo logins (local testing only, also documented in a comment in `seed.mjs`):
+
+| Rol | Persona | Username | Password |
+|---|---|---|---|
+| Administrador | Carolina Mendoza Ruiz | `carolina.mendoza` | `Admin2026*` |
+| Docente | Carlos Restrepo Álvarez | `carlos.restrepo` | `Docente2026*` |
+| Estudiante | Valentina Ríos Herrera | `valentina.rios` | `Estudiante2026*` |
+
+`POST /api/v1/users` bcrypt-hashes the password server side, so
+the plaintext is never stored or returned. Override via `SEED_USERNAME` /
+`SEED_PASSWORD`, `INSTRUCTOR_USERNAME` / `INSTRUCTOR_PASSWORD` or
+`STUDENT_USERNAME` / `STUDENT_PASSWORD` per environment
 and never reuse these values outside local testing.
 
 ## ID mapping
