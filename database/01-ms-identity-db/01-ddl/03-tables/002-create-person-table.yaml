@@ -103,7 +103,11 @@ databaseChangeLog:
                   constraints:
                     nullable: false
         - sql:
-            sql: ALTER TABLE identity.person ADD CONSTRAINT uq_person_document UNIQUE (document_number)
+            sql: ALTER TABLE identity.person ADD CONSTRAINT uq_person_document UNIQUE (document_type, document_number)
+        - sql:
+            sql: ALTER TABLE identity.person ADD CONSTRAINT chk_person_document_type CHECK (document_type IN ('CC', 'TI', 'CE', 'PP'))
+        - sql:
+            sql: ALTER TABLE identity.person ADD CONSTRAINT chk_person_blood_type CHECK (blood_type IN ('A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'))
         - createIndex:
             schemaName: identity
             tableName: person
