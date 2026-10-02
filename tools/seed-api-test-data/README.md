@@ -46,17 +46,17 @@ alerts and quality instruments created below.
 
 ## Seeded data
 
-| Service | Records (`SEED-*` unless noted) |
+| Service | Records |
 |---|---|
-| identity `:8081` | city, person `seed.student@example.com`, user `seed.admin`, `/me` check |
+| identity `:8081` | 3 cities (Bogotá, Medellín, Cali), 6 persons, user `seed.admin`, `/me` check |
 | authorization `:8083` | roles `Administrador`/`Instructor`/`Aprendiz`, 2 permissions |
-| academic `:8084` | school, program, period, cohort, course, actor, enrollment |
-| scheduling `:8087` | environment, block, session (+ open) |
+| academic `:8084` | school `Colegio Los Andes`, program `Ingeniería de Sistemas`, period `2026-I`, cohort, 2 courses, 6 actors (`EST-2026-00x`), enrollments |
+| scheduling `:8087` | 2 environments, block, session (+ open) |
 | attendance `:8085` | bulk records, justification types, justification |
-| biometric `:8086` | facial enroll, verify, identify for `seed-student-01` |
+| biometric `:8086` | facial enroll x7 (`seed-student-01` legacy + `est-2026-00x`), verify, identify |
 | configuration `:8089` | academic + security configs, biometric update case |
-| notification `:8090` | alert type `SEED_ABSENCE`, alert |
-| quality `:8091` | project, characteristics/process/istqb instruments |
+| notification `:8090` | alert type `ABSENTEEISM`, alerts |
+| quality `:8091` | project `Evaluación institucional 2026-I`, characteristics/process/istqb instruments |
 
 The seeded login is `SEED_USERNAME` / `SEED_PASSWORD` (defaults `seed.admin` /
 `SeedAdmin123!`). `POST /api/v1/users` bcrypt-hashes the password server side, so
@@ -66,9 +66,11 @@ and never reuse these values outside local testing.
 ## ID mapping
 
 `academic.academic_actor.person_id` is a native UUID column (cross-context
-reference to `identity.person`, no FK), so the seed reuses the `personId` UUID
-returned by `POST identity/api/v1/persons`. `biometric` keeps the string id
-`seed-student-01` (MongoDB only); the link between both is conventional, not a FK.
+reference to `identity.person`, no FK), so the seed reuses the `personId` UUIDs
+returned by `POST identity/api/v1/persons`. `biometric`/`configuration` use string
+ids `est-2026-00x` (MongoDB / case file only, plus legacy `seed-student-01`); the
+link between both is conventional, not a FK. Reruns are idempotent: `409` reuses
+the existing record, and cities are looked up first (no unique constraint).
 
 ## Known backend bugs
 
