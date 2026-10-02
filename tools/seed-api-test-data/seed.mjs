@@ -189,24 +189,46 @@ async function seedAuthorization() {
 
 // Academic: full chain schools -> programs -> periods -> cohorts -> courses -> actors -> enrollments.
 async function seedAcademic() {
-  ids.schoolId = await ensure("academic", "/api/v1/schools",
-    { code: "ANDES-01", name: "Colegio Los Andes", cityId: 1 },
-    { idKey: "schoolId", matchKey: "code", matchValue: "ANDES-01" }) ?? 1;
+  const SCHOOLS = [
+    { code: "ANDES-01", name: "Colegio Los Andes" },
+    { code: "SAM-02", name: "Colegio San Mateo" },
+    { code: "ROS-03", name: "Colegio Santa Rosa de Lima" },
+  ];
+  ids.schoolIds = [];
+  for (const s of SCHOOLS) {
+    const sid = await ensure("academic", "/api/v1/schools",
+      { code: s.code, name: s.name, cityId: 1 },
+      { idKey: "schoolId", matchKey: "code", matchValue: s.code }) ?? null;
+    if (sid) ids.schoolIds.push(sid);
+  }
+  ids.schoolId = ids.schoolIds[0] ?? 1;
   ids.programId = await ensure("academic", "/api/v1/programs",
     { schoolId: ids.schoolId, code: "IS-2026", name: "Ingeniería de Sistemas" },
     { idKey: "programId", matchKey: "code", matchValue: "IS-2026" }) ?? 1;
+  await ensure("academic", "/api/v1/programs",
+    { schoolId: ids.schoolId, code: "ADMON-2026", name: "Administración de Empresas" },
+    { idKey: "programId", matchKey: "code", matchValue: "ADMON-2026" });
   ids.periodId = await ensure("academic", "/api/v1/academic-periods",
     { schoolId: ids.schoolId, name: "Periodo Académico 2026-I", startsOn: "2026-01-01", endsOn: "2026-06-30", isActive: true },
     { idKey: "academicPeriodId", matchKey: "name", matchValue: "Periodo Académico 2026-I" }) ?? 1;
   ids.cohortId = await ensure("academic", "/api/v1/cohorts",
     { programId: ids.programId, academicPeriodId: ids.periodId, code: "COH-2026-I-01" },
     { idKey: "cohortId", matchKey: "code", matchValue: "COH-2026-I-01" }) ?? 1;
-  ids.courseId = await ensure("academic", "/api/v1/courses",
-    { programId: ids.programId, code: "CALC-101", name: "Cálculo Diferencial", creditHours: 3 },
-    { idKey: "courseId", matchKey: "code", matchValue: "CALC-101" }) ?? 1;
-  await ensure("academic", "/api/v1/courses",
-    { programId: ids.programId, code: "PROG-101", name: "Programación I", creditHours: 4 },
-    { idKey: "courseId", matchKey: "code", matchValue: "PROG-101" });
+  const COURSES = [
+    { code: "CALC-101", name: "Cálculo Diferencial", creditHours: 3 },
+    { code: "PROG-101", name: "Programación I", creditHours: 4 },
+    { code: "FIS-102", name: "Física I", creditHours: 4 },
+    { code: "LEN-103", name: "Lengua Castellana", creditHours: 2 },
+    { code: "ING-105", name: "Inglés I", creditHours: 2 },
+  ];
+  ids.courseIds = [];
+  for (const c of COURSES) {
+    const cid = await ensure("academic", "/api/v1/courses",
+      { programId: ids.programId, code: c.code, name: c.name, creditHours: c.creditHours },
+      { idKey: "courseId", matchKey: "code", matchValue: c.code }) ?? null;
+    if (cid) ids.courseIds.push(cid);
+  }
+  ids.courseId = ids.courseIds[0] ?? 1;
   // academic_actor.person_id is a native UUID column (cross-context reference to
   // identity.person, no FK): it must be the UUID from seedIdentity(), not the
   // biometric string id (which lives only in MongoDB).
