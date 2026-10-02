@@ -384,6 +384,7 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                     <AtRiskStudentsList
                         students={vm.adminData.atRiskStudents}
                         maxItems={5}
+                        navigation={navigation}
                         onStudentPress={(student) => {
                             console.log("Ver detalle estudiante:", student);
                         }}
@@ -407,6 +408,7 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                     <PerfectAttendanceList
                         students={vm.adminData.perfectAttendanceStudents}
                         maxItems={5}
+                        navigation={navigation}
                         onStudentPress={(student) => {
                             console.log("Ver detalle estudiante:", student);
                         }}
@@ -421,7 +423,7 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
 // TEACHER DASHBOARD — Vista de cursos del instructor
 // ──────────────────────────────────────────────────────────────
 
-function TeacherDashboard({ vm, permissions, isSmall, c, t }) {
+function TeacherDashboard({ vm, permissions, isSmall, c, t, navigation }) {
     if (!vm.teacherData) return null;
     
     // Obtener período académico de la configuración (Settings)
@@ -582,6 +584,7 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t }) {
                     <AtRiskStudentsList
                         students={vm.teacherData.myAtRiskStudents}
                         maxItems={10}
+                        navigation={navigation}
                         onStudentPress={(student) => {
                             console.log("Ver detalle estudiante:", student);
                         }}
@@ -883,11 +886,12 @@ export default function DashboardView({ navigation: navigationProp }) {
 
             {vm.userRole === "teacher" && (
                 <TeacherDashboard 
-                    vm={vm} 
+                    vm={vm}
                     permissions={permissions}
                     isSmall={isSmall}
                     c={c}
                     t={t}
+                    navigation={navigation}
                 />
             )}
 

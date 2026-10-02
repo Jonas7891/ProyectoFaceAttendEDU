@@ -12,6 +12,8 @@
 //    label="Total de usuarios"
 //    value={150}
 //    description="En el sistema"
+//    badge="↗ 12%"
+//    badgeColor={theme.colors.status.success}
 //  />
 // ============================================================
 
@@ -32,6 +34,8 @@ import { useResponsive } from "../../hooks/useResponsive";
  * @param {number|string} value - Valor de la estadística
  * @param {string} valueColor - Color del valor (opcional)
  * @param {string} description - Descripción adicional (opcional)
+ * @param {string} badge - Badge/notificador (ej: "↗ 12%") (opcional)
+ * @param {string} badgeColor - Color del badge (opcional)
  * @param {object} style - Estilos adicionales
  */
 export function StatsCard({
@@ -42,6 +46,8 @@ export function StatsCard({
     value,
     valueColor,
     description,
+    badge,
+    badgeColor,
     style,
 }) {
     const { theme } = useTheme();
@@ -50,41 +56,77 @@ export function StatsCard({
 
     return (
         <Card padding={16} style={[{ flex: 1 }, style]}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 13, color: c.text.secondary, marginBottom: 4 }}>
+            {/* Header: Ícono + Label con Badge */}
+            <View style={{ 
+                flexDirection: "row", 
+                alignItems: "center", 
+                justifyContent: "space-between",
+                marginBottom: 12,
+            }}>
+                {/* Ícono + Label en fila */}
+                <View style={{ 
+                    flexDirection: "row", 
+                    alignItems: "center", 
+                    gap: 8,
+                    flex: 1,
+                }}>
+                    {icon && (
+                        <View style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 20,
+                            backgroundColor: iconBgColor || c.brand.primaryLight,
+                            alignItems: "center",
+                            justifyContent: "center",
+                        }}>
+                            <Feather
+                                name={icon}
+                                size={20}
+                                color={iconColor || c.brand.primary}
+                            />
+                        </View>
+                    )}
+                    <Text style={{ 
+                        fontSize: 13, 
+                        color: c.text.secondary,
+                        fontWeight: "500",
+                        flex: 1,
+                    }}>
                         {label}
                     </Text>
-                    <Text style={{
-                        fontSize: 28,
-                        fontWeight: "700",
-                        color: valueColor || c.text.primary,
-                    }}>
-                        {value}
-                    </Text>
-                    {description && (
-                        <Text style={{ fontSize: 11, color: c.text.secondary, marginTop: 2 }}>
-                            {description}
-                        </Text>
-                    )}
                 </View>
-                {icon && (
-                    <View style={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: 24,
-                        backgroundColor: iconBgColor || c.brand.primaryLight,
-                        alignItems: "center",
-                        justifyContent: "center",
+                
+                {/* Badge/Notificador al lado derecho */}
+                {badge && (
+                    <Text style={{
+                        fontSize: 12,
+                        fontWeight: "600",
+                        color: badgeColor || c.status.success,
                     }}>
-                        <Feather
-                            name={icon}
-                            size={24}
-                            color={iconColor || c.brand.primary}
-                        />
-                    </View>
+                        {badge}
+                    </Text>
                 )}
             </View>
+
+            {/* Valor principal */}
+            <Text style={{
+                fontSize: 28,
+                fontWeight: "700",
+                color: valueColor || c.text.primary,
+                marginBottom: description ? 4 : 0,
+            }}>
+                {value}
+            </Text>
+            
+            {/* Descripción adicional */}
+            {description && (
+                <Text style={{ 
+                    fontSize: 11, 
+                    color: c.text.secondary,
+                }}>
+                    {description}
+                </Text>
+            )}
         </Card>
     );
 }

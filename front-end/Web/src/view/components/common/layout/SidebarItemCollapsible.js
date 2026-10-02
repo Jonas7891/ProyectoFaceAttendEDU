@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { View, Text, TouchableOpacity, Animated } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
@@ -55,6 +55,26 @@ export default function SidebarItemCollapsible({
     const [isExpanded, setIsExpanded] = useState(defaultExpanded);
     const animatedHeight = useRef(new Animated.Value(defaultExpanded ? 1 : 0)).current;
     const rotateAnim = useRef(new Animated.Value(defaultExpanded ? 1 : 0)).current;
+    
+    // Animated value para el ancho del borde izquierdo
+    const borderLeftWidthAnim = useRef(new Animated.Value(
+        (active || defaultExpanded) ? 3 : 0
+    )).current;
+
+    // Determinar si algún hijo está activo (debe estar antes de los useEffect que lo usan)
+    // Recalcular en cada render para detectar cambios en children
+    const hasActiveChild = useMemo(() => 
+        children.some(child => child.active), 
+        [children]
+    );
+
+    // Usar utility centralizada de colores
+    const colors = getVariantColors({
+        variant,
+        active,
+        disabled,
+        colors: c
+    });
 
     // Sincronizar estado interno con prop defaultExpanded cuando cambie
     useEffect(() => {
@@ -78,17 +98,16 @@ export default function SidebarItemCollapsible({
             ]).start();
         }
     }, [defaultExpanded, isExpanded, animatedHeight, rotateAnim]);
-
-    // Usar utility centralizada de colores
-    const colors = getVariantColors({
-        variant,
-        active,
-        disabled,
-        colors: c
-    });
-
-    // Determinar si algún hijo está activo
-    const hasActiveChild = children.some(child => child.active);
+    
+    // Animar el borde izquierdo cuando cambie active, hasActiveChild o isExpanded
+    useEffect(() => {
+        Animated.spring(borderLeftWidthAnim, {
+            toValue: (active || hasActiveChild || isExpanded) ? 3 : 0,
+            useNativeDriver: false,
+            tension: 100,
+            friction: 10,
+        }).start();
+    }, [active, hasActiveChild, isExpanded, borderLeftWidthAnim]);
 
     // Toggle expansión
     const handleToggle = () => {
@@ -169,11 +188,21 @@ export default function SidebarItemCollapsible({
                     gap: 12,
                     padding: SIDEBAR_CONSTANTS.ITEM_PADDING,
                     backgroundColor: active || hasActiveChild || isExpanded ? colors.bg : "transparent",
-                    borderLeftWidth: active || hasActiveChild || isExpanded ? 3 : 0,
-                    borderLeftColor: colors.border,
                 }}
                 activeOpacity={0.7}
             >
+                {/* Borde izquierdo animado */}
+                <Animated.View
+                    style={{
+                        position: "absolute",
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        width: borderLeftWidthAnim,
+                        backgroundColor: colors.border,
+                    }}
+                />
+                
                 {/* Icono principal */}
                 {icon && (
                     <Feather 

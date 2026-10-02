@@ -31,13 +31,43 @@ export default function UsersView({ section = "all", attendanceFilter = null }) 
     const vm = useUsersViewModel(section, attendanceFilter);
     const c = theme.colors;
 
+    // Helper para obtener el label de la sección
+    const getSectionLabel = (section) => {
+        const labels = {
+            students: t("estudiantes"),
+            teachers: t("profesores"),
+            admins: t("administradores"),
+            all: t("usuarios"),
+        };
+        return labels[section] || labels.all;
+    };
+    
+    // Helper para obtener el label singular de la sección
+    const getSectionLabelSingular = (section) => {
+        const labels = {
+            students: t("estudiante"),
+            teachers: t("profesor"),
+            admins: t("administrador"),
+            all: t("usuario"),
+        };
+        return labels[section] || labels.all;
+    };
+
     // Título dinámico según el rol del usuario
     const pageTitle = permissions.getTabLabel("users") || t("Usuarios");
 
-    // Subtitle dinámico con contador de usuarios filtrados
-    const pageSubtitle = `${t("Gestiona los usuarios del sistema")} (${vm.filteredUsers.length} ${
-        vm.filteredUsers.length !== 1 ? t("usuarios encontrados") : t("usuario encontrado")
-    })`;
+    // Subtitle dinámico: mantiene texto base, solo cambia contenido de paréntesis
+    const sectionLabel = getSectionLabel(section);
+    const pageSubtitle = vm.isLoading
+        ? `${t("Gestiona los usuarios del sistema")} (${t("Cargando")} ${sectionLabel}...)`
+        : `${t("Gestiona los usuarios del sistema")} (${vm.filteredUsers.length} ${
+            vm.filteredUsers.length !== 1 
+                ? `${sectionLabel} ${t("encontrados")}` 
+                : `${sectionLabel.slice(0, -1)} ${t("encontrado")}` // Singular: quita la 's' final
+        })`;
+    
+    // Texto dinámico del botón "Nuevo [sección]"
+    const newButtonLabel = `${t("Nuevo")} ${getSectionLabelSingular(section)}`;
 
     // Determinar qué componente de users renderizar según rol
     let UsersComponent;
@@ -76,7 +106,7 @@ export default function UsersView({ section = "all", attendanceFilter = null }) 
                                 onPress={vm.openRegisterModal}
                                 leftIcon={<Feather name="plus" size={16} color="#fff" />}
                             >
-                                {t("Nuevo usuario")}
+                                {newButtonLabel}
                             </Button>
                         )}
                     </>

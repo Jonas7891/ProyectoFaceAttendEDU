@@ -135,6 +135,11 @@ export function Button({
       minHeight: 52,
     },
   };
+  
+  // Reducir padding izquierdo cuando hay leftIcon
+  const iconPaddingAdjustment = leftIcon ? {
+    paddingLeft: sizeStyles[size].paddingHorizontal * 0.6, // 40% menos padding izquierdo
+  } : {};
 
   // Tamaño de texto por size (usando pesos consistentes)
   const textSizeStyles = {
@@ -153,6 +158,7 @@ export function Button({
         styles.button,
         variantStyles[variant],
         sizeStyles[size],
+        iconPaddingAdjustment,
         fullWidth && styles.fullWidth,
         isDisabled && styles.disabled,
         style,
@@ -214,12 +220,20 @@ const styles = StyleSheet.create({
   },
   text: {
     textAlign: "center",
+    // Asegurar que el texto no tenga lineHeight que lo desalinee
+    includeFontPadding: false, // Android
+    textAlignVertical: "center", // Android
+    // Pequeño ajuste para compensar el descender de las fuentes
+    marginTop: 1,
   },
   leftIcon: {
-    marginRight: DESIGN_TOKENS.spacing.xs,
+    // Ajustar posición vertical del ícono para alinearlo con cap-height del texto
+    // El ícono debe estar en la mitad visual de la letra "N"
+    marginTop: 3
   },
   rightIcon: {
-    marginLeft: DESIGN_TOKENS.spacing.xs,
+    // Mismo ajuste para íconos a la derecha
+    marginTop: 2,
   },
   loader: {
     marginHorizontal: DESIGN_TOKENS.spacing.sm,

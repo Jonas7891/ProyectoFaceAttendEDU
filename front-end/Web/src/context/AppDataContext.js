@@ -62,8 +62,14 @@ export function AppDataProvider({ children }) {
     const [environments, setEnvironments] = useState([]);
     const [fichas, setFichas] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    
+    // Estados para carga progresiva de usuarios
+    const [loadedStudents, setLoadedStudents] = useState([]);
+    const [loadedTeachers, setLoadedTeachers] = useState([]);
+    const [loadedAdmins, setLoadedAdmins] = useState([]);
+    const [isLoadingUsers, setIsLoadingUsers] = useState(true);
 
-    // Carga única al montar — todas las entidades en paralelo
+    // Carga inicial de datos base (environments, fichas)
     useEffect(() => {
         Promise.all([loadStudents(), loadUsers(), loadEnvironments(), loadFichas()]).then(([s, u, e, f]) => {
             setStudents(s);
@@ -71,14 +77,58 @@ export function AppDataProvider({ children }) {
             setEnvironments(e);
             setFichas(f);
             setIsLoading(false);
+            
+            // Iniciar carga progresiva de usuarios después de cargar datos base
+            startProgressiveUserLoading(s);
         });
+    }, []);
+    
+    // Carga progresiva de usuarios (efecto persiana)
+    const startProgressiveUserLoading = useCallback((allStudents) => {
+        setIsLoadingUsers(true);
+        setLoadedStudents([]);
+        setLoadedTeachers([]);
+        setLoadedAdmins([]);
+        
+        // Combinar todos los usuarios
+        const allUsersToLoad = [
+            ...allStudents,
+            ...mockTeachers,
+            ...mockAdmins,
+        ];
+        
+        // Cargar usuarios progresivamente (cada 150ms)
+        let currentIndex = 0;
+        const loadInterval = setInterval(() => {
+            if (currentIndex < allUsersToLoad.length) {
+                const user = allUsersToLoad[currentIndex];
+                
+                // Agregar al array correspondiente según tipo
+                if (currentIndex < allStudents.length) {
+                    setLoadedStudents(prev => [...prev, user]);
+                } else if (currentIndex < allStudents.length + mockTeachers.length) {
+                    setLoadedTeachers(prev => [...prev, user]);
+                } else {
+                    setLoadedAdmins(prev => [...prev, user]);
+                }
+                
+                currentIndex++;
+            } else {
+                // Terminó de cargar todos
+                clearInterval(loadInterval);
+                setIsLoadingUsers(false);
+            }
+        }, 150); // 150ms entre cada usuario (ajustable)
+        
+        return () => clearInterval(loadInterval);
     }, []);
 
     // ── Programs derivados (sin storage propio) ───────────
 
     const programs = useMemo(() => {
         const map = new Map();
-        for (const s of students) {
+        // Usar loadedStudents para que se actualice progresivamente
+        for (const s of loadedStudents) {
             if (!s.course?.trim()) continue;
             if (!map.has(s.course)) map.set(s.course, { attendance: [], active: 0 });
             const entry = map.get(s.course);
@@ -93,7 +143,7 @@ export function AppDataProvider({ children }) {
                 activeCount: active,
             }))
             .sort((a, b) => a.name.localeCompare(b.name));
-    }, [students]);
+    }, [loadedStudents]);
 
     // ── Students ──────────────────────────────────────────
 
@@ -239,16 +289,16 @@ export function AppDataProvider({ children }) {
 
     const value = useMemo(
         () => ({
-            isLoading,
+            isLoading: isLoading || isLoadingUsers, // Incluye carga progresiva de usuarios
 
-            students,
+            students: loadedStudents, // Usuarios cargados progresivamente
             addStudent: addStudentFn,
             importStudents: importStudentsFn,
             updateStudent: updateStudentFn,
             removeStudent: removeStudentFn,
 
-            teachers, // Mock data de profesores
-            admins,   // Mock data de administradores
+            teachers: loadedTeachers, // Profesores cargados progresivamente
+            admins: loadedAdmins,     // Administradores cargados progresivamente
 
             programs,
 
@@ -273,13 +323,14 @@ export function AppDataProvider({ children }) {
         }),
         [
             isLoading,
-            students,
+            isLoadingUsers,
+            loadedStudents,
+            loadedTeachers,
+            loadedAdmins,
             addStudentFn,
             importStudentsFn,
             updateStudentFn,
             removeStudentFn,
-            teachers,
-            admins,
             programs,
             users,
             addUserFn,
