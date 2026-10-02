@@ -137,10 +137,22 @@ async function seedAcademic() {
   ids.courseId = await ensure("academic", "/api/v1/courses",
     { programId: ids.programId, code: "SEED-CUR-01", name: "Seed Course", creditHours: 3 },
     { idKey: "courseId", matchKey: "code", matchValue: "SEED-CUR-01" }) ?? 1;
-  ids.actorId = await ensure("academic", "/api/v1/academic-actors",
-    { personId: "seed-student-01", actorTypeId: 1, schoolId: ids.schoolId, actorCode: "SEED-STU-01" },
-    { idKey: "academicActorId", matchKey: "actorCode", matchValue: "SEED-STU-01" }) ?? 1;
-  await post("academic", "/api/v1/enrollments", { academicActorId: ids.actorId, cohortId: ids.cohortId });
+  // academic_actor.person_id is a native UUID column (cross-context reference to
+  // identity.person, no FK): it must be the UUID from seedIdentity(), not the
+  // biometric string id ("seed-student-01" lives only in MongoDB).
+  if (!ids.personId) {
+    console.log("skip  - academic actor needs a person id (identity person seed failed?)");
+    ids.actorId = null;
+  } else {
+    ids.actorId = await ensure("academic", "/api/v1/academic-actors",
+      { personId: ids.personId, actorTypeId: 1, schoolId: ids.schoolId, actorCode: "SEED-STU-01" },
+      { idKey: "academicActorId", matchKey: "actorCode", matchValue: "SEED-STU-01" }) ?? null;
+  }
+  if (ids.actorId) {
+    await post("academic", "/api/v1/enrollments", { academicActorId: ids.actorId, cohortId: ids.cohortId });
+  } else {
+    console.log("skip  - enrollment needs an academic actor (academic actor seed failed?)");
+  }
   await get("academic", "/api/v1/schools");
   await get("academic", `/api/v1/cohorts/${ids.cohortId}/enrollments`);
 }
