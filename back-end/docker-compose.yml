@@ -96,7 +96,7 @@ services:
 
   # ──────────────────────────────────────────────────────────────
   # Java — Spring Boot 4.1.1 / JDK 21 (ADR-005 §1,2,4,5)
-  # 01 identity 8081, 02 authorization 8083, 04 scheduling 8087, 05 attendance 8085
+  # 01 identity 8081, 02 authorization 8082, 04 scheduling 8084, 05 attendance 8085
   # Hexagonal: _stacks/java-spring.md
   # ──────────────────────────────────────────────────────────────
   ms-identity:
@@ -124,7 +124,7 @@ services:
       SPRING_JPA_PROPERTIES_HIBERNATE_HBM2DDL_CREATE_NAMESPACES: "true"
       SPRING_JPA_PROPERTIES_HIBERNATE_GLOBALLY_QUOTED_IDENTIFIERS: "true"
       FACEATTEND_AUTH_IDENTITY_URL: http://ms-identity:8081
-      FACEATTEND_AUTH_AUTHORIZATION_URL: http://ms-authorization:8083
+      FACEATTEND_AUTH_AUTHORIZATION_URL: http://ms-authorization:8082
       SERVER_PORT: 8081
     ports:
       - "8081:8081"
@@ -162,15 +162,15 @@ services:
       SPRING_JPA_PROPERTIES_HIBERNATE_HBM2DDL_CREATE_NAMESPACES: "true"
       SPRING_JPA_PROPERTIES_HIBERNATE_GLOBALLY_QUOTED_IDENTIFIERS: "true"
       FACEATTEND_AUTH_IDENTITY_URL: http://ms-identity:8081
-      FACEATTEND_AUTH_AUTHORIZATION_URL: http://ms-authorization:8083
-      SERVER_PORT: 8083
+      FACEATTEND_AUTH_AUTHORIZATION_URL: http://ms-authorization:8082
+      SERVER_PORT: 8082
     ports:
-      - "8083:8083"
+      - "8082:8082"
     networks:
       - faceattend-net
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8083/actuator/health | grep -q '\"status\":\"UP\"' || curl -sf http://localhost:8083/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health | grep -q '\"status\":\"UP\"' || curl -sf http://localhost:8082/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"]
       interval: 20s
       timeout: 5s
       retries: 10
@@ -198,15 +198,15 @@ services:
       SPRING_JPA_PROPERTIES_HIBERNATE_HBM2DDL_CREATE_NAMESPACES: "true"
       SPRING_JPA_PROPERTIES_HIBERNATE_GLOBALLY_QUOTED_IDENTIFIERS: "true"
       FACEATTEND_AUTH_IDENTITY_URL: http://ms-identity:8081
-      FACEATTEND_AUTH_AUTHORIZATION_URL: http://ms-authorization:8083
-      SERVER_PORT: 8087
+      FACEATTEND_AUTH_AUTHORIZATION_URL: http://ms-authorization:8082
+      SERVER_PORT: 8084
     ports:
-      - "8087:8087"
+      - "8084:8084"
     networks:
       - faceattend-net
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8087/actuator/health | grep -q '\"status\":\"UP\"' || curl -sf http://localhost:8087/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8084/actuator/health | grep -q '\"status\":\"UP\"' || curl -sf http://localhost:8084/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"]
       interval: 20s
       timeout: 5s
       retries: 10
@@ -237,7 +237,7 @@ services:
       SPRING_JPA_PROPERTIES_HIBERNATE_HBM2DDL_CREATE_NAMESPACES: "true"
       SPRING_JPA_PROPERTIES_HIBERNATE_GLOBALLY_QUOTED_IDENTIFIERS: "true"
       FACEATTEND_AUTH_IDENTITY_URL: http://ms-identity:8081
-      FACEATTEND_AUTH_AUTHORIZATION_URL: http://ms-authorization:8083
+      FACEATTEND_AUTH_AUTHORIZATION_URL: http://ms-authorization:8082
       SERVER_PORT: 8085
     ports:
       - "8085:8085"
@@ -253,7 +253,7 @@ services:
 
   # ──────────────────────────────────────────────────────────────
   # TypeScript — Fastify + Drizzle / pg (ADR-005 §3, §9)
-  # 03 academic 8084 (Drizzle), 07 configuration 8089
+  # 03 academic 8083 (Drizzle), 07 configuration 8087
   # Hexagonal: _stacks/node-typescript.md
   # ──────────────────────────────────────────────────────────────
   ms-academic:
@@ -270,16 +270,16 @@ services:
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-faceattend_db}
       PG_SCHEMA: academic
-      PORT: 8084
+      PORT: 8083
       KAFKA_BROKERS: kafka:29092
       NODE_ENV: production
     ports:
-      - "8084:8084"
+      - "8083:8083"
     networks:
       - faceattend-net
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8084/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8083/health || exit 1"]
       interval: 20s
       timeout: 5s
       retries: 5
@@ -299,16 +299,16 @@ services:
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-faceattend_db}
       PG_SCHEMA: configuration
-      PORT: 8089
+      PORT: 8087
       KAFKA_BROKERS: kafka:29092
       NODE_ENV: production
     ports:
-      - "8089:8089"
+      - "8087:8087"
     networks:
       - faceattend-net
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8089/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8087/health || exit 1"]
       interval: 20s
       timeout: 5s
       retries: 5
@@ -348,7 +348,7 @@ services:
 
   # ──────────────────────────────────────────────────────────────
   # Go — Gin (ADR-005 §7)
-  # 08 notification 8090 — 5-10 MB distroless
+  # 08 notification 8088 — 5-10 MB distroless
   # Hexagonal: _stacks/go.md
   # ──────────────────────────────────────────────────────────────
   ms-notification:
@@ -365,10 +365,10 @@ services:
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-faceattend_db}?sslmode=disable
       PG_SCHEMA: notification
-      PORT: 8090
+      PORT: 8088
       KAFKA_BROKERS: kafka:29092
     ports:
-      - "8090:8090"
+      - "8088:8088"
     networks:
       - faceattend-net
     restart: unless-stopped
@@ -376,7 +376,7 @@ services:
       # distroless no tiene shell/wget: usar TCP check vía busybox-less workaround — base alpine lo soporta
       # healthcheck se ejecuta en el host docker, no dentro del contenedor distroless estricto, así que usamos CMD-SHELL con wget del host
       # Alternativa real: la app Go debe exponer /health; el check se hace con curl desde fuera — para distroless usamos tcp
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8090/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8088/health || exit 1"]
       interval: 20s
       timeout: 5s
       retries: 5
@@ -384,7 +384,7 @@ services:
 
   # ──────────────────────────────────────────────────────────────
   # TypeScript — Fastify (ISO/IEC 25010)
-  # 09 quality 8091 — assessment CRUD, in-memory + best-effort Kafka hook
+  # 09 quality 8089 — assessment CRUD, in-memory + best-effort Kafka hook
   # ──────────────────────────────────────────────────────────────
   ms-quality:
     build:
@@ -400,16 +400,16 @@ services:
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-faceattend_db}
       PG_SCHEMA: quality
-      PORT: 8091
+      PORT: 8089
       KAFKA_BROKERS: kafka:29092
       NODE_ENV: production
     ports:
-      - "8091:8091"
+      - "8089:8089"
     networks:
       - faceattend-net
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8091/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8089/health || exit 1"]
       interval: 20s
       timeout: 5s
       retries: 5
@@ -483,7 +483,7 @@ services:
       kong-gateway:
         condition: service_healthy
     ports:
-      - "${FRONTEND_PORT:-8082}:80"
+      - "${FRONTEND_PORT:-8090}:80"
     networks:
       - faceattend-net
     restart: unless-stopped

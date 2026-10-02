@@ -29,7 +29,7 @@ services:
           redis_database: 0
           policy: redis
   - name: authorization-service
-    url: http://ms-authorization:8083
+    url: http://ms-authorization:8082
     routes:
       - name: authorization-route
         paths: [/api/v1/roles, /api/v1/permissions]
@@ -48,14 +48,14 @@ services:
           redis_database: 0
           policy: redis
   - name: academic-service
-    url: http://ms-academic:8084
+    url: http://ms-academic:8083
     routes:
       - name: academic-route
         paths: [/api/v1/schools, /api/v1/programs, /api/v1/academic-periods, /api/v1/periods, /api/v1/cohorts, /api/v1/courses, /api/v1/actor-types, /api/v1/academic-actors, /api/v1/enrollments]
         strip_path: false
     # Sin plugins propios: el enforcement lo hace el MS (ver scheduling-nested-route).
   - name: scheduling-service
-    url: http://ms-scheduling:8087
+    url: http://ms-scheduling:8084
     routes:
       - name: scheduling-route
         paths: [/api/v1/environments, /api/v1/schedule-blocks, /api/v1/class-sessions]
@@ -92,7 +92,7 @@ services:
         strip_path: false
     # Sin plugins propios: el enforcement lo hace el MS.
   - name: configuration-service
-    url: http://ms-configuration:8089
+    url: http://ms-configuration:8087
     routes:
       - name: configuration-route
         paths: [/api/v1/academic-configurations, /api/v1/security-configurations, /api/v1/biometric-update-cases, /api/v1/configurations]
@@ -102,7 +102,7 @@ services:
         strip_path: false
     # Sin plugins propios: el enforcement lo hace el MS.
   - name: notification-service
-    url: http://ms-notification:8090
+    url: http://ms-notification:8088
     routes:
       - name: notification-route
         paths: [/api/v1/alert-types, /api/v1/alerts]
@@ -110,7 +110,7 @@ services:
     # Sin plugins propios: el enforcement lo hace el MS.
   # ── ISO/IEC 9001 Quality Health Endpoints ────────────────────
   - name: quality-health
-    url: http://ms-academic:8084
+    url: http://ms-academic:8083
     routes:
       - name: quality-health-route
         paths: [/health/quality]
@@ -123,7 +123,7 @@ services:
           headers: [Content-Type]
   # ── Quality Service (ISO 25010/29110) ──────────────────────
   - name: quality-service
-    url: http://ms-quality:8091
+    url: http://ms-quality:8089
     routes:
       - name: quality-route
         paths: [/api/v1/quality]
@@ -154,7 +154,7 @@ consumers:
 plugins:
   - name: cors
     config:
-      origins: ["http://localhost:3000", "http://localhost:5173"]
+      origins: ["http://localhost:3000", "http://localhost:5173", "http://localhost:8090"]
       methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
       headers: [Authorization, Content-Type, X-Requested-With]
       credentials: true

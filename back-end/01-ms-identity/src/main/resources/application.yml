@@ -24,7 +24,7 @@ spring:
 faceattend:
   auth:
     identity-url: http://localhost:8081
-    authorization-url: http://localhost:8083
+    authorization-url: http://localhost:8082
 management:
   endpoints:
     web:
