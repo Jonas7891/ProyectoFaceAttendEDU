@@ -80,7 +80,7 @@ export const JustificationService = {
     const data = await request({
       method: POST,
       url: `${BASE()}${TYPES_ENDPOINT}`,
-      data: { name, description, requires_attachment: requiresAttachment },
+      data: { name, description, requiresAttachment },
       requiresAuth: false,
     });
     return toSnakeDeep(data);
