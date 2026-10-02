@@ -147,35 +147,45 @@ async function seedAuthorization() {
 // Academic: full chain schools -> programs -> periods -> cohorts -> courses -> actors -> enrollments.
 async function seedAcademic() {
   ids.schoolId = await ensure("academic", "/api/v1/schools",
-    { code: "SEED-SCH", name: "Seed School", cityId: 1 },
-    { idKey: "schoolId", matchKey: "code", matchValue: "SEED-SCH" }) ?? 1;
+    { code: "ANDES-01", name: "Colegio Los Andes", cityId: 1 },
+    { idKey: "schoolId", matchKey: "code", matchValue: "ANDES-01" }) ?? 1;
   ids.programId = await ensure("academic", "/api/v1/programs",
-    { schoolId: ids.schoolId, code: "SEED-PROG", name: "Seed Program" },
-    { idKey: "programId", matchKey: "code", matchValue: "SEED-PROG" }) ?? 1;
+    { schoolId: ids.schoolId, code: "IS-2026", name: "Ingeniería de Sistemas" },
+    { idKey: "programId", matchKey: "code", matchValue: "IS-2026" }) ?? 1;
   ids.periodId = await ensure("academic", "/api/v1/academic-periods",
-    { schoolId: ids.schoolId, name: "Seed Period 2026", startsOn: "2026-01-01", endsOn: "2026-12-31", isActive: true },
-    { idKey: "academicPeriodId", matchKey: "name", matchValue: "Seed Period 2026" }) ?? 1;
+    { schoolId: ids.schoolId, name: "Periodo Académico 2026-I", startsOn: "2026-01-01", endsOn: "2026-06-30", isActive: true },
+    { idKey: "academicPeriodId", matchKey: "name", matchValue: "Periodo Académico 2026-I" }) ?? 1;
   ids.cohortId = await ensure("academic", "/api/v1/cohorts",
-    { programId: ids.programId, academicPeriodId: ids.periodId, code: "SEED-COH-01" },
-    { idKey: "cohortId", matchKey: "code", matchValue: "SEED-COH-01" }) ?? 1;
+    { programId: ids.programId, academicPeriodId: ids.periodId, code: "COH-2026-I-01" },
+    { idKey: "cohortId", matchKey: "code", matchValue: "COH-2026-I-01" }) ?? 1;
   ids.courseId = await ensure("academic", "/api/v1/courses",
-    { programId: ids.programId, code: "SEED-CUR-01", name: "Seed Course", creditHours: 3 },
-    { idKey: "courseId", matchKey: "code", matchValue: "SEED-CUR-01" }) ?? 1;
+    { programId: ids.programId, code: "CALC-101", name: "Cálculo Diferencial", creditHours: 3 },
+    { idKey: "courseId", matchKey: "code", matchValue: "CALC-101" }) ?? 1;
+  await ensure("academic", "/api/v1/courses",
+    { programId: ids.programId, code: "PROG-101", name: "Programación I", creditHours: 4 },
+    { idKey: "courseId", matchKey: "code", matchValue: "PROG-101" });
   // academic_actor.person_id is a native UUID column (cross-context reference to
   // identity.person, no FK): it must be the UUID from seedIdentity(), not the
-  // biometric string id ("seed-student-01" lives only in MongoDB).
-  if (!ids.personId) {
-    console.log("skip  - academic actor needs a person id (identity person seed failed?)");
+  // biometric string id (which lives only in MongoDB).
+  ids.actorIds = [];
+  if (!ids.personIds?.length) {
+    console.log("skip  - academic actors need person ids (identity person seed failed?)");
     ids.actorId = null;
   } else {
-    ids.actorId = await ensure("academic", "/api/v1/academic-actors",
-      { personId: ids.personId, actorTypeId: 1, schoolId: ids.schoolId, actorCode: "SEED-STU-01" },
-      { idKey: "academicActorId", matchKey: "actorCode", matchValue: "SEED-STU-01" }) ?? null;
+    for (let i = 0; i < PEOPLE.length && i < ids.personIds.length; i++) {
+      const actorId = await ensure("academic", "/api/v1/academic-actors",
+        { personId: ids.personIds[i], actorTypeId: 1, schoolId: ids.schoolId, actorCode: PEOPLE[i].actorCode },
+        { idKey: "academicActorId", matchKey: "actorCode", matchValue: PEOPLE[i].actorCode }) ?? null;
+      if (actorId) ids.actorIds.push(actorId);
+    }
+    ids.actorId = ids.actorIds[0] ?? null;
   }
-  if (ids.actorId) {
-    await post("academic", "/api/v1/enrollments", { academicActorId: ids.actorId, cohortId: ids.cohortId });
+  if (ids.actorIds?.length) {
+    for (const actorId of ids.actorIds) {
+      await post("academic", "/api/v1/enrollments", { academicActorId: actorId, cohortId: ids.cohortId });
+    }
   } else {
-    console.log("skip  - enrollment needs an academic actor (academic actor seed failed?)");
+    console.log("skip  - enrollments need academic actors (academic actor seed failed?)");
   }
   await get("academic", "/api/v1/schools");
   await get("academic", `/api/v1/cohorts/${ids.cohortId}/enrollments`);
