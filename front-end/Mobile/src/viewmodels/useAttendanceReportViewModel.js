@@ -33,7 +33,7 @@ export function useAttendanceReportViewModel() {
             try {
                 setIsLoading(true);
                 const arData = await backendGet(ENV.ATTENDANCE_BASE_URL, 'api/v1/attendance-records', {_limit: 500});
-                const records = unwrap(arData);
+                const records = Array.isArray(arData) ? arData : [];
 
                 const actorMap = {};
                 for (const r of records) {
