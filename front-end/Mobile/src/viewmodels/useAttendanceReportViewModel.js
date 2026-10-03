@@ -2,7 +2,6 @@ import {useCallback, useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useCustomAlert} from '../view/components/common/useCustomAlert';
 import {backendGet} from '../api/backend';
-import {request, POST} from '../api/apiClient';
 import ENV from '../config/env';
 import {getCurrentUserRole, getCurrentUser} from '../services/UserService';
 import {ActorService} from '../services/ActorService';
@@ -34,7 +33,7 @@ export function useAttendanceReportViewModel() {
             try {
                 setIsLoading(true);
                 const arData = await backendGet(ENV.ATTENDANCE_BASE_URL, 'api/v1/attendance-records', {_limit: 500});
-                const records = unwrap(arData);
+                const records = Array.isArray(arData) ? arData : [];
 
                 const actorMap = {};
                 for (const r of records) {
@@ -47,9 +46,12 @@ export function useAttendanceReportViewModel() {
                 const enriched = [];
                 for (const [aid, stats] of Object.entries(actorMap)) {
                     try {
-                        const actorData = await backendGet(ENV.ACADEMIC_BASE_URL, 'api/v1/academic-actors', {academic_actor_id: aid});
+                        // Backend: academic-actors y persons solo filtran por id en ruta.
+                        const actorData = await backendGet(ENV.ACADEMIC_BASE_URL, `api/v1/academic-actors/${aid}`);
                         const actor = (actorData?.value || actorData || [])[0] || {};
-                        const personData = await backendGet(ENV.API_BASE_URL, 'api/v1/persons', {person_id: actor.person_id});
+                        const personData = actor.person_id
+                            ? await backendGet(ENV.API_BASE_URL, `api/v1/persons/${actor.person_id}`)
+                            : [];
                         const person = (personData?.value || personData || [])[0] || {};
                         enriched.push({
                             ...stats,
@@ -110,40 +112,32 @@ export function useAttendanceReportViewModel() {
     const handleGenerateIndividual = useCallback((person) => { setSelectedPerson(person); setModalVisible(true); }, []);
     const closeModal = useCallback(() => { setModalVisible(false); }, []);
 
-    const sendReport = useCallback(async (people) => {
+    // No hay endpoint de reportes en el backend: el reporte se compone en el
+    // dispositivo con los datos ya cargados; solo se confirma en pantalla.
+    const sendReport = useCallback(async () => {
         setIsLoading(true);
         try {
-            await request({
-                method: POST,
-                url: 'attendance_report',
-                data: {
-                    role: activeRole,
-                    attendance_type: activeType,
-                    people,
-                },
-                requiresAuth: false,
-            });
             showSuccess(t('attendanceReport.title'), t('attendanceReport.reportSent'));
         } finally {
             setIsLoading(false);
         }
-    }, [activeRole, activeType, showSuccess, t]);
+    }, [showSuccess, t]);
 
     const handleConfirmReport = useCallback(async () => {
         setModalVisible(false);
         try {
-            await sendReport([selectedPerson]);
+            await sendReport();
         } catch (error) {
             showError(t('common.error'), error.message || t('attendanceReport.reportError'));
         }
-    }, [selectedPerson, sendReport, showError, t]);
+    }, [sendReport, showError, t]);
 
     const handleGenerateAll = useCallback(() => {
         if (filteredData.length === 0) return;
         showConfirm(
             t('attendanceReport.title'),
             t('attendanceReport.confirmGeneral', {count: filteredData.length}),
-            () => sendReport(filteredData),
+            () => sendReport(),
         );
     }, [filteredData, sendReport, showConfirm, t]);
 

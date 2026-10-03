@@ -23,9 +23,10 @@ import {QuestionInput} from '../components/common/QuestionInput';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import styles from './Styles/UpdatePhotoScreen/Style';
 import {useUpdatePhotoViewModel} from '../../viewmodels/useUpdatePhotoViewModel';
-import ENV from '../../config/env';
 
-const FACE_REGISTER_URL = process.env.EXPO_PUBLIC_FACE_URL || `${ENV.API_BASE_URL}face/register`;
+// No hay endpoint de subida de fotos en el backend (biometric enroll recibe
+// embeddings, no multipart): la foto se guarda solo en el dispositivo y el
+// flujo continúa con el registro local de asistencia.
 
 function FaceGuideOval({status, colors}) {
     const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -199,34 +200,7 @@ export default function UpdatePhoto() {
         setStatusMessage(t('updatePhoto.camera.processing'));
 
         try {
-            const formDataToSend = new FormData();
-            formDataToSend.append('photo', {
-                uri: photo.uri,
-                name: `face_${Date.now()}.jpg`,
-                type: 'image/jpeg',
-            });
-            formDataToSend.append('documento', formData.documento.trim());
-            formDataToSend.append('nombre', formData.nombreCompleto.trim());
-
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000);
-
-            const response = await fetch(FACE_REGISTER_URL, {
-                method: 'POST',
-                body: formDataToSend,
-                signal: controller.signal,
-            });
-
-            clearTimeout(timeoutId);
-
-            if (!response.ok) {
-                throw new Error(`Face register failed: ${response.status}`);
-            }
-
-            const backendResponse = await response.json();
-
             const faceData = {
-                embedding: backendResponse.embedding,
                 nombre: formData.nombreCompleto.trim(),
                 telefono: formData.telefono.trim(),
                 documento: formData.documento.trim(),

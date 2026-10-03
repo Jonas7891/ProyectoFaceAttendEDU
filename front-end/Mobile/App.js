@@ -1,4 +1,6 @@
 import React from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { I18nextProvider } from 'react-i18next';
 import { ThemeProvider, useTheme } from './src/view/components/common/ThemeContext';
@@ -24,10 +26,14 @@ function AppContent() {
 
 export default function App() {
     return (
-        <AlertsConfigProvider>
-            <ThemeProvider>
-                <AppContent />
-            </ThemeProvider>
-        </AlertsConfigProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <SafeAreaProvider>
+                <AlertsConfigProvider>
+                    <ThemeProvider>
+                        <AppContent />
+                    </ThemeProvider>
+                </AlertsConfigProvider>
+            </SafeAreaProvider>
+        </GestureHandlerRootView>
     );
 }

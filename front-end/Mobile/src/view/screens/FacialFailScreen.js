@@ -51,7 +51,7 @@ export default function FacialFail() {
                     keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
                 >
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                        <View style={styles.container} marginHorizontal={20}>
+                        <View style={[styles.container, { marginHorizontal: 20 }]}>
                             <View style={styles.headerContainer}>
                                 <Text style={[styles.mainTitle, { color: colors.text }]}>
                                     {t('facialFail.title')}

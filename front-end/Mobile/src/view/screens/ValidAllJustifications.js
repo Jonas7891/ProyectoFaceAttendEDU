@@ -54,7 +54,7 @@ export default function JustificationsScreen() {
             style={[styles.validAllJustificationsSafeArea, { backgroundColor: colors.background }]}
             key={`${updateKey}`}
         >
-            <View style={[styles.validAllJustificationsContainer, { backgroundColor: colors.background,  marginTop: Platform.OS === "ios" ? 0 : 50} ]} marginHorizontal={10}>
+            <View style={[styles.validAllJustificationsContainer, { backgroundColor: colors.background,  marginTop: Platform.OS === "ios" ? 0 : 50, marginHorizontal: 10 } ]}>
                 <View style={[styles.validAllJustificationsHeader, { backgroundColor: colors.background }]}>
                     <Text style={[styles.validAllJustificationsTitle, { color: colors.text }]}>
                         {t("justifications.validList")}

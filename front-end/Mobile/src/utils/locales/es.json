@@ -341,6 +341,7 @@
     "confirmTitle": "Confirmar envío",
     "dateLabel": "Fecha",
     "submitError": "No se pudo enviar la justificación",
+    "noRecordForDate": "No hay registro de asistencia para esa fecha",
     "timeLabel": "Hora"
   },
   "menuJustify": {
@@ -615,6 +616,7 @@
     "absent": "Ausente",
     "activePeriod": "Período activo",
     "address": "Dirección",
+    "actorCode": "Código",
     "approved": "Aprobado",
     "attendanceStats": "Estadísticas de asistencia",
     "classes": "Clases",

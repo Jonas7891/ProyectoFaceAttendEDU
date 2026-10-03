@@ -119,23 +119,24 @@ export function useAttendanceViewModel() {
             let records = [];
 
             if (isAdminRole) {
-                const arData = await backendGet(ENV.ATTENDANCE_BASE_URL, 'api/v1/attendance-records', {_limit: 200});
+                const arData = await backendGet(ENV.ATTENDANCE_BASE_URL, 'api/v1/attendance-records');
                 records = unwrap(arData);
             } else if (isTeacherRole && myActor) {
-                const blockData = await backendGet(ENV.SCHEDULING_BASE_URL, 'api/v1/schedule-blocks', {instructor_actor_id: myActor.academicActorId});
+                // Backend: schedule-blocks filtra ?instructorActorId= (camelCase).
+                const blockData = await backendGet(ENV.SCHEDULING_BASE_URL, 'api/v1/schedule-blocks', {instructorActorId: myActor.academicActorId});
                 const blocks = unwrap(blockData);
                 const blockIds = blocks.map(b => b.schedule_block_id);
 
                 for (const blockId of blockIds) {
-                    const sessionData = await backendGet(ENV.SCHEDULING_BASE_URL, 'api/v1/class-sessions', {schedule_block_id: blockId});
+                    const sessionData = await backendGet(ENV.SCHEDULING_BASE_URL, 'api/v1/class-sessions', {scheduleBlockId: blockId});
                     const sessions = unwrap(sessionData);
                     for (const session of sessions) {
-                        const arData = await backendGet(ENV.ATTENDANCE_BASE_URL, 'api/v1/attendance-records', {class_session_id: session.class_session_id});
+                        const arData = await backendGet(ENV.ATTENDANCE_BASE_URL, 'api/v1/attendance-records', {classSessionId: session.class_session_id});
                         records.push(...unwrap(arData));
                     }
                 }
             } else if (myActor) {
-                const arData = await backendGet(ENV.ATTENDANCE_BASE_URL, 'api/v1/attendance-records', {academic_actor_id: myActor.academicActorId, _limit: 200});
+                const arData = await backendGet(ENV.ATTENDANCE_BASE_URL, 'api/v1/attendance-records', {academicActorId: myActor.academicActorId});
                 records = unwrap(arData);
             }
 
@@ -149,31 +150,34 @@ export function useAttendanceViewModel() {
             const enriched = [];
             for (const record of records.slice(-50)) {
                 try {
-                    const sessionData = await backendGet(ENV.SCHEDULING_BASE_URL, 'api/v1/class-sessions', {class_session_id: record.class_session_id});
+                    // Backend: estas colecciones solo filtran por id en ruta.
+                    const sessionData = await backendGet(ENV.SCHEDULING_BASE_URL, `api/v1/class-sessions/${record.class_session_id}`);
                     const session = unwrap(sessionData)[0] || {};
 
-                    const blockData = await backendGet(ENV.SCHEDULING_BASE_URL, 'api/v1/schedule-blocks', {schedule_block_id: session.schedule_block_id});
+                    const blockData = await backendGet(ENV.SCHEDULING_BASE_URL, `api/v1/schedule-blocks/${session.schedule_block_id}`);
                     const block = unwrap(blockData)[0] || {};
 
-                    const courseData = await backendGet(ENV.ACADEMIC_BASE_URL, 'api/v1/courses', {course_id: block.course_id});
+                    const courseData = await backendGet(ENV.ACADEMIC_BASE_URL, `api/v1/courses/${block.course_id}`);
                     const course = unwrap(courseData)[0] || {};
 
-                    const envData = await backendGet(ENV.ACADEMIC_BASE_URL, 'api/v1/environments', {environment_id: block.environment_id});
+                    const envData = await backendGet(ENV.SCHEDULING_BASE_URL, `api/v1/environments/${block.environment_id}`);
                     const env = unwrap(envData)[0] || {};
 
-                    const actorData = await backendGet(ENV.ACADEMIC_BASE_URL, 'api/v1/academic-actors', {academic_actor_id: record.academic_actor_id});
+                    const actorData = await backendGet(ENV.ACADEMIC_BASE_URL, `api/v1/academic-actors/${record.academic_actor_id}`);
                     const actor = unwrap(actorData)[0] || {};
 
-                    const personData = await backendGet(ENV.API_BASE_URL, 'api/v1/persons', {person_id: actor.person_id});
+                    const personData = actor.person_id
+                        ? await backendGet(ENV.API_BASE_URL, `api/v1/persons/${actor.person_id}`)
+                        : [];
                     const person = unwrap(personData)[0] || {};
 
                     let docenteName = '—';
                     if (block.instructor_actor_id) {
                         try {
-                            const instrActorData = await backendGet(ENV.ACADEMIC_BASE_URL, 'api/v1/academic-actors', {academic_actor_id: block.instructor_actor_id});
+                            const instrActorData = await backendGet(ENV.ACADEMIC_BASE_URL, `api/v1/academic-actors/${block.instructor_actor_id}`);
                             const instrActor = unwrap(instrActorData)[0];
                             if (instrActor?.person_id) {
-                                const instrPersonData = await backendGet(ENV.API_BASE_URL, 'api/v1/persons', {person_id: instrActor.person_id});
+                                const instrPersonData = await backendGet(ENV.API_BASE_URL, `api/v1/persons/${instrActor.person_id}`);
                                 const instrPerson = unwrap(instrPersonData)[0];
                                 if (instrPerson) {
                                     docenteName = `${instrPerson.name || ''} ${instrPerson.last_name || ''}`.trim() || '—';
@@ -183,12 +187,13 @@ export function useAttendanceViewModel() {
                     }
 
                     const statusMap = { Present: 'presente', Late: 'tarde', Absent: 'ausente' };
-                    const hora = record.captured_at ? new Date(record.captured_at).toLocaleTimeString(locale, {hour: '2-digit', minute: '2-digit'}) : '—';
+                    const when = record.captured_at || record.created_at || null;
+                    const hora = when ? new Date(when).toLocaleTimeString(locale, {hour: '2-digit', minute: '2-digit'}) : '—';
 
                     enriched.push({
                         id: record.attendance_record_id,
                         nombre: `${person.name || ''} ${person.last_name || ''}`.trim() || t('attendance.unknownPerson', {id: record.academic_actor_id}),
-                        fecha: record.captured_at ? record.captured_at.split('T')[0] : '',
+                        fecha: when ? when.split('T')[0] : '',
                         hora,
                         estado: statusMap[record.attendance_status] || 'ausente',
                         materia: course.name || course.code || '—',

@@ -9,17 +9,20 @@ export const saveToken = async (token) => {
     return false;
   }
 
+  // El backend emite session ids opacos (UUID), no JWT: solo se intenta
+  // decodificar cuando el token tiene forma de JWT (header.payload.signature).
   let expiresAt = null;
-  try {
-    const decoded = jwtDecode(token);
-    expiresAt = decoded.exp ? decoded.exp * 1000 : null;
-    if (expiresAt && expiresAt <= Date.now()) {
-      console.warn("saveToken: token expirado");
-      return false;
+  if (token.split('.').length === 3) {
+    try {
+      const decoded = jwtDecode(token);
+      expiresAt = decoded.exp ? decoded.exp * 1000 : null;
+      if (expiresAt && expiresAt <= Date.now()) {
+        console.warn("saveToken: token expirado");
+        return false;
+      }
+    } catch (e) {
+      console.warn("saveToken: JWT ilegible:", e.message);
     }
-  } catch (e) {
-    // En desarrollo, si el token no es JWT válido, lo guardamos igual
-    console.warn("saveToken: token no es JWT válido, guardando de todos modos:", e.message);
   }
 
   const data = { token, savedAt: Date.now(), expiresAt };

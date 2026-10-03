@@ -212,7 +212,7 @@ const DeviceCard = ({ device, colors }) => {
 //  PANTALLA PRINCIPAL
 // ─────────────────────────────────────────────
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ onLogout }) {
     const { t } = useTranslation();
     const { colors, theme } = useTheme();
 
@@ -223,7 +223,15 @@ export default function ProfileScreen() {
         updateKey,
         handleBack,
         toggleTheme,
-    } = useProfileViewModel();
+        reload,
+        courses,
+        attendanceStats,
+        justifications,
+        iotDevices,
+        teacherSchedules,
+        teacherCourseStats,
+        schoolInfo,
+    } = useProfileViewModel({ onLogout });
 
     const isStudent = (userRole || '').toLowerCase().includes('estudiante') || (userRole || '').toLowerCase().includes('student') || (userRole || '').toLowerCase().includes('aprendiz');
     const isTeacher = (userRole || '').toLowerCase().includes('docente') || (userRole || '').toLowerCase().includes('teacher') || (userRole || '').toLowerCase().includes('instructor');
@@ -288,6 +296,8 @@ export default function ProfileScreen() {
                     />
                     <InfoField label={t('profile.email',      'Correo electrónico')} value={userInfo?.email}          colors={colors} />
                     <InfoField label={t('profile.phone',      'Teléfono')}           value={userInfo?.phone}          colors={colors} />
+                    <InfoField label={t('profile.employeeId', 'Documento')}          value={userInfo?.employeeId}     colors={colors} />
+                    <InfoField label={t('profile.actorCode',  'Código')}             value={userInfo?.actorCode}      colors={colors} />
                     <InfoField label={t('profile.joinDate',   'Fecha de ingreso')}   value={userInfo?.joinDate}       colors={colors} />
                     <InfoField label={t('profile.school',     'Colegio')}            value={userInfo?.school}         colors={colors} />
 
@@ -465,7 +475,7 @@ export default function ProfileScreen() {
                             }]}
                             activeOpacity={0.75}
                         >
-                            <ProfileUpdateModal userInfo={userInfo} />
+                            <ProfileUpdateModal userInfo={userInfo} personId={userInfo?.personId} onSaved={reload} />
                         </TouchableOpacity>
 
                         <TouchableOpacity

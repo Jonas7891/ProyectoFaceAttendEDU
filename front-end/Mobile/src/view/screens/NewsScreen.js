@@ -24,7 +24,7 @@ export default function NewsScreen() {
             key={`${updateKey}`}
         >
             <ScrollViewWrapper>
-                <View style={styles.container} marginHorizontal={10}>
+                <View style={[styles.container, { marginHorizontal: 10 }]}>
                     <CustomTabs userRole={userRole} />
 
                     <View style={{ marginLeft: 25, marginRight: 25 }}>

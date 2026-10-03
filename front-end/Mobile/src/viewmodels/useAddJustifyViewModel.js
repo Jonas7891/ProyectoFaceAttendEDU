@@ -3,7 +3,9 @@ import {useTranslation} from 'react-i18next';
 import {useNavigation} from '@react-navigation/native';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 import * as DocumentPicker from 'expo-document-picker';
-import {JustificationService, backendGet} from '../services/JustificationService';
+import {JustificationService} from '../services/JustificationService';
+import {backendGet} from '../api/backend';
+import ENV from '../config/env';
 import {getCurrentUser} from '../services/UserService';
 import {ActorService} from '../services/ActorService';
 
@@ -83,12 +85,22 @@ export function useAddJustificationViewModel() {
             const user = await getCurrentUser();
             const actors = await ActorService.getByPerson(user?.personId);
             const actor = actors?.[0];
+            // Backend: GET /api/v1/attendance-records?academicActorId= (camelCase).
+            const ATT = ENV.ATTENDANCE_BASE_URL;
             const attendanceData = actor
-                ? await backendGet(BASE(), 'api/v1/attendance-records', {academicActorId: actor.academicActorId})
+                ? await backendGet(ATT, 'api/v1/attendance-records', {academicActorId: actor.academicActorId})
                 : [];
             const attendanceRecords = attendanceData?.value || attendanceData || [];
             const attendanceRecord = attendanceRecords.find(record => record.captured_at?.startsWith(date));
-            const typeData = await backendGet(BASE(), 'api/v1/justification-types', {});
+            if (!attendanceRecord) {
+                setAlertData({
+                    message: t('justify.noRecordForDate'),
+                    type: 'warning',
+                    timestamp: Date.now(),
+                });
+                return;
+            }
+            const typeData = await backendGet(ATT, 'api/v1/justification-types', {});
             const types = typeData?.value || typeData || [];
             const type = types.find(item => {
                 const name = String(item.name || '').toLowerCase();

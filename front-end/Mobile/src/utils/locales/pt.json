@@ -341,7 +341,8 @@
     "missingAttachmentError": "Por favor, envie um anexo",
     "confirmMessage": "Tem certeza de que deseja enviar esta justificativa?",
     "confirmTitle": "Confirmar envio",
-    "submitError": "Não foi possível enviar a justificativa"
+    "submitError": "Não foi possível enviar a justificativa",
+    "noRecordForDate": "Nenhum registro de presença para essa data"
   },
   "menuJustify": {
     "backToDashboard": "Voltar ao Dashboard"
@@ -617,6 +618,7 @@
     "absent": "Ausente",
     "activePeriod": "Período ativo",
     "address": "Endereço",
+    "actorCode": "Código",
     "approved": "Aprovado",
     "attendanceStats": "Estatísticas de presença",
     "classes": "Aulas",

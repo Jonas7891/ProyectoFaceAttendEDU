@@ -1,4 +1,5 @@
 import { request, GET, POST, PUT, DELETE } from '../api/apiClient';
+import { toSnakeDeep } from '../api/backend';
 import AcademicPeriod from '../models/academic/AcademicPeriod';
 
 const ENDPOINT = 'academic_period';
@@ -18,22 +19,30 @@ function unwrapFirst(data) {
 export const PeriodService = {
   getAll: async (params = {}) => {
     const data = await request({ method: GET, url: ENDPOINT, params, requiresAuth: false });
-    return unwrap(data).map(AcademicPeriod.fromApi);
+    return unwrap(data).map((p) => AcademicPeriod.fromApi(toSnakeDeep(p)));
   },
 
   getById: async (id) => {
     const data = await request({ method: GET, url: `${ENDPOINT}/${id}`, requiresAuth: false });
-    return AcademicPeriod.fromApi(data);
+    return AcademicPeriod.fromApi(toSnakeDeep(data));
   },
 
+  // Backend: GET /api/v1/academic-periods no filtra (?school_id/ ?is_active se
+  // ignoran), así que se filtra en cliente.
   getBySchool: async (schoolId) => {
-    const data = await request({ method: GET, url: ENDPOINT, params: { school_id: schoolId }, requiresAuth: false });
-    return unwrap(data).map(AcademicPeriod.fromApi);
+    const data = await request({ method: GET, url: ENDPOINT, requiresAuth: false });
+    return unwrap(data)
+      .map((p) => AcademicPeriod.fromApi(toSnakeDeep(p)))
+      .filter((p) => String(p?.schoolId) === String(schoolId));
   },
 
   getActiveBySchool: async (schoolId) => {
-    const data = await request({ method: GET, url: ENDPOINT, params: { school_id: schoolId, is_active: true }, requiresAuth: false });
-    return AcademicPeriod.fromApi(unwrapFirst(data));
+    const data = await request({ method: GET, url: ENDPOINT, requiresAuth: false });
+    return AcademicPeriod.fromApi(
+      unwrap(data)
+        .map((p) => AcademicPeriod.fromApi(toSnakeDeep(p)))
+        .find((p) => String(p?.schoolId) === String(schoolId) && p?.isActive) || null,
+    );
   },
 
   create: async (periodData) => {
