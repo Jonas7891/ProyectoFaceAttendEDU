@@ -20,15 +20,26 @@ import { useResponsive } from "../../components/hooks/useResponsive";
 import { useCoursesViewModel } from "../../../viewmodels/useCoursesViewModel";
 import { useRolePermissions } from "../../../viewmodels/useRolePermissions";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
+import { useCourseDetails } from "../../../core/hooks/useCourseDetails";
 import { CourseDetailModal, RegisterCourseModal, ImportCoursesModal } from "./modals";
 
-// ── CourseCard (diseño original) ──────────────────────────
+// ── CourseCard (diseño original con datos dinámicos) ──────────────────────────
 
 function CourseCard({ course, onPress, onStudentsPress }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
     const c = theme.colors;
-    const barColor = useAttendanceColor(course.avgAttendance);
+    
+    // Usar el hook centralizado para obtener información dinámica
+    const {
+        currentInstructor,
+        currentRoom,
+        enrolledStudentsCount,
+        courseAvgAttendance,
+        courseShift,
+    } = useCourseDetails(course);
+    
+    const barColor = useAttendanceColor(courseAvgAttendance);
 
     return (
         <TouchableOpacity onPress={onPress} style={{ flex: 1, minWidth: 260 }}>
@@ -67,14 +78,14 @@ function CourseCard({ course, onPress, onStudentsPress }) {
                         {course.name}
                     </Text>
                     <Text style={{ fontSize: 13, color: c.text.secondary, marginBottom: 14 }}>
-                        {course.professor}
+                        {currentInstructor}
                     </Text>
 
                     <View style={{ gap: 8, marginBottom: 14 }}>
                         {[
-                            { icon: "users", text: `${course.students} ${t("estudiantes")}` },
-                            { icon: "clock", text: course.schedule },
-                            { icon: "map-pin", text: course.room },
+                            { icon: "users", text: `${enrolledStudentsCount} ${t("en curso")}` },
+                            { icon: "clock", text: courseShift },
+                            { icon: "map-pin", text: currentRoom },
                         ].map(({ icon, text }) => (
                             <View
                                 key={icon}
@@ -98,10 +109,10 @@ function CourseCard({ course, onPress, onStudentsPress }) {
                                 {t("Asistencia promedio")}
                             </Text>
                             <Text style={{ fontSize: 13, fontWeight: "700", color: barColor }}>
-                                {course.avgAttendance}%
+                                {courseAvgAttendance}%
                             </Text>
                         </View>
-                        <ProgressBar value={course.avgAttendance} color={barColor} height={5} />
+                        <ProgressBar value={courseAvgAttendance} color={barColor} height={5} />
                     </View>
                 </View>
 
