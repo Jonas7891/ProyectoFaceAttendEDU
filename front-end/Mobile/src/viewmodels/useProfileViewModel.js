@@ -21,6 +21,7 @@ export function useProfileViewModel({ onLogout } = {}) {
     const [userRole, setUserRole] = useState(null);
     const updateKey = useLanguageRefresh();
     const [isLoading, setIsLoading] = useState(false);
+    const [schoolInfo, setSchoolInfo] = useState(null);
     const [userInfo, setUserInfo] = useState({
         name: '',
         email: '',
@@ -54,7 +55,7 @@ export function useProfileViewModel({ onLogout } = {}) {
 
                     let schoolName = '';
                     let actorCode = '';
-                    let schoolInfo = null;
+                    let loadedSchoolInfo = null;
                     if (person?.person_id) {
                         try {
                             const actors = await ActorService.getByPerson(person.person_id);
@@ -64,14 +65,15 @@ export function useProfileViewModel({ onLogout } = {}) {
                                 const school = await SchoolService.getById(actor.schoolId);
                                 schoolName = school?.name || '';
                                 const activePeriod = await PeriodService.getActiveBySchool(actor.schoolId);
-                                schoolInfo = {
+                                loadedSchoolInfo = {
                                     name: school?.name || '',
                                     address: school?.address || '',
-                                    activePeriod: activePeriod?.name || activePeriod?.periodName || '',
+                                    activePeriod: activePeriod?.name || '',
                                 };
                             }
                         } catch {}
                     }
+                    setSchoolInfo(loadedSchoolInfo);
 
                     setUserInfo({
                         name: `${person?.name || ''} ${person?.last_name || ''}`.trim() || current?.username || current?.name || '',
