@@ -212,7 +212,7 @@ const DeviceCard = ({ device, colors }) => {
 //  PANTALLA PRINCIPAL
 // ─────────────────────────────────────────────
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ onLogout }) {
     const { t } = useTranslation();
     const { colors, theme } = useTheme();
 
@@ -223,7 +223,14 @@ export default function ProfileScreen() {
         updateKey,
         handleBack,
         toggleTheme,
-    } = useProfileViewModel();
+        courses,
+        attendanceStats,
+        justifications,
+        iotDevices,
+        teacherSchedules,
+        teacherCourseStats,
+        schoolInfo,
+    } = useProfileViewModel({ onLogout });
 
     const isStudent = (userRole || '').toLowerCase().includes('estudiante') || (userRole || '').toLowerCase().includes('student') || (userRole || '').toLowerCase().includes('aprendiz');
     const isTeacher = (userRole || '').toLowerCase().includes('docente') || (userRole || '').toLowerCase().includes('teacher') || (userRole || '').toLowerCase().includes('instructor');

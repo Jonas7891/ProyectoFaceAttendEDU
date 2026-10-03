@@ -7,11 +7,13 @@ import {useTheme} from '../view/components/common/ThemeContext';
 import {getCurrentUserRole, getCurrentUser} from "../services/UserService";
 import {ActorService} from '../services/ActorService';
 import {SchoolService} from '../services/SchoolService';
+import {PeriodService} from '../services/PeriodService';
 import {backendGet} from '../api/backend';
 import ENV from '../config/env';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
+import {removeToken} from '../storage/TokenStorage';
 
-export function useProfileViewModel() {
+export function useProfileViewModel({ onLogout } = {}) {
     const navigation = useNavigation();
     const {t, i18n} = useTranslation();
     const {theme, toggleTheme, loadThemeForRole} = useTheme();
@@ -52,6 +54,7 @@ export function useProfileViewModel() {
 
                     let schoolName = '';
                     let actorCode = '';
+                    let schoolInfo = null;
                     if (person?.person_id) {
                         try {
                             const actors = await ActorService.getByPerson(person.person_id);
@@ -60,6 +63,12 @@ export function useProfileViewModel() {
                             if (actor?.schoolId) {
                                 const school = await SchoolService.getById(actor.schoolId);
                                 schoolName = school?.name || '';
+                                const activePeriod = await PeriodService.getActiveBySchool(actor.schoolId);
+                                schoolInfo = {
+                                    name: school?.name || '',
+                                    address: school?.address || '',
+                                    activePeriod: activePeriod?.name || activePeriod?.periodName || '',
+                                };
                             }
                         } catch {}
                     }
@@ -84,22 +93,27 @@ export function useProfileViewModel() {
 
     const handleBack = useCallback(() => navigation.goBack(), [navigation]);
 
-    // Acción real de cerrar sesión (sin confirmación)
+    // Acción real de cerrar sesión (sin confirmación).
+    // Delega en onLogout (AppNavigator) para voltear isAuthenticated;
+    // sin él, solo limpia la sesión sin navegar a rutas de otro stack.
     const performLogout = useCallback(async () => {
         setIsLoading(true);
         try {
             if (userRole) {
                 await saveLanguageForRole(userRole, i18n.language);
             }
-            await AsyncStorage.removeItem('userRole');
-            navigation.navigate('HomesScreen');
+            await removeToken();
+            await AsyncStorage.multiRemove(['userRole', 'userEmail', 'userProfile']);
+            if (onLogout) {
+                await onLogout();
+            }
         } catch (error) {
             console.error('Error en logout:', error);
             throw error; // La pantalla mostrará el error con CustomAlert
         } finally {
             setIsLoading(false);
         }
-    }, [userRole, i18n.language, navigation]);
+    }, [userRole, i18n.language, onLogout]);
 
     return {
         userRole,
@@ -115,6 +129,6 @@ export function useProfileViewModel() {
         iotDevices: [],
         teacherSchedules: [],
         teacherCourseStats: [],
-        schoolInfo: null,
+        schoolInfo,
     };
 }

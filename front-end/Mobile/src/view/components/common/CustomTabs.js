@@ -9,7 +9,7 @@ import stylescommon from './style/Style';
 
 const screens = {
   home: "DashboardScreen",
-  history: "Historial",
+  history: "DisplayingAttendance",
   DisplayingAttendance: "DisplayingAttendance"
 };
 

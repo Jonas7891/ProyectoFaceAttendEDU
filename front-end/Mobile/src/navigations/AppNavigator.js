@@ -156,7 +156,14 @@ export default function App() {
                         <Stack.Screen name="AddJustification" component={AddJustification}/>
                         <Stack.Screen name="AddValidJustification" component={AddValidJustificationScreen}/>
                         <Stack.Screen name="ValidJustifications" component={ValidJustificationsScreen}/>
-                        <Stack.Screen name="Profile" component={ProfileScreen}/>
+                        <Stack.Screen name="Profile">
+                            {props => (
+                                <ProfileScreen
+                                    {...props}
+                                    onLogout={handleLogout}
+                                />
+                            )}
+                        </Stack.Screen>
                         <Stack.Screen name="ManageUsersScreen">
                             {props => (
                                 <ManageUsersScreen
