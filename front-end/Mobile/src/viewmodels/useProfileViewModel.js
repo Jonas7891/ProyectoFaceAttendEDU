@@ -23,6 +23,7 @@ export function useProfileViewModel({ onLogout } = {}) {
     const [isLoading, setIsLoading] = useState(false);
     const [schoolInfo, setSchoolInfo] = useState(null);
     const [userInfo, setUserInfo] = useState({
+        personId: null,
         name: '',
         email: '',
         phone: '',
@@ -46,100 +47,102 @@ export function useProfileViewModel({ onLogout } = {}) {
 
     // Cargar datos del usuario al recibir foco:
     // persona (nombre/teléfono) -> actor académico -> colegio.
+    const loadUserData = useCallback(async () => {
+        try {
+            const current = await getCurrentUser();
+            const role = await getCurrentUserRole();
+            if (role) {
+                setUserRole(role);
+                await loadThemeForRole(role);
+            }
+
+            let person = null;
+            if (current?.personId) {
+                try {
+                    const arr = await backendGet(ENV.API_BASE_URL, `api/v1/persons/${current.personId}`);
+                    person = arr[0] || null;
+                } catch {}
+            }
+
+            // Fecha de ingreso: inicio del vínculo académico; si no hay
+            // actor (p. ej. admin), creación del usuario en identity.
+            let userCreatedAt = null;
+            if (current?.userId) {
+                try {
+                    const arr = await backendGet(ENV.API_BASE_URL, `api/v1/users/${current.userId}`);
+                    userCreatedAt = arr[0]?.created_at || null;
+                } catch {}
+            }
+
+            let schoolName = '';
+            let actorCode = '';
+            let joinDate = '';
+            let loadedSchoolInfo = null;
+            if (person?.person_id) {
+                try {
+                    const actors = await ActorService.getByPerson(person.person_id);
+                    const actor = actors?.[0] || null;
+                    actorCode = actor?.actorCode || '';
+                    joinDate = formatJoinDate(actor?.startedOn || userCreatedAt);
+                    const schoolId = actor?.schoolId || null;
+                    if (schoolId) {
+                        const school = await SchoolService.getById(schoolId);
+                        schoolName = school?.name || '';
+                        const activePeriod = await PeriodService.getActiveBySchool(schoolId);
+                        loadedSchoolInfo = {
+                            name: school?.name || '',
+                            address: school?.address || '',
+                            activePeriod: activePeriod?.name || '',
+                        };
+                    } else {
+                        // Sin actor académico (p. ej. admin): escuela con
+                        // más actores (la sede principal) para no dejar
+                        // el perfil vacío.
+                        const schools = await SchoolService.getAll();
+                        let school = schools?.[0] || null;
+                        try {
+                            const counts = {};
+                            for (const a of (await ActorService.getAll()) || []) {
+                                if (a?.schoolId != null) counts[a.schoolId] = (counts[a.schoolId] || 0) + 1;
+                            }
+                            const top = Object.entries(counts).sort((x, y) => y[1] - x[1] || Number(x[0]) - Number(y[0]))[0];
+                            const found = top ? schools?.find((s) => String(s?.schoolId) === String(top[0])) : null;
+                            if (found) school = found;
+                        } catch {}
+                        if (school?.schoolId) {
+                            schoolName = school?.name || '';
+                            const activePeriod = await PeriodService.getActiveBySchool(school.schoolId);
+                            loadedSchoolInfo = {
+                                name: school?.name || '',
+                                address: school?.address || '',
+                                activePeriod: activePeriod?.name || '',
+                            };
+                        }
+                    }
+                } catch {}
+            }
+            setSchoolInfo(loadedSchoolInfo);
+
+            setUserInfo({
+                personId: person?.person_id || current?.personId || null,
+                name: `${person?.name || ''} ${person?.last_name || ''}`.trim() || current?.username || current?.name || '',
+                email: person?.email || current?.email || '',
+                phone: person?.phone || '',
+                role: role || '',
+                joinDate,
+                school: schoolName,
+                employeeId: person?.document_number || '',
+                actorCode,
+            });
+        } catch (error) {
+            console.error('Error cargando datos de usuario:', error);
+        }
+    }, [loadThemeForRole, i18n.language]);
+
     useFocusEffect(
         useCallback(() => {
-            const loadUserData = async () => {
-                try {
-                    const current = await getCurrentUser();
-                    const role = await getCurrentUserRole();
-                    if (role) {
-                        setUserRole(role);
-                        await loadThemeForRole(role);
-                    }
-
-                    let person = null;
-                    if (current?.personId) {
-                        try {
-                            const arr = await backendGet(ENV.API_BASE_URL, `api/v1/persons/${current.personId}`);
-                            person = arr[0] || null;
-                        } catch {}
-                    }
-
-                    // Fecha de ingreso: inicio del vínculo académico; si no hay
-                    // actor (p. ej. admin), creación del usuario en identity.
-                    let userCreatedAt = null;
-                    if (current?.userId) {
-                        try {
-                            const arr = await backendGet(ENV.API_BASE_URL, `api/v1/users/${current.userId}`);
-                            userCreatedAt = arr[0]?.created_at || null;
-                        } catch {}
-                    }
-
-                    let schoolName = '';
-                    let actorCode = '';
-                    let joinDate = '';
-                    let loadedSchoolInfo = null;
-                    if (person?.person_id) {
-                        try {
-                            const actors = await ActorService.getByPerson(person.person_id);
-                            const actor = actors?.[0] || null;
-                            actorCode = actor?.actorCode || '';
-                            joinDate = formatJoinDate(actor?.startedOn || userCreatedAt);
-                            const schoolId = actor?.schoolId || null;
-                            if (schoolId) {
-                                const school = await SchoolService.getById(schoolId);
-                                schoolName = school?.name || '';
-                                const activePeriod = await PeriodService.getActiveBySchool(schoolId);
-                                loadedSchoolInfo = {
-                                    name: school?.name || '',
-                                    address: school?.address || '',
-                                    activePeriod: activePeriod?.name || '',
-                                };
-                            } else {
-                                // Sin actor académico (p. ej. admin): escuela con
-                                // más actores (la sede principal) para no dejar
-                                // el perfil vacío.
-                                const schools = await SchoolService.getAll();
-                                let school = schools?.[0] || null;
-                                try {
-                                    const counts = {};
-                                    for (const a of (await ActorService.getAll()) || []) {
-                                        if (a?.schoolId != null) counts[a.schoolId] = (counts[a.schoolId] || 0) + 1;
-                                    }
-                                    const top = Object.entries(counts).sort((x, y) => y[1] - x[1] || Number(x[0]) - Number(y[0]))[0];
-                                    const found = top ? schools?.find((s) => String(s?.schoolId) === String(top[0])) : null;
-                                    if (found) school = found;
-                                } catch {}
-                                if (school?.schoolId) {
-                                    schoolName = school?.name || '';
-                                    const activePeriod = await PeriodService.getActiveBySchool(school.schoolId);
-                                    loadedSchoolInfo = {
-                                        name: school?.name || '',
-                                        address: school?.address || '',
-                                        activePeriod: activePeriod?.name || '',
-                                    };
-                                }
-                            }
-                        } catch {}
-                    }
-                    setSchoolInfo(loadedSchoolInfo);
-
-                    setUserInfo({
-                        name: `${person?.name || ''} ${person?.last_name || ''}`.trim() || current?.username || current?.name || '',
-                        email: person?.email || current?.email || '',
-                        phone: person?.phone || '',
-                        role: role || '',
-                        joinDate,
-                        school: schoolName,
-                        employeeId: person?.document_number || '',
-                        actorCode,
-                    });
-                } catch (error) {
-                    console.error('Error cargando datos de usuario:', error);
-                }
-            };
             loadUserData();
-        }, [loadThemeForRole])
+        }, [loadUserData])
     );
 
     const handleBack = useCallback(() => navigation.goBack(), [navigation]);
@@ -174,6 +177,7 @@ export function useProfileViewModel({ onLogout } = {}) {
         handleBack,
         performLogout,
         toggleTheme,
+        reload: loadUserData,
         courses: [],
         attendanceStats: null,
         justifications: [],

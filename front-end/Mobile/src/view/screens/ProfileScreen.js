@@ -223,6 +223,7 @@ export default function ProfileScreen({ onLogout }) {
         updateKey,
         handleBack,
         toggleTheme,
+        reload,
         courses,
         attendanceStats,
         justifications,
@@ -474,7 +475,7 @@ export default function ProfileScreen({ onLogout }) {
                             }]}
                             activeOpacity={0.75}
                         >
-                            <ProfileUpdateModal userInfo={userInfo} />
+                            <ProfileUpdateModal userInfo={userInfo} personId={userInfo?.personId} onSaved={reload} />
                         </TouchableOpacity>
 
                         <TouchableOpacity
