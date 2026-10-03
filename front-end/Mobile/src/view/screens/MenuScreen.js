@@ -103,7 +103,7 @@ export default function MenuScreen({ onLogout }) {
                         style={styles.ScrollView}
                         contentContainerStyle={styles.menuScrollContent}
                     >
-                        <View style={[styles.container, {marginTop: Platform.OS === "ios" ? 0 : 15}]} marginHorizontal={10}>
+                        <View style={[styles.container, {marginTop: Platform.OS === "ios" ? 0 : 15, marginHorizontal: 10}]}>
                             <TouchableOpacity onPress={handleBack} activeOpacity={0.2}>
                                 <View style={styles.backIcon}>
                                     <Image
