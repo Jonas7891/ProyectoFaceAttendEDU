@@ -1,4 +1,5 @@
 import { request, GET, POST, PUT, DELETE } from '../api/apiClient';
+import { toSnakeDeep } from '../api/backend';
 import School from '../models/academic/School';
 
 const ENDPOINT = 'school';
@@ -18,12 +19,12 @@ function unwrapFirst(data) {
 export const SchoolService = {
   getAll: async (params = {}) => {
     const data = await request({ method: GET, url: ENDPOINT, params, requiresAuth: false });
-    return unwrap(data).map(School.fromApi);
+    return unwrap(data).map((s) => School.fromApi(toSnakeDeep(s)));
   },
 
   getById: async (id) => {
     const data = await request({ method: GET, url: `${ENDPOINT}/${id}`, requiresAuth: false });
-    return School.fromApi(unwrapFirst(data));
+    return School.fromApi(toSnakeDeep(unwrapFirst(data)));
   },
 
   create: async (schoolData) => {
