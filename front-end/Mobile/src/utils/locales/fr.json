@@ -245,7 +245,7 @@
     "manageUsersDesc": "Ajoutez ou supprimez des utilisateurs de votre école."
   },
   "consultJustify": {
-    "mainTitle": "Justificativas Aprovadas",
+    "mainTitle": "Justificatifs approuvés",
     "subtitle": "Gérez vos justificatifs d'absence et de retard",
     "absences": "Absences",
     "delays": "Retards",
@@ -315,10 +315,10 @@
     "confirmMessage": "Voulez-vous vraiment envoyer cette justification ?",
     "confirmTitle": "Confirmer l'envoi",
     "submitError": "Impossible d'envoyer la justification",
-    "noRecordForDate": "Aucune présence enregistrée pour cette date",
+    "noRecordForDate": "Aucune présence enregistrée pour cette date"
   },
   "menuJustify": {
-    "backToDashboard": "Voltar ao Painel"
+    "backToDashboard": "Retour au tableau de bord"
   },
   "news": {
     "title": "Actualités",

@@ -315,7 +315,7 @@
     "confirmMessage": "Tem certeza de que deseja enviar esta justificativa?",
     "confirmTitle": "Confirmar envio",
     "submitError": "Não foi possível enviar a justificativa",
-    "noRecordForDate": "Nenhum registro de presença para essa data",
+    "noRecordForDate": "Nenhum registro de presença para essa data"
   },
   "menuJustify": {
     "backToDashboard": "Voltar ao Dashboard"
