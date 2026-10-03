@@ -295,6 +295,8 @@ export default function ProfileScreen({ onLogout }) {
                     />
                     <InfoField label={t('profile.email',      'Correo electrónico')} value={userInfo?.email}          colors={colors} />
                     <InfoField label={t('profile.phone',      'Teléfono')}           value={userInfo?.phone}          colors={colors} />
+                    <InfoField label={t('profile.employeeId', 'Documento')}          value={userInfo?.employeeId}     colors={colors} />
+                    <InfoField label={t('profile.actorCode',  'Código')}             value={userInfo?.actorCode}      colors={colors} />
                     <InfoField label={t('profile.joinDate',   'Fecha de ingreso')}   value={userInfo?.joinDate}       colors={colors} />
                     <InfoField label={t('profile.school',     'Colegio')}            value={userInfo?.school}         colors={colors} />
 

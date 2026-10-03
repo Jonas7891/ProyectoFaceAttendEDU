@@ -30,7 +30,19 @@ export function useProfileViewModel({ onLogout } = {}) {
         joinDate: '',
         school: '',
         employeeId: '',
+        actorCode: '',
     });
+
+    const formatJoinDate = (raw) => {
+        if (!raw) return '';
+        const date = raw instanceof Date ? raw : new Date(raw);
+        if (Number.isNaN(date.getTime())) return '';
+        try {
+            return date.toLocaleDateString(i18n.language || 'es', {day: '2-digit', month: 'short', year: 'numeric'});
+        } catch {
+            return date.toLocaleDateString('es', {day: '2-digit', month: 'short', year: 'numeric'});
+        }
+    };
 
     // Cargar datos del usuario al recibir foco:
     // persona (nombre/teléfono) -> actor académico -> colegio.
@@ -55,12 +67,14 @@ export function useProfileViewModel({ onLogout } = {}) {
 
                     let schoolName = '';
                     let actorCode = '';
+                    let joinDate = '';
                     let loadedSchoolInfo = null;
                     if (person?.person_id) {
                         try {
                             const actors = await ActorService.getByPerson(person.person_id);
                             const actor = actors?.[0] || null;
                             actorCode = actor?.actorCode || '';
+                            joinDate = formatJoinDate(actor?.startedOn || person?.created_at);
                             if (actor?.schoolId) {
                                 const school = await SchoolService.getById(actor.schoolId);
                                 schoolName = school?.name || '';
@@ -80,7 +94,7 @@ export function useProfileViewModel({ onLogout } = {}) {
                         email: person?.email || current?.email || '',
                         phone: person?.phone || '',
                         role: role || '',
-                        joinDate: '',
+                        joinDate,
                         school: schoolName,
                         employeeId: person?.document_number || '',
                         actorCode,
