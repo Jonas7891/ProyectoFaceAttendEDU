@@ -65,6 +65,16 @@ export function useProfileViewModel({ onLogout } = {}) {
                         } catch {}
                     }
 
+                    // Fecha de ingreso: inicio del vínculo académico; si no hay
+                    // actor (p. ej. admin), creación del usuario en identity.
+                    let userCreatedAt = null;
+                    if (current?.userId) {
+                        try {
+                            const arr = await backendGet(ENV.API_BASE_URL, `api/v1/users/${current.userId}`);
+                            userCreatedAt = arr[0]?.created_at || null;
+                        } catch {}
+                    }
+
                     let schoolName = '';
                     let actorCode = '';
                     let joinDate = '';
@@ -74,16 +84,41 @@ export function useProfileViewModel({ onLogout } = {}) {
                             const actors = await ActorService.getByPerson(person.person_id);
                             const actor = actors?.[0] || null;
                             actorCode = actor?.actorCode || '';
-                            joinDate = formatJoinDate(actor?.startedOn || person?.created_at);
-                            if (actor?.schoolId) {
-                                const school = await SchoolService.getById(actor.schoolId);
+                            joinDate = formatJoinDate(actor?.startedOn || userCreatedAt);
+                            const schoolId = actor?.schoolId || null;
+                            if (schoolId) {
+                                const school = await SchoolService.getById(schoolId);
                                 schoolName = school?.name || '';
-                                const activePeriod = await PeriodService.getActiveBySchool(actor.schoolId);
+                                const activePeriod = await PeriodService.getActiveBySchool(schoolId);
                                 loadedSchoolInfo = {
                                     name: school?.name || '',
                                     address: school?.address || '',
                                     activePeriod: activePeriod?.name || '',
                                 };
+                            } else {
+                                // Sin actor académico (p. ej. admin): escuela con
+                                // más actores (la sede principal) para no dejar
+                                // el perfil vacío.
+                                const schools = await SchoolService.getAll();
+                                let school = schools?.[0] || null;
+                                try {
+                                    const counts = {};
+                                    for (const a of (await ActorService.getAll()) || []) {
+                                        if (a?.schoolId != null) counts[a.schoolId] = (counts[a.schoolId] || 0) + 1;
+                                    }
+                                    const top = Object.entries(counts).sort((x, y) => y[1] - x[1] || Number(x[0]) - Number(y[0]))[0];
+                                    const found = top ? schools?.find((s) => String(s?.schoolId) === String(top[0])) : null;
+                                    if (found) school = found;
+                                } catch {}
+                                if (school?.schoolId) {
+                                    schoolName = school?.name || '';
+                                    const activePeriod = await PeriodService.getActiveBySchool(school.schoolId);
+                                    loadedSchoolInfo = {
+                                        name: school?.name || '',
+                                        address: school?.address || '',
+                                        activePeriod: activePeriod?.name || '',
+                                    };
+                                }
                             }
                         } catch {}
                     }
