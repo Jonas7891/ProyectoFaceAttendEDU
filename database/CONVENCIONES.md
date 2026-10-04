@@ -36,7 +36,7 @@ Los prefijos numéricos (`001-`, `002-`, ...) determinan el **orden de ejecució
 | Primary Key | `pk_{tabla}` | `pk_person` |
 | Unique | `uq_{tabla}_{columnas}` | `uq_person_document` |
 | Foreign Key | `fk_{tabla}_{referencia}` | `fk_actor_school` |
-| Index | `idx_{tabla}_{columna}` | `idx_person_email` |
+| Index | `idx_{tabla}_{columna}` | `idx_person_deleted` |
 
 ### Nombres de esquemas
 

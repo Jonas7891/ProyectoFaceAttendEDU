@@ -37,7 +37,9 @@ Table person {
 
   indexes {
     (document_type, document_number) [unique, name: 'uq_person_document']
-    email [name: 'idx_person_email']
+    // Login por correo: unicidad del email entre filas vivas (los NULL siguen
+    // permitidos y un soft-delete libera el correo para reutilizarlo).
+    email [unique, name: 'uq_person_email', where: 'deleted_at IS NULL']
     deleted_at [name: 'idx_person_deleted']
   }
 }
