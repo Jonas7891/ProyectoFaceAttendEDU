@@ -103,7 +103,7 @@ databaseChangeLog:
                   constraints:
                     nullable: false
         - sql:
-            sql: ALTER TABLE identity.person ADD CONSTRAINT uq_person_document UNIQUE (document_type, document_number)
+            sql: ALTER TABLE identity.person ADD CONSTRAINT uq_person_document UNIQUE (document_number)
         - createIndex:
             schemaName: identity
             tableName: person

@@ -23,3 +23,6 @@ databaseChangeLog:
   - include:
       file: 03-tables/005-create-password-policy-table.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 03-tables/006-alter-person-unique-composite.yaml
+      relativeToChangelogFile: true

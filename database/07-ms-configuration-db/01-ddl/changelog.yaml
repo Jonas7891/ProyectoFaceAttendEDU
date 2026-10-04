@@ -59,3 +59,6 @@ databaseChangeLog:
   - include:
       file: 03-tables/010-create-istqb-assessment-item-table.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 03-tables/011-alter-biometric-update-case-mandatory.yaml
+      relativeToChangelogFile: true
