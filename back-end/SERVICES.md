@@ -38,11 +38,11 @@ Todos los servicios 01-08 siguen hexagonal (`_stacks/java-spring.md`, `node-type
 
 | Servicio | Lenguaje | Framework | Puerto | DB | Razon ADR-005/007 |
 |----------|----------|-----------|--------|----|-------------------|
-| Identity 01 | Java 21 | Spring Boot 3 | 8081 | PostgreSQL identity | Hibernate/JPA + Spring Security JWT/Session |
-| Authorization 02 | Java 21 | Spring Boot 3 | 8082 | PostgreSQL authorization | Spring Security RBAC, permisos en JWT |
+| Identity 01 | Java 21 | Spring Boot 4.1.1 | 8081 | PostgreSQL identity | Hibernate/JPA + Spring Security JWT/Session |
+| Authorization 02 | Java 21 | Spring Boot 4.1.1 | 8082 | PostgreSQL authorization | Spring Security RBAC, permisos en JWT |
 | Academic 03 | TypeScript | Fastify + Drizzle | 8083 | PostgreSQL academic | Drizzle JOINs 7 tablas eficiente |
-| Scheduling 04 | Java 21 | Spring Boot 3 | 8084 | PostgreSQL scheduling | @UniqueConstraint anti-double-booking + ACID |
-| Attendance 05 | Java 21 | Spring Boot 3 | 8085 | PostgreSQL attendance | @Transactional ACID crítico |
+| Scheduling 04 | Java 21 | Spring Boot 4.1.1 | 8084 | PostgreSQL scheduling | @UniqueConstraint anti-double-booking + ACID |
+| Attendance 05 | Java 21 | Spring Boot 4.1.1 | 8085 | PostgreSQL attendance | @Transactional ACID crítico |
 | Biometric 06 | Python 3.12 | FastAPI | 8086 | MongoDB biometric | OpenCV/pymongo vector — único viable |
 | Configuration 07 | TypeScript | Fastify | 8087 | PostgreSQL configuration | CRUD trivial 3 tablas |
 | Notification 08 | Go 1.22 | Gin | 8088 | PostgreSQL notification | Binario 5-10 MB para 2 tablas |
@@ -83,7 +83,7 @@ Polyglot modular monolith: JVM + Node + Python + Go + Kong. 4 runtimes + gateway
 
 ### 3.1 Identity (`01-ms-identity`) — Java 8081
 **Responsabilidad:** Identidad de personas, credenciales de acceso, sesiones y password_policy.
-**Tablas:** `city`, `person`, `app_user`, `user_session`, `password_policy` — Ver `06-data/domains/01-identity.md` y `../database/01-ms-identity-db`
+**Tablas:** `person`, `app_user`, `user_session`, `password_policy` — Ver `06-data/domains/01-identity.md` y `../database/01-ms-identity-db`
 **Detalle:** Ver `01-ms-identity/SERVICE.md` + `STACK.md` + `DATA_MODEL.md`
 
 ### 3.2 Authorization (`02-ms-authorization`) — Java 8082
@@ -105,7 +105,7 @@ Polyglot modular monolith: JVM + Node + Python + Go + Kong. 4 runtimes + gateway
 **Stack:** `_stacks/python-fastapi.md`
 
 ### 3.7 Configuration (`07-ms-configuration`) — TS Fastify 8087
-**Responsabilidad:** `academic_configuration`, `security_configuration`, `biometric_update_case` — Ver `06-data/domains/09-configuration.md` (dominio 09 mapea a 07 tras reorden)
+**Responsabilidad:** `academic_configuration`, `security_configuration`, `biometric_update_case` — Ver `06-data/domains/08-configuration.md` (dominio 08 mapea a 07 tras reorden)
 
 ### 3.8 Notification (`08-ms-notification`) — Go Gin 8088
 **Responsabilidad:** `alert_type`, `alert` sobre `academic_actor` — Ver `06-data/domains/07-notification.md` (dominio 07 mapea a 08)
@@ -113,7 +113,7 @@ Polyglot modular monolith: JVM + Node + Python + Go + Kong. 4 runtimes + gateway
 ### 3.9 Quality (`09-ms-quality`) — TS Fastify 8089
 **Responsabilidad:** Instrumento ISO/IEC 25010 (24 ítems) + CRUD de evaluaciones y promedios por servicio — Ver `09-ms-quality/SERVICE.md` + `ISO25010_QUALITY_REPORT.md`
 
-### 3.9 Gateway (`99-api-gateway`) — Kong OSS 8080
+### 3.10 Gateway (`99-api-gateway`) — Kong OSS 8080
 **Responsabilidad:** Routing, JWT RS256, rate-limit, CORS, TLS. Kong DB-less `kong/kong.yml` + Redis. Ver `99-api-gateway/SERVICE.md` y `ADR-007-api-gateway.md`.
 
 ---
@@ -153,7 +153,7 @@ Todas las tablas incluyen: `created_at`, `updated_at`, `deleted_at`, `created_by
 | Tipo | Uso | Ejemplo |
 |------|-----|---------|
 | UUID | Entidades entre contextos | `person_id`, `user_id` |
-| INT autoincrement | Catalogos locales | `city_id`, `role_id` |
+| INT autoincrement | Catalogos locales | `school_id`, `role_id` |
 | BIGINT autoincrement | Alto volumen | `cohort_id` |
 | SMALLINT autoincrement | Catalogos pequeños | `actor_type_id`, `alert_type_id` |
 

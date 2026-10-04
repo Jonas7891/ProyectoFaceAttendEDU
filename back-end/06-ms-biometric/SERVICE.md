@@ -29,71 +29,54 @@ Gestionar plantillas biometricas (facial y dactilar). Servicio **hibrido SQL + N
 
 | Componente | Tecnologia | Justificacion |
 |------------|-----------|---------------|
-| Lenguaje | **Java 21** | Consistencia con el proyecto |
-| Framework | **Spring Boot 4.1.1** | Ecosistema unificado |
+| Lenguaje | **Python 3.12** | Ecosistema nativo de ML/vision artificial |
+| Framework | **FastAPI** | Async I/O, OpenAPI automatico, validacion con Pydantic |
 | Arquitectura | **Hexagonal** | Misma estructura |
-| ML Runtime | **ONNX Runtime** | Inferencia de modelos de ML optimizada |
+| ML/CV | **OpenCV + NumPy** | Procesamiento de imagen, embeddings y distancias |
 
 ### 3.2 Dependencias Principales
 
-```xml
-<!-- Core -->
-spring-boot-starter-webmvc
-spring-boot-starter-data-jpa
-spring-boot-starter-security
-spring-boot-starter-validation
-spring-boot-starter-actuator
-spring-boot-starter-kafka
-spring-boot-starter-liquibase
-
-<!-- NoSQL -->
-spring-boot-starter-data-mongodb   <!-- MongoDB para embeddings -->
-
-<!-- Computer Vision -->
-opencv-java                        <!-- OpenCV para procesamiento de imagen -->
-
-<!-- Machine Learning -->
-onnxruntime                        <!-- Inferencia ONNX (face recognition) -->
-dlib-java                          <!-- Dlib face detection (alternativa) -->
-
-<!-- Persistencia SQL -->
-postgresql
-
-<!-- API Documentation -->
-springdoc-openapi-starter-webmvc-ui
-
-<!-- Utilidades -->
-lombok
-mapstruct
-mapstruct-processor
+```toml
+# pyproject.toml
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.110.0"          # HTTP framework
+uvicorn = "^0.28.0"           # ASGI server
+pydantic = "^2.6.0"           # Validacion de schemas
+pydantic-settings = "^2.1.0"  # Configuracion
+motor = "^3.3.0"              # MongoDB driver async
+pymongo = "^4.6.0"            # MongoDB driver
+opencv-python = "^4.9.0"      # Computer vision
+numpy = "^1.26.0"             # Vectores/embeddings
+python-multipart = "^0.0.9"   # Upload de imagenes
+structlog = "^24.1.0"         # Structured logging
+httpx = "^0.27.0"             # Client HTTP
 ```
 
 ### 3.3 Librerias Recomendadas Adicionales
 
 | Libreria | Uso | Por que |
 |----------|-----|---------|
-| **OpenCV Java** | Procesamiento de imagen facial | Deteccion de rostros, preprocesamiento |
-| **ONNX Runtime** | Inferencia de modelos de ML | Ejecutar modelos FaceNet/ArcFace de forma eficiente |
-| **DeepJavaLibrary (DJL)** | Framework de ML para Java | Alternativa a ONNX, soporta PyTorch/TF |
-| **dlib-java** | Face detection | HOG/CNN face detector alternativo |
-| **Spring Data MongoDB** | Persistencia NoSQL | Para colecciones de embeddings |
-| **MongoDB Java Driver** | Driver nativo MongoDB | Control fino sobre operaciones |
-| **Testcontainers** | Tests de integracion | PostgreSQL + MongoDB en tests |
-| **Apache Commons Math** | Calculo de distancias euclidianas/coseno | Comparacion de embeddings |
-| **Redis** | Cache de embeddings activos | Cache en memoria para verificacion rapida |
-| **Caffeine** | Cache local | Cache de embeddings calientes |
+| **OpenCV (cv2)** | Procesamiento de imagen facial | Deteccion de rostros y preprocesamiento |
+| **OpenCV DNN** | Inferencia de modelos | Carga de modelos ONNX (FaceNet/ArcFace) |
+| **NumPy** | Algebra de vectores | Distancia coseno/coseno entre embeddings |
+| **Motor** | MongoDB async | Persistencia de embeddings |
+| **Pydantic** | Validacion de schemas | Modelos de request/response type-safe |
+| **Structlog** | Logging estructurado | Logs JSON de alta legibilidad |
+| **Redis** | Cache de embeddings activos | Verificacion rapida sin consultar MongoDB |
+| **Testcontainers** | Tests de integracion | MongoDB en tests |
 
 ### 3.4 Herramientas de Desarrollo
 
 | Herramienta | Uso |
 |-------------|-----|
-| **Maven** | Build tool |
+| **Poetry** | Gestion de dependencias y builds |
+| **Uvicorn** | Servidor ASGI |
 | **Docker** | Containerizacion |
-| **IntelliJ IDEA** | IDE |
-| **DBeaver** | Cliente PostgreSQL |
+| **VS Code / PyCharm** | IDE |
 | **MongoDB Compass** | Cliente grafico para MongoDB |
 | **Postman / Bruno** | Testing REST |
-| **Python (opcional)** | Entrenamiento de modelos, conversion ONNX |
+| **Jupyter (opcional)** | Exploracion de modelos ML |
 
 ---
 
@@ -138,10 +121,10 @@ mapstruct-processor
 
 | Evento | Trigger | Consumidores tipicos |
 |--------|---------|---------------------|
-| `FacialEnrolled` | Plantilla facial registrada | Audit |
-| `FingerprintEnrolled` | Plantilla dactilar registrada | Audit |
+| `FacialEnrolled` | Plantilla facial registrada | — |
+| `FingerprintEnrolled` | Plantilla dactilar registrada | — |
 | `FacialVerificationSucceeded` | Verificacion 1:1 exitosa | Attendance (registrar asistencia) |
-| `FacialVerificationFailed` | Verificacion 1:1 fallida | Audit, Notification |
+| `FacialVerificationFailed` | Verificacion 1:1 fallida | Notification |
 | `BiometricUpdateRequested` | Solicitud de actualizacion | Configuration, Notification |
 
 ---
@@ -161,7 +144,7 @@ mapstruct-processor
 │              INFERENCIA ML                      │
 │                                                 │
 │   OpenCV → Preprocesamiento de imagen           │
-│   ONNX Runtime → FaceNet/ArcFace embedding      │
+│   OpenCV DNN → FaceNet/ArcFace (modelo ONNX)    │
 │   Distancia coseno → Comparacion de embeddings  │
 └─────────────────────────────────────────────────┘
 ```
@@ -209,46 +192,21 @@ mapstruct-processor
 
 ## 8. Configuracion
 
-### application.yml (ejemplo)
+### .env (ejemplo)
 
-```yaml
-server:
-  port: 8086
-
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/faceattend_db
-    username: postgres
-    password: postgres
-    hikari:
-      schema: biometric
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    properties:
-      hibernate.default_schema: biometric
-  data:
-    mongodb:
-      uri: mongodb://localhost:27017/faceattend_biometric
-  kafka:
-    bootstrap-servers: localhost:9092
-    group-id: biometric-service
+```bash
+PORT=8086
+MONGODB_URI=mongodb://localhost:27017/faceattend_biometric
+KAFKA_BROKERS=localhost:9092
+KAFKA_GROUP_ID=biometric-service
 
 # Configuracion ML
-biometric:
-  facial:
-    model-path: models/facenet.onnx
-    embedding-size: 128
-    confidence-threshold: 0.85
-    similarity-threshold: 0.90
-  fingerprint:
-    model-path: models/fingerprint.onnx
-    embedding-size: 256
-    similarity-threshold: 0.85
-  cache:
-    enabled: true
-    ttl-minutes: 60
-    max-entries: 10000
+BIOMETRIC_FACIAL_MODEL_PATH=models/facenet.onnx
+BIOMETRIC_FACIAL_EMBEDDING_SIZE=128
+BIOMETRIC_CONFIDENCE_THRESHOLD=0.85
+BIOMETRIC_SIMILARITY_THRESHOLD=0.90
+BIOMETRIC_FINGERPRINT_MODEL_PATH=models/fingerprint.onnx
+BIOMETRIC_FINGERPRINT_EMBEDDING_SIZE=256
 ```
 
 ---
@@ -265,40 +223,14 @@ biometric:
 
 ---
 
-## 10. Analisis de Lenguaje
+## 10. Stack Actual
 
-### Candidatos evaluados
+Biometric esta implementado en **Python 3.12 + FastAPI** con arquitectura hexagonal. El servicio gestiona enrollment, verificacion e identificacion biometrica usando MongoDB para embeddings y PostgreSQL para el schema de casos.
 
-| # | Lenguaje | Framework | ML/CV Ecosistema | OpenCV | dlib | TensorFlow | Rendimiento |
-|---|----------|-----------|:-----------------:|:------:|:----:|:----------:|:-----------:|
-| 1 | **Python 3.12** | FastAPI | Nativo | cv2 nativo | pip install | Nativo | Bueno (I/O) |
-| 2 | Java 21 | Spring Boot + DJL | Moderado | OpenCV Java | JNI wrapper | DJL backend | Excelente |
-| 3 | C++ | OpenCV nativo | Nativo | Nativo | Nativo | Nativo | Maximo |
+### Justificacion
 
-### Por que Python gana
-
-- **OpenCV**: `pip install opencv-python` — listo. En Java/C++ requiere compilation manual.
-- **dlib**: `pip install dlib` — face detection, 68-point landmarks, 128D embeddings. En Java no existe binding oficial.
-- **face_recognition**: Libreria de alto nivel sobre dlib con 99.38% precision. Una linea de codigo para enroll/verify.
-- **TensorFlow/PyTorch**: Entrenamiento y fine-tuning de modelos FaceNet/ArcFace nativo.
-- **FastAPI**: Auto-generacion de OpenAPI docs, validacion con Pydantic, async nativo.
-- **Rapidez de desarrollo**: Un pipeline de enrollment facial se implementa en ~200 lineas vs ~800+ en Java/C++.
-- **Hugging Face**: Modelos pre-entrenados de face recognition listos para usar.
-
-### Por que no Java
-
-- DeepJavaLibrary (DJL) es una capa sobre PyTorch/TF pero menos madura que el ecosistema Python nativo.
-- OpenCV Java binding es funcional pero no tiene todas las funciones del original C++.
-- dlib no tiene binding Java oficial — requiere JNI manual.
-- Para ML/CV, Python es el estandar de la industria.
-
-### Por que no C++
-
-- Maximo rendimiento pero desarrollo 5x mas lento.
-- Gestion manual de memoria, compilacion compleja, dependencias del sistema.
-- Para el volumen de FaceAttend-Edu (institucion educativa, no millones de RPS), Python es suficiente.
-- OpenCV C++ es rapido pero la diferencia de latencia (ms vs sub-ms) no impacta al usuario final.
-
-### Decision: Python 3.12 (FastAPI)
-
-Biometric es el servicio de **ML/vision artificial** del sistema. Python es el lenguaje natural para OpenCV, dlib, TensorFlow/PyTorch. FastAPI提供了async I/O performance comparable a Go para I/O-bound workloads, con el ecosistema de ML mas rico del mundo.
+- **OpenCV + NumPy**: Procesamiento de imagen y algebra de vectores
+- **OpenCV DNN**: Inferencia de modelos FaceNet/ArcFace (ONNX)
+- **FastAPI**: Async I/O para manejo de imagenes y embeddings
+- **MongoDB (Motor)**: Almacenamiento de embeddings vectoriales
+- **Structlog**: Logs JSON estructurados

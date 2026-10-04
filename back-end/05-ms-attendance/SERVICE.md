@@ -12,6 +12,7 @@ Registro de asistencia con multiples fuentes (reconocimiento facial, manual, IoT
 | `justification_type` | Catalogo de tipos de justificacion | `justification_type_id` (INT) |
 | `justification` | Justificacion de inasistencia/tardanza | `justification_id` (BIGINT) |
 | `supporting_document` | Soportes documentales adjuntos | `supporting_document_id` (BIGINT) |
+| `attendance_report` | Proyeccion derivada (JSONB, sin FKs) | `report_id` (UUID) |
 
 **Cross-context:**
 - `attendance_record.class_session_id` → `Scheduling.class_session.class_session_id`
@@ -128,11 +129,11 @@ mapstruct-processor
 
 | Evento | Trigger | Consumidores tipicos |
 |--------|---------|---------------------|
-| `AttendanceRecorded` | Asistencia registrada | Audit, Notification |
-| `AttendanceStatusChanged` | Estado de asistencia cambia | Audit |
-| `JustificationSubmitted` | Justificacion enviada | Notification, Audit |
-| `JustificationApproved` | Justificacion aprobada | Audit, Attendance (actualizar registro) |
-| `JustificationRejected` | Justificacion rechazada | Notification, Audit |
+| `AttendanceRecorded` | Asistencia registrada | Notification |
+| `AttendanceStatusChanged` | Estado de asistencia cambia | — |
+| `JustificationSubmitted` | Justificacion enviada | Notification |
+| `JustificationApproved` | Justificacion aprobada | Attendance (actualizar registro) |
+| `JustificationRejected` | Justificacion rechazada | Notification |
 
 ---
 
@@ -230,33 +231,13 @@ storage:
 
 ---
 
-## 10. Analisis de Lenguaje
+## 10. Stack Actual
 
-### Candidatos evaluados
+Attendance esta implementado en **Java 21 + Spring Boot** con arquitectura hexagonal. El servicio maneja registro de asistencia multi-fuente (FACIAL, MANUAL, IOT, IMPORT), justificaciones y documentos de soporte.
 
-| # | Lenguaje | Framework | Throughput | IoT Support | Reactivo | Memoria |
-|---|----------|-----------|:----------:|:-----------:|:--------:|:-------:|
-| 1 | **Go 1.22** | Gin | 142k RPS | Goroutines | Nativo | 68MB |
-| 2 | Java 21 | Spring Boot + WebFlux | 100k RPS | WebFlux | Reactor | 412MB |
-| 3 | Rust 1.85 | Axum | 180k RPS | Tokio | Async/Await | 45MB |
+### Justificacion
 
-### Por que Go gana
-
-- **Throughput para IoT**: Los dispositivos IoT envian asistencia en tiempo real. Go maneja miles de conexiones simultaneas con goroutines sin overhead de JVM.
-- **Baja latencia**: Un lector facial IoT necesita respuesta en <100ms. Go entrega p99 de 8ms.
-- **6x menos memoria**: Attendance recibe registros de multiples fuentes (facial, manual, IoT, import). Go escala mejor con menos recursos.
-- **Kafka consumer rapido**: Consumir eventos de Biometric y Scheduling con baja latencia.
-
-### Por que no Java
-
-- Spring WebFlux es potente pero pesado (412MB). Para un servicio que recibe registros de asistencia, Go es mas eficiente.
-- El overhead de JVM no se justifica para un servicio de ingestion de registros.
-
-### Por que no Rust
-
-- Rust es ideal para IoT pero el costo de desarrollo es mucho mayor.
-- Go maneja el throughput requerido con menor complejidad de codigo.
-
-### Decision: Go 1.22
-
-Attendance es un servicio de **alta frecuencia, baja latencia** que recibe registros de multiples fuentes en tiempo real. Go ofrece el mejor balance de throughput, latencia y simplicidad.
+- **Spring Data JPA**: Persistencia relacional con constraints de unicidad por sesion/actor
+- **Spring Security**: Autorizacion basada en roles para endpoints de asistencia
+- **Kafka**: Eventos de dominio para notificaciones y auditoria
+- **Testcontainers**: Tests de integracion con PostgreSQL real

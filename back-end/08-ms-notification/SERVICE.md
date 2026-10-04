@@ -1,4 +1,4 @@
-# Notification Service â€” `08-ms-notification`
+# Notification Service — `08-ms-notification`
 
 ## 1. Responsabilidad
 
@@ -12,7 +12,7 @@ Gestionar tipos de alerta y alertas generadas automaticamente por el sistema sob
 | `alert` | Alerta generada sobre un actor | `alert_id` (BIGINT) |
 
 **Cross-context:**
-- `alert.academic_actor_id` â†’ `Academic.academic_actor.academic_actor_id`
+- `alert.academic_actor_id` → `Academic.academic_actor.academic_actor_id`
 
 ## 3. Stack Tecnologico
 
@@ -20,63 +20,50 @@ Gestionar tipos de alerta y alertas generadas automaticamente por el sistema sob
 
 | Componente | Tecnologia | Justificacion |
 |------------|-----------|---------------|
-| Lenguaje | **Java 21** | Consistencia con el proyecto |
-| Framework | **Spring Boot 4.1.1** | Ecosistema unificado |
-| Arquitectura | **Hexagonal** | Misma estructura |
+| Lenguaje | **Go 1.22** | Binario unico ~8MB, bajo consumo de memoria |
+| Framework | **Gin** | Router de alto rendimiento, middleware nativo |
+| Arquitectura | **Hexagonal** | Misma estructura que los demas servicios |
 
 ### 3.2 Dependencias Principales
 
-```xml
-<!-- Core -->
-spring-boot-starter-webmvc
-spring-boot-starter-data-jpa
-spring-boot-starter-security
-spring-boot-starter-validation
-spring-boot-starter-actuator
-spring-boot-starter-kafka
-spring-boot-starter-liquibase
-
-<!-- Persistencia -->
-postgresql
-
-<!-- Notificaciones -->
-spring-boot-starter-mail        <!-- Email -->
-firebase-admin                  <!-- Push notifications (FCM) -->
-
-<!-- API Documentation -->
-springdoc-openapi-starter-webmvc-ui
-
-<!-- Utilidades -->
-lombok
-mapstruct
-mapstruct-processor
+```go
+// go.mod
+require (
+    github.com/gin-gonic/gin v1.9.1            // HTTP framework
+    github.com/jackc/pgx/v5 v5.5.0              // PostgreSQL driver
+    github.com/golang-migrate/migrate/v4        // Migraciones
+    github.com/go-playground/validator/v10      // Validacion de requests
+    go.uber.org/zap v1.26.0                     // Structured logging
+    go.opentelemetry.io/otel v1.24.0            // Observabilidad
+)
 ```
 
 ### 3.3 Librerias Recomendadas Adicionales
 
 | Libreria | Uso | Por que |
 |----------|-----|---------|
-| **MapStruct** | Mapeo DTO <-> Entity | Type-safe |
-| **Lombok** | Boilerplate reduction | Reduce codigo |
-| **Firebase Admin** | Push notifications (FCM) | Notificaciones push a moviles |
-| **Spring Mail** | Envio de emails | Alertas por correo electronico |
-| **Thymeleaf** | Plantillas HTML | Templates de emails |
-| **Twilio SDK** | SMS | Notificaciones por SMS (alternativa) |
-| **Spring Kafka** | Consumer de eventos | Recibir eventos de otros servicios |
-| **Testcontainers** | Tests de integracion | PostgreSQL + Kafka en tests |
-| **Resilience4j** | Circuit breaker | Proteccion contra fallos de email/push |
+| **pgx** | PostgreSQL driver | 3x mas rapido que database/sql, soporte nativo PostgreSQL |
+| **zap** | Structured logging | Logs JSON de alta performance |
+| **golang-migrate** | Migraciones | Versionado de DDL por schema |
+| **validator/v10** | Validacion | Validacion de request bodies via tags |
+| **OpenTelemetry** | Trazas y metricas | Observabilidad de requests |
+| **firebase-admin-go** | Push notifications (FCM) | Notificaciones push a moviles |
+| **twilio-go** | SMS | Notificaciones por SMS (alternativa) |
+| **Testcontainers-go** | Tests de integracion | PostgreSQL + Kafka en tests |
+| **gofakeit** | Datos de prueba | Generacion de datos para tests |
 
 ### 3.4 Herramientas de Desarrollo
 
 | Herramienta | Uso |
 |-------------|-----|
-| **Maven** | Build tool |
+| **Go toolchain** | Build, test, vet, lint |
 | **Docker** | Containerizacion |
-| **IntelliJ IDEA** | IDE |
+| **VS Code + Go extension** | IDE principal |
 | **DBeaver** | Cliente PostgreSQL |
 | **Firebase Console** | Gestion de FCM |
 | **Postman / Bruno** | Testing REST |
 | **MailHog / Mailtrap** | Testing de emails en desarrollo |
+| **golangci-lint** | Linting automatico |
 
 ---
 
@@ -115,22 +102,28 @@ mapstruct-processor
 
 El servicio Notification **consume** eventos de otros servicios para generar alertas:
 
-```java
-@KafkaListener(topics = {"attendance-events", "scheduling-events",
-              "configuration-events", "identity-events"})
-public void consumeEvent(DomainEvent event) {
-    switch (event.type()) {
-        case "ABSENTEEISM_DETECTED" -> createAlert(ABSENTEEISM, event);
-        case "REPEATED_TARDINESS" -> createAlert(REPEATED_TARDINESS, event);
-        case "JUSTIFICATION_PENDING" -> createAlert(JUSTIFICATION_PENDING, event);
-        case "BIOMETRIC_UPDATE_REQUESTED" -> createAlert(BIOMETRIC_UPDATE, event);
+```go
+// Consumo de topicos de otros servicios
+kafka.Consume(ctx, []string{
+    "attendance-events", "scheduling-events",
+    "configuration-events", "identity-events",
+}, func(msg Event) {
+    switch msg.Type {
+    case "ABSENTEEISM_DETECTED":
+        createAlert(ABSENTEEISM, msg)
+    case "REPEATED_TARDINESS":
+        createAlert(REPEATED_TARDINESS, msg)
+    case "JUSTIFICATION_PENDING":
+        createAlert(JUSTIFICATION_PENDING, msg)
+    case "BIOMETRIC_UPDATE_REQUESTED":
+        createAlert(BIOMETRIC_UPDATE, msg)
     }
-}
+})
 ```
 
 ### Topicos consumidos
 
-| Topico | Eventos â†’ Alertas |
+| Topico | Eventos → Alertas |
 |--------|-------------------|
 | `attendance-events` | ABSENTEEISM_DETECTED, REPEATED_TARDINESS, LOW_ATTENDANCE |
 | `scheduling-events` | CLASS_SESSION_CANCELLED |
@@ -143,9 +136,9 @@ public void consumeEvent(DomainEvent event) {
 
 | Evento | Trigger | Consumidores tipicos |
 |--------|---------|---------------------|
-| `AlertRaised` | Alerta generada | Audit (registrar), email/push service |
-| `AlertResolved` | Alerta resuelta | Audit |
-| `AlertTypeCreated` | Nuevo tipo de alerta | Audit |
+| `AlertRaised` | Alerta generada | email/push service |
+| `AlertResolved` | Alerta resuelta | — |
+| `AlertTypeCreated` | Nuevo tipo de alerta | — |
 
 ---
 
@@ -163,16 +156,16 @@ public void consumeEvent(DomainEvent event) {
 
 ```
 Attendance Service detecta patron
-       â”‚
-       â–¼
+       │
+       ▼
 Kafka Event (ABSENTEEISM_DETECTED)
-       â”‚
-       â–¼
+       │
+       ▼
 Notification Service genera alert
-       â”‚
-       â”œâ”€â”€ Email al coordinador
-       â”œâ”€â”€ Push al instructor
-       â””â”€â”€ Registro en audit_log
+       │
+       ├── Email al coordinador
+       ├── Push al instructor
+       └── Persistencia en alert (DB)
 ```
 
 ---
@@ -181,44 +174,39 @@ Notification Service genera alert
 
 | Canal | Implementacion | Uso |
 |-------|---------------|-----|
-| **Email** | Spring Mail + Thymeleaf | Alertas formales, reportes |
-| **Push (FCM)** | Firebase Admin SDK | Notificaciones en tiempo real a movil |
-| **SMS** | Twilio SDK (opcional) | Alertas criticas, sin internet |
-| **In-App** | WebSocket / SSE | Notificaciones dentro de la plataforma |
+| **Email** | `net/smtp` + templates `html/template` | Alertas formales, reportes |
+| **Push (FCM)** | firebase-admin-go | Notificaciones en tiempo real a movil |
+| **SMS** | twilio-go (opcional) | Alertas criticas, sin internet |
+| **In-App** | SSE / WebSocket | Notificaciones dentro de la plataforma |
 
 ---
 
 ## 9. Configuracion
 
-### application.yml (ejemplo)
+### config.yaml (ejemplo)
 
 ```yaml
 server:
   port: 8088
 
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/faceattend_db
-    username: postgres
-    password: postgres
-    hikari:
-      schema: notification
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    properties:
-      hibernate.default_schema: notification
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
-    properties:
-      mail.smtp.auth: true
-      mail.smtp.starttls.enable: true
-  kafka:
-    bootstrap-servers: localhost:9092
-    group-id: notification-service
+database:
+  host: localhost
+  port: 5432
+  name: faceattend_db
+  user: postgres
+  password: postgres
+  schema: notification
+
+kafka:
+  brokers: localhost:9092
+  group-id: notification-service
+
+# Email
+mail:
+  host: smtp.gmail.com
+  port: 587
+  username: ${MAIL_USERNAME}
+  password: ${MAIL_PASSWORD}
 
 # Firebase
 firebase:
@@ -249,37 +237,15 @@ notification:
 
 ---
 
-## 11. Analisis de Lenguaje
+## 11. Stack Actual
 
-### Candidatos evaluados
+Notification esta implementado en **Go 1.22 + Gin** con arquitectura hexagonal.
 
-| # | Lenguaje | Framework | Email Templates | Firebase SDK | Twilio SDK | Event-Driven | DX |
-|---|----------|-----------|:---------------:|:------------:|:----------:|:------------:|:--:|
-| 1 | **TypeScript** | NestJS/Nestia | Thymeleaf/Nunjucks | firebase-admin | twilio | RxJS | Excelente |
-| 2 | Java 21 | Spring Boot | Thymeleaf | firebase-admin | twilio | Spring Kafka | Buena |
-| 3 | Go 1.22 | Gin | html/template | firebase-admin | twilio | Canal propio | Moderada |
+### Justificacion
 
-### Por que TypeScript gana
-
-- **Templates de email**: Thymeleaf, MJML, Nunjucks â€” el ecosistema de templates HTML para email es mas rico en Node/TypeScript.
-- **Firebase Admin**: SDK oficial de Google para TypeScript, bien documentado.
-- **Twilio SDK**: SDK oficial de Twilio para Node.js, el mas maduro.
-- **NestJS event-driven**: Modulos de event listeners nativos, integracion con Kafka via @nestjs/microservices.
-- **Rapidez de desarrollo**: Los templates de email y la integracion con multiples canales se implementan mas rapido en TypeScript.
-- **WebSockets/SSE**: NestJS tiene soporte nativo para notificaciones in-app via WebSockets.
-
-### Por que no Java
-
-- Spring Mail y Thymeleaf son excelentes pero el overhead de JVM es innecesario para un servicio de notificaciones.
-- El ecosistema de templates de email es igual pero el DX de TypeScript es superior.
-
-### Por que no Go
-
-- Go no tiene framework de templates de email tan rico como Thymeleaf/Nunjucks.
-- La integracion con Firebase y Twilio requiere mas codigo manual en Go.
-- NestJS resuelve event-driven de forma mas elegante.
-
-### Decision: TypeScript (NestJS)
-
-Notification es un servicio **event-driven multi-canal** (email, push, SMS, in-app). TypeScript con NestJS ofrece el mejor ecosistema para templates de email, integracion con Firebase/Twilio, y manejo de eventos asincronos.
+- **Binario unico ~8MB y bajo consumo de memoria**: ideal para un servicio ligero de 2 tablas (`alert_type`, `alert`) con alta frecuencia de escritura por eventos.
+- **Gin**: Router de alto rendimiento con middleware nativo para validacion de requests.
+- **pgx**: Driver PostgreSQL rapido para persistir alertas.
+- **Canal propio de templates**: `html/template` (estandar de Go) para emails, `firebase-admin-go` para push y `twilio-go` para SMS.
+- **Kafka + zap**: Consumo eficiente de eventos de otros servicios con logs JSON estructurados.
 

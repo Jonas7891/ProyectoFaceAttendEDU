@@ -1,6 +1,6 @@
-////////////////////////////////////////////////////////////
-// FACEATTEND-EDU — MODELO RELACIONAL CORREGIDO (3FN)
-// v4: Unificación de facial_update_case + fingerprint_update_case
+﻿////////////////////////////////////////////////////////////
+// FACEATTEND-EDU â€” MODELO RELACIONAL CORREGIDO (3FN)
+// v4: UnificaciÃ³n de facial_update_case + fingerprint_update_case
 //     en biometric_update_case (Configuration context)
 // v5: city seeds removed (external API), permission refactored,
 //     justification_type per-school, security_configuration trimmed,
@@ -36,7 +36,7 @@ Table person {
   row_version bigint [not null, default: 1]
 
   indexes {
-    document_number [unique, name: 'uq_person_document']
+    (document_type, document_number) [unique, name: 'uq_person_document']
     email [name: 'idx_person_email']
     deleted_at [name: 'idx_person_deleted']
   }
@@ -296,7 +296,7 @@ Table academic_actor {
   person_id uuid [not null]
   actor_type_id smallint [not null]
   school_id int [not null]
-  actor_code varchar [not null, note: 'Código de aprendiz o instructor']
+  actor_code varchar [not null, note: 'CÃ³digo de aprendiz o instructor']
   started_on date [not null]
   ended_on date [null]
   status boolean [not null, default: true]
@@ -405,9 +405,9 @@ Table class_session {
   class_session_id bigint [pk, increment]
   schedule_block_id bigint [not null]
   session_date date [not null]
-  opened_by bigint [null, note: 'academic_actor_id (instructor) que abrió la clase']
+  opened_by bigint [null, note: 'academic_actor_id (instructor) que abriÃ³ la clase']
   opened_at datetime [null]
-  closed_by bigint [null, note: 'academic_actor_id (instructor) que cerró la clase']
+  closed_by bigint [null, note: 'academic_actor_id (instructor) que cerrÃ³ la clase']
   closed_at datetime [null]
   session_status varchar [not null, note: 'ENUM: Open / Closed / Cancelled']
 
@@ -485,6 +485,7 @@ Table justification_type {
   indexes {
     (school_id, name) [unique, name: 'uq_justification_type_school_name']
     school_id [name: 'idx_justification_type_school']
+    (name) [unique, name: 'uq_justification_type_global_name', where: 'school_id IS NULL']
   }
 }
 
@@ -568,13 +569,13 @@ Ref: supporting_document.justification_id > justification.justification_id
 
 
 ////////////////////////////////////////////////////////////
-// BIOMETRIC (NoSQL — colecciones documentales, fuera del modelo SQL)
+// BIOMETRIC (NoSQL â€” colecciones documentales, fuera del modelo SQL)
 ////////////////////////////////////////////////////////////
 // facial_embedding (collection)      -> person_id, template_version, encoding, model_version, enrolled_at, is_active
 // fingerprint_embedding (collection) -> person_id, finger_number, template_version, encoding, model_version, enrolled_at, is_active
 //
 // Estas colecciones NO se modelan como Table en este DBML relacional.
-// Su referencia lógica desde SQL se documenta como texto libre (current_embedding_ref),
+// Su referencia lÃ³gica desde SQL se documenta como texto libre (current_embedding_ref),
 // nunca como Ref: real, por ser cross-paradigm (SQL -> NoSQL).
 
 
@@ -626,66 +627,6 @@ Ref: alert.alert_type_id > alert_type.alert_type_id
 
 
 ////////////////////////////////////////////////////////////
-// AUDIT
-////////////////////////////////////////////////////////////
-
-Table audit_log {
-  audit_log_id bigint [pk, increment]
-  school_id int [null]
-  actor_id uuid [null]
-  action varchar [not null]
-  aggregate_type varchar [not null]
-  aggregate_id varchar [null]
-  description text [null]
-  source_ip varchar [null]
-  application varchar [null]
-  occurred_at datetime [not null]
-
-  created_at datetime [not null]
-  updated_at datetime [not null]
-  deleted_at datetime [null]
-  created_by uuid [null]
-  updated_by uuid [null]
-  deleted_by uuid [null]
-  row_version bigint [not null, default: 1]
-
-  indexes {
-    actor_id [name: 'idx_audit_actor']
-    (aggregate_type, aggregate_id) [name: 'idx_audit_aggregate']
-    occurred_at [name: 'idx_audit_date']
-    school_id [name: 'idx_audit_school']
-  }
-}
-
-Table error_log {
-  error_id bigint [pk, increment]
-  school_id int [null]
-  user_id uuid [null]
-  error_type varchar [not null]
-  description text [not null]
-  source_ip varchar [null]
-  application varchar [null]
-  occurred_at datetime [not null]
-
-  created_at datetime [not null]
-  updated_at datetime [not null]
-  deleted_at datetime [null]
-  created_by uuid [null]
-  updated_by uuid [null]
-  deleted_by uuid [null]
-  row_version bigint [not null, default: 1]
-
-  indexes {
-    user_id [name: 'idx_error_user']
-    occurred_at [name: 'idx_error_date']
-    school_id [name: 'idx_error_school']
-  }
-}
-
-// Cross-context (sin FK): actor_id/user_id -> Identity.app_user, school_id -> Academic.school
-
-
-////////////////////////////////////////////////////////////
 // CONFIGURATION
 ////////////////////////////////////////////////////////////
 
@@ -727,14 +668,15 @@ Table biometric_update_case {
   person_id uuid [not null]
   biometric_type varchar [not null, note: 'ENUM: FACIAL / FINGERPRINT']
   finger_number smallint [null, note: 'Obligatorio solo si biometric_type = FINGERPRINT (1..10); nulo si es FACIAL']
-  current_embedding_ref varchar [null, note: '_id lógico del documento activo en facial_embedding o fingerprint_embedding (NoSQL). Sin FK real: cross-paradigm.']
+  chk_finger_number finger_number [note: 'CHECK: (biometric_type = FINGERPRINT AND finger_number BETWEEN 1 AND 10) OR (biometric_type = FACIAL AND finger_number IS NULL)']
+  current_embedding_ref varchar [null, note: '_id lÃ³gico del documento activo en facial_embedding o fingerprint_embedding (NoSQL). Sin FK real: cross-paradigm.']
   reason text [not null]
-  update_status varchar [not null, note: 'ENUM: Pending / In_Review / Approved / Rejected']
-  requested_by uuid [null, note: 'app_user.user_id (cross-context)']
-  requested_at datetime [null]
+  update_status varchar [not null, default: 'Pending', note: 'ENUM: Pending / In_Review / Approved / Rejected']
+  requested_by uuid [not null, note: 'app_user.user_id (cross-context)']
+  requested_at datetime [not null]
   reviewed_by uuid [null, note: 'app_user.user_id (cross-context)']
   reviewed_at datetime [null]
-  resolution_notes varchar [null]
+  resolution_notes text [null]
 
   created_at datetime [not null]
   updated_at datetime [not null]
@@ -760,7 +702,7 @@ Table biometric_update_case {
 
 
 ////////////////////////////////////////////////////////////
-// BOUNDED CONTEXTS (Agrupación visual)
+// BOUNDED CONTEXTS (AgrupaciÃ³n visual)
 ////////////////////////////////////////////////////////////
 
 TableGroup Identity [color: #3498DB] {
@@ -807,11 +749,6 @@ TableGroup Notification [color: #f1c40f] {
   alert
 }
 
-TableGroup Audit [color: #95a5a6] {
-  audit_log
-  error_log
-}
-
 TableGroup Configuration [color: #34495e] {
   academic_configuration
   security_configuration
@@ -821,3 +758,4 @@ TableGroup Configuration [color: #34495e] {
 // Nota: el grupo "Biometric" ya no contiene tablas SQL en este archivo.
 // facial_embedding y fingerprint_embedding viven como colecciones NoSQL
 // documentadas aparte (modelo_conceptual.md), fuera del alcance de este DBML.
+// El grupo "Audit" fue removido: la observabilidad la provee la plataforma.

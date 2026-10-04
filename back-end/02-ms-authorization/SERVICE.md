@@ -21,79 +21,66 @@ Control de acceso basado en roles (RBAC). Gestionar roles, permisos y asignacion
 
 | Componente | Tecnologia | Justificacion |
 |------------|-----------|---------------|
-| Lenguaje | **Go 1.22** | Checks de permisos de baja latencia, binario unico, bajo consumo de memoria |
-| Framework | **Gin** | Router de alto rendimiento, middleware nativo |
+| Lenguaje | **Java 21** | Consistencia con los demas servicios nucleares (Identity, Scheduling, Attendance) |
+| Framework | **Spring Boot 4.1.1** | Spring Security es el estandar oro para RBAC |
 | Arquitectura | **Hexagonal** | Misma estructura que Identity |
 
 ### 3.2 Dependencias Principales
 
-```go
-// go.mod
-module github.com/faceattend-edu/authorization-service
+```xml
+<!-- Core -->
+spring-boot-starter-webmvc
+spring-boot-starter-security      <!-- RBAC, JWT, autorizacion -->
+spring-boot-starter-data-jpa
+spring-boot-starter-validation
+spring-boot-starter-actuator
+spring-boot-starter-kafka
+spring-boot-starter-liquibase
 
-require (
-    github.com/gin-gonic/gin          // HTTP framework
-    github.com/jackc/pgx/v5            // PostgreSQL driver
-    github.com/redis/go-redis/v9       // Cache de permisos
-    github.com/golang-jwt/jwt/v5       // JWT validation
-    go.uber.org/zap                    // Structured logging
-    github.com/prometheus/client_golang // Metrics
-)
+<!-- Persistencia -->
+postgresql
+
+<!-- API Documentation -->
+springdoc-openapi-starter-webmvc-ui
+
+<!-- Utilidades -->
+lombok
 ```
 
 ### 3.3 Librerias Recomendadas Adicionales
 
 | Libreria | Uso | Por que |
 |----------|-----|---------|
-| **Gin** | HTTP framework | Zero-allocation router, 142k RPS, routing rapido |
-| **pgx** | PostgreSQL driver | 3x mas rapido que database/sql, soporte nativo PostgreSQL |
-| **go-redis** | Cache de permisos | Cache en memoria para evaluacion rapida de RBAC |
-| **golang-jwt** | JWT validation | Validar tokens de Identity de forma eficiente |
-| **zap** | Structured logging | Logs JSON de alta performance para Audit |
+| **Spring Security** | Autenticacion/Autorizacion | JWT, RBAC y sesiones out-of-the-box |
+| **Spring Data JPA** | Persistencia | Repositorios tipados, constraints de unicidad |
+| **Spring Cache** | Cache de permisos | Redis/Caffeine para evaluacion rapida de RBAC |
+| **Liquibase** | Migraciones | Versionado de DDL en cada schema |
+| **MapStruct** | Mapeo DTO <-> Entity | Type-safe, compile-time |
+| **Lombok** | Boilerplate reduction | Reduce codigo repetitivo |
 | **Testcontainers** | Tests de integracion | PostgreSQL real en tests |
-| **go-cmp** | Comparacion de objetos | Tests de igualdad estructural |
-| **golang-migrate** | Migrations | Alternativa a Liquibase para Go |
-| **zerolog** | Logging alternativo | Ultra-bajo overhead si se necesita |
+| **springdoc-openapi** | Documentacion API | Swagger UI automatico |
 
 ### 3.4 Herramientas de Desarrollo
 
 | Herramienta | Uso |
 |-------------|-----|
-| **Go toolchain** | Build, test, vet, lint |
-| **Docker** | Containerizacion (imagen ~8MB) |
-| **VS Code + Go extension** | IDE principal |
+| **Maven** | Build tool |
+| **Docker** | Containerizacion |
+| **IntelliJ IDEA** | IDE principal |
 | **DBeaver** | Cliente PostgreSQL |
 | **Postman / Bruno** | Testing REST |
-| **golangci-lint** | Linting automatico |
 
-### 3.5 Analisis de Lenguaje
+### 3.5 Stack Actual
 
-#### Candidatos evaluados
+Authorization esta implementado en **Java 21 + Spring Boot 4.1.1** con arquitectura hexagonal.
 
-| # | Lenguaje | Framework | Throughput | Memoria | Startup | Ecosistema RBAC | Curva aprendizaje |
-|---|----------|-----------|:----------:|:-------:|:-------:|:----------------:|:-----------------:|
-| 1 | **Go 1.22** | Gin | 142k RPS | 68MB | 180ms | Moderado | 2-3 semanas |
-| 2 | Java 21 | Spring Boot | 100k RPS | 412MB | 3.8s | Excelente | Moderada |
-| 3 | TypeScript | NestJS | 54k RPS | 120MB | 800ms | Bueno | Baja |
+#### Justificacion
 
-#### Por que Go gana sobre Java
-
-- **6x menor consumo de memoria**: 68MB vs 412MB a 500 RPS (benchmarks BackendBytes 2026). En 9 microservicios, esto se traduce en ahorro significativo de infraestructura.
-- **21x mas rapido en startup**: 180ms vs 3.8s. Critico para autoscaling en Kubernetes.
-- **Binario unico de ~8MB**: Sin JVM, sin dependencias runtime. Deploy mas simple.
-- **Latencia p99 consistente**: GC sub-milisegundo sin tuning especial.
-- **Servicio ligero**: Authorization es fundamentalmente validacion de permisos (lookup en Redis/hash map). No necesita el peso de Spring Boot.
-
-#### Por que Go gana sobre TypeScript
-
-- **2.6x mayor throughput**: 142k vs 54k RPS en benchmarks.
-- **35% menos memoria**: 68MB vs 120MB.
-- **Type safety en compile-time**: Go detecta mas errores antes del deployment que TypeScript.
-- **Concurrencia nativa**: Goroutines para evaluar multiples permisos en paralelo.
-
-#### Decision: Go 1.22
-
-Authorization es un servicio de **baja latencia, alta frecuencia** (cada request de cualquier servicio valida permisos). Go ofrece el mejor ratio throughput/memoria para este caso de uso. El ecosistema de Go para RBAC es suficiente: Redis para cache, pgx para PostgreSQL, y middleware de autenticacion bien establecido.
+- **Spring Security**: El estandar para RBAC/JWT — autorizacion de permisos resuelta en el propio token (claims por ADR-008) y en el contexto de seguridad.
+- **Spring Data JPA**: Repositorios tipados con constraints de unicidad `(user_id, role_id)` y `(role_id, permission_id)`.
+- **Spring Cache + Redis**: Cache de permisos para evaluacion rapida de RBAC en cada request.
+- **Kafka**: Eventos de dominio (`RoleCreated`, `UserRoleAssigned`, ...).
+- **Testcontainers**: Tests de integracion con PostgreSQL real.
 
 ---
 
@@ -140,10 +127,10 @@ Authorization es un servicio de **baja latencia, alta frecuencia** (cada request
 
 | Evento | Trigger | Consumidores tipicos |
 |--------|---------|---------------------|
-| `RoleCreated` | Nuevo rol creado | Audit |
-| `RoleUpdated` | Rol modificado | Audit |
-| `UserRoleAssigned` | Rol asignado a usuario | Audit, Notification |
-| `UserRoleRevoked` | Rol removido de usuario | Audit |
+| `RoleCreated` | Nuevo rol creado | — |
+| `RoleUpdated` | Rol modificado | — |
+| `UserRoleAssigned` | Rol asignado a usuario | Notification |
+| `UserRoleRevoked` | Rol removido de usuario | — |
 
 ---
 
@@ -181,34 +168,36 @@ configuration.manage
 
 ## 7. Configuracion
 
-### config.yaml (ejemplo)
+### application.yml (ejemplo)
 
 ```yaml
 server:
   port: 8082
 
-database:
-  host: localhost
-  port: 5432
-  name: faceattend_db
-  user: postgres
-  password: postgres
-  schema: authorization
-  max_open_conns: 25
-  max_idle_conns: 5
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/faceattend_db
+    username: postgres
+    password: postgres
+    hikari:
+      schema: authorization
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.default_schema: authorization
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  kafka:
+    bootstrap-servers: localhost:9092
+    group-id: authorization-service
 
-redis:
-  addr: localhost:6379
-  db: 0
-  ttl: 10m
-
-kafka:
-  brokers: localhost:9092
-  group-id: authorization-service
-
-jwt:
-  issuer: faceattend-identity
-  audience: faceattend-api
+security:
+  jwt:
+    issuer: faceattend-identity
+    audience: faceattend-api
 ```
 
 ---

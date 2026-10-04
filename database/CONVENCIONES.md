@@ -44,11 +44,11 @@ Un **esquema PostgreSQL por dominio** (bounded context). `biometric` es un schem
 
 | Dominio | Esquema | Notas |
 |---|---|
-| Identity | `identity` | 5 tablas |
+| Identity | `identity` | 4 tablas |
 | Authorization | `authorization` | 4 tablas |
 | Academic | `academic` | 8 tablas |
 | Scheduling | `scheduling` | 3 tablas |
-| Attendance | `attendance` | 4 tablas |
+| Attendance | `attendance` | 5 tablas |
 | Biometric | `biometric` | Solo schema, sin tablas (NoSQL en MongoDB) |
 | Configuration | `configuration` | 3 tablas (incluye `biometric_update_case`) |
 | Notification | `notification` | 2 tablas |
@@ -114,7 +114,7 @@ Las FK son **reales** a nivel de base de datos:
 | Tipo | Uso | Ejemplo |
 |---|---|---|
 | `UUID` | Entidades referenciadas desde otros contextos | `person_id`, `user_id`, `case_id` |
-| `INT` autoincrement | Entidades locales, catálogos | `city_id`, `role_id`, `school_id` |
+| `INT` autoincrement | Entidades locales, catálogos | `role_id`, `school_id` |
 | `BIGINT` autoincrement | Entidades de alto volumen | `cohort_id`, `enrollment_id`, `alert_id` |
 | `SMALLINT` autoincrement | Catálogos pequeños | `actor_type_id`, `alert_type_id` |
 

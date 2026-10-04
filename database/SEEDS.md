@@ -99,11 +99,39 @@ Global security params. Password policy lives in `identity.password_policy`.
 
 | ID | Parameter | Value | Description |
 |----|-----------|-------|-------------|
-| 1 | `session_timeout_minutes` | `480` | Session max duration |
+| 1 | `session_timeout_minutes` | `480` | Session max duration (8 hours) |
 | 2 | `max_login_attempts` | `5` | Max attempts before lockout |
-| 3 | `lockout_duration_minutes` | `30` | Lockout duration |
+| 3 | `lockout_duration_minutes` | `30` | Lockout duration (minutes) |
 
 **File:** `07-ms-configuration-db/02-dml/001-seed-security-configuration-table.yaml`
+
+---
+
+## 7. Configuration — `configuration.academic_configuration`
+
+Academic params per school. `school_id = 1` is the default school. Values align with frontend defaults (`front-end/Web/src/core/config/institutionConfig.js`).
+
+| ID | School | Parameter | Value | Description |
+|----|--------|-----------|-------|-------------|
+| 1 | 1 | `tardy_tolerance_minutes` | `15` | Minutes after start before marking late |
+| 2 | 1 | `min_attendance_percent` | `80` | Minimum attendance percentage to pass |
+| 3 | 1 | `days_until_sanction` | `15` | Days before sanction is applied |
+| 4 | 1 | `confidence_threshold` | `85` | Minimum facial recognition confidence (0-100) |
+| 5 | 1 | `session_time_minutes` | `60` | Default session duration |
+
+**File:** `07-ms-configuration-db/02-dml/002-seed-academic-configuration-table.yaml`
+
+---
+
+## 8. Identity — `identity.password_policy`
+
+Password complexity rules. Values align with frontend defaults (`front-end/Mobile/src/models/identity/PasswordPolicy.js`).
+
+| ID | Min Length | Max Length | Uppercase | Numbers | Symbols | Expiration Days |
+|----|------------|------------|-----------|---------|---------|-----------------|
+| 1 | 8 | 20 | true | true | true | 90 |
+
+**File:** `01-ms-identity-db/02-dml/001-seed-password-policy-table.yaml`
 
 ---
 
@@ -123,7 +151,7 @@ Alert types with `severity` and `channel` for `AlertsConfigContext` mapping.
 
 ---
 
-## 8. Summary by domain
+## 9. Summary by domain
 
 | Domain | Catalog table | Records | Seed file |
 |---------|---------------|:---------:|--------------|
@@ -132,13 +160,15 @@ Alert types with `severity` and `channel` for `AlertsConfigContext` mapping.
 | Academic | `academic_actor_type` | 2 | `03-ms-academic-db/02-dml/001-seed-academic-actor-type-table.yaml` |
 | Attendance | `justification_type` | 3 | `05-ms-attendance-db/02-dml/001-seed-justification-type-table.yaml` |
 | Configuration | `security_configuration` | 3 | `07-ms-configuration-db/02-dml/001-seed-security-configuration-table.yaml` |
+| Configuration | `academic_configuration` | 5 | `07-ms-configuration-db/02-dml/002-seed-academic-configuration-table.yaml` |
+| Identity | `password_policy` | 1 | `01-ms-identity-db/02-dml/001-seed-password-policy-table.yaml` |
 | Notification | `alert_type` | 5 | `08-ms-notification-db/02-dml/001-seed-alert-type-table.yaml` |
 
-**Total: 28 seed records in 6 catalog tables.** `identity.city` removed (external API).
+**Total: 34 seed records in 8 catalog tables.** `identity.city` removed (external API).
 
 ---
 
-## 9. How to add new records
+## 10. How to add new records
 
 Seeds run once on DB creation. For post-init inserts use incremental DML:
 
@@ -165,7 +195,7 @@ databaseChangeLog:
 
 ---
 
-## 10. Tables with ENUMs (no seeds)
+## 11. Tables with ENUMs (no seeds)
 
 | Domain | ENUM type | Values |
 |---------|-----------|---------|
