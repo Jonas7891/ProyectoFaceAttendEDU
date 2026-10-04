@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: config-002-seed-academic-configuration-table
+      id: config-003-seed-academic-configuration-table
       author: Andres Gutierrez
       context: seed
       changes:
