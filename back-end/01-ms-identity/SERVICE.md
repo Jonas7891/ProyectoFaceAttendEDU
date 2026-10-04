@@ -112,9 +112,9 @@ mapstruct-processor              <!-- Anotacion processor MapStruct -->
 
 | Metodo | Endpoint | Descripcion |
 |--------|----------|-------------|
-| POST | `/api/v1/auth/login` | Iniciar sesion |
+| POST | `/api/v1/auth/login` | Iniciar sesion (correo o username) |
 | POST | `/api/v1/auth/logout` | Cerrar sesion |
-| GET | `/api/v1/auth/me` | Usuario actual |
+| GET | `/api/v1/auth/me` | Usuario actual (`?username=` o `?email=`) |
 
 ### 4.4 Sesiones
 
@@ -233,7 +233,7 @@ Identity esta implementado en **Java 21 + Spring Boot 4.1.1** con arquitectura h
 ### Justificacion
 
 - **Spring Security**: La libreria de seguridad mas madura del ecosistema JVM. JWT, sesiones Redis, refresh tokens y RBAC out-of-the-box.
-- **Spring Data JPA**: Persistencia relacional con la unicidad compuesta `(document_type, document_number)` y `username` unico.
+- **Spring Data JPA**: Persistencia relacional con la unicidad compuesta `(document_type, document_number)` y `username` unico; el correo vive en `identity.person` con `uq_person_email` (unicidad entre filas vivas) y es la alternate key de login.
 - **Spring Kafka**: Domain Events asincronos (`PersonCreated`, `UserLoggedIn`, ...).
 - **Liquibase**: Migraciones versionadas del schema `identity`.
 - **Testcontainers**: Tests de integracion con PostgreSQL real.

@@ -8,6 +8,7 @@ import com.faceattend_edu.identity_service.adapter.in.web.mapper.UserWebMapper;
 import com.faceattend_edu.identity_service.application.port.in.AuthenticateUserUseCase;
 import com.faceattend_edu.identity_service.application.port.in.CloseUserSessionUseCase;
 import com.faceattend_edu.identity_service.application.port.in.GetUserByUsernameUseCase;
+import com.faceattend_edu.identity_service.domain.exception.ValidationException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +30,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<UserSessionDto> login(@Valid @RequestBody AuthRequest authRequest) {
         return ResponseEntity.ok(sessionWebMapper.toDto(
-                authenticateUserUseCase.authenticate(authRequest.getUsername(), authRequest.getPassword())));
+                authenticateUserUseCase.authenticate(authRequest.getIdentifier(), authRequest.getPassword())));
     }
 
     @PostMapping("/logout")
@@ -39,7 +40,12 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserDto> me(@RequestParam String username) {
-        return ResponseEntity.ok(userWebMapper.toDto(getUserByUsernameUseCase.getUserByUsername(username)));
+    public ResponseEntity<UserDto> me(@RequestParam(required = false) String username,
+                                      @RequestParam(required = false) String email) {
+        String identifier = username != null && !username.isBlank() ? username : email;
+        if (identifier == null || identifier.isBlank()) {
+            throw new ValidationException("username or email is required");
+        }
+        return ResponseEntity.ok(userWebMapper.toDto(getUserByUsernameUseCase.getUserByUsername(identifier)));
     }
 }
