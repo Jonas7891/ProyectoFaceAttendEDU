@@ -121,10 +121,10 @@ httpx = "^0.27.0"             # Client HTTP
 
 | Evento | Trigger | Consumidores tipicos |
 |--------|---------|---------------------|
-| `FacialEnrolled` | Plantilla facial registrada | Audit |
-| `FingerprintEnrolled` | Plantilla dactilar registrada | Audit |
+| `FacialEnrolled` | Plantilla facial registrada | — |
+| `FingerprintEnrolled` | Plantilla dactilar registrada | — |
 | `FacialVerificationSucceeded` | Verificacion 1:1 exitosa | Attendance (registrar asistencia) |
-| `FacialVerificationFailed` | Verificacion 1:1 fallida | Audit, Notification |
+| `FacialVerificationFailed` | Verificacion 1:1 fallida | Notification |
 | `BiometricUpdateRequested` | Solicitud de actualizacion | Configuration, Notification |
 
 ---

@@ -127,10 +127,10 @@ Authorization esta implementado en **Java 21 + Spring Boot 4.1.1** con arquitect
 
 | Evento | Trigger | Consumidores tipicos |
 |--------|---------|---------------------|
-| `RoleCreated` | Nuevo rol creado | Audit |
-| `RoleUpdated` | Rol modificado | Audit |
-| `UserRoleAssigned` | Rol asignado a usuario | Audit, Notification |
-| `UserRoleRevoked` | Rol removido de usuario | Audit |
+| `RoleCreated` | Nuevo rol creado | — |
+| `RoleUpdated` | Rol modificado | — |
+| `UserRoleAssigned` | Rol asignado a usuario | Notification |
+| `UserRoleRevoked` | Rol removido de usuario | — |
 
 ---
 

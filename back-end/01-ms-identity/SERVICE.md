@@ -135,11 +135,11 @@ El servicio Identity publica estos eventos via Kafka:
 | `PersonActivated` | Persona activada | Todos |
 | `PersonDeactivated` | Persona desactivada | Todos |
 | `UserCreated` | Nuevo usuario creado | Authorization |
-| `UserAuthenticated` | Login exitoso | Audit |
-| `UserAuthenticationFailed` | Login fallido | Audit, Notification |
-| `UserSessionStarted` | Sesion abierta | Audit |
-| `UserSessionClosed` | Sesion cerrada | Audit |
-| `PasswordChanged` | Contrasena cambiada | Audit |
+| `UserAuthenticated` | Login exitoso | — |
+| `UserAuthenticationFailed` | Login fallido | Notification |
+| `UserSessionStarted` | Sesion abierta | — |
+| `UserSessionClosed` | Sesion cerrada | — |
+| `PasswordChanged` | Contrasena cambiada | — |
 
 ---
 

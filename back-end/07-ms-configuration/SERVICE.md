@@ -102,8 +102,8 @@ Gestionar parametros configurables del sistema (academicos por sede y de segurid
 
 | Evento | Trigger | Consumidores tipicos |
 |--------|---------|---------------------|
-| `AcademicConfigurationUpdated` | Config academica modificada | Audit, Scheduling |
-| `SecurityConfigurationUpdated` | Config seguridad modificada | Audit, Identity |
+| `AcademicConfigurationUpdated` | Config academica modificada | Scheduling |
+| `SecurityConfigurationUpdated` | Config seguridad modificada | Identity |
 | `BiometricUpdateRequested` | Solicitud de actualizacion biom. | Biometric, Notification |
 | `BiometricUpdateApproved` | Solicitud aprobada | Biometric (aplicar cambio) |
 | `BiometricUpdateRejected` | Solicitud rechazada | Notification (informar) |

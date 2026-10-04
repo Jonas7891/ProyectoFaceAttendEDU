@@ -142,12 +142,12 @@ Gestionar la estructura academica completa: sedes educativas, programas curricul
 
 | Evento | Trigger | Consumidores tipicos |
 |--------|---------|---------------------|
-| `SchoolCreated` | Nueva sede | Audit |
-| `SchoolActivated` | Sede activada | Audit |
-| `SchoolDeactivated` | Sede desactivada | Audit, Notification |
-| `EnrollmentCreated` | Nueva matricula | Audit, Notification |
-| `EnrollmentStatusChanged` | Estado de matricula cambia | Audit, Notification |
-| `CohortCreated` | Nueva cohorte | Audit, Scheduling |
+| `SchoolCreated` | Nueva sede | — |
+| `SchoolActivated` | Sede activada | — |
+| `SchoolDeactivated` | Sede desactivada | Notification |
+| `EnrollmentCreated` | Nueva matricula | Notification |
+| `EnrollmentStatusChanged` | Estado de matricula cambia | Notification |
+| `CohortCreated` | Nueva cohorte | Scheduling |
 
 ---
 

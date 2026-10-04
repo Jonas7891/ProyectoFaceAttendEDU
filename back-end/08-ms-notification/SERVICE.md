@@ -136,9 +136,9 @@ kafka.Consume(ctx, []string{
 
 | Evento | Trigger | Consumidores tipicos |
 |--------|---------|---------------------|
-| `AlertRaised` | Alerta generada | Audit (registrar), email/push service |
-| `AlertResolved` | Alerta resuelta | Audit |
-| `AlertTypeCreated` | Nuevo tipo de alerta | Audit |
+| `AlertRaised` | Alerta generada | email/push service |
+| `AlertResolved` | Alerta resuelta | — |
+| `AlertTypeCreated` | Nuevo tipo de alerta | — |
 
 ---
 
@@ -165,7 +165,7 @@ Notification Service genera alert
        │
        ├── Email al coordinador
        ├── Push al instructor
-       └── Registro en audit_log
+       └── Persistencia en alert (DB)
 ```
 
 ---

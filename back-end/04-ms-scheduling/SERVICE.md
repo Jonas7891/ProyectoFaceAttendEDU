@@ -115,7 +115,7 @@ mapstruct-processor
 
 | Evento | Trigger | Consumidores tipicos |
 |--------|---------|---------------------|
-| `ScheduleBlockCreated` | Nuevo bloque de horario | Audit |
+| `ScheduleBlockCreated` | Nuevo bloque de horario | — |
 | `ClassSessionOpened` | Sesion abierta por instructor | Attendance (habilitar registro) |
 | `ClassSessionClosed` | Sesion cerrada | Attendance (calcular estadisticas), Notification |
 | `ClassSessionCancelled` | Sesion cancelada | Attendance, Notification |

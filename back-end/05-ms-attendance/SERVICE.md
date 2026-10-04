@@ -129,11 +129,11 @@ mapstruct-processor
 
 | Evento | Trigger | Consumidores tipicos |
 |--------|---------|---------------------|
-| `AttendanceRecorded` | Asistencia registrada | Audit, Notification |
-| `AttendanceStatusChanged` | Estado de asistencia cambia | Audit |
-| `JustificationSubmitted` | Justificacion enviada | Notification, Audit |
-| `JustificationApproved` | Justificacion aprobada | Audit, Attendance (actualizar registro) |
-| `JustificationRejected` | Justificacion rechazada | Notification, Audit |
+| `AttendanceRecorded` | Asistencia registrada | Notification |
+| `AttendanceStatusChanged` | Estado de asistencia cambia | — |
+| `JustificationSubmitted` | Justificacion enviada | Notification |
+| `JustificationApproved` | Justificacion aprobada | Attendance (actualizar registro) |
+| `JustificationRejected` | Justificacion rechazada | Notification |
 
 ---
 
