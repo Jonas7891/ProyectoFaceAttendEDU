@@ -38,11 +38,11 @@ Todos los servicios 01-08 siguen hexagonal (`_stacks/java-spring.md`, `node-type
 
 | Servicio | Lenguaje | Framework | Puerto | DB | Razon ADR-005/007 |
 |----------|----------|-----------|--------|----|-------------------|
-| Identity 01 | Java 21 | Spring Boot 3 | 8081 | PostgreSQL identity | Hibernate/JPA + Spring Security JWT/Session |
-| Authorization 02 | Java 21 | Spring Boot 3 | 8082 | PostgreSQL authorization | Spring Security RBAC, permisos en JWT |
+| Identity 01 | Java 21 | Spring Boot 4.1.1 | 8081 | PostgreSQL identity | Hibernate/JPA + Spring Security JWT/Session |
+| Authorization 02 | Java 21 | Spring Boot 4.1.1 | 8082 | PostgreSQL authorization | Spring Security RBAC, permisos en JWT |
 | Academic 03 | TypeScript | Fastify + Drizzle | 8083 | PostgreSQL academic | Drizzle JOINs 7 tablas eficiente |
-| Scheduling 04 | Java 21 | Spring Boot 3 | 8084 | PostgreSQL scheduling | @UniqueConstraint anti-double-booking + ACID |
-| Attendance 05 | Java 21 | Spring Boot 3 | 8085 | PostgreSQL attendance | @Transactional ACID crítico |
+| Scheduling 04 | Java 21 | Spring Boot 4.1.1 | 8084 | PostgreSQL scheduling | @UniqueConstraint anti-double-booking + ACID |
+| Attendance 05 | Java 21 | Spring Boot 4.1.1 | 8085 | PostgreSQL attendance | @Transactional ACID crítico |
 | Biometric 06 | Python 3.12 | FastAPI | 8086 | MongoDB biometric | OpenCV/pymongo vector — único viable |
 | Configuration 07 | TypeScript | Fastify | 8087 | PostgreSQL configuration | CRUD trivial 3 tablas |
 | Notification 08 | Go 1.22 | Gin | 8088 | PostgreSQL notification | Binario 5-10 MB para 2 tablas |
