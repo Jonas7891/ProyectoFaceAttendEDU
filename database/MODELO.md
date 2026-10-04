@@ -1,4 +1,4 @@
-# Guía del Modelo de Datos — FaceAttend-Edu
+﻿# Guía del Modelo de Datos — FaceAttend-Edu
 
 ## 1. Visión general
 
@@ -52,7 +52,6 @@ El modelo se divide en **8 contextos**, cada uno responsable de un área de nego
 
 | Tabla | Descripción | PK |
 |---|---|---|
-| `city` | Catálogo de ciudades | `city_id` (INT) |
 | `person` | Identidad base: documento, nombre, contacto | `person_id` (UUID) |
 | `app_user` | Credenciales de acceso; 1:1 con `person` (`person_id` UNIQUE) | `user_id` (UUID) |
 | `user_session` | Sesiones activas/cerradas | `session_id` (UUID) |

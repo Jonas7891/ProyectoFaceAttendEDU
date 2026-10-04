@@ -10,11 +10,11 @@ database/
 ├── .env                            ← Variables de entorno
 ├── scripts/init-multidb.sql        ← Script alternativo multi-DB (desarrollo usa 1 BD + 8 schemas)
 │
-├── 01-ms-identity-db/              → Contexto: Identity (5 tablas)
+├── 01-ms-identity-db/              → Contexto: Identity (4 tablas)
 ├── 02-ms-authorization-db/         → Contexto: Authorization (4 tablas)
 ├── 03-ms-academic-db/              → Contexto: Academic (8 tablas)
 ├── 04-ms-scheduling-db/            → Contexto: Scheduling (3 tablas)
-├── 05-ms-attendance-db/            → Contexto: Attendance (4 tablas)
+├── 05-ms-attendance-db/            → Contexto: Attendance (5 tablas)
 ├── 06-ms-biometric-db/             → Contexto: Biometric (solo schema, colecciones NoSQL en MongoDB)
 ├── 07-ms-configuration-db/         → Contexto: Configuration (3 tablas, incluye biometric_update_case)
 ├── 08-ms-notification-db/          → Contexto: Notification (2 tablas)
@@ -30,7 +30,7 @@ database/
 
 | # | Carpeta | Contexto | Esquemas | Tablas |
 |---|---|---|---|---|
-| 01 | `01-ms-identity-db` | Identity | `identity` | `city`, `person`, `app_user`, `user_session`, `password_policy` |
+| 01 | `01-ms-identity-db` | Identity | `identity` | `person`, `app_user`, `user_session`, `password_policy` |
 | 02 | `02-ms-authorization-db` | Authorization | `authorization` | `role`, `permission`, `role_permission`, `user_role` |
 | 03 | `03-ms-academic-db` | Academic | `academic` | `school`, `program`, `academic_period`, `cohort`, `course`, `academic_actor_type`, `academic_actor`, `enrollment` |
 | 04 | `04-ms-scheduling-db` | Scheduling | `scheduling` | `environment`, `schedule_block`, `class_session` |
