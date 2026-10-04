@@ -14,11 +14,11 @@ databaseChangeLog:
                 current_embedding_ref VARCHAR(500) NULL, -- Cross-paradigm ref a Biometric.facial_embedding / fingerprint_embedding (NoSQL, NO FK)
                 reason TEXT NOT NULL,
                 update_status configuration.update_status NOT NULL DEFAULT 'Pending',
-                requested_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
-                requested_at TIMESTAMP NULL,
+                requested_by UUID NOT NULL, -- Cross-context reference to Identity.app_user (NO FK)
+                requested_at TIMESTAMP NOT NULL,
                 reviewed_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
                 reviewed_at TIMESTAMP NULL,
-                resolution_notes VARCHAR(500) NULL,
+                resolution_notes TEXT NULL,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP NULL,
                 deleted_at TIMESTAMP NULL,
