@@ -5,17 +5,28 @@
 // (el Mobile los construye en los modelos con toApi()); aquí no se
 // transforma nada, la capa solo transporta.
 //
-// El flujo de login completa roles y permisos con
-// authorizationApi.userRoles() y authorizationApi.evaluate().
+// El flujo de login completa roles con authorizationApi.userRoles().
 import { request } from "../../api/apiClient";
 import { endpoints } from "../../api/endpoints";
 
 export const authApi = {
     // ── Sesión ──────────────────────────────────────────
-    login: (p) => request(endpoints.identity.login, { method: "POST", body: p }),
+    // Acepta { email, password } o { username, password }: el backend
+    // resuelve el identificador por el valor ('@' → correo, si no → username).
+    login: ({ email, username, password }) =>
+        request(endpoints.identity.login, {
+            method: "POST",
+            body: { email: email ?? username, password },
+        }),
     logout: (sessionId) =>
         request(endpoints.identity.logout, { method: "POST", query: { sessionId } }),
-    me: (username) => request(endpoints.identity.me, { method: "GET", query: { username } }),
+    me: (identifier) =>
+        request(endpoints.identity.me, {
+            method: "GET",
+            query: String(identifier).includes("@")
+                ? { email: identifier }
+                : { username: identifier },
+        }),
 
     // ── Roles y permisos del usuario autenticado ────────
     userRoles: (userId) =>

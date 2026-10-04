@@ -3,7 +3,8 @@
 //
 //  Toda petición al backend pasa por aquí:
 //  - Base URL del gateway Kong (EXPO_PUBLIC_API_URL)
-//  - Token Bearer automático (AsyncStorage / localStorage web)
+//  - Token Bearer automático desde la sesión guardada
+//    { token, savedAt, expiresAt, email } (localStorage en web, AsyncStorage en nativo)
 //  - Timeout + 1 reintento en GET idempotentes ante fallo de red
 //  - Errores tipados ApiError {status, code, message}
 // ============================================================
@@ -24,32 +25,74 @@ export class ApiError extends Error {
 const TOKEN_KEY = "auth_token";
 const SESSION_USER_KEY = "@faceattend:session_user";
 
-async function readToken() {
+async function readRaw(key) {
     try {
-        if (Platform.OS === "web") {
-            const raw = localStorage.getItem(TOKEN_KEY);
-            if (raw) {
-                try {
-                    const parsed = JSON.parse(raw);
-                    if (parsed?.token) return parsed.token;
-                } catch {
-                    return raw; // token plano legacy
-                }
-            }
-            return null;
-        }
+        if (Platform.OS === "web") return localStorage.getItem(key);
         const AS = (await import("@react-native-async-storage/async-storage")).default;
-        const raw = await AS.getItem(TOKEN_KEY);
-        if (!raw) return null;
-        try {
-            const parsed = JSON.parse(raw);
-            return parsed?.token ?? raw;
-        } catch {
-            return raw;
-        }
+        return await AS.getItem(key);
     } catch {
         return null;
     }
+}
+
+async function writeRaw(key, value) {
+    try {
+        if (Platform.OS === "web") {
+            localStorage.setItem(key, value);
+            return true;
+        }
+        const AS = (await import("@react-native-async-storage/async-storage")).default;
+        await AS.setItem(key, value);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+async function removeRaw(key) {
+    try {
+        if (Platform.OS === "web") {
+            localStorage.removeItem(key);
+            return true;
+        }
+        const AS = (await import("@react-native-async-storage/async-storage")).default;
+        await AS.removeItem(key);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Forma compartida con Mobile: { token, savedAt, expiresAt, email }.
+ * @returns el token o null si no hay sesión o si ya expiró.
+ */
+export async function getToken() {
+    const raw = await readRaw(TOKEN_KEY);
+    if (!raw) return null;
+    try {
+        const parsed = JSON.parse(raw);
+        if (!parsed?.token) return null;
+        if (parsed.expiresAt && Date.now() > parsed.expiresAt) {
+            await clearToken();
+            return null;
+        }
+        return parsed.token;
+    } catch {
+        return raw; // token plano legacy
+    }
+}
+
+export async function saveToken(token, { email = null, expiresAt = null } = {}) {
+    if (!token || typeof token !== "string") return false;
+    return writeRaw(
+        TOKEN_KEY,
+        JSON.stringify({ token, savedAt: Date.now(), expiresAt: expiresAt ?? null, email })
+    );
+}
+
+export async function clearToken() {
+    return removeRaw(TOKEN_KEY);
 }
 
 function resolveBaseUrl(override) {
@@ -126,7 +169,7 @@ function unwrapPage(payload) {
 export async function request(path, opts = {}) {
     const method = opts.method ?? "GET";
     const timeoutMs = opts.timeoutMs ?? API_TIMEOUT_MS;
-    const token = await readToken();
+    const token = await getToken();
     const headers = {
         "Content-Type": "application/json",
         ...(opts.headers ?? {}),
@@ -167,14 +210,8 @@ export async function request(path, opts = {}) {
 
 /** Atajo para saber si hay sesión guardada (usuario o token). */
 export async function hasSession() {
-    if (await readToken()) return true;
-    try {
-        if (Platform.OS === "web") return localStorage.getItem(SESSION_USER_KEY) !== null;
-        const AS = (await import("@react-native-async-storage/async-storage")).default;
-        return (await AS.getItem(SESSION_USER_KEY)) !== null;
-    } catch {
-        return false;
-    }
+    if (await getToken()) return true;
+    return (await readRaw(SESSION_USER_KEY)) !== null;
 }
 
 export const apiClient = { request, buildUrl };
