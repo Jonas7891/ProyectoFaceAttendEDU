@@ -6,6 +6,7 @@
 // ============================================================
 
 import { usePushNotification } from "./PushNotification";
+import { getInstitutionConfig } from "../../../../core/config/institutionConfig";
 
 // ══════════════════════════════════════════════════════════════
 //  EJEMPLO 1: Notificación simple de éxito

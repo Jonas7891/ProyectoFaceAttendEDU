@@ -45,7 +45,7 @@ export function PeriodExpirationAlert({
                 icon: "alert-circle",
                 iconColor: c.status.danger,
                 bgColor: c.status.dangerLight,
-                textColor: "#991B1B",
+                textColor: c.status.dangerDark,
                 title: t("⚠️ Período académico expirado"),
                 message: isAutomaticMode
                     ? t(`El período académico finalizó hace ${expirationInfo.daysOverdue} días. En modo automático, el sistema debería haber actualizado las fechas. Verifica la configuración.`)
@@ -59,7 +59,7 @@ export function PeriodExpirationAlert({
                 icon: "alert-triangle",
                 iconColor: c.status.warning,
                 bgColor: c.status.warningLight,
-                textColor: "#92400E",
+                textColor: c.status.warningDark,
                 title: t("⏰ Período próximo a finalizar"),
                 message: isAutomaticMode
                     ? t(`El período actual finaliza en ${expirationInfo.daysRemaining} días. En modo automático, el sistema actualizará las fechas automáticamente al finalizar.`)

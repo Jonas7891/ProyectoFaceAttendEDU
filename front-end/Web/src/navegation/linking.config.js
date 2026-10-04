@@ -46,7 +46,17 @@ export const linkingConfig = {
                 path: 'app',
                 screens: {
                     Dashboard: '',  // /app → Dashboard por defecto
-                    Students: 'students',  // /app/students
+                    Users: {
+                        path: 'users/:section?',  // /app/users o /app/users/teachers
+                        parse: {
+                            // Parsear el parámetro section desde la URL
+                            section: (section) => section || null,
+                        },
+                        stringify: {
+                            // Convertir el parámetro section a string para la URL
+                            section: (section) => section || '',
+                        },
+                    },
                     Courses: 'courses',  // /app/courses
                     Environments: 'environments',  // /app/environments
                     Reports: 'reports',  // /app/reports
@@ -119,7 +129,7 @@ export function buildUrl(screen, params = {}) {
         'FaceAttendEDU-Login': '/login',
         'FaceAttendEDU-Register': '/register',
         'Dashboard': '/app',
-        'Students': '/app/students',
+        'Users': params.section ? `/app/users/${params.section}` : '/app/users',
         'Courses': '/app/courses',
         'Environments': '/app/environments',
         'Reports': '/app/reports',

@@ -4,6 +4,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
+import { formatDate as formatDateWithConfig, formatTime as formatTimeWithConfig, formatDateTime as formatDateTimeWithConfig } from "../../../../core/constants/dateFormats";
 
 /**
  * DatePicker component para selección de fechas
@@ -70,28 +71,27 @@ export function DatePicker({
 }) {
   const { theme } = useTheme();
   const [showPicker, setShowPicker] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   const formatDate = (date) => {
     if (!date) return "";
     
-    const d = new Date(date);
-    const day = String(d.getDate()).padStart(2, "0");
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const year = d.getFullYear();
-    
     if (mode === "datetime") {
-      const hours = String(d.getHours()).padStart(2, "0");
-      const minutes = String(d.getMinutes()).padStart(2, "0");
-      return `${day}/${month}/${year} ${hours}:${minutes}`;
+      return formatDateTimeWithConfig(date);
     }
     
-    return `${day}/${month}/${year}`;
+    if (mode === "time") {
+      return formatTimeWithConfig(date);
+    }
+    
+    return formatDateWithConfig(date);
   };
 
   const displayText = value ? formatDate(value) : placeholder;
 
   const handlePress = () => {
     if (disabled) return;
+    setIsFocused(true);
     setShowPicker(true);
   };
 
@@ -99,6 +99,7 @@ export function DatePicker({
     // En Android, el picker se cierra automáticamente
     if (Platform.OS === "android") {
       setShowPicker(false);
+      setIsFocused(false);
     }
 
     if (event.type === "set" && selectedDate) {
@@ -107,9 +108,11 @@ export function DatePicker({
       // En iOS, cerramos manualmente después de seleccionar
       if (Platform.OS === "ios") {
         setShowPicker(false);
+        setIsFocused(false);
       }
     } else if (event.type === "dismissed") {
       setShowPicker(false);
+      setIsFocused(false);
     }
   };
 
@@ -135,7 +138,10 @@ export function DatePicker({
           {
             borderColor: error
               ? theme.colors.status.error
-              : theme.colors.border.primary,
+              : isFocused
+              ? theme.colors.text.primary
+              : theme.colors.border.primary + '80', // 50% opacidad en reposo
+            borderWidth: 2, // SIEMPRE 2px para evitar "baile"
             backgroundColor: disabled
               ? theme.colors.background.hover
               : theme.colors.background.surface,
@@ -205,11 +211,12 @@ const styles = StyleSheet.create({
   pickerButton: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1.5,
     borderRadius: DESIGN_TOKENS.borderRadius.lg,
     paddingHorizontal: DESIGN_TOKENS.spacing.md,
     paddingVertical: DESIGN_TOKENS.spacing.sm,
-    minHeight: 40,
+    minHeight: 48,
+    outlineWidth: 0,
+    outlineStyle: 'none',
   },
   icon: {
     marginRight: DESIGN_TOKENS.spacing.sm,

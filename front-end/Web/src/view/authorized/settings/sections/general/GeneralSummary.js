@@ -10,6 +10,8 @@
 //   - isAutomaticPeriod  : bool
 //   - automaticPeriod    : objeto calculado
 //   - currentLanguageLabel : string
+//   - dateFormat         : string
+//   - timeFormat24h      : boolean
 // ============================================================
 import React from "react";
 import { View, Text } from "react-native";
@@ -30,9 +32,14 @@ export function GeneralSummary({
     isAutomaticPeriod,
     automaticPeriod,
     currentLanguageLabel,
+    dateFormat,
+    timeFormat24h,
 }) {
     const { t } = useTranslation();
     const { c } = useSettingsSectionStyles();
+
+    // Label del formato
+    const formatLabel = `${dateFormat} · ${timeFormat24h ? "24h" : "12h"}`;
 
     return (
         <View style={{ gap: 0 }}>
@@ -60,6 +67,13 @@ export function GeneralSummary({
             />
             <Divider />
             <StatsRow label={t("Idioma")} value={currentLanguageLabel ?? t("Español")} icon="globe" color="#3B82F6" />
+            <Divider />
+            <StatsRow 
+                label={t("Formato de fecha")} 
+                value={formatLabel} 
+                icon="calendar" 
+                color="#10B981" 
+            />
         </View>
     );
 }

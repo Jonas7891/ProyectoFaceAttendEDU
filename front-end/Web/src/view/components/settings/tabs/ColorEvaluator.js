@@ -11,6 +11,18 @@ export function ColorEvaluator({ currentHex, verdict }) {
     const { t } = useTranslation();
     const c = theme.colors;
 
+    // Mapear el scoreColor semántico (string) al color real del tema
+    const getScoreColor = (semanticColor) => {
+        const colorMap = {
+            success: c.status.success,
+            warning: c.status.warning,
+            error: c.status.error,
+        };
+        return colorMap[semanticColor] || c.text.secondary;
+    };
+
+    const scoreColor = getScoreColor(verdict.scoreColor);
+
     return (
         <View style={{
             backgroundColor: c.background.app,
@@ -36,7 +48,7 @@ export function ColorEvaluator({ currentHex, verdict }) {
                     borderWidth: 1,
                     borderColor: c.border.secondary,
                 }} />
-                <View style={{ flex: 1, gap: 4 }}>
+                <View style={{ gap: 4, minWidth: 140 }}>
                     <Text style={{
                         fontSize: 10,
                         fontWeight: "700",
@@ -54,12 +66,12 @@ export function ColorEvaluator({ currentHex, verdict }) {
                             width: 8,
                             height: 8,
                             borderRadius: 14,
-                            backgroundColor: verdict.scoreColor,
+                            backgroundColor: scoreColor,
                         }} />
                         <Text style={{
                             fontSize: 10,
                             fontWeight: "600",
-                            color: verdict.scoreColor
+                            color: scoreColor
                         }}>
                             {(() => {
                                 const s = t(verdict.score);
@@ -69,15 +81,11 @@ export function ColorEvaluator({ currentHex, verdict }) {
                         <WcagBadge level={verdict.wcagLevel} />
                     </View>
                 </View>
-            </View>
-
-            {/* Barra de contraste */}
-            <View style={{
-                padding: 12,
-                borderBottomWidth: 1,
-                borderBottomColor: c.border.primary
-            }}>
-                <ContrastBar ratio={verdict.contrastRatio} />
+                
+                {/* Barra de contraste al lado derecho */}
+                <View style={{ flex: 1 }}>
+                    <ContrastBar ratio={verdict.contrastRatio} />
+                </View>
             </View>
 
             {/* Filas de análisis */}

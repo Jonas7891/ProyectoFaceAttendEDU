@@ -1,23 +1,44 @@
-import { useState, useMemo } from "react";
+// ============================================================
+//  FaceAttend EDU — Reports ViewModel
+// ============================================================
+//  RESPONSABILIDAD: Lógica de negocio para reportes ("qué hacer")
+//
+//  Este ViewModel:
+//  ✓ Gestiona estado de filtros y período
+//  ✓ Procesa y calcula datos de reportes
+//  ✓ Orquesta exportaciones (delega a servicio)
+//  ✓ Optimiza renders con useMemo y useCallback
+//
+//  NO debe:
+//  ✗ Renderizar UI (responsabilidad de la View)
+//  ✗ Formatear datos para exportación (responsabilidad de servicio)
+//
+//  Patrón MVVM: ViewModel = lógica + estado
+// ============================================================
+
+import { useState, useMemo, useCallback } from "react";
 import { useTheme } from "../view/components/hooks/useTheme";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../context/AppDataContext";
 import { mockAttendanceByDay, mockAttendanceByWeek } from "../models/data/mockData";
 import { exportToExcel, exportToPDF, buildReportHTML, buildHTMLTable, formatPercentageWithColor, formatStatusBadge } from "../core/utils/exportHelpers";
 
-// ── xlsx (solo se importa en runtime para evitar problemas SSR) ──
-// Se usa dynamic require para mantener compatibilidad con Expo web.
+// ══════════════════════════════════════════════════════════
+// CONSTANTES Y TIPOS PÚBLICOS
+// ══════════════════════════════════════════════════════════
 
-// ── Tipos públicos ────────────────────────────────────────────
-
+/**
+ * Opciones de período disponibles para reportes
+ */
 export const PERIOD_OPTIONS = [
     { value: "week", label: "Esta semana" },
     { value: "month", label: "Este mes" },
     { value: "semester", label: "Semestre" },
 ];
 
-// ── Filtros ───────────────────────────────────────────────────
-
+/**
+ * Filtros por defecto para reportes
+ */
 export const DEFAULT_FILTERS = {
     courseCode: "",
     attendanceMin: 0,
@@ -26,67 +47,183 @@ export const DEFAULT_FILTERS = {
     showAtRiskOnly: false,
 };
 
-// ── Helpers de label ─────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+// HELPERS INTERNOS
+// ══════════════════════════════════════════════════════════
 
-function periodLabel(p) {
-    if (p === "week") return "Esta semana";
-    if (p === "month") return "Este mes";
-    return "Semestre 2024-2";
+/**
+ * Genera label amigable del período actual
+ * @private
+ */
+function periodLabel(p, t) {
+    if (p === "week") return t("Esta semana");
+    if (p === "month") return t("Este mes");
+    return t("Semestre 2024-2");
 }
 
-// ── Generación de datos por período ──────────────────────────
-
+/**
+ * Filtra datos semanales según período seleccionado
+ * @private
+ */
 function weekDataForPeriod(period) {
     if (period === "week") return mockAttendanceByWeek.slice(0, 1);
     if (period === "month") return mockAttendanceByWeek.slice(0, 4);
     return mockAttendanceByWeek;
 }
 
+/**
+ * Obtiene datos diarios según período
+ * @private
+ */
 function dailyDataForPeriod(_period) {
     return mockAttendanceByDay;
 }
 
-// ── Export helpers ────────────────────────────────────────────
-
-function buildExcelRows(students, period, _filters) {
-    return students.map((s) => ({
-        Código: s.code,
-        Nombre: s.name,
-        Programa: s.course,
-        "Ficha/Semestre": s.grade,
-        "Asistencia (%)": s.attendance,
-        Estado: s.status === "active" ? "Activo" : "Inactivo",
-        "Facial reg.": s.registered ? "Sí" : "No",
-        Período: periodLabel(period),
-    }));
+/**
+ * Construye filas para exportación a Excel
+ * @private
+ */
+function buildExcelRows(students, period, _filters, t) {
+    return students.map((s) => {
+        // Calcular estado biométrico basado en facial y huella
+        const hasFacial = s.hasFacial || false;
+        const hasFingerprint = s.hasFingerprint || false;
+        
+        let biometricStatus = "pending";
+        let biometricText = t("Pendiente");
+        
+        if (hasFacial && hasFingerprint) {
+            biometricStatus = "registered";
+            biometricText = t("Registrado");
+        } else if (hasFacial && !hasFingerprint) {
+            biometricStatus = "partial";
+            biometricText = t("Parcial") + " - " + t("Falta huella");
+        } else if (!hasFacial && hasFingerprint) {
+            biometricStatus = "partial";
+            biometricText = t("Parcial") + " - " + t("Falta facial");
+        }
+        
+        return {
+            [t("Código")]: s.code,
+            [t("Nombre")]: s.name,
+            [t("Programa")]: s.courseName || s.course,
+            [t("Ficha/Semestre")]: s.grade,
+            [t("Asistencia (%)")]: s.attendance,
+            [t("Estado")]: s.status === "active" ? t("Activo") : t("Inactivo"),
+            [t("Biometría")]: biometricText,
+            [t("Período")]: periodLabel(period, t),
+        };
+    });
 }
 
-// ── ViewModel ────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+// VIEWMODEL PRINCIPAL
+// ══════════════════════════════════════════════════════════
 
-export function useReportsViewModel() {
+/**
+ * Hook principal del ViewModel de Reportes
+ * 
+ * Gestiona la lógica de reportes y sanciones, incluyendo filtrado
+ * por tipo, ficha, usuario y umbral de asistencia.
+ * 
+ * @param {string} filterType - Tipo de filtro ("at-risk" | "ficha" | "user" | null)
+ * @param {string} fichaId - ID de ficha específica
+ * @param {string} userId - ID de usuario específico
+ * @param {number} attendanceThreshold - Umbral de asistencia (default: 75)
+ * @returns {object} Estado y métodos del ViewModel
+ * 
+ * @example
+ * // Uso básico - todos los estudiantes
+ * const vm = useReportsViewModel();
+ * 
+ * @example
+ * // Filtrar estudiantes en riesgo
+ * const vm = useReportsViewModel("at-risk", null, null, 75);
+ * 
+ * @example
+ * // Estudiantes de una ficha específica
+ * const vm = useReportsViewModel("ficha", "2640001", null, 75);
+ */
+export function useReportsViewModel(
+    filterType = null,
+    fichaId = null,
+    userId = null,
+    attendanceThreshold = 75
+) {
+    // ── Estado local ──────────────────────────────────────────
     const [period, setPeriod] = useState("semester");
     const [filters, setFilters] = useState(DEFAULT_FILTERS);
     const [showFilters, setShowFilters] = useState(false);
+    const [search, setSearch] = useState("");
+    const [fichaFilter, setFichaFilter] = useState(fichaId || "");
+    const [statusFilter, setStatusFilter] = useState("active");
 
+    // ── Hooks de contexto ─────────────────────────────────────
     const { theme } = useTheme();
     const { t } = useTranslation();
     const appData = useAppData();
     const c = theme.colors;
 
-    // Datos vienen del contexto global — sin carga local
+    // ── Datos del contexto global ─────────────────────────────
     const students = appData.students;
+    const courses = appData.courses;
     const isLoading = appData.isLoading;
 
-    // ── Programas disponibles (dinámico desde contexto) ──────
-    const availableCourses = useMemo(() => appData.programs.map((p) => p.name), [appData.programs]);
+    /**
+     * Helper: obtener nombre completo del curso desde su código o nombre
+     */
+    const getCourseName = useCallback((courseCodeOrName) => {
+        if (!courseCodeOrName) return '—';
+        const course = courses.find(c => c.code === courseCodeOrName || c.name === courseCodeOrName);
+        return course ? course.name : courseCodeOrName;
+    }, [courses]);
 
-    // ── Datos derivados del período ──────────────────────────
+    // ══════════════════════════════════════════════════════════
+    // DATOS DERIVADOS MEMOIZADOS
+    // ══════════════════════════════════════════════════════════
 
-    const attendanceByWeek = useMemo(() => weekDataForPeriod(period), [period]);
-    const attendanceByDay = useMemo(() => dailyDataForPeriod(period), [period]);
+    /**
+     * Fichas/programas disponibles para filtrado
+     */
+    const availableFichas = useMemo(
+        () => [
+            { value: "", label: t("Todas las fichas") },
+            ...appData.programs.map((p) => ({
+                value: p.code || p.name,
+                label: `${p.code || ""} - ${p.name}`,
+            })),
+        ],
+        [appData.programs, t]
+    );
 
-    // ── Filtros activos ──────────────────────────────────────
+    /**
+     * Nombre de la ficha actual (para subtítulo)
+     */
+    const fichaName = useMemo(() => {
+        if (!fichaFilter) return null;
+        const ficha = appData.programs.find(p => p.code === fichaFilter || p.name === fichaFilter);
+        return ficha ? ficha.name : fichaFilter;
+    }, [fichaFilter, appData.programs]);
 
+    /**
+     * Datos de asistencia semanal según período
+     */
+    const attendanceByWeek = useMemo(
+        () => weekDataForPeriod(period),
+        [period]
+    );
+
+    /**
+     * Datos de asistencia diaria
+     */
+    const attendanceByDay = useMemo(
+        () => dailyDataForPeriod(period),
+        [period]
+    );
+
+    /**
+     * Verifica si hay filtros activos
+     */
     const filtersActive = useMemo(
         () =>
             filters.courseCode !== DEFAULT_FILTERS.courseCode ||
@@ -97,25 +234,71 @@ export function useReportsViewModel() {
         [filters]
     );
 
-    const resetFilters = () => setFilters({ ...DEFAULT_FILTERS });
-
-    // ── Estudiantes filtrados (sobre datos reales) ────────────
-
+    /**
+     * Estudiantes filtrados según todos los criterios
+     * - filterType (at-risk, ficha, user)
+     * - fichaId
+     * - userId
+     * - attendanceThreshold
+     * - search
+     * - statusFilter
+     * 
+     * Enriquecidos con:
+     * - courseName: nombre completo del curso
+     */
     const filteredStudents = useMemo(() => {
-        return students.filter((s) => {
-            if (filters.courseCode && s.course !== filters.courseCode) return false;
-            if (s.attendance < filters.attendanceMin) return false;
-            if (s.attendance > filters.attendanceMax) return false;
-            if (filters.statusFilter !== "all" && s.status !== filters.statusFilter) return false;
-            if (filters.showAtRiskOnly && s.attendance >= 75) return false;
-            return true;
-        });
-    }, [students, filters]);
+        let result = students;
 
-    const atRiskStudents = useMemo(() => filteredStudents.filter((s) => s.attendance < 75), [filteredStudents]);
+        // Filtro por tipo
+        if (filterType === "at-risk") {
+            result = result.filter(s => s.attendance < attendanceThreshold);
+        }
 
-    // ── Stats calculadas sobre datos reales ──────────────────
+        // Filtro por ficha
+        if (fichaId || fichaFilter) {
+            const targetFicha = fichaId || fichaFilter;
+            result = result.filter(s => s.course === targetFicha || s.grade === targetFicha);
+        }
 
+        // Filtro por usuario específico
+        if (userId) {
+            result = result.filter(s => s.id === userId);
+        }
+
+        // Filtro por búsqueda
+        if (search) {
+            const searchLower = search.toLowerCase();
+            result = result.filter(s =>
+                s.name.toLowerCase().includes(searchLower) ||
+                s.code?.toLowerCase().includes(searchLower) ||
+                s.document?.toLowerCase().includes(searchLower)
+            );
+        }
+
+        // Filtro por estado
+        if (statusFilter !== "all") {
+            result = result.filter(s => s.status === statusFilter);
+        }
+
+        // Enriquecer con nombre completo del curso
+        return result.map(student => ({
+            ...student,
+            courseName: getCourseName(student.course),
+        }));
+    }, [students, filterType, fichaId, fichaFilter, userId, attendanceThreshold, search, statusFilter, getCourseName]);
+
+    /**
+     * Estudiantes en riesgo (asistencia < 75%)
+     */
+    const atRiskStudents = useMemo(
+        () => filteredStudents.filter((s) => s.attendance < 75),
+        [filteredStudents]
+    );
+
+    /**
+     * Estadísticas principales del dashboard
+     * Calcula métricas globales con factor de período
+     */
     const stats = useMemo(() => {
         if (students.length === 0) {
             return [
@@ -128,10 +311,11 @@ export function useReportsViewModel() {
 
         const activeStudents = students.filter((s) => s.status === "active");
         const avgAttendance = Math.round(
-            activeStudents.reduce((sum, s) => sum + s.attendance, 0) / (activeStudents.length || 1)
+            activeStudents.reduce((sum, s) => sum + s.attendance, 0) /
+                (activeStudents.length || 1)
         );
         const atRiskCount = students.filter((s) => s.attendance < 75).length;
-        const programCount = availableCourses.length;
+        const programCount = appData.programs.length;
 
         // Factor de escala según período para simular variación
         const factor = period === "week" ? 1.03 : period === "month" ? 1.01 : 1;
@@ -168,8 +352,11 @@ export function useReportsViewModel() {
                 icon: "book-open",
             },
         ];
-    }, [c, t, period, students, availableCourses]);
+    }, [c, t, period, students, appData.programs]);
 
+    /**
+     * Distribución de asistencia por categorías
+     */
     const distribution = useMemo(() => {
         if (students.length === 0)
             return [
@@ -190,8 +377,10 @@ export function useReportsViewModel() {
         ];
     }, [c, t, students]);
 
-    // ── Ranking por programa (derivado de estudiantes reales) ─
-
+    /**
+     * Ranking de programas por asistencia promedio
+     * Agrupa estudiantes y calcula promedios
+     */
     const courseRanking = useMemo(() => {
         if (students.length === 0) return [];
 
@@ -217,28 +406,81 @@ export function useReportsViewModel() {
             }));
     }, [c, students]);
 
-    // ── Exportar Excel ───────────────────────────────────────
+    // ══════════════════════════════════════════════════════════
+    // HANDLERS MEMOIZADOS (OPTIMIZACIÓN DE PERFORMANCE)
+    // ══════════════════════════════════════════════════════════
 
-    const exportExcel = () => {
-        const rows = buildExcelRows(filteredStudents, period, filters);
+    /**
+     * Resetea filtros a valores por defecto
+     * useCallback evita recreación en cada render
+     */
+    const resetFilters = useCallback(() => {
+        setFilters({ ...DEFAULT_FILTERS });
+    }, []);
+
+    /**
+     * Toggle filtros de búsqueda
+     */
+    const toggleFilters = useCallback(() => {
+        setShowFilters(prev => !prev);
+    }, []);
+
+    /**
+     * Notificar a un estudiante individual
+     */
+    const notifyStudent = useCallback((studentId) => {
+        console.log("Notificar estudiante:", studentId);
+        // TODO: Implementar lógica de notificación
+    }, []);
+
+    /**
+     * Notificar a todos los estudiantes filtrados
+     */
+    const notifyAll = useCallback(() => {
+        console.log("Notificar a todos:", filteredStudents.length, "estudiantes");
+        // TODO: Implementar lógica de notificación masiva
+    }, [filteredStudents]);
+
+    /**
+     * Ver detalles de un estudiante
+     */
+    const viewStudentDetails = useCallback((studentId) => {
+        console.log("Ver detalles de estudiante:", studentId);
+        // TODO: Navegar a detalle de estudiante
+    }, []);
+
+    /**
+     * Ver historial completo
+     */
+    const viewFullHistory = useCallback(() => {
+        console.log("Ver historial completo");
+        // TODO: Navegar a vista de historial
+    }, []);
+
+    /**
+     * Exporta datos a Excel
+     * Orquesta la exportación delegando formato a servicio
+     */
+    const exportExcel = useCallback(() => {
+        const rows = buildExcelRows(filteredStudents, period, filters, t);
 
         // Hoja 2: evolución semanal
         const weeklyRows = attendanceByWeek.map((w) => ({
-            Semana: w.week,
-            "Tasa de Asistencia (%)": w.rate,
+            [t("Semana")]: w.week,
+            [t("Tasa de Asistencia (%)")]: w.rate,
         }));
 
         // Hoja 3: ranking por programa
         const rankRows = courseRanking.map((r) => ({
-            Posición: r.rank,
-            Programa: r.courseName,
-            "Promedio (%)": r.rate,
+            [t("Posición")]: r.rank,
+            [t("Programa")]: r.courseName,
+            [t("Promedio (%)")]: r.rate,
         }));
 
         // Configurar hojas con anchos de columna
         const sheets = [
             {
-                name: "Aprendices",
+                name: t("Aprendices"),
                 data: rows,
                 columns: [
                     { wch: 12 }, // Código
@@ -247,79 +489,80 @@ export function useReportsViewModel() {
                     { wch: 18 }, // Ficha/Semestre
                     { wch: 16 }, // Asistencia (%)
                     { wch: 12 }, // Estado
-                    { wch: 12 }, // Facial reg.
+                    { wch: 14 }, // Biometría
                     { wch: 20 }, // Período
                 ],
             },
             {
-                name: "Evolución Semanal",
+                name: t("Evolución Semanal"),
                 data: weeklyRows,
             },
             {
-                name: "Ranking Programas",
+                name: t("Ranking Programas"),
                 data: rankRows,
             },
         ];
 
-        const filename = `Reporte_Asistencia_${periodLabel(period).replace(/ /g, "_")}.xlsx`;
+        const filename = `Reporte_Asistencia_${periodLabel(period, t).replace(/ /g, "_")}.xlsx`;
         const result = exportToExcel(sheets, filename);
-        
+
         if (!result.success) {
             console.error("Error al exportar Excel:", result.error);
         }
-    };
+    }, [filteredStudents, period, filters, attendanceByWeek, courseRanking, t]);
 
-    // ── Exportar PDF ─────────────────────────────────────────
+    /**
+     * Exporta datos a PDF
+     * Construye HTML y delega exportación a servicio
+     */
+    const exportPDF = useCallback(() => {
+        const periodText = periodLabel(period, t);
 
-    const exportPDF = () => {
-        const periodText = periodLabel(period);
-        
         // Construir notas de filtros
         const filterNotes = [];
-        if (filters.courseCode) filterNotes.push(`Programa: ${filters.courseCode}`);
-        if (filters.showAtRiskOnly) filterNotes.push("Solo en riesgo");
-        if (filters.statusFilter !== "all") filterNotes.push(`Estado: ${filters.statusFilter}`);
+        if (filters.courseCode) filterNotes.push(`${t("Programa")}: ${filters.courseCode}`);
+        if (filters.showAtRiskOnly) filterNotes.push(t("Solo en riesgo"));
+        if (filters.statusFilter !== "all")
+            filterNotes.push(`${t("Estado")}: ${filters.statusFilter}`);
         if (filters.attendanceMin > 0 || filters.attendanceMax < 100)
-            filterNotes.push(`Asistencia: ${filters.attendanceMin}%–${filters.attendanceMax}%`);
+            filterNotes.push(
+                `${t("Asistencia")}: ${filters.attendanceMin}%–${filters.attendanceMax}%`
+            );
 
         // Construir tabla de estudiantes
-        const studentsTable = buildHTMLTable(
-            filteredStudents,
-            [
-                { key: "code", label: "Código" },
-                { key: "name", label: "Nombre" },
-                { key: "course", label: "Programa" },
-                { key: "grade", label: "Ficha/Semestre" },
-                { 
-                    key: "attendance", 
-                    label: "Asistencia", 
-                    align: "center",
-                    render: (value) => formatPercentageWithColor(value, 75, 60)
+        const studentsTable = buildHTMLTable(filteredStudents, [
+            { key: "code", label: t("Código") },
+            { key: "name", label: t("Nombre") },
+            { key: "courseName", label: t("Programa"), render: (value, row) => value || row.course },
+            { key: "grade", label: t("Ficha/Semestre") },
+            {
+                key: "attendance",
+                label: t("Asistencia"),
+                align: "center",
+                render: (value) => formatPercentageWithColor(value, 75, 60),
+            },
+            {
+                key: "status",
+                label: t("Estado"),
+                render: (value) => {
+                    return formatStatusBadge(value, {
+                        active: { text: t("Activo"), color: c.status.success },
+                        inactive: { text: t("Inactivo"), color: c.text.disabled },
+                    });
                 },
-                { 
-                    key: "status", 
-                    label: "Estado",
-                    render: (value) => formatStatusBadge(value, {
-                        active: { text: "Activo", color: "#10B981" },
-                        inactive: { text: "Inactivo", color: "#6B7280" }
-                    })
-                },
-            ]
-        );
+            },
+        ]);
 
         // Construir tabla de evolución semanal
-        const weeklyTable = buildHTMLTable(
-            attendanceByWeek,
-            [
-                { key: "week", label: "Semana" },
-                { 
-                    key: "rate", 
-                    label: "Tasa", 
-                    align: "center",
-                    render: (value) => `${value}%`
-                },
-            ]
-        );
+        const weeklyTable = buildHTMLTable(attendanceByWeek, [
+            { key: "week", label: t("Semana") },
+            {
+                key: "rate",
+                label: t("Tasa"),
+                align: "center",
+                render: (value) => `${value}%`,
+            },
+        ]);
 
         // Construir HTML completo del reporte
         const html = buildReportHTML({
@@ -340,22 +583,51 @@ export function useReportsViewModel() {
         });
 
         const result = exportToPDF(html, `Reporte_${periodText}`);
-        
+
         if (!result.success) {
             console.warn("Error al exportar PDF:", result.error);
         }
-    };
+    }, [filteredStudents, period, filters, attendanceByWeek, c, t]);
+
+    /**
+     * Exportar selección actual
+     */
+    const exportSelection = useCallback(() => {
+        exportExcel();
+    }, [exportExcel]);
+
+    // ══════════════════════════════════════════════════════════
+    // RETORNO DEL VIEWMODEL
+    // ══════════════════════════════════════════════════════════
 
     return {
+        // Estado básico
         period,
         setPeriod,
         filters,
         setFilters,
         filtersActive,
-        resetFilters,
         showFilters,
-        openFilters: () => setShowFilters(true),
-        closeFilters: () => setShowFilters(false),
+        search,
+        setSearch,
+        fichaFilter,
+        setFichaFilter,
+        statusFilter,
+        setStatusFilter,
+        fichaName,
+
+        // Acciones memoizadas
+        resetFilters,
+        toggleFilters,
+        exportExcel,
+        exportPDF,
+        notifyStudent,
+        notifyAll,
+        viewStudentDetails,
+        exportSelection,
+        viewFullHistory,
+
+        // Datos derivados memoizados
         stats: stats || [],
         distribution: distribution || [],
         attendanceByDay: attendanceByDay || [],
@@ -363,9 +635,9 @@ export function useReportsViewModel() {
         courseRanking: courseRanking || [],
         atRiskStudents: atRiskStudents || [],
         filteredStudents: filteredStudents || [],
-        availableCourses: availableCourses || [],
+        availableFichas: availableFichas || [],
+
+        // Estado de carga
         isLoading,
-        exportExcel,
-        exportPDF,
     };
 }

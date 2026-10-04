@@ -132,10 +132,10 @@ export function PeriodConfig({
                     style={{ marginTop: 1 }}
                 />
                 <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 11, fontWeight: "600", color: isAutomaticPeriod ? "#065F46" : "#92400E", marginBottom: 4 }}>
+                    <Text style={{ fontSize: 11, fontWeight: "600", color: isAutomaticPeriod ? c.status.successDark : c.status.warningDark, marginBottom: 4 }}>
                         {isAutomaticPeriod ? t("Modo Automático Activado") : t("Modo Manual Activado")}
                     </Text>
-                    <Text style={{ fontSize: 11, color: isAutomaticPeriod ? "#065F46" : "#92400E", lineHeight: 18 }}>
+                    <Text style={{ fontSize: 11, color: isAutomaticPeriod ? c.status.successDark : c.status.warningDark, lineHeight: 18 }}>
                         {isAutomaticPeriod
                             ? t("Al finalizar el período actual, el sistema calculará automáticamente las fechas del próximo período basándose en la duración del actual y actualizará la configuración.")
                             : t("Al finalizar el período actual, recibirás una alerta para que configures manualmente las fechas del nuevo período. El sistema NO actualizará las fechas automáticamente.")}

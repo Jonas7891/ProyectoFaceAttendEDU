@@ -38,7 +38,7 @@ export function TwoFactorRow({ value, onToggle, description, warningText }) {
                     gap: 8,
                 }}>
                     <Feather name="shield" size={13} color={c.status.warning} style={{ marginTop: 1 }} />
-                    <Text style={{ fontSize: 11, color: "#92400E", flex: 1, lineHeight: 18 }}>
+                    <Text style={{ fontSize: 11, color: c.status.warningDark, flex: 1, lineHeight: 18 }}>
                         {warningText}
                     </Text>
                 </View>

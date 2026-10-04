@@ -16,8 +16,10 @@
 // ============================================================
 
 import React from "react";
+import { useNavigation } from "@react-navigation/native";
 import DashboardView from "../DashboardView";
 
 export default function DashboardScreen() {
-    return <DashboardView />;
+    const navigation = useNavigation();
+    return <DashboardView navigation={navigation} />;
 }

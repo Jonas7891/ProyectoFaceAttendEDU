@@ -8,14 +8,15 @@
 // ============================================================
 
 import { getInstitutionConfig, DEFAULT_ACADEMIC_PERIOD } from "../config/institutionConfig";
+import { formatDate } from "./dateFormats";
 
 /**
  * Tipos de períodos académicos soportados
  */
 export const ACADEMIC_PERIOD_TYPES = {
-    ANNUAL: 'annual',           // Anual
+    ANNUAL: 'anual',           // Anual
     SEMESTRAL: 'semestral',     // Semestral
-    QUARTERLY: 'quarterly',      // Cuatrimestral
+    QUARTERLY: 'cuatrimestral',      // Cuatrimestral
     TRIMESTRAL: 'trimestral',   // Trimestral
 };
 
@@ -406,9 +407,12 @@ export function formatPeriodDateRange(period, locale = 'es-ES') {
         return '';
     }
     
-    const formatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
-    const startStr = period.startDate.toLocaleDateString(locale, formatOptions);
-    const endStr = period.endDate.toLocaleDateString(locale, formatOptions);
+    // Usar el formato de fecha configurado
+    const config = getInstitutionConfig();
+    const dateFormat = config.dateFormat || "DD/MM/YYYY";
+    
+    const startStr = formatDate(period.startDate, dateFormat);
+    const endStr = formatDate(period.endDate, dateFormat);
     
     return `${startStr} - ${endStr}`;
 }

@@ -17,6 +17,7 @@ import { View, Text, TextInput } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
+import { useDateFormat } from "../../../../core/utils/hooks/useDateFormat";
 import { ACADEMIC_PERIOD_TYPES } from "../../../../core/constants/academicPeriods";
 
 /**
@@ -40,11 +41,26 @@ export function DateRangePicker({
 }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
+    const { dateFormat } = useDateFormat();
     const c = theme.colors;
 
     // Estados para validación en tiempo real
     const [startDateError, setStartDateError] = useState("");
     const [endDateError, setEndDateError] = useState("");
+
+    // Calcular placeholders dinámicos según el formato seleccionado
+    const placeholderFormat = useMemo(() => {
+        switch (dateFormat) {
+            case "DD/MM/YYYY":
+                return "DD-MM-AAAA";
+            case "MM/DD/YYYY":
+                return "MM-DD-AAAA";
+            case "YYYY-MM-DD":
+                return "AAAA-MM-DD";
+            default:
+                return "AAAA-MM-DD";
+        }
+    }, [dateFormat]);
 
     // Configuración de duración máxima según tipo de período
     const maxDurationMonths = useMemo(() => {
@@ -182,7 +198,7 @@ export function DateRangePicker({
     const handleStartDateChange = (text) => {
         onStartDateChange(text);
         if (text && !isValidDateFormat(text)) {
-            setStartDateError(t("Formato inválido (AAAA-MM-DD)"));
+            setStartDateError(t("Formato inválido") + " (" + placeholderFormat + ")");
         } else {
             setStartDateError("");
         }
@@ -191,7 +207,7 @@ export function DateRangePicker({
     const handleEndDateChange = (text) => {
         onEndDateChange(text);
         if (text && !isValidDateFormat(text)) {
-            setEndDateError(t("Formato inválido (AAAA-MM-DD)"));
+            setEndDateError(t("Formato inválido") + " (" + placeholderFormat + ")");
         } else {
             setEndDateError("");
         }
@@ -262,7 +278,7 @@ export function DateRangePicker({
                                     ? successInputStyle
                                     : inputStyle
                             }
-                            placeholder="AAAA-MM-DD"
+                            placeholder={placeholderFormat}
                             placeholderTextColor={c.text.disabled}
                         />
                         {validation.isValid && (
@@ -296,7 +312,7 @@ export function DateRangePicker({
                                     ? successInputStyle
                                     : inputStyle
                             }
-                            placeholder="AAAA-MM-DD"
+                            placeholder={placeholderFormat}
                             placeholderTextColor={c.text.disabled}
                         />
                         {validation.isValid && (
@@ -360,24 +376,24 @@ export function DateRangePicker({
                                     fontWeight: "600",
                                     color:
                                         validation.type === "success"
-                                            ? "#065F46"
+                                            ? c.status.successDark
                                             : validation.type === "error"
-                                            ? "#991B1B"
-                                            : "#1E3A8A",
+                                            ? c.status.dangerDark
+                                            : c.status.infoDark,
                                 }}
                             >
                                 {validation.isValid ? (
                                     <>
                                         <Text>✓ </Text>
-                                        <Text style={{ fontSize: 11, color: "#065F46" }}>
+                                        <Text style={{ fontSize: 11, color: c.status.successDark }}>
                                             📅 {validation.days} {t("días")}
                                         </Text>
                                         <Text> · </Text>
-                                        <Text style={{ fontSize: 11, color: "#065F46" }}>
+                                        <Text style={{ fontSize: 11, color: c.status.successDark }}>
                                             📊 {validation.weeks} {t("semanas")}
                                         </Text>
                                         <Text> · </Text>
-                                        <Text style={{ fontSize: 11, color: "#065F46" }}>
+                                        <Text style={{ fontSize: 11, color: c.status.successDark }}>
                                             📆 ~{validation.months} {t("meses")}
                                         </Text>
                                     </>

@@ -3,11 +3,23 @@
 // ============================================================
 
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Card } from "../common";
 import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
+import { formatTime } from "../../../core/constants/dateFormats";
+
+/**
+ * Convierte un string de tiempo (HH:MM) a un objeto Date
+ */
+function parseTimeToDate(timeStr) {
+    if (!timeStr) return new Date();
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours || 0, minutes || 0, 0, 0);
+    return date;
+}
 
 /**
  * Card de ambiente con preview de horarios
@@ -47,8 +59,14 @@ export function EnvironmentCard({ environment, onPress }) {
                                 fontSize: 13,
                                 color: c.text.secondary,
                                 lineHeight: 18,
+                                fontStyle: environment.description === "Sin descripción" ? "italic" : "normal",
                             }} numberOfLines={2}>
-                                {environment.description}
+                                {environment.description === "Sin descripción" ? (
+                                    <>
+                                        <Text style={{ color: c.status.warning }}>*</Text>
+                                        Sin descripción
+                                    </>
+                                ) : environment.description}
                             </Text>
                         </View>
                         
@@ -82,7 +100,7 @@ export function EnvironmentCard({ environment, onPress }) {
                         marginVertical: 14,
                     }} />
 
-                    {/* Schedules section */}
+                    {/* Schedules section - Título FIJO */}
                     <Text style={{
                         fontSize: 11,
                         fontWeight: "600",
@@ -94,6 +112,7 @@ export function EnvironmentCard({ environment, onPress }) {
                         {t("Horarios asignados")} ({environment.schedules.length})
                     </Text>
 
+                    {/* Lista de horarios - SCROLLEABLE */}
                     {environment.schedules.length === 0 ? (
                         <Text style={{
                             fontSize: 13,
@@ -103,8 +122,12 @@ export function EnvironmentCard({ environment, onPress }) {
                             {t("Sin horarios asignados")}
                         </Text>
                     ) : (
-                        <>
-                            {environment.schedules.slice(0, 3).map(schedule => (
+                        <ScrollView 
+                            style={{ flex: 1, maxHeight: 105 }}
+                            showsVerticalScrollIndicator={false}
+                            nestedScrollEnabled={true}
+                        >
+                            {environment.schedules.map(schedule => (
                                 <View key={schedule.id} style={{
                                     flexDirection: "row",
                                     alignItems: "flex-start",
@@ -132,23 +155,12 @@ export function EnvironmentCard({ environment, onPress }) {
                                             fontSize: 12,
                                             color: c.text.secondary,
                                         }} numberOfLines={1}>
-                                            {schedule.instructorName} • {schedule.startTime}–{schedule.endTime} • {schedule.days.map(d => t(d)).join(", ")}
+                                            {schedule.instructorName} • {formatTime(parseTimeToDate(schedule.startTime))}–{formatTime(parseTimeToDate(schedule.endTime))} • {schedule.days.map(d => t(d)).join(", ")}
                                         </Text>
                                     </View>
                                 </View>
                             ))}
-                            
-                            {environment.schedules.length > 3 && (
-                                <Text style={{
-                                    fontSize: 12,
-                                    fontWeight: "600",
-                                    color: c.brand.primary,
-                                    marginTop: 4,
-                                }}>
-                                    +{environment.schedules.length - 3} {t("más...")}
-                                </Text>
-                            )}
-                        </>
+                        </ScrollView>
                     )}
                 </View>
             </Card>

@@ -194,12 +194,12 @@ export function PasswordPolicyModal({ visible, onClose, onResetPassword }) {
                             }}
                             activeOpacity={0.8}
                         >
-                            <Feather name="refresh-cw" size={16} color="#FFFFFF" />
+                            <Feather name="refresh-cw" size={16} color={c.brand.textOnPrimary} />
                             <Text
                                 style={{
                                     fontSize: 14,
                                     fontWeight: "600",
-                                    color: "#FFFFFF",
+                                    color: c.brand.textOnPrimary,
                                 }}
                             >
                                 {t("Restablécela ahora")}

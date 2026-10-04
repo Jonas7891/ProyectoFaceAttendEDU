@@ -18,11 +18,13 @@ import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
  * @param {Array} students - Array de estudiantes destacados
  * @param {number} maxItems - Número máximo de items (default: 5)
  * @param {function} onStudentPress - Callback al presionar un estudiante
+ * @param {object} navigation - Objeto de navegación para redireccionar
  */
 export function PerfectAttendanceList({
     students = [],
     maxItems = 5,
     onStudentPress,
+    navigation,
 }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
@@ -187,12 +189,19 @@ export function PerfectAttendanceList({
             })}
 
             {students.length > maxItems && (
-                <View style={{
-                    padding: 12,
-                    alignItems: "center",
-                    borderTopWidth: 1,
-                    borderTopColor: c.border.primary,
-                }}>
+                <TouchableOpacity
+                    onPress={() => navigation?.navigate("Users", { 
+                        section: "students", 
+                        attendanceFilter: "gt" 
+                    })}
+                    style={{
+                        padding: 12,
+                        alignItems: "center",
+                        borderTopWidth: 1,
+                        borderTopColor: c.border.primary,
+                    }}
+                    activeOpacity={0.7}
+                >
                     <Text style={{
                         fontSize: 12,
                         color: c.brand.primary,
@@ -200,7 +209,7 @@ export function PerfectAttendanceList({
                     }}>
                         +{students.length - maxItems} {t("estudiantes destacados más")}
                     </Text>
-                </View>
+                </TouchableOpacity>
             )}
         </Card>
     );

@@ -28,6 +28,62 @@ class TranslationService {
     
     // Tracking automático de textos usados
     activeTexts = new Set();
+    
+    // Estado del servicio
+    serviceAvailable = null; // null = no verificado, true = disponible, false = caído
+    healthCheckInterval = null;
+    healthCheckIntervalMs = 10000; // 10 segundos
+    pendingTextsForRetry = null; // Textos que esperan reintento cuando el servicio vuelva
+
+    // ── Health Check Asíncrono ────────────────────────────────────────────
+
+    /**
+     * Inicia polling de health check
+     * Cuando el servicio vuelve a estar disponible, dispara callback
+     */
+    startHealthMonitoring(onServiceAvailable, textsToRetry = null) {
+        // Si ya está monitoreando, no iniciar otro
+        if (this.healthCheckInterval) return;
+
+        // Guardar textos pendientes para reintentar
+        if (textsToRetry) {
+            this.pendingTextsForRetry = textsToRetry;
+        }
+
+        console.log(`[TranslationService] Iniciando monitoreo de salud del microservicio (cada ${this.healthCheckIntervalMs}ms)`);
+
+        this.healthCheckInterval = setInterval(async () => {
+            try {
+                const health = await this.provider.checkHealth();
+                if (health.status === "ok" && this.serviceAvailable === false) {
+                    console.log(`[TranslationService] ✓ Microservicio recuperado`);
+                    this.serviceAvailable = true;
+                    this.stopHealthMonitoring();
+                    
+                    // Notificar que el servicio está disponible de nuevo
+                    if (onServiceAvailable) {
+                        onServiceAvailable(this.pendingTextsForRetry);
+                    }
+                    
+                    // Limpiar textos pendientes
+                    this.pendingTextsForRetry = null;
+                }
+            } catch (error) {
+                // Silencioso - seguir esperando
+            }
+        }, this.healthCheckIntervalMs);
+    }
+
+    /**
+     * Detiene polling de health check
+     */
+    stopHealthMonitoring() {
+        if (this.healthCheckInterval) {
+            clearInterval(this.healthCheckInterval);
+            this.healthCheckInterval = null;
+            console.log(`[TranslationService] Monitoreo de salud detenido`);
+        }
+    }
 
     // ── Consulta síncrona (para t()) ──────────────────────────────────────
 
@@ -57,7 +113,17 @@ class TranslationService {
      * Limpia el tracking de textos activos
      */
     clearTracking() {
+        console.log(`[TranslationService] Limpiando tracking: ${this.activeTexts.size} textos`);
         this.activeTexts.clear();
+    }
+
+    /**
+     * Resetea el tracking al montar una nueva View
+     * Permite que solo se rastreen textos de la View actual
+     */
+    resetTracking() {
+        console.log(`[TranslationService] ⚡ Reseteando tracking (nueva View montada)`);
+        this.clearTracking();
     }
 
     // ── Obtener textos activos ────────────────────────────────────────────
@@ -94,9 +160,10 @@ class TranslationService {
 
     /**
      * Prepara traducciones para todos los textos rastreados (View actual)
-     * y luego limpia el tracking para la próxima View
+     * 
+     * @param {boolean} forceCheck - Forzar verificación de health (reintento manual)
      */
-    async prepareCurrentTexts(language) {
+    async prepareCurrentTexts(language, forceCheck = true) {
         const texts = this.getActiveTexts();
         
         if (texts.length === 0) {
@@ -107,13 +174,9 @@ class TranslationService {
         console.log(`[TranslationService] Preparando textos de View actual: ${texts.length} textos`);
         
         // Preparar traducciones
-        await this.prepareTranslations(texts, language);
+        await this.prepareTranslations(texts, language, forceCheck);
         
-        // IMPORTANTE: Limpiar tracking después de preparar
-        // Así la próxima View solo acumula SUS textos
-        this.clearTracking();
-        
-        console.log(`[TranslationService] Tracking limpiado, listo para próxima View`);
+        console.log(`[TranslationService] ✓ Preparación completada`);
     }
 
     // ── Preparación para cambio de idioma ─────────────────────────────────
@@ -121,8 +184,11 @@ class TranslationService {
     /**
      * Prepara traducciones para un conjunto de textos
      * Espera a que TODAS estén listas antes de resolver
+     * Verifica el health del microservicio antes de proceder
+     * 
+     * @param {boolean} forceCheck - Forzar verificación de health (ej: reintento manual)
      */
-    async prepareTranslations(texts, language) {
+    async prepareTranslations(texts, language, forceCheck = false) {
         if (language === SOURCE_LANGUAGE) return;
         if (!texts || texts.length === 0) return;
 
@@ -142,9 +208,37 @@ class TranslationService {
             return;
         }
 
-        console.log(`[TranslationService] Faltan ${missing.length} traducciones, solicitando al microservicio...`);
+        // Si ya sabemos que el servicio no está disponible y NO es reintento manual, abortar
+        if (this.serviceAvailable === false && !forceCheck) {
+            console.log(`[TranslationService] Servicio no disponible, abortando (usar forceCheck para reintentar)`);
+            return;
+        }
 
-        // Procesar en batches
+        console.log(`[TranslationService] Faltan ${missing.length} traducciones, verificando microservicio...`);
+
+        // ✓ VERIFICAR HEALTH DEL MICROSERVICIO ANTES DE PROCEDER
+        try {
+            const health = await this.provider.checkHealth();
+            
+            if (health.status !== "ok") {
+                throw new Error(`Status no es "ok": ${health.status}`);
+            }
+            
+            console.log(`[TranslationService] Microservicio disponible: ${health.status}`);
+            this.serviceAvailable = true;
+            
+            // Si había monitoreo activo, detenerlo
+            this.stopHealthMonitoring();
+            
+        } catch (error) {
+            console.warn(`[TranslationService] Microservicio no disponible:`, error.message);
+            this.serviceAvailable = false;
+            return; // Abortar sin procesar
+        }
+
+        // Procesar en batches solo si el servicio está disponible
+        console.log(`[TranslationService] Procesando ${missing.length} traducciones...`);
+        
         for (let i = 0; i < missing.length; i += BATCH_SIZE) {
             const chunk = missing.slice(i, i + BATCH_SIZE);
             await Promise.all(chunk.map(text => this.fetchAndCache(text, language)));
@@ -193,6 +287,12 @@ class TranslationService {
         translationCache.clearAll();
         this.hydratedLanguages.clear();
         await TranslationStorage.clearAll();
+    }
+
+    // ── Cleanup ───────────────────────────────────────────────────────────
+
+    cleanup() {
+        this.stopHealthMonitoring();
     }
 }
 

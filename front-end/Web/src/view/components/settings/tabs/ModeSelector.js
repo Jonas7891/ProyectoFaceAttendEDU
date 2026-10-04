@@ -4,10 +4,25 @@ import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 
-export function ModeSelector() {
-    const { mode, setMode, theme } = useTheme();
+/**
+ * ModeSelector
+ * 
+ * Selector de modo claro/oscuro con preview visual.
+ * 
+ * Props:
+ * - mode: string - Modo actual ("light" | "dark")
+ * - onModeChange: (mode: string) => void - Callback cuando cambia el modo
+ * 
+ * Si no se pasan props, usa el ThemeContext directamente (comportamiento legacy)
+ */
+export function ModeSelector({ mode: modeProp, onModeChange: onModeChangeProp }) {
+    const { mode: contextMode, setMode: setContextMode, theme } = useTheme();
     const { t } = useTranslation();
     const c = theme.colors;
+
+    // Usar props si están disponibles, sino usar context (compatibilidad)
+    const mode = modeProp !== undefined ? modeProp : contextMode;
+    const handleModeChange = onModeChangeProp || setContextMode;
 
     const modes = [
         {
@@ -31,7 +46,7 @@ export function ModeSelector() {
                 return (
                     <TouchableOpacity
                         key={m.key}
-                        onPress={() => setMode(m.key)}
+                        onPress={() => handleModeChange(m.key)}
                         style={{
                             flex: 1,
                             borderRadius: 14,

@@ -36,6 +36,46 @@ export class RestTranslationProvider {
         this.apiKey = apiKey;
     }
 
+    /**
+     * Verifica el estado del microservicio
+     * @returns {Promise<{ status: string }>} - { status: "ok" } si está disponible
+     * @throws {Error} - Si el servicio no está disponible o responde con error
+     */
+    async checkHealth() {
+        try {
+            const response = await fetch(`${this.baseUrl}/health`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(
+                    `[RestTranslationProvider] Health check falló: HTTP ${response.status}`
+                );
+            }
+
+            const data = await response.json();
+            
+            if (data?.status !== "ok") {
+                throw new Error(
+                    `[RestTranslationProvider] Servicio no disponible: status=${data?.status || "unknown"}`
+                );
+            }
+
+            return data;
+        } catch (error) {
+            // Re-lanzar el error con contexto adicional
+            if (error instanceof TypeError && error.message.includes("fetch")) {
+                throw new Error(
+                    `[RestTranslationProvider] Microservicio no alcanzable en ${this.baseUrl}`
+                );
+            }
+            throw error;
+        }
+    }
+
     async translate(text, from, to) {
         if (!text.trim()) return { translatedText: text };
 

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { View, Text, TouchableOpacity, Animated } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
@@ -55,6 +55,18 @@ export default function SidebarItemCollapsible({
     const [isExpanded, setIsExpanded] = useState(defaultExpanded);
     const animatedHeight = useRef(new Animated.Value(defaultExpanded ? 1 : 0)).current;
     const rotateAnim = useRef(new Animated.Value(defaultExpanded ? 1 : 0)).current;
+    
+    // Animated value para el ancho del borde izquierdo
+    const borderLeftWidthAnim = useRef(new Animated.Value(
+        (active || defaultExpanded) ? 3 : 0
+    )).current;
+
+    // Determinar si algún hijo está activo (debe estar antes de los useEffect que lo usan)
+    // Recalcular en cada render para detectar cambios en children
+    const hasActiveChild = useMemo(() => 
+        children.some(child => child.active), 
+        [children]
+    );
 
     // Usar utility centralizada de colores
     const colors = getVariantColors({
@@ -64,8 +76,38 @@ export default function SidebarItemCollapsible({
         colors: c
     });
 
-    // Determinar si algún hijo está activo
-    const hasActiveChild = children.some(child => child.active);
+    // Sincronizar estado interno con prop defaultExpanded cuando cambie
+    useEffect(() => {
+        if (defaultExpanded !== isExpanded) {
+            setIsExpanded(defaultExpanded);
+            
+            // Animar a la nueva posición sin esperar interacción
+            Animated.parallel([
+                Animated.spring(animatedHeight, {
+                    toValue: defaultExpanded ? 1 : 0,
+                    useNativeDriver: false,
+                    tension: 100,
+                    friction: 10,
+                }),
+                Animated.spring(rotateAnim, {
+                    toValue: defaultExpanded ? 1 : 0,
+                    useNativeDriver: true,
+                    tension: 100,
+                    friction: 10,
+                }),
+            ]).start();
+        }
+    }, [defaultExpanded, isExpanded, animatedHeight, rotateAnim]);
+    
+    // Animar el borde izquierdo cuando cambie active, hasActiveChild o isExpanded
+    useEffect(() => {
+        Animated.spring(borderLeftWidthAnim, {
+            toValue: (active || hasActiveChild || isExpanded) ? 3 : 0,
+            useNativeDriver: false,
+            tension: 100,
+            friction: 10,
+        }).start();
+    }, [active, hasActiveChild, isExpanded, borderLeftWidthAnim]);
 
     // Toggle expansión
     const handleToggle = () => {
@@ -110,9 +152,20 @@ export default function SidebarItemCollapsible({
         if (onPress) {
             onPress();
         }
-        // Si hay hijos, hacer toggle
+        
+        // Lógica de colapso inteligente:
+        // - Si está expandido Y el item padre está activo: es un "segundo click" → colapsar
+        // - Si está expandido Y algún hijo está activo: navegando desde hijo a padre → NO colapsar
+        // - Si está colapsado: expandir
         if (children.length > 0) {
-            handleToggle();
+            if (isExpanded && active && !hasActiveChild) {
+                // Segundo click en el item padre cuando ya está activo → colapsar
+                handleToggle();
+            } else if (!isExpanded) {
+                // Está colapsado → expandir
+                handleToggle();
+            }
+            // Si está expandido y navegando desde hijo → no hacer nada (mantener expandido)
         }
     };
 
@@ -135,11 +188,21 @@ export default function SidebarItemCollapsible({
                     gap: 12,
                     padding: SIDEBAR_CONSTANTS.ITEM_PADDING,
                     backgroundColor: active || hasActiveChild || isExpanded ? colors.bg : "transparent",
-                    borderLeftWidth: active || hasActiveChild || isExpanded ? 3 : 0,
-                    borderLeftColor: colors.border,
                 }}
                 activeOpacity={0.7}
             >
+                {/* Borde izquierdo animado */}
+                <Animated.View
+                    style={{
+                        position: "absolute",
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        width: borderLeftWidthAnim,
+                        backgroundColor: colors.border,
+                    }}
+                />
+                
                 {/* Icono principal */}
                 {icon && (
                     <Feather 
@@ -276,7 +339,7 @@ export default function SidebarItemCollapsible({
                                         <Feather 
                                             name={child.icon} 
                                             size={16} 
-                                            color={child.active ? childColors.icon : c.text.tertiary} 
+                                            color={child.active ? childColors.icon : c.text.secondary} 
                                         />
                                     )}
 

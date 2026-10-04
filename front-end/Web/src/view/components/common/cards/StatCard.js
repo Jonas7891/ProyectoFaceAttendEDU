@@ -50,19 +50,18 @@ export function StatCard({
           <Text style={[styles.label, { color: theme.colors.text.secondary }]}>
             {label}
           </Text>
+          
+          {/* Trend/Badge al lado derecho del título */}
+          {trend && (
+            <Text style={[styles.trendText, { color: trendColors[trend], marginLeft: "auto" }]}>
+              {trendIcons[trend]} {trendValue}
+            </Text>
+          )}
         </View>
 
         <Text style={[styles.value, { color: theme.colors.text.primary }]}>
           {value}
         </Text>
-
-        {trend && (
-          <View style={styles.trend}>
-            <Text style={[styles.trendText, { color: trendColors[trend] }]}>
-              {trendIcons[trend]} {trendValue}
-            </Text>
-          </View>
-        )}
       </View>
     </Card>
   );
@@ -91,10 +90,6 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 28,
     fontWeight: "800",
-  },
-  trend: {
-    flexDirection: "row",
-    alignItems: "center",
   },
   trendText: {
     fontSize: 12,

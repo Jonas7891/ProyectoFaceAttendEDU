@@ -82,7 +82,7 @@ export function NotAuthorized({
             case AUTH_EXCEPTION_TYPES.NO_SESSION:
                 return {
                     icon: "lock",
-                    iconColor: "#F59E0B",
+                    iconColor: c.status.warning,
                     title: t("Sesión no iniciada"),
                     message: t("Debes iniciar sesión para acceder a esta función."),
                 };
@@ -90,7 +90,7 @@ export function NotAuthorized({
             case AUTH_EXCEPTION_TYPES.SESSION_EXPIRED:
                 return {
                     icon: "clock",
-                    iconColor: "#F59E0B",
+                    iconColor: c.status.warning,
                     title: t("Sesión caducada"),
                     message: t("Tu sesión ha expirado. Inicia sesión nuevamente."),
                 };
@@ -98,7 +98,7 @@ export function NotAuthorized({
             case AUTH_EXCEPTION_TYPES.NO_ROLE:
                 return {
                     icon: "alert-triangle",
-                    iconColor: "#EF4444",
+                    iconColor: c.status.error,
                     title: t("Rol no asignado"),
                     message: t("Tu cuenta no tiene un rol asignado. Contacta al administrador."),
                 };
@@ -106,7 +106,7 @@ export function NotAuthorized({
             case AUTH_EXCEPTION_TYPES.INVALID_TOKEN:
                 return {
                     icon: "shield-off",
-                    iconColor: "#EF4444",
+                    iconColor: c.status.error,
                     title: t("Token inválido"),
                     message: t("Tu sesión es inválida. Inicia sesión nuevamente."),
                 };
@@ -114,7 +114,7 @@ export function NotAuthorized({
             case AUTH_EXCEPTION_TYPES.INSUFFICIENT_PERMISSIONS:
                 return {
                     icon: "shield",
-                    iconColor: "#F59E0B",
+                    iconColor: c.status.warning,
                     title: t("Acceso denegado"),
                     message: t("No tienes los permisos necesarios para acceder aquí."),
                 };
@@ -122,7 +122,7 @@ export function NotAuthorized({
             default:
                 return {
                     icon: "alert-circle",
-                    iconColor: "#EF4444",
+                    iconColor: c.status.error,
                     title: t("Error de autenticación"),
                     message: t("Ocurrió un error con tu sesión. Inicia sesión nuevamente."),
                 };
@@ -199,8 +199,8 @@ export function NotAuthorized({
                                 onPress={handleAccept}
                                 activeOpacity={0.8}
                             >
-                                <Feather name="log-in" size={14} color="#fff" />
-                                <Text style={styles.buttonText}>
+                                <Feather name="log-in" size={14} color={c.brand.textOnPrimary} />
+                                <Text style={[styles.buttonText, { color: c.brand.textOnPrimary }]}>
                                     {t("Iniciar sesión")}
                                 </Text>
                             </TouchableOpacity>
@@ -290,7 +290,6 @@ const styles = StyleSheet.create({
         flexShrink: 0,
     },
     buttonText: {
-        color: '#fff',
         fontSize: 13,
         fontWeight: '600',
     },

@@ -45,7 +45,7 @@ export default function PasswordStrengthIndicator({ password, show = false }) {
         <View style={styles.container}>
             {/* Barra de fortaleza */}
             <View style={styles.strengthBar}>
-                <View style={styles.barBackground}>
+                <View style={[styles.barBackground, { backgroundColor: c.border.primary }]}>
                     <View 
                         style={[
                             styles.barFill, 
@@ -190,7 +190,6 @@ const styles = StyleSheet.create({
     barBackground: {
         flex: 1,
         height: 4,
-        backgroundColor: "#E2E8F0",
         borderRadius: 2,
         overflow: "hidden",
     },

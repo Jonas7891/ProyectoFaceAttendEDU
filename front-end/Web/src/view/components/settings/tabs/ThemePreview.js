@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text } from "react-native";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 
-export function ThemePreview({ previewTheme }) {
+export function ThemePreview({ previewTheme, hasChanges }) {
     const { t } = useTranslation();
     const c = previewTheme.colors;
 
@@ -13,6 +13,7 @@ export function ThemePreview({ previewTheme }) {
             borderRadius: 14,
             overflow: "hidden"
         }}>
+            {/* Header */}
             <View style={{
                 backgroundColor: c.background.surface,
                 padding: 12,
@@ -28,35 +29,39 @@ export function ThemePreview({ previewTheme }) {
                     borderRadius: 14,
                     backgroundColor: c.brand.primary
                 }} />
-                <Text style={{ fontSize: 11, color: c.text.secondary }}>
-                    {t("Vista previa en vivo")}
+                <Text style={{ fontSize: 12, color: c.font, fontWeight: 400 }}>
+                    {t("Asi lucira el aplicativo de forma general con base a los colores que eijas")}
                 </Text>
                 <View style={{
                     marginLeft: "auto",
-                    backgroundColor: c.brand.primaryLight,
+                    borderWidth: 2,
+                    borderColor: hasChanges ? c.status.warning : c.status.success,
                     borderRadius: 14,
-                    paddingHorizontal: 6,
+                    paddingHorizontal: 8,
                     paddingVertical: 2,
                 }}>
                     <Text style={{
                         fontSize: 11,
-                        color: c.brand.primary,
+                        color: hasChanges ? c.status.warning : c.status.success,
                         fontWeight: "700"
                     }}>
-                        {t("SIN GUARDAR")}
+                        {hasChanges ? t("SIN GUARDAR") : t("GUARDADO")}
                     </Text>
                 </View>
             </View>
+
+            {/* Content */}
             <View style={{
                 backgroundColor: c.background.app,
                 padding: 14,
-                gap: 8
+                gap: 12
             }}>
-                {/* Barra + badge */}
+                {/* Progress Bar + Badge */}
                 <View style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    gap: 10
+                    gap: 10,
+                    marginTop: -8,
                 }}>
                     <View style={{
                         flex: 1,
@@ -86,7 +91,8 @@ export function ThemePreview({ previewTheme }) {
                         </Text>
                     </View>
                 </View>
-                {/* Botones */}
+
+                {/* Botones Primarios */}
                 <View style={{ flexDirection: "row", gap: 6 }}>
                     <View style={{
                         flex: 1,
@@ -97,7 +103,7 @@ export function ThemePreview({ previewTheme }) {
                     }}>
                         <Text style={{
                             fontSize: 11,
-                            color: "#fff",
+                            color: c.brand.textOnPrimary,
                             fontWeight: "600"
                         }}>
                             {t("Primario")}
@@ -128,43 +134,133 @@ export function ThemePreview({ previewTheme }) {
                     }}>
                         <Text style={{
                             fontSize: 11,
-                            color: c.text.secondary,
+                            color: c.font,
                             fontWeight: "600"
                         }}>
                             {t("Ghost")}
                         </Text>
                     </View>
                 </View>
-                {/* Badges */}
+
+                {/* Textos sin fondo (solo color de fuente) + Badges con fondo */}
                 <View style={{
+                    backgroundColor: c.background.surface,
+                    borderRadius: 10,
+                    marginTop: -10,
+                    padding: 10,
                     flexDirection: "row",
-                    gap: 6,
-                    flexWrap: "wrap"
+                    justifyContent: "space-between",
+                    alignItems: "center"
                 }}>
-                    {[
-                        { labelKey: "Activo", bg: c.brand.primaryLight, color: c.brand.primary },
-                        { labelKey: "Éxito", bg: c.status.successLight, color: "#065F46" },
-                        { labelKey: "Advertencia", bg: c.status.warningLight, color: "#92400E" },
-                        { labelKey: "Peligro", bg: c.status.dangerLight, color: "#991B1B" },
-                    ].map(b => (
-                        <View
-                            key={b.labelKey}
-                            style={{
-                                backgroundColor: b.bg,
-                                borderRadius: 14,
-                                paddingHorizontal: 8,
-                                paddingVertical: 2
-                            }}
-                        >
+                    {/* Lado izquierdo: textos sin fondo */}
+                    <View style={{ flex: 1, gap: 6 }}>
+                        <Text style={{
+                            fontSize: 12,
+                            color: c.font,
+                            fontWeight: "500"
+                        }}>
+                            {t("Texto normal")} (Color de Fuente)
+                        </Text>
+                        <View style={{
+                            flexDirection: "row",
+                            gap: 8,
+                            flexWrap: "wrap"
+                        }}>
                             <Text style={{
                                 fontSize: 11,
-                                color: b.color,
+                                color: c.brand.primary,
                                 fontWeight: "600"
                             }}>
-                                {t(b.labelKey)}
+                                • {t("Primario")}
+                            </Text>
+                            <Text style={{
+                                fontSize: 11,
+                                color: c.status.success,
+                                fontWeight: "600"
+                            }}>
+                                • {t("Éxito")}
+                            </Text>
+                            <Text style={{
+                                fontSize: 11,
+                                color: c.status.warning,
+                                fontWeight: "600"
+                            }}>
+                                • {t("Advertencia")}
+                            </Text>
+                            <Text style={{
+                                fontSize: 11,
+                                color: c.status.error,
+                                fontWeight: "600"
+                            }}>
+                                • {t("Error")}
                             </Text>
                         </View>
-                    ))}
+                    </View>
+
+                    {/* Lado derecho: badges con fondo */}
+                    <View style={{
+                        flexDirection: "row",
+                        gap: 6,
+                        flexWrap: "wrap",
+                        justifyContent: "flex-end"
+                    }}>
+                        <View style={{
+                            backgroundColor: c.brand.primaryLight,
+                            borderRadius: 14,
+                            paddingHorizontal: 8,
+                            paddingVertical: 2
+                        }}>
+                            <Text style={{
+                                fontSize: 11,
+                                color: c.brand.primary,
+                                fontWeight: "600"
+                            }}>
+                                {t("Activo")}
+                            </Text>
+                        </View>
+                        <View style={{
+                            backgroundColor: c.status.successLight,
+                            borderRadius: 14,
+                            paddingHorizontal: 8,
+                            paddingVertical: 2
+                        }}>
+                            <Text style={{
+                                fontSize: 11,
+                                color: c.status.success,
+                                fontWeight: "600"
+                            }}>
+                                {t("Éxito")}
+                            </Text>
+                        </View>
+                        <View style={{
+                            backgroundColor: c.status.warningLight,
+                            borderRadius: 14,
+                            paddingHorizontal: 8,
+                            paddingVertical: 2
+                        }}>
+                            <Text style={{
+                                fontSize: 11,
+                                color: c.status.warning,
+                                fontWeight: "600"
+                            }}>
+                                {t("Advertencia")}
+                            </Text>
+                        </View>
+                        <View style={{
+                            backgroundColor: c.status.errorLight,
+                            borderRadius: 14,
+                            paddingHorizontal: 8,
+                            paddingVertical: 2
+                        }}>
+                            <Text style={{
+                                fontSize: 11,
+                                color: c.status.error,
+                                fontWeight: "600"
+                            }}>
+                                {t("Peligro")}
+                            </Text>
+                        </View>
+                    </View>
                 </View>
             </View>
         </View>

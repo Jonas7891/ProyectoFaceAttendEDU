@@ -61,7 +61,11 @@ export function LanguageProvider({ children }) {
             setIsLoading(false);
         })();
 
-        return () => { cancelled = true; };
+        // Cleanup al desmontar
+        return () => { 
+            cancelled = true;
+            translationService.cleanup();
+        };
     }, []);
 
     // ── Verificar y preparar traducciones de View actual ──────────────
@@ -75,7 +79,11 @@ export function LanguageProvider({ children }) {
         
         const activeTexts = translationService.getActiveTexts();
         
-        if (activeTexts.length === 0) return;
+        if (activeTexts.length === 0) {
+            // Si no hay textos activos, simplemente resetear para la próxima View
+            translationService.clearTracking();
+            return;
+        }
         
         // Verificar cuántos textos faltan traducir
         const missing = activeTexts.filter(text => {
@@ -84,20 +92,46 @@ export function LanguageProvider({ children }) {
         });
         
         if (missing.length > 0) {
-            console.log(`[LanguageContext] View actual necesita ${missing.length} traducciones`);
+            console.log(`[LanguageContext] View actual necesita ${missing.length} traducciones de ${activeTexts.length} textos totales`);
             
             setIsPreparingTranslations(true);
             
             try {
-                await translationService.prepareTranslations(missing, language);
+                // forceCheck = false (no forzar si ya sabemos que está caído)
+                await translationService.prepareTranslations(missing, language, false);
             } catch (error) {
-                console.error('[LanguageContext] Error preparando traducciones:', error);
+                console.warn('[LanguageContext] No se pudieron preparar traducciones:', error.message);
             } finally {
                 setIsPreparingTranslations(false);
             }
+            
+            // Si el servicio no está disponible, iniciar monitoreo
+            if (translationService.serviceAvailable === false) {
+                console.log('[LanguageContext] Iniciando monitoreo para reintento automático');
+                // Pasar los textos faltantes al monitoring
+                translationService.startHealthMonitoring(async (pendingTexts) => {
+                    if (!pendingTexts || pendingTexts.length === 0) {
+                        console.log('[LanguageContext] No hay textos pendientes para traducir');
+                        return;
+                    }
+                    
+                    console.log(`[LanguageContext] Servicio recuperado, traduciendo ${pendingTexts.length} textos pendientes...`);
+                    setIsPreparingTranslations(true);
+                    try {
+                        await translationService.prepareTranslations(pendingTexts, language, true);
+                    } catch (err) {
+                        console.warn('[LanguageContext] Reintento automático falló:', err.message);
+                    } finally {
+                        setIsPreparingTranslations(false);
+                    }
+                }, missing); // Pasar los textos faltantes
+            }
+        } else {
+            console.log(`[LanguageContext] Todos los textos ya están traducidos (${activeTexts.length} textos)`);
         }
         
-        // Limpiar tracking para la próxima View
+        // IMPORTANTE: Limpiar tracking SIEMPRE al final
+        // La próxima navegación empezará con tracking limpio
         translationService.clearTracking();
         
     }, [language, isLoading]);
@@ -121,8 +155,37 @@ export function LanguageProvider({ children }) {
             // PASO 3: Preparar traducciones de textos actualmente en uso
             if (code !== SOURCE_LANGUAGE) {
                 console.log(`[LanguageContext] Preparando traducciones para textos activos...`);
-                await translationService.prepareCurrentTexts(code);
-                console.log(`[LanguageContext] ✓ Traducciones listas`);
+                try {
+                    // forceCheck = true (es un cambio manual del usuario, reintentar siempre)
+                    await translationService.prepareCurrentTexts(code);
+                    
+                    // Si el servicio no está disponible tras cambio de idioma, iniciar monitoring
+                    if (translationService.serviceAvailable === false) {
+                        const missingTexts = translationService.getActiveTexts().filter(text => {
+                            const cached = translationService.getCached(text, code);
+                            return cached === text;
+                        });
+                        
+                        if (missingTexts.length > 0) {
+                            console.log('[LanguageContext] Iniciando monitoreo tras cambio de idioma');
+                            translationService.startHealthMonitoring(async (pendingTexts) => {
+                                if (!pendingTexts || pendingTexts.length === 0) return;
+                                
+                                console.log(`[LanguageContext] Servicio recuperado tras cambio de idioma, traduciendo ${pendingTexts.length} textos...`);
+                                setIsPreparingTranslations(true);
+                                try {
+                                    await translationService.prepareTranslations(pendingTexts, code, true);
+                                } finally {
+                                    setIsPreparingTranslations(false);
+                                }
+                            }, missingTexts); // Pasar textos faltantes
+                        }
+                    }
+                    
+                    console.log(`[LanguageContext] ✓ Traducciones listas`);
+                } catch (error) {
+                    console.warn('[LanguageContext] No se pudieron preparar traducciones, continuando:', error.message);
+                }
             }
             
             // PASO 4: SOLO AHORA cambiar el idioma (esto dispara re-render)

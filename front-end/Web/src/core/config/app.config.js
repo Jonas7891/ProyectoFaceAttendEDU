@@ -1,7 +1,3 @@
-/**
- * Configuración global de la aplicación FaceAttend EDU
- */
-
 export const APP_CONFIG = {
   // App Info
   name: "FaceAttend EDU",

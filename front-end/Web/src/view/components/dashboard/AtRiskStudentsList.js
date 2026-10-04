@@ -18,12 +18,14 @@ import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
  * @param {Array} students - Array de estudiantes en riesgo
  * @param {number} maxItems - Número máximo de items (default: 10)
  * @param {function} onStudentPress - Callback al presionar un estudiante
+ * @param {object} navigation - Objeto de navegación para redireccionar
  * @param {boolean} showActions - Mostrar botón de acción (default: false)
  */
 export function AtRiskStudentsList({
     students = [],
     maxItems = 10,
     onStudentPress,
+    navigation,
     showActions = false,
 }) {
     const { theme } = useTheme();
@@ -261,12 +263,19 @@ export function AtRiskStudentsList({
             })}
 
             {students.length > maxItems && (
-                <View style={{
-                    padding: 12,
-                    alignItems: "center",
-                    borderTopWidth: 1,
-                    borderTopColor: c.border.primary,
-                }}>
+                <TouchableOpacity
+                    onPress={() => navigation?.navigate("Users", { 
+                        section: "students", 
+                        attendanceFilter: "lt" 
+                    })}
+                    style={{
+                        padding: 12,
+                        alignItems: "center",
+                        borderTopWidth: 1,
+                        borderTopColor: c.border.primary,
+                    }}
+                    activeOpacity={0.7}
+                >
                     <Text style={{
                         fontSize: 12,
                         color: c.brand.primary,
@@ -274,7 +283,7 @@ export function AtRiskStudentsList({
                     }}>
                         +{students.length - maxItems} {t("estudiantes más en riesgo")}
                     </Text>
-                </View>
+                </TouchableOpacity>
             )}
         </Card>
     );

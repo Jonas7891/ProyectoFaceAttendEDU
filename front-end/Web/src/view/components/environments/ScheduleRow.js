@@ -8,6 +8,7 @@ import { Feather } from "@expo/vector-icons";
 import { Badge } from "../common";
 import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
+import { useDateFormat } from "../../../core/utils/hooks/useDateFormat";
 
 /**
  * Fila de horario con información y acciones
@@ -20,7 +21,19 @@ import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 export function ScheduleRow({ schedule, onEdit, onDelete, isLast }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
+    const { formatTime } = useDateFormat();
     const c = theme.colors;
+
+    // Parsear las horas del horario y formatearlas según la configuración
+    const parseAndFormatTime = (timeStr) => {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        const date = new Date();
+        date.setHours(hours, minutes, 0, 0);
+        return formatTime(date);
+    };
+
+    const formattedStartTime = parseAndFormatTime(schedule.startTime);
+    const formattedEndTime = parseAndFormatTime(schedule.endTime);
     
     return (
         <View style={{
@@ -86,7 +99,7 @@ export function ScheduleRow({ schedule, onEdit, onDelete, isLast }) {
                                 fontSize: 12,
                                 color: c.text.secondary,
                             }}>
-                                {schedule.startTime} — {schedule.endTime}
+                                {formattedStartTime} — {formattedEndTime}
                             </Text>
                         </View>
                         

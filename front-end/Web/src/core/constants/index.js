@@ -15,3 +15,4 @@
 export { default as Typography, getTypography } from './typography';
 export { BadgePositions, BadgePositionsMobile } from './badgePositions';
 export * from './academicPeriods';
+export * from './dateFormats';

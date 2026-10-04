@@ -17,6 +17,8 @@
 // ============================================================
 
 import { Platform } from "react-native";
+import { getInstitutionConfig } from "../config/institutionConfig";
+import { formatDate } from "../constants/dateFormats";
 
 /**
  * Exporta datos a un archivo Excel (.xlsx)
@@ -146,7 +148,8 @@ export function buildReportHTML({
     sections = [],
     footer = "FaceAttend EDU — Reporte generado automáticamente",
 }) {
-    const currentDate = new Date().toLocaleDateString("es-CO", { dateStyle: "full" });
+    const config = getInstitutionConfig();
+    const currentDate = formatDate(new Date(), config.dateFormat);
     
     const filterTags = filters.length > 0
         ? `<div style="margin-bottom:16px">${filters.map(f => 
