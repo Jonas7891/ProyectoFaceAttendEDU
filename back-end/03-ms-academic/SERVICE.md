@@ -25,53 +25,45 @@ Gestionar la estructura academica completa: sedes educativas, programas curricul
 
 | Componente | Tecnologia | Justificacion |
 |------------|-----------|---------------|
-| Lenguaje | **Java 21** | Consistencia con el proyecto |
-| Framework | **Spring Boot 4.1.1** | Ecosistema unificado |
-| Arquitectura | **Hexagonal** | Misma estructura que Identity |
+| Lenguaje | **TypeScript 5** | Type-safe para modelos academicos y reportes |
+| Framework | **Fastify 4** | Alto rendimiento, validacion declarativa con Zod |
+| ORM | **Drizzle ORM** | SQL eficiente para JOINs de 8 tablas (mejor que TypeORM) |
+| Arquitectura | **Hexagonal** | Misma estructura que los demas servicios |
 
 ### 3.2 Dependencias Principales
 
-```xml
-<!-- Core -->
-spring-boot-starter-webmvc
-spring-boot-starter-data-jpa
-spring-boot-starter-security
-spring-boot-starter-validation
-spring-boot-starter-actuator
-spring-boot-starter-kafka
-spring-boot-starter-liquibase
-
-<!-- Persistencia -->
-postgresql
-
-<!-- API Documentation -->
-springdoc-openapi-starter-webmvc-ui
-
-<!-- Utilidades -->
-lombok
-mapstruct
-mapstruct-processor
+```json
+// package.json
+"dependencies": {
+  "fastify": "^4.26.0",      // HTTP framework
+  "drizzle-orm": "^0.31.0",  // ORM type-safe
+  "pg": "^8.11.0",           // PostgreSQL driver
+  "zod": "^3.22.0",          // Validacion de schemas
+  "kafkajs": "^2.2.4",       // Domain Events
+  "pino": "^8.16.0"          // Structured logging
+}
 ```
 
 ### 3.3 Librerias Recomendadas Adicionales
 
 | Libreria | Uso | Por que |
 |----------|-----|---------|
-| **MapStruct** | Mapeo DTO <-> Entity | Type-safe, compile-time |
-| **Lombok** | Boilerplate reduction | Reduce codigo repetitivo |
-| **Testcontainers** | Tests de integracion | PostgreSQL real |
-| **Spring Cache** | Cache de consultas academicas | Caffeine para catalogos |
-| **Caffeine** | Cache local | Catalogos que cambian poco (school, program) |
-| ** Apache POI** | Exportacion Excel/CSV | Reportes de matriculas y cohortes |
-| **Thymeleaf** | Generacion de reportes HTML | Certificados, constancias |
+| **Drizzle ORM** | Persistencia | SQL eficiente y type-safe para JOINs de 8 tablas |
+| **Zod** | Validacion | Validacion declarativa de DTOs/queries |
+| **Kafkajs** | Domain Events | Publicacion de eventos de dominio |
+| **Pino** | Logging | Logs JSON estructurados |
+| **Jest + ts-jest** | Tests | Unit tests con TypeScript |
+| **Testcontainers** | Tests de integracion | PostgreSQL real en tests |
+| **exceljs / pdfmake** | Reportes | Listados de matriculas y constancias |
 
 ### 3.4 Herramientas de Desarrollo
 
 | Herramienta | Uso |
 |-------------|-----|
-| **Maven** | Build tool |
+| **npm** | Gestion de dependencias |
+| **TypeScript (tsc)** | Compilacion |
 | **Docker** | Containerizacion |
-| **IntelliJ IDEA** | IDE |
+| **VS Code** | IDE principal |
 | **DBeaver** | Cliente PostgreSQL |
 | **Postman / Bruno** | Testing REST |
 
@@ -182,31 +174,15 @@ school ──> program ──> course
 
 ## 7. Configuracion
 
-### application.yml (ejemplo)
+### .env (ejemplo)
 
-```yaml
-server:
-  port: 8083
-
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/faceattend_db
-    username: postgres
-    password: postgres
-    hikari:
-      schema: academic
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    properties:
-      hibernate.default_schema: academic
-  cache:
-    type: caffeine
-    caffeine:
-      spec: maximumSize=500,expireAfterWrite=30m
-  kafka:
-    bootstrap-servers: localhost:9092
-    group-id: academic-service
+```bash
+PORT=8083
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/faceattend_db
+DB_SCHEMA=academic
+KAFKA_BROKERS=localhost:9092
+KAFKA_GROUP_ID=academic-service
+CACHE_TTL_SECONDS=1800
 ```
 
 ---
@@ -221,36 +197,14 @@ spring:
 
 ---
 
-## 9. Analisis de Lenguaje
+## 9. Stack Actual
 
-### Candidatos evaluados
+Academic esta implementado en **TypeScript + Fastify + Drizzle** con arquitectura hexagonal. El servicio gestiona la estructura academica completa: sedes, programas, periodos, cohortes, cursos, actores y matriculas.
 
-| # | Lenguaje | Framework | ORM | Validacion | Reportes | DX |
-|---|----------|-----------|:---:|:----------:|:--------:|:--:|
-| 1 | **TypeScript** | NestJS/Nestia | Prisma/Drizzle | class-validator, Zod | Excelente (xlsx, pdfmake) | Excelente |
-| 2 | Java 21 | Spring Boot | JPA/Hibernate | Jakarta Validation | Apache POI | Buena |
-| 3 | Go 1.22 | Gin | sqlc/Ent | Manual | reportlab-go | Moderada |
+### Justificacion
 
-### Por que TypeScript gana
-
-- **Validacion declarativa**: class-validator + DTOs de NestJS validan complejos academicos (cohortes, matriculas, periodos) con decoradores concisos.
-- **Prisma/Drizzle ORM**: Type-safe queries con auto-completado en compile-time. Migrationes declarativas.
-- **Reportes**: pdfmake, exceljs, puppeteer — ecosistema de generacion de documentos mas rico que Go.
-- **DX superior**: Auto-completado, refactorizaciones seguras, hot-reload en desarrollo.
-- **Endpoints tipados**: Nestia genera tipos TypeScript directamente desde los controllers, compartibles con el frontend.
-
-### Por que no Java
-
-- CRUD complejo con 8 tablas y multiples relaciones. NestJS es mas conciso para estos patrones.
-- Apache POI es pesado para reportes simples. exceljs/pdfmake son mas ligeros.
-- Sin ventaja de rendimiento significativa para un servicio CRUD.
-
-### Por que no Go
-
-- Go no tiene ORM maduro comparable a Prisma. sqlc requiere escribir SQL manualmente.
-- La validacion de complejos academicos (cohorte = programa + periodo + sede) es verbosa sin framework de validacion declarativo.
-- Los reportes (certificados, constancias) son mas faciles con el ecosistema Node/TypeScript.
-
-### Decision: TypeScript (NestJS)
-
-Academic es un servicio de **CRDD pesado** (Create-Read-Delete-Dominio) con reglas de negocio complejas. NestJS ofrece la mejor combinacion de validacion declarativa, ORM type-safe, y generacion de reportes.
+- **Drizzle ORM**: SQL eficiente y type-safe para los JOINs de las 8 tablas del dominio
+- **Zod**: Validacion declarativa de DTOs y filtros de query
+- **Kafka (Kafkajs)**: Eventos de dominio para notificaciones
+- **Testcontainers**: Tests de integracion con PostgreSQL real
+- **Pino**: Logs JSON estructurados

@@ -1,4 +1,4 @@
-# Configuration Service â€” `07-ms-configuration`
+# Configuration Service — `07-ms-configuration`
 
 ## 1. Responsabilidad
 
@@ -13,10 +13,10 @@ Gestionar parametros configurables del sistema (academicos por sede y de segurid
 | `biometric_update_case` | Solicitud de actualizacion biometrica | `case_id` (UUID) |
 
 **Cross-context:**
-- `academic_configuration.school_id` â†’ `Academic.school.school_id`
-- `biometric_update_case.person_id` â†’ `Identity.person.person_id`
-- `biometric_update_case.requested_by` â†’ `Identity.app_user.user_id`
-- `biometric_update_case.reviewed_by` â†’ `Identity.app_user.user_id`
+- `academic_configuration.school_id` → `Academic.school.school_id`
+- `biometric_update_case.person_id` → `Identity.person.person_id`
+- `biometric_update_case.requested_by` → `Identity.app_user.user_id`
+- `biometric_update_case.reviewed_by` → `Identity.app_user.user_id`
 
 ## 3. Stack Tecnologico
 
@@ -24,52 +24,41 @@ Gestionar parametros configurables del sistema (academicos por sede y de segurid
 
 | Componente | Tecnologia | Justificacion |
 |------------|-----------|---------------|
-| Lenguaje | **Java 21** | Consistencia con el proyecto |
-| Framework | **Spring Boot 4.1.1** | Ecosistema unificado |
+| Lenguaje | **TypeScript 5** | Type-safe, DX moderno |
+| Framework | **Fastify 4** | HTTP framework ultrarapido, validacion con Zod |
 | Arquitectura | **Hexagonal** | Misma estructura |
 
 ### 3.2 Dependencias Principales
 
-```xml
-<!-- Core -->
-spring-boot-starter-webmvc
-spring-boot-starter-data-jpa
-spring-boot-starter-security
-spring-boot-starter-validation
-spring-boot-starter-actuator
-spring-boot-starter-kafka
-spring-boot-starter-liquibase
-
-<!-- Persistencia -->
-postgresql
-
-<!-- API Documentation -->
-springdoc-openapi-starter-webmvc-ui
-
-<!-- Utilidades -->
-lombok
-mapstruct
-mapstruct-processor
+```json
+// package.json
+"dependencies": {
+  "fastify": "^4.26.0",   // HTTP framework
+  "pg": "^8.11.0",        // PostgreSQL driver
+  "zod": "^3.22.0",       // Validacion de schemas
+  "kafkajs": "^2.2.4",    // Domain Events
+  "pino": "^8.16.0"       // Structured logging
+}
 ```
 
 ### 3.3 Librerias Recomendadas Adicionales
 
 | Libreria | Uso | Por que |
 |----------|-----|---------|
-| **MapStruct** | Mapeo DTO <-> Entity | Type-safe |
-| **Lombok** | Boilerplate reduction | Reduce codigo |
-| **Spring Cache** | Cache de configuraciones | Redis/Caffeine para lectura frecuente |
-| **Caffeine** | Cache local | Configuraciones no cambian seguido |
-| **Spring Cloud Config** | Config centralizada | Alternativa si se necesita config externa |
-| **Testcontainers** | Tests de integracion | PostgreSQL real |
+| **Zod** | Validacion | Validacion declarativa de configuraciones |
+| **Pino** | Logging | Logs JSON estructurados |
+| **Kafkajs** | Domain Events | Publicacion de cambios de config |
+| **Jest + ts-jest** | Tests | Unit tests con TypeScript |
+| **Testcontainers** | Tests de integracion | PostgreSQL real en tests |
 
 ### 3.4 Herramientas de Desarrollo
 
 | Herramienta | Uso |
 |-------------|-----|
-| **Maven** | Build tool |
+| **npm** | Gestion de dependencias |
+| **TypeScript (tsc)** | Compilacion |
 | **Docker** | Containerizacion |
-| **IntelliJ IDEA** | IDE |
+| **VS Code** | IDE principal |
 | **DBeaver** | Cliente PostgreSQL |
 | **Postman / Bruno** | Testing REST |
 
@@ -125,20 +114,20 @@ mapstruct-processor
 
 ```
 academic_actor/person solicita actualizacion
-       â”‚
-       â–¼
+       │
+       ▼
 biometric_update_case (Pending)
-       â”‚
-       â”‚ reviewer revisa
-       â–¼
+       │
+       │ reviewer revisa
+       ▼
 biometric_update_case (In_Review)
-       â”‚
-       â”œâ”€â”€ APPROVED â”€â”€> Biometric aplica nuevo embedding
-       â”‚                  â”‚
-       â”‚                  â–¼
-       â”‚              facial/fingerprint_embedding (nueva version)
-       â”‚
-       â””â”€â”€ REJECTED â”€â”€> Notification informa al solicitante
+       │
+       ├── APPROVED ──> Biometric aplica nuevo embedding
+       │                  │
+       │                  ▼
+       │              facial/fingerprint_embedding (nueva version)
+       │
+       └── REJECTED ──> Notification informa al solicitante
 ```
 
 ### Estados de actualizacion
@@ -166,31 +155,14 @@ biometric_update_case (In_Review)
 
 ## 7. Configuracion
 
-### application.yml (ejemplo)
+### .env (ejemplo)
 
-```yaml
-server:
-  port: 8087
-
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/faceattend_db
-    username: postgres
-    password: postgres
-    hikari:
-      schema: configuration
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    properties:
-      hibernate.default_schema: configuration
-  cache:
-    type: caffeine
-    caffeine:
-      spec: maximumSize=200,expireAfterWrite=60m
-  kafka:
-    bootstrap-servers: localhost:9092
-    group-id: configuration-service
+```bash
+PORT=8087
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/faceattend_db
+DB_SCHEMA=configuration
+KAFKA_BROKERS=localhost:9092
+KAFKA_GROUP_ID=configuration-service
 ```
 
 ---
@@ -205,33 +177,15 @@ spring:
 
 ---
 
-## 9. Analisis de Lenguaje
+## 9. Stack Actual
 
-### Candidatos evaluados
+Configuration esta implementado en **TypeScript + Fastify** con arquitectura hexagonal. El servicio gestiona parametros academicos por sede, configuracion de seguridad global y el flujo de aprobacion de actualizaciones biometricas.
 
-| # | Lenguaje | Framework | Cache | Throughput | Memoria | Complejidad |
-|---|----------|-----------|:-----:|:----------:|:-------:|:-----------:|
-| 1 | **Go 1.22** | Gin | ristretto/bigcache | 142k RPS | 68MB | Baja |
-| 2 | Java 21 | Spring Boot | Caffeine | 100k RPS | 412MB | Moderada |
-| 3 | TypeScript | NestJS | cache-manager | 54k RPS | 120MB | Baja |
+### Justificacion
 
-### Por que Go gana
-
-- **CRUD simple**: Configuration es esencialmente lectura/escritura de parametros. Go lo resuelve de forma minima.
-- **Cache de alta velocidad**: ristretto/bigcache son caches Go que operan a nanosegundos.
-- **Bajo consumo**: 68MB vs 412MB para un servicio que casi no tiene logica de negocio.
-- **Consistencia con otros servicios Go**: Authorization, Scheduling, Attendance, Audit ya son Go.
-
-### Por que no Java
-
-- Spring Boot es overkill para un servicio de configuracion CRUD.
-- Caffeine es excelente pero el overhead de JVM no se justifica aqui.
-
-### Por que no TypeScript
-
-- TypeScript funciona pero Go tiene mejor rendimiento para el mismo esfuerzo de desarrollo.
-
-### Decision: Go 1.22
-
-Configuration es el servicio **mas simple** del sistema. Go resuelve CRUD + cache con el minimo overhead posible, manteniendo consistencia con la mayoria de servicios del sistema.
+- **Fastify**: HTTP framework de alto rendimiento para Node.js
+- **pg**: Driver nativo de PostgreSQL, CRUD directo sin ORM
+- **Zod**: Validacion declarativa de configuraciones
+- **Pino**: Logs JSON estructurados
+- **Kafka (Kafkajs)**: Eventos de dominio para notificaciones
 
