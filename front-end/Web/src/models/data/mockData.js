@@ -14,7 +14,8 @@ export const mockStudents = [
         grade: null, // Será calculado dinámicamente
         attendance: 92,
         status: "active",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: true,
     },
     {
         id: "2",
@@ -25,7 +26,8 @@ export const mockStudents = [
         grade: null, // Será calculado dinámicamente
         attendance: 88,
         status: "active",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: true,
     },
     {
         id: "3",
@@ -36,7 +38,8 @@ export const mockStudents = [
         grade: null, // Será calculado dinámicamente
         attendance: 95,
         status: "active",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: false, // Solo tiene facial
     },
     {
         id: "4",
@@ -47,7 +50,8 @@ export const mockStudents = [
         grade: null, // Será calculado dinámicamente
         attendance: 75,
         status: "active",
-        registered: false,
+        hasFacial: false,
+        hasFingerprint: false, // No tiene ninguno
     },
     {
         id: "5",
@@ -58,7 +62,8 @@ export const mockStudents = [
         grade: null, // Será calculado dinámicamente
         attendance: 60,
         status: "inactive",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: true,
     },
     {
         id: "6",
@@ -69,7 +74,8 @@ export const mockStudents = [
         grade: null, // Será calculado dinámicamente
         attendance: 85,
         status: "active",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: true,
     },
     {
         id: "7",
@@ -80,7 +86,8 @@ export const mockStudents = [
         grade: null, // Será calculado dinámicamente
         attendance: 91,
         status: "active",
-        registered: true,
+        hasFacial: false,
+        hasFingerprint: true, // Solo tiene huella
     },
     {
         id: "8",
@@ -91,7 +98,8 @@ export const mockStudents = [
         grade: null, // Será calculado dinámicamente
         attendance: 78,
         status: "active",
-        registered: false,
+        hasFacial: false,
+        hasFingerprint: false,
     },
     // ── Estudiantes adicionales para listas del dashboard ────
     {
@@ -103,7 +111,8 @@ export const mockStudents = [
         grade: null, // Será calculado dinámicamente
         attendance: 68,
         status: "active",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: true,
     },
     {
         id: "10",
@@ -114,7 +123,8 @@ export const mockStudents = [
         grade: null, // Será calculado dinámicamente
         attendance: 73,
         status: "active",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: false,
     },
     {
         id: "11",
@@ -125,7 +135,8 @@ export const mockStudents = [
         grade: null, // Será calculado dinámicamente
         attendance: 97.5,
         status: "active",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: true,
     },
     {
         id: "12",
@@ -136,7 +147,8 @@ export const mockStudents = [
         grade: null, // Será calculado dinámicamente
         attendance: 96.7,
         status: "active",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: true,
     },
     // ── Estudiantes nuevos (8 más para probar funcionalidad) ────
     {
@@ -148,7 +160,8 @@ export const mockStudents = [
         grade: null, // Será calculado dinámicamente
         attendance: 94,
         status: "active",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: true,
     },
     {
         id: "14",
@@ -159,7 +172,8 @@ export const mockStudents = [
         grade: null, // Será calculado dinámicamente
         attendance: 89,
         status: "active",
-        registered: true,
+        hasFacial: false,
+        hasFingerprint: true,
     },
     {
         id: "15",
@@ -170,7 +184,8 @@ export const mockStudents = [
         grade: null, // Será calculado dinámicamente
         attendance: 55,
         status: "active",
-        registered: false,
+        hasFacial: false,
+        hasFingerprint: false,
     },
     {
         id: "16",
@@ -181,7 +196,8 @@ export const mockStudents = [
         grade: null, // Será calculado dinámicamente
         attendance: 82,
         status: "active",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: true,
     },
     {
         id: "17",
@@ -192,7 +208,8 @@ export const mockStudents = [
         grade: null, // Será calculado dinámicamente
         attendance: 98,
         status: "active",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: true,
     },
     {
         id: "18",
@@ -203,7 +220,8 @@ export const mockStudents = [
         grade: null, // Será calculado dinámicamente
         attendance: 65,
         status: "active",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: false,
     },
     {
         id: "19",
@@ -214,7 +232,8 @@ export const mockStudents = [
         grade: null, // Será calculado dinámicamente
         attendance: 93,
         status: "active",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: true,
     },
     {
         id: "20",
@@ -225,7 +244,8 @@ export const mockStudents = [
         grade: null, // Será calculado dinámicamente
         attendance: 71,
         status: "active",
-        registered: false,
+        hasFacial: false,
+        hasFingerprint: false,
     },
 ];
 
@@ -952,7 +972,8 @@ export const mockTeachers = [
         grade: "Docente",
         attendance: 95.6,
         status: "active",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: true,
     },
     {
         id: "t2",
@@ -963,7 +984,8 @@ export const mockTeachers = [
         grade: "Docente",
         attendance: 100,
         status: "active",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: true,
     },
     {
         id: "t3",
@@ -974,7 +996,8 @@ export const mockTeachers = [
         grade: "Docente",
         attendance: 92.1,
         status: "active",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: true,
     },
     {
         id: "t4",
@@ -985,7 +1008,8 @@ export const mockTeachers = [
         grade: "Docente",
         attendance: 90.5,
         status: "active",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: false,
     },
     {
         id: "t5",
@@ -996,7 +1020,8 @@ export const mockTeachers = [
         grade: "Docente",
         attendance: 94.4,
         status: "active",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: true,
     },
     // ── Profesores adicionales (5 más para probar funcionalidad) ────
     {
@@ -1008,7 +1033,8 @@ export const mockTeachers = [
         grade: "Docente",
         attendance: 88.5,
         status: "active",
-        registered: true,
+        hasFacial: false,
+        hasFingerprint: false,
     },
     {
         id: "t7",
@@ -1019,7 +1045,8 @@ export const mockTeachers = [
         grade: "Docente",
         attendance: 96.8,
         status: "active",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: true,
     },
     {
         id: "t8",
@@ -1030,7 +1057,8 @@ export const mockTeachers = [
         grade: "Docente",
         attendance: 89.2,
         status: "active",
-        registered: true,
+        hasFacial: false,
+        hasFingerprint: true,
     },
     {
         id: "t9",
@@ -1041,7 +1069,8 @@ export const mockTeachers = [
         grade: "Docente",
         attendance: 93.7,
         status: "active",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: true,
     },
     {
         id: "t10",
@@ -1052,7 +1081,8 @@ export const mockTeachers = [
         grade: "Docente",
         attendance: 91.3,
         status: "active",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: true,
     },
 ];
 
@@ -1068,7 +1098,8 @@ export const mockAdmins = [
         grade: "Administrador",
         attendance: null, // Los admins no tienen asistencia
         status: "active",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: true,
     },
     {
         id: "a2",
@@ -1079,6 +1110,7 @@ export const mockAdmins = [
         grade: "Administrador",
         attendance: null,
         status: "active",
-        registered: true,
+        hasFacial: true,
+        hasFingerprint: true,
     },
 ];

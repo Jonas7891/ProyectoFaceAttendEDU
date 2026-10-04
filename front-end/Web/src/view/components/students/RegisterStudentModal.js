@@ -157,12 +157,7 @@ export default function RegisterStudentModal({
         const validationErr = validateStudentForm(form);
         if (validationErr) return;
 
-        if (!form.registered) {
-            pendingFormRef.current = form;
-            setShowFaceModal(true);
-            return;
-        }
-
+        // Ya no validamos biometría aquí, los campos son opcionales
         await doSave(form);
     };
 
@@ -449,58 +444,85 @@ export default function RegisterStudentModal({
                     </View>
                 </View>
 
-                {/* Registro facial (solo para estudiantes y docentes) */}
+                {/* Registro biométrico (solo para estudiantes y docentes) */}
                 {config.showFaceRegistration && (
                     <View style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: 12,
+                        padding: 14,
                         borderWidth: 1.5,
-                        borderColor: form.registered ? c.status.success : c.border.primary,
+                        borderColor: c.border.primary,
                         borderRadius: 14,
                         marginBottom: 14,
                         backgroundColor: c.background.app,
+                        gap: 12,
                     }}>
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}>
-                            <Feather
-                                name="aperture"
-                                size={18}
-                                color={form.registered ? c.status.success : c.brand.primary}
-                            />
-                            <View>
-                                <Text style={{ fontSize: 13, fontWeight: "600", color: c.text.primary }}>
-                                    {t("Reconocimiento facial")}
-                                </Text>
-                                <Text style={{ fontSize: 12, color: form.registered ? c.status.success : c.text.secondary }}>
-                                    {form.registered ? t("Rostro registrado") : t("Sin registro facial")}
-                                </Text>
-                            </View>
-                        </View>
+                        <Text style={{ fontSize: 13, fontWeight: "600", color: c.text.primary }}>
+                            {t("Reconocimiento biométrico")}
+                        </Text>
+                        
+                        {/* Checkbox Facial */}
                         <TouchableOpacity
-                            onPress={() => setField("registered", !form.registered)}
+                            onPress={() => setField("hasFacial", !form.hasFacial)}
                             style={{
-                                width: 40,
-                                height: 20,
-                                borderRadius: 14,
-                                backgroundColor: form.registered
-                                    ? c.status.success
-                                    : c.interactive.disabled,
-                                justifyContent: "center",
-                                paddingHorizontal: 2,
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 10,
                             }}
                         >
                             <View style={{
-                                width: 16,
-                                height: 16,
-                                borderRadius: 14,
-                                backgroundColor: "#fff",
-                                alignSelf: form.registered ? "flex-end" : "flex-start",
-                                shadowColor: "#000",
-                                shadowOpacity: 0.2,
-                                shadowRadius: 2,
-                                elevation: 2,
-                            }} />
+                                width: 20,
+                                height: 20,
+                                borderRadius: 4,
+                                borderWidth: 2,
+                                borderColor: form.hasFacial ? c.status.success : c.border.primary,
+                                backgroundColor: form.hasFacial ? c.status.success : "transparent",
+                                alignItems: "center",
+                                justifyContent: "center",
+                            }}>
+                                {form.hasFacial && (
+                                    <Feather name="check" size={14} color="#fff" />
+                                )}
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ fontSize: 13, color: c.text.primary }}>
+                                    {t("Registro facial")}
+                                </Text>
+                                <Text style={{ fontSize: 11, color: c.text.secondary }}>
+                                    {t("Reconocimiento por rostro")}
+                                </Text>
+                            </View>
+                        </TouchableOpacity>
+                        
+                        {/* Checkbox Huella */}
+                        <TouchableOpacity
+                            onPress={() => setField("hasFingerprint", !form.hasFingerprint)}
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 10,
+                            }}
+                        >
+                            <View style={{
+                                width: 20,
+                                height: 20,
+                                borderRadius: 4,
+                                borderWidth: 2,
+                                borderColor: form.hasFingerprint ? c.status.success : c.border.primary,
+                                backgroundColor: form.hasFingerprint ? c.status.success : "transparent",
+                                alignItems: "center",
+                                justifyContent: "center",
+                            }}>
+                                {form.hasFingerprint && (
+                                    <Feather name="check" size={14} color="#fff" />
+                                )}
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ fontSize: 13, color: c.text.primary }}>
+                                    {t("Registro de huella dactilar")}
+                                </Text>
+                                <Text style={{ fontSize: 11, color: c.text.secondary }}>
+                                    {t("Reconocimiento por huella")}
+                                </Text>
+                            </View>
                         </TouchableOpacity>
                     </View>
                 )}
@@ -518,7 +540,7 @@ export default function RegisterStudentModal({
                 onClose={() => setShowFaceModal(false)}
                 onConfirm={(_descriptor) => {
                     setShowFaceModal(false);
-                    const formWithFace = { ...form, registered: true };
+                    const formWithFace = { ...form, hasFacial: true };
                     pendingFormRef.current = formWithFace;
                     setForm(formWithFace);
                     doSave(formWithFace);

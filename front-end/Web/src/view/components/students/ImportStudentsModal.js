@@ -52,9 +52,17 @@ const ALIAS = {
     // attendance
     attendance: "attendance",
     asistencia: "attendance",
-    // registered
-    registered: "registered",
-    facial: "registered",
+    // hasFacial
+    hasfacial: "hasFacial",
+    facial: "hasFacial",
+    rostro: "hasFacial",
+    reconocimientofacial: "hasFacial",
+    // hasFingerprint
+    hasfingerprint: "hasFingerprint",
+    huella: "hasFingerprint",
+    huelladactilar: "hasFingerprint",
+    dactilar: "hasFingerprint",
+    fingerprint: "hasFingerprint",
     // status
     status: "status",
     estado: "status",
@@ -80,8 +88,10 @@ function rowToStudent(headers, cells) {
         const val = (cells[i] ?? "").trim();
         if (key === "attendance") {
             obj.attendance = Math.min(100, Math.max(0, parseInt(val, 10) || 100));
-        } else if (key === "registered") {
-            obj.registered = val === "true" || val === "1" || val === "sí" || val === "si";
+        } else if (key === "hasFacial") {
+            obj.hasFacial = val === "true" || val === "1" || val === "sí" || val === "si" || val === "yes";
+        } else if (key === "hasFingerprint") {
+            obj.hasFingerprint = val === "true" || val === "1" || val === "sí" || val === "si" || val === "yes";
         } else if (key === "status") {
             obj.status = val === "inactive" || val === "inactivo" ? "inactive" : "active";
         } else {
@@ -96,7 +106,8 @@ function rowToStudent(headers, cells) {
         course: obj.course,
         grade: obj.grade,
         attendance: obj.attendance ?? 100,
-        registered: obj.registered ?? false,
+        hasFacial: obj.hasFacial ?? false,
+        hasFingerprint: obj.hasFingerprint ?? false,
         status: obj.status ?? "active",
     };
 }

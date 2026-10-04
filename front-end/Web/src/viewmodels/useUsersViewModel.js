@@ -17,6 +17,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
+import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 
 // ── Tipos de usuario ───────────────────────────────────────
 
@@ -43,7 +44,8 @@ export const EMPTY_USER_FORM = {
     course: "",
     role: USER_TYPES.STUDENT,
     attendance: 0,
-    registered: false,
+    hasFacial: false,      // Registro facial
+    hasFingerprint: false, // Registro de huella dactilar
     status: "active",
 };
 
@@ -139,6 +141,7 @@ export function useUsersViewModel(
     initialFilterColumn = null
 ) {
     const appData = useAppData();
+    const { t } = useTranslation();
 
     const [search, setSearch] = useState(initialSearchQuery || "");
     const [userTypeFilter, setUserTypeFilter] = useState(USER_TYPES.ALL);
@@ -217,19 +220,19 @@ export function useUsersViewModel(
     // ── Filtros de tipo de usuario ────────────────────────────
     
     const userTypeFilters = useMemo(() => [
-        { value: USER_TYPES.ALL, label: "Todos", icon: "users" },
-        { value: USER_TYPES.STUDENT, label: "Estudiantes", icon: "user" },
-        { value: USER_TYPES.TEACHER, label: "Profesores", icon: "user-check" },
-        { value: USER_TYPES.ADMIN, label: "Administradores", icon: "shield" },
-    ], []);
+        { value: USER_TYPES.ALL, label: t("Todos"), icon: "users" },
+        { value: USER_TYPES.STUDENT, label: t("Estudiantes"), icon: "user" },
+        { value: USER_TYPES.TEACHER, label: t("Profesores"), icon: "user-check" },
+        { value: USER_TYPES.ADMIN, label: t("Administradores"), icon: "shield" },
+    ], [t]);
 
     // ── Filtros de estado ──────────────────────────────────────
     
     const statusFilters = useMemo(() => [
-        { value: "", label: "Todos los estados", icon: "filter" },
-        { value: "active", label: "Activos", icon: "check-circle" },
-        { value: "inactive", label: "Inactivos", icon: "x-circle" },
-    ], []);
+        { value: "", label: t("Todos los estados"), icon: "filter" },
+        { value: "active", label: t("Activos"), icon: "check-circle" },
+        { value: "inactive", label: t("Inactivos"), icon: "x-circle" },
+    ], [t]);
 
     // ── Usuarios filtrados ─────────────────────────────────────
     
@@ -353,7 +356,8 @@ export function useUsersViewModel(
                     course: form.course.trim(),
                     grade: form.role,
                     attendance: form.attendance,
-                    registered: form.registered,
+                    hasFacial: form.hasFacial || false,
+                    hasFingerprint: form.hasFingerprint || false,
                     status: form.status,
                 });
             }

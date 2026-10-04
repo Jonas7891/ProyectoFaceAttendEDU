@@ -55,10 +55,10 @@ export const DEFAULT_FILTERS = {
  * Genera label amigable del período actual
  * @private
  */
-function periodLabel(p) {
-    if (p === "week") return "Esta semana";
-    if (p === "month") return "Este mes";
-    return "Semestre 2024-2";
+function periodLabel(p, t) {
+    if (p === "week") return t("Esta semana");
+    if (p === "month") return t("Este mes");
+    return t("Semestre 2024-2");
 }
 
 /**
@@ -83,17 +83,37 @@ function dailyDataForPeriod(_period) {
  * Construye filas para exportación a Excel
  * @private
  */
-function buildExcelRows(students, period, _filters) {
-    return students.map((s) => ({
-        Código: s.code,
-        Nombre: s.name,
-        Programa: s.courseName || s.course, // Usar nombre completo del curso
-        "Ficha/Semestre": s.grade,
-        "Asistencia (%)": s.attendance,
-        Estado: s.status === "active" ? "Activo" : "Inactivo",
-        "Facial reg.": s.registered ? "Sí" : "No",
-        Período: periodLabel(period),
-    }));
+function buildExcelRows(students, period, _filters, t) {
+    return students.map((s) => {
+        // Calcular estado biométrico basado en facial y huella
+        const hasFacial = s.hasFacial || false;
+        const hasFingerprint = s.hasFingerprint || false;
+        
+        let biometricStatus = "pending";
+        let biometricText = t("Pendiente");
+        
+        if (hasFacial && hasFingerprint) {
+            biometricStatus = "registered";
+            biometricText = t("Registrado");
+        } else if (hasFacial && !hasFingerprint) {
+            biometricStatus = "partial";
+            biometricText = t("Parcial") + " - " + t("Falta huella");
+        } else if (!hasFacial && hasFingerprint) {
+            biometricStatus = "partial";
+            biometricText = t("Parcial") + " - " + t("Falta facial");
+        }
+        
+        return {
+            [t("Código")]: s.code,
+            [t("Nombre")]: s.name,
+            [t("Programa")]: s.courseName || s.course,
+            [t("Ficha/Semestre")]: s.grade,
+            [t("Asistencia (%)")]: s.attendance,
+            [t("Estado")]: s.status === "active" ? t("Activo") : t("Inactivo"),
+            [t("Biometría")]: biometricText,
+            [t("Período")]: periodLabel(period, t),
+        };
+    });
 }
 
 // ══════════════════════════════════════════════════════════
@@ -442,25 +462,25 @@ export function useReportsViewModel(
      * Orquesta la exportación delegando formato a servicio
      */
     const exportExcel = useCallback(() => {
-        const rows = buildExcelRows(filteredStudents, period, filters);
+        const rows = buildExcelRows(filteredStudents, period, filters, t);
 
         // Hoja 2: evolución semanal
         const weeklyRows = attendanceByWeek.map((w) => ({
-            Semana: w.week,
-            "Tasa de Asistencia (%)": w.rate,
+            [t("Semana")]: w.week,
+            [t("Tasa de Asistencia (%)")]: w.rate,
         }));
 
         // Hoja 3: ranking por programa
         const rankRows = courseRanking.map((r) => ({
-            Posición: r.rank,
-            Programa: r.courseName,
-            "Promedio (%)": r.rate,
+            [t("Posición")]: r.rank,
+            [t("Programa")]: r.courseName,
+            [t("Promedio (%)")]: r.rate,
         }));
 
         // Configurar hojas con anchos de columna
         const sheets = [
             {
-                name: "Aprendices",
+                name: t("Aprendices"),
                 data: rows,
                 columns: [
                     { wch: 12 }, // Código
@@ -469,65 +489,65 @@ export function useReportsViewModel(
                     { wch: 18 }, // Ficha/Semestre
                     { wch: 16 }, // Asistencia (%)
                     { wch: 12 }, // Estado
-                    { wch: 12 }, // Facial reg.
+                    { wch: 14 }, // Biometría
                     { wch: 20 }, // Período
                 ],
             },
             {
-                name: "Evolución Semanal",
+                name: t("Evolución Semanal"),
                 data: weeklyRows,
             },
             {
-                name: "Ranking Programas",
+                name: t("Ranking Programas"),
                 data: rankRows,
             },
         ];
 
-        const filename = `Reporte_Asistencia_${periodLabel(period).replace(/ /g, "_")}.xlsx`;
+        const filename = `Reporte_Asistencia_${periodLabel(period, t).replace(/ /g, "_")}.xlsx`;
         const result = exportToExcel(sheets, filename);
 
         if (!result.success) {
             console.error("Error al exportar Excel:", result.error);
         }
-    }, [filteredStudents, period, filters, attendanceByWeek, courseRanking]);
+    }, [filteredStudents, period, filters, attendanceByWeek, courseRanking, t]);
 
     /**
      * Exporta datos a PDF
      * Construye HTML y delega exportación a servicio
      */
     const exportPDF = useCallback(() => {
-        const periodText = periodLabel(period);
+        const periodText = periodLabel(period, t);
 
         // Construir notas de filtros
         const filterNotes = [];
-        if (filters.courseCode) filterNotes.push(`Programa: ${filters.courseCode}`);
-        if (filters.showAtRiskOnly) filterNotes.push("Solo en riesgo");
+        if (filters.courseCode) filterNotes.push(`${t("Programa")}: ${filters.courseCode}`);
+        if (filters.showAtRiskOnly) filterNotes.push(t("Solo en riesgo"));
         if (filters.statusFilter !== "all")
-            filterNotes.push(`Estado: ${filters.statusFilter}`);
+            filterNotes.push(`${t("Estado")}: ${filters.statusFilter}`);
         if (filters.attendanceMin > 0 || filters.attendanceMax < 100)
             filterNotes.push(
-                `Asistencia: ${filters.attendanceMin}%–${filters.attendanceMax}%`
+                `${t("Asistencia")}: ${filters.attendanceMin}%–${filters.attendanceMax}%`
             );
 
         // Construir tabla de estudiantes
         const studentsTable = buildHTMLTable(filteredStudents, [
-            { key: "code", label: "Código" },
-            { key: "name", label: "Nombre" },
-            { key: "courseName", label: "Programa", render: (value, row) => value || row.course },
-            { key: "grade", label: "Ficha/Semestre" },
+            { key: "code", label: t("Código") },
+            { key: "name", label: t("Nombre") },
+            { key: "courseName", label: t("Programa"), render: (value, row) => value || row.course },
+            { key: "grade", label: t("Ficha/Semestre") },
             {
                 key: "attendance",
-                label: "Asistencia",
+                label: t("Asistencia"),
                 align: "center",
                 render: (value) => formatPercentageWithColor(value, 75, 60),
             },
             {
                 key: "status",
-                label: "Estado",
+                label: t("Estado"),
                 render: (value) => {
                     return formatStatusBadge(value, {
-                        active: { text: "Activo", color: c.status.success },
-                        inactive: { text: "Inactivo", color: c.text.disabled },
+                        active: { text: t("Activo"), color: c.status.success },
+                        inactive: { text: t("Inactivo"), color: c.text.disabled },
                     });
                 },
             },
@@ -535,10 +555,10 @@ export function useReportsViewModel(
 
         // Construir tabla de evolución semanal
         const weeklyTable = buildHTMLTable(attendanceByWeek, [
-            { key: "week", label: "Semana" },
+            { key: "week", label: t("Semana") },
             {
                 key: "rate",
-                label: "Tasa",
+                label: t("Tasa"),
                 align: "center",
                 render: (value) => `${value}%`,
             },
@@ -567,7 +587,7 @@ export function useReportsViewModel(
         if (!result.success) {
             console.warn("Error al exportar PDF:", result.error);
         }
-    }, [filteredStudents, period, filters, attendanceByWeek, c]);
+    }, [filteredStudents, period, filters, attendanceByWeek, c, t]);
 
     /**
      * Exportar selección actual

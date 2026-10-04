@@ -129,37 +129,73 @@ export default function StudentDetailModal({
                                 </Text>
                             </View>
 
-                            {/* Bloque facial — solo para quienes pueden registrar */}
-                            {canRegisterFace && (
-                                <View style={{
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    padding: 14,
-                                    borderWidth: 1,
-                                    borderColor: c.border.primary,
-                                    borderRadius: 14,
-                                    marginBottom: 16,
-                                }}>
-                                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                                        <Feather name="aperture" size={18} color={c.brand.primary} />
-                                        <View>
-                                            <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary }}>
-                                                {t("Reconocimiento facial")}
-                                            </Text>
-                                            <Text style={{ fontSize: 13, color: c.text.secondary }}>
-                                                {student.registered
-                                                    ? t("Rostro registrado")
-                                                    : t("Sin registro facial")}
-                                            </Text>
+                            {/* Bloque biométrico — solo para quienes pueden registrar */}
+                            {canRegisterFace && (() => {
+                                // Determinar estado biométrico basado en facial y huella
+                                const hasFacial = student.hasFacial || false;
+                                const hasFingerprint = student.hasFingerprint || false;
+                                
+                                let biometricStatus = "pending";
+                                if (hasFacial && hasFingerprint) {
+                                    biometricStatus = "registered";
+                                } else if (hasFacial || hasFingerprint) {
+                                    biometricStatus = "partial";
+                                }
+                                
+                                // Configuración por estado
+                                const statusConfig = {
+                                    registered: { 
+                                        icon: "check-circle", 
+                                        color: c.status.success, 
+                                        text: t("Biometría registrada"),
+                                        showButton: false
+                                    },
+                                    partial: { 
+                                        icon: "alert-circle", 
+                                        color: c.status.warning, 
+                                        text: hasFacial 
+                                            ? t("Falta registro de huella dactilar")
+                                            : t("Falta registro facial"),
+                                        showButton: true
+                                    },
+                                    pending: { 
+                                        icon: "x-circle", 
+                                        color: c.text.secondary, 
+                                        text: t("Sin registro biométrico"),
+                                        showButton: true
+                                    },
+                                };
+                                const config = statusConfig[biometricStatus] || statusConfig.pending;
+                                
+                                return (
+                                    <View style={{
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                        padding: 14,
+                                        borderWidth: 1,
+                                        borderColor: c.border.primary,
+                                        borderRadius: 14,
+                                        marginBottom: 16,
+                                    }}>
+                                        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                                            <Feather name="aperture" size={18} color={c.brand.primary} />
+                                            <View>
+                                                <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary }}>
+                                                    {t("Reconocimiento biométrico")}
+                                                </Text>
+                                                <Text style={{ fontSize: 13, color: c.text.secondary }}>
+                                                    {config.text}
+                                                </Text>
+                                            </View>
                                         </View>
+                                        {config.showButton
+                                            ? <Button variant="primary" size="sm">{t("Registrar")}</Button>
+                                            : <Feather name={config.icon} size={18} color={config.color} />
+                                        }
                                     </View>
-                                    {student.registered
-                                        ? <Feather name="check-circle" size={18} color={c.status.success} />
-                                        : <Button variant="primary" size="sm">{t("Registrar")}</Button>
-                                    }
-                                </View>
-                            )}
+                                );
+                            })()}
                         </ScrollView>
 
                         {/* Footer */}

@@ -10,7 +10,8 @@ export const EMPTY_FORM = {
     course: "",
     role: "student",
     attendance: 0,
-    registered: false,
+    hasFacial: false,      // Registro facial
+    hasFingerprint: false, // Registro de huella dactilar
     status: "active",
 };
 
@@ -69,7 +70,8 @@ export function useStudentsViewModel() {
                 course: form.course.trim(),
                 grade: form.role,
                 attendance: form.attendance,
-                registered: form.registered,
+                hasFacial: form.hasFacial || false,
+                hasFingerprint: form.hasFingerprint || false,
                 status: form.status,
             });
             return null;

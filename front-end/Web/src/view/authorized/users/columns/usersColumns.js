@@ -130,16 +130,39 @@ export const COLUMNS = [
         ),
     },
     {
-        id: "face",
-        label: "Facial",
+        id: "biometric",
+        label: "Biometría",
         flex: 1,
         align: "center",
         visible: ({ canManage }) => canManage,
-        render: (user, { t }) => (
-            <Badge variant={user.registered ? "success" : "warning"}>
-                {user.registered ? t("Registrado") : t("Pendiente")}
-            </Badge>
-        ),
+        render: (user, { t }) => {
+            // Calcular estado basado en facial y huella
+            const hasFacial = user.hasFacial || false;
+            const hasFingerprint = user.hasFingerprint || false;
+            
+            let biometricStatus = "pending";
+            if (hasFacial && hasFingerprint) {
+                biometricStatus = "registered";
+            } else if (hasFacial || hasFingerprint) {
+                biometricStatus = "partial";
+            }
+            
+            const variantMap = {
+                registered: "success",
+                partial: "warning", 
+                pending: "default",
+            };
+            const labelMap = {
+                registered: t("Registrado"),
+                partial: t("Parcial"),
+                pending: t("Pendiente"),
+            };
+            return (
+                <Badge variant={variantMap[biometricStatus] || "default"}>
+                    {labelMap[biometricStatus] || t("Pendiente")}
+                </Badge>
+            );
+        },
     },
     {
         id: "status",
@@ -200,11 +223,34 @@ export function createCompactRowConfig({ showRole, canManage }) {
                     <Text style={{ fontSize: 12, fontWeight: "700", color: attColor }}>
                         {user.attendance || 0}%
                     </Text>
-                    {canManage && (
-                        <Badge variant={user.registered ? "success" : "warning"}>
-                            {user.registered ? t("Facial OK") : t("Pendiente")}
-                        </Badge>
-                    )}
+                    {canManage && (() => {
+                        // Calcular estado basado en facial y huella
+                        const hasFacial = user.hasFacial || false;
+                        const hasFingerprint = user.hasFingerprint || false;
+                        
+                        let biometricStatus = "pending";
+                        if (hasFacial && hasFingerprint) {
+                            biometricStatus = "registered";
+                        } else if (hasFacial || hasFingerprint) {
+                            biometricStatus = "partial";
+                        }
+                        
+                        const variantMap = {
+                            registered: "success",
+                            partial: "warning",
+                            pending: "default",
+                        };
+                        const labelMap = {
+                            registered: t("Registrado"),
+                            partial: t("Parcial"),
+                            pending: t("Pendiente"),
+                        };
+                        return (
+                            <Badge variant={variantMap[biometricStatus] || "default"}>
+                                {labelMap[biometricStatus] || t("Pendiente")}
+                            </Badge>
+                        );
+                    })()}
                 </View>
             </>
         ),
