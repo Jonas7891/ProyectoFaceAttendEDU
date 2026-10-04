@@ -70,6 +70,8 @@ databaseChangeLog:
                     nullable: false
         - sql:
             sql: ALTER TABLE attendance.justification_type ADD CONSTRAINT uq_justification_type_school_name UNIQUE (school_id, name)
+        - sql:
+            sql: CREATE UNIQUE INDEX uq_justification_type_global_name ON attendance.justification_type (name) WHERE school_id IS NULL
         - createIndex:
             schemaName: attendance
             tableName: justification_type
