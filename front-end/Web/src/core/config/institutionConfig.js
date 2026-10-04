@@ -86,8 +86,10 @@ const DEFAULT_INSTITUTION_CONFIG = {
     weeklyReport: true,
     atRiskAlert: true,
     dailySummary: false,
-    pushNotifications: true,
-    pushDuration: 0, // Sin valor por defecto - el usuario debe configurarlo
+    pushNotifications: true, // Activadas por defecto
+    pushDuration: 4, // Valor por defecto: 4 segundos
+    pushNotificationLimit: 15, // Límite total mostrado: 15 notificaciones
+    pushNotificationLimitByType: 5, // Límite por tipo: 5 notificaciones del mismo tipo
     
     // Seguridad
     twoFactor: false,

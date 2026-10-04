@@ -20,6 +20,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Platform } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
+import { getContrastTextColor } from "../../../../core/utils/colorHelpers";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 
 // ══════════════════════════════════════════════════════════════
@@ -52,10 +53,150 @@ let notificationId = 0;
 export function PushNotificationProvider({ 
   children, 
   defaultDuration = 5000,
-  maxNotifications = 5,
+  maxNotifications = 15,
+  maxNotificationsByType = 5,
   onNavigate 
 }) {
   const [notifications, setNotifications] = useState([]);
+  const [pendingQueue, setPendingQueue] = useState([]); // Cola de notificaciones pendientes
+  const [processedFromQueue, setProcessedFromQueue] = useState(0); // Contador de notificaciones liberadas de cola
+
+  /**
+   * Generar clave única para detectar duplicados
+   * @param {Object} notification - Configuración de la notificación
+   * @returns {string} Clave única
+   */
+  const generateNotificationKey = (notification) => {
+    // Combinar type, title y message para crear una clave única
+    const keyParts = [
+      notification.type || 'info',
+      notification.title || '',
+      notification.message || '',
+      notification.source || 'system'
+    ];
+    return keyParts.join('|').toLowerCase();
+  };
+
+  /**
+   * Verificar si una notificación es duplicada
+   * @param {Object} newNotification - Nueva notificación a verificar
+   * @returns {boolean} True si es duplicada
+   */
+  const isDuplicateNotification = (newNotification) => {
+    const newKey = generateNotificationKey(newNotification);
+    
+    // Verificar en notificaciones activas
+    const isDuplicateInActive = notifications.some(notification => 
+      generateNotificationKey(notification) === newKey
+    );
+    
+    // Verificar en cola pendiente
+    const isDuplicateInQueue = pendingQueue.some(notification => 
+      generateNotificationKey(notification) === newKey
+    );
+    
+    return isDuplicateInActive || isDuplicateInQueue;
+  };
+
+  /**
+   * Contar notificaciones del mismo tipo
+   * @param {string} type - Tipo de notificación
+   * @param {string} source - Fuente de notificación
+   * @returns {number} Cantidad de notificaciones del mismo tipo
+   */
+  const countNotificationsByType = (type, source) => {
+    const activeCount = notifications.filter(notification => 
+      notification.type === type && notification.source === source
+    ).length;
+    
+    const queueCount = pendingQueue.filter(notification => 
+      notification.type === type && notification.source === source
+    ).length;
+    
+    return activeCount + queueCount;
+  };
+
+  /**
+   * Calcular duración incremental basada en el total de notificaciones ya procesadas
+   * @param {number} totalProcessed - Total de notificaciones que ya han sido procesadas desde cola
+   * @returns {number} Milisegundos adicionales
+   */
+  const getIncrementalDuration = (totalProcessed) => {
+    // Solo aplicar incremento a partir de que hayamos superado el límite inicial
+    // Si ya procesamos algunas de la cola, aplicar incremento progresivo
+    if (totalProcessed === 0) return 0; // Primera notificación liberada: sin incremento
+    
+    // Fórmula incremental: 1ra liberada = +0s, 2da = +2s, 3ra = +5s, 4ta = +10s, etc.
+    const increments = [2000, 5000, 10000, 20000, 35000, 55000]; // En milisegundos
+    
+    if (totalProcessed - 1 < increments.length) {
+      return increments[totalProcessed - 1];
+    }
+    
+    // Para posiciones mayores, incremento exponencial
+    return increments[increments.length - 1] + (totalProcessed - increments.length) * 30000;
+  };
+
+  /**
+   * Procesar la cola de notificaciones pendientes
+   * Libera notificaciones cuando hay cupo disponible
+   */
+  const processQueue = () => {
+    setNotifications((currentNotifications) => {
+      setPendingQueue((currentQueue) => {
+        if (currentQueue.length === 0 || currentNotifications.length >= maxNotifications) {
+          return currentQueue;
+        }
+
+        // Cuántas notificaciones podemos mostrar
+        const availableSlots = maxNotifications - currentNotifications.length;
+        const toShow = currentQueue.slice(0, availableSlots);
+        const remaining = currentQueue.slice(availableSlots);
+
+        // Agregar duración incremental a las notificaciones liberadas de la cola
+        const processedNotifications = toShow.map((notification, index) => {
+          // Calcular duración incremental basada en cuántas ya han sido procesadas
+          const incrementalDuration = getIncrementalDuration(processedFromQueue + index + 1);
+          
+          return {
+            ...notification,
+            duration: notification.originalDuration + incrementalDuration,
+            wasQueued: true,
+            queuePosition: processedFromQueue + index + 1, // Posición global de procesamiento
+          };
+        });
+
+        // Actualizar contador de notificaciones procesadas de la cola
+        setProcessedFromQueue(prev => prev + toShow.length);
+
+        // Agregar las notificaciones procesadas a las actuales
+        setNotifications((prev) => {
+          const combined = [...prev, ...processedNotifications];
+          
+          // Ordenar por prioridad
+          const priorityOrder = { urgent: 0, high: 1, normal: 2, low: 3 };
+          combined.sort((a, b) => 
+            priorityOrder[a.priority] - priorityOrder[b.priority]
+          );
+
+          return combined;
+        });
+
+        // Configurar auto-dismiss para las notificaciones liberadas
+        processedNotifications.forEach((notification) => {
+          if (notification.duration > 0) {
+            setTimeout(() => {
+              dismiss(notification.id);
+            }, notification.duration);
+          }
+        });
+
+        return remaining;
+      });
+
+      return currentNotifications;
+    });
+  };
 
   /**
    * Mostrar una notificación push
@@ -73,17 +214,18 @@ export function PushNotificationProvider({
    * @param {object} config.data - Datos adicionales para la notificación
    * @param {function} config.onPress - Callback al hacer click en la notificación
    * @param {function} config.onDismiss - Callback al cerrar la notificación
+   * @param {boolean} config.allowDuplicates - Permitir notificaciones duplicadas (default: false)
    * 
-   * @returns {number} ID de la notificación
+   * @returns {number|null} ID de la notificación o null si fue rechazada
    */
   const show = (config) => {
-    const id = notificationId++;
     const notification = {
-      id,
+      id: notificationId++,
       title: config.title || "Notificación",
       message: config.message || "",
       type: config.type || "info",
       duration: config.duration !== undefined ? config.duration : defaultDuration,
+      originalDuration: config.duration !== undefined ? config.duration : defaultDuration,
       icon: config.icon,
       navigation: config.navigation,
       action: config.action,
@@ -93,44 +235,88 @@ export function PushNotificationProvider({
       onPress: config.onPress,
       onDismiss: config.onDismiss,
       timestamp: Date.now(),
+      wasQueued: false,
+      allowDuplicates: config.allowDuplicates || false,
     };
 
-    setNotifications((prev) => {
-      const newNotifications = [...prev, notification];
-      
-      // Ordenar por prioridad
-      const priorityOrder = { urgent: 0, high: 1, normal: 2, low: 3 };
-      newNotifications.sort((a, b) => 
-        priorityOrder[a.priority] - priorityOrder[b.priority]
-      );
-
-      // Limitar notificaciones simultáneas
-      if (newNotifications.length > maxNotifications) {
-        return newNotifications.slice(0, maxNotifications);
-      }
-      return newNotifications;
-    });
-
-    // Auto-dismiss si tiene duración
-    if (notification.duration > 0) {
-      setTimeout(() => {
-        dismiss(id);
-      }, notification.duration);
+    // 1. Verificar duplicados (a menos que se permitan explícitamente)
+    if (!notification.allowDuplicates && isDuplicateNotification(notification)) {
+      console.log(`🔕 Notificación duplicada ignorada: ${notification.title}`);
+      return null;
     }
 
-    return id;
+    // 2. Verificar límite por tipo
+    const currentTypeCount = countNotificationsByType(notification.type, notification.source);
+    if (currentTypeCount >= maxNotificationsByType) {
+      console.log(`🚫 Límite por tipo alcanzado (${notification.type}): ${currentTypeCount}/${maxNotificationsByType}`);
+      return null;
+    }
+
+    setNotifications((currentNotifications) => {
+      // 3. Si hay espacio en pantalla, mostrar inmediatamente
+      if (currentNotifications.length < maxNotifications) {
+        const newNotifications = [...currentNotifications, notification];
+        
+        // Ordenar por prioridad
+        const priorityOrder = { urgent: 0, high: 1, normal: 2, low: 3 };
+        newNotifications.sort((a, b) => 
+          priorityOrder[a.priority] - priorityOrder[b.priority]
+        );
+
+        // Auto-dismiss si tiene duración
+        if (notification.duration > 0) {
+          setTimeout(() => {
+            dismiss(notification.id);
+          }, notification.duration);
+        }
+
+        return newNotifications;
+      } else {
+        // 4. No hay espacio, agregar a la cola
+        setPendingQueue((currentQueue) => {
+          const newQueue = [...currentQueue, notification];
+          
+          // Ordenar cola por prioridad también
+          const priorityOrder = { urgent: 0, high: 1, normal: 2, low: 3 };
+          newQueue.sort((a, b) => 
+            priorityOrder[a.priority] - priorityOrder[b.priority]
+          );
+
+          return newQueue;
+        });
+
+        return currentNotifications;
+      }
+    });
+
+    return notification.id;
   };
 
   const dismiss = (id) => {
+    // Buscar la notificación en las activas
     const notification = notifications.find(n => n.id === id);
     if (notification?.onDismiss) {
       notification.onDismiss();
     }
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    
+    setNotifications((prev) => {
+      const filtered = prev.filter((n) => n.id !== id);
+      
+      // Después de remover, procesar la cola para liberar notificaciones pendientes
+      setTimeout(() => {
+        processQueue();
+      }, 100); // Pequeño delay para evitar problemas de concurrencia
+      
+      return filtered;
+    });
+
+    // También remover de la cola si está allí
+    setPendingQueue((prev) => prev.filter((n) => n.id !== id));
   };
 
   const dismissAll = () => {
     setNotifications([]);
+    setPendingQueue([]);
   };
 
   const handleNavigate = (navigation) => {
@@ -167,6 +353,19 @@ export function PushNotificationProvider({
     
     dismiss,
     dismissAll,
+    
+    // Información de estado para debugging
+    getStatus: () => ({
+      active: notifications.length,
+      pending: pendingQueue.length,
+      maxNotifications,
+      maxNotificationsByType,
+      byType: notifications.reduce((acc, n) => {
+        const key = `${n.type}-${n.source}`;
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {}),
+    }),
   };
 
   return (
@@ -289,38 +488,38 @@ function PushNotificationItem({ notification, onDismiss, onNavigate }) {
   const typeConfig = {
     success: {
       icon: "check-circle",
-      bgColor: c.status.successLight || "#D1FAE5",
-      iconColor: c.status.success || "#10B981",
-      textColor: "#065F46",
-      borderColor: c.status.success || "#10B981",
+      bgColor: c.status.successLight || c.status.success + "15",
+      iconColor: c.status.success,
+      textColor: getContrastTextColor(c.status.successLight || c.status.success + "15"),
+      borderColor: c.status.success,
     },
     error: {
-      icon: "alert-circle",
-      bgColor: c.status.dangerLight || "#FEE2E2",
-      iconColor: c.status.danger || "#EF4444",
-      textColor: "#991B1B",
-      borderColor: c.status.danger || "#EF4444",
+      icon: "alert-circle", 
+      bgColor: c.status.dangerLight || c.status.danger + "15",
+      iconColor: c.status.danger,
+      textColor: getContrastTextColor(c.status.dangerLight || c.status.danger + "15"),
+      borderColor: c.status.danger,
     },
     warning: {
       icon: "alert-triangle",
-      bgColor: c.status.warningLight || "#FEF3C7",
-      iconColor: c.status.warning || "#F59E0B",
-      textColor: "#92400E",
-      borderColor: c.status.warning || "#F59E0B",
+      bgColor: c.status.warningLight || c.status.warning + "15",
+      iconColor: c.status.warning,
+      textColor: getContrastTextColor(c.status.warningLight || c.status.warning + "15"),
+      borderColor: c.status.warning,
     },
     info: {
       icon: "info",
-      bgColor: c.brand.primaryLight || "#DBEAFE",
-      iconColor: c.brand.primary || "#3B82F6",
-      textColor: "#1E40AF",
-      borderColor: c.brand.primary || "#3B82F6",
+      bgColor: c.status.infoLight || c.brand.primaryLight || c.brand.primary + "15",
+      iconColor: c.brand.primary,
+      textColor: getContrastTextColor(c.status.infoLight || c.brand.primaryLight || c.brand.primary + "15"),
+      borderColor: c.brand.primary,
     },
     custom: {
       icon: "bell",
-      bgColor: c.background.surface || "#FFFFFF",
-      iconColor: c.text.primary || "#1F2937",
-      textColor: c.text.primary || "#1F2937",
-      borderColor: c.border.primary || "#E5E7EB",
+      bgColor: c.background.surface,
+      iconColor: c.text.primary,
+      textColor: c.text.primary,
+      borderColor: c.border.primary,
     },
   };
 
@@ -377,8 +576,17 @@ function PushNotificationItem({ notification, onDismiss, onNavigate }) {
               {notification.title}
             </Text>
             
+            {/* Indicador de notificación que estuvo en cola */}
+            {notification.wasQueued && (
+              <View style={[styles.badge, { backgroundColor: config.iconColor + "15" }]}>
+                <Text style={[styles.badgeText, { color: config.iconColor }]}>
+                  +{notification.queuePosition}
+                </Text>
+              </View>
+            )}
+            
             {/* Badge de origen/fuente */}
-            {notification.source && notification.source !== "system" && (
+            {notification.source && notification.source !== "system" && !notification.wasQueued && (
               <View style={[styles.badge, { backgroundColor: config.iconColor + "20" }]}>
                 <Text style={[styles.badgeText, { color: config.iconColor }]}>
                   {notification.source}

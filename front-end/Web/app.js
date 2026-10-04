@@ -11,6 +11,8 @@ import { ResponsiveProvider } from "./src/context/ResponsiveContext";
 import { LanguageProvider, useLanguageContext } from "./src/core/utils/i18n/context/LanguageContext";
 import { AppDataProvider }  from "./src/context/AppDataContext";
 import { AuthProvider }     from "./src/context/AuthContext";
+import { PushNotificationProvider } from "./src/view/components/common/feedback/PushNotification";
+import { getInstitutionConfig } from "./src/core/config/institutionConfig";
 
 import AppNavigator from "./src/navegation/appNavigator";
 import { linkingConfig } from "./src/navegation/linking.config";
@@ -19,6 +21,9 @@ import LoadingView from "./src/view/LoadingView";
 // Wrapper interno para acceder al contexto de idioma
 function AppContent() {
     const { isPreparingTranslations, checkAndPrepareTranslations } = useLanguageContext();
+    
+    // Obtener configuración dinámica para las notificaciones
+    const config = getInstitutionConfig();
 
     // Callback cuando el linking está listo
     const onReady = () => {
@@ -39,30 +44,36 @@ function AppContent() {
     return (
         <AuthProvider>
             <AppDataProvider>
-                <NavigationContainer
-                    linking={linkingConfig}
-                    onReady={onReady}
-                    onStateChange={onNavigationStateChange}
-                    fallback={<></>}
-                    documentTitle={{
-                        formatter: (options, route) => {
-                            const routeTitles = {
-                                'FaceAttendEDU': 'FaceAttend EDU',
-                                'FaceAttendEDU-Login': 'Iniciar Sesión | FaceAttend EDU',
-                                'FaceAttendEDU-Register': 'Registrarse | FaceAttend EDU',
-                                'Dashboard': 'Dashboard | FaceAttend EDU',
-                                'Users': 'Usuarios | FaceAttend EDU',
-                                'Courses': 'Cursos | FaceAttend EDU',
-                                'Environments': 'Ambientes | FaceAttend EDU',
-                                'Reports': 'Reportes | FaceAttend EDU',
-                                'Settings': 'Configuración | FaceAttend EDU',
-                            };
-                            return routeTitles[route?.name] || 'FaceAttend EDU';
-                        }
-                    }}
+                <PushNotificationProvider 
+                    defaultDuration={config.pushDuration * 1000} // Convertir segundos a milisegundos
+                    maxNotifications={config.pushNotificationLimit || 15} // Límite total
+                    maxNotificationsByType={config.pushNotificationLimitByType || 5} // Límite por tipo
                 >
-                    <AppNavigator />
-                </NavigationContainer>
+                    <NavigationContainer
+                        linking={linkingConfig}
+                        onReady={onReady}
+                        onStateChange={onNavigationStateChange}
+                        fallback={<></>}
+                        documentTitle={{
+                            formatter: (options, route) => {
+                                const routeTitles = {
+                                    'FaceAttendEDU': 'FaceAttend EDU',
+                                    'FaceAttendEDU-Login': 'Iniciar Sesión | FaceAttend EDU',
+                                    'FaceAttendEDU-Register': 'Registrarse | FaceAttend EDU',
+                                    'Dashboard': 'Dashboard | FaceAttend EDU',
+                                    'Users': 'Usuarios | FaceAttend EDU',
+                                    'Courses': 'Cursos | FaceAttend EDU',
+                                    'Environments': 'Ambientes | FaceAttend EDU',
+                                    'Reports': 'Reportes | FaceAttend EDU',
+                                    'Settings': 'Configuración | FaceAttend EDU',
+                                };
+                                return routeTitles[route?.name] || 'FaceAttend EDU';
+                            }
+                        }}
+                    >
+                        <AppNavigator />
+                    </NavigationContainer>
+                </PushNotificationProvider>
             </AppDataProvider>
         </AuthProvider>
     );

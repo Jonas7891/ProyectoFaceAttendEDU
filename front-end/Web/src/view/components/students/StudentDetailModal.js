@@ -5,7 +5,7 @@
 // ============================================================
 
 import React, { useMemo } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Modal } from "react-native";
+import { View, Text, TouchableOpacity, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Badge, Avatar, Button, ProgressBar, useAttendanceColor, ATTENDANCE_THRESHOLDS } from "../common";
 import { useTheme }       from "../hooks/useTheme";
@@ -53,7 +53,6 @@ export default function StudentDetailModal({
                         backgroundColor: c.background.surface,
                         borderRadius: 14,
                         width: 520,
-                        maxHeight: "90%",
                         overflow: "hidden",
                         shadowColor: "#000",
                         shadowOpacity: 0.15,
@@ -89,12 +88,15 @@ export default function StudentDetailModal({
                         </View>
 
                         {/* Body */}
-                        <ScrollView style={{ padding: 20 }}>
-                            <View style={{ gap: 10, marginBottom: 16 }}>
+                        <View style={{ padding: 20 }}>
+                            <View style={{ gap: 8, marginBottom: 12 }}>
                                 {[
                                     { label: t("Correo"), value: student.email, icon: "mail" },
-                                    { label: t("Programa"), value: courseName, icon: "book-open" },
-                                    { label: t("Semestre"), value: student.grade, icon: "trending-up" },
+                                    // Solo mostrar Programa y Semestre para no-administradores
+                                    ...(student.userType !== "admin" ? [
+                                        { label: t("Programa"), value: courseName, icon: "book-open" },
+                                        { label: t("Semestre"), value: student.grade, icon: "trending-up" },
+                                    ] : [])
                                 ].map(({ label, value, icon }) => (
                                     <View key={label} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                                         <Feather name={icon} size={16} color={c.text.secondary} />
@@ -106,31 +108,33 @@ export default function StudentDetailModal({
                                 ))}
                             </View>
 
-                            {/* Bloque de asistencia */}
-                            <View style={{
-                                backgroundColor: c.background.app,
-                                borderRadius: 14,
-                                padding: 14,
-                                marginBottom: 16,
-                            }}>
-                                <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 10 }}>
-                                    <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary }}>
-                                        {t("Asistencia")}
-                                    </Text>
-                                    <Text style={{ fontSize: 16, fontWeight: "800", color: attColor }}>
-                                        {student.attendance}%
+                            {/* Bloque de asistencia - Solo para estudiantes y profesores */}
+                            {student.userType !== "admin" && (
+                                <View style={{
+                                    backgroundColor: c.background.app,
+                                    borderRadius: 14,
+                                    padding: 12,
+                                    marginBottom: 12,
+                                }}>
+                                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
+                                        <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary }}>
+                                            {t("Asistencia")}
+                                        </Text>
+                                        <Text style={{ fontSize: 16, fontWeight: "800", color: attColor }}>
+                                            {student.attendance}%
+                                        </Text>
+                                    </View>
+                                    <ProgressBar value={student.attendance} color={attColor} height={6} />
+                                    <Text style={{ fontSize: 11, color: c.text.secondary, marginTop: 6 }}>
+                                        {student.attendance >= ATTENDANCE_THRESHOLDS.MIN_ACCEPTABLE
+                                            ? t("Cumple el mínimo requerido (80%)")
+                                            : t("⚠ Por debajo del mínimo requerido (80%)")}
                                     </Text>
                                 </View>
-                                <ProgressBar value={student.attendance} color={attColor} height={8} />
-                                <Text style={{ fontSize: 12, color: c.text.secondary, marginTop: 8 }}>
-                                    {student.attendance >= ATTENDANCE_THRESHOLDS.MIN_ACCEPTABLE
-                                        ? t("Cumple el mínimo requerido (80%)")
-                                        : t("⚠ Por debajo del mínimo requerido (80%)")}
-                                </Text>
-                            </View>
+                            )}
 
-                            {/* Bloque biométrico — solo para quienes pueden registrar */}
-                            {canRegisterFace && (() => {
+                            {/* Bloque biométrico — solo para estudiantes y profesores que pueden registrar */}
+                            {canRegisterFace && student.userType !== "admin" && (() => {
                                 // Determinar estado biométrico basado en facial y huella
                                 const hasFacial = student.hasFacial || false;
                                 const hasFingerprint = student.hasFingerprint || false;
@@ -172,11 +176,10 @@ export default function StudentDetailModal({
                                         flexDirection: "row",
                                         alignItems: "center",
                                         justifyContent: "space-between",
-                                        padding: 14,
+                                        padding: 12,
                                         borderWidth: 1,
                                         borderColor: c.border.primary,
                                         borderRadius: 14,
-                                        marginBottom: 16,
                                     }}>
                                         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                                             <Feather name="aperture" size={18} color={c.brand.primary} />
@@ -184,7 +187,7 @@ export default function StudentDetailModal({
                                                 <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary }}>
                                                     {t("Reconocimiento biométrico")}
                                                 </Text>
-                                                <Text style={{ fontSize: 13, color: c.text.secondary }}>
+                                                <Text style={{ fontSize: 12, color: c.text.secondary }}>
                                                     {config.text}
                                                 </Text>
                                             </View>
@@ -196,11 +199,11 @@ export default function StudentDetailModal({
                                     </View>
                                 );
                             })()}
-                        </ScrollView>
+                        </View>
 
                         {/* Footer */}
                         <View style={{
-                            padding: 16,
+                            padding: 12,
                             borderTopWidth: 1,
                             borderTopColor: c.border.primary,
                             flexDirection: "row",
@@ -210,7 +213,11 @@ export default function StudentDetailModal({
                             <Button variant="ghost" onPress={onClose}>{t("Cerrar")}</Button>
                             {/* Editar solo para quienes pueden gestionar */}
                             {canManage && (
-                                <Button variant="primary">{t("Editar estudiante")}</Button>
+                                <Button variant="primary">
+                                    {student.userType === "admin" ? t("Editar administrador") : 
+                                     student.userType === "teacher" ? t("Editar docente") : 
+                                     t("Editar estudiante")}
+                                </Button>
                             )}
                         </View>
                     </View>

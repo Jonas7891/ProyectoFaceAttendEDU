@@ -38,6 +38,13 @@ export function AdminUsers({ section, vm: vmProp }) {
     const permissions = useRolePermissions();
     const appData = useAppData();
 
+    // Resetear filtro de dropdown cuando cambias de sección
+    React.useEffect(() => {
+        if (section === "all" || !section || section === undefined) {
+            vm.setUserTypeFilter("all");
+        }
+    }, [section]);
+
     // Determinar el filtro de rol: prioritario desde section (sidebar), secundario desde dropdown
     // section: undefined/"all" (todos), "students", "teachers", "admins"
     const sectionToUserType = {
@@ -46,7 +53,7 @@ export function AdminUsers({ section, vm: vmProp }) {
         admins: "admin",
     };
     
-    const roleFilterFromSection = section && section !== "all" ? sectionToUserType[section] : null;
+    const roleFilterFromSection = section && section !== "all" && section !== undefined ? sectionToUserType[section] : null;
     const roleFilterFromDropdown = vm.userTypeFilter && vm.userTypeFilter !== "all" ? vm.userTypeFilter : null;
     const roleFilter = roleFilterFromSection || roleFilterFromDropdown;
     
@@ -73,6 +80,7 @@ export function AdminUsers({ section, vm: vmProp }) {
     const compactConfig = createCompactRowConfig({
         showRole: !roleFilter,
         canManage,
+        roleFilter,
     });
     
     // Mensaje de carga dinámico según la sección
@@ -131,7 +139,7 @@ export function AdminUsers({ section, vm: vmProp }) {
                     visible={vm.showRegisterModal}
                     onClose={vm.closeRegisterModal}
                     onSubmit={vm.registerUser}
-                    initialRole={roleFilter || null}
+                    initialRole={roleFilter}
                 />
             )}
 

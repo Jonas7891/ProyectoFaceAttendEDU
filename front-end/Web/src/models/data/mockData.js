@@ -844,7 +844,6 @@ export const mockAppUsers = [
         email: "admin@uni.edu",
         role: "admin",
         code: "ADM001",
-        department: "TI",
         status: "active",
     },
     {
@@ -1094,23 +1093,13 @@ export const mockAdmins = [
         name: "Admin. General",
         email: "admin@uni.edu",
         code: "ADMIN001",
-        course: null, // Los admins no tienen curso asignado
-        grade: "Administrador",
-        attendance: null, // Los admins no tienen asistencia
         status: "active",
-        hasFacial: true,
-        hasFingerprint: true,
     },
     {
         id: "a2",
         name: "Coordinador Académico",
         email: "coord.academico@uni.edu",
         code: "ADMIN002",
-        course: null,
-        grade: "Administrador",
-        attendance: null,
         status: "active",
-        hasFacial: true,
-        hasFingerprint: true,
     },
 ];

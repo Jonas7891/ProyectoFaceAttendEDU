@@ -22,7 +22,7 @@ export const SEMANTIC_SLOTS = [
 const VISION_COLOR_MAP = {
     base: {
         primary: "#1983fc", // Azul
-        success: "#19C687", // Verde
+        success: "#4fdd36", // Verde
         warning: "#FFAB00", // Ámbar
         error:   "#F04438", // Rojo
         text:    "#000000", // Negro

@@ -18,6 +18,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
+import { isValidEmail } from "../core/utils/validation";
 
 // ── Tipos de usuario ───────────────────────────────────────
 
@@ -120,11 +121,17 @@ export function validateUserForm(form) {
     if (!form.name.trim()) return "El nombre es requerido";
     if (!form.code.trim()) return "El código es requerido";
     if (!form.email.trim()) return "El correo es requerido";
+    if (!isValidEmail(form.email.trim())) return "El formato del correo electrónico no es válido";
     if (!form.role) return "El rol es requerido";
     
     // Validación adicional para estudiantes
-    if (form.role === USER_TYPES.STUDENT && !form.course.trim()) {
+    if (form.role === USER_TYPES.STUDENT && !form.course?.trim()) {
         return "El programa es requerido para estudiantes";
+    }
+    
+    // Validación adicional para profesores
+    if (form.role === USER_TYPES.TEACHER && !form.course?.trim()) {
+        return "El departamento es requerido para profesores";
     }
     
     return null;
@@ -347,27 +354,48 @@ export function useUsersViewModel(
             const err = validateUserForm(form);
             if (err) return err;
 
+            // Crear objeto base del usuario
+            const baseUser = {
+                name: form.name.trim(),
+                code: form.code.trim(),
+                email: form.email.trim(),
+                status: form.status,
+            };
+
             // Delegar al método correspondiente según el tipo de usuario
             if (form.role === USER_TYPES.STUDENT) {
                 await appData.addStudent({
-                    name: form.name.trim(),
-                    code: form.code.trim(),
-                    email: form.email.trim(),
+                    ...baseUser,
                     course: form.course.trim(),
                     grade: form.role,
-                    attendance: form.attendance,
+                    attendance: form.attendance || 0,
                     hasFacial: form.hasFacial || false,
                     hasFingerprint: form.hasFingerprint || false,
-                    status: form.status,
                 });
+            } else {
+                // Para profesores y administradores, agregar a la lista general users
+                const userData = {
+                    ...baseUser,
+                    id: `${form.role.charAt(0)}${Date.now()}`, // Generar ID único
+                };
+
+                if (form.role === USER_TYPES.TEACHER) {
+                    userData.role = "teacher";
+                    userData.userType = USER_TYPES.TEACHER;
+                    userData.course = form.course ? form.course.trim() : null;
+                    userData.department = form.course ? form.course.trim() : null;
+                    userData.grade = "Docente";
+                    userData.attendance = 0;
+                    userData.hasFacial = form.hasFacial || false;
+                    userData.hasFingerprint = form.hasFingerprint || false;
+                } else if (form.role === USER_TYPES.ADMIN) {
+                    userData.role = "admin";
+                    userData.userType = USER_TYPES.ADMIN;
+                    // Los administradores no necesitan campos adicionales
+                }
+
+                await appData.addUser(userData);
             }
-            // TODO: Agregar métodos para profesores y administradores
-            // else if (form.role === USER_TYPES.TEACHER) {
-            //     await appData.addTeacher({ ... });
-            // }
-            // else if (form.role === USER_TYPES.ADMIN) {
-            //     await appData.addAdmin({ ... });
-            // }
             
             return null;
         },

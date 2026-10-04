@@ -21,6 +21,7 @@ import {
 import {
     AtRiskAlertToggle,
     PushNotificationToggle,
+    PushNotificationLimit,
     TwoFactorRow,
     SessionTimeInput,
     AccentBlock,
@@ -94,6 +95,14 @@ export function StudentSettings({ section, onSave, onDiscard, onDiscardColors, o
                         onDurationChange={(value) => updateConfig("pushDuration", value)}
                         description={t("Notificaciones emergentes sobre tu asistencia y actualizaciones del sistema.")}
                     />,
+                    ...(config.pushNotifications ? [
+                        <PushNotificationLimit
+                            limit={config.pushNotificationLimit}
+                            limitByType={config.pushNotificationLimitByType}
+                            onLimitChange={(value) => updateConfig("pushNotificationLimit", value)}
+                            onLimitByTypeChange={(value) => updateConfig("pushNotificationLimitByType", value)}
+                        />
+                    ] : []),
                 ]}
             />
         ),
