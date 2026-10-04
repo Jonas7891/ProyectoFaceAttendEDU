@@ -56,12 +56,30 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
     const loadSchoolInfo = async () => {
         try {
             const userInfo = await getCurrentUser();
-            const email = userInfo?.email;
-            const user = await getUserByEmail(email);
+            let personId = userInfo?.personId || null;
+            if (!personId && userInfo?.email) {
+                const user = await getUserByEmail(userInfo.email);
+                personId = user?.personId || null;
+            }
 
-            const actors = await ActorService.getByPerson(user?.personId);
+            const actors = await ActorService.getByPerson(personId);
             const actor = actors?.length > 0 ? actors[0] : null;
-            const actorSchoolId = actor?.schoolId;
+            let actorSchoolId = actor?.schoolId || null;
+            if (!actorSchoolId) {
+                // Sin actor académico (p. ej. admin): escuela con más actores.
+                try {
+                    const counts = {};
+                    for (const a of (await ActorService.getAll()) || []) {
+                        if (a?.schoolId != null) counts[a.schoolId] = (counts[a.schoolId] || 0) + 1;
+                    }
+                    const top = Object.entries(counts).sort((x, y) => y[1] - x[1] || Number(x[0]) - Number(y[0]))[0];
+                    if (top) actorSchoolId = Number(top[0]);
+                    if (!actorSchoolId) {
+                        const schools = await SchoolService.getAll();
+                        actorSchoolId = schools?.[0]?.schoolId || null;
+                    }
+                } catch {}
+            }
             if (!actorSchoolId) return;
 
             const school = await SchoolService.getById(actorSchoolId);

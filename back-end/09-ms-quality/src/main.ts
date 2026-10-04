@@ -64,7 +64,7 @@ async function start() {
   await registerProcessRoutes(app);
   await registerIstqbRoutes(app);
   registerEventHook(app);
-  const port = Number(process.env.PORT) || 8091;
+  const port = Number(process.env.PORT) || 8089;
   await app.listen({ port, host: '0.0.0.0' });
 }
 

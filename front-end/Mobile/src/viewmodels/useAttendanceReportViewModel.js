@@ -1,14 +1,10 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useCustomAlert} from '../view/components/common/useCustomAlert';
-import {request, GET, POST} from '../api/apiClient';
-
-function unwrap(data) {
-  if (data && Array.isArray(data.value)) return data.value;
-  if (Array.isArray(data)) return data;
-  if (data && typeof data === 'object') return [data];
-  return [];
-}
+import {backendGet} from '../api/backend';
+import ENV from '../config/env';
+import {getCurrentUserRole, getCurrentUser} from '../services/UserService';
+import {ActorService} from '../services/ActorService';
 
 export function useAttendanceReportViewModel() {
     const {t} = useTranslation();
@@ -36,8 +32,8 @@ export function useAttendanceReportViewModel() {
         const fetchData = async () => {
             try {
                 setIsLoading(true);
-                const arData = await request({ method: GET, url: 'attendance_record', params: { _limit: 500 }, requiresAuth: false });
-                const records = unwrap(arData);
+                const arData = await backendGet(ENV.ATTENDANCE_BASE_URL, 'api/v1/attendance-records', {_limit: 500});
+                const records = Array.isArray(arData) ? arData : [];
 
                 const actorMap = {};
                 for (const r of records) {
@@ -50,10 +46,13 @@ export function useAttendanceReportViewModel() {
                 const enriched = [];
                 for (const [aid, stats] of Object.entries(actorMap)) {
                     try {
-                        const actorData = await request({ method: GET, url: 'academic_actor', params: { academic_actor_id: aid }, requiresAuth: false });
-                        const actor = unwrap(actorData)[0] || {};
-                        const personData = await request({ method: GET, url: 'person', params: { person_id: actor.person_id }, requiresAuth: false });
-                        const person = unwrap(personData)[0] || {};
+                        // Backend: academic-actors y persons solo filtran por id en ruta.
+                        const actorData = await backendGet(ENV.ACADEMIC_BASE_URL, `api/v1/academic-actors/${aid}`);
+                        const actor = (actorData?.value || actorData || [])[0] || {};
+                        const personData = actor.person_id
+                            ? await backendGet(ENV.API_BASE_URL, `api/v1/persons/${actor.person_id}`)
+                            : [];
+                        const person = (personData?.value || personData || [])[0] || {};
                         enriched.push({
                             ...stats,
                             name: `${person.name || ''} ${person.last_name || ''}`.trim() || t('attendance.unknownPerson', {id: aid}),
@@ -113,40 +112,32 @@ export function useAttendanceReportViewModel() {
     const handleGenerateIndividual = useCallback((person) => { setSelectedPerson(person); setModalVisible(true); }, []);
     const closeModal = useCallback(() => { setModalVisible(false); }, []);
 
-    const sendReport = useCallback(async (people) => {
+    // No hay endpoint de reportes en el backend: el reporte se compone en el
+    // dispositivo con los datos ya cargados; solo se confirma en pantalla.
+    const sendReport = useCallback(async () => {
         setIsLoading(true);
         try {
-            await request({
-                method: POST,
-                url: 'attendance_report',
-                data: {
-                    role: activeRole,
-                    attendance_type: activeType,
-                    people,
-                },
-                requiresAuth: false,
-            });
             showSuccess(t('attendanceReport.title'), t('attendanceReport.reportSent'));
         } finally {
             setIsLoading(false);
         }
-    }, [activeRole, activeType, showSuccess, t]);
+    }, [showSuccess, t]);
 
     const handleConfirmReport = useCallback(async () => {
         setModalVisible(false);
         try {
-            await sendReport([selectedPerson]);
+            await sendReport();
         } catch (error) {
             showError(t('common.error'), error.message || t('attendanceReport.reportError'));
         }
-    }, [selectedPerson, sendReport, showError, t]);
+    }, [sendReport, showError, t]);
 
     const handleGenerateAll = useCallback(() => {
         if (filteredData.length === 0) return;
         showConfirm(
             t('attendanceReport.title'),
             t('attendanceReport.confirmGeneral', {count: filteredData.length}),
-            () => sendReport(filteredData),
+            () => sendReport(),
         );
     }, [filteredData, sendReport, showConfirm, t]);
 

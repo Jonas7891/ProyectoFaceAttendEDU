@@ -17,13 +17,21 @@ export default function DangerButton({ title, disabled = false, onLogout }) {
         try {
             // Limpiar almacenamiento
             await removeToken();
-            await AsyncStorage.multiRemove(['userRole', 'userEmail', 'appLanguage', 'alertsConfig']);
+            await AsyncStorage.multiRemove(['userRole', 'userEmail', 'userProfile', 'appLanguage', 'alertsConfig']);
 
             // Ejecutar callback (que ya incluye la confirmación desde la pantalla)
             if (onLogout) {
                 await onLogout();
             } else {
-                navigation.reset({ index: 0, routes: [{ name: 'HomesScreen' }] });
+                const routeNames = navigation.getState?.()?.routeNames ?? [];
+                const target = routeNames.includes('HomesScreen')
+                    ? 'HomesScreen'
+                    : routeNames.includes('DashboardScreen')
+                        ? 'DashboardScreen'
+                        : null;
+                if (target) {
+                    navigation.reset({ index: 0, routes: [{ name: target }] });
+                }
             }
         } catch (error) {
             console.error('Error al cerrar sesión:', error);

@@ -6,7 +6,14 @@ import {useFocusEffect} from '@react-navigation/native';
 import {getCurrentUserRole, getCurrentUser} from "../services/UserService";
 import {ActorService} from '../services/ActorService';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
-import {request, GET} from '../api/apiClient';
+import {backendGet} from '../api/backend';
+import ENV from '../config/env';
+
+const ATT = () => ENV.ATTENDANCE_BASE_URL;
+const SCHED = () => ENV.SCHEDULING_BASE_URL;
+const ACAD = () => ENV.ACADEMIC_BASE_URL;
+const NOTIFY = () => ENV.NOTIFY_BASE_URL;
+const API = () => ENV.API_BASE_URL;
 
 function unwrap(data) {
   if (data && Array.isArray(data.value)) return data.value;
@@ -40,11 +47,14 @@ function formatRelativeTime(isoDate, t) {
 
 async function getCourseNameForRecord(record) {
   try {
-    const session = unwrap(await request({ method: GET, url: 'class_session', params: { class_session_id: record.class_session_id }, requiresAuth: false }))[0];
+    const sessions = await backendGet(SCHED(), `api/v1/class-sessions/${record.class_session_id}`);
+    const session = sessions[0];
     if (!session?.schedule_block_id) return '';
-    const block = unwrap(await request({ method: GET, url: 'schedule_block', params: { schedule_block_id: session.schedule_block_id }, requiresAuth: false }))[0];
+    const blocks = await backendGet(SCHED(), `api/v1/schedule-blocks/${session.schedule_block_id}`);
+    const block = blocks[0];
     if (!block?.course_id) return '';
-    const course = unwrap(await request({ method: GET, url: 'course', params: { course_id: block.course_id }, requiresAuth: false }))[0];
+    const courses = await backendGet(ACAD(), `api/v1/courses/${block.course_id}`);
+    const course = courses[0];
     return course?.name || course?.code || '';
   } catch {
     return '';
@@ -54,26 +64,30 @@ async function getCourseNameForRecord(record) {
 async function fetchRecentNovedades(t) {
   try {
     const typeMap = {};
-    unwrap(await request({ method: GET, url: 'alert_type', requiresAuth: false })).forEach((at) => {
+    (await backendGet(NOTIFY(), 'api/v1/alert-types')).forEach((at) => {
       typeMap[at.alert_type_id] = at.name;
     });
 
-    const alerts = unwrap(await request({
-      method: GET,
-      url: 'alert',
-      params: { _sort: 'raised_at', _order: 'desc', _limit: 5 },
-      requiresAuth: false,
-    }));
+    const all = await backendGet(NOTIFY(), 'api/v1/alerts', { limit: 50 });
+    const alerts = [...all]
+      .filter((a) => a && (a.alert_id ?? a.alertId) != null)
+      .sort((a, b) => new Date(b.raised_at || 0) - new Date(a.raised_at || 0))
+      .slice(0, 5);
 
     const items = [];
+    let actorById = {};
+    try {
+      const actors = await backendGet(ACAD(), 'api/v1/academic-actors', { limit: 2000 });
+      actors.forEach((x) => { actorById[String(x.academic_actor_id)] = x; });
+    } catch {}
     for (let i = 0; i < alerts.length; i++) {
       const a = alerts[i];
       let personName = '';
       try {
-        const actor = unwrap(await request({ method: GET, url: 'academic_actor', params: { academic_actor_id: a.academic_actor_id }, requiresAuth: false }))[0];
+        const actor = actorById[String(a.academic_actor_id)];
         if (actor?.person_id) {
-          const person = unwrap(await request({ method: GET, url: 'person', params: { person_id: actor.person_id }, requiresAuth: false }))[0];
-          if (person) personName = `${person.name || ''} ${person.last_name || ''}`.trim();
+          const person = unwrap(await backendGet(API(), `api/v1/persons/${actor.person_id}`))[0];
+          if (person) personName = `${person.name || ''} ${person.last_name || person.lastName || ''}`.trim();
         }
       } catch {}
 
@@ -154,8 +168,9 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
         }, [loadUserData])
     );
 
-    const isAdmin = userRole === 'Administrador' || userRole === 'admin';
-    const isTeacher = userRole === 'teacher' || userRole === 'Docente';
+    const roleLower = String(userRole || '').toLowerCase();
+    const isAdmin = roleLower === 'administrador' || roleLower === 'admin';
+    const isTeacher = roleLower === 'teacher' || roleLower === 'docente' || roleLower === 'instructor';
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -174,8 +189,10 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                 }
 
                 if (isAdmin) {
-                    const arData = await request({ method: GET, url: 'attendance_record', params: { _limit: 100 }, requiresAuth: false });
-                    const records = unwrap(arData);
+                    // Paginado (caché): la tabla completa son decenas de miles de
+                    // filas y tumba la petición en el dispositivo (timeout).
+                    try {
+                        const records = await backendGet(ATT(), 'api/v1/attendance-records', {page: 1, limit: 200}, { useCache: true });
                     const present = records.filter(r => r.attendance_status === 'Present').length;
                     const absent = records.filter(r => r.attendance_status === 'Absent').length;
                     const late = records.filter(r => r.attendance_status === 'Late').length;
@@ -195,7 +212,11 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                         estado: r.attendance_status === 'Present' ? 'presente' : r.attendance_status === 'Late' ? 'tarde' : 'ausente',
                     }));
                     setAsistenciasRecientes(recentRecords);
+                    } catch (sectionError) {
+                        console.error('Error fetching admin dashboard section:', sectionError);
+                    }
                 } else if (isTeacher) {
+                    try {
                     const user = await getCurrentUser();
                     const actors = await ActorService.getByPerson(user?.personId);
                     const myActor = actors?.length > 0 ? actors[0] : null;
@@ -204,15 +225,12 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                     let sessionsTodayCount = 0;
                     const todayKey = formatDateKey(new Date());
                     if (myActor) {
-                        const blockData = await request({ method: GET, url: 'schedule_block', params: { instructor_actor_id: myActor.academicActorId }, requiresAuth: false });
-                        const blocks = unwrap(blockData);
+                        const blocks = await backendGet(SCHED(), 'api/v1/schedule-blocks', { instructorActorId: myActor.academicActorId });
                         for (const block of blocks) {
-                            const sessionData = await request({ method: GET, url: 'class_session', params: { schedule_block_id: block.schedule_block_id }, requiresAuth: false });
-                            const sessions = unwrap(sessionData);
+                            const sessions = await backendGet(SCHED(), 'api/v1/class-sessions', { scheduleBlockId: block.schedule_block_id });
                             sessionsTodayCount += sessions.filter((s) => s.session_date === todayKey).length;
                             for (const session of sessions) {
-                                const arData = await request({ method: GET, url: 'attendance_record', params: { class_session_id: session.class_session_id }, requiresAuth: false });
-                                teacherRecords.push(...unwrap(arData));
+                                teacherRecords.push(...await backendGet(ATT(), 'api/v1/attendance-records', { classSessionId: session.class_session_id }));
                             }
                         }
                     }
@@ -222,8 +240,7 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
 
                     let pendingJustifications = 0;
                     try {
-                        const jData = await request({ method: GET, url: 'justification', params: { review_status: 'Pending' }, requiresAuth: false });
-                        pendingJustifications = unwrap(jData).length;
+                        pendingJustifications = (await backendGet(ATT(), 'api/v1/justifications', { status: 'Pending' })).length;
                     } catch {}
 
                     setTeacherStats({
@@ -241,12 +258,14 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                         estado: r.attendance_status === 'Present' ? 'presente' : r.attendance_status === 'Late' ? 'tarde' : 'ausente',
                     }));
                     setAsistenciasRecientes(recentRecords);
+                    } catch (sectionError) {
+                        console.error('Error fetching teacher dashboard section:', sectionError);
+                    }
                 } else {
-                    const arParams = studentActorId
-                        ? { academic_actor_id: studentActorId, _limit: 100 }
-                        : { _limit: 100 };
-                    const arData = await request({ method: GET, url: 'attendance_record', params: arParams, requiresAuth: false });
-                    const records = unwrap(arData);
+                    try {
+                    const records = studentActorId
+                        ? await backendGet(ATT(), 'api/v1/attendance-records', { academicActorId: studentActorId })
+                        : [];
                     const present = records.filter(r => r.attendance_status === 'Present').length;
                     const total = records.length || 1;
                     setStudentStats({
@@ -271,9 +290,16 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                         });
                     }
                     setMisRegistrosRecientes(myRecords);
+                    } catch (sectionError) {
+                        console.error('Error fetching student dashboard section:', sectionError);
+                    }
                 }
 
-                setNovedades(await fetchRecentNovedades(t));
+                try {
+                    setNovedades(await fetchRecentNovedades(t));
+                } catch (sectionError) {
+                    console.error('Error fetching dashboard news section:', sectionError);
+                }
             } catch (error) {
                 console.error('Error fetching dashboard data:', error);
             }

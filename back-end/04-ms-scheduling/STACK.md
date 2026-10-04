@@ -2,7 +2,7 @@
 
 > **Stack ADR-005:** `Java 21 + Spring Boot 3` · **Guía:** `../../fae-docs/_stacks/java-spring.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md`
-> **Database:** `../database/04-ms-scheduling-db` (schema `scheduling`) · **Puerto:** `8087` · **Dominio:** `06-data/domains/04-scheduling.md`
+> **Database:** `../database/04-ms-scheduling-db` (schema `scheduling`) · **Puerto:** `8084` · **Dominio:** `06-data/domains/04-scheduling.md`
 
 ## Decisión (ADR-005 §4)
 
@@ -33,5 +33,5 @@ Spring Boot 4.1.1, `webmvc`, `data-jpa`, `validation`, `liquibase`, `postgresql`
 ## Ejecución
 
 ```bash
-./mvnw spring-boot:run  # 8087
+./mvnw spring-boot:run  # 8084
 ```

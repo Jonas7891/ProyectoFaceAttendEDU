@@ -11,7 +11,7 @@ services:
         strip_path: false
       # Canonical school lives in academic-service; identity SchoolController kept direct-only for backward compat
       - name: identity-nested-route
-        paths: ["~/api/v1/persons/.+/transfer", "~/api/v1/users/.+/activate"]
+        paths: ["~/api/v1/users/.+/activate"]
         strip_path: false
     plugins:
       - name: cors
@@ -29,7 +29,7 @@ services:
           redis_database: 0
           policy: redis
   - name: authorization-service
-    url: http://ms-authorization:8083
+    url: http://ms-authorization:8082
     routes:
       - name: authorization-route
         paths: [/api/v1/roles, /api/v1/permissions]
@@ -38,7 +38,7 @@ services:
         paths: ["~/api/v1/users/.+/roles", /api/v1/auth/evaluate]
         strip_path: false
     plugins:
-      - name: jwt
+      # JWT retirado: AuthTokenFilter valida sesión + evaluate en el MS.
       - name: rate-limiting
         config:
           minute: 100
@@ -48,24 +48,23 @@ services:
           redis_database: 0
           policy: redis
   - name: academic-service
-    url: http://ms-academic:8084
+    url: http://ms-academic:8083
     routes:
       - name: academic-route
         paths: [/api/v1/schools, /api/v1/programs, /api/v1/academic-periods, /api/v1/periods, /api/v1/cohorts, /api/v1/courses, /api/v1/actor-types, /api/v1/academic-actors, /api/v1/enrollments]
         strip_path: false
-    plugins:
-      - name: jwt
+    # Sin plugins propios: el enforcement lo hace el MS (ver scheduling-nested-route).
   - name: scheduling-service
-    url: http://ms-scheduling:8087
+    url: http://ms-scheduling:8084
     routes:
       - name: scheduling-route
         paths: [/api/v1/environments, /api/v1/schedule-blocks, /api/v1/class-sessions]
         strip_path: false
       - name: scheduling-nested-route
-        paths: ["~/api/v1/cohorts/.+/blocks"]
+        paths: ["~/api/v1/cohorts/.+/blocks", "~/api/v1/environments/.+/blocks", "~/api/v1/actors/.+/blocks", "~/api/v1/blocks/.+/sessions"]
         strip_path: false
-    plugins:
-      - name: jwt
+    # Sin plugins propios: el enforcement lo hace AuthTokenFilter en cada MS
+    # (la sesión opaca no es JWT; reintroducir jwt con RS256 según ADR-007).
   - name: attendance-service
     url: http://ms-attendance:8085
     routes:
@@ -76,7 +75,7 @@ services:
         paths: ["~/api/v1/class-sessions/.+/attendance", "~/api/v1/academic-actors/.+/attendance", "~/api/v1/attendance/.+/justification", "~/api/v1/justifications/.+/documents"]
         strip_path: false
     plugins:
-      - name: jwt
+      # JWT retirado: AuthTokenFilter valida sesión + evaluate en el MS.
       - name: rate-limiting
         config:
           minute: 200
@@ -91,10 +90,9 @@ services:
       - name: biometric-route
         paths: [/api/v1/biometric]
         strip_path: false
-    plugins:
-      - name: jwt
+    # Sin plugins propios: el enforcement lo hace el MS.
   - name: configuration-service
-    url: http://ms-configuration:8089
+    url: http://ms-configuration:8087
     routes:
       - name: configuration-route
         paths: [/api/v1/academic-configurations, /api/v1/security-configurations, /api/v1/biometric-update-cases, /api/v1/configurations]
@@ -102,19 +100,17 @@ services:
       - name: configuration-nested-route
         paths: ["~/api/v1/schools/.+/configurations", "~/api/v1/persons/.+/biometric-cases"]
         strip_path: false
-    plugins:
-      - name: jwt
+    # Sin plugins propios: el enforcement lo hace el MS.
   - name: notification-service
-    url: http://ms-notification:8090
+    url: http://ms-notification:8088
     routes:
       - name: notification-route
         paths: [/api/v1/alert-types, /api/v1/alerts]
         strip_path: false
-    plugins:
-      - name: jwt
+    # Sin plugins propios: el enforcement lo hace el MS.
   # ── ISO/IEC 9001 Quality Health Endpoints ────────────────────
   - name: quality-health
-    url: http://ms-academic:8084
+    url: http://ms-academic:8083
     routes:
       - name: quality-health-route
         paths: [/health/quality]
@@ -127,13 +123,13 @@ services:
           headers: [Content-Type]
   # ── Quality Service (ISO 25010/29110) ──────────────────────
   - name: quality-service
-    url: http://ms-quality:8091
+    url: http://ms-quality:8089
     routes:
       - name: quality-route
         paths: [/api/v1/quality]
         strip_path: false
     plugins:
-      - name: jwt
+      # JWT retirado: el enforcement vive en cada MS.
       - name: rate-limiting
         config:
           minute: 100
@@ -158,7 +154,7 @@ consumers:
 plugins:
   - name: cors
     config:
-      origins: ["http://localhost:3000", "http://localhost:5173"]
+      origins: ["http://localhost:3000", "http://localhost:5173", "http://localhost:8090"]
       methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
       headers: [Authorization, Content-Type, X-Requested-With]
       credentials: true

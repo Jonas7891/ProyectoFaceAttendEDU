@@ -15,6 +15,7 @@ import DisplayingAttendance from '../view/screens/DisplayingAttendance';
 import MenuJustify from '../view/screens/MenuJustifyScreen';
 import AddJustification from '../view/screens/AddJustifyScreen';
 import LanguageSettingsScreen from '../view/screens/LanguageSettingsScreen';
+import AppearanceSettingsScreen from '../view/screens/AppearanceSettingsScreen';
 import AddValidJustificationScreen from '../view/screens/AddValidJustificationScreen';
 import ValidJustificationsScreen from '../view/screens/ConsultJustifyScreen';
 import ProfileScreen from '../view/screens/ProfileScreen';
@@ -50,7 +51,7 @@ export default function App() {
                 setUserRole(role);
             } else {
                 await removeToken();
-                await AsyncStorage.multiRemove(['userRole', 'userEmail', 'appLanguage', 'alertsConfig']);
+                await AsyncStorage.multiRemove(['userRole', 'userEmail', 'userProfile', 'appLanguage', 'alertsConfig']);
                 setIsAuthenticated(false);
                 setUserRole(null);
             }
@@ -74,10 +75,17 @@ export default function App() {
 
     const handleLogout = async () => {
         try {
+            try {
+                const { getToken } = require('../storage/TokenStorage');
+                const { AuthService } = require('../services/AuthService');
+                const sessionId = await getToken();
+                await AuthService.logout(sessionId);
+            } catch {}
             await removeToken();
             await AsyncStorage.multiRemove([
                 'userRole',
                 'userEmail',
+                'userProfile',
                 'appLanguage',
                 'alertsConfig',
             ]);
@@ -144,12 +152,20 @@ export default function App() {
                         <Stack.Screen name="FacialFail" component={FacialFail}/>
                         <Stack.Screen name="UpdatePhoto" component={UpdatePhoto}/>
                         <Stack.Screen name="LanguageSettingsScreen" component={LanguageSettingsScreen}/>
+                        <Stack.Screen name="AppearanceSettingsScreen" component={AppearanceSettingsScreen}/>
                         <Stack.Screen name="DisplayingAttendance" component={DisplayingAttendance}/>
                         <Stack.Screen name="MenuJustify" component={MenuJustify}/>
                         <Stack.Screen name="AddJustification" component={AddJustification}/>
                         <Stack.Screen name="AddValidJustification" component={AddValidJustificationScreen}/>
                         <Stack.Screen name="ValidJustifications" component={ValidJustificationsScreen}/>
-                        <Stack.Screen name="Profile" component={ProfileScreen}/>
+                        <Stack.Screen name="Profile">
+                            {props => (
+                                <ProfileScreen
+                                    {...props}
+                                    onLogout={handleLogout}
+                                />
+                            )}
+                        </Stack.Screen>
                         <Stack.Screen name="ManageUsersScreen">
                             {props => (
                                 <ManageUsersScreen

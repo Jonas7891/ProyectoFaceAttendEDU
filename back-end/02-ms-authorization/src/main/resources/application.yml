@@ -1,5 +1,5 @@
 server:
-  port: 8083
+  port: 8082
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/faceattend_db
@@ -19,3 +19,7 @@ spring:
   liquibase:
     # Las migraciones viven en ../database/ (fuente canonica); el servicio no auto-migra.
     enabled: false
+faceattend:
+  auth:
+    identity-url: http://localhost:8081
+    authorization-url: http://localhost:8082

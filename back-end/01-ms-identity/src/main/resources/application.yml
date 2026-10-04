@@ -21,6 +21,10 @@ spring:
   liquibase:
     # Las migraciones viven en ../database/ (fuente canonica); el servicio no auto-migra.
     enabled: false
+faceattend:
+  auth:
+    identity-url: http://localhost:8081
+    authorization-url: http://localhost:8082
 management:
   endpoints:
     web:

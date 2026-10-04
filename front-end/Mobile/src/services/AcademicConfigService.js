@@ -26,19 +26,27 @@ export const AcademicConfigService = {
     return AcademicConfiguration.fromApi(data);
   },
 
+  // Backend: GET /api/v1/academic-configurations solo filtra ?name=, así que
+  // school_id se filtra en cliente.
   getBySchool: async (schoolId) => {
-    const data = await request({ method: GET, url: ENDPOINT, params: { school_id: schoolId }, requiresAuth: false });
-    return unwrap(data).map(AcademicConfiguration.fromApi);
+    const data = await request({ method: GET, url: ENDPOINT, requiresAuth: false });
+    return unwrap(data)
+      .map(AcademicConfiguration.fromApi)
+      .filter((c) => String(c?.schoolId) === String(schoolId));
   },
 
   getByName: async (schoolId, configName) => {
     const data = await request({
       method: GET,
       url: ENDPOINT,
-      params: { school_id: schoolId, configuration_name: configName },
+      params: { name: configName },
       requiresAuth: false,
     });
-    return AcademicConfiguration.fromApi(unwrapFirst(data));
+    return AcademicConfiguration.fromApi(
+      unwrap(data)
+        .map(AcademicConfiguration.fromApi)
+        .find((c) => String(c?.schoolId) === String(schoolId) && c?.configurationName === configName) || null,
+    );
   },
 
   create: async (configData) => {

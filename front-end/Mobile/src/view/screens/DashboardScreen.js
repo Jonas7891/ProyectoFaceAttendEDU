@@ -45,7 +45,7 @@ export default function Dashboard({ onLogout, userRole: propUserRole }) {
             key={`${updateKey}`}
         >
             <ScrollViewWrapper>
-                <View style={styles.container} marginHorizontal={15}>
+                <View style={[styles.container, { marginHorizontal: 15 }]}>
                     <CustomTabs userRole={userRole} onLogout={handleLogoutPress} />
 
                     <View style={styles.header}>

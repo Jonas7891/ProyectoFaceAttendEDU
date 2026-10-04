@@ -123,7 +123,34 @@
     "defaultAlertsDesc": "Mensagens informativas gerais",
     "iotAlerts": "Alertas de Dispositivos IoT",
     "iotAlertsDesc": "Mensagens sobre os dispositivos de escaneamento facial",
-    "noRoleError": "Não foi possível determinar o papel do usuário"
+    "noRoleError": "Não foi possível determinar o papel do usuário",
+    "appearance": "Aparência",
+    "appearanceDesc": "Personalize o tema e a cor de destaque do aplicativo",
+    "themeAndColor": "Tema e cor de destaque",
+    "themeAndColorDesc": "Modo claro/escuro e cor personalizada",
+    "lightThemeLabel": "Claro",
+    "darkThemeLabel": "Escuro",
+    "displayMode": "Modo de exibição",
+    "displayModeDesc": "Escolha o tema base da interface. Afeta fundos, textos e superfícies de todo o aplicativo.",
+    "accentColor": "Cor de destaque",
+    "accentColorDesc": "Esta cor é aplicada a botões, abas ativas, barras de progresso e bordas de foco. As alterações são visualizadas em tempo real.",
+    "visionMode": "Modo de visão (acessibilidade)",
+    "visionModeNormal": "Normal",
+    "visionModeDeuteranopia": "Deuteranopia",
+    "visionModeProtanopia": "Protanopia",
+    "visionModeTritanopia": "Tritanopia",
+    "visionModeAchromatopsia": "Acromatopsia",
+    "colorPalette": "Paleta de cores",
+    "fineAdjust": "Ajuste fino (HSL)",
+    "hue": "Matiz (Hue)",
+    "saturation": "Saturação",
+    "luminosity": "Luminosidade",
+    "hexCode": "Código HEX",
+    "colorEvaluation": "Avaliação da cor",
+    "colorPreview": "Pré-visualização ao vivo",
+    "accentInfoMsg": "A pré-visualização mostra como a cor ficará em botões, emblemas e elementos ativos. Pressione \"Salvar\" para aplicá-la em todo o aplicativo.",
+    "appearanceSaved": "Aparência salva com sucesso",
+    "errorSavingAppearance": "Erro ao salvar a aparência"
   },
   "menu": {
     "facialParams": "Inserir Parâmetros Faciais",
@@ -314,7 +341,8 @@
     "missingAttachmentError": "Por favor, envie um anexo",
     "confirmMessage": "Tem certeza de que deseja enviar esta justificativa?",
     "confirmTitle": "Confirmar envio",
-    "submitError": "Não foi possível enviar a justificativa"
+    "submitError": "Não foi possível enviar a justificativa",
+    "noRecordForDate": "Nenhum registro de presença para essa data"
   },
   "menuJustify": {
     "backToDashboard": "Voltar ao Dashboard"
@@ -590,6 +618,7 @@
     "absent": "Ausente",
     "activePeriod": "Período ativo",
     "address": "Endereço",
+    "actorCode": "Código",
     "approved": "Aprovado",
     "attendanceStats": "Estatísticas de presença",
     "classes": "Aulas",

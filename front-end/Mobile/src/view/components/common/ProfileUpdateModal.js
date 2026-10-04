@@ -17,8 +17,10 @@ import {useCustomAlert} from './useCustomAlert';
 import CustomAlert from './CustomAlert';
 import PrimaryButton from '../auth/PrimaryButton';
 import stylesCommon from './style/Style';
+import {PersonService} from '../../../services/PersonService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function ProfileUpdateModal({ userInfo = {} }) {
+export default function ProfileUpdateModal({ userInfo = {}, personId = null, onSaved = null }) {
     const { t } = useTranslation();
     const { colors } = useTheme();
     const { alertConfig, hideAlert, showSuccess, showError } = useCustomAlert();
@@ -81,9 +83,44 @@ export default function ProfileUpdateModal({ userInfo = {} }) {
 
         try {
             setProfileLoading(true);
-            // Simular petición al servidor
-            await new Promise((resolve) => setTimeout(resolve, 800));
+            if (!personId) {
+                throw new Error('no-person');
+            }
+            const current = await PersonService.getById(personId);
+            if (!current) {
+                throw new Error('no-person');
+            }
+            const parts = name.trim().split(/\s+/);
+            const updated = await PersonService.updateFields(personId, {
+                documentNumber: current.documentNumber,
+                name: parts[0] || current.name,
+                lastName: parts.length > 1 ? parts.slice(1).join(' ') : (current.lastName || ''),
+                email: email.trim(),
+                documentType: current.documentType || 'CC',
+                bloodType: current.bloodType || null,
+                birthDate: current.birthDate || null,
+                address: current.address || null,
+                phone: phone.trim(),
+                status: current.status !== undefined ? current.status : true,
+            });
+            if (!updated) {
+                throw new Error('update-failed');
+            }
+            // Mantener el email de sesión sincronizado si cambió.
+            try {
+                await AsyncStorage.setItem('userEmail', email.trim());
+                const raw = await AsyncStorage.getItem('userProfile');
+                if (raw) {
+                    const profile = JSON.parse(raw);
+                    profile.email = email.trim();
+                    profile.name = updated.fullName || name.trim();
+                    await AsyncStorage.setItem('userProfile', JSON.stringify(profile));
+                }
+            } catch {}
             setProfileLoading(false);
+            if (onSaved) {
+                try { await onSaved(); } catch {}
+            }
             showSuccess(
                 t('profile.profileModal.successTitle', 'Perfil actualizado'),
                 t('profile.profileModal.successMessage', 'Tu información ha sido actualizada correctamente')

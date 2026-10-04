@@ -1,5 +1,6 @@
 import {useCallback, useEffect, useState} from 'react';
-import {request, GET} from '../api/apiClient';
+import {backendGet} from '../api/backend';
+import ENV from '../config/env';
 
 function unwrap(data) {
   if (data && Array.isArray(data.value)) return data.value;
@@ -16,7 +17,7 @@ export function useManageEnvironmentViewModel() {
     const fetchEnvironments = useCallback(async () => {
         try {
             setLoading(true);
-            const data = await request({ method: GET, url: 'environment', params: { _limit: 100 }, requiresAuth: false });
+            const data = await backendGet(ENV.ACADEMIC_BASE_URL, 'api/v1/environments', {_limit: 100});
             const records = unwrap(data);
             const mapped = records.map(r => ({
                 id: r.environment_id || r.id,

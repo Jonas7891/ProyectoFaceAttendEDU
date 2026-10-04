@@ -1,51 +1,100 @@
 package com.faceattend_edu.identity_service.adapter.in.web.controller;
 
+import com.faceattend_edu.identity_service.domain.exception.DomainException;
 import com.faceattend_edu.identity_service.domain.exception.DuplicateEntityException;
 import com.faceattend_edu.identity_service.domain.exception.EntityNotFoundException;
+import com.faceattend_edu.identity_service.domain.exception.UnauthorizedException;
 import com.faceattend_edu.identity_service.domain.exception.ValidationException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
+/**
+ * Error bodies follow the ErrorResponse schema from
+ * fae-docs/07-api/contracts/openapi/_shared.yaml: a SCREAMING_SNAKE_CASE code plus a
+ * human readable message. Internal details are never leaked (security-rules.md A05).
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private Map<String, Object> envelope(HttpStatus status, String message, HttpServletRequest req) {
-        return Map.of(
-                "error", status.getReasonPhrase(),
-                "message", message,
-                "status", status.value(),
-                "path", req != null ? req.getRequestURI() : "",
-                "timestamp", Instant.now().toString());
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    private Map<String, Object> envelope(HttpStatus status, String code, String message, HttpServletRequest req) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("error", code);
+        body.put("message", message);
+        body.put("status", status.value());
+        body.put("path", req != null ? req.getRequestURI() : "");
+        body.put("timestamp", Instant.now().toString());
+        body.put("traceId", UUID.randomUUID().toString());
+        return body;
+    }
+
+    private ResponseEntity<Map<String, Object>> build(HttpStatus status, String code, String message, HttpServletRequest req) {
+        return ResponseEntity.status(status).body(envelope(status, code, message, req));
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleNotFound(EntityNotFoundException ex, HttpServletRequest req) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(envelope(HttpStatus.NOT_FOUND, ex.getMessage(), req));
+        return build(HttpStatus.NOT_FOUND, "NOT_FOUND", ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNoResource(NoResourceFoundException ex, HttpServletRequest req) {
+        return build(HttpStatus.NOT_FOUND, "NOT_FOUND", "Resource not found", req);
+    }
+
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNoHandler(NoHandlerFoundException ex, HttpServletRequest req) {
+        return build(HttpStatus.NOT_FOUND, "NOT_FOUND", "Resource not found", req);
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<Map<String, Object>> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex, HttpServletRequest req) {
+        return build(HttpStatus.METHOD_NOT_ALLOWED, "METHOD_NOT_ALLOWED", ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<Map<String, Object>> handleUnauthorized(UnauthorizedException ex, HttpServletRequest req) {
+        return build(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", ex.getMessage(), req);
     }
 
     @ExceptionHandler(DuplicateEntityException.class)
     public ResponseEntity<Map<String, Object>> handleDuplicate(DuplicateEntityException ex, HttpServletRequest req) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(envelope(HttpStatus.CONFLICT, ex.getMessage(), req));
+        return build(HttpStatus.CONFLICT, "CONFLICT", ex.getMessage(), req);
     }
 
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(ValidationException ex, HttpServletRequest req) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(envelope(HttpStatus.BAD_REQUEST, ex.getMessage(), req));
+        return build(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(DomainException.class)
+    public ResponseEntity<Map<String, Object>> handleDomain(DomainException ex, HttpServletRequest req) {
+        return build(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", ex.getMessage(), req);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegal(IllegalArgumentException ex, HttpServletRequest req) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(envelope(HttpStatus.BAD_REQUEST, ex.getMessage(), req));
+        return build(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", ex.getMessage(), req);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -53,31 +102,41 @@ public class GlobalExceptionHandler {
         String msg = ex.getBindingResult().getFieldErrors().stream()
                 .map(f -> f.getField() + ": " + f.getDefaultMessage())
                 .reduce((a, b) -> a + ", " + b).orElse(ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(envelope(HttpStatus.BAD_REQUEST, msg, req));
+        return build(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", msg, req);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleConstraintViolation(ConstraintViolationException ex, HttpServletRequest req) {
+        return build(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<Map<String, Object>> handleMissingParameter(MissingServletRequestParameterException ex, HttpServletRequest req) {
+        return build(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR",
+                "Required parameter '" + ex.getParameterName() + "' is missing", req);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, Object>> handleDataIntegrity(DataIntegrityViolationException ex, HttpServletRequest req) {
         // No se expone el mensaje SQL interno al cliente.
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(envelope(HttpStatus.CONFLICT, "Resource violates a uniqueness constraint", req));
+        log.warn("Data integrity violation on {}: {}", req != null ? req.getRequestURI() : "", ex.getMessage());
+        return build(HttpStatus.CONFLICT, "CONFLICT", "Resource violates a uniqueness constraint", req);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, Object>> handleUnreadableBody(HttpMessageNotReadableException ex, HttpServletRequest req) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(envelope(HttpStatus.BAD_REQUEST, "Malformed request body", req));
+        return build(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "Malformed request body", req);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<Map<String, Object>> handleTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest req) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(envelope(HttpStatus.BAD_REQUEST, "Invalid value for parameter '" + ex.getName() + "'", req));
+        return build(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR",
+                "Invalid value for parameter '" + ex.getName() + "'", req);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleUnexpected(Exception ex, HttpServletRequest req) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(envelope(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected internal error", req));
+        log.error("Unhandled exception on {}: {}", req != null ? req.getRequestURI() : "", ex.getMessage(), ex);
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "Unexpected internal error", req);
     }
 }

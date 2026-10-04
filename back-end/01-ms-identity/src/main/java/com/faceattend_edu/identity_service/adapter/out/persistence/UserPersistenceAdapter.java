@@ -6,15 +6,18 @@ import com.faceattend_edu.identity_service.application.port.out.LoadUserPort;
 import com.faceattend_edu.identity_service.application.port.out.SaveUserPort;
 import com.faceattend_edu.identity_service.application.port.out.UpdateUserPort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserByUsernamePort;
+import com.faceattend_edu.identity_service.application.port.out.ListUsersPort;
 import com.faceattend_edu.identity_service.domain.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class UserPersistenceAdapter implements LoadUserPort, SaveUserPort, UpdateUserPort, LoadUserByUsernamePort {
+public class UserPersistenceAdapter implements LoadUserPort, SaveUserPort, UpdateUserPort, LoadUserByUsernamePort, ListUsersPort {
 
     private final UserJpaRepository repository;
     private final UserPersistenceMapper mapper;
@@ -27,6 +30,11 @@ public class UserPersistenceAdapter implements LoadUserPort, SaveUserPort, Updat
     @Override
     public User loadUserByUsername(String username) {
         return mapper.toDomain(repository.findByUsername(username).orElse(null));
+    }
+
+    @Override
+    public List<User> listUsers() {
+        return repository.findAll().stream().map(mapper::toDomain).collect(Collectors.toList());
     }
 
     @Override

@@ -123,7 +123,34 @@
     "defaultAlertsDesc": "Messages d'information généraux",
     "iotAlerts": "Alertes des Appareils IoT",
     "iotAlertsDesc": "Messages sur les appareils de scan facial",
-    "noRoleError": "Impossible de déterminer le rôle de l'utilisateur"
+    "noRoleError": "Impossible de déterminer le rôle de l'utilisateur",
+    "appearance": "Apparence",
+    "appearanceDesc": "Personnalisez le thème et la couleur d'accentuation de l'application",
+    "themeAndColor": "Thème et couleur d'accentuation",
+    "themeAndColorDesc": "Mode clair/sombre et couleur personnalisée",
+    "lightThemeLabel": "Clair",
+    "darkThemeLabel": "Sombre",
+    "displayMode": "Mode d'affichage",
+    "displayModeDesc": "Choisissez le thème de base de l'interface. Affecte les arrière-plans, les textes et les surfaces de toute l'application.",
+    "accentColor": "Couleur d'accentuation",
+    "accentColorDesc": "Cette couleur est appliquée aux boutons, onglets actifs, barres de progression et bordures de focus. Les modifications sont prévisualisées en temps réel.",
+    "visionMode": "Mode de vision (accessibilité)",
+    "visionModeNormal": "Normal",
+    "visionModeDeuteranopia": "Deutéranopie",
+    "visionModeProtanopia": "Protanopie",
+    "visionModeTritanopia": "Tritanopie",
+    "visionModeAchromatopsia": "Achromatopsie",
+    "colorPalette": "Palette de couleurs",
+    "fineAdjust": "Réglage fin (TSL)",
+    "hue": "Teinte",
+    "saturation": "Saturation",
+    "luminosity": "Luminosité",
+    "hexCode": "Code HEX",
+    "colorEvaluation": "Évaluation de la couleur",
+    "colorPreview": "Aperçu en direct",
+    "accentInfoMsg": "L'aperçu montre comment la couleur apparaîtra sur les boutons, badges et éléments actifs. Appuyez sur \"Enregistrer\" pour l'appliquer dans toute l'application.",
+    "appearanceSaved": "Apparence enregistrée avec succès",
+    "errorSavingAppearance": "Erreur lors de l'enregistrement de l'apparence"
   },
   "menu": {
     "facialParams": "Entrer les Paramètres Faciaux",
@@ -245,7 +272,7 @@
     "manageUsersDesc": "Ajoutez ou supprimez des utilisateurs de votre école."
   },
   "consultJustify": {
-    "mainTitle": "Justificativas Aprovadas",
+    "mainTitle": "Justificatifs approuvés",
     "subtitle": "Gérez vos justificatifs d'absence et de retard",
     "absences": "Absences",
     "delays": "Retards",
@@ -314,10 +341,11 @@
     "missingAttachmentError": "Veuillez téléverser une pièce jointe",
     "confirmMessage": "Voulez-vous vraiment envoyer cette justification ?",
     "confirmTitle": "Confirmer l'envoi",
-    "submitError": "Impossible d'envoyer la justification"
+    "submitError": "Impossible d'envoyer la justification",
+    "noRecordForDate": "Aucune présence enregistrée pour cette date"
   },
   "menuJustify": {
-    "backToDashboard": "Voltar ao Painel"
+    "backToDashboard": "Retour au tableau de bord"
   },
   "news": {
     "title": "Actualités",
@@ -590,6 +618,7 @@
     "absent": "Absent",
     "activePeriod": "Période active",
     "address": "Adresse",
+    "actorCode": "Code",
     "approved": "Approuvé",
     "attendanceStats": "Statistiques de présence",
     "classes": "Cours",

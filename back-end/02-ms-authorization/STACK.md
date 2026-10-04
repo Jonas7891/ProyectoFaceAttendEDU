@@ -2,7 +2,7 @@
 
 > **Stack ADR-005:** `Java 21 + Spring Boot 3` · **Guía:** `../../fae-docs/_stacks/java-spring.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md`
-> **Database:** `../database/02-ms-authorization-db` (schema `authorization`) · **Puerto:** `8083` · **Dominio:** `06-data/domains/02-authorization.md`
+> **Database:** `../database/02-ms-authorization-db` (schema `authorization`) · **Puerto:** `8082` · **Dominio:** `06-data/domains/02-authorization.md`
 
 ## Decisión (ADR-005 §2)
 
@@ -40,5 +40,5 @@ Spring Boot 4.1.1, `webmvc`, `data-jpa`, `security`, `validation`, `liquibase`, 
 
 ```bash
 cd ../database && docker compose up -d
-./mvnw spring-boot:run  # 8083
+./mvnw spring-boot:run  # 8082
 ```

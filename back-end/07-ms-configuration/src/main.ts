@@ -62,7 +62,7 @@ async function start() {
 
   await registerConfigurationRoutes(app);
   registerEventHook(app);
-  const port = Number(process.env.PORT) || 8089;
+  const port = Number(process.env.PORT) || 8087;
   await app.listen({ port, host: '0.0.0.0' });
 }
 

@@ -1,6 +1,7 @@
 package com.faceattend_edu.identity_service.adapter.in.web.controller;
 
 import com.faceattend_edu.identity_service.adapter.in.web.dto.CityDto;
+import com.faceattend_edu.identity_service.adapter.in.web.dto.PageResponse;
 import com.faceattend_edu.identity_service.adapter.in.web.mapper.CityWebMapper;
 import com.faceattend_edu.identity_service.application.port.in.CreateCityUseCase;
 import com.faceattend_edu.identity_service.application.port.in.DeleteCityUseCase;
@@ -35,17 +36,13 @@ public class CityController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CityDto>> listCities(
-            @RequestParam(defaultValue = "20") int limit,
-            @RequestParam(defaultValue = "0") int offset) {
-        int safeLimit = Math.min(Math.max(limit, 1), 100);
-        int safeOffset = Math.max(offset, 0);
+    public ResponseEntity<PageResponse<CityDto>> listCities(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer limit) {
         List<CityDto> all = listCitiesUseCase.listCities().stream()
                 .map(cityWebMapper::toDto)
                 .collect(Collectors.toList());
-        int from = Math.min(safeOffset, all.size());
-        int to = Math.min(from + safeLimit, all.size());
-        return ResponseEntity.ok(all.subList(from, to));
+        return ResponseEntity.ok(PageResponse.of(all, page, limit));
     }
 
     @GetMapping("/{id}")

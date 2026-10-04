@@ -2,7 +2,7 @@
 
 > **Stack ADR-005:** `TypeScript + Fastify + Drizzle ORM` · **Guía:** `../../fae-docs/_stacks/node-typescript.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md`
-> **Database:** `../database/03-ms-academic-db` (schema `academic`) · **Puerto:** `8084` · **Dominio:** `06-data/domains/03-academic.md`
+> **Database:** `../database/03-ms-academic-db` (schema `academic`) · **Puerto:** `8083` · **Dominio:** `06-data/domains/03-academic.md`
 
 ## Decisión (ADR-005 §3)
 
@@ -41,6 +41,6 @@ Fastify 4, Drizzle ORM, `pg` 8, `zod` 3, `kafkajs`, `pino`, `typescript` 5, `jes
 ## Ejecución
 
 ```bash
-npm install && npm run dev  # 8084
+npm install && npm run dev  # 8083
 npm test && npm run build
 ```

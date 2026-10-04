@@ -1,6 +1,6 @@
 # DATA_MODEL — 04-ms-scheduling
 
-> **Servicio:** `04-ms-scheduling` · **Schema:** `scheduling` · **Puerto ADR-005:** `8087`
+> **Servicio:** `04-ms-scheduling` · **Schema:** `scheduling` · **Puerto ADR-005:** `8084`
 > **Fuente canónica:** `../database/04-ms-scheduling-db/01-ddl/03-tables/` + `../../fae-docs/06-data/domains/04-scheduling.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **Stack:** `Java 21 + Spring Boot 3` → `../../fae-docs/_stacks/java-spring.md`
 

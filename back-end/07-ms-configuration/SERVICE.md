@@ -170,7 +170,7 @@ biometric_update_case (In_Review)
 
 ```yaml
 server:
-  port: 8088
+  port: 8087
 
 spring:
   datasource:
@@ -199,7 +199,7 @@ spring:
 
 | Puerto | Servicio |
 |--------|----------|
-| 8088 | REST API |
+| 8087 | REST API |
 | 9092 | Kafka (externo) |
 | 5432 | PostgreSQL (externo) |
 
