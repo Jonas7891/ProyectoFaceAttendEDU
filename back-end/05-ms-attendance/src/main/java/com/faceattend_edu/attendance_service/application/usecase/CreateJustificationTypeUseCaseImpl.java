@@ -16,7 +16,11 @@ public class CreateJustificationTypeUseCaseImpl implements CreateJustificationTy
     private final DomainEventPublisher eventPublisher;
     @Override public JustificationType create(JustificationType type){
         type.validate(); type.touchCreated();
-        repository.findByName(type.getName()).ifPresent(t -> { throw new DuplicateEntityException("JustificationType already exists with name=" + type.getName()); });
+        if (type.getSchoolId() == null) {
+            repository.findByNameAndSchoolIdIsNull(type.getName()).ifPresent(t -> { throw new DuplicateEntityException("Global JustificationType already exists with name=" + type.getName()); });
+        } else {
+            repository.findByNameAndSchoolId(type.getName(), type.getSchoolId()).ifPresent(t -> { throw new DuplicateEntityException("JustificationType already exists with name=" + type.getName() + " for schoolId=" + type.getSchoolId()); });
+        }
         try {
             JustificationType saved = repository.save(type);
             eventPublisher.publish("justification-type-events", "{\"justificationTypeId\":" + saved.getJustificationTypeId() + ",\"name\":\"" + saved.getName() + "\"}");
