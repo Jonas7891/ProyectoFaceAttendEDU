@@ -41,12 +41,73 @@ export function DateRangePicker({
 }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
-    const { dateFormat } = useDateFormat();
+    const { dateFormat } = useDateFormat(); // Volver a usar el hook
     const c = theme.colors;
 
     // Estados para validación en tiempo real
     const [startDateError, setStartDateError] = useState("");
     const [endDateError, setEndDateError] = useState("");
+    
+    // Convertir fecha ISO a formato de display
+    const isoToDisplayFormat = React.useCallback((isoDate) => {
+        if (!isoDate) return "";
+        const date = new Date(isoDate);
+        if (isNaN(date)) return isoDate; // Si no es válida, devolver tal como está
+        
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const year = date.getFullYear();
+        
+        switch (dateFormat) {
+            case "DD/MM/YYYY":
+                return `${day}/${month}/${year}`;
+            case "MM/DD/YYYY":
+                return `${month}/${day}/${year}`;
+            case "YYYY-MM-DD":
+                return `${year}-${month}-${day}`;
+            default:
+                return `${day}/${month}/${year}`;
+        }
+    }, [dateFormat]);
+    
+    // Convertir formato de display a ISO
+    const displayToIsoFormat = React.useCallback((displayDate) => {
+        if (!displayDate) return "";
+        
+        let day, month, year;
+        
+        switch (dateFormat) {
+            case "DD/MM/YYYY":
+                const ddmmParts = displayDate.split("/");
+                if (ddmmParts.length !== 3) return displayDate;
+                [day, month, year] = ddmmParts;
+                break;
+            case "MM/DD/YYYY":
+                const mmddParts = displayDate.split("/");
+                if (mmddParts.length !== 3) return displayDate;
+                [month, day, year] = mmddParts;
+                break;
+            case "YYYY-MM-DD":
+                const yyyyParts = displayDate.split("-");
+                if (yyyyParts.length !== 3) return displayDate;
+                [year, month, day] = yyyyParts;
+                break;
+            default:
+                return displayDate;
+        }
+        
+        return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+    }, [dateFormat]);
+    
+    // Fechas formateadas para mostrar en los inputs
+    const [displayStartDate, setDisplayStartDate] = useState("");
+    const [displayEndDate, setDisplayEndDate] = useState("");
+    
+    // Actualizar fechas formateadas cuando cambie el formato o las fechas
+    React.useEffect(() => {
+        setDisplayStartDate(isoToDisplayFormat(startDate));
+        setDisplayEndDate(isoToDisplayFormat(endDate));
+    }, [startDate, endDate, dateFormat, isoToDisplayFormat]);
 
     // Calcular placeholders dinámicos según el formato seleccionado
     const placeholderFormat = useMemo(() => {
@@ -196,7 +257,9 @@ export function DateRangePicker({
 
     // Manejadores de cambio con validación
     const handleStartDateChange = (text) => {
-        onStartDateChange(text);
+        setDisplayStartDate(text);
+        const isoDate = displayToIsoFormat(text);
+        onStartDateChange(isoDate);
         if (text && !isValidDateFormat(text)) {
             setStartDateError(t("Formato inválido") + " (" + placeholderFormat + ")");
         } else {
@@ -205,7 +268,9 @@ export function DateRangePicker({
     };
 
     const handleEndDateChange = (text) => {
-        onEndDateChange(text);
+        setDisplayEndDate(text);
+        const isoDate = displayToIsoFormat(text);
+        onEndDateChange(isoDate);
         if (text && !isValidDateFormat(text)) {
             setEndDateError(t("Formato inválido") + " (" + placeholderFormat + ")");
         } else {
@@ -238,14 +303,14 @@ export function DateRangePicker({
         borderColor: c.border.primary,
         borderRadius: 14,
         paddingHorizontal: 14,
-        fontSize: 11,
+        fontSize: 12,
         color: c.text.primary,
         backgroundColor: c.background.surface,
     };
 
     const labelStyle = {
-        fontSize: 10,
-        fontWeight: "500",
+        fontSize: 12,
+        fontWeight: "600",
         color: c.text.primary,
         marginBottom: 6,
     };
@@ -269,7 +334,7 @@ export function DateRangePicker({
                     <Text style={labelStyle}>{t("Fecha de inicio")}</Text>
                     <View style={{ position: "relative" }}>
                         <TextInput
-                            value={startDate}
+                            value={displayStartDate}
                             onChangeText={handleStartDateChange}
                             style={
                                 startDateError
@@ -303,7 +368,7 @@ export function DateRangePicker({
                     <Text style={labelStyle}>{t("Fecha de fin")}</Text>
                     <View style={{ position: "relative" }}>
                         <TextInput
-                            value={endDate}
+                            value={displayEndDate}
                             onChangeText={handleEndDateChange}
                             style={
                                 endDateError
@@ -372,7 +437,7 @@ export function DateRangePicker({
                         <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
                             <Text
                                 style={{
-                                    fontSize: 11,
+                                    fontSize: 13,
                                     fontWeight: "600",
                                     color:
                                         validation.type === "success"
@@ -385,16 +450,16 @@ export function DateRangePicker({
                                 {validation.isValid ? (
                                     <>
                                         <Text>✓ </Text>
-                                        <Text style={{ fontSize: 11, color: c.status.successDark }}>
-                                            📅 {validation.days} {t("días")}
+                                        <Text style={{ fontSize: 13, color: c.status.successDark }}>
+                                            {validation.days} {t("días")}
                                         </Text>
                                         <Text> · </Text>
-                                        <Text style={{ fontSize: 11, color: c.status.successDark }}>
-                                            📊 {validation.weeks} {t("semanas")}
+                                        <Text style={{ fontSize: 13, color: c.status.successDark }}>
+                                            {validation.weeks} {t("semanas")}
                                         </Text>
                                         <Text> · </Text>
-                                        <Text style={{ fontSize: 11, color: c.status.successDark }}>
-                                            📆 ~{validation.months} {t("meses")}
+                                        <Text style={{ fontSize: 13, color: c.status.successDark }}>
+                                            {validation.months} {t("meses")}
                                         </Text>
                                     </>
                                 ) : (

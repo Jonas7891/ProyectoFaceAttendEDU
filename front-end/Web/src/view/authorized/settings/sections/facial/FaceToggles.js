@@ -32,7 +32,7 @@ export function FaceToggles({ confidence, autoRegister, onAutoRegister, savePhot
             {autoRegister && confidence < 75 && (
                 <View style={{ marginTop: 8, backgroundColor: c.status.warningLight, borderRadius: 14, padding: 12, flexDirection: "row", gap: 8 }}>
                     <Feather name="alert-triangle" size={13} color={c.status.warning} style={{ marginTop: 1 }} />
-                    <Text style={{ fontSize: 11, color: c.status.warningDark, flex: 1, lineHeight: 18 }}>
+                    <Text style={{ fontSize: 12, color: c.status.warningDark, flex: 1, lineHeight: 18 }}>
                         {t("Con umbral bajo y registro automático habilitado, hay mayor riesgo de registrar asistencia incorrectamente. Considera subir el umbral a al menos 75%.")}
                     </Text>
                 </View>
@@ -48,7 +48,7 @@ export function FaceToggles({ confidence, autoRegister, onAutoRegister, savePhot
             {savePhotos && (
                 <View style={{ marginTop: 8, backgroundColor: c.brand.primaryLight, borderRadius: 14, padding: 12, flexDirection: "row", gap: 8 }}>
                     <Feather name="info" size={13} color={c.brand.primary} style={{ marginTop: 1 }} />
-                    <Text style={{ fontSize: 11, color: c.brand.primary, flex: 1, lineHeight: 18 }}>
+                    <Text style={{ fontSize: 12, color: c.brand.primary, flex: 1, lineHeight: 18 }}>
                         {t("Las fotos se almacenan localmente. Asegúrate de tener suficiente espacio y de informar a los estudiantes según tu política de privacidad.")}
                     </Text>
                 </View>

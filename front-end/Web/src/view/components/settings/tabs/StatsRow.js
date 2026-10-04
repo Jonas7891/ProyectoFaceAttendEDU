@@ -25,10 +25,10 @@ export function StatsRow({ label, value, icon, color }) {
                 <Feather name={icon} size={15} color={color} />
             </View>
             <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 11, color: c.text.secondary }}>
+                <Text style={{ fontSize: 12, color: c.text.secondary }}>
                     {label}
                 </Text>
-                <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.primary }}>
+                <Text style={{ fontSize: 13, fontWeight: "600", color: c.text.primary }}>
                     {value}
                 </Text>
             </View>

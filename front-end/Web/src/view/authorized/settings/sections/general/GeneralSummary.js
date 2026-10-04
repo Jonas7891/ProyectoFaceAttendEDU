@@ -43,7 +43,7 @@ export function GeneralSummary({
 
     return (
         <View style={{ gap: 0 }}>
-            <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.secondary, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>
+            <Text style={{ fontSize: 12, fontWeight: "600", color: c.text.secondary, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>
                 {t("Resumen actual")}
             </Text>
             <StatsRow label={t("Institución")} value={institutionName || t("Sin definir")} icon="home" color={c.brand.primary} />

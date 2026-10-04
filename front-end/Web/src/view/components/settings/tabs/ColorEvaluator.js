@@ -50,7 +50,7 @@ export function ColorEvaluator({ currentHex, verdict }) {
                 }} />
                 <View style={{ gap: 4, minWidth: 140 }}>
                     <Text style={{
-                        fontSize: 10,
+                        fontSize: 12,
                         fontWeight: "700",
                         color: c.text.primary,
                         fontFamily: "monospace"
@@ -69,7 +69,7 @@ export function ColorEvaluator({ currentHex, verdict }) {
                             backgroundColor: scoreColor,
                         }} />
                         <Text style={{
-                            fontSize: 10,
+                            fontSize: 12,
                             fontWeight: "600",
                             color: scoreColor
                         }}>
@@ -113,14 +113,14 @@ export function ColorEvaluator({ currentHex, verdict }) {
                         style={{ marginTop: 1 }}
                     />
                     <Text style={{
-                        fontSize: 11,
+                        fontSize: 12,
                         color: c.text.secondary,
                         width: 72
                     }}>
                         {row.label}
                     </Text>
                     <Text style={{
-                        fontSize: 11,
+                        fontSize: 12,
                         color: c.text.primary,
                         flex: 1
                     }}>
@@ -147,7 +147,7 @@ export function ColorEvaluator({ currentHex, verdict }) {
                         style={{ marginTop: 1 }}
                     />
                     <Text style={{
-                        fontSize: 11,
+                        fontSize: 12,
                         color: "#92400E",
                         flex: 1
                     }}>
@@ -171,7 +171,7 @@ export function ColorEvaluator({ currentHex, verdict }) {
                         style={{ marginTop: 1 }}
                     />
                     <Text style={{
-                        fontSize: 11,
+                        fontSize: 12,
                         color: "#065F46",
                         flex: 1
                     }}>

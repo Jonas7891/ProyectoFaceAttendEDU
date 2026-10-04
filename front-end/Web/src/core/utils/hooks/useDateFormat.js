@@ -2,8 +2,8 @@
 //  useDateFormat - Hook para formatear fechas según config
 // ============================================================
 
-import { useMemo, useCallback } from "react";
-import { getInstitutionConfig } from "../../config/institutionConfig";
+import { useState, useCallback, useEffect } from "react";
+import { getInstitutionConfig, onInstitutionConfigChange } from "../../config/institutionConfig";
 import {
     formatDate as formatDateUtil,
     formatTime as formatTimeUtil,
@@ -12,15 +12,28 @@ import {
 
 /**
  * Hook para obtener y usar el formato de fecha configurado
+ * Se suscribe automáticamente a cambios de configuración
  */
 export function useDateFormat() {
-    // Obtener el formato configurado
-    const config = useMemo(() => {
+    // Estado reactivo para la configuración
+    const [config, setConfig] = useState(() => {
         const cfg = getInstitutionConfig();
         return {
             dateFormat: cfg.dateFormat || "DD/MM/YYYY",
             timeFormat24h: cfg.timeFormat24h ?? false,
         };
+    });
+
+    // Suscribirse a cambios de configuración
+    useEffect(() => {
+        const unsubscribe = onInstitutionConfigChange((newConfig) => {
+            setConfig({
+                dateFormat: newConfig.dateFormat || "DD/MM/YYYY",
+                timeFormat24h: newConfig.timeFormat24h ?? false,
+            });
+        });
+        
+        return unsubscribe;
     }, []);
 
     // Función para formatear fechas

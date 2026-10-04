@@ -30,7 +30,7 @@ export function AcademicPeriodSelector({ value, onChange }) {
             onSelect={onChange}
             placeholder={t("Seleccionar período")}
             triggerIcon="calendar"
-            triggerHeight={44}
+            triggerHeight={40}
             maxVisible={4}
         />
     );

@@ -35,10 +35,10 @@ export function SecurityMeter({ twoFactor, sessionTime }) {
                 justifyContent: "space-between",
                 alignItems: "center"
             }}>
-                <Text style={{ fontSize: 11, color: c.text.secondary }}>
+                <Text style={{ fontSize: 12, color: c.text.secondary }}>
                     {t("Nivel de seguridad")}
                 </Text>
-                <Text style={{ fontSize: 10, fontWeight: "700", color: color }}>
+                <Text style={{ fontSize: 12, fontWeight: "700", color: color }}>
                     {label}
                 </Text>
             </View>
@@ -68,7 +68,7 @@ export function SecurityMeter({ twoFactor, sessionTime }) {
                             color={item.ok ? "#10B981" : c.text.disabled}
                         />
                         <Text style={{
-                            fontSize: 11,
+                            fontSize: 12,
                             color: item.ok ? c.text.primary : c.text.disabled
                         }}>
                             {item.label}

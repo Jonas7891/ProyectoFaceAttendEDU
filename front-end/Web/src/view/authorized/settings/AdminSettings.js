@@ -12,6 +12,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Card } from "../../components/common";
 import { useResponsive } from "../../components/hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
+import { useDateFormat } from "../../../core/utils/hooks/useDateFormat";
 import { useEditableConfig } from "../../components/hooks/useEditableConfig";
 import { SecurityMeter } from "../../components/settings/tabs";
 import {
@@ -51,6 +52,7 @@ import {
 export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onSaveSuccessColors, previewAccent, onPreviewChange, previewTheme, onHasChanges, onColorChanges }) {
     const { isSmall } = useResponsive();
     const { currentLanguage, t } = useTranslation();
+    const { dateFormat } = useDateFormat(); // Forzar re-render cuando cambie el formato
 
     // ── Estado no editable (UI temporal) ──────────────────────
     const [showExpirationAlert, setShowExpirationAlert] = useState(true);
@@ -115,7 +117,7 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
     // ── Derivados ─────────────────────────────────────────────
     const automaticPeriod = useMemo(() => {
         return getCurrentPeriod(config.academicPeriodType);
-    }, [config.academicPeriodType]);
+    }, [config.academicPeriodType, dateFormat]); // Añadir dateFormat como dependencia
 
     const periodExpiration = useMemo(() => {
         return checkPeriodExpiration();

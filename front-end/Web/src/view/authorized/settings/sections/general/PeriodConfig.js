@@ -57,7 +57,7 @@ export function PeriodConfig({
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <View style={{ flex: 1 }}>
                     <Text style={labelStyle}>{t("Configuración del período académico actual")}</Text>
-                    <Text style={[descStyle, { marginTop: 0 }]}>
+                    <Text style={[descStyle, { marginTop: 6, marginBottom: 2}]}>
                         {t("Define las fechas del período actual. En modo automático, se calculará el próximo período basándose en la duración del actual.")}
                     </Text>
                 </View>
@@ -65,7 +65,7 @@ export function PeriodConfig({
                     onPress={() => setShowInfoModal(true)}
                     style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingVertical: 4 }}
                 >
-                    <Text style={{ fontSize: 11, fontWeight: "600", color: c.brand.primary, textDecorationLine: "underline" }}>
+                    <Text style={{ fontSize: 12, fontWeight: "600", color: c.brand.primary, textDecorationLine: "underline" }}>
                         {t("¿Cómo funciona?")}
                     </Text>
                 </TouchableOpacity>
@@ -124,6 +124,7 @@ export function PeriodConfig({
                 padding: 12,
                 flexDirection: "row",
                 gap: 8,
+                marginTop: 8,
             }}>
                 <Feather
                     name={isAutomaticPeriod ? "info" : "alert-triangle"}
@@ -132,10 +133,10 @@ export function PeriodConfig({
                     style={{ marginTop: 1 }}
                 />
                 <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 11, fontWeight: "600", color: isAutomaticPeriod ? c.status.successDark : c.status.warningDark, marginBottom: 4 }}>
+                    <Text style={{ fontSize: 12, fontWeight: "600", color: isAutomaticPeriod ? c.status.successDark : c.status.warningDark, marginBottom: 4 }}>
                         {isAutomaticPeriod ? t("Modo Automático Activado") : t("Modo Manual Activado")}
                     </Text>
-                    <Text style={{ fontSize: 11, color: isAutomaticPeriod ? c.status.successDark : c.status.warningDark, lineHeight: 18 }}>
+                    <Text style={{ fontSize: 12, color: isAutomaticPeriod ? c.status.successDark : c.status.warningDark, lineHeight: 18 }}>
                         {isAutomaticPeriod
                             ? t("Al finalizar el período actual, el sistema calculará automáticamente las fechas del próximo período basándose en la duración del actual y actualizará la configuración.")
                             : t("Al finalizar el período actual, recibirás una alerta para que configures manualmente las fechas del nuevo período. El sistema NO actualizará las fechas automáticamente.")}
@@ -153,10 +154,10 @@ export function PeriodConfig({
                 <View style={{ gap: 12 }}>
                     {automaticPeriod && (
                         <View>
-                            <Text style={{ fontSize: 14, fontWeight: "600", color: c.brand.primary, marginBottom: 8 }}>
+                            <Text style={{ fontSize: 15, fontWeight: "600", color: c.brand.primary, marginBottom: 8 }}>
                                 {getFullPeriodLabel(automaticPeriod)}
                             </Text>
-                            <Text style={{ fontSize: 13, color: c.text.primary, lineHeight: 20 }}>
+                            <Text style={{ fontSize: 14, color: c.text.primary, lineHeight: 20 }}>
                                 {t("Este cálculo se basa en dividir el año calendario según el tipo de período seleccionado.")}
                             </Text>
                         </View>

@@ -113,7 +113,7 @@ export function PeriodExpirationAlert({
                 <View style={{ flex: 1 }}>
                     <Text
                         style={{
-                            fontSize: 13,
+                            fontSize: 14,
                             fontWeight: "700",
                             color: alertConfig.textColor,
                             marginBottom: 6,
@@ -123,7 +123,7 @@ export function PeriodExpirationAlert({
                     </Text>
                     <Text
                         style={{
-                            fontSize: 12,
+                            fontSize: 13,
                             color: alertConfig.textColor,
                             lineHeight: 18,
                             marginBottom: 12,
@@ -150,7 +150,7 @@ export function PeriodExpirationAlert({
                                 <Feather name="settings" size={14} color="#fff" />
                                 <Text
                                     style={{
-                                        fontSize: 12,
+                                        fontSize: 13,
                                         fontWeight: "600",
                                         color: "#fff",
                                     }}
@@ -176,7 +176,7 @@ export function PeriodExpirationAlert({
                                 <Feather name="calendar" size={14} color="#fff" />
                                 <Text
                                     style={{
-                                        fontSize: 12,
+                                        fontSize: 13,
                                         fontWeight: "600",
                                         color: "#fff",
                                     }}
@@ -204,7 +204,7 @@ export function PeriodExpirationAlert({
                                 <Feather name="x" size={14} color={alertConfig.textColor} />
                                 <Text
                                     style={{
-                                        fontSize: 12,
+                                        fontSize: 13,
                                         fontWeight: "600",
                                         color: alertConfig.textColor,
                                     }}

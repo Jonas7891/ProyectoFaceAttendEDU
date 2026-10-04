@@ -14,10 +14,10 @@ export function ContrastBar({ ratio }) {
     return (
         <View style={{ gap: 4 }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                <Text style={{ fontSize: 11, color: c.text.secondary }}>
+                <Text style={{ fontSize: 12, color: c.text.secondary }}>
                     {t("Ratio de contraste")}
                 </Text>
-                <Text style={{ fontSize: 10, fontWeight: "700", color: color }}>
+                <Text style={{ fontSize: 11, fontWeight: "700", color: color }}>
                     {ratio}:1
                 </Text>
             </View>
@@ -38,7 +38,7 @@ export function ContrastBar({ ratio }) {
                             color={ratio >= item.min ? "#10B981" : c.text.disabled}
                         />
                         <Text style={{
-                            fontSize: 11,
+                            fontSize: 12,
                             color: ratio >= item.min ? "#10B981" : c.text.disabled
                         }}>
                             {item.label}

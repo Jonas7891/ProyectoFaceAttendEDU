@@ -17,7 +17,7 @@ export function FaceSettings({ sections = [], title }) {
     const { sectionTitle } = useSettingsSectionStyles();
 
     return (
-        <View style={{ gap: 18 }}>
+        <View style={{ gap: 12 }}>
             {title && <Text style={sectionTitle}>{title}</Text>}
             {sections.map((section, i) => (
                 <React.Fragment key={i}>

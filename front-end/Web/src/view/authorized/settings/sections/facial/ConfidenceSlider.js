@@ -24,7 +24,7 @@ export function ConfidenceSlider({ value, onChange }) {
                     <Text style={labelStyle}>{t("Umbral de confianza")}</Text>
                     <Text style={[descStyle, { marginTop: 0 }]}>{t("Qué tan seguro debe estar el modelo para registrar")}</Text>
                 </View>
-                <Text style={{ fontSize: 16, fontWeight: "800", color: c.brand.primary }}>{value}%</Text>
+                <Text style={{ fontSize: 18, fontWeight: "800", color: c.brand.primary }}>{value}%</Text>
             </View>
             <Slider
                 minimumValue={60} maximumValue={99} step={1}
@@ -34,7 +34,7 @@ export function ConfidenceSlider({ value, onChange }) {
             />
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 4 }}>
                 {[`60 — ${t("Permisivo")}`, "75", "85 ✓", `95 — ${t("Estricto")}`, "99"].map((v, i) => (
-                    <Text key={i} style={{ fontSize: 11, color: c.text.disabled }}>{v}</Text>
+                    <Text key={i} style={{ fontSize: 12, color: c.text.disabled }}>{v}</Text>
                 ))}
             </View>
             <View style={{ marginTop: 12 }}>

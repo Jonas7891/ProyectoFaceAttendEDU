@@ -49,7 +49,6 @@ export default function RegisterStudentModal({
     const [showErrors,    setShowErrors]    = useState(false);
     const [success,       setSuccess]       = useState(false);
     const [showFaceModal, setShowFaceModal] = useState(false);
-    const [fichaSearch,   setFichaSearch]   = useState(""); // Para búsqueda de fichas
     const pendingFormRef = useRef(null);
 
     // Generar items de fichas desde los cursos disponibles
@@ -65,19 +64,6 @@ export default function RegisterStudentModal({
                 icon: "book-open",
             }));
     }, [appData.courses]);
-
-    // Filtrar fichas según búsqueda
-    const filteredFichaItems = useMemo(() => {
-        if (!fichaSearch.trim()) return fichaItems.slice(0, 5); // Máximo 5 por defecto
-        
-        const query = fichaSearch.toLowerCase();
-        return fichaItems
-            .filter(item => 
-                item.label.toLowerCase().includes(query) ||
-                item.value.toLowerCase().includes(query)
-            )
-            .slice(0, 5); // Máximo 5 resultados
-    }, [fichaItems, fichaSearch]);
 
     // Calcular código estudiantil auto-incremental cuando se selecciona una ficha
     // Formato: códigoCurso + "00" + n (ej: "AED-401001", "AED-401002", ..., "AED-40120", etc.)
@@ -307,7 +293,7 @@ export default function RegisterStudentModal({
                     </View>
                 )}
 
-                {/* Fila 1 — Nombre y Código */}
+                {/* Fila 1 — Nombre y Programa (intercambiados) */}
                 <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
                     <View style={{ flex: 1 }}>
                         <TextInput
@@ -319,18 +305,30 @@ export default function RegisterStudentModal({
                             errorMessage={isEmpty(form.name) ? t("Campo requerido") : ""}
                         />
                     </View>
-                    <View style={{ flex: 1 }}>
-                        <TextInput
-                            label={config.codeLabel + " *"}
-                            value={form.code}
-                            onChangeText={v => setField("code", v)}
-                            placeholder={config.codePlaceholder}
-                            error={isEmpty(form.code)}
-                            errorMessage={isEmpty(form.code) ? t("Campo requerido") : ""}
-                            disabled={form.role === "student"} // Auto-generado para estudiantes
-                            helperText={form.role === "student" && form.code ? t("Generado automáticamente") : ""}
-                        />
-                    </View>
+                    {config.showProgram && (
+                        <View style={{ flex: 1 }}>
+                            <Text style={{ 
+                                fontSize: 14, 
+                                fontWeight: "600", 
+                                color: showErrors && isEmpty(form.course) ? c.status.error : c.text.secondary, 
+                                marginBottom: 6 
+                            }}>
+                                {config.programLabel + " *"}
+                            </Text>
+                            <AnimatedDropdown
+                                items={fichaItems}
+                                value={form.course}
+                                onSelect={(value) => {
+                                    setField("course", value);
+                                }}
+                                placeholder={config.programPlaceholder}
+                                searchable
+                                searchPlaceholder={t("Buscar programa...")}
+                                error={showErrors && isEmpty(form.course)}
+                                triggerHeight={48}
+                            />
+                        </View>
+                    )}
                 </View>
 
                 {/* Correo */}
@@ -344,33 +342,19 @@ export default function RegisterStudentModal({
                     errorMessage={isEmpty(form.email) ? t("Campo requerido") : ""}
                 />
 
-                {/* Fila 2 — Programa/Departamento y Rol */}
+                {/* Fila 2 — Código y Rol */}
                 <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
-                    {config.showProgram && (
-                        <View style={{ flex: 1 }}>
-                            {/* Dropdown con búsqueda para todos los roles excepto admin */}
-                            <Text style={{
-                                fontSize: 14,
-                                fontWeight: "600",
-                                color: showErrors && !form.course ? c.status.error : c.text.secondary,
-                                marginBottom: 6,
-                            }}>
-                                {config.programLabel + " *"}
-                            </Text>
-                            <AnimatedDropdown
-                                items={fichaItems}
-                                value={form.course}
-                                onSelect={v => setField("course", v)}
-                                placeholder={t("Seleccionar ficha/curso")}
-                                searchable={true}
-                                searchPlaceholder={t("Buscar...")}
-                                maxVisible={5}
-                                triggerIcon="book-open"
-                                error={showErrors && !form.course}
-                                triggerHeight={48}
-                            />
-                        </View>
-                    )}
+                    <View style={{ flex: 1 }}>
+                        <TextInput
+                            label={config.codeLabel + " *"}
+                            value={form.code}
+                            onChangeText={v => setField("code", v)}
+                            placeholder={config.codePlaceholder}
+                            error={isEmpty(form.code)}
+                            errorMessage={isEmpty(form.code) ? t("Campo requerido") : ""}
+                            disabled={form.role === "student"}
+                        />
+                    </View>
                     <View style={{ flex: 1 }}>
                         <Text style={{
                             fontSize: 14,
@@ -392,6 +376,7 @@ export default function RegisterStudentModal({
                             placeholder={config.rolePlaceholder || t("Seleccionar rol")}
                             error={showErrors && !form.role}
                             triggerHeight={48}
+                            disabled={!!initialRole}
                         />
                     </View>
                 </View>
@@ -459,77 +444,78 @@ export default function RegisterStudentModal({
                             {t("Reconocimiento biométrico")}
                         </Text>
                         
-                        {/* Checkbox Facial */}
-                        <TouchableOpacity
-                            onPress={() => setField("hasFacial", !form.hasFacial)}
-                            style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 10,
-                            }}
-                        >
-                            <View style={{
-                                width: 20,
-                                height: 20,
-                                borderRadius: 4,
-                                borderWidth: 2,
-                                borderColor: form.hasFacial ? c.status.success : c.border.primary,
-                                backgroundColor: form.hasFacial ? c.status.success : "transparent",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}>
-                                {form.hasFacial && (
-                                    <Feather name="check" size={14} color="#fff" />
-                                )}
-                            </View>
-                            <View style={{ flex: 1 }}>
-                                <Text style={{ fontSize: 13, color: c.text.primary }}>
-                                    {t("Registro facial")}
-                                </Text>
-                                <Text style={{ fontSize: 11, color: c.text.secondary }}>
-                                    {t("Reconocimiento por rostro")}
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
-                        
-                        {/* Checkbox Huella */}
-                        <TouchableOpacity
-                            onPress={() => setField("hasFingerprint", !form.hasFingerprint)}
-                            style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 10,
-                            }}
-                        >
-                            <View style={{
-                                width: 20,
-                                height: 20,
-                                borderRadius: 4,
-                                borderWidth: 2,
-                                borderColor: form.hasFingerprint ? c.status.success : c.border.primary,
-                                backgroundColor: form.hasFingerprint ? c.status.success : "transparent",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}>
-                                {form.hasFingerprint && (
-                                    <Feather name="check" size={14} color="#fff" />
-                                )}
-                            </View>
-                            <View style={{ flex: 1 }}>
-                                <Text style={{ fontSize: 13, color: c.text.primary }}>
-                                    {t("Registro de huella dactilar")}
-                                </Text>
-                                <Text style={{ fontSize: 11, color: c.text.secondary }}>
-                                    {t("Reconocimiento por huella")}
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
+                        {/* Checkboxes en la misma línea */}
+                        <View style={{ flexDirection: "row", gap: 20 }}>
+                            {/* Checkbox Facial */}
+                            <TouchableOpacity
+                                onPress={() => setField("hasFacial", !form.hasFacial)}
+                                style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    flex: 1,
+                                }}
+                            >
+                                <View style={{
+                                    width: 20,
+                                    height: 20,
+                                    borderRadius: 4,
+                                    borderWidth: 2,
+                                    borderColor: form.hasFacial ? c.status.success : c.border.primary,
+                                    backgroundColor: form.hasFacial ? c.status.success : "transparent",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}>
+                                    {form.hasFacial && (
+                                        <Feather name="check" size={14} color="#fff" />
+                                    )}
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ fontSize: 13, color: c.text.primary }}>
+                                        {t("Registro facial")}
+                                    </Text>
+                                    <Text style={{ fontSize: 11, color: c.text.secondary }}>
+                                        {t("Reconocimiento por rostro")}
+                                    </Text>
+                                </View>
+                            </TouchableOpacity>
+                            
+                            {/* Checkbox Huella */}
+                            <TouchableOpacity
+                                onPress={() => setField("hasFingerprint", !form.hasFingerprint)}
+                                style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    flex: 1,
+                                }}
+                            >
+                                <View style={{
+                                    width: 20,
+                                    height: 20,
+                                    borderRadius: 4,
+                                    borderWidth: 2,
+                                    borderColor: form.hasFingerprint ? c.status.success : c.border.primary,
+                                    backgroundColor: form.hasFingerprint ? c.status.success : "transparent",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}>
+                                    {form.hasFingerprint && (
+                                        <Feather name="check" size={14} color="#fff" />
+                                    )}
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ fontSize: 13, color: c.text.primary }}>
+                                        {t("Registro de huella dactilar")}
+                                    </Text>
+                                    <Text style={{ fontSize: 11, color: c.text.secondary }}>
+                                        {t("Reconocimiento por huella")}
+                                    </Text>
+                                </View>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 )}
-
-                <Text style={{ fontSize: 12, color: c.text.secondary, textAlign: "right" }}>
-                    * {t("Campos obligatorios")}
-                </Text>
             </BaseModal>
 
             {/* Modal facial secundario */}

@@ -253,7 +253,7 @@ export function PushNotificationToggle({
                 {/* Mensaje de error o contextual - con margin bottom negativo para compensar el padding del contenedor */}
                 {enabled && (error || contextualMessage) && (
                     <Text style={{
-                        fontSize: 11,
+                        fontSize: 12,
                         color: error ? c.status.danger : contextualMessage?.color,
                         marginTop: 4,
                         marginBottom: -19,

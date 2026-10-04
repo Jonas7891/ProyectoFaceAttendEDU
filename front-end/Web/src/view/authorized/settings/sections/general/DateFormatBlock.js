@@ -51,7 +51,7 @@ export function DateFormatBlock({ dateFormat, onDateFormatChange, timeFormat24h,
                         onSelect={onDateFormatChange}
                         placeholder={t("Formato")}
                         triggerIcon="calendar"
-                        triggerHeight={44}
+                        triggerHeight={36}
                     />
                 </View>
             </View>

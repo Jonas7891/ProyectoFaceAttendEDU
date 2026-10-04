@@ -51,16 +51,16 @@ export function ConfidenceGuide({ value }) {
             gap: 6,
         }}>
             <Text style={{
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: "700",
                 color: zone.color
             }}>
                 {zone.label}
             </Text>
             <Text style={{
-                fontSize: 11,
+                fontSize: 12,
                 color: c.text.primary,
-                lineHeight: 18
+                lineHeight: 20
             }}>
                 {zone.desc}
             </Text>
