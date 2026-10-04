@@ -8,7 +8,6 @@ Gestionar la identidad de personas, credenciales de acceso, sesiones de usuario 
 
 | Tabla | Descripcion | PK |
 |-------|-------------|-----|
-| `city` | Catalogo de ciudades colombianas | `city_id` (INT) |
 | `person` | Identidad base: documento, nombre, contacto | `person_id` (UUID) |
 | `app_user` | Credenciales de acceso; 1:1 con `person` | `user_id` (UUID) |
 | `user_session` | Sesiones activas/cerradas | `session_id` (UUID) |
@@ -227,35 +226,14 @@ springdoc:
 
 ---
 
-## 9. Analisis de Lenguaje
+## 9. Stack Actual
 
-### Candidatos evaluados
+Identity esta implementado en **Java 21 + Spring Boot 4.1.1** con arquitectura hexagonal.
 
-| # | Lenguaje | Framework | Ecosistema JWT/Security | ORM | Rendimiento | Ecosistema |
-|---|----------|-----------|:-----------------------:|:---:|:-----------:|:----------:|
-| 1 | **Java 21** | Spring Boot 4.1.1 | Excelente (Spring Security) | JPA/Hibernate | Excelente | Mas grande del mundo |
-| 2 | C# .NET 8 | ASP.NET Core | Excelente (Identity) | Entity Framework | Excelente | Muy grande, enterprise |
-| 3 | Go 1.22 | Gin + golang-jwt | Bueno (manual) | pgx/sqlc | Excelente | Moderado, cloud-native |
+### Justificacion
 
-### Por que Java gana
-
-- **Spring Security**: La libreria de seguridad mas madura y completa del ecosistema JVM. JWT, sesiones, OAuth2, RBAC nativo.
-- **Identity ya implementado**: 90+ archivos Java con arquitectura hexagonal completa. Reescribir en otro lenguaje no justifica el costo.
-- **Ecosistema**: Spring Data JPA, Liquibase, Kafka, OpenAPI — todo integrado y probado en produccion.
-- **Virtual Threads (JEP 444)**: Java 21 cierra la brecha de concurrencia con Go.
-
-### Por que no C# .NET 8
-
-- Mismo nivel de madurez que Java, pero sin ventaja para este caso de uso.
-- Requeriria reescribir todo el proyecto existente.
-- Menor ecosistema de seguridad biometrica que Java.
-
-### Por que no Go
-
-- Spring Security resuelve JWT, sesiones y politicas de forma integral.
-- Go requiere implementar manualmente lo que Spring Security da "out of the box".
-- Identity tiene dominios complejos (personas, usuarios, sesiones, escuelas) donde JPA simplifica el ORM.
-
-### Decision: Java 21
-
-Identity es el servicio base del sistema. Java 21 con Spring Boot ofrece el ecosistema mas completo para identidad y seguridad. El proyecto ya esta implementado y funcionando.
+- **Spring Security**: La libreria de seguridad mas madura del ecosistema JVM. JWT, sesiones Redis, refresh tokens y RBAC out-of-the-box.
+- **Spring Data JPA**: Persistencia relacional con la unicidad compuesta `(document_type, document_number)` y `username` unico.
+- **Spring Kafka**: Domain Events asincronos (`PersonCreated`, `UserLoggedIn`, ...).
+- **Liquibase**: Migraciones versionadas del schema `identity`.
+- **Testcontainers**: Tests de integracion con PostgreSQL real.

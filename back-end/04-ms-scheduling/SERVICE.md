@@ -190,34 +190,13 @@ spring:
 
 ---
 
-## 9. Analisis de Lenguaje
+## 9. Stack Actual
 
-### Candidatos evaluados
+Scheduling esta implementado en **Java 21 + Spring Boot** con arquitectura hexagonal. El servicio gestiona ambientes, bloques de horario recurrentes y sesiones de clase con deteccion de conflictos.
 
-| # | Lenguaje | Framework | Concurrencia | Latencia p99 | Memoria | Deployment |
-|---|----------|-----------|:------------:|:------------:|:-------:|:----------:|
-| 1 | **Go 1.22** | Gin | Goroutines (M:N) | 8ms | 68MB | Binario ~8MB |
-| 2 | Java 21 | Spring Boot | Virtual Threads | 12ms | 412MB | JAR ~200MB |
-| 3 | Rust 1.85 | Axum | Async/Await | 5ms | 45MB | Binario ~2MB |
+### Justificacion
 
-### Por que Go gana
-
-- **Deteccion de conflictos concurrente**: Goroutines evaluan simultaneamente si un bloque de horario choca con otros en el mismo ambiente/instructor. Miles de goroutines = miles de validaciones en paralelo.
-- **Baja latencia**: p99 de 8ms vs 12ms de Java. Critico cuando un instructor intenta agendar y debe recibir respuesta rapida.
-- **6x menos memoria**: 68MB vs 412MB. En un sistema con muchos horarios, la densidad de pods importa.
-- **Simplicidad**: El modelo de concurrencia de Go (channels + goroutines) es mas natural para conflictos de horarios que el modelo de Java.
-
-### Por que no Java
-
-- Virtual Threads cierra la brecha de concurrencia, pero el overhead de Spring Boot (412MB) es excesivo para un servicio de horarios.
-- La deteccion de conflictos es inherentemente concurrente — Go la resuelve de forma mas natural.
-
-### Por que no Rust
-
-- Rust ofrece mejor latencia (5ms p99) pero el costo de desarrollo es 3-4x mayor.
-- El learning curve de Rust (8-12 semanas) no se justifica para un servicio de scheduling.
-- Go es suficientemente rapido y mucho mas rapido de desarrollar.
-
-### Decision: Go 1.22
-
-Scheduling requiere **concurrencia real** para detectar conflictos de horarios en tiempo real. Goroutines son el modelo natural para evaluar multiples restricciones simultaneamente (ambiente, instructor, cohorte).
+- **Spring Data JPA**: Persistencia relacional con constraints de unicidad anti-doble-reserva
+- **Spring Security**: Autorizacion basada en roles para endpoints de horarios
+- **Kafka**: Eventos de dominio para notificaciones de sesiones
+- **Testcontainers**: Tests de integracion con PostgreSQL real
