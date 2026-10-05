@@ -50,7 +50,8 @@ public class ScheduleBlock {
 
     public void touchUpdated() {
         updatedAt = Instant.now();
-        rowVersion++;
+        // row_version is owned by JPA @Version (reinforced by fn_audit_timestamps trigger);
+        // pre-incrementing it here makes merge() fail with StaleObjectStateException
     }
 
     @Override public boolean equals(Object o) {
