@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { getInstitutionConfig } from "../core/config/institutionConfig";
 
@@ -280,6 +280,22 @@ export function useEnvironmentsViewModel() {
     const [scheduleModalMode, setScheduleModalMode] = useState("none");
     const [editingSchedule, setEditingSchedule] = useState(null);
     const [scheduleTargetEnvId, setScheduleTargetEnvId] = useState(null);
+
+    // Escuchar eventos de avance de período para refrescar los ambientes
+    useEffect(() => {
+        const handlePeriodAdvanced = () => {
+            console.log("[EnvironmentsViewModel] Período avanzado detectado, recargando ambientes...");
+            // El AppData se recargará automáticamente al cambiar el localStorage
+            // Forzar limpieza de selección actual
+            setSelected(null);
+        };
+        
+        window.addEventListener("periodAdvanced", handlePeriodAdvanced);
+        
+        return () => {
+            window.removeEventListener("periodAdvanced", handlePeriodAdvanced);
+        };
+    }, []);
 
     // Instructores: usuarios activos con rol teacher (solo profesores, NO admins)
     const instructors = useMemo(

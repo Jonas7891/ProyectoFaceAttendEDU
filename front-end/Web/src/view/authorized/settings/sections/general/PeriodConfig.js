@@ -162,6 +162,26 @@ export function PeriodConfig({
                             </Text>
                         </View>
                     )}
+                    
+                    {/* Separador */}
+                    <View style={{ height: 1, backgroundColor: c.border.light, marginVertical: 4 }} />
+                    
+                    {/* Información sobre limpieza de horarios */}
+                    <View style={{
+                        backgroundColor: c.status.infoLight,
+                        borderRadius: 12,
+                        padding: 12,
+                    }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                            <Feather name="calendar" size={16} color={c.status.info} />
+                            <Text style={{ fontSize: 14, fontWeight: "600", color: c.status.infoDark }}>
+                                {t("Limpieza automática de horarios")}
+                            </Text>
+                        </View>
+                        <Text style={{ fontSize: 14, color: c.status.infoDark, lineHeight: 20 }}>
+                            {t("Al finalizar el período académico, todos los horarios asignados a los ambientes se borrarán automáticamente. Los cursos, ambientes y registros históricos de asistencia no se verán afectados.")}
+                        </Text>
+                    </View>
                 </View>
             </InfoModal>
         </View>

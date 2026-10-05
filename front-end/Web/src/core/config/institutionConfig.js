@@ -174,6 +174,8 @@ export function updateInstitutionConfigField(key, value) {
 
 /**
  * Actualizar múltiples propiedades de la configuración
+ * Si se detecta un cambio de período (fecha final cambiada y expirada), 
+ * también limpia los horarios de los ambientes
  * 
  * @param {Object} updates - Objeto con las propiedades a actualizar
  * @returns {boolean} True si se actualizó exitosamente
@@ -181,6 +183,33 @@ export function updateInstitutionConfigField(key, value) {
 export function updateInstitutionConfig(updates) {
     const config = getInstitutionConfig();
     const newConfig = { ...config, ...updates };
+    
+    // Detectar si cambió el período y si ya expiró
+    const periodChanged = 
+        updates.periodEndDate && 
+        updates.periodEndDate !== config.periodEndDate;
+    
+    if (periodChanged) {
+        const newEndDate = new Date(updates.periodEndDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        newEndDate.setHours(0, 0, 0, 0);
+        
+        // Si el nuevo período ya expiró, limpiar horarios
+        if (newEndDate < today) {
+            console.log("[Config] Período ya expirado detectado al actualizar configuración. Limpiando horarios...");
+            
+            // Limpiar horarios de forma asíncrona (no bloqueante)
+            clearAllSchedules().then(success => {
+                if (success) {
+                    console.log("[Config] ✅ Horarios limpiados exitosamente");
+                } else {
+                    console.warn("[Config] ⚠️ Error al limpiar horarios");
+                }
+            });
+        }
+    }
+    
     return saveInstitutionConfig(newConfig);
 }
 
@@ -359,11 +388,41 @@ export function calculateNextPeriod() {
 }
 
 /**
- * Avanzar automáticamente al próximo período (solo si isAutomaticPeriod es true)
+ * Borrar todos los horarios de todos los ambientes al finalizar un período
+ * Esto NO elimina los ambientes ni los cursos, solo limpia los horarios asignados
  * 
- * @returns {boolean} True si se avanzó exitosamente
+ * @returns {Promise<boolean>} True si se borraron exitosamente
  */
-export function advanceToNextPeriod() {
+export async function clearAllSchedules() {
+    try {
+        // Importar dinámicamente para evitar dependencias circulares
+        const { loadEnvironments, saveEnvironments } = await import("../../models/data/EnvironmentStorage");
+        
+        const environments = await loadEnvironments();
+        
+        // Limpiar los horarios de cada ambiente
+        const updatedEnvironments = environments.map(env => ({
+            ...env,
+            schedules: [] // Vaciar el array de horarios
+        }));
+        
+        await saveEnvironments(updatedEnvironments);
+        
+        console.log(`[PeriodAdvance] ✅ Horarios borrados: ${environments.length} ambientes limpiados`);
+        return true;
+    } catch (error) {
+        console.error("[PeriodAdvance] ❌ Error al borrar horarios:", error);
+        return false;
+    }
+}
+
+/**
+ * Avanzar automáticamente al próximo período (solo si isAutomaticPeriod es true)
+ * Al avanzar, borra todos los horarios asignados a los ambientes
+ * 
+ * @returns {Promise<boolean>} True si se avanzó exitosamente
+ */
+export async function advanceToNextPeriod() {
     const config = getInstitutionConfig();
     
     if (!config.isAutomaticPeriod) {
@@ -378,10 +437,20 @@ export function advanceToNextPeriod() {
         return false;
     }
     
-    return updateInstitutionConfig({
+    // Borrar todos los horarios antes de avanzar el período
+    const schedulesCleared = await clearAllSchedules();
+    
+    if (!schedulesCleared) {
+        console.warn("[PeriodAdvance] ⚠️ No se pudieron borrar los horarios, pero se continuará con el avance del período");
+    }
+    
+    // Actualizar las fechas del período
+    const configUpdated = updateInstitutionConfig({
         periodStartDate: nextPeriod.periodStartDate,
         periodEndDate: nextPeriod.periodEndDate,
     });
+    
+    return configUpdated && schedulesCleared;
 }
 
 /**

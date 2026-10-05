@@ -28,7 +28,7 @@ export function useAutomaticPeriodAdvance(enabled = true, checkIntervalMinutes =
             return;
         }
 
-        const checkAndAdvance = () => {
+        const checkAndAdvance = async () => {
             try {
                 const config = getInstitutionConfig();
                 
@@ -44,10 +44,10 @@ export function useAutomaticPeriodAdvance(enabled = true, checkIntervalMinutes =
                 if (expiration.hasExpired) {
                     console.log(`[PeriodAdvance] Período expirado hace ${expiration.daysOverdue} días. Avanzando al próximo período...`);
                     
-                    const success = advanceToNextPeriod();
+                    const success = await advanceToNextPeriod();
                     
                     if (success) {
-                        console.log("[PeriodAdvance] ✅ Período avanzado exitosamente");
+                        console.log("[PeriodAdvance] ✅ Período avanzado exitosamente y horarios borrados");
                         
                         // Emitir evento custom para notificar a componentes
                         window.dispatchEvent(new CustomEvent("periodAdvanced", {
