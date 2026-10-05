@@ -20,6 +20,15 @@
 
 import { Pool, types as pgTypes, type PoolClient, type QueryResultRow } from 'pg';
 
+// Host runs also read the repo-root .env, so one file governs Docker and
+// workstation runs alike; in Docker compose injects the environment and the
+// file is absent, so this is a no-op there.
+try {
+  (process as unknown as { loadEnvFile?: (file: string) => void }).loadEnvFile?.('../../.env');
+} catch {
+  /* no root .env */
+}
+
 // ── Wire-format normalisation ────────────────────────────────────────────
 //
 // The public JSON contract of this service predates real persistence: dates are
