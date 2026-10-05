@@ -13,4 +13,5 @@ Edge: routing, JWT, rate limiting, CORS, TLS. Enruta a modular monolith 8081-808
   SERVICE.md / STACK.md / DATA_MODEL.md
 
 ## Run
+Requiere el stack FULL/ ya creado (redes `faceattend-edge` y `faceattend-app`).
 cd 99-api-gateway; docker compose up -d; curl http://localhost:8080/api/v1/persons; curl http://localhost:8001/
