@@ -18,13 +18,28 @@ import { clearToken, getToken, saveToken } from "../api/apiClient";
 import { authApi } from "../services/api/authApi";
 
 // ── Roles del backend → roles de la UI ────────────────────
-// Mismo criterio que Mobile (getHighestRole): admin > teacher > student.
+// Prioridad admin > teacher > student, igual que Mobile (getHighestRole).
+//
+// Catálogo vigente (database/02-ms-authorization-db/02-dml/004-unify-mobile-roles):
+//   Administrador | Instructor | Aprendiz
+// Se aceptan también los nombres legados (001-seed-role-table) por si la base
+// todavía no fue migrada. Espejo de Mobile/src/utils/getHighestRole.js.
 
 const ROLE_BY_BACKEND_ROLE = {
+    // Vigentes
+    ADMINISTRADOR: "admin",
+    INSTRUCTOR: "teacher",
+    APRENDIZ: "student",
+    // Legados / sin migrar
     SUPER_ADMIN: "admin",
     SCHOOL_ADMIN: "admin",
-    INSTRUCTOR: "teacher",
+    ADMIN: "admin",
+    RECTOR: "admin",
+    COORDINATOR: "admin",
+    DOCENTE: "teacher",
+    TEACHER: "teacher",
     STUDENT: "student",
+    ESTUDIANTE: "student",
 };
 const ROLE_PRIORITY = ["admin", "teacher", "student"];
 
@@ -161,7 +176,10 @@ export function AuthProvider({ children }) {
         if (!role) {
             await clearToken();
             // "cuenta" hace que useAuthViewModel lo muestre en el campo de email.
-            return "La cuenta no tiene roles asignados en el backend";
+            // Distingue: sin roles asignados vs. roles que la app no sabe mapear.
+            return roleNames.length
+                ? `La cuenta tiene un rol no reconocido: ${roleNames.join(", ")}`
+                : "La cuenta no tiene roles asignados en el backend";
         }
 
         const personId = userDto?.personId ?? userDto?.person_id ?? null;
