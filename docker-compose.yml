@@ -120,7 +120,9 @@ services:
       - faceattend-edge
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost/health || exit 1"]
+      # nginx binds IPv4 only; `localhost` also resolves to ::1 in the
+      # container and would be refused, marking it unhealthy.
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/health || exit 1"]
       interval: 20s
       timeout: 5s
       retries: 5
