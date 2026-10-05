@@ -3,9 +3,11 @@
 # back-end/docker-compose.yml and runs inside the FULL/ stack. Use THIS file
 # only to restart Kong alone against an already-running shared stack:
 #   cd FULL/back-end/99-api-gateway && docker compose up -d
-# Requires the shared `faceattend-net` network and `faceattend-redis`
-# (rate-limiting storage, see kong/kong.yml). Same container/ports/vars as
-# the canonical definition; do not run both at once (name/port collision).
+# Joins the shared `faceattend-edge` (frontend proxy) and `faceattend-app`
+# (microservices + `faceattend-redis` rate-limiting storage, see kong/kong.yml)
+# networks, which the FULL/ project must have created first. Same
+# container/ports/vars as the canonical definition; do not run both at once
+# (name/port collision).
 services:
   kong:
     image: kong:3.6
@@ -27,7 +29,8 @@ services:
     volumes:
       - ./kong/kong.yml:/kong/kong.yml:ro
     networks:
-      - faceattend-net
+      - faceattend-edge
+      - faceattend-app
     healthcheck:
       test: ['CMD', 'kong', 'health']
       interval: 10s
@@ -35,5 +38,7 @@ services:
     restart: unless-stopped
 
 networks:
-  faceattend-net:
+  faceattend-edge:
+    external: true
+  faceattend-app:
     external: true

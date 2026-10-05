@@ -21,7 +21,7 @@ services:
     volumes:
       - mongo_data:/data/db
     networks:
-      - faceattend-net
+      - faceattend-data
     healthcheck:
       test: ["CMD-SHELL", "mongosh -u $${MONGO_INITDB_ROOT_USERNAME} -p $${MONGO_INITDB_ROOT_PASSWORD} --eval \"db.adminCommand('ping')\" --quiet || mongosh --eval \"db.adminCommand('ping')\" --quiet"]
       interval: 10s
@@ -38,7 +38,7 @@ services:
     volumes:
       - redis_data:/data
     networks:
-      - faceattend-net
+      - faceattend-app
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -70,7 +70,7 @@ services:
     volumes:
       - kafka_data:/var/lib/kraft-combined-logs
     networks:
-      - faceattend-net
+      - faceattend-data
     healthcheck:
       test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list > /dev/null 2>&1"]
       interval: 15s
@@ -113,7 +113,8 @@ services:
     ports:
       - "8081:8081"
     networks:
-      - faceattend-net
+      - faceattend-app
+      - faceattend-data
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health | grep -q '\"status\":\"UP\"' || curl -sf http://localhost:8081/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"]
@@ -151,7 +152,8 @@ services:
     ports:
       - "8082:8082"
     networks:
-      - faceattend-net
+      - faceattend-app
+      - faceattend-data
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health | grep -q '\"status\":\"UP\"' || curl -sf http://localhost:8082/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"]
@@ -187,7 +189,8 @@ services:
     ports:
       - "8084:8084"
     networks:
-      - faceattend-net
+      - faceattend-app
+      - faceattend-data
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8084/actuator/health | grep -q '\"status\":\"UP\"' || curl -sf http://localhost:8084/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"]
@@ -226,7 +229,8 @@ services:
     ports:
       - "8085:8085"
     networks:
-      - faceattend-net
+      - faceattend-app
+      - faceattend-data
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8085/actuator/health | grep -q '\"status\":\"UP\"' || curl -sf http://localhost:8085/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"]
@@ -260,7 +264,8 @@ services:
     ports:
       - "8083:8083"
     networks:
-      - faceattend-net
+      - faceattend-app
+      - faceattend-data
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8083/health || exit 1"]
@@ -289,7 +294,8 @@ services:
     ports:
       - "8087:8087"
     networks:
-      - faceattend-net
+      - faceattend-app
+      - faceattend-data
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8087/health || exit 1"]
@@ -321,7 +327,8 @@ services:
     ports:
       - "8086:8086"
     networks:
-      - faceattend-net
+      - faceattend-app
+      - faceattend-data
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8086/health || exit 1"]
@@ -354,7 +361,8 @@ services:
     ports:
       - "8088:8088"
     networks:
-      - faceattend-net
+      - faceattend-app
+      - faceattend-data
     restart: unless-stopped
     healthcheck:
       # distroless no tiene shell/wget: usar TCP check vía busybox-less workaround — base alpine lo soporta
@@ -390,7 +398,8 @@ services:
     ports:
       - "8089:8089"
     networks:
-      - faceattend-net
+      - faceattend-app
+      - faceattend-data
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8089/health || exit 1"]
@@ -437,13 +446,17 @@ services:
       KONG_PROXY_ERROR_LOG: /dev/stderr
       KONG_ADMIN_ERROR_LOG: /dev/stderr
       KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      # Docker's embedded DNS blackholes SRV queries (~8s cold-start latency
+      # per upstream host). Same value as the standalone gateway file.
+      KONG_DNS_ORDER: 'LAST,A,AAAA,CNAME'
     ports:
       - "${KONG_PROXY_PORT:-8080}:8000"
       - "${KONG_ADMIN_PORT:-8001}:8001"
     volumes:
       - ./99-api-gateway/kong/kong.yml:/kong/kong.yml:ro
     networks:
-      - faceattend-net
+      - faceattend-edge
+      - faceattend-app
     healthcheck:
       test: ["CMD", "kong", "health"]
       interval: 10s
@@ -454,7 +467,14 @@ services:
   # Frontend web lives in FULL/docker-compose.yml (presentation concern,
   # context ./front-end/Web). It is intentionally NOT defined here.
 networks:
-  faceattend-net:
+  # edge â€” browser tier: frontend-web <-> Kong proxy (:8080).
+  faceattend-edge:
+    driver: bridge
+  # app â€” service tier: Kong <-> microservices <-> Redis.
+  faceattend-app:
+    driver: bridge
+  # data â€” data tier: microservices <-> MongoDB/Kafka (PostgreSQL lives in database/).
+  faceattend-data:
     driver: bridge
 
 volumes:

@@ -2,6 +2,12 @@
 # Includes database/ (postgres + liquibase) and back-end/ (microservices +
 # Kong). Interpolation variables for ALL included files resolve from FULL/.env
 # (see .env.example). Start everything with:  docker compose up --build -d
+#
+# Networks — one bridge per tier, so the data tier is unreachable from the
+# browser-facing one:
+#   faceattend-edge  frontend-web <-> Kong proxy
+#   faceattend-app   Kong <-> microservices <-> Redis
+#   faceattend-data  microservices <-> PostgreSQL / MongoDB / Kafka + Liquibase
 include:
   - ./database/docker-compose.yml
   - ./back-end/docker-compose.yml
@@ -111,7 +117,7 @@ services:
     ports:
       - "${FRONTEND_PORT:-8090}:80"
     networks:
-      - faceattend-net
+      - faceattend-edge
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost/health || exit 1"]
@@ -119,3 +125,9 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+
+# Browser-facing tier. `faceattend-app` and `faceattend-data` are declared by
+# back-end/docker-compose.yml and database/docker-compose.yml (same project).
+networks:
+  faceattend-edge:
+    driver: bridge
