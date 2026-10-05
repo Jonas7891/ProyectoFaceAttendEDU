@@ -1,4 +1,5 @@
 # FaceAttend EDU — root orchestrator (run every stack command from FULL/).
+# Full reference: COMPOSE.md (files, startup order, networks, ports, .env).
 # Includes database/ (postgres + liquibase) and back-end/ (microservices +
 # Kong). Interpolation variables for ALL included files resolve from FULL/.env
 # (see .env.example). Start everything with:  docker compose up --build -d
