@@ -1,22 +1,35 @@
 // ============================================================
 //  FaceAttend EDU — FichaStorage
 //
-//  Capa de persistencia para las fichas/cursos.
-//  Usa AsyncStorage para guardar fichas registradas
-//  manualmente (formulario o importación) en el dispositivo.
+//  Lectura de fichas (cohortes): API académica (GET /cohorts,
+//  /programs, /enrollments, /schedule-blocks) con los mocks
+//  como respaldo si falla.
 //
-//  Estructura almacenada:
-//    KEY → JSON.stringify(Ficha[])
-//
-//  Los mockFichas son el "seed" inicial. Al arrancar, si no
-//  existe nada en storage, se usan los mocks. Toda nueva
-//  ficha se guarda aquí y se fusiona con los mocks.
+//  Derivados que el backend aún no expone y se calculan aquí:
+//  - instructor: desde los bloques del cohorte (actor -> persona)
+//  - totalStudents / activeStudents: matrículas del cohorte
+//  - avgAttendance / presentToday / atRisk...: 0 hasta la fase
+//    de consulta de asistencia
 // ============================================================
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { mockFichas } from "./mockData";
+import { colorAt } from "../../core/constants/dataColors";
+import {
+    actorMap,
+    fullName,
+    listBlocks,
+    listCohorts,
+    listEnrollments,
+    listPrograms,
+    normalizeStatus,
+    optional,
+    personMap,
+    userByPersonMap,
+} from "../../services/api/referenceData";
 
 const STORAGE_KEY = "@faceattend_fichas";
+const LOCAL_PREFIX = "f_";
 
 // ── Genera un ID único simple ──────────────────────────────
 
@@ -24,60 +37,108 @@ function generateId() {
     return `f_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 }
 
-// ── Colores predeterminados para fichas ────────────────────
-
-const DEFAULT_COLORS = [
-    "#4F6BED",
-    "#10B981",
-    "#F59E0B",
-    "#8B5CF6",
-    "#EF4444",
-    "#06B6D4",
-    "#F97316",
-    "#84CC16",
-];
-
-function getDefaultColor(index) {
-    return DEFAULT_COLORS[index % DEFAULT_COLORS.length];
-}
-
-// ── Asignar colores a mockFichas si no los tienen ──────────
+// ── Asignar colores si no los tienen ───────────────────────
 
 function ensureFichasHaveColors(fichas) {
     return fichas.map((f, i) => ({
         ...f,
-        color: f.color || getDefaultColor(i),
+        color: f.color || colorAt(i),
     }));
 }
 
-// ── API pública ────────────────────────────────────────────
+// ── Lectura ───────────────────────────────────────────────
 
-/**
- * Carga todas las fichas:
- *  - Si hay datos guardados en storage, los devuelve.
- *  - Si no, devuelve los mockFichas como estado inicial.
- */
-export async function loadFichas() {
+async function localFichas() {
     try {
         const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        if (raw) {
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-                return ensureFichasHaveColors(parsed);
-            }
-        }
-        // Primera vez: inicializar con los mocks (con colores) y persistirlos
-        const initialFichas = ensureFichasHaveColors(mockFichas);
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(initialFichas));
-        return initialFichas;
-    } catch (error) {
-        return ensureFichasHaveColors(mockFichas);
+        const parsed = raw ? JSON.parse(raw) : null;
+        if (!Array.isArray(parsed)) return [];
+        return parsed.filter(
+            (ficha) => typeof ficha?.id === "string" && ficha.id.startsWith(LOCAL_PREFIX)
+        );
+    } catch {
+        return [];
     }
 }
 
+async function fichasFromApi() {
+    const cohorts = await listCohorts();
+    if (!Array.isArray(cohorts)) return [];
+
+    const [programs, enrollments, blocks, actors, persons, usersByPerson] = await Promise.all([
+        optional(listPrograms(), []),
+        optional(listEnrollments(), []),
+        optional(listBlocks(), []),
+        optional(actorMap(), new Map()),
+        optional(personMap(), new Map()),
+        optional(userByPersonMap(), new Map()),
+    ]);
+
+    const programsById = new Map(programs.map((program) => [program.programId, program]));
+
+    return cohorts.map((cohort) => {
+        const cohortEnrollments = enrollments.filter((e) => e.cohortId === cohort.cohortId);
+        const notWithdrawn = cohortEnrollments.filter(
+            (e) => String(e.enrollmentStatus ?? "").toLowerCase() !== "withdrawn"
+        );
+        const active = cohortEnrollments.filter(
+            (e) => String(e.enrollmentStatus ?? "").toLowerCase() === "active"
+        );
+
+        // Instructor: el primer bloque del cohorte trae al docente a cargo
+        let instructorName = "";
+        let instructorId = null;
+        for (const block of blocks) {
+            if (block.cohortId !== cohort.cohortId) continue;
+            const actor = actors.get(block.instructorActorId);
+            const person = actor?.personId ? persons.get(actor.personId) : null;
+            const user = actor?.personId ? usersByPerson.get(actor.personId) : null;
+            const name = fullName(person);
+            if (name) {
+                instructorName = name;
+                instructorId = user?.userId ?? null;
+                break;
+            }
+        }
+
+        const program = programsById.get(cohort.programId);
+
+        return {
+            id: String(cohort.cohortId),
+            code: cohort.code ?? "",
+            name: program?.name ?? cohort.code ?? "",
+            program: program?.code ?? "",
+            instructor: instructorName,
+            instructorId,
+            totalStudents: notWithdrawn.length,
+            activeStudents: active.length,
+            avgAttendance: 0,
+            presentToday: 0,
+            lateToday: 0,
+            absentToday: 0,
+            atRiskStudents: 0,
+            excellentStudents: 0,
+            status: normalizeStatus(cohort.status),
+        };
+    });
+}
+
 /**
- * Guarda la lista completa de fichas en storage.
+ * Carga todas las fichas: API primero, mocks como respaldo,
+ * fusionadas con las altas hechas localmente en la UI.
  */
+export async function loadFichas() {
+    const local = await localFichas();
+    try {
+        return ensureFichasHaveColors([...(await fichasFromApi()), ...local]);
+    } catch (error) {
+        console.warn("[FaceAttend] loadFichas: API no disponible, uso mock —", error?.message);
+        return ensureFichasHaveColors([...mockFichas, ...local]);
+    }
+}
+
+// ── Escritura local (pendiente de cablear al backend) ─────
+
 export async function saveFichas(fichas) {
     try {
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(fichas));
@@ -86,14 +147,10 @@ export async function saveFichas(fichas) {
     }
 }
 
-/**
- * Agrega una nueva ficha a la lista persistida.
- * Retorna la lista completa actualizada.
- */
 export async function addFicha(existing, draft) {
     const newFicha = {
         id: generateId(),
-        color: draft.color || getDefaultColor(existing.length),
+        color: draft.color || colorAt(existing.length),
         ...draft,
     };
     const updated = [...existing, newFicha];
@@ -101,20 +158,12 @@ export async function addFicha(existing, draft) {
     return updated;
 }
 
-/**
- * Actualiza una ficha existente.
- * Retorna la lista completa actualizada.
- */
 export async function updateFicha(existing, id, patch) {
     const updated = existing.map((f) => (f.id === id ? { ...f, ...patch } : f));
     await saveFichas(updated);
     return updated;
 }
 
-/**
- * Elimina una ficha.
- * Retorna la lista completa actualizada.
- */
 export async function deleteFicha(existing, id) {
     const updated = existing.filter((f) => f.id !== id);
     await saveFichas(updated);
