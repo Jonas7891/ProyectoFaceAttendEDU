@@ -15,6 +15,9 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
+import { resetReferenceData } from "../services/api/referenceData";
+import { useAuth } from "./AuthContext";
+
 import {
     loadStudents,
     saveStudents,
@@ -53,10 +56,32 @@ import {
     deleteCourse as storageDeleteCourse,
 } from "../models/data/CourseStorage";
 
-import { mockTeachers, mockAdmins } from "../models/data/mockData";
 import { calculateStudentCurrentPeriod } from "../core/utils/studentPeriodCalculator";
 import { getConfiguredAcademicPeriodType } from "../core/constants/academicPeriods";
 import { getStudentPeriodFromData } from "../core/utils/studentPeriodCalculator";
+
+// ── Filas de personal (docentes / administradores) ─────────
+// Los usuarios vienen de la API con role admin|teacher|student;
+// aquí se completan los campos que la vista de personal espera y
+// que el backend aún no expone (asistencia, biométricos).
+
+function toStaffRow(user) {
+    return {
+        ...user,
+        grade: user.role === "admin" ? "Administrador" : "Docente",
+        attendance: 0, // pendiente de la fase de consulta
+        hasFacial: false,
+        hasFingerprint: false,
+    };
+}
+
+function splitStaff(users) {
+    const list = Array.isArray(users) ? users : [];
+    return {
+        teacherRows: list.filter((u) => u.role === "teacher").map(toStaffRow),
+        adminRows: list.filter((u) => u.role === "admin").map(toStaffRow),
+    };
+}
 
 // ── Context ───────────────────────────────────────────────
 
@@ -66,8 +91,6 @@ const AppDataContext = createContext(null);
 
 export function AppDataProvider({ children }) {
     const [students, setStudents] = useState([]);
-    const [teachers] = useState(mockTeachers); // Mock data - TODO: cargar desde storage
-    const [admins] = useState(mockAdmins); // Mock data - TODO: cargar desde storage
     const [users, setUsers] = useState([]);
     const [environments, setEnvironments] = useState([]);
     const [fichas, setFichas] = useState([]);
@@ -80,27 +103,6 @@ export function AppDataProvider({ children }) {
     const [loadedAdmins, setLoadedAdmins] = useState([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(true);
 
-    // Carga inicial de datos base (environments, fichas, courses)
-    useEffect(() => {
-        Promise.all([
-            loadStudents(), 
-            loadUsers(), 
-            loadEnvironments(), 
-            loadFichas(),
-            loadCourses()
-        ]).then(([s, u, e, f, c]) => {
-            setStudents(s);
-            setUsers(u);
-            setEnvironments(e);
-            setFichas(f);
-            setCourses(c);
-            setIsLoading(false);
-            
-            // Iniciar carga progresiva de usuarios después de cargar datos base
-            startProgressiveUserLoading(s, c);
-        });
-    }, []);
-    
     // Obtener tipo de período académico
     const periodType = useMemo(() => getConfiguredAcademicPeriodType(), []);
     
@@ -125,7 +127,7 @@ export function AppDataProvider({ children }) {
     }, [courses, periodType]);
     
     // Carga progresiva de usuarios (efecto persiana)
-    const startProgressiveUserLoading = useCallback((allStudents, allCourses) => {
+    const startProgressiveUserLoading = useCallback((allStudents, allCourses, allUsers) => {
         setIsLoadingUsers(true);
         setLoadedStudents([]);
         setLoadedTeachers([]);
@@ -160,11 +162,12 @@ export function AppDataProvider({ children }) {
             };
         });
         
-        // Combinar todos los usuarios
+        // Combinar todos los usuarios (el personal sale de la API, no de mocks)
+        const { teacherRows, adminRows } = splitStaff(allUsers);
         const allUsersToLoad = [
             ...enrichedStudents,
-            ...mockTeachers,
-            ...mockAdmins,
+            ...teacherRows,
+            ...adminRows,
         ];
         
         // Cargar usuarios progresivamente (cada 150ms)
@@ -176,7 +179,7 @@ export function AppDataProvider({ children }) {
                 // Agregar al array correspondiente según tipo
                 if (currentIndex < enrichedStudents.length) {
                     setLoadedStudents(prev => [...prev, user]);
-                } else if (currentIndex < enrichedStudents.length + mockTeachers.length) {
+                } else if (currentIndex < enrichedStudents.length + teacherRows.length) {
                     setLoadedTeachers(prev => [...prev, user]);
                 } else {
                     setLoadedAdmins(prev => [...prev, user]);
@@ -192,6 +195,49 @@ export function AppDataProvider({ children }) {
         
         return () => clearInterval(loadInterval);
     }, [periodType]);
+
+    // ── Carga de datos base (environments, fichas, courses) ────
+    // Solo con sesión: sin token todas las peticiones responderían 401 y
+    // caeríamos al mock de respaldo sin reintentar (el efecto no se vuelve
+    // a ejecutar). Al cerrar sesión se limpia todo, incluida la caché de
+    // datos de referencia, para no arrastrar datos de otra sesión.
+    const { user, isLoadingAuth } = useAuth();
+
+    useEffect(() => {
+        if (isLoadingAuth) return undefined; // aún restaurando la sesión guardada
+
+        if (!user) {
+            // Sin sesión no hay nada que pedir; se olvida la caché de
+            // referencia para que el próximo login vuelva a consultar.
+            // El estado cargado se reemplaza entero al iniciar sesión.
+            resetReferenceData();
+            return undefined;
+        }
+
+        let cancelled = false;
+        Promise.all([
+            loadStudents(),
+            loadUsers(),
+            loadEnvironments(),
+            loadFichas(),
+            loadCourses(),
+        ]).then(([s, u, e, f, c]) => {
+            if (cancelled) return;
+            setStudents(s);
+            setUsers(u);
+            setEnvironments(e);
+            setFichas(f);
+            setCourses(c);
+            setIsLoading(false);
+
+            // Carga progresiva de usuarios (efecto persiana)
+            startProgressiveUserLoading(s, c, u);
+        });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [isLoadingAuth, user, startProgressiveUserLoading]);
 
     // ── Programs derivados (sin storage propio) ───────────
 

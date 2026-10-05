@@ -2,7 +2,7 @@ package com.faceattend_edu.identity_service.application.usecase;
 
 import com.faceattend_edu.identity_service.application.port.in.AuthenticateUserUseCase;
 import com.faceattend_edu.identity_service.application.port.out.HashPasswordPort;
-import com.faceattend_edu.identity_service.application.port.out.LoadUserByUsernamePort;
+import com.faceattend_edu.identity_service.application.port.out.LoadUserByIdentifierPort;
 import com.faceattend_edu.identity_service.application.port.out.SaveUserSessionPort;
 import com.faceattend_edu.identity_service.application.port.out.UpdateUserPort;
 import com.faceattend_edu.identity_service.domain.exception.UnauthorizedException;
@@ -16,18 +16,18 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AuthenticateUserUseCaseImpl implements AuthenticateUserUseCase {
 
-    private final LoadUserByUsernamePort loadUserByUsernamePort;
+    private final LoadUserByIdentifierPort loadUserByIdentifierPort;
     private final SaveUserSessionPort saveUserSessionPort;
     private final UpdateUserPort updateUserPort;
     private final HashPasswordPort hashPasswordPort;
 
     @Override
     @Transactional
-    public UserSession authenticate(String username, String password) {
-        User user = username == null ? null : loadUserByUsernamePort.loadUserByUsername(username);
+    public UserSession authenticate(String identifier, String password) {
+        User user = loadUserByIdentifierPort.loadUserByIdentifier(identifier);
 
         if (user == null || !user.isActive() || !hashPasswordPort.matches(password, user.getPasswordHash())) {
-            throw new UnauthorizedException("Invalid username or password");
+            throw new UnauthorizedException("Invalid email or password");
         }
 
         user.touchLastAccess();

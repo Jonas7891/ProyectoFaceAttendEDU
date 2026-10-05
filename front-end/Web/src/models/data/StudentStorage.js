@@ -1,22 +1,34 @@
 // ============================================================
 //  FaceAttend EDU — StudentStorage
 //
-//  Capa de persistencia para la lista de estudiantes.
-//  Usa AsyncStorage para guardar los estudiantes registrados
-//  manualmente (formulario o importación) en el dispositivo.
+//  Lectura de estudiantes: API académica (GET /academic-actors
+//  filtrado por actor type STUDENT + /persons) con los mocks
+//  como respaldo si falla.
 //
-//  Estructura almacenada:
-//    KEY → JSON.stringify(Student[])
-//
-//  Los mockStudents son el "seed" inicial. Al arrancar, si no
-//  existe nada en storage, se usan los mocks. Todo nuevo
-//  estudiante se guarda aquí y se fusiona con los mocks.
+//  Derivados que el backend aún no expone y se calculan aquí:
+//  - course: cohorte matriculado -> bloques -> código del curso
+//  - attendance: 0 hasta la fase de consulta de asistencia
+//  - hasFacial / hasFingerprint: false (sin dato biométrico en
+//    esta lista; el detalle biométrico es otra petición)
 // ============================================================
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { mockStudents } from "./mockData";
+import {
+    actorTypeMap,
+    cohortMap,
+    courseMap,
+    fullName,
+    listActors,
+    listBlocks,
+    listEnrollments,
+    normalizeStatus,
+    optional,
+    personMap,
+} from "../../services/api/referenceData";
 
 const STORAGE_KEY = "@faceattend_students";
+const LOCAL_PREFIX = "s_";
 
 // ── Genera un ID único simple ──────────────────────────────
 
@@ -24,40 +36,99 @@ function generateId() {
     return `s_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 }
 
-// ── API pública ────────────────────────────────────────────
+// ── Lectura ───────────────────────────────────────────────
 
-/**
- * Carga todos los estudiantes:
- *  - Si hay datos guardados en storage, los devuelve.
- *  - Si no, devuelve los mockStudents como estado inicial.
- */
-export async function loadStudents() {
+async function localStudents() {
     try {
-        // DESARROLLO: Siempre usar mocks actualizados
-        // TODO: Comentar esta línea en producción
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(mockStudents));
-        return mockStudents;
-        
-        /* PRODUCCIÓN: Descomentar este bloque
         const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        if (raw) {
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-                return parsed;
-            }
-        }
-        // Primera vez: inicializar con los mocks y persistirlos
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(mockStudents));
-        return mockStudents;
-        */
-    } catch (error) {
-        return mockStudents;
+        const parsed = raw ? JSON.parse(raw) : null;
+        if (!Array.isArray(parsed)) return [];
+        return parsed.filter(
+            (student) => typeof student?.id === "string" && student.id.startsWith(LOCAL_PREFIX)
+        );
+    } catch {
+        return [];
     }
 }
 
+async function studentsFromApi() {
+    // Tipos de actor y personas son necesarios: sin ellos no hay nombres
+    // ni forma de separar estudiantes de instructores.
+    const [actors, actorTypes, persons] = await Promise.all([
+        listActors(),
+        actorTypeMap(),
+        personMap(),
+    ]);
+    if (!Array.isArray(actors)) return [];
+
+    const studentType = [...actorTypes.values()].find(
+        (type) => String(type.code ?? "").toUpperCase() === "STUDENT"
+    );
+    if (!studentType) throw new Error("no hay actor type STUDENT en el backend");
+
+    const [enrollments, cohorts, blocks, courses] = await Promise.all([
+        optional(listEnrollments(), []),
+        optional(cohortMap(), new Map()),
+        optional(listBlocks(), []),
+        optional(courseMap(), new Map()),
+    ]);
+
+    const cohortOfActor = new Map(
+        enrollments
+            .filter((e) => String(e.enrollmentStatus ?? "").toLowerCase() !== "withdrawn")
+            .map((e) => [e.academicActorId, e.cohortId])
+    );
+
+    const courseByCohort = new Map();
+    for (const block of blocks) {
+        if (block.cohortId && block.courseId && !courseByCohort.has(block.cohortId)) {
+            courseByCohort.set(block.cohortId, block.courseId);
+        }
+    }
+
+    return actors
+        .filter((actor) => actor.actorTypeId === studentType.actorTypeId)
+        .map((actor) => {
+            const person = persons.get(actor.personId);
+            const cohortId = cohortOfActor.get(actor.academicActorId);
+            const cohort = cohortId ? cohorts.get(cohortId) : null;
+            const courseId = cohortId ? courseByCohort.get(cohortId) : null;
+            const course = courseId ? courses.get(courseId) : null;
+
+            return {
+                id: String(actor.academicActorId),
+                name: fullName(person) || actor.actorCode || "",
+                email: person?.email ?? "",
+                code: actor.actorCode ?? "",
+                course: course?.code ?? "", // vacío: la UI lo omite de los programas
+                grade: null, // lo rellena AppDataContext con el período del curso
+                attendance: 0, // pendiente de la fase de consulta
+                status: normalizeStatus(actor.status),
+                hasFacial: false,
+                hasFingerprint: false,
+                document: person?.documentNumber ?? "",
+                ficha: cohort?.code ?? "",
+                personId: actor.personId,
+            };
+        });
+}
+
 /**
- * Guarda la lista completa de estudiantes en storage.
+ * Carga todos los estudiantes: API primero, mocks como respaldo,
+ * fusionados con las altas hechas localmente en la UI.
  */
+export async function loadStudents() {
+    const local = await localStudents();
+    try {
+        return [...(await studentsFromApi()), ...local];
+    } catch (error) {
+        console.warn("[FaceAttend] loadStudents: API no disponible, uso mock —", error?.message);
+        return [...mockStudents, ...local];
+    }
+}
+
+// ── Escritura local (pendiente de cablear al backend) ─────
+
 export async function saveStudents(students) {
     try {
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(students));
@@ -66,10 +137,6 @@ export async function saveStudents(students) {
     }
 }
 
-/**
- * Agrega un nuevo estudiante a la lista persistida.
- * Retorna la lista completa actualizada.
- */
 export async function addStudent(existing, draft) {
     const newStudent = { id: generateId(), ...draft };
     const updated = [...existing, newStudent];
@@ -77,10 +144,6 @@ export async function addStudent(existing, draft) {
     return updated;
 }
 
-/**
- * Agrega múltiples estudiantes de una vez (importación).
- * Retorna la lista completa actualizada.
- */
 export async function addStudentsBulk(existing, drafts) {
     const newStudents = drafts.map(d => ({
         id: generateId(),

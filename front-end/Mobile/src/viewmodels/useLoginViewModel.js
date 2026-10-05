@@ -74,13 +74,13 @@ export function useLoginViewModel({onLogin}) {
                 throw new Error("Token no recibido en la respuesta");
             }
 
-            const saved = await saveToken(authResponse.token);
+            const userData = authResponse.user;
+            const saved = await saveToken(authResponse.token, userData?.email || email);
 
             if (!saved) {
                 throw new Error("No se pudo guardar el token");
             }
 
-            const userData = authResponse.user;
             const role = getHighestRole(userData?.roles ?? []);
             if (!role) {
                 throw new Error('El usuario no tiene un rol válido asignado');

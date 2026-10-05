@@ -1,0 +1,239 @@
+// ============================================================
+//  FaceAttend EDU — Cliente HTTP central (fetch + interceptores)
+//
+//  Toda petición al backend pasa por aquí:
+//  - Base URL del gateway Kong (EXPO_PUBLIC_API_URL)
+//  - Token Bearer automático desde la sesión guardada
+//    { token, savedAt, expiresAt, email } (localStorage en web, AsyncStorage en nativo)
+//  - Timeout + 1 reintento en GET idempotentes ante fallo de red
+//  - Errores tipados ApiError {status, code, message}
+// ============================================================
+
+import { Platform } from "react-native";
+import { API_TIMEOUT_MS, getApiBaseUrl } from "../config/env";
+
+export class ApiError extends Error {
+    constructor(opts) {
+        super(opts.message);
+        this.name = "ApiError";
+        this.status = opts.status;
+        this.code = opts.code;
+        this.details = opts.details;
+    }
+}
+
+const TOKEN_KEY = "auth_token";
+const SESSION_USER_KEY = "@faceattend:session_user";
+
+async function readRaw(key) {
+    try {
+        if (Platform.OS === "web") return localStorage.getItem(key);
+        const AS = (await import("@react-native-async-storage/async-storage")).default;
+        return await AS.getItem(key);
+    } catch {
+        return null;
+    }
+}
+
+async function writeRaw(key, value) {
+    try {
+        if (Platform.OS === "web") {
+            localStorage.setItem(key, value);
+            return true;
+        }
+        const AS = (await import("@react-native-async-storage/async-storage")).default;
+        await AS.setItem(key, value);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+async function removeRaw(key) {
+    try {
+        if (Platform.OS === "web") {
+            localStorage.removeItem(key);
+            return true;
+        }
+        const AS = (await import("@react-native-async-storage/async-storage")).default;
+        await AS.removeItem(key);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Forma compartida con Mobile: { token, savedAt, expiresAt, email }.
+ * @returns el token o null si no hay sesión o si ya expiró.
+ */
+export async function getToken() {
+    const raw = await readRaw(TOKEN_KEY);
+    if (!raw) return null;
+    try {
+        const parsed = JSON.parse(raw);
+        if (!parsed?.token) return null;
+        if (parsed.expiresAt && Date.now() > parsed.expiresAt) {
+            await clearToken();
+            return null;
+        }
+        return parsed.token;
+    } catch {
+        return raw; // token plano legacy
+    }
+}
+
+export async function saveToken(token, { email = null, expiresAt = null } = {}) {
+    if (!token || typeof token !== "string") return false;
+    return writeRaw(
+        TOKEN_KEY,
+        JSON.stringify({ token, savedAt: Date.now(), expiresAt: expiresAt ?? null, email })
+    );
+}
+
+export async function clearToken() {
+    return removeRaw(TOKEN_KEY);
+}
+
+function resolveBaseUrl(override) {
+    if (override) return override.replace(/\/$/, "");
+    if (
+        typeof window !== "undefined" &&
+        window.__FACEATTEND_API_URL__
+    ) {
+        return window.__FACEATTEND_API_URL__.replace(/\/$/, "");
+    }
+    return getApiBaseUrl();
+}
+
+async function fetchWithTimeout(input, init, timeoutMs) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        return await fetch(input, { ...init, signal: controller.signal });
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+function buildUrl(path, query, baseUrl) {
+    const base = resolveBaseUrl(baseUrl);
+    const url = new URL(path.startsWith("http") ? path : `${base}${path.startsWith("/") ? "" : "/"}${path}`);
+    if (query) {
+        for (const [k, v] of Object.entries(query)) {
+            if (v === undefined || v === null) continue;
+            url.searchParams.set(k, String(v));
+        }
+    }
+    return url.toString();
+}
+
+async function parseBody(res) {
+    if (res.status === 204) return null;
+    const text = await res.text();
+    if (!text) return null;
+    try {
+        return JSON.parse(text);
+    } catch {
+        return text;
+    }
+}
+
+function toApiError(status, payload) {
+    if (payload && typeof payload === "object") {
+        const p = payload;
+        return new ApiError({
+            status,
+            code: typeof p.error === "string" ? p.error : `HTTP_${status}`,
+            message: typeof p.message === "string" && p.message ? p.message : `Error ${status}`,
+            details: p.details,
+        });
+    }
+    return new ApiError({ status, code: `HTTP_${status}`, message: `Error ${status}` });
+}
+
+function isPageEnvelope(payload) {
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) return false;
+    return Array.isArray(payload.data) && !!payload.meta && typeof payload.meta === "object" && "total" in payload.meta;
+}
+
+/**
+ * Los endpoints de colección devuelven { data, meta }. Quien llama espera el arreglo,
+ * así que se desenvuelve aquí en vez de en cada servicio.
+ */
+function unwrapPage(payload) {
+    return isPageEnvelope(payload) ? payload.data : payload;
+}
+
+/** Petición genérica. Lanza ApiError si !ok. */
+export async function request(path, opts = {}) {
+    const method = opts.method ?? "GET";
+    const timeoutMs = opts.timeoutMs ?? API_TIMEOUT_MS;
+    const token = await getToken();
+    const headers = {
+        "Content-Type": "application/json",
+        ...(opts.headers ?? {}),
+    };
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    const url = buildUrl(path, opts.query, opts.baseUrl);
+    const init = {
+        method,
+        headers,
+        body: opts.body !== undefined && method !== "GET" ? JSON.stringify(opts.body) : undefined,
+    };
+
+    let lastErr = null;
+    const attempts = opts.retryOnceOnNetworkError === false || method !== "GET" ? 1 : 2;
+    for (let i = 0; i < attempts; i += 1) {
+        try {
+            const res = await fetchWithTimeout(url, init, timeoutMs);
+            const data = await parseBody(res);
+            if (!res.ok) throw toApiError(res.status, data);
+            return unwrapPage(data);
+        } catch (e) {
+            lastErr = e;
+            if (e instanceof ApiError) throw e; // no reintentar errores HTTP
+            if (i === attempts - 1) break;
+            await new Promise((r) => setTimeout(r, 400)); // espera antes de reintentar
+        }
+    }
+    if (lastErr instanceof Error && lastErr.name === "AbortError") {
+        throw new ApiError({ status: 0, code: "Timeout", message: "Tiempo de espera agotado" });
+    }
+    throw new ApiError({
+        status: 0,
+        code: "NetworkError",
+        message: "No se pudo conectar con el backend. Verifica que el gateway :8080 esté en ejecución.",
+    });
+}
+
+/**
+ * Recorre todas las páginas de un endpoint paginado y devuelve un solo arreglo.
+ * - by "page":   query { page, limit }   (ms-identity)
+ * - by "offset": query { limit, offset } (ms-academic)
+ * Corta con una página incompleta, vacía o al llegar a maxPages.
+ */
+export async function fetchAllPages(path, query = {}, opts = {}) {
+    const { by = "offset", pageSize = 100, maxPages = 50 } = opts;
+    const all = [];
+    for (let index = 0; index < maxPages; index += 1) {
+        const paging =
+            by === "page"
+                ? { page: index + 1, limit: pageSize }
+                : { limit: pageSize, offset: index * pageSize };
+        const chunk = await request(path, { method: "GET", query: { ...query, ...paging } });
+        const items = Array.isArray(chunk) ? chunk : [];
+        all.push(...items);
+        if (items.length < pageSize) break;
+    }
+    return all;
+}
+
+/** Atajo para saber si hay sesión guardada (usuario o token). */
+export async function hasSession() {
+    if (await getToken()) return true;
+    return (await readRaw(SESSION_USER_KEY)) !== null;
+}
+
+export const apiClient = { request, buildUrl };
