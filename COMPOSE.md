@@ -158,6 +158,23 @@ Si personalizas valores en la raíz y quieres que una corrida aislada de
 cd database && docker compose --env-file ../.env up -d
 ```
 
+### Fuera de Docker
+
+Los servicios que corren en la estación de trabajo **leen este mismo `.env`** al
+arrancar — no lo hace Compose, lo hace cada servicio:
+
+| Servicio | Mecanismo |
+|---|---|
+| `01-ms-identity`, `02-ms-authorization`, `04-ms-scheduling`, `05-ms-attendance` | `spring.config.import` con rutas `optional:file:${user.dir}/…` |
+| `03-ms-academic`, `09-ms-quality` | `process.loadEnvFile('../../.env')` al cargar su módulo de BD (y `drizzle.config.ts`) |
+| `06-ms-biometric` | `_load_root_env()` en `settings.py` (sin dependencias; nunca pisa el entorno real) |
+
+Las rutas parten del **directorio de trabajo**: el del servicio
+(`back-end/0X-…`) o la raíz del repo. En Docker el archivo no existe dentro de
+la imagen y compose ya inyecta el entorno, así que todo queda en **no-op**.
+Los defaults dev (`postgres`, `mongopass`) siguen siendo el último recurso: sin
+`.env`, todo arranca igual que siempre.
+
 Variables principales (ver `.env.example`): `POSTGRES_*`, `FACEATTEND_LIQUIBASE_IMAGE`,
 `MONGO_*`, `REDIS_PORT`, `KAFKA_PORT`, `KONG_PROXY_PORT`, `KONG_ADMIN_PORT`,
 `FRONTEND_PORT`, `EXPO_PUBLIC_API_URL`, `BIND_IP`, `SEED_*`.
