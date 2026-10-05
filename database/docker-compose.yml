@@ -12,7 +12,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-faceattend_db}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      # Loopback only by default: databases must not be reachable from the LAN.
+      - "${BIND_IP:-127.0.0.1}:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       # Creates the 8 bounded-context schemas on first boot only.

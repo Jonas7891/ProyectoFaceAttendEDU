@@ -115,7 +115,8 @@ services:
       kong-gateway:
         condition: service_healthy
     ports:
-      - "${FRONTEND_PORT:-8090}:80"
+      # 0.0.0.0: browsers (and phones on the LAN) must reach the SPA.
+      - "0.0.0.0:${FRONTEND_PORT:-8090}:80"
     networks:
       - faceattend-edge
     restart: unless-stopped
