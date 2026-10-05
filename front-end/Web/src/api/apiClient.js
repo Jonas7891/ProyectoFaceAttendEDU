@@ -208,6 +208,28 @@ export async function request(path, opts = {}) {
     });
 }
 
+/**
+ * Recorre todas las páginas de un endpoint paginado y devuelve un solo arreglo.
+ * - by "page":   query { page, limit }   (ms-identity)
+ * - by "offset": query { limit, offset } (ms-academic)
+ * Corta con una página incompleta, vacía o al llegar a maxPages.
+ */
+export async function fetchAllPages(path, query = {}, opts = {}) {
+    const { by = "offset", pageSize = 100, maxPages = 50 } = opts;
+    const all = [];
+    for (let index = 0; index < maxPages; index += 1) {
+        const paging =
+            by === "page"
+                ? { page: index + 1, limit: pageSize }
+                : { limit: pageSize, offset: index * pageSize };
+        const chunk = await request(path, { method: "GET", query: { ...query, ...paging } });
+        const items = Array.isArray(chunk) ? chunk : [];
+        all.push(...items);
+        if (items.length < pageSize) break;
+    }
+    return all;
+}
+
 /** Atajo para saber si hay sesión guardada (usuario o token). */
 export async function hasSession() {
     if (await getToken()) return true;

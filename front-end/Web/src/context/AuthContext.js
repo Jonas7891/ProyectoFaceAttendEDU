@@ -15,46 +15,11 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Platform } from "react-native";
 import { clearToken, getToken, saveToken } from "../api/apiClient";
+import { roleNamesFrom, toUiRole } from "../core/utils/backendRoles";
 import { authApi } from "../services/api/authApi";
 
 // ── Roles del backend → roles de la UI ────────────────────
-// Prioridad admin > teacher > student, igual que Mobile (getHighestRole).
-//
-// Catálogo vigente (database/02-ms-authorization-db/02-dml/004-unify-mobile-roles):
-//   Administrador | Instructor | Aprendiz
-// Se aceptan también los nombres legados (001-seed-role-table) por si la base
-// todavía no fue migrada. Espejo de Mobile/src/utils/getHighestRole.js.
-
-const ROLE_BY_BACKEND_ROLE = {
-    // Vigentes
-    ADMINISTRADOR: "admin",
-    INSTRUCTOR: "teacher",
-    APRENDIZ: "student",
-    // Legados / sin migrar
-    SUPER_ADMIN: "admin",
-    SCHOOL_ADMIN: "admin",
-    ADMIN: "admin",
-    RECTOR: "admin",
-    COORDINATOR: "admin",
-    DOCENTE: "teacher",
-    TEACHER: "teacher",
-    STUDENT: "student",
-    ESTUDIANTE: "student",
-};
-const ROLE_PRIORITY = ["admin", "teacher", "student"];
-
-function toUiRole(roleNames) {
-    const mapped = (roleNames ?? [])
-        .map((name) => ROLE_BY_BACKEND_ROLE[String(name ?? "").trim().toUpperCase()])
-        .filter(Boolean);
-    return ROLE_PRIORITY.find((role) => mapped.includes(role)) ?? null;
-}
-
-function toList(payload) {
-    if (Array.isArray(payload)) return payload;
-    if (Array.isArray(payload?.data)) return payload.data;
-    return [];
-}
+// Mapa compartido con UserStorage en core/utils/backendRoles.js.
 
 function loginErrorMessage(err) {
     if (err?.status === 400 || err?.status === 401) return "Credenciales incorrectas";
@@ -169,9 +134,7 @@ export function AuthProvider({ children }) {
             return err?.message || "No se pudo cargar el perfil";
         }
 
-        const roleNames = toList(roles)
-            .map((role) => role?.roleName ?? role?.role_name)
-            .filter(Boolean);
+        const roleNames = roleNamesFrom(roles);
         const role = toUiRole(roleNames);
         if (!role) {
             await clearToken();
