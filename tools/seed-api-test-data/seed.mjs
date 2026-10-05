@@ -1,6 +1,25 @@
 // Seed test data into FaceAttendEDU microservices.
 // Run: npm run seed (Node >= 20, no dependencies).
 // Targets direct microservice URLs (see .env.example) to bypass Kong JWT.
+//
+// Scale: 2 colombian high schools (bachillerato), 1600 students + 80 teachers,
+// ~1210 class sessions and ~81k attendance records inside a pinned 4-week
+// window, so web/mobile can exercise list, filter and dashboard performance.
+//
+// Reruns are idempotent: full collection indexes are loaded once per service
+// and every create is a map hit on rerun (no 409 churn). SEED_VERBOSE=1 logs
+// every successful request; SEED_CONCURRENCY tunes the parallel pool (default 8).
+
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+// The local .env mirrors .env.example; older Nodes or a missing file just
+// fall back to the defaults below.
+try {
+  if (typeof process.loadEnvFile === "function") {
+    process.loadEnvFile(path.join(path.dirname(fileURLToPath(import.meta.url)), ".env"));
+  }
+} catch { /* no .env: use defaults */ }
 
 const U = {
   identity: process.env.IDENTITY_URL ?? "http://localhost:8081",
@@ -14,10 +33,144 @@ const U = {
   quality: process.env.QUALITY_URL ?? "http://localhost:8089",
 };
 
+const VERBOSE = process.env.SEED_VERBOSE === "1";
+const CONCURRENCY = Math.min(64, Math.max(1, Number(process.env.SEED_CONCURRENCY ?? 8)));
+
+// Pinned date window: fixed constants keep reruns idempotent (the same session
+// dates are requested every run instead of drifting with the wall clock).
+// 2026-09-07 is a Monday, so SEED_TODAY (also a Monday) closes the window.
+const WINDOW_START = "2026-09-07"; // first session/matriculation date (4 weeks back)
+const SEED_TODAY = "2026-10-05";   // sessions on this date stay Open, older ones Closed
+const PERIOD_END = "2026-12-18";   // active academic period ends
+
 const results = [];
 const ids = {};
 
-// Realistic Colombian demo catalog (stable keys keep reruns idempotent).
+// Full-collection indexes built once per run (see loadIndexes in each phase).
+const M = {
+  persons: new Map(),       // documentNumber -> personId
+  users: new Map(),         // username -> userId
+  roles: new Map(),         // roleName -> roleId
+  schools: new Map(),       // code -> school row
+  programs: new Map(),      // `${schoolId}:${code}` -> programId
+  periods: new Map(),       // `${schoolId}:${name}` -> periodId
+  cohorts: new Map(),       // code -> cohortId
+  courses: new Map(),       // `${programId}:${code}` -> courseId
+  actors: new Map(),        // actorCode -> academicActorId
+  enrollments: new Set(),   // `${actorId}:${cohortId}`
+  envs: new Map(),          // `${schoolId}:${code}` -> environmentId
+  blocks: new Map(),        // `${cohortId}:${courseId}` -> scheduleBlockId
+  justTypes: new Map(),     // name -> justificationTypeId
+  justifications: new Set(),// attendanceRecordId with a justification
+  alertTypes: new Map(),    // code -> alertTypeId
+  alerts: new Set(),        // `${actorId}:${typeId}`
+  projects: new Set(),      // quality project names
+  updateCases: new Set(),   // personIds with a pending biometric update case
+};
+
+async function call(service, method, path, body, allow404 = false) {
+  const url = `${U[service]}${path}`;
+  const label = `${method} ${service}${path}`;
+  try {
+    const headers = { "Content-Type": "application/json" };
+    if (TOKEN) headers.Authorization = `Bearer ${TOKEN}`;
+    const res = await fetch(url, {
+      method,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+      signal: AbortSignal.timeout(30000),
+    });
+
+    const text = await res.text();
+    let data = null;
+    try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+    // 409: rerun, test data already exists. 404 is fine only for probes
+    // (biometric "is this person enrolled?" checks), never for writes.
+    const ok = res.ok || res.status === 409 || (allow404 && res.status === 404);
+    results.push({ label, status: res.status, ok });
+    if (!ok) console.log(`FAIL ${res.status} ${label}`);
+    else if (VERBOSE) console.log(`ok   ${res.status}${res.status === 409 ? " (exists)" : ""} ${label}`);
+    return ok ? data : null;
+  } catch (e) {
+    results.push({ label, status: 0, ok: false });
+    console.log(`FAIL conn ${label} (${e.cause?.code ?? e.message})`);
+    return null;
+  }
+}
+
+const get = (s, p) => call(s, "GET", p);
+const getProbe = (s, p) => call(s, "GET", p, undefined, true); // 404 = "not there yet", not a failure
+const post = (s, p, b) => call(s, "POST", p, b);
+const patch = (s, p, b) => call(s, "PATCH", p, b);
+const pick = (obj, ...keys) => { for (const k of keys) if (obj?.[k] !== undefined) return obj[k]; return null; };
+const asArray = (v) => (Array.isArray(v) ? v : v?.data ?? v?.alerts ?? v?.alert_types ?? []);
+
+// Bounded concurrency: every bulk phase runs through this pool so ~13k
+// requests finish in minutes instead of half an hour.
+async function pooled(items, limit, worker) {
+  let next = 0;
+  const runners = Array.from({ length: Math.max(1, Math.min(limit, items.length || 1)) }, async () => {
+    for (;;) {
+      const i = next++;
+      if (i >= items.length) return;
+      await worker(items[i], i);
+    }
+  });
+  await Promise.all(runners);
+}
+
+// Progress line for phases with hundreds of requests (console stays readable).
+const progress = (total, step, label) => {
+  let n = 0;
+  return () => { if (++n % step === 0 || n === total) console.log(`    ${label} ${n}/${total}`); };
+};
+
+const banner = (name) => {
+  const t0 = Date.now();
+  console.log(`\n--- ${name}`);
+  return () => console.log(`    ${name} done in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+};
+
+// identity: PageResponse {data, meta} with MAX_LIMIT 100 (page-based).
+async function listAllPaged(service, path) {
+  const out = [];
+  for (let page = 1; page <= 500; page++) {
+    const chunk = await get(service, `${path}${path.includes("?") ? "&" : "?"}page=${page}&limit=100`);
+    const data = Array.isArray(chunk) ? chunk : (chunk?.data ?? []);
+    out.push(...data);
+    if (!data.length || page >= (chunk?.meta?.totalPages ?? 1)) break;
+  }
+  return out;
+}
+
+// academic (?limit&offset, max 100) and notification (?limit&offset): page until short.
+async function listPaged(service, path) {
+  const out = [];
+  for (let offset = 0; offset < 50000; offset += 100) {
+    const data = asArray(await get(service, `${path}${path.includes("?") ? "&" : "?"}limit=100&offset=${offset}`));
+    out.push(...data);
+    if (data.length < 100) break;
+  }
+  return out;
+}
+
+// Map-first create: on rerun the preloaded index answers without a request;
+// an unexpected conflict falls back to a list lookup so chained ids survive.
+async function upsert(service, path, body, { idKeys, map, mapKey, matchKey, matchValue, fetchList }) {
+  if (map && mapKey != null && map.has(mapKey)) return map.get(mapKey);
+  const created = await post(service, path, body);
+  const id = created ? pick(created, ...idKeys) : null;
+  if (id != null) {
+    if (map && mapKey != null) map.set(mapKey, id);
+    return id;
+  }
+  const found = asArray(await fetchList()).find((e) => e?.[matchKey] === matchValue);
+  const existing = found ? pick(found, ...idKeys) : null;
+  if (existing != null && map && mapKey != null) map.set(mapKey, existing);
+  return existing;
+}
+
+// Realistic colombian demo catalog (stable keys keep reruns idempotent).
 const CITIES = [
   { name: "Bogotá", department: "Cundinamarca" },
   { name: "Medellín", department: "Antioquia" },
@@ -41,61 +194,131 @@ const STAFF = [
 //   Administrador: Carolina Mendoza Ruiz / username carolina.mendoza / password Admin2026*
 //   Docente:       Carlos Restrepo Álvarez / username carlos.restrepo / password Docente2026*
 //   Estudiante:    Valentina Ríos Herrera  / username valentina.rios  / password Estudiante2026*
-// Override any of them via SEED_USERNAME / SEED_PASSWORD, INSTRUCTOR_USERNAME /
-// INSTRUCTOR_PASSWORD, STUDENT_USERNAME / STUDENT_PASSWORD.
+// The 80 seeded teachers all log in as username (see TEACHERS) / password
+// TEACHER_PASSWORD (default Docente2026*). Override any of them via
+// SEED_USERNAME / SEED_PASSWORD, INSTRUCTOR_USERNAME / INSTRUCTOR_PASSWORD,
+// STUDENT_USERNAME / STUDENT_PASSWORD, TEACHER_PASSWORD.
 const SEED_USERNAME = process.env.SEED_USERNAME ?? "carolina.mendoza";
 const SEED_PASSWORD = process.env.SEED_PASSWORD ?? "Admin2026*";
 const INSTRUCTOR_USERNAME = process.env.INSTRUCTOR_USERNAME ?? "carlos.restrepo";
 const INSTRUCTOR_PASSWORD = process.env.INSTRUCTOR_PASSWORD ?? "Docente2026*";
 const STUDENT_USERNAME = process.env.STUDENT_USERNAME ?? "valentina.rios";
 const STUDENT_PASSWORD = process.env.STUDENT_PASSWORD ?? "Estudiante2026*";
+const TEACHER_PASSWORD = process.env.TEACHER_PASSWORD ?? "Docente2026*";
 // Bootstrap admin from DB seeds (01-bootstrap-admin-user + 005 role assignment).
 // The seed needs its session token: protected endpoints require Bearer + permissions.
 const BOOTSTRAP_USERNAME = process.env.BOOTSTRAP_USERNAME ?? "admin.faceattend";
 const BOOTSTRAP_PASSWORD = process.env.BOOTSTRAP_PASSWORD ?? "Admin123!ChangeMe";
 let TOKEN = null;
 
-async function call(service, method, path, body) {
-  const url = `${U[service]}${path}`;
-  const label = `${method} ${service}${path}`;
-  try {
-    const headers = { "Content-Type": "application/json" };
-    if (TOKEN) headers.Authorization = `Bearer ${TOKEN}`;
-    const res = await fetch(url, {
-      method,
-      headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
-      signal: AbortSignal.timeout(30000),
+// ---------------------------------------------------------------------------
+// Colombian bachillerato roster: 2 schools x 800 students, 40 teachers each.
+// ---------------------------------------------------------------------------
+const SCHOOLS = [
+  { code: "ICT-01", prefix: "ICT", name: "Institución Educativa Distrital Camilo Torres", city: "Bogotá" },
+  { code: "SMP-02", prefix: "SMP", name: "Institución Educativa San Martín de Porres", city: "Medellín" },
+];
+// Small schools from the previous seed: soft-disabled (status=false) once the
+// big schools exist, so school pickers show exactly the 2 active institutions.
+const LEGACY_SCHOOL_CODES = ["ANDES-01", "SAM-02", "ROS-03"];
+const PROGRAMS = [
+  { code: "BTI-26", name: "Bachillerato Técnico en Informática" },
+  { code: "BNC-26", name: "Bachillerato con Énfasis en Ciencias Naturales" },
+];
+const SUBJECTS = [
+  { code: "MAT", name: "Matemáticas", creditHours: 3 },
+  { code: "LEN", name: "Lengua Castellana", creditHours: 3 },
+  { code: "ING", name: "Inglés", creditHours: 2 },
+  { code: "CNA", name: "Ciencias Naturales", creditHours: 3 },
+  { code: "CSO", name: "Ciencias Sociales", creditHours: 3 },
+  { code: "ETY", name: "Ética y Valores", creditHours: 2 },
+  { code: "EDF", name: "Educación Física", creditHours: 1 },
+  { code: "TEC", name: "Tecnología e Informática", creditHours: 2 },
+  { code: "QUI", name: "Química", creditHours: 3 },
+  { code: "BIO", name: "Biología", creditHours: 3 },
+  { code: "FIS", name: "Física", creditHours: 3 },
+  { code: "EMP", name: "Emprendimiento e Innovación", creditHours: 2 },
+];
+const GRADES = [6, 7, 8, 9, 10, 11];          // bachillerato: 6-9 básica, 10-11 media
+const COHORTS_PER_SCHOOL = GRADES.length * 2;  // one cohort per grade per énfasis (A/B)
+const STUDENTS_PER_SCHOOL = 800;
+const STUDENT_COUNT = STUDENTS_PER_SCHOOL * SCHOOLS.length;
+const TEACHERS_PER_SCHOOL = 40;
+const TEACHER_COUNT = TEACHERS_PER_SCHOOL * SCHOOLS.length;
+// 12 weekly blocks per cohort (full school day), 6 two-hour slots per weekday.
+const SLOT_COUNT = 5 * 6;
+const START_HOURS = [6, 8, 10, 12, 14, 16];
+
+const FIRST_F = ["Valentina", "Camila", "Lucía", "María", "Sofía", "Isabella", "Salomé", "Elena", "Daniela", "Laura", "Paula", "Gabriela", "Ana", "Juliana", "Mariana", "Diana", "Carolina", "Fernanda", "Victoria", "Regina"];
+const FIRST_M = ["Santiago", "Daniel", "Mateo", "Juan", "Andrés", "Sebastián", "Nicolás", "Samuel", "Gabriel", "Carlos", "David", "Diego", "Julián", "Emiliano", "Tomás", "Lucas", "Martín", "Alejandro", "Felipe", "Óscar"];
+const LAST = ["García", "Rodríguez", "Gómez", "López", "Martínez", "Hernández", "Sánchez", "Ramírez", "Torres", "Arias", "Vargas", "Castillo", "Morales", "Ortiz", "Rojas", "Álvarez", "Mendoza", "Restrepo", "Ospina", "Quintero", "Rendón", "Sepúlveda", "Valencia", "Zapata", "Cruz", "Fuentes", "Guerrero", "Ibarra", "Jiménez", "Peña", "Salazar", "Urbina", "Vega", "Acosta", "Bermúdez", "Cárdenas", "Duarte", "Espinosa", "Fajardo", "Gallardo"];
+
+const stripAccents = (s) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const pad2 = (n) => String(n).padStart(2, "0");
+// Grades 6-9 are minors (TI), 10-11 already carry a CC: how colombian schools work.
+const cohortCodeOf = (schoolIdx, cohortIdx) => {
+  const grade = GRADES[Math.floor(cohortIdx / 2)];
+  return `${SCHOOLS[schoolIdx].prefix}-${grade}${cohortIdx % 2 === 0 ? "A" : "B"}`;
+};
+
+function buildStudents() {
+  const list = [];
+  for (let i = 0; i < STUDENT_COUNT; i++) {
+    const schoolIdx = i < STUDENTS_PER_SCHOOL ? 0 : 1;
+    const local = i % STUDENTS_PER_SCHOOL;
+    const female = i % 2 === 0;
+    const first = (female ? FIRST_F : FIRST_M)[Math.floor(i / 2) % FIRST_F.length];
+    const last1 = LAST[Math.floor(i / LAST.length) % LAST.length];
+    const last2 = LAST[(i * 7 + 13) % LAST.length];
+    const cohortIdx = Math.floor((local * COHORTS_PER_SCHOOL) / STUDENTS_PER_SCHOOL);
+    const grade = GRADES[Math.floor(cohortIdx / 2)];
+    const documentType = grade <= 9 ? "TI" : "CC";
+    list.push({
+      seq: i + 1,
+      schoolIdx,
+      name: first,
+      lastName: `${last1} ${last2}`,
+      documentType,
+      documentNumber: `${documentType === "TI" ? "1098" : "1095"}${String(1000000 + i)}`,
+      actorCode: `EST-${SCHOOLS[schoolIdx].prefix}-${String(i + 1).padStart(4, "0")}`,
+      cohortCode: cohortCodeOf(schoolIdx, cohortIdx),
     });
-
-    const text = await res.text();
-    let data = null;
-    try { data = text ? JSON.parse(text) : null; } catch { data = text; }
-    const ok = res.ok || res.status === 409; // 409: rerun, test data already exists
-    results.push({ label, status: res.status, ok });
-    console.log(`${ok ? "ok  " : "FAIL"} ${res.status}${res.status === 409 ? " (exists)" : ""} ${label}`);
-    return ok ? data : null;
-  } catch (e) {
-    results.push({ label, status: 0, ok: false });
-    console.log(`FAIL conn ${label} (${e.cause?.code ?? e.message})`);
-    return null;
   }
+  return list;
 }
 
-const get = (s, p) => call(s, "GET", p);
-const post = (s, p, b) => call(s, "POST", p, b);
-const pick = (obj, ...keys) => { for (const k of keys) if (obj?.[k] !== undefined) return obj[k]; return null; };
-const asArray = (v) => (Array.isArray(v) ? v : v?.data ?? v?.alerts ?? v?.alert_types ?? []);
-
-// POST, or on 409 find the existing seed record so reruns keep chained ids.
-async function ensure(service, path, body, { idKey, matchKey, matchValue, listPath }) {
-  const created = await post(service, path, body);
-  const id = created ? pick(created, idKey) : null;
-  if (id) return id;
-  const list = await get(service, listPath ?? path);
-  const found = asArray(list).find((e) => e?.[matchKey] === matchValue);
-  return found ? found[idKey] : null;
+function buildTeachers() {
+  const used = new Set([SEED_USERNAME, INSTRUCTOR_USERNAME, STUDENT_USERNAME, BOOTSTRAP_USERNAME]);
+  const list = [];
+  for (let i = 0; i < TEACHER_COUNT; i++) {
+    const schoolIdx = i < TEACHERS_PER_SCHOOL ? 0 : 1;
+    const local = i % TEACHERS_PER_SCHOOL;
+    const female = i % 2 === 0;
+    const first = (female ? FIRST_F : FIRST_M)[Math.floor(i / 2) % FIRST_F.length];
+    const last1 = LAST[i % LAST.length];
+    const last2 = LAST[(i * 11 + 5) % LAST.length];
+    const base = `${stripAccents(first).toLowerCase()}.${stripAccents(last1).toLowerCase()}`;
+    let username = base;
+    for (let n = 2; used.has(username); n++) username = `${base}${n}`;
+    used.add(username);
+    list.push({
+      seq: i + 1,
+      schoolIdx,
+      name: first,
+      lastName: `${last1} ${last2}`,
+      documentType: "CC",
+      documentNumber: `1096${String(1000000 + i)}`,
+      email: `${username}@example.com`,
+      phone: `300${String(1000000 + i * 7919).slice(-7)}`,
+      username,
+      actorCode: `DOC-${SCHOOLS[schoolIdx].prefix}-${String(local + 1).padStart(3, "0")}`,
+    });
+  }
+  return list;
 }
+
+const STUDENTS = buildStudents();
+const TEACHERS = buildTeachers();
 
 // Login as bootstrap admin: protected endpoints require Bearer + permissions.
 // Runs before any seed step; without TOKEN the calls below fail with 401/403.
@@ -105,8 +328,16 @@ async function loginSeed() {
   if (!TOKEN) console.log("WARN no bootstrap session: protected calls will fail (run DB seeds first)");
 }
 
-// Identity: cities, persons, users (auth surface stays testable via /me).
+const personBody = (p) => {
+  const b = { documentNumber: p.documentNumber, name: p.name, lastName: p.lastName, documentType: p.documentType, status: true };
+  if (p.email) b.email = p.email;
+  if (p.phone) b.phone = p.phone;
+  return b;
+};
+
+// Identity: cities, persons (1690), users (demo logins + 80 teachers).
 async function seedIdentity() {
+  const done = banner("identity");
   // Cities have no unique constraint on name, so look up first to avoid
   // creating duplicates on every rerun (other catalogs answer 409).
   const knownCities = asArray(await get("identity", "/api/v1/cities?limit=100"));
@@ -114,61 +345,76 @@ async function seedIdentity() {
     if (knownCities.some((e) => e?.name === c.name)) continue;
     await post("identity", "/api/v1/cities", c);
   }
-  const city = await get("identity", "/api/v1/cities?limit=5");
-  ids.cityId = pick(asArray(city)[0], "cityId", "id") ?? 1;
-  ids.personIds = [];
-  for (const p of PEOPLE) {
-    const pid = await ensure("identity", "/api/v1/persons", {
-      documentNumber: p.documentNumber, name: p.name, lastName: p.lastName,
-      email: p.email, documentType: p.documentType, status: true,
-    }, { idKey: "personId", matchKey: "documentNumber", matchValue: p.documentNumber });
-    if (pid) ids.personIds.push(pid);
-  }
-  ids.personId = ids.personIds[0] ?? null;
-  // Staff personas: Carolina Mendoza (admin) + Carlos Restrepo (instructor).
+  const cities = asArray(await get("identity", "/api/v1/cities?limit=100"));
+  ids.cityIdByName = new Map(cities.map((c) => [c.name, pick(c, "cityId", "id")]));
+  ids.cityId = cities.length ? pick(cities[0], "cityId", "id") : 1;
+
+  // One pass over the full collections turns every rerun create into a map hit.
+  for (const p of await listAllPaged("identity", "/api/v1/persons")) M.persons.set(p.documentNumber, p.personId);
+  for (const u of await listAllPaged("identity", "/api/v1/users")) M.users.set(u.username, u.userId);
+
+  const personJobs = [
+    ...PEOPLE.map((p) => p),
+    ...STAFF.map((s) => s),
+    ...STUDENTS,
+    ...TEACHERS,
+  ];
+  const tick = progress(personJobs.length, 400, "persons");
+  await pooled(personJobs, CONCURRENCY, async (p) => {
+    await upsert("identity", "/api/v1/persons", personBody(p), {
+      idKeys: ["personId", "id"], map: M.persons, mapKey: p.documentNumber,
+      matchKey: "documentNumber", matchValue: p.documentNumber,
+      fetchList: () => listAllPaged("identity", "/api/v1/persons"),
+    });
+    tick();
+  });
+  ids.personIds = PEOPLE.map((p) => M.persons.get(p.documentNumber)).filter(Boolean);
   ids.staffPersonIds = {};
-  for (const s of STAFF) {
-    const pid = await ensure("identity", "/api/v1/persons", {
-      documentNumber: s.documentNumber, name: s.name, lastName: s.lastName,
-      email: s.email, documentType: s.documentType, status: true,
-    }, { idKey: "personId", matchKey: "documentNumber", matchValue: s.documentNumber });
-    if (pid) ids.staffPersonIds[s.key] = pid;
-  }
+  for (const s of STAFF) ids.staffPersonIds[s.key] = M.persons.get(s.documentNumber) ?? null;
+
   // POST /api/v1/users requires personId + username + password; the password is
   // bcrypt-hashed server side (ADR-008) and never returned by any endpoint.
   // Admin reuses SEED_USERNAME so existing smoke tests keep working.
   const logins = [
     { key: "userId", personId: ids.staffPersonIds.admin, username: SEED_USERNAME, password: SEED_PASSWORD },
     { key: "instructorUserId", personId: ids.staffPersonIds.instructor, username: INSTRUCTOR_USERNAME, password: INSTRUCTOR_PASSWORD },
-    { key: "studentUserId", personId: ids.personId, username: STUDENT_USERNAME, password: STUDENT_PASSWORD },
+    { key: "studentUserId", personId: ids.personIds[0] ?? null, username: STUDENT_USERNAME, password: STUDENT_PASSWORD },
+    ...TEACHERS.map((t) => ({ personId: M.persons.get(t.documentNumber), username: t.username, password: TEACHER_PASSWORD })),
   ];
-  for (const l of logins) {
+  const tickUsers = progress(logins.length, 40, "users");
+  await pooled(logins, CONCURRENCY, async (l) => {
     if (!l.personId) {
       console.log(`skip  - user ${l.username} needs a person id (identity person seed failed?)`);
-      continue;
+      return;
     }
-    ids[l.key] = await ensure("identity", "/api/v1/users", {
-      personId: l.personId, username: l.username, password: l.password,
-    }, { idKey: "userId", matchKey: "username", matchValue: l.username });
-  }
+    const userId = await upsert("identity", "/api/v1/users", { personId: l.personId, username: l.username, password: l.password }, {
+      idKeys: ["userId", "id"], map: M.users, mapKey: l.username,
+      matchKey: "username", matchValue: l.username,
+      fetchList: () => listAllPaged("identity", "/api/v1/users"),
+    });
+    if (userId && l.key) ids[l.key] = userId;
+    tickUsers();
+  });
   await get("identity", `/api/v1/auth/me?username=${SEED_USERNAME}`);
   await get("identity", `/api/v1/auth/me?username=${INSTRUCTOR_USERNAME}`);
   await get("identity", `/api/v1/auth/me?username=${STUDENT_USERNAME}`);
-  await get("identity", "/api/v1/cities?limit=5");
+  done();
 }
 
 // Authorization: canonical Mobile roles (Administrador, Instructor, Aprendiz).
 // Each demo login gets its role so role-guarded logins resolve correctly.
+// Every seeded teacher also gets Instructor so the role holds at volume.
 async function seedAuthorization() {
-  const adminRoleId = await ensure("authorization", "/api/v1/roles",
-    { roleName: "Administrador", description: "Rol Mobile: acceso total" },
-    { idKey: "roleId", matchKey: "roleName", matchValue: "Administrador" });
-  const instructorRoleId = await ensure("authorization", "/api/v1/roles",
-    { roleName: "Instructor", description: "Rol Mobile: docencia y asistencia" },
-    { idKey: "roleId", matchKey: "roleName", matchValue: "Instructor" });
-  const aprendizRoleId = await ensure("authorization", "/api/v1/roles",
-    { roleName: "Aprendiz", description: "Rol Mobile: consulta propia" },
-    { idKey: "roleId", matchKey: "roleName", matchValue: "Aprendiz" });
+  const done = banner("authorization");
+  for (const r of asArray(await get("authorization", "/api/v1/roles"))) {
+    M.roles.set(r.roleName, pick(r, "roleId", "id"));
+  }
+  const roleFor = async (roleName, description) => upsert("authorization", "/api/v1/roles",
+    { roleName, description },
+    { idKeys: ["roleId", "id"], map: M.roles, mapKey: roleName, matchKey: "roleName", matchValue: roleName, fetchList: () => get("authorization", "/api/v1/roles") });
+  const adminRoleId = await roleFor("Administrador", "Rol Mobile: acceso total");
+  const instructorRoleId = await roleFor("Instructor", "Rol Mobile: docencia y asistencia");
+  const aprendizRoleId = await roleFor("Aprendiz", "Rol Mobile: consulta propia");
   ids.roleId = adminRoleId;
   await post("authorization", "/api/v1/permissions", { permissionName: "seed.attendance.read", description: "Read attendance" });
   await post("authorization", "/api/v1/permissions", { permissionName: "seed.attendance.write", description: "Write attendance" });
@@ -176,207 +422,372 @@ async function seedAuthorization() {
     { userId: ids.userId, roleId: adminRoleId },
     { userId: ids.instructorUserId, roleId: instructorRoleId },
     { userId: ids.studentUserId, roleId: aprendizRoleId },
+    ...TEACHERS.map((t) => ({ userId: M.users.get(t.username), roleId: instructorRoleId, label: t.username })),
   ];
-  for (const a of assignments) {
-    if (a.userId && a.roleId) {
-      await post("authorization", `/api/v1/users/${a.userId}/roles`, { roleId: a.roleId });
-    } else {
-      console.log("skip  - role assignment needs a user id and role id");
-    }
-  }
+  const tick = progress(assignments.length, 40, "role assignments");
+  await pooled(assignments, CONCURRENCY, async (a) => {
+    if (a.userId && a.roleId) await post("authorization", `/api/v1/users/${a.userId}/roles`, { roleId: a.roleId });
+    else console.log(`skip  - role assignment needs a user id and role id${a.label ? ` (${a.label})` : ""}`);
+    tick();
+  });
   await get("authorization", "/api/v1/roles");
+  done();
 }
 
-// Academic: full chain schools -> programs -> periods -> cohorts -> courses -> actors -> enrollments.
+// Academic: schools (2 new + legacy disabled) -> programs -> periods ->
+// cohorts (6 grades x 2 tracks) -> courses -> actors (1600 + 80) -> enrollments.
 async function seedAcademic() {
-  const SCHOOLS = [
-    { code: "ANDES-01", name: "Colegio Los Andes" },
-    { code: "SAM-02", name: "Colegio San Mateo" },
-    { code: "ROS-03", name: "Colegio Santa Rosa de Lima" },
-  ];
+  const done = banner("academic");
+  const loadIndexes = async () => {
+    for (const s of await listPaged("academic", "/api/v1/schools")) M.schools.set(s.code, s);
+    for (const p of await listPaged("academic", "/api/v1/programs")) M.programs.set(`${p.schoolId}:${p.code}`, p.programId);
+    for (const p of await listPaged("academic", "/api/v1/academic-periods")) M.periods.set(`${p.schoolId}:${p.name}`, p.academicPeriodId);
+    for (const c of await listPaged("academic", "/api/v1/cohorts")) M.cohorts.set(c.code, c.cohortId);
+    for (const c of await listPaged("academic", "/api/v1/courses")) M.courses.set(`${c.programId}:${c.code}`, c.courseId);
+    for (const a of await listPaged("academic", "/api/v1/academic-actors")) M.actors.set(a.actorCode, a.academicActorId);
+    for (const e of await listPaged("academic", "/api/v1/enrollments")) M.enrollments.add(`${e.academicActorId}:${e.cohortId}`);
+  };
+  await loadIndexes();
+
+  // The demo institutions from the previous seed go dormant (soft disable, no
+  // deletion): school pickers then show SEED-SCH plus the 2 big schools.
+  for (const code of LEGACY_SCHOOL_CODES) {
+    const s = M.schools.get(code);
+    if (s && s.status !== false) await patch("academic", `/api/v1/schools/${s.schoolId}/status`, { status: false });
+  }
+
   ids.schoolIds = [];
   for (const s of SCHOOLS) {
-    const sid = await ensure("academic", "/api/v1/schools",
-      { code: s.code, name: s.name, cityId: 1 },
-      { idKey: "schoolId", matchKey: "code", matchValue: s.code }) ?? null;
-    if (sid) ids.schoolIds.push(sid);
+    let school = M.schools.get(s.code);
+    if (!school) {
+      const created = await post("academic", "/api/v1/schools", {
+        code: s.code, name: s.name, cityId: ids.cityIdByName.get(s.city) ?? ids.cityId ?? 1,
+      });
+      if (created) { school = created; M.schools.set(s.code, created); }
+    }
+    ids.schoolIds.push(school ? pick(school, "schoolId", "id") : null);
   }
-  ids.schoolId = ids.schoolIds[0] ?? 1;
-  ids.programId = await ensure("academic", "/api/v1/programs",
-    { schoolId: ids.schoolId, code: "IS-2026", name: "Ingeniería de Sistemas" },
-    { idKey: "programId", matchKey: "code", matchValue: "IS-2026" }) ?? 1;
-  await ensure("academic", "/api/v1/programs",
-    { schoolId: ids.schoolId, code: "ADMON-2026", name: "Administración de Empresas" },
-    { idKey: "programId", matchKey: "code", matchValue: "ADMON-2026" });
-  ids.periodId = await ensure("academic", "/api/v1/academic-periods",
-    { schoolId: ids.schoolId, name: "Periodo Académico 2026-I", startsOn: "2026-01-01", endsOn: "2026-06-30", isActive: true },
-    { idKey: "academicPeriodId", matchKey: "name", matchValue: "Periodo Académico 2026-I" }) ?? 1;
-  ids.cohortId = await ensure("academic", "/api/v1/cohorts",
-    { programId: ids.programId, academicPeriodId: ids.periodId, code: "COH-2026-I-01" },
-    { idKey: "cohortId", matchKey: "code", matchValue: "COH-2026-I-01" }) ?? 1;
-  const COURSES = [
-    { code: "CALC-101", name: "Cálculo Diferencial", creditHours: 3 },
-    { code: "PROG-101", name: "Programación I", creditHours: 4 },
-    { code: "FIS-102", name: "Física I", creditHours: 4 },
-    { code: "LEN-103", name: "Lengua Castellana", creditHours: 2 },
-    { code: "ING-105", name: "Inglés I", creditHours: 2 },
-  ];
-  ids.courseIds = [];
-  for (const c of COURSES) {
-    const cid = await ensure("academic", "/api/v1/courses",
-      { programId: ids.programId, code: c.code, name: c.name, creditHours: c.creditHours },
-      { idKey: "courseId", matchKey: "code", matchValue: c.code }) ?? null;
-    if (cid) ids.courseIds.push(cid);
+
+  for (let schoolIdx = 0; schoolIdx < SCHOOLS.length; schoolIdx++) {
+    const schoolId = ids.schoolIds[schoolIdx];
+    if (schoolId == null) continue;
+    for (const pr of PROGRAMS) {
+      await upsert("academic", "/api/v1/programs", { schoolId, code: pr.code, name: pr.name }, {
+        idKeys: ["programId", "id"], map: M.programs, mapKey: `${schoolId}:${pr.code}`,
+        matchKey: "code", matchValue: pr.code,
+        fetchList: () => listPaged("academic", "/api/v1/programs"),
+      });
+    }
+    await upsert("academic", "/api/v1/academic-periods", {
+      schoolId, name: "Periodo Académico 2026-II", startsOn: WINDOW_START, endsOn: PERIOD_END, isActive: true,
+    }, {
+      idKeys: ["academicPeriodId", "id"], map: M.periods, mapKey: `${schoolId}:Periodo Académico 2026-II`,
+      matchKey: "name", matchValue: "Periodo Académico 2026-II",
+      fetchList: () => listPaged("academic", "/api/v1/academic-periods"),
+    });
+    const periodId = M.periods.get(`${schoolId}:Periodo Académico 2026-II`);
+    for (let cohortIdx = 0; cohortIdx < COHORTS_PER_SCHOOL; cohortIdx++) {
+      const code = cohortCodeOf(schoolIdx, cohortIdx);
+      const programId = M.programs.get(`${schoolId}:${PROGRAMS[cohortIdx % 2].code}`);
+      if (programId == null || periodId == null) continue;
+      await upsert("academic", "/api/v1/cohorts", { programId, academicPeriodId: periodId, code }, {
+        idKeys: ["cohortId", "id"], map: M.cohorts, mapKey: code,
+        matchKey: "code", matchValue: code,
+        fetchList: () => listPaged("academic", "/api/v1/cohorts"),
+      });
+    }
+    for (const pr of PROGRAMS) {
+      const programId = M.programs.get(`${schoolId}:${pr.code}`);
+      if (programId == null) continue;
+      for (const sub of SUBJECTS) {
+        await upsert("academic", "/api/v1/courses", { programId, code: sub.code, name: sub.name, creditHours: sub.creditHours }, {
+          idKeys: ["courseId", "id"], map: M.courses, mapKey: `${programId}:${sub.code}`,
+          matchKey: "code", matchValue: sub.code,
+          fetchList: () => listPaged("academic", "/api/v1/courses"),
+        });
+      }
+    }
   }
-  ids.courseId = ids.courseIds[0] ?? 1;
+
   // academic_actor.person_id is a native UUID column (cross-context reference to
   // identity.person, no FK): it must be the UUID from seedIdentity(), not the
   // biometric string id (which lives only in MongoDB).
-  ids.actorIds = [];
-  if (!ids.personIds?.length) {
-    console.log("skip  - academic actors need person ids (identity person seed failed?)");
-    ids.actorId = null;
-  } else {
-    for (let i = 0; i < PEOPLE.length && i < ids.personIds.length; i++) {
-      const actorId = await ensure("academic", "/api/v1/academic-actors",
-        { personId: ids.personIds[i], actorTypeId: 1, schoolId: ids.schoolId, actorCode: PEOPLE[i].actorCode },
-        { idKey: "academicActorId", matchKey: "actorCode", matchValue: PEOPLE[i].actorCode }) ?? null;
-      if (actorId) ids.actorIds.push(actorId);
-    }
-    ids.actorId = ids.actorIds[0] ?? null;
-  }
-  // Docente Carlos Restrepo teaches the block: actor type 2 = INSTRUCTOR.
-  ids.instructorActorId = null;
-  if (ids.staffPersonIds?.instructor) {
-    ids.instructorActorId = await ensure("academic", "/api/v1/academic-actors",
-      { personId: ids.staffPersonIds.instructor, actorTypeId: 2, schoolId: ids.schoolId, actorCode: "DOC-2026-001" },
-      { idKey: "academicActorId", matchKey: "actorCode", matchValue: "DOC-2026-001" }) ?? null;
-  }
-  if (ids.actorIds?.length) {
-    for (const actorId of ids.actorIds) {
-      await post("academic", "/api/v1/enrollments", { academicActorId: actorId, cohortId: ids.cohortId });
-    }
-  } else {
-    console.log("skip  - enrollments need academic actors (academic actor seed failed?)");
-  }
-  await get("academic", "/api/v1/schools");
-  await get("academic", `/api/v1/cohorts/${ids.cohortId}/enrollments`);
-}
-
-// POST a session, or on 409 resolve the existing one so reruns keep the id.
-// A session defaults to 'Open', so /open is only called when it is not open yet.
-async function ensureSession(blockId, date) {
-  const created = await post("scheduling", "/api/v1/class-sessions", {
-    scheduleBlockId: blockId, sessionDate: date,
-  });
-  let id = pick(created, "sessionId", "classSessionId", "id");
-  let resolved = created;
-  if (!id) {
-    const list = await get("scheduling", `/api/v1/class-sessions?scheduleBlockId=${blockId}`);
-    const found = asArray(list).find((e) =>
-      String(e?.sessionDate ?? e?.session_date ?? "").slice(0, 10) === date &&
-      String(e?.scheduleBlockId ?? e?.schedule_block_id ?? "") === String(blockId));
-    id = found ? pick(found, "sessionId", "classSessionId", "id") : null;
-    resolved = found ?? null;
-  }
-  if (id && pick(resolved, "sessionStatus", "session_status", "status") !== "Open") {
-    await post("scheduling", `/api/v1/class-sessions/${id}/open`);
-  }
-  return id;
-}
-
-// Scheduling: environments -> blocks -> sessions -> open sessions.
-async function seedScheduling() {
-  const ENVS = [
-    { schoolIdx: 0, code: "AULA-301-B", name: "Aula 301 - Bloque B", capacity: 30 },
-    { schoolIdx: 0, code: "LAB-201-A", name: "Laboratorio 201 - Bloque A", capacity: 24 },
-    { schoolIdx: 1, code: "AULA-102-SM", name: "Aula 102 - Sede San Mateo", capacity: 28 },
-  ];
-  ids.environmentIds = {};
-  for (const e of ENVS) {
-    const eid = await ensure("scheduling", "/api/v1/environments",
-      { schoolId: ids.schoolIds?.[e.schoolIdx] ?? ids.schoolId ?? 1, code: e.code, name: e.name, capacity: e.capacity },
-      { idKey: "environmentId", matchKey: "code", matchValue: e.code }) ?? null;
-    if (eid) ids.environmentIds[e.code] = eid;
-  }
-  ids.environmentId = ids.environmentIds["AULA-301-B"] ?? 1;
-  // One block per environment keeps the rerun lookup (by environmentId) unambiguous.
-  const BLOCKS = [
-    { courseIdx: 0, envCode: "AULA-301-B", dayOfWeek: 1, startsAt: "08:00:00", endsAt: "10:00:00" },
-    { courseIdx: 1, envCode: "LAB-201-A", dayOfWeek: 3, startsAt: "10:00:00", endsAt: "12:00:00" },
-  ];
-  ids.blockIds = [];
-  for (const b of BLOCKS) {
-    const environmentId = ids.environmentIds[b.envCode] ?? 1;
-    const bid = await ensure("scheduling", "/api/v1/schedule-blocks", {
-      cohortId: ids.cohortId ?? 1, courseId: ids.courseIds?.[b.courseIdx] ?? ids.courseId ?? 1,
-      environmentId, instructorActorId: ids.instructorActorId ?? ids.actorId ?? 1,
-      dayOfWeek: b.dayOfWeek, startsAt: b.startsAt, endsAt: b.endsAt,
-    }, { idKey: "scheduleBlockId", matchKey: "environmentId", matchValue: environmentId }) ?? null;
-    if (bid) ids.blockIds.push(bid);
-  }
-  ids.blockId = ids.blockIds[0] ?? null;
-  ids.sessionIds = [];
-  if (ids.blockIds.length) {
-    const SESSION_DATES = ["2026-09-21", "2026-09-23", "2026-09-28"];
-    for (const bid of ids.blockIds) {
-      for (const date of SESSION_DATES) {
-        const sid = await ensureSession(bid, date);
-        if (sid) ids.sessionIds.push(sid);
-      }
-    }
-    ids.sessionId = ids.sessionIds[0] ?? null;
-  }
-  await get("scheduling", "/api/v1/environments");
-}
-
-// Attendance: records (bulk), justification types, justifications.
-async function seedAttendance() {
-  await post("attendance", "/api/v1/justification-types", {
-    name: "Incapacidad médica EPS", description: "Excusa médica certificada por la EPS", requiresAttachment: true,
-  });
-  ids.justificationTypeId = await ensure("attendance", "/api/v1/justification-types",
-    { name: "Calamidad doméstica", description: "Calamidad doméstica debidamente soportada", requiresAttachment: true },
-    { idKey: "justificationTypeId", matchKey: "name", matchValue: "Calamidad doméstica" }) ?? 1;
-  await ensure("attendance", "/api/v1/justification-types",
-    { name: "Compromiso deportivo institucional", description: "Representación institucional en eventos deportivos", requiresAttachment: false },
-    { idKey: "justificationTypeId", matchKey: "name", matchValue: "Compromiso deportivo institucional" });
-  const sessionIds = ids.sessionIds?.length ? ids.sessionIds : (ids.sessionId ? [ids.sessionId] : []);
-  if (sessionIds.length) {
-    // attendance_status is the native enum ('Present','Absent','Late','Justified') and
-    // capture_method is ('FACIAL','MANUAL','IOT','IMPORT'); casing must match exactly.
-    const actors = ids.actorIds?.length ? ids.actorIds : [ids.actorId ?? 1];
-    const statuses = ["Present", "Present", "Late", "Absent", "Present", "Late"];
-    const rec = await post("attendance", "/api/v1/attendance-records", {
-      classSessionId: sessionIds[0], academicActorId: actors[0],
-      attendanceStatus: "Present", captureMethod: "MANUAL",
+  const actorJobs = [
+    ...STUDENTS.map((s) => ({ personKey: s.documentNumber, actorTypeId: 1, schoolIdx: s.schoolIdx, actorCode: s.actorCode })),
+    ...TEACHERS.map((t) => ({ personKey: t.documentNumber, actorTypeId: 2, schoolIdx: t.schoolIdx, actorCode: t.actorCode })),
+  ].filter((a) => M.persons.get(a.personKey) && ids.schoolIds[a.schoolIdx] != null);
+  const tickActors = progress(actorJobs.length, 400, "actors");
+  await pooled(actorJobs, CONCURRENCY, async (a) => {
+    await upsert("academic", "/api/v1/academic-actors", {
+      personId: M.persons.get(a.personKey), actorTypeId: a.actorTypeId,
+      schoolId: ids.schoolIds[a.schoolIdx], actorCode: a.actorCode, startedOn: WINDOW_START,
+    }, {
+      idKeys: ["academicActorId", "id"], map: M.actors, mapKey: a.actorCode,
+      matchKey: "actorCode", matchValue: a.actorCode,
+      fetchList: () => listPaged("academic", "/api/v1/academic-actors"),
     });
-    ids.recordId = pick(rec, "recordId", "attendanceRecordId", "id");
-    // Each session gets its own roll call, rotated so no two lists look alike.
-    for (let s = 0; s < sessionIds.length; s++) {
-      await post("attendance", "/api/v1/attendance-records/bulk", actors.map((academicActorId, i) => ({
-        classSessionId: sessionIds[s], academicActorId,
-        attendanceStatus: statuses[(i + s) % statuses.length],
-        captureMethod: (i + s) % 4 === 0 ? "FACIAL" : "MANUAL",
-      })));
-    }
-    if (ids.recordId) {
-      await post("attendance", "/api/v1/justifications", {
-        attendanceRecordId: ids.recordId, justificationTypeId: ids.justificationTypeId, reason: "Cita médica prioritaria",
+    tickActors();
+  });
+  // Roster per cohort feeds roll call (attendance) and blocks (scheduling).
+  ids.rosterByCohort = new Map();
+  for (const s of STUDENTS) {
+    const actorId = M.actors.get(s.actorCode);
+    if (actorId == null) continue;
+    const roster = ids.rosterByCohort.get(s.cohortCode) ?? [];
+    roster.push(actorId);
+    ids.rosterByCohort.set(s.cohortCode, roster);
+  }
+
+  const enrollmentJobs = [];
+  for (const s of STUDENTS) {
+    const actorId = M.actors.get(s.actorCode);
+    const cohortId = M.cohorts.get(s.cohortCode);
+    if (actorId == null || cohortId == null) continue;
+    const key = `${actorId}:${cohortId}`;
+    if (M.enrollments.has(key)) continue;
+    enrollmentJobs.push({ actorId, cohortId, key });
+  }
+  const tickEnr = progress(enrollmentJobs.length, 400, "enrollments");
+  await pooled(enrollmentJobs, CONCURRENCY, async (e) => {
+    await post("academic", "/api/v1/enrollments", {
+      academicActorId: e.actorId, cohortId: e.cohortId, enrolledOn: WINDOW_START, enrollmentStatus: "Active",
+    });
+    M.enrollments.add(e.key);
+    tickEnr();
+  });
+
+  // Cohort descriptors consumed by scheduling (blocks + sessions).
+  ids.cohorts = [];
+  for (let schoolIdx = 0; schoolIdx < SCHOOLS.length; schoolIdx++) {
+    for (let cohortIdx = 0; cohortIdx < COHORTS_PER_SCHOOL; cohortIdx++) {
+      const code = cohortCodeOf(schoolIdx, cohortIdx);
+      ids.cohorts.push({
+        code, id: M.cohorts.get(code), schoolIdx, track: cohortIdx % 2, local: cohortIdx,
       });
     }
-    for (const sid of sessionIds) {
-      await get("attendance", `/api/v1/class-sessions/${sid}/attendance`);
-    }
-  } else {
-    console.log("skip  - attendance records need a class session (scheduling seed failed?)");
   }
+  ids.teacherActorIdsBySchool = [0, 1].map((schoolIdx) =>
+    TEACHERS.filter((t) => t.schoolIdx === schoolIdx).map((t) => M.actors.get(t.actorCode)).filter((v) => v != null));
+
+  await get("academic", "/api/v1/schools");
+  const firstCohort = ids.cohorts.find((c) => c.id != null);
+  if (firstCohort) await get("academic", `/api/v1/cohorts/${firstCohort.id}/enrollments`);
+  done();
 }
 
-// Biometric: facial enroll, verify, identify with synthetic encodings.
+// Occurrences of an ISO weekday inside the pinned window (Mon 2026-09-07 ..
+// Mon 2026-10-05): 5 dates for Mondays, 4 for the other weekdays.
+function sessionDatesFor(dayOfWeek) {
+  const dates = [];
+  const start = Date.parse(`${WINDOW_START}T00:00:00Z`);
+  const end = Date.parse(`${SEED_TODAY}T00:00:00Z`);
+  const startDow = new Date(start).getUTCDay() || 7;
+  let d = start + ((dayOfWeek - startDow + 7) % 7) * 86400000;
+  for (; d <= end; d += 7 * 86400000) dates.push(new Date(d).toISOString().slice(0, 10));
+  return dates;
+}
+
+// Scheduling: environments (12 per school) -> blocks (12 per cohort) ->
+// sessions (4-5 per block over the window) -> past Closed, today Open.
+async function seedScheduling() {
+  const done = banner("scheduling");
+  for (const e of asArray(await get("scheduling", "/api/v1/environments"))) {
+    M.envs.set(`${e.schoolId}:${e.code}`, pick(e, "environmentId", "id"));
+  }
+  // 04 list endpoints take filters but no limit/offset: a bare GET returns all.
+  for (const b of asArray(await get("scheduling", "/api/v1/schedule-blocks"))) {
+    M.blocks.set(`${b.cohortId}:${b.courseId}`, pick(b, "scheduleBlockId", "id"));
+  }
+
+  const envCodes = [];
+  for (let schoolIdx = 0; schoolIdx < SCHOOLS.length; schoolIdx++) {
+    const schoolId = ids.schoolIds[schoolIdx];
+    const prefix = SCHOOLS[schoolIdx].prefix;
+    const schoolEnvs = [
+      ...Array.from({ length: 10 }, (_, n) => ({ code: `AULA-${prefix}-${pad2(n + 1)}`, name: `Aula ${n + 1}`, capacity: 70 })),
+      { code: `LAB-INFO-${prefix}`, name: "Laboratorio de Informática", capacity: 45 },
+      { code: `LAB-CIEN-${prefix}`, name: "Laboratorio de Ciencias", capacity: 45 },
+    ];
+    const tickEnv = progress(schoolEnvs.length, 12, "environments");
+    for (const env of schoolEnvs) {
+      if (schoolId != null) {
+        await upsert("scheduling", "/api/v1/environments", { schoolId, code: env.code, name: env.name, capacity: env.capacity }, {
+          idKeys: ["environmentId", "id"], map: M.envs, mapKey: `${schoolId}:${env.code}`,
+          matchKey: "code", matchValue: env.code,
+          fetchList: () => get("scheduling", "/api/v1/environments"),
+        });
+      }
+      tickEnv();
+    }
+    envCodes.push(schoolEnvs.map((e) => (schoolId != null ? M.envs.get(`${schoolId}:${e.code}`) : null)));
+  }
+
+  // Deterministic weekly grid: 12 two-hour slots per cohort (phase-shifted so a
+  // cohort never clashes with itself), one home room per cohort, instructors
+  // assigned greedily so no teacher gets two blocks at the same slot.
+  const busy = new Set();
+  const blockDescs = [];
+  for (const coh of ids.cohorts) {
+    if (coh.id == null) continue;
+    const schoolId = ids.schoolIds[coh.schoolIdx];
+    const programId = M.programs.get(`${schoolId}:${PROGRAMS[coh.track].code}`);
+    const environmentId = envCodes[coh.schoolIdx]?.[coh.local] ?? null;
+    const teachers = ids.teacherActorIdsBySchool[coh.schoolIdx] ?? [];
+    if (environmentId == null || !teachers.length) {
+      console.log(`skip  - blocks for cohort ${coh.code} need an environment and an instructor`);
+      continue;
+    }
+    for (let b = 0; b < SUBJECTS.length; b++) {
+      const slot = (b + coh.local * 5) % SLOT_COUNT;
+      const dayOfWeek = Math.floor(slot / 6) + 1;
+      const startH = START_HOURS[slot % 6];
+      const courseId = M.courses.get(`${programId}:${SUBJECTS[b].code}`);
+      if (courseId == null) continue;
+      let teacher = teachers.find((t) => !busy.has(`${t}:${slot}`));
+      if (teacher == null) teacher = teachers[b % teachers.length];
+      busy.add(`${teacher}:${slot}`);
+      blockDescs.push({
+        mapKey: `${coh.id}:${courseId}`, cohortCode: coh.code, dayOfWeek,
+        instructorActorId: teacher,
+        body: {
+          cohortId: coh.id, courseId, environmentId, instructorActorId: teacher,
+          dayOfWeek, startsAt: `${pad2(startH)}:00:00`, endsAt: `${pad2(startH + 2)}:00:00`,
+        },
+      });
+    }
+  }
+  const missingBlocks = blockDescs.filter((d) => !M.blocks.has(d.mapKey));
+  const tickBlocks = progress(missingBlocks.length, 60, "blocks");
+  await pooled(missingBlocks, CONCURRENCY, async (d) => {
+    await upsert("scheduling", "/api/v1/schedule-blocks", d.body, {
+      idKeys: ["scheduleBlockId", "id"], map: M.blocks, mapKey: d.mapKey,
+      matchKey: "environmentId", matchValue: d.body.environmentId,
+      fetchList: () => get("scheduling", "/api/v1/schedule-blocks"),
+    });
+    tickBlocks();
+  });
+
+  // Sessions: one list per block, create the missing dates, then enforce the
+  // status policy (past Closed with the block's instructor, SEED_TODAY Open).
+  ids.sessionCtx = [];
+  const sessionJobs = blockDescs.map((d) => ({ ...d, blockId: M.blocks.get(d.mapKey), dates: sessionDatesFor(d.dayOfWeek) })).filter((j) => j.blockId != null);
+  const tickSessions = progress(sessionJobs.length, 100, "blocks w/ sessions");
+  await pooled(sessionJobs, CONCURRENCY, async (job) => {
+    const listPath = `/api/v1/class-sessions?scheduleBlockId=${job.blockId}`;
+    const existing = asArray(await get("scheduling", listPath));
+    const byDate = new Map(existing.map((s) => [String(s.sessionDate ?? s.session_date ?? "").slice(0, 10), s]));
+    for (const date of job.dates) {
+      let row = byDate.get(date);
+      let sid = row ? pick(row, "sessionId", "classSessionId", "id") : null;
+      if (sid == null) {
+        const created = await post("scheduling", "/api/v1/class-sessions", { scheduleBlockId: job.blockId, sessionDate: date });
+        sid = created ? pick(created, "sessionId", "classSessionId", "id") : null;
+        if (sid != null) row = created;
+        else { // 409: resolve the existing session so the chain keeps working
+          row = asArray(await get("scheduling", listPath)).find((s) =>
+            String(s.sessionDate ?? s.session_date ?? "").slice(0, 10) === date);
+          sid = row ? pick(row, "sessionId", "classSessionId", "id") : null;
+        }
+      }
+      if (sid == null) continue;
+      const status = pick(row, "sessionStatus", "session_status", "status");
+      if (date !== SEED_TODAY && status !== "Closed") {
+        await post("scheduling", `/api/v1/class-sessions/${sid}/close`, { closedBy: job.instructorActorId });
+      } else if (date === SEED_TODAY && status !== "Open") {
+        await post("scheduling", `/api/v1/class-sessions/${sid}/open`);
+      }
+      ids.sessionCtx.push({ id: sid, cohortCode: job.cohortCode, date });
+    }
+    tickSessions();
+  });
+  await get("scheduling", "/api/v1/environments");
+  done();
+}
+
+// Attendance: roll call per session (bulk, ~81k records) plus justifications
+// over a deterministic sample of absences.
+async function seedAttendance() {
+  const done = banner("attendance");
+  for (const jt of asArray(await get("attendance", "/api/v1/justification-types"))) {
+    M.justTypes.set(jt.name, pick(jt, "justificationTypeId", "id"));
+  }
+  const typeDefs = [
+    { name: "Incapacidad médica EPS", description: "Excusa médica certificada por la EPS", requiresAttachment: true },
+    { name: "Calamidad doméstica", description: "Calamidad doméstica debidamente soportada", requiresAttachment: true },
+    { name: "Compromiso deportivo institucional", description: "Representación institucional en eventos deportivos", requiresAttachment: false },
+  ];
+  const tickTypes = progress(typeDefs.length, 3, "justification types");
+  for (const t of typeDefs) {
+    await upsert("attendance", "/api/v1/justification-types", t, {
+      idKeys: ["justificationTypeId", "id"], map: M.justTypes, mapKey: t.name,
+      matchKey: "name", matchValue: t.name,
+      fetchList: () => get("attendance", "/api/v1/justification-types"),
+    });
+    tickTypes();
+  }
+  for (const j of asArray(await get("attendance", "/api/v1/justifications"))) {
+    const rid = pick(j, "attendanceRecordId", "attendance_record_id");
+    if (rid != null) M.justifications.add(String(rid));
+  }
+
+  // attendance_status is the native enum ('Present','Absent','Late','Justified') and
+  // capture_method is ('FACIAL','MANUAL','IOT','IMPORT'); casing must match exactly.
+  const tickBulk = progress(ids.sessionCtx.length, 200, "roll calls");
+  await pooled(ids.sessionCtx, CONCURRENCY, async (job) => {
+    const roster = ids.rosterByCohort.get(job.cohortCode) ?? [];
+    if (roster.length) {
+      const sIdx = Number(job.id) % 97; // stable per session: rerun-free random-looking rotation
+      const body = roster.map((academicActorId, i) => {
+        const r = (i * 7 + sIdx * 13) % 100;
+        const attendanceStatus = r < 80 ? "Present" : r < 88 ? "Late" : "Absent";
+        const m = (i * 3 + sIdx) % 10;
+        const captureMethod = m < 6 ? "FACIAL" : m < 8 ? "MANUAL" : m < 9 ? "IOT" : "IMPORT";
+        const rec = { classSessionId: job.id, academicActorId, attendanceStatus, captureMethod };
+        if (captureMethod === "FACIAL") rec.matchScore = +(((i * 37 + sIdx * 11) % 24 + 76) / 100).toFixed(4);
+        return rec;
+      });
+      await post("attendance", "/api/v1/attendance-records/bulk", body);
+    }
+    tickBulk();
+  });
+
+  // 1 of every 8 sessions gets up to 2 justified absences (Pending review).
+  const reasons = [
+    "Cita médica EPS programada con anterioridad",
+    "Incapacidad certificada por el médico particular",
+    "Emergencia familiar grave el día de la sesión",
+    "Traslado de ciudad por causas familiares",
+    "Malestar general manifestado la noche anterior",
+  ];
+  const typeIds = typeDefs.map((t) => M.justTypes.get(t.name)).filter((v) => v != null);
+  const targets = [...ids.sessionCtx].sort((a, b) => a.id - b.id).filter((_, i) => i % 8 === 0);
+  const tickJust = progress(targets.length, 50, "justified sessions");
+  await pooled(targets, CONCURRENCY, async (job, ti) => {
+    const recs = asArray(await get("attendance", `/api/v1/class-sessions/${job.id}/attendance`));
+    const absent = recs.filter((r) => pick(r, "attendanceStatus", "attendance_status") === "Absent").slice(0, 2);
+    let k = 0;
+    for (const rec of absent) {
+      const rid = pick(rec, "attendanceRecordId", "recordId", "id");
+      if (rid == null || M.justifications.has(String(rid))) continue;
+      await post("attendance", "/api/v1/justifications", {
+        attendanceRecordId: rid,
+        justificationTypeId: typeIds[(ti + k) % typeIds.length],
+        reason: reasons[(ti + k) % reasons.length],
+      });
+      M.justifications.add(String(rid));
+      k++;
+    }
+    tickJust();
+  });
+  done();
+}
+
+// Biometric: facial enroll for the whole roster (student + teacher person
+// UUIDs), plus the legacy string-id demo block kept for old dashboards.
 async function seedBiometric() {
+  const done = banner("biometric");
   const base = [0.12, 0.45, 0.78, 0.23, 0.56, 0.89, 0.34, 0.67];
-  const encodingFor = (i) => base.map((v, j) => +(v + i * 0.01 + j * 0.001).toFixed(4));
+  const encodingFor = (i) => base.map((v, j) => +(v + (i % 100) * 0.01 + j * 0.001).toFixed(4));
   // Legacy id kept for backward compatibility with existing frontends/dashboards.
   await post("biometric", "/api/v1/biometric/facial/enroll", {
     person_id: "seed-student-01", encoding: base, model_version: "seed-v1",
@@ -390,43 +801,146 @@ async function seedBiometric() {
   await post("biometric", "/api/v1/biometric/facial/verify", { person_id: first, encoding: encodingFor(0) });
   await post("biometric", "/api/v1/biometric/facial/identify", { encoding: encodingFor(0) });
   await get("biometric", `/api/v1/biometric/facial/${first}/history`);
+
+  const enrollJobs = [
+    ...STUDENTS.map((s, i) => ({ personId: M.persons.get(s.documentNumber), seq: i })),
+    ...TEACHERS.map((t, i) => ({ personId: M.persons.get(t.documentNumber), seq: 1000 + i })),
+  ].filter((j) => j.personId != null);
+  const tick = progress(enrollJobs.length, 400, "enrolls");
+  await pooled(enrollJobs, CONCURRENCY, async (j) => {
+    const active = await getProbe("biometric", `/api/v1/biometric/facial/${j.personId}`);
+    if (!active) { // null = 404, person not enrolled yet
+      await post("biometric", "/api/v1/biometric/facial/enroll", {
+        person_id: j.personId, encoding: encodingFor(j.seq), model_version: "seed-v1",
+      });
+    }
+    tick();
+  });
+  done();
 }
 
-// Configuration: academic/security configs plus a biometric update case.
+// Configuration: per-school attendance configs, security configs and a top-up
+// of pending biometric update cases (capped at 10 pending).
 async function seedConfiguration() {
-  await post("configuration", "/api/v1/configurations/academic", {
-    schoolId: ids.schoolId ?? 1, configurationName: "attendance.tolerance.minutes", configurationValue: "10",
-  });
-  await post("configuration", "/api/v1/configurations/security", {
-    configurationName: "jwt.ttl.seconds", configurationValue: "3600",
-  });
-  await post("configuration", "/api/v1/biometric-update-cases", {
-    personId: PEOPLE[0].biometricId, biometricType: "FACIAL", reason: "Re-enrolamiento por actualización de documento",
-  });
-  await get("configuration", "/api/v1/biometric-update-cases?status=Pending");
-}
-
-// Notification: alert type then alert (needs a type id first).
-async function seedNotification() {
-  ids.alertTypeId = await ensure("notification", "/api/v1/alert-types",
-    { code: "ABSENTEEISM", name: "Inasistencia recurrente", severity: "MEDIUM", channel: "APP" },
-    { idKey: "AlertTypeID", matchKey: "Code", matchValue: "ABSENTEEISM" });
-  if (ids.alertTypeId) {
-    const actors = ids.actorIds?.length ? ids.actorIds.slice(0, 2) : [1];
-    for (const academicActorId of actors) {
-      await post("notification", "/api/v1/alerts", { academic_actor_id: academicActorId, alert_type_id: ids.alertTypeId });
+  const done = banner("configuration");
+  const academicConfigs = [
+    ["attendance.tolerance.minutes", "10"],
+    ["attendance.absence.alert.threshold", "3"],
+    ["attendance.min.passing.percent", "80"],
+  ];
+  const jobs = [];
+  for (const schoolId of ids.schoolIds) {
+    if (schoolId == null) continue;
+    for (const [configurationName, configurationValue] of academicConfigs) {
+      jobs.push({ schoolId, configurationName, configurationValue });
     }
   }
-  await get("notification", "/api/v1/alerts?limit=5");
+  const tick = progress(jobs.length, 6, "academic configs");
+  await pooled(jobs, CONCURRENCY, async (c) => {
+    await post("configuration", "/api/v1/configurations/academic", {
+      schoolId: c.schoolId, configurationName: c.configurationName, configurationValue: c.configurationValue,
+    });
+    tick();
+  });
+  for (const [configurationName, configurationValue] of [
+    ["jwt.ttl.seconds", "3600"],
+    ["session.timeout.minutes", "480"],
+    ["login.max.attempts", "5"],
+  ]) {
+    await post("configuration", "/api/v1/configurations/security", { configurationName, configurationValue });
+  }
+
+  const pending = asArray(await get("configuration", "/api/v1/biometric-update-cases?status=Pending"));
+  for (const c of pending) {
+    const pid = pick(c, "personId", "person_id");
+    if (pid != null) M.updateCases.add(String(pid));
+  }
+  const caseReasons = [
+    "Re-enrolamiento por actualización de documento",
+    "Cambio de plantilla facial por nuevo modelo",
+    "Corrección de enrolamiento por baja calidad de la muestra",
+  ];
+  let pendingCount = pending.length;
+  for (const idx of [99, 199, 299, 399, 499, 599, 699, 799, 899, 999]) {
+    if (pendingCount >= 10) break;
+    const pid = M.persons.get(STUDENTS[idx]?.documentNumber);
+    if (!pid || M.updateCases.has(String(pid))) continue;
+    await post("configuration", "/api/v1/biometric-update-cases", {
+      personId: pid, biometricType: "FACIAL", reason: caseReasons[idx % caseReasons.length],
+    });
+    M.updateCases.add(String(pid));
+    pendingCount++;
+  }
+  await get("configuration", "/api/v1/biometric-update-cases?status=Pending");
+  done();
 }
 
-// Quality: project plus read-only instruments used by frontend forms.
+// Notification: 3 alert types, then one alert per absentee/tardy/low-attendance
+// student rule (~467 alerts). Alerts carry no unique key, so the existing
+// collection is indexed first to keep reruns from duplicating them.
+async function seedNotification() {
+  const done = banner("notification");
+  for (const t of await listPaged("notification", "/api/v1/alert-types")) {
+    M.alertTypes.set(pick(t, "Code", "code"), pick(t, "AlertTypeID", "alertTypeId", "id"));
+  }
+  const typeDefs = [
+    { code: "ABSENTEEISM", name: "Inasistencia recurrente", severity: "WARNING", channel: "DASHBOARD" },
+    { code: "TARDINESS", name: "Tardanzas repetidas", severity: "INFO", channel: "DASHBOARD" },
+    { code: "LOW_ATTENDANCE", name: "Bajo porcentaje de asistencia", severity: "WARNING", channel: "DASHBOARD" },
+  ];
+  for (const t of typeDefs) {
+    if (M.alertTypes.has(t.code)) continue;
+    const created = await post("notification", "/api/v1/alert-types", t);
+    const id = created ? pick(created, "AlertTypeID", "alertTypeId", "id") : null;
+    if (id != null) M.alertTypes.set(t.code, id);
+  }
+  for (const a of await listPaged("notification", "/api/v1/alerts")) {
+    M.alerts.add(`${pick(a, "AcademicActorID", "academic_actor_id")}:${pick(a, "AlertTypeID", "alert_type_id")}`);
+  }
+
+  const alertJobs = [];
+  for (const s of STUDENTS) {
+    const actorId = M.actors.get(s.actorCode);
+    if (actorId == null) continue;
+    const rules = [
+      ...(s.seq % 7 === 0 ? ["ABSENTEEISM"] : []),
+      ...(s.seq % 11 === 0 ? ["TARDINESS"] : []),
+      ...(s.seq % 17 === 0 ? ["LOW_ATTENDANCE"] : []),
+    ];
+    for (const code of rules) {
+      const typeId = M.alertTypes.get(code);
+      if (typeId == null) continue;
+      const key = `${actorId}:${typeId}`;
+      if (M.alerts.has(key)) continue;
+      alertJobs.push({ actorId, typeId, key });
+    }
+  }
+  const tick = progress(alertJobs.length, 100, "alerts");
+  await pooled(alertJobs, CONCURRENCY, async (a) => {
+    await post("notification", "/api/v1/alerts", { academic_actor_id: a.actorId, alert_type_id: a.typeId });
+    M.alerts.add(a.key);
+    tick();
+  });
+  await get("notification", "/api/v1/alerts?limit=5");
+  done();
+}
+
+// Quality: projects plus read-only instruments used by frontend forms.
 async function seedQuality() {
-  await post("quality", "/api/v1/quality/projects", { name: "Evaluación institucional 2026-I", status: "Active" });
+  const done = banner("quality");
+  for (const p of asArray(await get("quality", "/api/v1/quality/projects"))) {
+    if (p?.name) M.projects.add(p.name);
+  }
+  for (const name of ["Evaluación institucional 2026-I", "Autoevaluación institucional 2026-II"]) {
+    if (M.projects.has(name)) continue;
+    await post("quality", "/api/v1/quality/projects", { name, status: "Active" });
+    M.projects.add(name);
+  }
   await get("quality", "/api/v1/quality/characteristics");
   await get("quality", "/api/v1/quality/process/profile");
   await get("quality", "/api/v1/quality/istqb/categories");
   await get("quality", "/api/v1/quality/projects");
+  done();
 }
 
 // Endpoints with confirmed, still-unfixed backend defects (see README "known issues").
@@ -435,7 +949,7 @@ async function seedQuality() {
 const KNOWN_ISSUES = new Set([]);
 
 async function main() {
-  console.log(`seed start (${new Date().toISOString()})`);
+  console.log(`seed start (${new Date().toISOString()}) - concurrency=${CONCURRENCY}`);
   await loginSeed();
   await seedIdentity();
   await seedAuthorization();
