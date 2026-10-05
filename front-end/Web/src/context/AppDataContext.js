@@ -53,10 +53,32 @@ import {
     deleteCourse as storageDeleteCourse,
 } from "../models/data/CourseStorage";
 
-import { mockTeachers, mockAdmins } from "../models/data/mockData";
 import { calculateStudentCurrentPeriod } from "../core/utils/studentPeriodCalculator";
 import { getConfiguredAcademicPeriodType } from "../core/constants/academicPeriods";
 import { getStudentPeriodFromData } from "../core/utils/studentPeriodCalculator";
+
+// ── Filas de personal (docentes / administradores) ─────────
+// Los usuarios vienen de la API con role admin|teacher|student;
+// aquí se completan los campos que la vista de personal espera y
+// que el backend aún no expone (asistencia, biométricos).
+
+function toStaffRow(user) {
+    return {
+        ...user,
+        grade: user.role === "admin" ? "Administrador" : "Docente",
+        attendance: 0, // pendiente de la fase de consulta
+        hasFacial: false,
+        hasFingerprint: false,
+    };
+}
+
+function splitStaff(users) {
+    const list = Array.isArray(users) ? users : [];
+    return {
+        teacherRows: list.filter((u) => u.role === "teacher").map(toStaffRow),
+        adminRows: list.filter((u) => u.role === "admin").map(toStaffRow),
+    };
+}
 
 // ── Context ───────────────────────────────────────────────
 
@@ -66,8 +88,6 @@ const AppDataContext = createContext(null);
 
 export function AppDataProvider({ children }) {
     const [students, setStudents] = useState([]);
-    const [teachers] = useState(mockTeachers); // Mock data - TODO: cargar desde storage
-    const [admins] = useState(mockAdmins); // Mock data - TODO: cargar desde storage
     const [users, setUsers] = useState([]);
     const [environments, setEnvironments] = useState([]);
     const [fichas, setFichas] = useState([]);
@@ -97,7 +117,7 @@ export function AppDataProvider({ children }) {
             setIsLoading(false);
             
             // Iniciar carga progresiva de usuarios después de cargar datos base
-            startProgressiveUserLoading(s, c);
+            startProgressiveUserLoading(s, c, u);
         });
     }, []);
     
@@ -125,7 +145,7 @@ export function AppDataProvider({ children }) {
     }, [courses, periodType]);
     
     // Carga progresiva de usuarios (efecto persiana)
-    const startProgressiveUserLoading = useCallback((allStudents, allCourses) => {
+    const startProgressiveUserLoading = useCallback((allStudents, allCourses, allUsers) => {
         setIsLoadingUsers(true);
         setLoadedStudents([]);
         setLoadedTeachers([]);
@@ -160,11 +180,12 @@ export function AppDataProvider({ children }) {
             };
         });
         
-        // Combinar todos los usuarios
+        // Combinar todos los usuarios (el personal sale de la API, no de mocks)
+        const { teacherRows, adminRows } = splitStaff(allUsers);
         const allUsersToLoad = [
             ...enrichedStudents,
-            ...mockTeachers,
-            ...mockAdmins,
+            ...teacherRows,
+            ...adminRows,
         ];
         
         // Cargar usuarios progresivamente (cada 150ms)
@@ -176,7 +197,7 @@ export function AppDataProvider({ children }) {
                 // Agregar al array correspondiente según tipo
                 if (currentIndex < enrichedStudents.length) {
                     setLoadedStudents(prev => [...prev, user]);
-                } else if (currentIndex < enrichedStudents.length + mockTeachers.length) {
+                } else if (currentIndex < enrichedStudents.length + teacherRows.length) {
                     setLoadedTeachers(prev => [...prev, user]);
                 } else {
                     setLoadedAdmins(prev => [...prev, user]);
