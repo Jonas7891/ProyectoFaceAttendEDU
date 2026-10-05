@@ -1,3 +1,7 @@
+# FaceAttend EDU — data layer (standalone: cd database && docker compose up -d).
+# Owns PostgreSQL 17 (1 instance, 8 schemas) + the 8 Liquibase migrations.
+# Also included by FULL/docker-compose.yml, which chains the migrations.
+# Services connect through the `faceattend-data` network (see root compose).
 services:
   postgres:
     image: postgres:17-alpine
@@ -11,6 +15,8 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # Creates the 8 bounded-context schemas on first boot only.
+      - ./database-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-faceattend_db}"]
       interval: 10s

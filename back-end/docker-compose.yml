@@ -1,33 +1,13 @@
+# FaceAttend EDU — application tier (microservices + Kong + MongoDB/Redis/Kafka).
+# Not standalone: run it from FULL/ (docker compose up), which includes this
+# file together with database/docker-compose.yml — PostgreSQL lives THERE
+# (data layer, Liquibase migrations). Only MongoDB, Redis and Kafka are defined
+# here; the 8 bounded-context schemas are created by ../database/database-init.
 services:
   # ──────────────────────────────────────────────────────────────
-  # Infrastructure — PostgreSQL, MongoDB, Redis, Kafka (KRaft)
+  # Infrastructure — MongoDB, Redis, Kafka (KRaft)
   # ADR-003 MongoDB, ADR-006 Kafka, ADR-015 Redis, DB per service
-  # NOTE: postgres is also declared in database/docker-compose.yml (which owns
-  # the Liquibase changelogs). Included later, this definition wins in the
-  # merged FULL/ project by adding ./database-init seed scripts. Keep both
-  # variable names in sync via FULL/.env.
   # ──────────────────────────────────────────────────────────────
-  postgres:
-    image: postgres:17-alpine
-    container_name: faceattend-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-faceattend_db}
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./database-init:/docker-entrypoint-initdb.d:ro
-    networks:
-      - faceattend-net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-faceattend_db}"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-
   mongodb:
     image: mongo:7
     container_name: faceattend-mongo
@@ -478,7 +458,6 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_data:
   mongo_data:
   redis_data:
   kafka_data:

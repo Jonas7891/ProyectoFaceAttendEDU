@@ -10,11 +10,6 @@ include:
   #   docker compose up frontend-web kong-gateway
 
 services:
-  postgres:
-    networks:
-      - default
-      - faceattend-net
-
   authorization-liquibase:
     depends_on:
       identity-liquibase:
@@ -86,6 +81,13 @@ services:
         condition: service_completed_successfully
 
   ms-notification:
+    depends_on:
+      notification-liquibase:
+        condition: service_completed_successfully
+
+  # quality has no changelog of its own: start it once the whole
+  # database is migrated (postgres is healthy through the liquibase chain).
+  ms-quality:
     depends_on:
       notification-liquibase:
         condition: service_completed_successfully
