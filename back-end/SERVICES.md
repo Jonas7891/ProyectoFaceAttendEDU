@@ -58,7 +58,7 @@ Ver `ADR-005-technology-stack.md` para scoring y `ADR-007-api-gateway.md` para g
 | **TypeScript** | Academic (Drizzle), Configuration | 2/8 | ~50 MB node-slim |
 | **Python 3.12** | Biometric | 1/8 | ~150 MB python-slim |
 | **Go 1.22** | Notification | 1/8 | ~8 MB distroless |
-| **Kong/Redis** | Gateway 99 (infra) | — | kong:3.6 + redis:7-alpine |
+| **Kong/Redis** | Gateway 99 (infra) | — | kong:3.6 + redis:7-alpine (compartido, red `faceattend-app`) |
 
 Polyglot modular monolith: JVM + Node + Python + Go + Kong. 4 runtimes + gateway.
 
@@ -170,8 +170,20 @@ Nunca FK reales entre contextos distintos. Solo comentarios `remarks: Cross-cont
 ### Arranque completo (desarrollo)
 
 ```bash
-cd ../database && docker compose up -d          # Postgres 17 + 8 Liquibase
-cd ../back-end/99-api-gateway && docker compose up -d  # Kong + Redis
+docker compose up -d --build        # desde FULL/: todo el stack
+```
+
+La raíz `docker-compose.yml` incluye `database/` (PostgreSQL + 8 Liquibase) y
+`back-end/` (9 microservicios + Kong); `frontend-web` tambien vive en la raíz.
+Tres redes, una por capa: `faceattend-edge` (frontend ↔ Kong),
+`faceattend-app` (Kong ↔ microservicios ↔ Redis) y `faceattend-data`
+(microservicios ↔ PostgreSQL / MongoDB / Kafka + Liquibase).
+
+### Por pieza
+
+```bash
+cd database && docker compose up -d                 # PostgreSQL 17 + 8 Liquibase
+cd back-end/99-api-gateway && docker compose up -d  # solo Kong (requiere el stack FULL/ ya creado)
 ```
 
 ### Servicio individual
@@ -196,7 +208,7 @@ docker compose up -d && curl http://localhost:8001/
 ### Verificar estado
 
 ```bash
-docker exec -it faceattend-postgres-18 psql -U postgres -d faceattend_db
+docker exec -it faceattend-postgres psql -U postgres -d faceattend_db
 \dn
 \dt academic.*
 curl http://localhost:8080/api/v1/persons  # via Kong

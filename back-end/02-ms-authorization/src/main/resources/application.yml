@@ -1,10 +1,16 @@
 server:
   port: 8082
 spring:
+  config:
+    # Host runs (mvn/IDE) also read the repo-root .env, so one file governs
+    # Docker and local runs alike. The optional paths are anchored at the
+    # working directory (service dir or repo root); in Docker compose injects
+    # the environment, so this import stays a no-op.
+    import: "optional:file:${user.dir}/../../.env[.properties],optional:file:${user.dir}/.env[.properties]"
   datasource:
-    url: jdbc:postgresql://localhost:5432/faceattend_db
-    username: postgres
-    password: postgres
+    url: jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/faceattend_db
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
     hikari:
       schema: authorization
   jpa:

@@ -14,13 +14,46 @@ source for this service.
 """
 from __future__ import annotations
 
+import os
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
+def _load_root_env() -> None:
+    """Merge the repo-root ``.env`` into the process environment (dev runs).
+
+    Docker compose injects the environment directly and no ``.env`` ships
+    inside the image, so this is a no-op in containers. Existing variables
+    are never overwritten.
+    """
+    env_file = next(
+        (
+            base / ".env"
+            for base in Path(__file__).resolve().parents
+            if (base / ".env").is_file()
+        ),
+        None,
+    )
+    if env_file is None:
+        return
+    for line in env_file.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        os.environ.setdefault(key.strip(), value.strip().strip("\"'"))
+
+
+_load_root_env()
+
+_MONGO_USER = os.getenv("MONGO_USER", "mongoadmin")
+_MONGO_PASSWORD = os.getenv("MONGO_PASSWORD", "mongopass")
 DEFAULT_MONGODB_URL = (
-    "mongodb://mongoadmin:mongopass@localhost:27017/faceattend_biometric?authSource=admin"
+    f"mongodb://{_MONGO_USER}:{_MONGO_PASSWORD}"
+    "@localhost:27017/faceattend_biometric?authSource=admin"
 )
 DEFAULT_MONGO_DB_NAME = "faceattend_biometric"
 SECONDS_PER_DAY = 86_400

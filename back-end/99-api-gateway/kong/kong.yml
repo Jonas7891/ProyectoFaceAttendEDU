@@ -138,14 +138,10 @@ services:
           redis_port: 6379
           redis_database: 0
           policy: redis
-consumers:
-  # Local-dev consumer for the jwt plugin (HS256). Rotate before production.
-  # Production target per ADR-007: RS256 keys issued by identity-service.
-  - username: faceattend-admin
-    jwt_secrets:
-      - key: faceattend-admin-key
-        algorithm: HS256
-        secret: faceattend-local-dev-secret-change-me
+# No consumers here: the jwt plugin is not enabled (only rate-limiting and
+# cors are), and Kong cannot interpolate env vars in declarative config, so a
+# committed secret would be the only way to keep one. Provision RS256 keys
+# through the Admin API when jwt is enabled (ADR-007: identity-service).
 # TLS termination (production): mount cert/key and uncomment:
 # certificates:
 #   - cert: /kong/ssl/faceattend.crt

@@ -17,4 +17,6 @@ FROM nginx:1.27-alpine AS runtime
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 80
-HEALTHCHECK --interval=20s --timeout=5s --retries=3 CMD wget -qO- http://localhost/ || exit 1
+# HEALTHCHECK: nginx escucha solo IPv4, por eso se usa 127.0.0.1 y no
+# `localhost` (que dentro del contenedor resuelve también a ::1 y es rechazado).
+HEALTHCHECK --interval=20s --timeout=5s --retries=3 CMD wget -qO- http://127.0.0.1/ || exit 1

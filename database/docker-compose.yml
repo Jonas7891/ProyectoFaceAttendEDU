@@ -1,3 +1,7 @@
+# FaceAttend EDU — data layer (standalone: cd database && docker compose up -d).
+# Owns PostgreSQL 17 (1 instance, 8 schemas) + the 8 Liquibase migrations.
+# Also included by FULL/docker-compose.yml, which chains the migrations.
+# Services connect through the `faceattend-data` network (see root compose).
 services:
   postgres:
     image: postgres:17-alpine
@@ -8,14 +12,19 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-faceattend_db}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      # Loopback only by default: databases must not be reachable from the LAN.
+      - "${BIND_IP:-127.0.0.1}:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # Creates the 8 bounded-context schemas on first boot only.
+      - ./database-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-faceattend_db}"]
       interval: 10s
       timeout: 5s
       retries: 12
+    networks:
+      - faceattend-data
 
   identity-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
@@ -32,6 +41,8 @@ services:
       - --password=${POSTGRES_PASSWORD:-postgres}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
+    networks:
+      - faceattend-data
 
   authorization-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
@@ -48,6 +59,8 @@ services:
       - --password=${POSTGRES_PASSWORD:-postgres}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
+    networks:
+      - faceattend-data
 
   academic-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
@@ -64,6 +77,8 @@ services:
       - --password=${POSTGRES_PASSWORD:-postgres}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
+    networks:
+      - faceattend-data
 
   scheduling-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
@@ -80,6 +95,8 @@ services:
       - --password=${POSTGRES_PASSWORD:-postgres}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
+    networks:
+      - faceattend-data
 
   attendance-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
@@ -96,6 +113,8 @@ services:
       - --password=${POSTGRES_PASSWORD:-postgres}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
+    networks:
+      - faceattend-data
 
   biometric-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
@@ -112,6 +131,8 @@ services:
       - --password=${POSTGRES_PASSWORD:-postgres}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
+    networks:
+      - faceattend-data
 
   configuration-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
@@ -128,6 +149,8 @@ services:
       - --password=${POSTGRES_PASSWORD:-postgres}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
+    networks:
+      - faceattend-data
 
   notification-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
@@ -144,6 +167,14 @@ services:
       - --password=${POSTGRES_PASSWORD:-postgres}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
+    networks:
+      - faceattend-data
+
+# Tier 3 — databases and migrations only: nothing from the `edge` or `app`
+# networks can reach this one.
+networks:
+  faceattend-data:
+    driver: bridge
 
 volumes:
   postgres_data:
