@@ -15,6 +15,9 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
+import { resetReferenceData } from "../services/api/referenceData";
+import { useAuth } from "./AuthContext";
+
 import {
     loadStudents,
     saveStudents,
@@ -100,27 +103,6 @@ export function AppDataProvider({ children }) {
     const [loadedAdmins, setLoadedAdmins] = useState([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(true);
 
-    // Carga inicial de datos base (environments, fichas, courses)
-    useEffect(() => {
-        Promise.all([
-            loadStudents(), 
-            loadUsers(), 
-            loadEnvironments(), 
-            loadFichas(),
-            loadCourses()
-        ]).then(([s, u, e, f, c]) => {
-            setStudents(s);
-            setUsers(u);
-            setEnvironments(e);
-            setFichas(f);
-            setCourses(c);
-            setIsLoading(false);
-            
-            // Iniciar carga progresiva de usuarios después de cargar datos base
-            startProgressiveUserLoading(s, c, u);
-        });
-    }, []);
-    
     // Obtener tipo de período académico
     const periodType = useMemo(() => getConfiguredAcademicPeriodType(), []);
     
@@ -213,6 +195,49 @@ export function AppDataProvider({ children }) {
         
         return () => clearInterval(loadInterval);
     }, [periodType]);
+
+    // ── Carga de datos base (environments, fichas, courses) ────
+    // Solo con sesión: sin token todas las peticiones responderían 401 y
+    // caeríamos al mock de respaldo sin reintentar (el efecto no se vuelve
+    // a ejecutar). Al cerrar sesión se limpia todo, incluida la caché de
+    // datos de referencia, para no arrastrar datos de otra sesión.
+    const { user, isLoadingAuth } = useAuth();
+
+    useEffect(() => {
+        if (isLoadingAuth) return undefined; // aún restaurando la sesión guardada
+
+        if (!user) {
+            // Sin sesión no hay nada que pedir; se olvida la caché de
+            // referencia para que el próximo login vuelva a consultar.
+            // El estado cargado se reemplaza entero al iniciar sesión.
+            resetReferenceData();
+            return undefined;
+        }
+
+        let cancelled = false;
+        Promise.all([
+            loadStudents(),
+            loadUsers(),
+            loadEnvironments(),
+            loadFichas(),
+            loadCourses(),
+        ]).then(([s, u, e, f, c]) => {
+            if (cancelled) return;
+            setStudents(s);
+            setUsers(u);
+            setEnvironments(e);
+            setFichas(f);
+            setCourses(c);
+            setIsLoading(false);
+
+            // Carga progresiva de usuarios (efecto persiana)
+            startProgressiveUserLoading(s, c, u);
+        });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [isLoadingAuth, user, startProgressiveUserLoading]);
 
     // ── Programs derivados (sin storage propio) ───────────
 
