@@ -92,7 +92,7 @@ export function NotAuthorized({
                     icon: "clock",
                     iconColor: c.status.warning,
                     title: t("Sesión caducada"),
-                    message: t("Tu sesión ha expirado. Inicia sesión nuevamente."),
+                    message: t("Tu sesión expiró por inactividad. Por seguridad, debes iniciar sesión nuevamente."),
                 };
             
             case AUTH_EXCEPTION_TYPES.NO_ROLE:
@@ -136,11 +136,8 @@ export function NotAuthorized({
             // Usar callback personalizado si se proporciona
             onRedirect();
         } else {
-            // Por defecto, navegar a login usando React Navigation
-            navigation.reset({
-                index: 0,
-                routes: [{ name: 'FaceAttendEDU-Login' }],
-            });
+            // Navegar a login sin destruir el stack - usar navigate en lugar de reset
+            navigation.navigate('FaceAttendEDU-Login');
         }
     };
 

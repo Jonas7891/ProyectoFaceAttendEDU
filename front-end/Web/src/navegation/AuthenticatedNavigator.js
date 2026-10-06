@@ -14,7 +14,7 @@ import React from "react";
 import { View , Text, TouchableOpacity } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 
 // ── Importación de Screens ────────────────────────────────────
 import DashboardScreen from "../view/screens/DashboardScreen";
@@ -45,6 +45,7 @@ import { useRolePermissions } from "../viewmodels/useRolePermissions";
 import { useDashboardScreenViewModel } from "../viewmodels/useDashboardScreenViewModel";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { Feather } from "@expo/vector-icons";
+import { SessionManager } from "../view/components/auth";
 
 const Stack = createNativeStackNavigator();
 
@@ -196,20 +197,16 @@ function PersistentSidebar() {
                             }
                             : () => handleNavigate(tab.key);
                         
-                        // Memoizar children para evitar recrear en cada render
-                        const childrenItems = React.useMemo(() => 
-                            tab.children.map(child => ({
-                                key: child.key,
-                                icon: child.icon,
-                                label: child.label,
-                                active: isTabActive(tab.key, child.key),
-                                onPress: () => handleNavigate(tab.key, child.key),
-                                badge: child.badge,
-                                indicator: child.indicator,
-                            })), 
-                            // eslint-disable-next-line react-hooks/exhaustive-deps
-                            [tab.key, tab.children, sidebarSelectedTab, sidebarSelectedSubTab]
-                        );
+                        // Mapear children items
+                        const childrenItems = tab.children.map(child => ({
+                            key: child.key,
+                            icon: child.icon,
+                            label: child.label,
+                            active: isTabActive(tab.key, child.key),
+                            onPress: () => handleNavigate(tab.key, child.key),
+                            badge: child.badge,
+                            indicator: child.indicator,
+                        }));
                         
                         return (
                             <SidebarItemCollapsible
@@ -219,8 +216,9 @@ function PersistentSidebar() {
                                 active={shouldShowActive}
                                 defaultExpanded={shouldShowActive}
                                 onPress={mainItemOnPress}
-                                children={childrenItems}
-                            />
+                            >
+                                {childrenItems}
+                            </SidebarItemCollapsible>
                         );
                     }
                     
@@ -277,26 +275,31 @@ function BottomTabs() {
     // Usar contexto compartido
     const { setSidebarSelectedTab, setSidebarSelectedSubTab } = React.useContext(SidebarStateContext);
     
-    // Estado para tracking de ruta actual
-    const [currentRouteName, setCurrentRouteName] = React.useState("Dashboard");
+    // Estado para tracking de ruta actual derivado del navigation state
+    const [navigationState, setNavigationState] = React.useState(null);
     
     // Listener para cambios de navegación
     React.useEffect(() => {
-        const unsubscribe = navigation.addListener('state', (e) => {
-            const state = navigation.getState();
-            if (state?.routes && state.routes.length > 0) {
-                setCurrentRouteName(state.routes[state.index]?.name || "Dashboard");
-            }
-        });
+        const updateNavigationState = () => {
+            setNavigationState(navigation.getState());
+        };
         
-        // Obtener estado inicial
-        const state = navigation.getState();
-        if (state?.routes && state.routes.length > 0) {
-            setCurrentRouteName(state.routes[state.index]?.name || "Dashboard");
-        }
+        // Establecer estado inicial
+        updateNavigationState();
+        
+        // Escuchar cambios
+        const unsubscribe = navigation.addListener('state', updateNavigationState);
         
         return unsubscribe;
     }, [navigation]);
+    
+    // Derivar currentRouteName del navigation state
+    const currentRouteName = React.useMemo(() => {
+        if (navigationState?.routes && navigationState.routes.length > 0) {
+            return navigationState.routes[navigationState.index]?.name || "Dashboard";
+        }
+        return "Dashboard";
+    }, [navigationState]);
     
     const currentTabKey = ROUTE_TO_KEY_MAP[currentRouteName] || "dashboard";
     
@@ -373,8 +376,9 @@ function BottomTabs() {
 export default function AuthenticatedNavigator() {
     const { theme } = useTheme();
     const { isSmall } = useResponsive();
-    const { user } = useAuth();
+    const { user, sessionExpiredByTimeout, isLoadingTimeoutFlag, saveIntendedRoute, clearIntendedRoute } = useAuth();
     const permissions = useRolePermissions();
+    const route = useRoute();
     const c = theme.colors;
     
     // ============================================================
@@ -391,6 +395,107 @@ export default function AuthenticatedNavigator() {
     }), [sidebarSelectedTab, sidebarSelectedSubTab]);
     
     const bottomPadding = isSmall ? 64 : 0;
+    const navigation = useNavigation();
+
+    // ============================================================
+    // ============================================================
+    // TRACKING CORRECTO DE RUTA INTERNA - Solo DESPUÉS de autenticación completa
+    // ============================================================
+    
+    // Flag para rastrear si ya se inició el tracking (una sola vez por sesión)
+    const [isRouteTrackingActive, setIsRouteTrackingActive] = React.useState(false);
+    
+    // Activar tracking SOLO después de autenticación completa y renderizado inicial
+    React.useEffect(() => {
+        // Solo activar si hay usuario, no hay proceso de logout, y aún no está activo el tracking
+        if (!user || sessionExpiredByTimeout || isRouteTrackingActive) return;
+        
+        // Dar un pequeño delay para asegurar que el componente esté completamente montado
+        // y que la navegación inicial (redirectTo) ya se haya procesado
+        const timer = setTimeout(() => {
+            console.log('[AuthenticatedNavigator] Activating route tracking after authentication');
+            setIsRouteTrackingActive(true);
+        }, 100); // Pequeño delay de 100ms
+        
+        return () => clearTimeout(timer);
+    }, [user, sessionExpiredByTimeout, isRouteTrackingActive]);
+    
+    // Listener de navegación - solo se activa después del flag
+    React.useEffect(() => {
+        if (!isRouteTrackingActive) return;
+        
+        console.log('[AuthenticatedNavigator] Starting navigation listener for route tracking');
+        
+        const unsubscribe = navigation.addListener('focus', () => {
+            // Obtener el estado del navigation stack interno
+            const state = navigation.getState();
+            if (state?.routes && state.routes.length > 0) {
+                const activeRoute = state.routes[state.index];
+                const routeName = activeRoute?.name || "Dashboard";
+                const routeParams = activeRoute?.params || {};
+                
+                console.log('[AuthenticatedNavigator] Current internal route:', routeName, routeParams);
+                
+                // Solo guardar rutas internas que no sean Dashboard
+                if (routeName !== "Dashboard") {
+                    const routeInfo = {
+                        name: routeName,
+                        params: routeParams
+                    };
+                    console.log('[AuthenticatedNavigator] Saving route for future redirect:', routeInfo);
+                    saveIntendedRoute(routeInfo);
+                } else {
+                    // Si navega al Dashboard, limpiar la ruta guardada
+                    console.log('[AuthenticatedNavigator] Navigated to Dashboard, clearing saved route');
+                    clearIntendedRoute();
+                }
+            }
+        });
+        
+        return unsubscribe;
+    }, [isRouteTrackingActive, navigation, saveIntendedRoute, clearIntendedRoute]);
+    
+    // Limpiar el flag de tracking cuando el usuario se desloguee
+    React.useEffect(() => {
+        if (!user) {
+            console.log('[AuthenticatedNavigator] User logged out, deactivating route tracking');
+            setIsRouteTrackingActive(false);
+        }
+    }, [user]);
+    // ============================================================
+    // REDIRECCIÓN POST-LOGIN
+    // ============================================================
+    
+    // Redirección post-login con validación de permisos
+    React.useEffect(() => {
+        const redirectTo = route.params?.redirectTo;
+        console.log('[AuthenticatedNavigator] Checking redirect:', { 
+            redirectTo, 
+            user: !!user, 
+            routeParams: route.params 
+        });
+        
+        if (redirectTo && user) {
+            const routeName = redirectTo.name;
+            const routeParams = redirectTo.params;
+            
+            console.log('[AuthenticatedNavigator] Will redirect to:', routeName, routeParams);
+            
+            // Limpiar parámetros inmediatamente
+            navigation.setParams({ redirectTo: undefined });
+            
+            // Usar replace en lugar de navigate para evitar stack issues
+            if (routeName && routeName !== "Dashboard") {
+                console.log('[AuthenticatedNavigator] Executing navigation.replace to:', routeName);
+                navigation.replace(routeName, routeParams);
+            } else {
+                console.log('[AuthenticatedNavigator] Route is Dashboard, no redirect needed');
+            }
+        } else {
+            if (!redirectTo) console.log('[AuthenticatedNavigator] No redirectTo in route params');
+            if (!user) console.log('[AuthenticatedNavigator] No user available yet');
+        }
+    }, [user, route.params?.redirectTo, navigation]);
     
     // ============================================================
     // VALIDACIÓN GLOBAL DE AUTORIZACIÓN
@@ -400,7 +505,17 @@ export default function AuthenticatedNavigator() {
     
     // 1. Verificar sesión activa
     if (!user) {
-        return <NotAuthorized type={AUTH_EXCEPTION_TYPES.NO_SESSION} />;
+        // Esperar a que termine de cargar el flag de timeout antes de decidir
+        if (isLoadingTimeoutFlag) {
+            return null; // o un spinner de carga
+        }
+        
+        // Determinar si fue por timeout o porque nunca se logueó
+        const errorType = sessionExpiredByTimeout 
+            ? AUTH_EXCEPTION_TYPES.SESSION_EXPIRED 
+            : AUTH_EXCEPTION_TYPES.NO_SESSION;
+            
+        return <NotAuthorized type={errorType} />;
     }
     
     // 2. Verificar rol asignado
@@ -462,6 +577,9 @@ export default function AuthenticatedNavigator() {
                     {/* Bottom tabs (solo móvil) - renderizado condicional */}
                     {isSmall && <BottomTabs />}
                 </SafeAreaView>
+
+                {/* Session Manager - Gestiona advertencias de timeout */}
+                <SessionManager />
             </SafeAreaProvider>
         </SidebarStateContext.Provider>
     );

@@ -93,7 +93,8 @@ const DEFAULT_INSTITUTION_CONFIG = {
     
     // Seguridad
     twoFactor: false,
-    sessionTime: 60,
+    sessionTime: 60,           // Minutos de timeout de sesión
+    sessionWarningTime: 5,     // Minutos de advertencia antes del logout
     
     // Apariencia
     theme: "light",

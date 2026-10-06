@@ -168,19 +168,54 @@ export function PeriodConfig({
                     
                     {/* Información sobre limpieza de horarios */}
                     <View style={{
-                        backgroundColor: c.status.infoLight,
+                        backgroundColor: c.status.warningLight,
                         borderRadius: 12,
                         padding: 12,
+                        borderWidth: 1,
+                        borderColor: c.status.warningBorder || c.status.warning + '20',
                     }}>
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                            <Feather name="calendar" size={16} color={c.status.info} />
-                            <Text style={{ fontSize: 14, fontWeight: "600", color: c.status.infoDark }}>
-                                {t("Limpieza automática de horarios")}
-                            </Text>
+                        <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 10, marginBottom: 8 }}>
+                            <View style={{
+                                backgroundColor: c.status.warning,
+                                borderRadius: 18,
+                                width: 28,
+                                height: 28,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                marginTop: 1,
+                            }}>
+                                <Feather name="alert-circle" size={16} color="#fff" />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ 
+                                    fontSize: 16, 
+                                    fontWeight: "700", 
+                                    color: c.status.warningDark,
+                                    marginBottom: 6,
+                                    letterSpacing: -0.2,
+                                }}>
+                                    {t("Limpieza automática de horarios")}
+                                </Text>
+                                <Text style={{ 
+                                    fontSize: 14, 
+                                    color: c.status.warningDark, 
+                                    lineHeight: 21,
+                                    opacity: 0.9,
+                                }}>
+                                    {t("Al finalizar el período académico, todos los horarios asignados a los ambientes se borrarán automáticamente.")}
+                                </Text>
+                                <Text style={{ 
+                                    fontSize: 13, 
+                                    color: c.status.warningDark, 
+                                    lineHeight: 19,
+                                    marginTop: 6,
+                                    opacity: 0.8,
+                                    fontStyle: "italic",
+                                }}>
+                                    {t("Los cursos, ambientes y registros históricos no se verán afectados.")}
+                                </Text>
+                            </View>
                         </View>
-                        <Text style={{ fontSize: 14, color: c.status.infoDark, lineHeight: 20 }}>
-                            {t("Al finalizar el período académico, todos los horarios asignados a los ambientes se borrarán automáticamente. Los cursos, ambientes y registros históricos de asistencia no se verán afectados.")}
-                        </Text>
                     </View>
                 </View>
             </InfoModal>

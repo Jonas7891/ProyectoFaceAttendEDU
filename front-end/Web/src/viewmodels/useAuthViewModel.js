@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useAuth } from "../context/AuthContext";
-import { checkPassword } from "../core/utils/validation";
+import { checkPassword, isValidEmail } from "../core/utils/validation";
 
 // ── useLoginViewModel ────────────────────────────────────────
 
@@ -51,7 +51,7 @@ export function useLoginViewModel(onSuccess) {
             setEmailError(t("El correo electrónico es requerido"));
             setEmailValid(false);
             return false;
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        } else if (!isValidEmail(value)) {
             setEmailError(t("El correo electrónico no es válido"));
             setEmailValid(false);
             return false;
@@ -168,7 +168,7 @@ export function useLoginViewModel(onSuccess) {
             setPasswordProgress(prev => Math.min(prev + 10, 90));
         }, 50);
 
-        const err = await login({
+        const result = await login({
             email: emailRef.current,
             password: passwordRef.current,
         });
@@ -176,6 +176,18 @@ export function useLoginViewModel(onSuccess) {
         // Detener animación de progreso
         clearInterval(progressInterval);
         setLoading(false);
+
+        // Manejar el resultado (puede ser string de error o objeto con success/redirectRoute)
+        const isError = typeof result === 'string';
+        const err = isError ? result : null;
+        const redirectRoute = !isError && result?.redirectRoute ? result.redirectRoute : null;
+
+        console.log('[useAuthViewModel] Login result processed:', { 
+            isError, 
+            err, 
+            redirectRoute, 
+            fullResult: result 
+        });
 
         if (err) {
             // Resetear progreso
@@ -208,6 +220,7 @@ export function useLoginViewModel(onSuccess) {
             }, 300);
         } else {
             // Login exitoso - completar progreso y marcar como válido
+            console.log('[useAuthViewModel] Login successful, redirectRoute:', redirectRoute);
             setEmailProgress(100);
             setPasswordProgress(100);
             setEmailValid(true);
@@ -215,7 +228,8 @@ export function useLoginViewModel(onSuccess) {
             
             // Pequeño delay para mostrar el verde antes de redirigir
             setTimeout(() => {
-                onSuccess();
+                console.log('[useAuthViewModel] Calling onSuccess with redirectRoute:', redirectRoute);
+                onSuccess(redirectRoute); // Pasar la ruta de redirección al callback
             }, 200);
         }
     }
@@ -246,6 +260,7 @@ export function useLoginViewModel(onSuccess) {
 
 export function useSignupViewModel(onSuccess) {
     const { t } = useTranslation();
+    const { register } = useAuth();
 
     const usernameRef = useRef("");
     const emailRef = useRef("");
@@ -306,7 +321,7 @@ export function useSignupViewModel(onSuccess) {
             setEmailError(t("El correo electrónico es requerido"));
             setEmailValid(false);
             return false;
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        } else if (!isValidEmail(value)) {
             setEmailError(t("El correo electrónico no es válido"));
             setEmailValid(false);
             return false;
@@ -438,19 +453,35 @@ export function useSignupViewModel(onSuccess) {
         return isValid;
     }
 
-    function handleRegister() {
+    async function handleRegister() {
         if (!validate()) return;
         
         setLoading(true);
-        // TODO: reemplazar con llamada real a API de registro
-        setTimeout(() => {
-            setLoading(false);
+        
+        const result = await register({
+            username: usernameRef.current,
+            email: emailRef.current,
+            password: passwordRef.current,
+        });
+
+        setLoading(false);
+        
+        // Manejar el resultado (puede ser string de error o objeto con success/redirectRoute)
+        const isError = typeof result === 'string';
+        const err = isError ? result : null;
+        const redirectRoute = !isError && result?.redirectRoute ? result.redirectRoute : null;
+
+        if (err) {
+            // TODO: manejar errores de registro
+            console.error('Register error:', err);
+        } else {
+            // Registro exitoso - NO pasar redirectRoute (por diseño)
             onSuccess({
                 username: usernameRef.current,
                 email: emailRef.current,
                 password: passwordRef.current,
             });
-        }, 900);
+        }
     }
 
     return {

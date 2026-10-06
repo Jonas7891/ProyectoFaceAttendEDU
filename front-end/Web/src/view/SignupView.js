@@ -38,6 +38,28 @@ import { useSignupViewModel } from "../viewmodels/useAuthViewModel";
 import { useTranslation }     from "../core/utils/i18n/hooks/useTranslation";
 import { useAutoSlideOnContent } from "./components/hooks/useAutoSlideOnContent";
 
+/**
+ * Filtra el texto para permitir solo letras y espacios
+ */
+const filterLettersAndSpaces = (text) => {
+    return text.replace(/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/g, '');
+};
+
+/**
+ * Capitaliza la primera letra de cada palabra
+ */
+const capitalizeWords = (text) => {
+    return text.replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+/**
+ * Formatea el nombre: filtra caracteres no válidos y capitaliza
+ */
+const formatName = (text) => {
+    const filtered = filterLettersAndSpaces(text);
+    return capitalizeWords(filtered);
+};
+
 
 export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLanding }) {
     const { isSmall } = useResponsive();
@@ -85,6 +107,12 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLandi
         }
     );
     
+    // Handler para cuando el usuario cambie el nombre de usuario (con formateo)
+    const handleUsernameChange = (text) => {
+        const formatted = formatName(text);
+        vm.setUsername(formatted);
+    };
+    
     // Handler para cuando el usuario cambie la contraseña
     const handlePasswordChange = (text) => {
         vm.setPassword(text);
@@ -109,7 +137,7 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLandi
                 label={t("Usuario")}
                 placeholder={t("Tu nombre de usuario")}
                 value={vm.username}
-                onChangeText={vm.setUsername}
+                onChangeText={handleUsernameChange}
                 onBlur={() => vm.handleBlur('username')}
                 onKeyPress={handleKeyPress}
                 leftIcon={<Feather name="user" size={20} color={c.text.secondary} />}

@@ -19,13 +19,25 @@
 import React from "react";
 import { useNavigation } from "@react-navigation/native";
 import LoginView from "../LoginView";
+import { useAuth } from "../../context/AuthContext";
 
 export default function LoginScreen() {
     const navigation = useNavigation();
+    const { clearIntendedRoute } = useAuth();
 
     // ── Navegación post-login exitoso ────────────────────────
-    function onLoginSuccess() {
-        navigation.replace("FaceAttendEDU-Dashboard");
+    function onLoginSuccess(redirectRoute = null) {
+        console.log('[LoginScreen] Login success callback:', { redirectRoute });
+        
+        if (redirectRoute) {
+            console.log('[LoginScreen] Navigating with redirect to:', redirectRoute);
+            navigation.replace("FaceAttendEDU-Dashboard", {
+                redirectTo: redirectRoute 
+            });
+        } else {
+            console.log('[LoginScreen] Navigating to dashboard (no redirect)');
+            navigation.replace("FaceAttendEDU-Dashboard");
+        }
     }
 
     // ── Navegación a recuperación de contraseña ──────────────
@@ -36,11 +48,13 @@ export default function LoginScreen() {
 
     // ── Navegación a registro ─────────────────────────────────
     function onGoToRegister() {
+        clearIntendedRoute();
         navigation.navigate("FaceAttendEDU-Register");
     }
 
     // ── Navegación de regreso al landing ──────────────────────
     function onGoToLanding() {
+        clearIntendedRoute();
         navigation.navigate("FaceAttendEDU");
     }
 

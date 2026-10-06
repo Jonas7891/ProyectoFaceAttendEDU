@@ -19,31 +19,17 @@
 import React from "react";
 import { useNavigation } from "@react-navigation/native";
 import SignupView from "../SignupView";
-import { useAuth } from "../../context/AuthContext";
 
 export default function SignupScreen() {
     const navigation = useNavigation();
-    const { register } = useAuth();
 
     // ── Navegación post-registro exitoso ──────────────────────
-    async function onRegisterSuccess(data) {
+    function onRegisterSuccess(data) {
         console.log("Registro exitoso:", data.email);
         
-        // Registrar usuario y crear sesión automáticamente
-        const error = await register({
-            username: data.username,
-            email: data.email,
-            password: data.password,
-        });
-        
-        if (!error) {
-            // Registro exitoso → usuario ya tiene sesión activa → ir al Dashboard
-            navigation.replace("FaceAttendEDU-Dashboard");
-        } else {
-            // Error al registrar (raro, pero por si acaso)
-            console.error("Error al registrar:", error);
-            // Podríamos mostrar un alert aquí en vez de navegar
-        }
+        // El registro ya se maneja en el ViewModel
+        // Por diseño, signup SIEMPRE va al Dashboard (sin redirección guardada)
+        navigation.replace("FaceAttendEDU-Dashboard");
     }
 
     // ── Navegación a login ────────────────────────────────────
