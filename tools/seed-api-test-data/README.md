@@ -101,6 +101,20 @@ empty database.
 
 Demo logins (local testing only, also documented in a comment in `seed.mjs`):
 
+Scoped to a school — the web app reads the school from the account's
+`academic_actor` and shows only that institution:
+
+| Rol | Sede | Persona | Username | Password |
+|---|---|---|---|---|
+| Administrador | Camilo Torres (`ICT-01`) | Marcela Quintero Pardo | `admin.ict` | `Rector2026*` |
+| Administrador | San Martín (`SMP-02`) | Hernán Ocampo Zuluaga | `admin.smp` | `Rector2026*` |
+| Docente | Camilo Torres | Valentina García Hernández | `valentina.garcia` | `Docente2026*` |
+| Docente | San Martín | Valentina García Hernández | `valentina.garcia2` | `Docente2026*` |
+| Estudiante | Camilo Torres | Valentina García Ortiz | `est.ict` | `Estudiante2026*` |
+| Estudiante | San Martín | Valentina Rendón Ortiz | `est.smp` | `Estudiante2026*` |
+
+Not scoped — these have no `academic_actor`, so they see every school:
+
 | Rol | Persona | Username | Password |
 |---|---|---|---|
 | Administrador | Carolina Mendoza Ruiz | `carolina.mendoza` | `Admin2026*` |
