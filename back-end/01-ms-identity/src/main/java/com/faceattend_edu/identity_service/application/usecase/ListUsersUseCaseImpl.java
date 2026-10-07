@@ -15,7 +15,12 @@ public class ListUsersUseCaseImpl implements ListUsersUseCase {
     private final ListUsersPort listUsersPort;
 
     @Override
-    public List<User> listUsers() {
-        return listUsersPort.listUsers();
+    public List<User> listUsers(int pageIndex, int limit) {
+        return listUsersPort.listUsers(pageIndex, limit);
+    }
+
+    @Override
+    public long countUsers() {
+        return listUsersPort.countUsers();
     }
 }
