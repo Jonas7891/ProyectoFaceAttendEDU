@@ -4,7 +4,7 @@
 > **Fuente:** ../../fae-docs/05-architecture/decisions/records/ADR-007-api-gateway.md + ADR-005
 
 ## Responsabilidad
-Edge: routing, JWT, rate limiting, CORS, TLS. Enruta a modular monolith 8081-8089 interno, extraction-ready.
+Edge: routing, session token validation, rate limiting, CORS, TLS. Enruta a modular monolith 8081-8089 interno, extraction-ready.
 
 ## Estructura
 99-api-gateway/

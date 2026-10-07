@@ -23,6 +23,7 @@ services:
       # Same as back-end/docker-compose.yml: Docker embedded DNS blackholes
       # SRV queries (~8s cold-start latency per upstream host).
       KONG_DNS_ORDER: 'LAST,A,AAAA,CNAME'
+      KONG_UNTRUSTED_LUA_SANDBOX_REQUIRES: resty.http
     ports:
       - '0.0.0.0:${KONG_PROXY_PORT:-8080}:8000'
       - '${BIND_IP:-127.0.0.1}:${KONG_ADMIN_PORT:-8001}:8001'
