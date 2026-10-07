@@ -34,6 +34,8 @@ faceattend:
     # start_date + esto = expiración de la sesión (seed: session_timeout_minutes=480).
     session-timeout-minutes: 480
   recovery:
+    # memory (default, per process) | redis (survives restarts, shared across replicas).
+    store: memory
     # Código de recuperación: 6 dígitos, 10 min de vida, 5 intentos, 60 s de espera
     # entre reenvíos (las mismas constantes que usa el front).
     code-ttl-minutes: 10
@@ -44,6 +46,10 @@ faceattend:
     base-url: http://localhost:8088
     internal-token: ""
 management:
+  health:
+    # Redis is only needed when faceattend.recovery.store=redis; do not fail health without it.
+    redis:
+      enabled: false
   endpoints:
     web:
       exposure:

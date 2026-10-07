@@ -3,6 +3,7 @@ package com.faceattend_edu.identity_service.adapter.out.security;
 import com.faceattend_edu.identity_service.application.port.out.RecoveryCodePort;
 import com.faceattend_edu.identity_service.config.AuthProperties;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -32,6 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 @Component
+@ConditionalOnProperty(name = "faceattend.recovery.store", havingValue = "memory", matchIfMissing = true)
 public class InMemoryRecoveryCodeAdapter implements RecoveryCodePort {
 
     private static final int CODE_LENGTH = 6;
