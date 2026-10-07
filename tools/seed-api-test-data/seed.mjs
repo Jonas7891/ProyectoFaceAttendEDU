@@ -1117,13 +1117,22 @@ async function seedNotification() {
   const openAlerts = existingAlerts.filter(
     (a) => !legacyTypeIds.has(pick(a, "AlertTypeID", "alert_type_id")) && !pick(a, "ResolvedAt", "resolved_at")
   );
-  const toResolve = openAlerts.filter((_, i) => i % 3 === 0);
+  // Se decide por el id de la alerta, no por su posicion: filtrar sobre el conjunto
+  // de abiertas (que encoge en cada corrida) cerraba otro tercio cada vez hasta
+  // dejarlas todas resueltas. Con el id, la misma alerta se cierra siempre.
+  const toResolve = openAlerts.filter((a) => Number(pick(a, "AlertID", "alertId", "id")) % 3 === 0);
   if (toResolve.length) {
     const tickRes = progress(toResolve.length, 100, "alert resolutions");
     await pooled(toResolve, CONCURRENCY, async (a) => {
       await call("notification", "PATCH", "/api/v1/alerts/" + pick(a, "AlertID", "alertId", "id") + "/resolve", {}, true);
       tickRes();
     });
+  }
+  // Y por ultimo los tipos duplicados, ya sin ninguna alerta apuntando a ellos:
+  // /alert-types devolvia nueve filas para los cinco motivos del catalogo.
+  for (const code of LEGACY_ALERT_TYPE_CODES) {
+    const id = M.alertTypes.get(code);
+    if (id != null) await call("notification", "DELETE", "/api/v1/alert-types/" + id, undefined, true);
   }
   await get("notification", "/api/v1/alerts?limit=5");
   done();
