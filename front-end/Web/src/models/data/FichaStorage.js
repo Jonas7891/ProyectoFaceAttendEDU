@@ -17,6 +17,7 @@ import { mockFichas } from "./mockData";
 import { colorAt } from "../../core/constants/dataColors";
 import {
     actorMap,
+    attendanceSummaryFor,
     fullName,
     listBlocks,
     listCohorts,
@@ -76,6 +77,19 @@ async function fichasFromApi() {
 
     const programsById = new Map(programs.map((program) => [program.programId, program]));
 
+    // Asistencia por ficha, del mismo resumen agregado que usan los estudiantes.
+    // Estaba fija en 0, y como el panel saca "Asistencia global" promediando las
+    // fichas, ese indicador salía siempre 0,0 %.
+    const attendance = await optional(
+        attendanceSummaryFor(enrollments.map((e) => e.academicActorId).filter((v) => v != null)),
+        new Map()
+    );
+    const rateOf = (actorId) => {
+        const counts = attendance.get(actorId);
+        if (!counts?.total) return null;
+        return Math.round(((counts.present + counts.late + counts.justified) / counts.total) * 100);
+    };
+
     return cohorts.map((cohort) => {
         const cohortEnrollments = enrollments.filter((e) => e.cohortId === cohort.cohortId);
         const notWithdrawn = cohortEnrollments.filter(
@@ -103,6 +117,11 @@ async function fichasFromApi() {
 
         const program = programsById.get(cohort.programId);
 
+        const rates = notWithdrawn.map((e) => rateOf(e.academicActorId)).filter((v) => v != null);
+        const avgAttendance = rates.length
+            ? Math.round(rates.reduce((sum, r) => sum + r, 0) / rates.length)
+            : 0;
+
         return {
             id: String(cohort.cohortId),
             code: cohort.code ?? "",
@@ -112,12 +131,12 @@ async function fichasFromApi() {
             instructorId,
             totalStudents: notWithdrawn.length,
             activeStudents: active.length,
-            avgAttendance: 0,
-            presentToday: 0,
+            avgAttendance,
+            presentToday: 0, // pendiente: exige agregar por fecha, no por actor
             lateToday: 0,
             absentToday: 0,
-            atRiskStudents: 0,
-            excellentStudents: 0,
+            atRiskStudents: rates.filter((r) => r < 75).length,
+            excellentStudents: rates.filter((r) => r === 100).length,
             status: normalizeStatus(cohort.status),
         };
     });
