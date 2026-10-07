@@ -245,6 +245,11 @@ export async function fetchAllPages(path, query = {}, opts = {}) {
     const first = await fetchPage(0);
     if (first.items.length < pageSize) return first.items;
 
+    // Más filas que el límite pedido = el endpoint no pagina (ms-scheduling ignora
+    // limit/offset). Seguir pidiendo páginas devolvía la MISMA lista maxPages veces:
+    // 50 peticiones y 50 copias de las mismas filas en el arreglo final.
+    if (first.items.length > pageSize) return first.items;
+
     const all = [...first.items];
 
     // Camino rápido: el backend dijo cuántas filas hay, así que se sabe exactamente
