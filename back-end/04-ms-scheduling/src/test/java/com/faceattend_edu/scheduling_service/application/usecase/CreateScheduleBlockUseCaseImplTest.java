@@ -6,7 +6,7 @@ import com.faceattend_edu.scheduling_service.domain.port.out.ScheduleBlockReposi
 import com.faceattend_edu.scheduling_service.infrastructure.messaging.DomainEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -27,7 +27,12 @@ class CreateScheduleBlockUseCaseImplTest {
 
     @Mock ScheduleBlockRepository repository;
     @Mock DomainEventPublisher eventPublisher;
-    @InjectMocks CreateScheduleBlockUseCaseImpl useCase;
+    CreateScheduleBlockUseCaseImpl useCase;
+
+    @BeforeEach
+    void setUp() {
+        useCase = new CreateScheduleBlockUseCaseImpl(repository, new ScheduleBlockOverlapGuard(repository), eventPublisher);
+    }
 
     private ScheduleBlock block(short day, LocalTime start, LocalTime end) {
         ScheduleBlock block = new ScheduleBlock();
@@ -69,6 +74,24 @@ class CreateScheduleBlockUseCaseImplTest {
         ScheduleBlock input = block((short) 2, LocalTime.of(10, 0), LocalTime.of(8, 0));
 
         assertThrows(IllegalArgumentException.class, () -> useCase.create(input));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void rejectsABlockThatOverlapsTheRoomEvenWithADifferentStart() {
+        ScheduleBlock input = block((short) 2, LocalTime.of(9, 0), LocalTime.of(11, 0));
+        when(repository.existsEnvironmentOverlap(3, (short) 2, LocalTime.of(9, 0), LocalTime.of(11, 0), null)).thenReturn(true);
+
+        assertThrows(DuplicateEntityException.class, () -> useCase.create(input));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void rejectsABlockThatOverlapsTheInstructor() {
+        ScheduleBlock input = block((short) 2, LocalTime.of(9, 0), LocalTime.of(11, 0));
+        when(repository.existsInstructorOverlap(4L, (short) 2, LocalTime.of(9, 0), LocalTime.of(11, 0), null)).thenReturn(true);
+
+        assertThrows(DuplicateEntityException.class, () -> useCase.create(input));
         verify(repository, never()).save(any());
     }
 

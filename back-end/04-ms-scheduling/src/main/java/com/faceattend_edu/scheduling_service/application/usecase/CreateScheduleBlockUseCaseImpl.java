@@ -14,12 +14,14 @@ import org.springframework.stereotype.Service;
 public class CreateScheduleBlockUseCaseImpl implements CreateScheduleBlockUseCase {
 
     private final ScheduleBlockRepository repository;
+    private final ScheduleBlockOverlapGuard overlapGuard;
     private final DomainEventPublisher eventPublisher;
 
     @Override
     public ScheduleBlock create(ScheduleBlock block) {
         block.validate();
         block.touchCreated();
+        overlapGuard.check(block, null);
         try {
             ScheduleBlock saved = repository.save(block);
             eventPublisher.publish("schedule-block-events", "{\"scheduleBlockId\":" + saved.getScheduleBlockId() + ",\"cohortId\":" + saved.getCohortId() + "}");
