@@ -41,8 +41,15 @@ export function useLoginViewModel({onLogin}) {
         return true;
     };
 
+    // Fallos esperados del login (401/400 de credenciales, red caída): no son
+    // fallos de la app, así que no se registran con console.error. React Native
+    // LogBox los pintaba como "error de Expo" en cada intento fallido, aunque
+    // la pantalla ya muestra el alerta con el motivo.
+    const isExpectedLoginError = (err) =>
+        (err instanceof ApiError && [0, 400, 401, 403, 408].includes(err.status)) ||
+        err?.message === "Credenciales inválidas";
+
     const handleError = (err) => {
-        console.error("Login error:", err);
         const newCount = failedAttempts + 1;
         setFailedAttempts(newCount);
 
@@ -105,9 +112,16 @@ export function useLoginViewModel({onLogin}) {
                 onLogin(role, authResponse.token);
             }
         } catch (err) {
-            console.error("Error en login:", err);
+            // Sólo los fallos inesperados van a consola: el alerta de la
+            // pantalla ya informa al usuario y LogBox deja de pintar el
+            // "error de Expo" en cada intento con credenciales inválidas.
+            if (!isExpectedLoginError(err)) {
+                console.error("Error en login:", err);
+            }
             handleError(err);
-            await removeToken();
+            try {
+                await removeToken();
+            } catch {}
         } finally {
             setIsLoading(false);
         }
