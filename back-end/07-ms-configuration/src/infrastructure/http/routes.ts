@@ -1,12 +1,9 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
-import { MemoryStore } from '../persistence/memory.store';
+import type { ConfigurationRepositories } from '../persistence/postgres';
 
-export const stores = {
-  academic: new MemoryStore<any>('configurationId'),
-  security: new MemoryStore<any>('configurationId'),
-  cases: new MemoryStore<any>('caseId'),
-};
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const academicBody = z.object({
   schoolId: z.number().int(),
@@ -22,149 +19,224 @@ const securityBody = z.object({
 });
 
 const caseBody = z.object({
-  personId: z.string().min(1),
+  personId: z.string().uuid(),
   biometricType: z.enum(['FACIAL', 'FINGERPRINT']),
   fingerNumber: z.number().int().min(1).max(10).nullable().optional(),
   currentEmbeddingRef: z.string().nullable().optional(),
   reason: z.string().min(1),
-  requestedBy: z.string().nullable().optional(),
+  requestedBy: z.string().uuid().nullable().optional(),
 });
 
-function getPagination(req: any): { limit: number; offset: number } {
-  let limit = Number(req?.query?.limit ?? 20);
-  let offset = Number(req?.query?.offset ?? 0);
+const reviewBody = z.object({
+  updateStatus: z.enum(['In_Review', 'Approved', 'Rejected']),
+  reviewedBy: z.string().uuid().optional(),
+  resolutionNotes: z.string().optional(),
+});
+
+type Req = FastifyRequest;
+type Reply = FastifyReply;
+
+function badRequest(reply: Reply, details: unknown, message?: string) {
+  return reply.code(400).send({ error: 'BadRequest', ...(message ? { message } : {}), details, timestamp: new Date().toISOString() });
+}
+
+function notFound(reply: Reply) {
+  return reply.code(404).send({ error: 'NotFound', timestamp: new Date().toISOString() });
+}
+
+/** Numeric path id, or `null` when it is not a positive integer (answered as 404). */
+function intId(req: Req): number | null {
+  const n = Number((req.params as any).id);
+  return Number.isInteger(n) && n > 0 ? n : null;
+}
+
+/** Pagination is opt-in: without `limit`/`offset` the full list is returned, as before. */
+function pagination(req: Req): { limit?: number; offset?: number } | null {
+  const q = (req.query as any) ?? {};
+  if (q.limit === undefined && q.offset === undefined) return null;
+  let limit = Number(q.limit ?? 20);
+  let offset = Number(q.offset ?? 0);
   if (!Number.isInteger(limit) || limit <= 0) limit = 20;
   if (!Number.isInteger(offset) || offset < 0) offset = 0;
   return { limit: Math.min(limit, 100), offset };
 }
 
-function page<T>(items: T[], req: any, reply: any): T[] {
-  const q = (req as any)?.query as any;
-  if (!q || (q.limit === undefined && q.offset === undefined)) return items;
-  const { limit, offset } = getPagination(req);
-  reply.header('x-total-count', items.length);
-  return items.slice(offset, offset + limit);
+async function paged<T>(
+  req: Req,
+  reply: Reply,
+  fetch: (page: { limit?: number; offset?: number }) => Promise<T[]>,
+  total: () => Promise<number>,
+): Promise<T[]> {
+  const page = pagination(req);
+  if (!page) return fetch({});
+  reply.header('x-total-count', await total());
+  return fetch(page);
 }
 
-function registerAcademicConfigRoutes(app: FastifyInstance, base: string) {
+function registerAcademicConfigRoutes(app: FastifyInstance, repos: ConfigurationRepositories, base: string) {
   app.post(base, async (req, reply) => {
     const parsed = academicBody.safeParse((req as any).body);
-    if (!parsed.success) return reply.code(400).send({ error: 'BadRequest', details: parsed.error.flatten(), timestamp: new Date().toISOString() });
-    return reply.code(201).send(stores.academic.create(parsed.data as any));
+    if (!parsed.success) return badRequest(reply, parsed.error.flatten());
+    return reply.code(201).send(await repos.academic.create(parsed.data));
   });
   app.get(base, async (req, reply) => {
-    const q = (req.query as any) ?? {};
-    if (q.name) return page(stores.academic.list((c: any) => c.configurationName === q.name), req, reply);
-    return page(stores.academic.list(), req, reply);
+    const name = ((req.query as any) ?? {}).name as string | undefined;
+    return paged(
+      req,
+      reply,
+      (page) => repos.academic.search({ name, ...page }),
+      () => repos.academic.countMatching({ name }),
+    );
   });
   app.get(`${base}/:id`, async (req, reply) => {
-    const found = stores.academic.get((req.params as any).id);
-    if (!found) return reply.code(404).send({ error: 'NotFound' });
-    return found;
+    const id = intId(req);
+    const found = id ? await repos.academic.findById(id) : null;
+    return found ?? notFound(reply);
   });
   app.put(`${base}/:id`, async (req, reply) => {
-    const updated = stores.academic.update((req.params as any).id, (req as any).body ?? {});
-    if (!updated) return reply.code(404).send({ error: 'NotFound' });
-    return updated;
+    const parsed = academicBody.partial().safeParse((req as any).body ?? {});
+    if (!parsed.success) return badRequest(reply, parsed.error.flatten());
+    const id = intId(req);
+    const updated = id ? await repos.academic.update(id, parsed.data) : null;
+    return updated ?? notFound(reply);
   });
   app.delete(`${base}/:id`, async (req, reply) => {
-    if (!stores.academic.remove((req.params as any).id)) return reply.code(404).send({ error: 'NotFound' });
+    const id = intId(req);
+    if (!id || !(await repos.academic.softDelete(id))) return notFound(reply);
     return reply.code(204).send();
   });
 }
 
-function registerSecurityConfigRoutes(app: FastifyInstance, base: string) {
+function registerSecurityConfigRoutes(app: FastifyInstance, repos: ConfigurationRepositories, base: string) {
   app.post(base, async (req, reply) => {
     const parsed = securityBody.safeParse((req as any).body);
-    if (!parsed.success) return reply.code(400).send({ error: 'BadRequest', details: parsed.error.flatten(), timestamp: new Date().toISOString() });
-    return reply.code(201).send(stores.security.create(parsed.data as any));
+    if (!parsed.success) return badRequest(reply, parsed.error.flatten());
+    return reply.code(201).send(await repos.security.create(parsed.data));
   });
   app.get(base, async (req, reply) => {
-    const q = (req.query as any) ?? {};
-    if (q.name) return page(stores.security.list((c: any) => c.configurationName === q.name), req, reply);
-    return page(stores.security.list(), req, reply);
+    const name = ((req.query as any) ?? {}).name as string | undefined;
+    return paged(
+      req,
+      reply,
+      (page) => repos.security.search({ name, ...page }),
+      () => repos.security.countMatching({ name }),
+    );
   });
   app.get(`${base}/:id`, async (req, reply) => {
-    const found = stores.security.get((req.params as any).id);
-    if (!found) return reply.code(404).send({ error: 'NotFound' });
-    return found;
+    const id = intId(req);
+    const found = id ? await repos.security.findById(id) : null;
+    return found ?? notFound(reply);
   });
   app.put(`${base}/:id`, async (req, reply) => {
-    const updated = stores.security.update((req.params as any).id, (req as any).body ?? {});
-    if (!updated) return reply.code(404).send({ error: 'NotFound' });
-    return updated;
+    const parsed = securityBody.partial().safeParse((req as any).body ?? {});
+    if (!parsed.success) return badRequest(reply, parsed.error.flatten());
+    const id = intId(req);
+    const updated = id ? await repos.security.update(id, parsed.data) : null;
+    return updated ?? notFound(reply);
   });
   app.delete(`${base}/:id`, async (req, reply) => {
-    if (!stores.security.remove((req.params as any).id)) return reply.code(404).send({ error: 'NotFound' });
+    const id = intId(req);
+    if (!id || !(await repos.security.softDelete(id))) return notFound(reply);
     return reply.code(204).send();
   });
 }
 
-export async function registerConfigurationRoutes(app: FastifyInstance) {
+export async function registerConfigurationRoutes(app: FastifyInstance, repos: ConfigurationRepositories) {
   // SERVICE.md canonical bases
-  registerAcademicConfigRoutes(app, '/api/v1/configurations/academic');
-  registerSecurityConfigRoutes(app, '/api/v1/configurations/security');
+  registerAcademicConfigRoutes(app, repos, '/api/v1/configurations/academic');
+  registerSecurityConfigRoutes(app, repos, '/api/v1/configurations/security');
   // Kong aliases (kong.yml) for gateway prefix matching
-  registerAcademicConfigRoutes(app, '/api/v1/academic-configurations');
-  registerSecurityConfigRoutes(app, '/api/v1/security-configurations');
+  registerAcademicConfigRoutes(app, repos, '/api/v1/academic-configurations');
+  registerSecurityConfigRoutes(app, repos, '/api/v1/security-configurations');
 
   // Schools -> academic configs
-  for (const base of ['/api/v1/configurations/academic', '/api/v1/academic-configurations']) {
-    void base;
-  }
   app.get('/api/v1/schools/:schoolId/configurations', async (req, reply) => {
     const schoolId = Number((req.params as any).schoolId);
-    return page(stores.academic.list((c: any) => c.schoolId === schoolId), req, reply);
+    if (!Number.isInteger(schoolId)) return reply.send([]);
+    return paged(
+      req,
+      reply,
+      (page) => repos.academic.search({ schoolId, ...page }),
+      () => repos.academic.countMatching({ schoolId }),
+    );
   });
 
   // ---------- Biometric update cases ----------
   app.post('/api/v1/biometric-update-cases', async (req, reply) => {
     const parsed = caseBody.safeParse((req as any).body);
-    if (!parsed.success) return reply.code(400).send({ error: 'BadRequest', details: parsed.error.flatten() });
-    if (parsed.data.biometricType === 'FINGERPRINT' && !parsed.data.fingerNumber) {
-      return reply.code(400).send({ error: 'BadRequest', message: 'fingerNumber required for FINGERPRINT' });
+    if (!parsed.success) return badRequest(reply, parsed.error.flatten());
+    const data = parsed.data;
+    if (data.biometricType === 'FINGERPRINT' && !data.fingerNumber) {
+      return badRequest(reply, undefined, 'fingerNumber required for FINGERPRINT');
     }
-    const created = stores.cases.create(
-      { ...parsed.data, updateStatus: 'Pending', requestedAt: new Date().toISOString() } as any,
-      true,
-    );
+    // The requester is the authenticated user unless the caller states one.
+    const requestedBy = data.requestedBy ?? ((req as any).userId as string | undefined);
+    if (!requestedBy || !UUID_RE.test(requestedBy)) {
+      return badRequest(reply, undefined, 'requestedBy is required');
+    }
+    const created = await repos.cases.create({
+      caseId: randomUUID(),
+      personId: data.personId,
+      biometricType: data.biometricType,
+      // chk_finger_number: a facial case never carries a finger.
+      fingerNumber: data.biometricType === 'FACIAL' ? null : data.fingerNumber,
+      currentEmbeddingRef: data.currentEmbeddingRef ?? null,
+      reason: data.reason,
+      updateStatus: 'Pending',
+      requestedBy,
+      requestedAt: new Date().toISOString(),
+    });
     return reply.code(201).send(created);
   });
   app.get('/api/v1/biometric-update-cases', async (req, reply) => {
-    const q = (req.query as any) ?? {};
-    if (q.status) return page(stores.cases.list((c: any) => c.updateStatus === q.status), req, reply);
-    return page(stores.cases.list(), req, reply);
+    const status = ((req.query as any) ?? {}).status as string | undefined;
+    return paged(
+      req,
+      reply,
+      (page) => repos.cases.search({ status, ...page }),
+      () => repos.cases.countMatching({ status }),
+    );
   });
   app.get('/api/v1/biometric-update-cases/:id', async (req, reply) => {
-    const found = stores.cases.get((req.params as any).id);
-    if (!found) return reply.code(404).send({ error: 'NotFound' });
-    return found;
+    const id = String((req.params as any).id);
+    const found = UUID_RE.test(id) ? await repos.cases.findById(id) : null;
+    return found ?? notFound(reply);
   });
   app.put('/api/v1/biometric-update-cases/:id', async (req, reply) => {
-    const parsed = caseBody.partial().safeParse((req as any).body);
-    if (!parsed.success) return reply.code(400).send({ error: 'BadRequest', details: parsed.error.flatten() });
-    const updated = stores.cases.update((req.params as any).id, parsed.data as any);
-    if (!updated) return reply.code(404).send({ error: 'NotFound' });
-    return updated;
+    const parsed = caseBody.partial().safeParse((req as any).body ?? {});
+    if (!parsed.success) return badRequest(reply, parsed.error.flatten());
+    const id = String((req.params as any).id);
+    const updated = UUID_RE.test(id) ? await repos.cases.update(id, parsed.data) : null;
+    return updated ?? notFound(reply);
   });
   app.patch('/api/v1/biometric-update-cases/:id/review', async (req, reply) => {
-    const parsed = z
-      .object({ updateStatus: z.enum(['In_Review', 'Approved', 'Rejected']), reviewedBy: z.string().optional(), resolutionNotes: z.string().optional() })
-      .safeParse((req as any).body);
-    if (!parsed.success) return reply.code(400).send({ error: 'BadRequest', details: parsed.error.flatten() });
-    const updated = stores.cases.update((req.params as any).id, {
-      ...parsed.data,
-      reviewedAt: new Date().toISOString(),
-    } as any);
-    if (!updated) return reply.code(404).send({ error: 'NotFound' });
-    return updated;
+    const parsed = reviewBody.safeParse((req as any).body);
+    if (!parsed.success) return badRequest(reply, parsed.error.flatten());
+    const id = String((req.params as any).id);
+    const reviewer = parsed.data.reviewedBy ?? ((req as any).userId as string | undefined);
+    const updated = UUID_RE.test(id)
+      ? await repos.cases.update(id, {
+          updateStatus: parsed.data.updateStatus,
+          reviewedBy: reviewer ?? null,
+          reviewedAt: new Date().toISOString(),
+          ...(parsed.data.resolutionNotes !== undefined ? { resolutionNotes: parsed.data.resolutionNotes } : {}),
+        })
+      : null;
+    return updated ?? notFound(reply);
   });
   app.delete('/api/v1/biometric-update-cases/:id', async (req, reply) => {
-    if (!stores.cases.remove((req.params as any).id)) return reply.code(404).send({ error: 'NotFound' });
+    const id = String((req.params as any).id);
+    if (!UUID_RE.test(id) || !(await repos.cases.softDelete(id))) return notFound(reply);
     return reply.code(204).send();
   });
   app.get('/api/v1/persons/:personId/biometric-cases', async (req, reply) => {
-    const personId = (req.params as any).personId;
-    return page(stores.cases.list((c: any) => c.personId === personId), req, reply);
+    const personId = String((req.params as any).personId);
+    if (!UUID_RE.test(personId)) return reply.send([]);
+    return paged(
+      req,
+      reply,
+      (page) => repos.cases.search({ personId, ...page }),
+      () => repos.cases.countMatching({ personId }),
+    );
   });
 }

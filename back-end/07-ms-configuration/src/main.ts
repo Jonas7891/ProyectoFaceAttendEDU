@@ -5,6 +5,9 @@ import { registerEventHook } from './infrastructure/messaging/event.publisher';
 import { registerQualityMiddleware, registerQualityHealthEndpoint } from './infrastructure/http/qualityMiddleware';
 import { registerAuthGuard } from './infrastructure/http/authGuard';
 import { configurationPermission } from './infrastructure/http/permissions';
+import { closeDatabase, connectDatabase, getDatabaseStatus, healthCheck } from './infrastructure/db/database';
+import { RepositoryError } from './infrastructure/persistence/errors';
+import { createConfigurationRepositories } from './infrastructure/persistence/postgres';
 
 const app = Fastify({ logger: true });
 const startedAt = Date.now();
@@ -18,12 +21,26 @@ app.addHook('onSend', async (_req, reply, payload) => {
   reply.header('x-content-type-options', 'nosniff');
   return payload;
 });
+/** Error name rendered in the response envelope, by HTTP status. */
+function errorNameFor(status: number): string {
+  switch (status) {
+    case 400: return 'BadRequest';
+    case 404: return 'NotFound';
+    case 409: return 'Conflict';
+    case 503: return 'ServiceUnavailable';
+    default: return status >= 500 ? 'InternalError' : 'BadRequest';
+  }
+}
+
 app.setErrorHandler((error, req, reply) => {
   const status = (error as any).statusCode && (error as any).statusCode >= 400 ? (error as any).statusCode : 500;
   req.log.error({ err: error, path: req.url }, 'unhandled error');
+  const details = error instanceof RepositoryError ? error.details : undefined;
   reply.code(status).send({
-    error: status === 404 ? 'NotFound' : status === 400 ? 'BadRequest' : 'InternalError',
-    message: status === 500 ? 'Unexpected internal error' : (error as Error).message,
+    error: errorNameFor(status),
+    // Never echo a raw driver message for a server-side failure.
+    message: status >= 500 && status !== 503 ? 'Unexpected internal error' : (error as Error).message,
+    ...(details === undefined ? {} : { details }),
     path: req.url,
     timestamp: new Date().toISOString(),
   });
@@ -39,27 +56,28 @@ function healthPayload(service: string) {
 app.get('/health', async () => healthPayload('configuration-service'));
 app.get('/api/v1/health', async () => healthPayload('configuration-service'));
 
+// Readiness is separate from liveness: `/health` keeps answering 200 for the
+// compose healthcheck, while `/health/ready` reports whether PostgreSQL answers.
+app.get('/health/ready', async (_req, reply) => {
+  const probe = await healthCheck();
+  return reply.code(probe.ok ? 200 : 503).send({
+    status: probe.ok ? 'ready' : 'not-ready',
+    service: 'configuration-service',
+    database: { ...getDatabaseStatus(), latencyMs: probe.latencyMs, error: probe.error },
+    timestamp: new Date().toISOString(),
+  });
+});
+
 async function start() {
-  // PostgreSQL is a hard dependency: an unreachable database is a fatal boot
-  // error (compose restarts us). Only the test environment may skip it.
-  const databaseUrl = process.env.DATABASE_URL;
-  const pgSchema = process.env.PG_SCHEMA || 'configuration';
-  if (!databaseUrl && process.env.NODE_ENV !== 'test') {
-    throw new Error('DATABASE_URL is not set — refusing to start');
-  }
-  if (databaseUrl) {
-    const { Pool } = await import('pg');
-    const pool = new Pool({ connectionString: databaseUrl });
-    try {
-      await pool.query(`CREATE SCHEMA IF NOT EXISTS "${pgSchema}"`);
-      await pool.query('SELECT 1');
-      app.log.info({ schema: pgSchema }, 'postgres connected (configuration)');
-    } catch (err) {
-      app.log.error({ err }, 'postgres unavailable — refusing to start');
-      throw err;
-    } finally {
-      await pool.end().catch(() => undefined);
-    }
+  // PostgreSQL is the only persistence layer: there is no in-memory fallback, so
+  // a database that cannot be reached is a fatal boot error (compose restarts us).
+  try {
+    await connectDatabase();
+    app.log.info({ database: getDatabaseStatus() }, 'postgres connected (configuration)');
+  } catch (err) {
+    app.log.error({ err, database: getDatabaseStatus() }, 'postgres unavailable — refusing to start');
+    await closeDatabase().catch(() => undefined);
+    throw err;
   }
 
   registerAuthGuard(app, configurationPermission);
@@ -68,8 +86,12 @@ async function start() {
   registerQualityMiddleware(app);
   registerQualityHealthEndpoint(app);
 
-  await registerConfigurationRoutes(app);
+  await registerConfigurationRoutes(app, createConfigurationRepositories());
   registerEventHook(app);
+  app.addHook('onClose', async () => {
+    await closeDatabase().catch(() => undefined);
+  });
+
   const port = Number(process.env.PORT) || 8087;
   await app.listen({ port, host: '0.0.0.0' });
 }
