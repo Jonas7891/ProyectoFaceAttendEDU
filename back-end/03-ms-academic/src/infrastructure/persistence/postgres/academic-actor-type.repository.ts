@@ -23,4 +23,14 @@ export class PostgresAcademicActorTypeRepository
     { field: 'name', column: 'name' },
     ...AUDIT_FIELDS,
   ];
+
+  async restoreByCode(code: string, name: string): Promise<AcademicActorType | null> {
+    const rows = await this.select(
+      `UPDATE ${this.qualifiedTable} SET deleted_at = NULL, deleted_by = NULL, name = $2
+         WHERE code = $1 AND deleted_at IS NOT NULL
+       RETURNING *`,
+      [code, name],
+    );
+    return rows.length ? this.mapRow(rows[0]) : null;
+  }
 }

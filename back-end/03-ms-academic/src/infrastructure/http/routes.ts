@@ -344,6 +344,10 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
   app.post('/api/v1/actor-types', async (req, reply) => {
     const parsed = actorTypeBody.safeParse((req as any).body);
     if (!parsed.success) return send400(reply, 'Invalid actor-type payload', parsed.error.flatten());
+    // Un code retirado sigue ocupando el UNIQUE, así que crearlo de nuevo daba 409
+    // para siempre. Si existe borrado, se revive en vez de rechazar.
+    const revived = await repos.actorTypes.restoreByCode(parsed.data.code, parsed.data.name);
+    if (revived) return reply.code(201).send(revived);
     const created = await repos.actorTypes.create(parsed.data);
     return reply.code(201).send(created);
   });
