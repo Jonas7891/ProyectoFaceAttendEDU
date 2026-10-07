@@ -159,9 +159,10 @@ export function AppDataProvider({ children }) {
         // Luego, estudiantes heredan el período de su curso
         const enrichedStudents = allStudents.map(student => {
             // Buscar el curso del estudiante
-            const studentCourse = coursesWithPeriod.find(
-                c => c.code === student.course || c.name === student.course || c.id === student.course
-            );
+            // Por id: buscar por code o name devolvia el primer curso homonimo, que
+            // puede ser el de la otra sede.
+            const studentCourse = coursesWithPeriod.find((c) => String(c.id) === student.courseId)
+                ?? coursesWithPeriod.find((c) => c.code === student.course || c.name === student.course);
             
             // Heredar el período del curso
             return {
@@ -258,22 +259,27 @@ export function AppDataProvider({ children }) {
     // ── Programs derivados (sin storage propio) ───────────
 
     const programs = useMemo(() => {
+        const byId = new Map(courses.map((c) => [String(c.id), c]));
         const map = new Map();
         // Usar loadedStudents para que se actualice progresivamente
         for (const s of loadedStudents) {
             if (!s.course?.trim()) continue;
-            
-            // Buscar el curso completo para obtener su nombre
-            const course = courses.find(c => c.code === s.course || c.name === s.course);
-            const courseName = course ? course.name : s.course;
-            
-            if (!map.has(courseName)) map.set(courseName, { attendance: [], active: 0, code: s.course });
-            const entry = map.get(courseName);
+
+            // Se agrupa por courseId, no por nombre: "Lengua Castellana" existe una vez
+            // por sede, y agrupar por nombre fundia las dos en una sola fila sumando los
+            // estudiantes de ambas.
+            const course = s.courseId ? byId.get(s.courseId) : null;
+            const key = course ? String(course.id) : s.course;
+
+            if (!map.has(key)) {
+                map.set(key, { attendance: [], active: 0, code: course?.code ?? s.course, name: course?.name ?? s.course });
+            }
+            const entry = map.get(key);
             entry.attendance.push(s.attendance);
             if (s.status === "active") entry.active += 1;
         }
-        return Array.from(map.entries())
-            .map(([name, { attendance, active, code }]) => ({
+        return Array.from(map.values())
+            .map(({ attendance, active, code, name }) => ({
                 name,
                 code, // Incluir el código del curso
                 studentCount: attendance.length,

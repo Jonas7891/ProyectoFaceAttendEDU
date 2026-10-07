@@ -101,6 +101,10 @@ async function studentsFromApi() {
                 email: person?.email ?? "",
                 code: actor.actorCode ?? "",
                 course: course?.code ?? "", // vacío: la UI lo omite de los programas
+                // El código y el nombre del curso se repiten entre sedes ("MAT" existe
+                // en las dos), así que buscar por ellos cuelga al estudiante del curso
+                // equivocado. El id sí es único: es el que debe usarse para cruzar.
+                courseId: courseId != null ? String(courseId) : null,
                 grade: null, // lo rellena AppDataContext con el período del curso
                 attendance: 0, // pendiente de la fase de consulta
                 status: normalizeStatus(actor.status),
