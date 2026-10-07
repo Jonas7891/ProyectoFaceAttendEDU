@@ -265,6 +265,9 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-faceattend_db}
       PG_SCHEMA: academic
       PORT: 8083
+      # Session + RBAC guard: sessions come from identity, permissions from authorization.
+      IDENTITY_URL: http://ms-identity:8081
+      AUTHORIZATION_URL: http://ms-authorization:8082
       KAFKA_BROKERS: kafka:29092
       NODE_ENV: production
     ports:
@@ -295,6 +298,9 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-faceattend_db}
       PG_SCHEMA: configuration
       PORT: 8087
+      # Session + RBAC guard: sessions come from identity, permissions from authorization.
+      IDENTITY_URL: http://ms-identity:8081
+      AUTHORIZATION_URL: http://ms-authorization:8082
       KAFKA_BROKERS: kafka:29092
       NODE_ENV: production
     ports:
@@ -329,6 +335,9 @@ services:
     environment:
       MONGODB_URL: mongodb://${MONGO_USER:-mongoadmin}:${MONGO_PASSWORD:-mongopass}@mongodb:27017/${MONGO_DB:-faceattend_biometric}?authSource=admin
       PORT: 8086
+      # Session + RBAC guard: sessions come from identity, permissions from authorization.
+      IDENTITY_URL: http://ms-identity:8081
+      AUTHORIZATION_URL: http://ms-authorization:8082
       KAFKA_BROKERS: kafka:29092
     ports:
       - "${BIND_IP:-127.0.0.1}:8086:8086"
@@ -363,6 +372,9 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-faceattend_db}?sslmode=disable
       PG_SCHEMA: notification
       PORT: 8088
+      # Session + RBAC guard: sessions come from identity, permissions from authorization.
+      IDENTITY_URL: http://ms-identity:8081
+      AUTHORIZATION_URL: http://ms-authorization:8082
       KAFKA_BROKERS: kafka:29092
       # Canal de correo SMTP (SERVICE.md §9.1): SMTP_HOST vacío = deshabilitado y
       # POST /api/v1/emails responde 202 {"status":"skipped"}. Los valores por
@@ -415,6 +427,9 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-faceattend_db}
       PG_SCHEMA: quality
       PORT: 8089
+      # Session + RBAC guard: sessions come from identity, permissions from authorization.
+      IDENTITY_URL: http://ms-identity:8081
+      AUTHORIZATION_URL: http://ms-authorization:8082
       KAFKA_BROKERS: kafka:29092
       NODE_ENV: production
     ports:

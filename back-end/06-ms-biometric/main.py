@@ -110,6 +110,8 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
         status_code=exc.status_code,
         content=_error_body(
             "NotFound" if exc.status_code == 404
+            else "Unauthorized" if exc.status_code == 401
+            else "Forbidden" if exc.status_code == 403
             else "BadRequest" if exc.status_code < 500
             else "InternalError",
             str(exc.detail),

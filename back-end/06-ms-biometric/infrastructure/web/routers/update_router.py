@@ -18,6 +18,7 @@ from domain.value_objects.biometric_type import BiometricType
 from domain.value_objects.update_case_status import UpdateCaseStatus
 from infrastructure.config.dependencies import get_update_case_repository
 from infrastructure.web.schemas.responses import update_case_response
+from infrastructure.web.security import require_permission
 
 router = APIRouter(prefix="/api/v1/biometric", tags=["update-requests"])
 
@@ -37,6 +38,7 @@ class ReviewUpdateRequestIn(BaseModel):
 @router.post("/update-request", status_code=status.HTTP_201_CREATED)
 async def create_update_request(
     req: UpdateRequestIn,
+    _auth: None = Depends(require_permission("biometric.case:request")),
     repository: UpdateCaseRepositoryPort = Depends(get_update_case_repository),
 ):
     case = BiometricUpdateCase(
@@ -51,6 +53,7 @@ async def create_update_request(
 @router.get("/update-requests/{person_id}")
 async def list_update_requests(
     person_id: str,
+    _auth: None = Depends(require_permission("biometric.case:request")),
     repository: UpdateCaseRepositoryPort = Depends(get_update_case_repository),
 ):
     cases = await repository.list_for_person(person_id)
@@ -61,6 +64,7 @@ async def list_update_requests(
 async def review_update_request(
     request_id: str,
     req: ReviewUpdateRequestIn,
+    _auth: None = Depends(require_permission("biometric.case:review")),
     repository: UpdateCaseRepositoryPort = Depends(get_update_case_repository),
 ):
     reviewed = await repository.review(request_id, UpdateCaseStatus(req.status))
@@ -72,6 +76,7 @@ async def review_update_request(
 @router.delete("/update-request/{request_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_update_request(
     request_id: str,
+    _auth: None = Depends(require_permission("biometric.case:review")),
     repository: UpdateCaseRepositoryPort = Depends(get_update_case_repository),
 ):
     if not await repository.deactivate(request_id):

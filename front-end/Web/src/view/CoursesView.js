@@ -52,7 +52,7 @@ export default function CoursesView() {
                 subtitle={pageSubtitle}
                 actions={
                     <>
-                        {/* Importar — solo admin/teacher */}
+                        {/* Importar — solo admin */}
                         {permissions.canManageCourses && (
                             <Button
                                 variant="ghost"
@@ -64,7 +64,7 @@ export default function CoursesView() {
                             </Button>
                         )}
 
-                        {/* Nuevo curso — solo admin/teacher */}
+                        {/* Nuevo curso — solo admin */}
                         {permissions.canManageCourses && (
                             <Button
                                 variant="primary"
