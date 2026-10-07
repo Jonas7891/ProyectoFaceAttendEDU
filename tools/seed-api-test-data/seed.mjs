@@ -220,7 +220,11 @@ const SCHOOLS = [
 ];
 // Small schools from the previous seed: soft-disabled (status=false) once the
 // big schools exist, so school pickers show exactly the 2 active institutions.
-const LEGACY_SCHOOL_CODES = ["ANDES-01", "SAM-02", "ROS-03"];
+const LEGACY_SCHOOL_CODES = ["ANDES-01", "SAM-02", "ROS-03", "SEED-SCH"];
+// Tipos de justificacion de corridas viejas: duplican en ingles los tres tipos
+// del catalogo y los tres en espanol, asi que /justification-types devolvia
+// ocho filas para tres conceptos. Se desactivan, no se borran (soft delete).
+const LEGACY_JUSTIFICATION_TYPES = ["Seed Medical", "Seed Calamity"];
 const PROGRAMS = [
   { code: "BTI-26", name: "Bachillerato Técnico en Informática" },
   { code: "BNC-26", name: "Bachillerato con Énfasis en Ciencias Naturales" },
@@ -494,7 +498,7 @@ async function seedAcademic() {
   await loadIndexes();
 
   // The demo institutions from the previous seed go dormant (soft disable, no
-  // deletion): school pickers then show SEED-SCH plus the 2 big schools.
+  // deletion): school pickers then show exactly the 2 active institutions.
   for (const code of LEGACY_SCHOOL_CODES) {
     const s = M.schools.get(code);
     if (s && s.status !== false) await patch("academic", `/api/v1/schools/${s.schoolId}/status`, { status: false });
@@ -774,6 +778,13 @@ async function seedAttendance() {
     });
     tickTypes();
   }
+  // Tipos de corridas viejas: se desactivan para que el selector muestre los
+  // tres vigentes y no ocho filas para los mismos tres conceptos.
+  for (const name of LEGACY_JUSTIFICATION_TYPES) {
+    const id = M.justTypes.get(name);
+    if (id != null) await call("attendance", "PUT", "/api/v1/justification-types/" + id, { status: false }, true);
+  }
+
   for (const j of asArray(await get("attendance", "/api/v1/justifications"))) {
     const rid = pick(j, "attendanceRecordId", "attendance_record_id");
     if (rid != null) M.justifications.add(String(rid));
