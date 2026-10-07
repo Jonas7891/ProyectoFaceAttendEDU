@@ -178,17 +178,17 @@ const CITIES = [
 ];
 
 const PEOPLE = [
-  { documentNumber: "1014287635", name: "Valentina", lastName: "Ríos Herrera", email: "valentina.rios@example.com", documentType: "CC", actorCode: "EST-2026-001", biometricId: "est-2026-001" },
-  { documentNumber: "1014298812", name: "Santiago", lastName: "Herrera Mora", email: "santiago.herrera@example.com", documentType: "CC", actorCode: "EST-2026-002", biometricId: "est-2026-002" },
-  { documentNumber: "1020804451", name: "Camila", lastName: "Torres Vargas", email: "camila.torres@example.com", documentType: "CC", actorCode: "EST-2026-003", biometricId: "est-2026-003" },
-  { documentNumber: "1020812398", name: "Daniel", lastName: "Vargas Castillo", email: "daniel.vargas@example.com", documentType: "CC", actorCode: "EST-2026-004", biometricId: "est-2026-004" },
-  { documentNumber: "1030665124", name: "Lucía", lastName: "Fernández Rojas", email: "lucia.fernandez@example.com", documentType: "CC", actorCode: "EST-2026-005", biometricId: "est-2026-005" },
-  { documentNumber: "1030678903", name: "Mateo", lastName: "Castillo Ospina", email: "mateo.castillo@example.com", documentType: "CC", actorCode: "EST-2026-006", biometricId: "est-2026-006" },
+  { documentNumber: "1014287635", name: "Valentina", lastName: "Ríos Herrera", email: "valentina.rios@example.com", documentType: "CC", actorCode: "EST-2026-001", biometricId: "est-2026-001", address: "Calle 134 # 54-20, Suba", birthDate: "2009-03-14", bloodType: "O+" },
+  { documentNumber: "1014298812", name: "Santiago", lastName: "Herrera Mora", email: "santiago.herrera@example.com", documentType: "CC", actorCode: "EST-2026-002", biometricId: "est-2026-002", address: "Carrera 68 # 24-15, Kennedy", birthDate: "2009-07-02", bloodType: "A+" },
+  { documentNumber: "1020804451", name: "Camila", lastName: "Torres Vargas", email: "camila.torres@example.com", documentType: "CC", actorCode: "EST-2026-003", biometricId: "est-2026-003", address: "Diagonal 45 # 12-30, Engativá", birthDate: "2010-11-21", bloodType: "O-" },
+  { documentNumber: "1020812398", name: "Daniel", lastName: "Vargas Castillo", email: "daniel.vargas@example.com", documentType: "CC", actorCode: "EST-2026-004", biometricId: "est-2026-004", address: "Transversal 93 # 53-48, Usaquén", birthDate: "2009-05-09", bloodType: "B+" },
+  { documentNumber: "1030665124", name: "Lucía", lastName: "Fernández Rojas", email: "lucia.fernandez@example.com", documentType: "CC", actorCode: "EST-2026-005", biometricId: "est-2026-005", address: "Avenida 19 # 104-62, Chapinero", birthDate: "2010-01-27", bloodType: "A-" },
+  { documentNumber: "1030678903", name: "Mateo", lastName: "Castillo Ospina", email: "mateo.castillo@example.com", documentType: "CC", actorCode: "EST-2026-006", biometricId: "est-2026-006", address: "Calle 80 # 69-40, Fontibón", birthDate: "2009-09-18", bloodType: "O+" },
 ];
 // Staff personas (linked to users + roles below).
 const STAFF = [
-  { documentNumber: "79852314", name: "Carolina", lastName: "Mendoza Ruiz", email: "carolina.mendoza@example.com", documentType: "CC", key: "admin" },
-  { documentNumber: "79981245", name: "Carlos", lastName: "Restrepo Álvarez", email: "carlos.restrepo@example.com", documentType: "CC", key: "instructor" },
+  { documentNumber: "79852314", name: "Carolina", lastName: "Mendoza Ruiz", email: "carolina.mendoza@example.com", documentType: "CC", key: "admin", address: "Carrera 15 # 88-64, Chapinero", birthDate: "1984-06-11", bloodType: "AB+" },
+  { documentNumber: "79981245", name: "Carlos", lastName: "Restrepo Álvarez", email: "carlos.restrepo@example.com", documentType: "CC", key: "instructor", address: "Calle 53 # 40-22, Laureles", birthDate: "1979-12-03", bloodType: "O+" },
 ];
 // Demo logins (local testing only, never reuse in production):
 //   Administrador: Carolina Mendoza Ruiz / username carolina.mendoza / password Admin2026*
@@ -261,6 +261,31 @@ const cohortCodeOf = (schoolIdx, cohortIdx) => {
   return `${SCHOOLS[schoolIdx].prefix}-${grade}${cohortIdx % 2 === 0 ? "A" : "B"}`;
 };
 
+// Atributos demográficos: sin ellos cada persona que devolvía /persons era
+// nombre + documento + nulls, así que las 1600 filas se veían idénticas.
+// Hemoclasificación con distribución aproximada a la colombiana (O+ dominante).
+const BLOOD_TYPES = ["O+", "O+", "O+", "O+", "A+", "A+", "A+", "B+", "O-", "A-", "AB+", "B-", "AB-", "O+", "A+", "B+"];
+const STREET_KINDS = ["Calle", "Carrera", "Diagonal", "Transversal", "Avenida"];
+const NEIGHBOURHOODS = [
+  ["Suba", "Kennedy", "Engativá", "Usaquén", "Bosa", "Fontibón", "Chapinero", "Teusaquillo"],
+  ["Belén", "Laureles", "Robledo", "Envigado", "Itagüí", "La América", "Castilla", "Buenos Aires"],
+];
+const MOBILE_PREFIXES = ["300", "301", "310", "311", "312", "320", "321", "322", "350", "351"];
+
+/** Dirección con forma catastral colombiana: "Calle 45 # 12-30, Suba". */
+const addressFor = (schoolIdx, i) => {
+  const kind = STREET_KINDS[i % STREET_KINDS.length];
+  const main = 1 + ((i * 13) % 180);
+  const cross = 1 + ((i * 7) % 120);
+  const plate = 10 + ((i * 29) % 89);
+  const barrios = NEIGHBOURHOODS[schoolIdx] ?? NEIGHBOURHOODS[0];
+  return `${kind} ${main} # ${cross}-${plate}, ${barrios[(i * 3) % barrios.length]}`;
+};
+const phoneFor = (i) => `${MOBILE_PREFIXES[i % MOBILE_PREFIXES.length]}${String(2000000 + ((i * 7919) % 7999999)).slice(-7)}`;
+const bloodFor = (i) => BLOOD_TYPES[(i * 5 + 3) % BLOOD_TYPES.length];
+/** Cumpleaños repartidos por el año: los filtros por fecha devuelven tramos distintos. */
+const birthDateFor = (year, i) => `${year}-${pad2(1 + (i % 12))}-${pad2(1 + ((i * 17) % 28))}`;
+
 function buildStudents() {
   const list = [];
   for (let i = 0; i < STUDENT_COUNT; i++) {
@@ -273,6 +298,9 @@ function buildStudents() {
     const cohortIdx = Math.floor((local * COHORTS_PER_SCHOOL) / STUDENTS_PER_SCHOOL);
     const grade = GRADES[Math.floor(cohortIdx / 2)];
     const documentType = grade <= 9 ? "TI" : "CC";
+    // Edad coherente con el grado: 6º ronda los 11-12 años en 2026, 11º los 16-17.
+    const birthYear = 2026 - (grade + 5);
+    const slug = `${stripAccents(first).toLowerCase()}.${stripAccents(last1).toLowerCase()}${i + 1}`;
     list.push({
       seq: i + 1,
       schoolIdx,
@@ -280,6 +308,13 @@ function buildStudents() {
       lastName: `${last1} ${last2}`,
       documentType,
       documentNumber: `${documentType === "TI" ? "1098" : "1095"}${String(1000000 + i)}`,
+      email: `${slug}@estudiantes.${SCHOOLS[schoolIdx].prefix.toLowerCase()}.edu.co`,
+      phone: phoneFor(i),
+      address: addressFor(schoolIdx, i),
+      birthDate: birthDateFor(birthYear, i),
+      bloodType: bloodFor(i),
+      // 1 de cada 50 inactivo: sin esto, filtrar por estado devolvía siempre todo.
+      status: i % 50 !== 37,
       actorCode: `EST-${SCHOOLS[schoolIdx].prefix}-${String(i + 1).padStart(4, "0")}`,
       cohortCode: cohortCodeOf(schoolIdx, cohortIdx),
     });
@@ -308,8 +343,14 @@ function buildTeachers() {
       lastName: `${last1} ${last2}`,
       documentType: "CC",
       documentNumber: `1096${String(1000000 + i)}`,
-      email: `${username}@example.com`,
-      phone: `300${String(1000000 + i * 7919).slice(-7)}`,
+      // Correo institucional en vez de example.com: distingue docente de estudiante a simple vista.
+      email: `${username}@${SCHOOLS[schoolIdx].prefix.toLowerCase()}.edu.co`,
+      phone: phoneFor(i * 3 + 1),
+      address: addressFor(schoolIdx, i * 5 + 2),
+      // Planta docente entre 31 y 58 años.
+      birthDate: birthDateFor(1968 + ((i * 7) % 28), i),
+      bloodType: bloodFor(i * 2 + 1),
+      status: true,
       username,
       actorCode: `DOC-${SCHOOLS[schoolIdx].prefix}-${String(local + 1).padStart(3, "0")}`,
     });
@@ -329,9 +370,12 @@ async function loginSeed() {
 }
 
 const personBody = (p) => {
-  const b = { documentNumber: p.documentNumber, name: p.name, lastName: p.lastName, documentType: p.documentType, status: true };
-  if (p.email) b.email = p.email;
-  if (p.phone) b.phone = p.phone;
+  const b = { documentNumber: p.documentNumber, name: p.name, lastName: p.lastName, documentType: p.documentType };
+  b.status = p.status !== false;
+  // Opcionales del modelo (PersonDto los acepta todos). Antes solo viajaban email
+  // y phone, asi que address / birthDate / bloodType quedaban NULL en las 1693
+  // personas y la coleccion entera se veia igual fila tras fila.
+  for (const k of ['email', 'phone', 'address', 'birthDate', 'bloodType']) if (p[k]) b[k] = p[k];
   return b;
 };
 
