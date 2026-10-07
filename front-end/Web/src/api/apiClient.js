@@ -165,6 +165,27 @@ function unwrapPage(payload) {
     return isPageEnvelope(payload) ? payload.data : payload;
 }
 
+// ── Sesión rechazada por el backend ────────────────────────
+// El sessionId opaco caduca en el backend a las 8 h
+// (security_configuration.session_timeout_minutes) aunque localmente el
+// token no tenga expiresAt. AuthContext se registra aquí para purgar la
+// sesión guardada el primer 401: sin esto la app sigue "logueada" y
+// dispara 401 en cada llamada en lugar de volver al login.
+let unauthorizedHandler = null;
+
+/** Registra (o con setUnauthorizedHandler(null) desregistra) el callback de sesión caducada. */
+export function setUnauthorizedHandler(handler) {
+    unauthorizedHandler = handler;
+}
+
+/**
+ * En los flujos de credenciales el 401 es una respuesta de negocio
+ * (contraseña o código incorrectos), no una sesión muerta: no se purga nada.
+ */
+function isCredentialFlow(path) {
+    return path.replace(/^\/+/, "").startsWith("api/v1/auth/");
+}
+
 /** Petición genérica. Lanza ApiError si !ok. */
 export async function request(path, opts = {}) {
     const method = opts.method ?? "GET";
@@ -189,7 +210,16 @@ export async function request(path, opts = {}) {
         try {
             const res = await fetchWithTimeout(url, init, timeoutMs);
             const data = await parseBody(res);
-            if (!res.ok) throw toApiError(res.status, data);
+            if (!res.ok) {
+                if (res.status === 401 && !isCredentialFlow(path)) {
+                    try {
+                        unauthorizedHandler?.();
+                    } catch {
+                        /* el handler no debe romper la petición */
+                    }
+                }
+                throw toApiError(res.status, data);
+            }
             return opts.unwrap === false ? data : unwrapPage(data);
         } catch (e) {
             lastErr = e;

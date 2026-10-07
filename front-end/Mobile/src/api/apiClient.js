@@ -35,6 +35,41 @@ function buildUrl(path) {
   return `${base}/${canonical.replace(/^\//, '')}`;
 }
 
+// ── Sesión rechazada por el backend ─────────────────────────
+// El sessionId opaco caduca a las 8 h (session_timeout_minutes) aunque
+// localmente no tenga expiresAt, así que la app arranca "logueada" con un
+// token muerto. AppNavigator se suscribe aquí para purgar la sesión y
+// volver al login en el primer 401, en vez de disparar 401 en cada llamada.
+let sessionExpiredHandler = null;
+let sessionExpiredNotified = false;
+
+/** Registra el callback de sesión caducada; devuelve la función para desuscribirse. */
+export function onSessionExpired(handler) {
+  sessionExpiredHandler = handler;
+  return () => {
+    if (sessionExpiredHandler === handler) sessionExpiredHandler = null;
+  };
+}
+
+/**
+ * En los flujos de credenciales el 401 es una respuesta de negocio
+ * (contraseña o código incorrectos), no una sesión muerta.
+ */
+function isCredentialFlow(url) {
+  return url.includes('/api/v1/auth/');
+}
+
+function notifySessionExpired() {
+  // Una sola vez por sesión caída: varias llamadas fallan en paralelo.
+  if (sessionExpiredNotified || !sessionExpiredHandler) return;
+  sessionExpiredNotified = true;
+  try {
+    sessionExpiredHandler();
+  } catch (e) {
+    console.warn('onSessionExpired:', e?.message);
+  }
+}
+
 /**
  * Mapa legacy Mobile (singular snake, sin /api/v1, contra :3000)
  * -> canónico Gateway Kong :8080 (/api/v1/plural-kebab).
@@ -169,9 +204,14 @@ export async function request({ method, url, data = null, params = null, require
     }
 
     if (!response.ok) {
+      if (response.status === 401 && !isCredentialFlow(fullUrl)) {
+        notifySessionExpired();
+      }
       throw new ApiError(response.status, result?.message || `Error ${response.status}`, result);
     }
 
+    // Respuesta válida: rearma el aviso de sesión caducada para el próximo login.
+    sessionExpiredNotified = false;
     return unwrapPage(result);
   } catch (error) {
     clearTimeout(timeoutId);

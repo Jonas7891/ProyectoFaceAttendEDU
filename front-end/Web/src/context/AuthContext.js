@@ -14,7 +14,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Platform } from "react-native";
-import { clearToken, getToken, saveToken } from "../api/apiClient";
+import { clearToken, getToken, saveToken, setUnauthorizedHandler } from "../api/apiClient";
 import { roleNamesFrom, toUiRole } from "../core/utils/backendRoles";
 import { authApi } from "../services/api/authApi";
 
@@ -69,6 +69,28 @@ async function sessionRemove() {
     await AS.removeItem(SESSION_KEY);
 }
 
+/**
+ * ¿El sessionId sigue vivo en el backend?
+ *
+ * El token opaco caduca a las 8 h (security_configuration.session_timeout_minutes)
+ * aunque localmente no tenga expiresAt, y esa expiración es perezosa: el primer
+ * GET de sesión lo marca "Closed" (GetUserSessionUseCaseImpl). La llamada lleva el
+ * propio sessionId como bearer, así que Kong (pre-function del edge) la responde con
+ * 401 en cuanto la sesión deja de estar Active.
+ *
+ * Solo se descarta la sesión con una respuesta definitiva (401/404 o estado
+ * distinto de Active); si el backend no responde se conserva, para no cerrar
+ * la sesión de nadie por un reinicio del contenedor.
+ */
+async function isSessionAlive(token) {
+    try {
+        const session = await authApi.getSession(token);
+        return session?.sessionStatus === "Active";
+    } catch (err) {
+        return err?.status !== 401 && err?.status !== 404;
+    }
+}
+
 // ── Context ───────────────────────────────────────────────
 
 const AuthContext = createContext(null);
@@ -80,21 +102,44 @@ export function AuthProvider({ children }) {
     const [isLoadingAuth, setIsLoadingAuth] = useState(true);
 
     // Recuperar sesión guardada al montar: solo es una sesión válida si el
-    // token también está presente (y no expiró, getToken ya lo filtra).
+    // token también está presente (y no expiró, getToken ya lo filtra) y si
+    // el backend la sigue reconociendo (isSessionAlive).
     useEffect(() => {
-        Promise.all([sessionGet(), getToken()]).then(([raw, token]) => {
+        Promise.all([sessionGet(), getToken()]).then(async ([raw, token]) => {
+            let saved = null;
             if (raw && token) {
                 try {
-                    setUser(JSON.parse(raw));
+                    saved = JSON.parse(raw);
                 } catch {
                     /* sesión corrupta, ignorar */
                 }
             } else if (raw) {
                 // Usuario sin token: no hay sesión autenticada que restaurar.
-                sessionRemove();
+                await sessionRemove();
             }
+
+            if (saved && !(await isSessionAlive(token))) {
+                // Sesión ya cerrada/vencida en el backend: purgar y volver a login.
+                await clearToken();
+                await sessionRemove();
+                saved = null;
+            }
+
+            if (saved) setUser(saved);
             setIsLoadingAuth(false);
         });
+    }, []);
+
+    // Primer 401 con un bearer que el backend ya no acepta: purgar la sesión
+    // local. AuthenticatedNavigator deja de montarse y NotAuthorized navega a
+    // Login, en vez de quedarse en /app disparando 401 en cada llamada.
+    useEffect(() => {
+        setUnauthorizedHandler(() => {
+            void clearToken();
+            void sessionRemove();
+            setUser(null);
+        });
+        return () => setUnauthorizedHandler(null);
     }, []);
 
     const login = useCallback(async (credentials) => {
