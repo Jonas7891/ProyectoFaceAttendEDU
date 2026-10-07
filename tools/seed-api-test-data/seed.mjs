@@ -398,7 +398,11 @@ async function seedIdentity() {
   ids.cityId = cities.length ? pick(cities[0], "cityId", "id") : 1;
 
   // One pass over the full collections turns every rerun create into a map hit.
-  for (const p of await listAllPaged("identity", "/api/v1/persons")) M.persons.set(p.documentNumber, p.personId);
+  const existingPersons = new Map();
+  for (const p of await listAllPaged("identity", "/api/v1/persons")) {
+    M.persons.set(p.documentNumber, p.personId);
+    existingPersons.set(p.documentNumber, p);
+  }
   for (const u of await listAllPaged("identity", "/api/v1/users")) M.users.set(u.username, u.userId);
 
   const personJobs = [
@@ -416,6 +420,24 @@ async function seedIdentity() {
     });
     tick();
   });
+  // upsert() devuelve el id y no toca la fila si ya existia, asi que en una base
+  // ya sembrada los atributos nuevos jamas llegarian. Se completan con PUT, y solo
+  // a quien le falte algo: en una base al dia este paso no hace ni una peticion.
+  const needsBackfill = (p) => {
+    const row = existingPersons.get(p.documentNumber);
+    if (!row) return false;
+    return ['email', 'phone', 'address', 'birthDate', 'bloodType'].some((k) => p[k] && !row[k]);
+  };
+  const backfill = personJobs.filter(needsBackfill);
+  if (backfill.length) {
+    const tickFill = progress(backfill.length, 400, "person backfill");
+    await pooled(backfill, CONCURRENCY, async (p) => {
+      const id = M.persons.get(p.documentNumber);
+      if (id) await call("identity", "PUT", "/api/v1/persons/" + id, personBody(p), true);
+      tickFill();
+    });
+  }
+
   ids.personIds = PEOPLE.map((p) => M.persons.get(p.documentNumber)).filter(Boolean);
   ids.staffPersonIds = {};
   for (const s of STAFF) ids.staffPersonIds[s.key] = M.persons.get(s.documentNumber) ?? null;
