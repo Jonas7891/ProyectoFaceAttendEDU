@@ -4,6 +4,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/faceattend/notification-service/internal/application/usecase"
+	"github.com/faceattend/notification-service/internal/infrastructure/email"
 	"github.com/faceattend/notification-service/internal/infrastructure/http/handler"
 	"github.com/faceattend/notification-service/internal/infrastructure/postgres"
 )
@@ -11,6 +12,7 @@ import (
 type Container struct {
 	AlertHandler     *handler.AlertHandler
 	AlertTypeHandler *handler.AlertTypeHandler
+	EmailHandler     *handler.EmailHandler
 }
 
 func Wire(pool *pgxpool.Pool) *Container {
@@ -32,8 +34,13 @@ func Wire(pool *pgxpool.Pool) *Container {
 	alertHandler := handler.NewAlertHandler(createAlert, listAlerts, resolveAlert, deleteAlert)
 	alertTypeHandler := handler.NewAlertTypeHandler(createAlertType, listAlertTypes, updateAlertType, deleteAlertType)
 
+	// Email channel (SMTP transport + templates) driven by SMTP_* env vars.
+	mailCfg := email.FromEnv()
+	emailHandler := handler.NewEmailHandler(email.NewSMTPSender(mailCfg), mailCfg)
+
 	return &Container{
 		AlertHandler:     alertHandler,
 		AlertTypeHandler: alertTypeHandler,
+		EmailHandler:     emailHandler,
 	}
 }
