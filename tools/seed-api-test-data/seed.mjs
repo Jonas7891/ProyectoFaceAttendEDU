@@ -623,18 +623,25 @@ async function seedAcademic() {
     }
   }
 
+  // ADMIN como tercer tipo de actor: un administrador de sede es un rol distinto
+  // del de docente, y modelarlo como INSTRUCTOR lo mezclaba con la planta docente.
+  const actorTypes = asArray(await get("academic", "/api/v1/actor-types"));
+  let adminActorTypeId = actorTypes.find((t) => t?.code === "ADMIN")?.actorTypeId;
+  if (adminActorTypeId == null) {
+    const created = await post("academic", "/api/v1/actor-types", { code: "ADMIN", name: "Administrador de sede" });
+    adminActorTypeId = created ? pick(created, "actorTypeId", "id") : null;
+  }
+  if (adminActorTypeId == null) console.log("skip  - no ADMIN actor type: school admins will have no school");
+
   // academic_actor.person_id is a native UUID column (cross-context reference to
   // identity.person, no FK): it must be the UUID from seedIdentity(), not the
   // biometric string id (which lives only in MongoDB).
   const actorJobs = [
     ...STUDENTS.map((s) => ({ personKey: s.documentNumber, actorTypeId: 1, schoolIdx: s.schoolIdx, actorCode: s.actorCode })),
     ...TEACHERS.map((t) => ({ personKey: t.documentNumber, actorTypeId: 2, schoolIdx: t.schoolIdx, actorCode: t.actorCode })),
-    // El administrador de sede es personal de la institucion: su actor es de tipo
-    // INSTRUCTOR (el catalogo solo tiene STUDENT e INSTRUCTOR, MODELO §4.3). Que
-    // administre lo dice su rol en authorization, no el tipo de actor.
-    ...SCHOOL_ADMINS.map((a) => ({
-      personKey: a.documentNumber, actorTypeId: 2, schoolIdx: a.schoolIdx, actorCode: a.actorCode,
-    })),
+    ...(adminActorTypeId == null ? [] : SCHOOL_ADMINS.map((a) => ({
+      personKey: a.documentNumber, actorTypeId: adminActorTypeId, schoolIdx: a.schoolIdx, actorCode: a.actorCode,
+    }))),
   ].filter((a) => M.persons.get(a.personKey) && ids.schoolIds[a.schoolIdx] != null);
   const tickActors = progress(actorJobs.length, 400, "actors");
   await pooled(actorJobs, CONCURRENCY, async (a) => {
@@ -654,20 +661,16 @@ async function seedAcademic() {
     const id = M.actors.get(code);
     if (id != null) await call("academic", "PATCH", "/api/v1/academic-actors/" + id + "/status", { status: false }, true);
   }
-  // Corridas anteriores de este seed crearon un tipo de actor ADMIN que se desvia
-  // del catalogo del modelo. Los actores que lo usaban pasan a INSTRUCTOR y el tipo
-  // se retira.
-  const legacyAdminType = asArray(await get("academic", "/api/v1/actor-types"))
-    .find((t) => t?.code === "ADMIN");
-  if (legacyAdminType) {
-    const legacyTypeId = pick(legacyAdminType, "actorTypeId", "id");
+  // upsert() devuelve el actor existente sin tocarlo, así que los administradores
+  // sembrados por una corrida anterior (o dejados en INSTRUCTOR por la reversión)
+  // se corrigen aquí al tipo ADMIN.
+  if (adminActorTypeId != null) {
     for (const a of SCHOOL_ADMINS) {
       const actorId = M.actors.get(a.actorCode);
       if (actorId != null) {
-        await call("academic", "PUT", "/api/v1/academic-actors/" + actorId, { actorTypeId: 2 }, true);
+        await call("academic", "PUT", "/api/v1/academic-actors/" + actorId, { actorTypeId: adminActorTypeId }, true);
       }
     }
-    await call("academic", "DELETE", "/api/v1/actor-types/" + legacyTypeId, undefined, true);
   }
 
   // Roster per cohort feeds roll call (attendance) and blocks (scheduling).
