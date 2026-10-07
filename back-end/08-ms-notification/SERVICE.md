@@ -96,6 +96,35 @@ require (
 | GET | `/api/v1/notification-preferences/{actorId}` | Preferencias del actor |
 | PUT | `/api/v1/notification-preferences/{actorId}` | Actualizar preferencias |
 
+### 4.4 Correo (interno)
+
+| Metodo | Endpoint | Descripcion |
+|--------|----------|-------------|
+| POST | `/api/v1/emails` | Envia un correo mediante una plantilla |
+
+```json
+{
+  "to": "carolina.mendoza@example.com",
+  "template": "verification_code",
+  "data": { "code": "482913", "minutes": "10" }
+}
+```
+
+- **Respuestas**: `202 {"status":"accepted"}` cuando el relay lo acepto,
+  `202 {"status":"skipped","reason":"smtp_not_configured"}` cuando no hay
+  `SMTP_HOST` (dev sin relay), `502 {"error":"DELIVERY_FAILED"}` si el relay
+  rechaza el mensaje, `400` por payload invalido y `403` si
+  `EMAIL_INTERNAL_TOKEN` esta definido y no llega el header `X-Internal-Token`.
+- **Anti-relay**: el cliente no puede enviar asunto ni cuerpo libre; solo
+  `template` (lista cerrada: `verification_code`) + `data`. Los valores se
+  validan contra la inyeccion de sintaxis de plantilla.
+- **Alcance**: consumido por **01-ms-identity** para los codigos de
+  recuperacion de contrasena. La ruta **no esta publicada en Kong**: solo se
+  alcanza por la red interna de compose (`http://ms-notification:8088`).
+- **Plantillas**: `internal/infrastructure/email/templates/`
+  (`verification_code.html.tmpl` + `verification_code.txt.tmpl`, ambas
+  embebidas en el binario).
+
 ---
 
 ## 5. Consumo de Eventos Kafka
@@ -174,10 +203,15 @@ Notification Service genera alert
 
 | Canal | Implementacion | Uso |
 |-------|---------------|-----|
-| **Email** | `net/smtp` + templates `html/template` | Alertas formales, reportes |
+| **Email** | `net/smtp` + `html/template` (`internal/infrastructure/email`) | Alertas formales, reportes, codigos de verificacion |
 | **Push (FCM)** | firebase-admin-go | Notificaciones en tiempo real a movil |
 | **SMS** | twilio-go (opcional) | Alertas criticas, sin internet |
 | **In-App** | SSE / WebSocket | Notificaciones dentro de la plataforma |
+
+El canal **Email esta implementado** (endpoint interno `POST /api/v1/emails`,
+ver §4.4). Push, SMS e In-App siguen pendientes. Las alertas aun no disparan
+correo automatico: `alert` no tiene destinatario (solo `academic_actor_id`,
+cross-context) y resolverlo implica consultar el correo en 01-ms-identity.
 
 ---
 
@@ -201,12 +235,8 @@ kafka:
   brokers: localhost:9092
   group-id: notification-service
 
-# Email
-mail:
-  host: smtp.gmail.com
-  port: 587
-  username: ${MAIL_USERNAME}
-  password: ${MAIL_PASSWORD}
+# Email: NO se configura aqui. El servicio lee variables de entorno (ver 9.1).
+# SMTP_HOST vacio = canal deshabilitado y /api/v1/emails responde 202 "skipped".
 
 # Firebase
 firebase:
@@ -222,6 +252,22 @@ notification:
     sms:
       enabled: false
 ```
+
+### 9.1 Variables de entorno del canal de correo
+
+| Variable | Por defecto | Descripcion |
+|----------|-------------|-------------|
+| `SMTP_HOST` | *(vacia)* | Relay SMTP. Vacía = canal deshabilitado |
+| `SMTP_PORT` | `587` | `465` activa implicitamente TLS directo (SMTPS) |
+| `SMTP_USERNAME` | — | Usuario del relay (opcional) |
+| `SMTP_PASSWORD` | — | Password del relay (opcional) |
+| `SMTP_FROM` | `FaceAttend EDU <no-reply@faceattend.local>` | Remitente RFC 5322 |
+| `SMTP_STARTTLS` | `true` | STARTTLS en puertos distintos de 465 |
+| `SMTP_TIMEOUT_SECONDS` | `10` | Timeout de dial/handshake/IO |
+| `EMAIL_INTERNAL_TOKEN` | *(vacia)* | Si se define, exige el header `X-Internal-Token` en `/api/v1/emails` |
+
+En desarrollo basta apuntar a un MailHog local (`SMTP_HOST=host.docker.internal`,
+`SMTP_PORT=1025`, `SMTP_STARTTLS=false`) para ver los correos en su UI.
 
 ---
 

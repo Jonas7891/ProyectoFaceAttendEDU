@@ -114,9 +114,50 @@ mapstruct-processor              <!-- Anotacion processor MapStruct -->
 |--------|----------|-------------|
 | POST | `/api/v1/auth/login` | Iniciar sesion (correo o username) |
 | POST | `/api/v1/auth/logout` | Cerrar sesion |
+| POST | `/api/v1/auth/refresh` | Rotar la sesion: devuelve un `sessionId` nuevo y cierra el anterior |
 | GET | `/api/v1/auth/me` | Usuario actual (`?username=` o `?email=`) |
 
-### 4.4 Sesiones
+**Refresh token.** No hay JWT: el `sessionId` opaco cumple las dos funciones.
+`POST /auth/refresh` recibe el `sessionId` vigente en el cuerpo y responde con
+otro distinto; el anterior se cierra con un `UPDATE ... WHERE status='Active'`
+de un solo uso, de modo que dos renovaciones concurrentes con el mismo token
+solo producen una sesion nueva. Si el cliente no renueva antes de
+`session-timeout-minutes` (480 por defecto, igual que el seed de
+`configuration.security_configuration`), la sesion expira y todo
+`/api/v1/auth/refresh` o peticion autenticada responde 401.
+
+**Expiracion perezosa.** `GET /api/v1/sessions/{id}` cierra la sesion vencida al
+leerla. Como ese GET es el que usan los `AuthTokenFilter` de todos los
+microservicios para validar el bearer, la expiracion se aplica en toda la
+plataforma sin duplicar logica en los demas servicios.
+
+### 4.4 Recuperacion de contrasena
+
+| Metodo | Endpoint | Descripcion |
+|--------|----------|-------------|
+| POST | `/api/v1/auth/forgot-password` | Genera el codigo de 6 digitos y lo envia por correo (`{email}`) |
+| POST | `/api/v1/auth/verify-code` | Valida el codigo y deja el reto verificado (`{email, code}`) |
+| POST | `/api/v1/auth/reset-password` | Aplica la contrasena nueva (`{email, password}`) |
+
+Los tres son publicos (aun no hay sesion): la autorizacion la da el reto
+verificado.
+
+- **Codigo**: 6 digitos, SHA-256 en memoria, TTL 10 min, 5 intentos, reenvio
+  cada 60 s (las mismas constantes del front). Se guarda solo el hash y la
+  comparacion es en tiempo constante.
+- **Anti-enumeracion**: `forgot-password` responde 202 exista o no la cuenta, y
+  `verify-code`/`reset-password` devuelven 401 identico si no hay reto.
+- **Politica**: `reset-password` valida la contrasena contra
+  `identity.password_policy` antes de consumir el reto y cierra todas las
+  sesiones abiertas del usuario.
+- **Correo**: identity no habla SMTP; entrega el mensaje a
+  `POST /api/v1/emails` de **08-ms-notification** (interno, no publicado en
+  Kong) mediante `faceattend.notification.base-url`.
+- **Limitacion**: el almacén vive en memoria del JVM; un reinicio de identity
+  descarta los codigos pendientes (el usuario vuelve a pedir uno). Si se necesita
+  persistencia o multiples replicas, cambia solo `RecoveryCodePort`.
+
+### 4.5 Sesiones
 
 | Metodo | Endpoint | Descripcion |
 |--------|----------|-------------|
@@ -213,6 +254,21 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 ```
+
+### 7.1 Propiedades de autenticacion (`faceattend.*`)
+
+| Propiedad | Defecto | Descripcion |
+|-----------|---------|-------------|
+| `faceattend.auth.session-timeout-minutes` | `480` | Vigencia de la sesion opaca (start_date + esto) |
+| `faceattend.recovery.code-ttl-minutes` | `10` | Vida del codigo de recuperacion |
+| `faceattend.recovery.max-attempts` | `5` | Intentos fallidos antes de invalidar el codigo |
+| `faceattend.recovery.resend-cooldown-seconds` | `60` | Espera minima entre reenvios |
+| `faceattend.notification.base-url` | `http://localhost:8088` | 08-ms-notification (en compose: `http://ms-notification:8088`) |
+| `faceattend.notification.internal-token` | *(vacio)* | Header `X-Internal-Token` si el destino lo exige |
+
+Se sobrescriben por variable de entorno con la forma `FACEATTEND_AUTH_*`,
+`FACEATTEND_RECOVERY_*` y `FACEATTEND_NOTIFICATION_*` (p. ej.
+`FACEATTEND_NOTIFICATION_BASE_URL`).
 
 ---
 
