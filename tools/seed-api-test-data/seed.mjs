@@ -591,10 +591,15 @@ async function seedAcademic() {
     if (M.enrollments.has(key)) continue;
     enrollmentJobs.push({ actorId, cohortId, key });
   }
+  // Antes las 1607 matrículas quedaban en "Active", así que filtrar por
+  // enrollmentStatus devolvía siempre la lista completa. Se reparten: ~3%
+  // retiradas y ~2% completadas, el resto activas.
+  const enrollmentStatusFor = (i) => (i % 33 === 7 ? "Withdrawn" : i % 53 === 11 ? "Completed" : "Active");
   const tickEnr = progress(enrollmentJobs.length, 400, "enrollments");
-  await pooled(enrollmentJobs, CONCURRENCY, async (e) => {
+  await pooled(enrollmentJobs, CONCURRENCY, async (e, i) => {
     await post("academic", "/api/v1/enrollments", {
-      academicActorId: e.actorId, cohortId: e.cohortId, enrolledOn: WINDOW_START, enrollmentStatus: "Active",
+      academicActorId: e.actorId, cohortId: e.cohortId, enrolledOn: WINDOW_START,
+      enrollmentStatus: enrollmentStatusFor(i),
     });
     M.enrollments.add(e.key);
     tickEnr();
@@ -785,8 +790,14 @@ async function seedAttendance() {
         const r = (i * 7 + sIdx * 13) % 100;
         const attendanceStatus = r < 80 ? "Present" : r < 88 ? "Late" : "Absent";
         const m = (i * 3 + sIdx) % 10;
-        const captureMethod = m < 6 ? "FACIAL" : m < 8 ? "MANUAL" : m < 9 ? "IOT" : "IMPORT";
+        // Un ausente no pasa por el lector: marcarlo FACIAL con match_score dejaba
+        // 5.800 registros diciendo que la cámara reconoció a quien no vino. La
+        // ausencia la registra el docente (MANUAL) o llega por importación.
+        const captureMethod = attendanceStatus === "Absent"
+          ? (m < 7 ? "MANUAL" : "IMPORT")
+          : (m < 6 ? "FACIAL" : m < 8 ? "MANUAL" : m < 9 ? "IOT" : "IMPORT");
         const rec = { classSessionId: job.id, academicActorId, attendanceStatus, captureMethod };
+        // El score solo existe si hubo comparación biométrica real.
         if (captureMethod === "FACIAL") rec.matchScore = +(((i * 37 + sIdx * 11) % 24 + 76) / 100).toFixed(4);
         return rec;
       });
@@ -795,7 +806,19 @@ async function seedAttendance() {
     tickBulk();
   });
 
-  // 1 of every 8 sessions gets up to 2 justified absences (Pending review).
+  // Notas de resolucion: dan contenido distinto a cada expediente revisado.
+  const APPROVAL_NOTES = [
+    "Soporte medico verificado con la EPS; inasistencia justificada.",
+    "Certificado adjunto coincide con la fecha de la sesion.",
+    "Calamidad confirmada con acudiente por via telefonica.",
+    "Permiso institucional avalado por coordinacion academica.",
+  ];
+  const REJECTION_NOTES = [
+    "Sin soporte adjunto dentro del plazo de tres dias habiles.",
+    "La fecha del certificado no corresponde a la sesion reportada.",
+    "El tipo de justificacion exige anexo y no se recibio.",
+  ];
+  // 1 de cada 8 sesiones recibe hasta 2 ausencias justificadas; una parte se revisa.
   const reasons = [
     "Cita médica EPS programada con anterioridad",
     "Incapacidad certificada por el médico particular",
@@ -813,12 +836,27 @@ async function seedAttendance() {
     for (const rec of absent) {
       const rid = pick(rec, "attendanceRecordId", "recordId", "id");
       if (rid == null || M.justifications.has(String(rid))) continue;
-      await post("attendance", "/api/v1/justifications", {
+      const created = await post("attendance", "/api/v1/justifications", {
         attendanceRecordId: rid,
         justificationTypeId: typeIds[(ti + k) % typeIds.length],
         reason: reasons[(ti + k) % reasons.length],
       });
       M.justifications.add(String(rid));
+      // Antes TODAS quedaban en Pending: la bandeja de revision no tenia ni un
+      // caso resuelto y filtrar por reviewStatus devolvia siempre lo mismo.
+      // Reparto: ~45% aprobadas, ~20% rechazadas, el resto pendientes.
+      const jid = created ? pick(created, "justificationId", "id") : null;
+      const slot = (ti + k) % 20;
+      if (jid != null && ids.userId && slot < 13) {
+        const approved = slot < 9;
+        await call("attendance", "PATCH", "/api/v1/justifications/" + jid + "/review", {
+          reviewStatus: approved ? "Approved" : "Rejected",
+          reviewedBy: ids.userId,
+          resolutionNotes: approved
+            ? APPROVAL_NOTES[(ti + k) % APPROVAL_NOTES.length]
+            : REJECTION_NOTES[(ti + k) % REJECTION_NOTES.length],
+        });
+      }
       k++;
     }
     tickJust();
@@ -927,10 +965,13 @@ async function seedNotification() {
   for (const t of await listPaged("notification", "/api/v1/alert-types")) {
     M.alertTypes.set(pick(t, "Code", "code"), pick(t, "AlertTypeID", "alertTypeId", "id"));
   }
+  // Los codigos son los del catalogo que ya siembra Liquibase (SEEDS.md 7).
+  // Antes el seed creaba ABSENTEEISM / TARDINESS / LOW_ATTENDANCE por su cuenta:
+  // /alert-types devolvia 9 tipos, tres duplicados y los cinco oficiales a cero.
   const typeDefs = [
-    { code: "ABSENTEEISM", name: "Inasistencia recurrente", severity: "WARNING", channel: "DASHBOARD" },
-    { code: "TARDINESS", name: "Tardanzas repetidas", severity: "INFO", channel: "DASHBOARD" },
-    { code: "LOW_ATTENDANCE", name: "Bajo porcentaje de asistencia", severity: "WARNING", channel: "DASHBOARD" },
+    { code: "ATTENDANCE_ABSENTEEISM", name: "Inasistencia recurrente", severity: "WARNING", channel: "DASHBOARD" },
+    { code: "ATTENDANCE_TARDINESS", name: "Tardanzas repetidas", severity: "INFO", channel: "DASHBOARD" },
+    { code: "ATTENDANCE_LOW", name: "Bajo porcentaje de asistencia", severity: "WARNING", channel: "DASHBOARD" },
   ];
   for (const t of typeDefs) {
     if (M.alertTypes.has(t.code)) continue;
@@ -947,9 +988,9 @@ async function seedNotification() {
     const actorId = M.actors.get(s.actorCode);
     if (actorId == null) continue;
     const rules = [
-      ...(s.seq % 7 === 0 ? ["ABSENTEEISM"] : []),
-      ...(s.seq % 11 === 0 ? ["TARDINESS"] : []),
-      ...(s.seq % 17 === 0 ? ["LOW_ATTENDANCE"] : []),
+      ...(s.seq % 7 === 0 ? ["ATTENDANCE_ABSENTEEISM"] : []),
+      ...(s.seq % 11 === 0 ? ["ATTENDANCE_TARDINESS"] : []),
+      ...(s.seq % 17 === 0 ? ["ATTENDANCE_LOW"] : []),
     ];
     for (const code of rules) {
       const typeId = M.alertTypes.get(code);
@@ -960,9 +1001,15 @@ async function seedNotification() {
     }
   }
   const tick = progress(alertJobs.length, 100, "alerts");
-  await pooled(alertJobs, CONCURRENCY, async (a) => {
-    await post("notification", "/api/v1/alerts", { academic_actor_id: a.actorId, alert_type_id: a.typeId });
+  await pooled(alertJobs, CONCURRENCY, async (a, i) => {
+    const created = await post("notification", "/api/v1/alerts", { academic_actor_id: a.actorId, alert_type_id: a.typeId });
     M.alerts.add(a.key);
+    // 1 de cada 3 se cierra: antes quedaban 493 abiertas y ninguna resuelta, con
+    // lo que el tablero no tenia historial y resolved_at era NULL en todas.
+    const alertId = created ? pick(created, "AlertID", "alertId", "id") : null;
+    if (alertId != null && i % 3 === 0) {
+      await call("notification", "POST", "/api/v1/alerts/" + alertId + "/resolve", {}, true);
+    }
     tick();
   });
   await get("notification", "/api/v1/alerts?limit=5");
