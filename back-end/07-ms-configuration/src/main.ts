@@ -3,6 +3,8 @@ import { randomUUID } from 'node:crypto';
 import { registerConfigurationRoutes } from './infrastructure/http/routes';
 import { registerEventHook } from './infrastructure/messaging/event.publisher';
 import { registerQualityMiddleware, registerQualityHealthEndpoint } from './infrastructure/http/qualityMiddleware';
+import { registerAuthGuard } from './infrastructure/http/authGuard';
+import { configurationPermission } from './infrastructure/http/permissions';
 
 const app = Fastify({ logger: true });
 const startedAt = Date.now();
@@ -38,23 +40,29 @@ app.get('/health', async () => healthPayload('configuration-service'));
 app.get('/api/v1/health', async () => healthPayload('configuration-service'));
 
 async function start() {
-  // PostgreSQL best-effort: verify DATABASE_URL, fallback to MemoryStore.
+  // PostgreSQL is a hard dependency: an unreachable database is a fatal boot
+  // error (compose restarts us). Only the test environment may skip it.
   const databaseUrl = process.env.DATABASE_URL;
   const pgSchema = process.env.PG_SCHEMA || 'configuration';
+  if (!databaseUrl && process.env.NODE_ENV !== 'test') {
+    throw new Error('DATABASE_URL is not set — refusing to start');
+  }
   if (databaseUrl) {
+    const { Pool } = await import('pg');
+    const pool = new Pool({ connectionString: databaseUrl });
     try {
-      const { Pool } = await import('pg');
-      const pool = new Pool({ connectionString: databaseUrl });
       await pool.query(`CREATE SCHEMA IF NOT EXISTS "${pgSchema}"`);
       await pool.query('SELECT 1');
       app.log.info({ schema: pgSchema }, 'postgres connected (configuration)');
-      await pool.end();
     } catch (err) {
-      app.log.warn({ err }, 'postgres unavailable, using MemoryStore');
+      app.log.error({ err }, 'postgres unavailable — refusing to start');
+      throw err;
+    } finally {
+      await pool.end().catch(() => undefined);
     }
-  } else {
-    app.log.warn('DATABASE_URL not set, using MemoryStore');
   }
+
+  registerAuthGuard(app, configurationPermission);
 
   // ISO/IEC 9001 — Quality audit middleware (Cláusula 8.5.2 / 9.1)
   registerQualityMiddleware(app);
