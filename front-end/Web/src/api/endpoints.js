@@ -93,6 +93,7 @@ export const endpoints = {
         records: `${API_V1}/attendance-records`,
         recordById: (id) => `${API_V1}/attendance-records/${id}`,
         recordsBulk: `${API_V1}/attendance-records/bulk`,
+        recordsSummary: `${API_V1}/attendance-records/summary`,
         justifications: `${API_V1}/justifications`,
         justificationById: (id) => `${API_V1}/justifications/${id}`,
         justificationReview: (id) => `${API_V1}/justifications/${id}/review`,

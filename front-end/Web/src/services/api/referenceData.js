@@ -173,6 +173,34 @@ export const rolesForUsers = (userIds) =>
         return byUser;
     });
 
+/**
+ * GET /attendance-records/summary?academicActorIds=... — conteos por actor,
+ * agregados en SQL. El endpoint acepta 300 ids, así que la lista se parte en
+ * lotes de 200 que viajan en paralelo.
+ * Devuelve Map<academicActorId, { present, late, absent, justified, total }>.
+ */
+export const attendanceSummaryFor = (actorIds) =>
+    memo(`attendance:${[...actorIds].sort((a, b) => a - b).join(",")}`, async () => {
+        const BATCH = 200;
+        const batches = [];
+        for (let i = 0; i < actorIds.length; i += BATCH) batches.push(actorIds.slice(i, i + BATCH));
+
+        const responses = await Promise.all(
+            batches.map((batch) =>
+                request(endpoints.attendance.recordsSummary, {
+                    method: "GET",
+                    query: { academicActorIds: batch.join(",") },
+                })
+            )
+        );
+
+        const byActor = new Map();
+        for (const response of responses) {
+            for (const [actorId, counts] of Object.entries(response ?? {})) byActor.set(Number(actorId), counts);
+        }
+        return byActor;
+    });
+
 // ── Mapas de consulta (una sola construcción por sesión) ──
 
 export const personMap = () =>
