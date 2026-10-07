@@ -81,15 +81,23 @@ alerts and quality instruments created below.
 
 | Service | Records |
 |---|---|
-| identity `:8081` | 3 cities (Bogotá, Medellín, Cali), ~1690 persons (1600 students TI/CC + 80 teachers + staff), 83 users (3 demo logins + 80 teachers), `/me` checks |
+| identity `:8081` | 3 cities (Bogotá, Medellín, Cali), ~1690 persons (1600 students TI/CC + 80 teachers + staff) — every one with email, phone, address, birth date and blood type, ~2% inactive —, 83 users (3 demo logins + 80 teachers), `/me` checks |
 | authorization `:8082` | roles `Administrador`/`Instructor`/`Aprendiz`, every demo login and all 80 teachers assigned, 2 permissions |
-| academic `:8083` | 2 schools (`ICT-01` Bogotá, `SMP-02` Medellín; legacy `ANDES-01`/`SAM-02`/`ROS-03` soft-disabled), 4 programs (2 énfasis per school), period `2026-II`, 24 cohorts (grados 6°-11° A/B, ≈67 students each), 48 courses, 1680 actors (`EST-*`/`DOC-*`), 1600 enrollments |
+| academic `:8083` | 2 schools (`ICT-01` Bogotá, `SMP-02` Medellín; legacy `ANDES-01`/`SAM-02`/`ROS-03`/`SEED-SCH` soft-disabled), 4 programs (2 énfasis per school), period `2026-II`, 24 cohorts (grados 6°-11° A/B, ≈67 students each), 48 courses, 1680 actors (`EST-*`/`DOC-*`), 1600 enrollments (~95% Active, ~3% Withdrawn, ~2% Completed) |
 | scheduling `:8084` | 24 environments (12 per school), 288 weekly blocks (12 per cohort), ~1210 sessions (4-5 dates per block) |
-| attendance `:8085` | roll call per session via bulk (~81k records, 80% Present / 8% Late / 12% Absent, mixed FACIAL/MANUAL/IOT/IMPORT), 3 justification types, ~300 pending justifications |
+| attendance `:8085` | roll call per session via bulk (~81k records, 80% Present / 8% Late / 12% Absent; Present/Late mix FACIAL/MANUAL/IOT/IMPORT with a match score only on FACIAL, absences are MANUAL/IMPORT with no capture), 3 justification types (plus legacy ones disabled), ~300 justifications split ~45% Approved / ~20% Rejected / rest Pending |
 | biometric `:8086` | facial enroll for every student and teacher (person UUID) + legacy `seed-student-01`/`est-2026-00x`, verify, identify, history |
 | configuration `:8087` | 3 attendance configs per school, 3 security configs, up to 10 pending biometric update cases |
-| notification `:8088` | alert types `ABSENTEEISM`/`TARDINESS`/`LOW_ATTENDANCE`, ~467 alerts (rules: seq % 7 / % 11 / % 17) |
+| notification `:8088` | reuses the Liquibase catalog types `ATTENDANCE_ABSENTEEISM`/`ATTENDANCE_TARDINESS`/`ATTENDANCE_LOW` (it no longer creates duplicates), ~467 alerts (rules: seq % 7 / % 11 / % 17), 1 in 3 resolved |
 | quality `:8089` | 2 projects, characteristics/process/istqb instruments |
+
+Reruns also normalise data created by earlier runs: person attributes are
+backfilled, enrollment and review states get spread, duplicate demo catalog
+rows are soft-disabled and alerts raised against the old duplicate types are
+removed. The one thing a rerun cannot repair is `captured_at` on attendance
+records that already exist (no endpoint clears it), so absences seeded before
+this change keep their capture timestamp until attendance is seeded from an
+empty database.
 
 Demo logins (local testing only, also documented in a comment in `seed.mjs`):
 
