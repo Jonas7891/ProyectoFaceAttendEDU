@@ -15,7 +15,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
-import { resetReferenceData } from "../services/api/referenceData";
+import { resetReferenceData, setActiveSchool } from "../services/api/referenceData";
 import { useAuth } from "./AuthContext";
 
 import {
@@ -229,6 +229,10 @@ export function AppDataProvider({ children }) {
             resetReferenceData();
             return undefined;
         }
+
+        // La sede del usuario acota todas las cargas de abajo. Debe fijarse ANTES
+        // de pedir nada: setActiveSchool limpia la caché si la sede cambió.
+        setActiveSchool(user.schoolId ?? null);
 
         let cancelled = false;
         Promise.all([

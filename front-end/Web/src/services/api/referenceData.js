@@ -47,6 +47,34 @@ export function resetReferenceData() {
     cache.clear();
 }
 
+// ── Sede activa ───────────────────────────────────────────
+// La sede del usuario (de su academic_actor) acota TODA la carga. Sin esto un
+// administrador de una institución veía los datos de las dos mezclados. Si es
+// null —un super admin sin actor— se cargan todas las sedes, como antes.
+
+let activeSchoolId = null;
+
+export function setActiveSchool(schoolId) {
+    const next = schoolId ?? null;
+    if (next === activeSchoolId) return;
+    activeSchoolId = next;
+    cache.clear(); // los datos cacheados son de la sede anterior
+}
+
+export const getActiveSchool = () => activeSchoolId;
+
+/** Ids de los programas de la sede activa; vacío cuando no hay sede. */
+const schoolProgramIds = () =>
+    memo("schoolProgramIds", async () =>
+        (await listPrograms()).map((p) => p.programId).filter((v) => v != null)
+    );
+
+/** Une el resultado de un endpoint anidado sobre varios padres. */
+async function unionOf(parentIds, pathFor) {
+    const pages = await Promise.all(parentIds.map((id) => fetchAllPages(pathFor(id))));
+    return pages.flat();
+}
+
 // ── Colecciones ───────────────────────────────────────────
 
 export const listPersons = () =>
@@ -55,26 +83,61 @@ export const listPersons = () =>
 export const listUsers = () =>
     memo("users", () => fetchAllPages(endpoints.identity.users, {}, { by: "page" }));
 
-export const listActors = () => memo("actors", () => fetchAllPages(endpoints.academic.actors));
+export const listActors = () =>
+    memo("actors", () =>
+        activeSchoolId == null
+            ? fetchAllPages(endpoints.academic.actors)
+            : fetchAllPages(endpoints.academic.schoolActors(activeSchoolId))
+    );
 
 export const listActorTypes = () =>
     memo("actorTypes", () => fetchAllPages(endpoints.academic.actorTypes));
 
-export const listCourses = () => memo("courses", () => fetchAllPages(endpoints.academic.courses));
+export const listCourses = () =>
+    memo("courses", async () =>
+        activeSchoolId == null
+            ? fetchAllPages(endpoints.academic.courses)
+            : unionOf(await schoolProgramIds(), endpoints.academic.programCourses)
+    );
 
-export const listCohorts = () => memo("cohorts", () => fetchAllPages(endpoints.academic.cohorts));
+export const listCohorts = () =>
+    memo("cohorts", async () =>
+        activeSchoolId == null
+            ? fetchAllPages(endpoints.academic.cohorts)
+            : unionOf(await schoolProgramIds(), endpoints.academic.programCohorts)
+    );
 
 export const listPrograms = () =>
-    memo("programs", () => fetchAllPages(endpoints.academic.programs));
+    memo("programs", () =>
+        activeSchoolId == null
+            ? fetchAllPages(endpoints.academic.programs)
+            : fetchAllPages(endpoints.academic.schoolPrograms(activeSchoolId))
+    );
 
 export const listEnrollments = () =>
-    memo("enrollments", () => fetchAllPages(endpoints.academic.enrollments));
+    memo("enrollments", async () => {
+        if (activeSchoolId == null) return fetchAllPages(endpoints.academic.enrollments);
+        const cohortIds = (await listCohorts()).map((c) => c.cohortId).filter((v) => v != null);
+        return unionOf(cohortIds, endpoints.academic.cohortEnrollments);
+    });
 
 export const listBlocks = () =>
-    memo("blocks", () => fetchAllPages(endpoints.scheduling.blocks));
+    memo("blocks", async () => {
+        const blocks = await fetchAllPages(endpoints.scheduling.blocks);
+        if (activeSchoolId == null) return blocks;
+        // schedule_block no tiene ruta por sede (su school_id es indirecto, vía
+        // cohorte), así que se acota con los cohortes de la sede ya cargados.
+        const cohortIds = new Set((await listCohorts()).map((c) => c.cohortId));
+        return blocks.filter((b) => cohortIds.has(b.cohortId));
+    });
 
 export const listEnvironments = () =>
-    memo("environments", () => request(endpoints.scheduling.environments, { method: "GET" }));
+    memo("environments", () =>
+        request(endpoints.scheduling.environments, {
+            method: "GET",
+            query: activeSchoolId == null ? undefined : { schoolId: activeSchoolId },
+        })
+    );
 
 /** GET /users/{id}/roles (público, respuesta: arreglo de RoleResponse). */
 export const rolesForUser = (userId) =>
