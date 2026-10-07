@@ -377,6 +377,11 @@ services:
       EMAIL_INTERNAL_TOKEN: "${EMAIL_INTERNAL_TOKEN:-}"
     ports:
       - "${BIND_IP:-127.0.0.1}:8088:8088"
+    extra_hosts:
+      # Docker Engine en Linux no resuelve host.docker.internal (el valor por
+      # defecto de SMTP_HOST en .env.example): se mapea al host vía host-gateway.
+      # En Docker Desktop (Windows/macOS) es inocuo, ya lo resuelve él solo.
+      - "host.docker.internal:host-gateway"
     networks:
       - faceattend-app
       - faceattend-data
