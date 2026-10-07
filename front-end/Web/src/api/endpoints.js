@@ -41,6 +41,7 @@ export const endpoints = {
         permissions: `${API_V1}/permissions`,
         permissionById: (id) => `${API_V1}/permissions/${id}`,
         userRoles: (userId) => `${API_V1}/users/${userId}/roles`,
+        userRolesBatch: `${API_V1}/user-roles`,
         userRole: (userId, roleId) => `${API_V1}/users/${userId}/roles/${roleId}`,
         evaluate: `${API_V1}/auth/evaluate`,
     },

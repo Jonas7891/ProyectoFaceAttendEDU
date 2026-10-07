@@ -24,6 +24,7 @@ import {
     optional,
     personMap,
     rolesForUser,
+    rolesForUsers,
 } from "../../services/api/referenceData";
 
 const STORAGE_KEY = "@faceattend_users";
@@ -48,18 +49,34 @@ async function localUsers() {
     }
 }
 
+/** Respaldo cuando GET /user-roles no existe: concurrencia 5 para no saturar el gateway. */
+async function rolesOneByOne(users) {
+    const fetchOne = (user) => optional(rolesForUser(user.userId).then(roleNamesFrom), []);
+    const roles = [];
+    const BATCH = 5;
+    for (let i = 0; i < users.length; i += BATCH) {
+        roles.push(...(await Promise.all(users.slice(i, i + BATCH).map(fetchOne))));
+    }
+    return roles;
+}
+
 async function usersFromApi() {
     // Usuarios y personas son necesarios: sin personas no hay nombre ni correo.
     const [users, persons] = await Promise.all([listUsers(), personMap()]);
     if (!Array.isArray(users)) return [];
 
-    // Carga secundaria: los docentes muestran su curso desde los bloques.
-    const teacherCourses = await optional(instructorCourseNamesByPerson(), new Map());
-
-    // Roles: uno por usuario (no existe endpoint por lote).
-    const roles = await Promise.all(
-        users.map((user) => optional(rolesForUser(user.userId).then(roleNamesFrom), []))
-    );
+    // Roles: una sola petición por lote a GET /user-roles. Antes se pedía uno por
+    // usuario, lo que con 88 cuentas eran 88 viajes de ida y vuelta (~3 min). Si el
+    // endpoint por lote no está disponible todavía (gateway sin la ruta), se cae al
+    // camino uno-a-uno con concurrencia acotada en vez de quedarse sin roles.
+    // Ambas cargas secundarias viajan a la vez: no dependen una de la otra.
+    const [rolesByUser, teacherCourses] = await Promise.all([
+        optional(rolesForUsers(users.map((user) => user.userId)), null),
+        optional(instructorCourseNamesByPerson(), new Map()),
+    ]);
+    const roles = rolesByUser
+        ? users.map((user) => roleNamesFrom(rolesByUser.get(user.userId) ?? []))
+        : await rolesOneByOne(users);
 
     return users.map((user, index) => {
         const person = persons.get(user.personId);

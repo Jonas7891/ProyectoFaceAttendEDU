@@ -82,6 +82,34 @@ export const rolesForUser = (userId) =>
         request(endpoints.authorization.userRoles(userId), { method: "GET" })
     );
 
+/**
+ * GET /user-roles?userIds=... — roles de varios usuarios en UNA petición.
+ * Sustituye el bucle de una llamada por usuario: con 88 cuentas eran 88 viajes.
+ * El endpoint acepta 300 ids por petición, así que la lista se parte en lotes de 200.
+ * Devuelve Map<userId, RoleResponse[]>; un usuario sin roles no aparece en el mapa.
+ */
+export const rolesForUsers = (userIds) =>
+    memo(`rolesBatch:${[...userIds].sort().join(",")}`, async () => {
+        const BATCH = 200;
+        const batches = [];
+        for (let i = 0; i < userIds.length; i += BATCH) batches.push(userIds.slice(i, i + BATCH));
+
+        const responses = await Promise.all(
+            batches.map((batch) =>
+                request(endpoints.authorization.userRolesBatch, {
+                    method: "GET",
+                    query: { userIds: batch.join(",") },
+                })
+            )
+        );
+
+        const byUser = new Map();
+        for (const response of responses) {
+            for (const [userId, roles] of Object.entries(response ?? {})) byUser.set(userId, roles);
+        }
+        return byUser;
+    });
+
 // ── Mapas de consulta (una sola construcción por sesión) ──
 
 export const personMap = () =>
