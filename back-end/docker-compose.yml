@@ -96,6 +96,9 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      # El canal de correo (recuperación de contraseña) sale hacia notification.
+      ms-notification:
+        condition: service_started
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}?stringtype=unspecified
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
@@ -109,6 +112,9 @@ services:
       SPRING_JPA_PROPERTIES_HIBERNATE_GLOBALLY_QUOTED_IDENTIFIERS: "true"
       FACEATTEND_AUTH_IDENTITY_URL: http://ms-identity:8081
       FACEATTEND_AUTH_AUTHORIZATION_URL: http://ms-authorization:8082
+      # Canal de correo: identity llama por HTTP a POST /api/v1/emails (SERVICE.md §4.4).
+      FACEATTEND_NOTIFICATION_BASE_URL: http://ms-notification:8088
+      FACEATTEND_NOTIFICATION_INTERNAL_TOKEN: "${EMAIL_INTERNAL_TOKEN:-}"
       SERVER_PORT: 8081
     ports:
       - "${BIND_IP:-127.0.0.1}:8081:8081"
@@ -358,6 +364,17 @@ services:
       PG_SCHEMA: notification
       PORT: 8088
       KAFKA_BROKERS: kafka:29092
+      # Canal de correo SMTP (SERVICE.md §9.1): SMTP_HOST vacío = deshabilitado y
+      # POST /api/v1/emails responde 202 {"status":"skipped"}. Los valores por
+      # defecto de dev (MailHog) viven en .env.example; vacío = seguro.
+      SMTP_HOST: "${SMTP_HOST:-}"
+      SMTP_PORT: "${SMTP_PORT:-587}"
+      SMTP_USERNAME: "${SMTP_USERNAME:-}"
+      SMTP_PASSWORD: "${SMTP_PASSWORD:-}"
+      SMTP_FROM: "${SMTP_FROM:-}"
+      SMTP_STARTTLS: "${SMTP_STARTTLS:-true}"
+      SMTP_TIMEOUT_SECONDS: "${SMTP_TIMEOUT_SECONDS:-10}"
+      EMAIL_INTERNAL_TOKEN: "${EMAIL_INTERNAL_TOKEN:-}"
     ports:
       - "${BIND_IP:-127.0.0.1}:8088:8088"
     networks:
