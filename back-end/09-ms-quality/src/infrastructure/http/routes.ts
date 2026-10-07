@@ -1,6 +1,5 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { MemoryStore } from '../persistence/memory.store';
 import {
   ALL_SUBCHARACTERISTIC_IDS,
   ISO25010_CHARACTERISTICS,
@@ -8,10 +7,7 @@ import {
   scoreEvaluation,
 } from '../../domain/iso25010';
 import type { QualityEvaluation } from '../../domain/entities/QualityEvaluation';
-
-export const stores = {
-  evaluations: new MemoryStore<any>('evaluationId'),
-};
+import type { IQualityEvaluationRepository } from '../../domain/ports/out/IQualityEvaluationRepository';
 
 function parseId(raw: unknown): number | null {
   const n = Number(raw);
@@ -49,7 +45,7 @@ function withScore(data: any): QualityEvaluation {
   return { ...data, ...scored } as QualityEvaluation;
 }
 
-export async function registerQualityRoutes(app: FastifyInstance) {
+export async function registerQualityRoutes(app: FastifyInstance, evaluations: IQualityEvaluationRepository) {
   // ---------- Instrumento (solo lectura): características, preguntas y pesos ----------
   app.get('/api/v1/quality/characteristics', async () => ({
     standard: 'ISO/IEC 25010:2011',
@@ -67,7 +63,7 @@ export async function registerQualityRoutes(app: FastifyInstance) {
     if (Object.keys(parsed.data.scores).length !== ISO25010_QUESTION_COUNT) {
       return send400(reply, `All ${ISO25010_QUESTION_COUNT} items are required`, { expected: ISO25010_QUESTION_COUNT, received: Object.keys(parsed.data.scores).length });
     }
-    const created = stores.evaluations.create(withScore(parsed.data) as any);
+    const created = await evaluations.create(withScore(parsed.data));
     return reply.code(201).send(created);
   });
 
@@ -75,18 +71,14 @@ export async function registerQualityRoutes(app: FastifyInstance) {
   app.get('/api/v1/quality/evaluations', async (req) => {
     const q = ((req as any).query ?? {}) as any;
     const { limit, offset } = parsePagination(q);
-    const { data, total } = stores.evaluations.list(
-      (e: any) => (!q.service || e.service === q.service) && (!q.status || e.status === q.status),
-      limit,
-      offset,
-    );
+    const { data, total } = await evaluations.list({ service: q.service, status: q.status }, { limit, offset });
     return { data, total, limit, offset };
   });
 
   // ---------- Detalle ----------
   app.get('/api/v1/quality/evaluations/:id', async (req, reply) => {
     const id = parseId((req.params as any).id);
-    const found = id ? stores.evaluations.get(id) : null;
+    const found = id ? await evaluations.findById(id) : null;
     if (!found) return reply.code(404).send({ error: 'NotFound', message: 'Evaluation not found' });
     return found;
   });
@@ -101,24 +93,25 @@ export async function registerQualityRoutes(app: FastifyInstance) {
       const unknownIds = Object.keys(parsed.data.scores).filter((k) => !ALL_SUBCHARACTERISTIC_IDS.includes(k));
       if (unknownIds.length) return send400(reply, 'Unknown subcharacteristic ids', unknownIds);
     }
-    const current = stores.evaluations.get(id);
+    const current = await evaluations.findById(id);
     if (!current) return reply.code(404).send({ error: 'NotFound', message: 'Evaluation not found' });
-    const merged = { ...(current as any), ...parsed.data };
-    const updated = stores.evaluations.update(id, withScore(merged) as any);
+    const merged = { ...current, ...parsed.data };
+    const updated = await evaluations.update(id, { ...parsed.data, ...scoreEvaluation(merged.scores ?? {}) });
+    if (!updated) return reply.code(404).send({ error: 'NotFound', message: 'Evaluation not found' });
     return updated;
   });
 
   // ---------- Eliminar (soft-delete) ----------
   app.delete('/api/v1/quality/evaluations/:id', async (req, reply) => {
     const id = parseId((req.params as any).id);
-    if (!id || !stores.evaluations.remove(id)) return reply.code(404).send({ error: 'NotFound', message: 'Evaluation not found' });
+    if (!id || !(await evaluations.softDelete(id))) return reply.code(404).send({ error: 'NotFound', message: 'Evaluation not found' });
     return reply.code(204).send();
   });
 
   // ---------- Resumen agregado por servicio ----------
   app.get('/api/v1/quality/services/:service/summary', async (req) => {
     const service = decodeURIComponent((req.params as any).service);
-    const { data, total } = stores.evaluations.list((e: any) => e.service === service, 1000, 0);
+    const { data, total } = await evaluations.list({ service }, { limit: 1000, offset: 0 });
     if (!total) return { service, evaluations: 0, averageScore: null, averagePercentage: null, level: null, byCharacteristic: {} };
     const avg = (xs: number[]) => Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 100) / 100;
     const byChar: Record<string, number[]> = {};

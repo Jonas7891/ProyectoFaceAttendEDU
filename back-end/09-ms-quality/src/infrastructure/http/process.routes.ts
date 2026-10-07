@@ -1,6 +1,5 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { MemoryStore } from '../persistence/memory.store';
 import {
   ALL_OBJECTIVE_IDS,
   ISO29110_OBJECTIVE_COUNT,
@@ -13,11 +12,8 @@ import {
   scoreProcess,
 } from '../../domain/iso29110';
 import type { ProcessAssessment, QualityProject } from '../../domain/entities/QualityProject';
-
-export const processStores = {
-  projects: new MemoryStore<any>('projectId'),
-  assessments: new MemoryStore<any>('assessmentId'),
-};
+import type { IProcessAssessmentRepository } from '../../domain/ports/out/IProcessAssessmentRepository';
+import type { IQualityProjectRepository } from '../../domain/ports/out/IQualityProjectRepository';
 
 function parseId(raw: unknown): number | null {
   const n = Number(raw);
@@ -61,7 +57,11 @@ function withProcessScore(data: any): ProcessAssessment {
   return { ...data, score, rating: rateProcess(score) } as ProcessAssessment;
 }
 
-export async function registerProcessRoutes(app: FastifyInstance) {
+export async function registerProcessRoutes(
+  app: FastifyInstance,
+  projects: IQualityProjectRepository,
+  assessments: IProcessAssessmentRepository,
+) {
   // ---------- Instrumento (solo lectura): perfil Basic, objetivos y productos ----------
   app.get('/api/v1/quality/process/profile', async () => ({
     standard: 'ISO/IEC 29110 (perfil Basic, adaptado a VSE)',
@@ -77,7 +77,7 @@ export async function registerProcessRoutes(app: FastifyInstance) {
   app.post('/api/v1/quality/projects', async (req, reply) => {
     const parsed = projectBody.safeParse((req as any).body);
     if (!parsed.success) return send400(reply, 'Invalid project payload', parsed.error.flatten());
-    const created = processStores.projects.create(parsed.data as any);
+    const created = await projects.create(parsed.data);
     return reply.code(201).send(created);
   });
 
@@ -85,18 +85,14 @@ export async function registerProcessRoutes(app: FastifyInstance) {
   app.get('/api/v1/quality/projects', async (req) => {
     const q = ((req as any).query ?? {}) as any;
     const { limit, offset } = parsePagination(q);
-    const { data, total } = processStores.projects.list(
-      (p: any) => (!q.status || p.status === q.status),
-      limit,
-      offset,
-    );
+    const { data, total } = await projects.list({ status: q.status }, { limit, offset });
     return { data, total, limit, offset };
   });
 
   // ---------- Proyectos: detalle ----------
   app.get('/api/v1/quality/projects/:id', async (req, reply) => {
     const id = parseId((req.params as any).id);
-    const found = id ? processStores.projects.get(id) : null;
+    const found = id ? await projects.findById(id) : null;
     if (!found) return reply.code(404).send({ error: 'NotFound', message: 'Project not found' });
     return found;
   });
@@ -107,7 +103,7 @@ export async function registerProcessRoutes(app: FastifyInstance) {
     if (!id) return reply.code(404).send({ error: 'NotFound', message: 'Project not found' });
     const parsed = projectBody.partial().safeParse((req as any).body);
     if (!parsed.success) return send400(reply, 'Invalid project payload', parsed.error.flatten());
-    const updated = processStores.projects.update(id, parsed.data as any);
+    const updated = await projects.update(id, parsed.data);
     if (!updated) return reply.code(404).send({ error: 'NotFound', message: 'Project not found' });
     return updated;
   });
@@ -115,7 +111,7 @@ export async function registerProcessRoutes(app: FastifyInstance) {
   // ---------- Proyectos: eliminar (soft-delete) ----------
   app.delete('/api/v1/quality/projects/:id', async (req, reply) => {
     const id = parseId((req.params as any).id);
-    if (!id || !processStores.projects.remove(id)) return reply.code(404).send({ error: 'NotFound', message: 'Project not found' });
+    if (!id || !(await projects.softDelete(id))) return reply.code(404).send({ error: 'NotFound', message: 'Project not found' });
     return reply.code(204).send();
   });
 
@@ -123,7 +119,7 @@ export async function registerProcessRoutes(app: FastifyInstance) {
   app.post('/api/v1/quality/assessments', async (req, reply) => {
     const parsed = assessmentBody.safeParse((req as any).body);
     if (!parsed.success) return send400(reply, 'Invalid assessment payload', parsed.error.flatten());
-    if (!processStores.projects.get(parsed.data.projectId)) {
+    if (!(await projects.findById(parsed.data.projectId))) {
       return send400(reply, 'Unknown projectId', { projectId: parsed.data.projectId });
     }
     const proc = ISO29110_PROCESSES.find((p) => p.id === parsed.data.processId)!;
@@ -133,7 +129,7 @@ export async function registerProcessRoutes(app: FastifyInstance) {
     if (unknown.length) return send400(reply, `Ratings must belong to process ${parsed.data.processId}`, unknown);
     const missing = expected.filter((id) => !received.includes(id));
     if (missing.length) return send400(reply, `All ${expected.length} objectives of ${parsed.data.processId} are required`, missing);
-    const created = processStores.assessments.create(withProcessScore(parsed.data) as any);
+    const created = await assessments.create(withProcessScore(parsed.data));
     return reply.code(201).send(created);
   });
 
@@ -141,18 +137,15 @@ export async function registerProcessRoutes(app: FastifyInstance) {
   app.get('/api/v1/quality/assessments', async (req) => {
     const q = ((req as any).query ?? {}) as any;
     const { limit, offset } = parsePagination(q);
-    const { data, total } = processStores.assessments.list(
-      (a: any) => (!q.projectId || a.projectId === Number(q.projectId)) && (!q.processId || a.processId === q.processId),
-      limit,
-      offset,
-    );
+    const projectId = q.projectId ? Number(q.projectId) : undefined;
+    const { data, total } = await assessments.list({ projectId, processId: q.processId }, { limit, offset });
     return { data, total, limit, offset };
   });
 
   // ---------- Evaluaciones de proceso: detalle ----------
   app.get('/api/v1/quality/assessments/:id', async (req, reply) => {
     const id = parseId((req.params as any).id);
-    const found = id ? processStores.assessments.get(id) : null;
+    const found = id ? await assessments.findById(id) : null;
     if (!found) return reply.code(404).send({ error: 'NotFound', message: 'Assessment not found' });
     return found;
   });
@@ -163,9 +156,9 @@ export async function registerProcessRoutes(app: FastifyInstance) {
     if (!id) return reply.code(404).send({ error: 'NotFound', message: 'Assessment not found' });
     const parsed = assessmentBody.partial().safeParse((req as any).body);
     if (!parsed.success) return send400(reply, 'Invalid assessment payload', parsed.error.flatten());
-    const current = processStores.assessments.get(id) as any;
+    const current = await assessments.findById(id);
     if (!current) return reply.code(404).send({ error: 'NotFound', message: 'Assessment not found' });
-    if (parsed.data.projectId && !processStores.projects.get(parsed.data.projectId)) {
+    if (parsed.data.projectId && !(await projects.findById(parsed.data.projectId))) {
       return send400(reply, 'Unknown projectId', { projectId: parsed.data.projectId });
     }
     const merged = { ...current, ...parsed.data };
@@ -175,23 +168,25 @@ export async function registerProcessRoutes(app: FastifyInstance) {
       const unknown = Object.keys(merged.ratings).filter((k) => !expected.includes(k));
       if (unknown.length) return send400(reply, `Ratings must belong to process ${merged.processId}`, unknown);
     }
-    const updated = processStores.assessments.update(id, withProcessScore(merged) as any);
+    const scored = withProcessScore(merged);
+    const updated = await assessments.update(id, { ...parsed.data, score: scored.score, rating: scored.rating });
+    if (!updated) return reply.code(404).send({ error: 'NotFound', message: 'Assessment not found' });
     return updated;
   });
 
   // ---------- Evaluaciones de proceso: eliminar (soft-delete) ----------
   app.delete('/api/v1/quality/assessments/:id', async (req, reply) => {
     const id = parseId((req.params as any).id);
-    if (!id || !processStores.assessments.remove(id)) return reply.code(404).send({ error: 'NotFound', message: 'Assessment not found' });
+    if (!id || !(await assessments.softDelete(id))) return reply.code(404).send({ error: 'NotFound', message: 'Assessment not found' });
     return reply.code(204).send();
   });
 
   // ---------- Resumen agregado por proyecto ----------
   app.get('/api/v1/quality/projects/:id/summary', async (req, reply) => {
     const id = parseId((req.params as any).id);
-    const project = id ? (processStores.projects.get(id) as QualityProject | null) : null;
+    const project: QualityProject | null = id ? await projects.findById(id) : null;
     if (!project) return reply.code(404).send({ error: 'NotFound', message: 'Project not found' });
-    const { data } = processStores.assessments.list((a: any) => a.projectId === id, 1000, 0);
+    const { data } = await assessments.list({ projectId: id! }, { limit: 1000, offset: 0 });
     const byProcess: Record<string, { score: number; rating: string; assessments: number }> = {};
     for (const p of ISO29110_PROCESSES) {
       const mine = (data as any[]).filter((a) => a.processId === p.id);

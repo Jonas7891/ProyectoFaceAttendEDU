@@ -6,6 +6,8 @@ import { qualityPermission } from './infrastructure/http/permissions';
 import { registerProcessRoutes } from './infrastructure/http/process.routes';
 import { registerIstqbRoutes } from './infrastructure/http/istqb.routes';
 import { registerEventHook } from './infrastructure/messaging/event.publisher';
+import { closeDatabase, connectDatabase, healthCheck } from './infrastructure/db/database';
+import { createQualityRepositories } from './infrastructure/persistence/pg';
 
 const app = Fastify({ logger: true });
 const startedAt = Date.now();
@@ -43,35 +45,43 @@ function healthPayload(service: string) {
 app.get('/health', async () => healthPayload('quality-service'));
 app.get('/api/v1/health', async () => healthPayload('quality-service'));
 
+// Readiness is separate from liveness: `/health` keeps answering 200 for the
+// compose healthcheck, while `/health/ready` reports whether PostgreSQL answers.
+app.get('/health/ready', async (_req, reply) => {
+  const probe = await healthCheck();
+  const ready = probe.status === 'up';
+  return reply.code(ready ? 200 : 503).send({
+    status: ready ? 'ready' : 'not-ready',
+    service: 'quality-service',
+    database: probe,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 async function start() {
-  // PostgreSQL is a hard dependency: an unreachable database is a fatal boot
-  // error (compose restarts us). Only the test environment may skip it.
-  const databaseUrl = process.env.DATABASE_URL;
-  const pgSchema = process.env.PG_SCHEMA || 'quality';
-  if (!databaseUrl && process.env.NODE_ENV !== 'test') {
-    throw new Error('DATABASE_URL is not set — refusing to start');
-  }
-  if (databaseUrl) {
-    const { Pool } = await import('pg');
-    const pool = new Pool({ connectionString: databaseUrl });
-    try {
-      await pool.query(`CREATE SCHEMA IF NOT EXISTS "${pgSchema}"`);
-      await pool.query('SELECT 1');
-      app.log.info({ schema: pgSchema }, 'postgres connected (quality)');
-    } catch (err) {
-      app.log.error({ err }, 'postgres unavailable — refusing to start');
-      throw err;
-    } finally {
-      await pool.end().catch(() => undefined);
-    }
+  // PostgreSQL is the only persistence layer: there is no in-memory fallback, so
+  // a database that cannot be reached is a fatal boot error (compose restarts us).
+  try {
+    await connectDatabase();
+    app.log.info('postgres connected (quality)');
+  } catch (err) {
+    app.log.error({ err }, 'postgres unavailable — refusing to start');
+    await closeDatabase().catch(() => undefined);
+    throw err;
   }
 
   registerAuthGuard(app, qualityPermission);
 
-  await registerQualityRoutes(app);
-  await registerProcessRoutes(app);
-  await registerIstqbRoutes(app);
+  const repositories = createQualityRepositories();
+
+  await registerQualityRoutes(app, repositories.evaluations);
+  await registerProcessRoutes(app, repositories.projects, repositories.processAssessments);
+  await registerIstqbRoutes(app, repositories.istqbAssessments);
   registerEventHook(app);
+  app.addHook('onClose', async () => {
+    await closeDatabase().catch(() => undefined);
+  });
+
   const port = Number(process.env.PORT) || 8089;
   await app.listen({ port, host: '0.0.0.0' });
 }
