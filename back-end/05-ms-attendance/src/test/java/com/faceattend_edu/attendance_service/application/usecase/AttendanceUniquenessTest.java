@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -91,6 +93,26 @@ class AttendanceUniquenessTest {
         assertThrows(DuplicateEntityException.class,
                 () -> record.record(SESSION, ACTOR, "Present", "FACIAL", new BigDecimal("0.9")));
         verify(repository, never()).save(any());
+    }
+
+    @Test
+    void anAbsenceIsRecordedWithoutACaptureTime() {
+        when(repository.findByClassSessionIdAndAcademicActorId(SESSION, ACTOR)).thenReturn(Optional.empty());
+        when(repository.save(any(AttendanceRecord.class))).thenAnswer(call -> call.getArgument(0));
+
+        AttendanceRecord saved = record.record(SESSION, ACTOR, "Absent", "MANUAL", null);
+
+        assertNull(saved.getCapturedAt());
+    }
+
+    @Test
+    void aPresentRecordKeepsItsCaptureTime() {
+        when(repository.findByClassSessionIdAndAcademicActorId(SESSION, ACTOR)).thenReturn(Optional.empty());
+        when(repository.save(any(AttendanceRecord.class))).thenAnswer(call -> call.getArgument(0));
+
+        AttendanceRecord saved = record.record(SESSION, ACTOR, "Present", "FACIAL", new BigDecimal("0.9"));
+
+        assertNotNull(saved.getCapturedAt());
     }
 
     @Test
