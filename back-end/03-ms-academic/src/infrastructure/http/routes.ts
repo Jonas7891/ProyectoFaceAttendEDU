@@ -389,9 +389,20 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const created = await repos.actors.create(parsed.data);
     return reply.code(201).send(created);
   });
-  app.get('/api/v1/academic-actors', async (req, reply) =>
-    pageOf(req, reply, (page) => repos.actors.list(page), () => repos.actors.count()),
-  );
+  // ?personId= resuelve en una peticion a que sede pertenece quien inicia sesion;
+  // sin el, sigue devolviendo la coleccion completa como antes.
+  app.get('/api/v1/academic-actors', async (req, reply) => {
+    const personId = (req.query as any)?.personId;
+    if (typeof personId === 'string' && personId.length > 0) {
+      return pageOf(
+        req,
+        reply,
+        (page) => repos.actors.findByPerson(personId, page),
+        () => repos.actors.countByPerson(personId),
+      );
+    }
+    return pageOf(req, reply, (page) => repos.actors.list(page), () => repos.actors.count());
+  });
   app.get('/api/v1/academic-actors/:id', async (req, reply) => {
     const id = parseId((req.params as any).id);
     const found = id ? await repos.actors.findById(id) : null;
