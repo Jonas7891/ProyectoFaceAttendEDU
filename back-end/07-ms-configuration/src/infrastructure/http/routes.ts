@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import type { ConfigurationRepositories } from '../persistence/postgres';
+import { resolveCaseScope, ScopeError, type CaseScope } from './caseScope';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -38,6 +39,19 @@ type Reply = FastifyReply;
 
 function badRequest(reply: Reply, details: unknown, message?: string) {
   return reply.code(400).send({ error: 'BadRequest', ...(message ? { message } : {}), details, timestamp: new Date().toISOString() });
+}
+
+/** Resolves who the caller may see; answers 403/503 itself when it cannot. */
+async function scopeOf(req: Req, reply: Reply): Promise<CaseScope | null> {
+  try {
+    return await resolveCaseScope(req);
+  } catch (err) {
+    if (err instanceof ScopeError) {
+      reply.code(err.statusCode).send({ error: err.statusCode === 403 ? 'Forbidden' : 'ServiceUnavailable', message: err.message, timestamp: new Date().toISOString() });
+      return null;
+    }
+    throw err;
+  }
 }
 
 function notFound(reply: Reply) {
@@ -166,6 +180,11 @@ export async function registerConfigurationRoutes(app: FastifyInstance, repos: C
     const parsed = caseBody.safeParse((req as any).body);
     if (!parsed.success) return badRequest(reply, parsed.error.flatten());
     const data = parsed.data;
+    const scope = await scopeOf(req, reply);
+    if (!scope) return reply;
+    if (!scope.all && data.personId !== scope.personId) {
+      return reply.code(403).send({ error: 'Forbidden', message: 'You can only request an update for your own biometric data', timestamp: new Date().toISOString() });
+    }
     if (data.biometricType === 'FINGERPRINT' && !data.fingerNumber) {
       return badRequest(reply, undefined, 'fingerNumber required for FINGERPRINT');
     }
@@ -190,17 +209,25 @@ export async function registerConfigurationRoutes(app: FastifyInstance, repos: C
   });
   app.get('/api/v1/biometric-update-cases', async (req, reply) => {
     const status = ((req.query as any) ?? {}).status as string | undefined;
+    const scope = await scopeOf(req, reply);
+    if (!scope) return reply;
+    const personId = scope.all ? undefined : scope.personId;
     return paged(
       req,
       reply,
-      (page) => repos.cases.search({ status, ...page }),
-      () => repos.cases.countMatching({ status }),
+      (page) => repos.cases.search({ status, personId, ...page }),
+      () => repos.cases.countMatching({ status, personId }),
     );
   });
   app.get('/api/v1/biometric-update-cases/:id', async (req, reply) => {
     const id = String((req.params as any).id);
     const found = UUID_RE.test(id) ? await repos.cases.findById(id) : null;
-    return found ?? notFound(reply);
+    if (!found) return notFound(reply);
+    const scope = await scopeOf(req, reply);
+    if (!scope) return reply;
+    // Someone else's case looks exactly like a missing one.
+    if (!scope.all && found.personId !== scope.personId) return notFound(reply);
+    return found;
   });
   app.put('/api/v1/biometric-update-cases/:id', async (req, reply) => {
     const parsed = caseBody.partial().safeParse((req as any).body ?? {});
@@ -232,6 +259,11 @@ export async function registerConfigurationRoutes(app: FastifyInstance, repos: C
   app.get('/api/v1/persons/:personId/biometric-cases', async (req, reply) => {
     const personId = String((req.params as any).personId);
     if (!UUID_RE.test(personId)) return reply.send([]);
+    const scope = await scopeOf(req, reply);
+    if (!scope) return reply;
+    if (!scope.all && personId !== scope.personId) {
+      return reply.code(403).send({ error: 'Forbidden', message: 'You can only list your own cases', timestamp: new Date().toISOString() });
+    }
     return paged(
       req,
       reply,
