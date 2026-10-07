@@ -205,6 +205,7 @@ const INSTRUCTOR_PASSWORD = process.env.INSTRUCTOR_PASSWORD ?? "Docente2026*";
 const STUDENT_USERNAME = process.env.STUDENT_USERNAME ?? "valentina.rios";
 const STUDENT_PASSWORD = process.env.STUDENT_PASSWORD ?? "Estudiante2026*";
 const TEACHER_PASSWORD = process.env.TEACHER_PASSWORD ?? "Docente2026*";
+const SCHOOL_ADMIN_PASSWORD = process.env.SCHOOL_ADMIN_PASSWORD ?? "Rector2026*";
 // Bootstrap admin from DB seeds (01-bootstrap-admin-user + 005 role assignment).
 // The seed needs its session token: protected endpoints require Bearer + permissions.
 const BOOTSTRAP_USERNAME = process.env.BOOTSTRAP_USERNAME ?? "admin.faceattend";
@@ -218,6 +219,30 @@ const SCHOOLS = [
   { code: "ICT-01", prefix: "ICT", name: "Institución Educativa Distrital Camilo Torres", city: "Bogotá" },
   { code: "SMP-02", prefix: "SMP", name: "Institución Educativa San Martín de Porres", city: "Medellín" },
 ];
+// Un administrador por sede. El admin global no tiene academic_actor, asi que no
+// hay dato con el cual acotar lo que ve; estos si lo tienen y el frontend resuelve
+// su sede con GET /academic-actors?personId=.
+const SCHOOL_ADMINS = [
+  {
+    schoolIdx: 0, documentNumber: "52874109", name: "Marcela", lastName: "Quintero Pardo",
+    username: "admin.ict", email: "marcela.quintero@ict.edu.co",
+    phone: "3106742188", address: "Calle 72 # 11-45, Chapinero",
+    birthDate: "1981-04-22", bloodType: "A+", actorCode: "ADM-ICT-001",
+  },
+  {
+    schoolIdx: 1, documentNumber: "71204836", name: "Hernán", lastName: "Ocampo Zuluaga",
+    username: "admin.smp", email: "hernan.ocampo@smp.edu.co",
+    phone: "3014529073", address: "Carrera 70 # 44-18, Laureles",
+    birthDate: "1976-09-08", bloodType: "O+", actorCode: "ADM-SMP-001",
+  },
+];
+// Un estudiante con login por sede, reutilizando dos de los ya sembrados: asi
+// arrastran su ficha, matricula y asistencia reales.
+const STUDENT_LOGINS = [
+  { schoolIdx: 0, username: "est.ict" },
+  { schoolIdx: 1, username: "est.smp" },
+];
+
 // Small schools from the previous seed: soft-disabled (status=false) once the
 // big schools exist, so school pickers show exactly the 2 active institutions.
 const LEGACY_SCHOOL_CODES = ["ANDES-01", "SAM-02", "ROS-03", "SEED-SCH"];
@@ -413,6 +438,7 @@ async function seedIdentity() {
   const personJobs = [
     ...PEOPLE.map((p) => p),
     ...STAFF.map((s) => s),
+    ...SCHOOL_ADMINS,
     ...STUDENTS,
     ...TEACHERS,
   ];
@@ -454,6 +480,13 @@ async function seedIdentity() {
     { key: "userId", personId: ids.staffPersonIds.admin, username: SEED_USERNAME, password: SEED_PASSWORD },
     { key: "instructorUserId", personId: ids.staffPersonIds.instructor, username: INSTRUCTOR_USERNAME, password: INSTRUCTOR_PASSWORD },
     { key: "studentUserId", personId: ids.personIds[0] ?? null, username: STUDENT_USERNAME, password: STUDENT_PASSWORD },
+    ...SCHOOL_ADMINS.map((a) => ({ personId: M.persons.get(a.documentNumber), username: a.username, password: SCHOOL_ADMIN_PASSWORD })),
+    // Un estudiante con login por sede, tomado de los ya sembrados.
+    ...STUDENT_LOGINS.map((l) => ({
+      personId: M.persons.get(STUDENTS.find((s) => s.schoolIdx === l.schoolIdx).documentNumber),
+      username: l.username,
+      password: STUDENT_PASSWORD,
+    })),
     ...TEACHERS.map((t) => ({ personId: M.persons.get(t.documentNumber), username: t.username, password: TEACHER_PASSWORD })),
   ];
   const tickUsers = progress(logins.length, 40, "users");
@@ -497,6 +530,8 @@ async function seedAuthorization() {
     { userId: ids.userId, roleId: adminRoleId },
     { userId: ids.instructorUserId, roleId: instructorRoleId },
     { userId: ids.studentUserId, roleId: aprendizRoleId },
+    ...SCHOOL_ADMINS.map((a) => ({ userId: M.users.get(a.username), roleId: adminRoleId, label: a.username })),
+    ...STUDENT_LOGINS.map((l) => ({ userId: M.users.get(l.username), roleId: aprendizRoleId, label: l.username })),
     ...TEACHERS.map((t) => ({ userId: M.users.get(t.username), roleId: instructorRoleId, label: t.username })),
   ];
   const tick = progress(assignments.length, 40, "role assignments");
@@ -588,12 +623,25 @@ async function seedAcademic() {
     }
   }
 
+  // Tipo de actor ADMIN: el catalogo solo traia STUDENT e INSTRUCTOR, asi que un
+  // administrador no podia tener fila en academic_actor y por tanto no tenia sede.
+  const actorTypes = asArray(await get("academic", "/api/v1/actor-types"));
+  let adminActorTypeId = actorTypes.find((t) => t?.code === "ADMIN")?.actorTypeId;
+  if (adminActorTypeId == null) {
+    const created = await post("academic", "/api/v1/actor-types", { code: "ADMIN", name: "Administrador de sede" });
+    adminActorTypeId = created ? pick(created, "actorTypeId", "id") : null;
+  }
+  if (adminActorTypeId == null) console.log("skip  - no ADMIN actor type: school admins will have no school");
+
   // academic_actor.person_id is a native UUID column (cross-context reference to
   // identity.person, no FK): it must be the UUID from seedIdentity(), not the
   // biometric string id (which lives only in MongoDB).
   const actorJobs = [
     ...STUDENTS.map((s) => ({ personKey: s.documentNumber, actorTypeId: 1, schoolIdx: s.schoolIdx, actorCode: s.actorCode })),
     ...TEACHERS.map((t) => ({ personKey: t.documentNumber, actorTypeId: 2, schoolIdx: t.schoolIdx, actorCode: t.actorCode })),
+    ...(adminActorTypeId == null ? [] : SCHOOL_ADMINS.map((a) => ({
+      personKey: a.documentNumber, actorTypeId: adminActorTypeId, schoolIdx: a.schoolIdx, actorCode: a.actorCode,
+    }))),
   ].filter((a) => M.persons.get(a.personKey) && ids.schoolIds[a.schoolIdx] != null);
   const tickActors = progress(actorJobs.length, 400, "actors");
   await pooled(actorJobs, CONCURRENCY, async (a) => {
