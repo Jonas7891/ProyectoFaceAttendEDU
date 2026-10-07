@@ -16,8 +16,8 @@ import {
 } from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../../components/common/ThemeContext';
-import {VerificationService} from '../../../services/verificationService';
-import {request, GET} from '../../../api/apiClient';
+import {VerificationService, VerificationError} from '../../../services/verificationService';
+import {VerificationErrorType} from '../../../services/constants/auths';
 import styles from '../Styles/Forgotpasswordscreen/Style';
 
 const COOLDOWN_MS = 60000;
@@ -40,7 +40,6 @@ function initializeLayoutAnimations() {
 initializeLayoutAnimations();
 
 const RecoveryErrorType = {
-    NOT_FOUND: 'NOT_FOUND',
     TIMEOUT: 'TIMEOUT',
     GENERIC: 'GENERIC',
 };
@@ -57,29 +56,23 @@ const PasswordRecoveryService = {
     async sendRecoveryEmail(email) {
         const normalizedEmail = email.toLowerCase().trim();
 
-        let exists = false;
+        // El backend es el único dueño de la verificación: responde 202
+        // anti-enumeración a cualquier correo y sólo emite código si la cuenta
+        // existe. Aquí había una consulta previa a `GET person?email=` que ya
+        // no es pública (401 sin sesión): el flujo moría antes de llegar a
+        // forgot-password, ningún correo se enviaba y además filtraba si el
+        // correo estaba registrado.
         try {
-            const personData = await request({
-                method: GET,
-                url: 'person',
-                params: { email: normalizedEmail },
-                requiresAuth: false,
-            });
-            const people = personData && Array.isArray(personData.value)
-                ? personData.value
-                : Array.isArray(personData)
-                    ? personData
-                    : [];
-            exists = people.length > 0;
-        } catch {
-            throw new RecoveryError(RecoveryErrorType.TIMEOUT, 'No se pudo verificar el correo. Intenta de nuevo.');
+            await VerificationService.sendRecoveryCode(normalizedEmail);
+        } catch (err) {
+            if (err instanceof RecoveryError) throw err;
+            throw new RecoveryError(
+                err instanceof VerificationError && err.type === VerificationErrorType.TIMEOUT
+                    ? RecoveryErrorType.TIMEOUT
+                    : RecoveryErrorType.GENERIC,
+                err?.message,
+            );
         }
-
-        if (!exists) {
-            throw new RecoveryError(RecoveryErrorType.NOT_FOUND, 'Email no encontrado');
-        }
-
-        await VerificationService.sendRecoveryCode(normalizedEmail);
     },
 };
 
@@ -408,7 +401,6 @@ export default function ForgotPasswordScreen({ navigation }) {
         sendButton: t('forgotPassword.sendButton'),
         errorRequired: t('forgotPassword.errorRequired'),
         errorInvalidEmail: t('forgotPassword.errorInvalidEmail'),
-        errorNotFound: t('forgotPassword.errorNotFound'),
         errorTimeout: t('forgotPassword.errorTimeout'),
         errorGeneric: t('forgotPassword.errorGeneric'),
         successMessage: t('forgotPassword.successMessage'),
@@ -419,8 +411,6 @@ export default function ForgotPasswordScreen({ navigation }) {
         if (!recovery.error) return null;
 
         switch (recovery.error.type) {
-            case RecoveryErrorType.NOT_FOUND:
-                return labels.errorNotFound;
             case RecoveryErrorType.TIMEOUT:
                 return labels.errorTimeout;
             default:
