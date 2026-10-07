@@ -12,6 +12,8 @@ import {
 } from './infrastructure/db/database';
 import { RepositoryError } from './infrastructure/persistence/errors';
 import { createAcademicRepositories } from './infrastructure/persistence/postgres';
+import { registerAuthGuard } from './infrastructure/http/authGuard';
+import { academicPermission } from './infrastructure/http/permissions';
 
 const app = Fastify({ logger: true });
 const startedAt = Date.now();
@@ -85,6 +87,8 @@ async function start() {
     await closeDatabase().catch(() => undefined);
     throw err;
   }
+
+  registerAuthGuard(app, academicPermission);
 
   // ISO/IEC 9001 — Quality audit middleware (Cláusula 8.5.2 / 9.1)
   registerQualityMiddleware(app);
