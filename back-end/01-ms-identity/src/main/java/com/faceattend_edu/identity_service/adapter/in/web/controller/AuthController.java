@@ -1,6 +1,7 @@
 package com.faceattend_edu.identity_service.adapter.in.web.controller;
 
 import com.faceattend_edu.identity_service.adapter.in.web.dto.AuthRequest;
+import com.faceattend_edu.identity_service.adapter.in.web.dto.RefreshSessionRequest;
 import com.faceattend_edu.identity_service.adapter.in.web.dto.UserDto;
 import com.faceattend_edu.identity_service.adapter.in.web.dto.UserSessionDto;
 import com.faceattend_edu.identity_service.adapter.in.web.mapper.UserSessionWebMapper;
@@ -8,7 +9,9 @@ import com.faceattend_edu.identity_service.adapter.in.web.mapper.UserWebMapper;
 import com.faceattend_edu.identity_service.application.port.in.AuthenticateUserUseCase;
 import com.faceattend_edu.identity_service.application.port.in.CloseUserSessionUseCase;
 import com.faceattend_edu.identity_service.application.port.in.GetUserByUsernameUseCase;
+import com.faceattend_edu.identity_service.application.port.in.RefreshSessionUseCase;
 import com.faceattend_edu.identity_service.domain.exception.ValidationException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +27,7 @@ public class AuthController {
     private final AuthenticateUserUseCase authenticateUserUseCase;
     private final CloseUserSessionUseCase closeUserSessionUseCase;
     private final GetUserByUsernameUseCase getUserByUsernameUseCase;
+    private final RefreshSessionUseCase refreshSessionUseCase;
     private final UserSessionWebMapper sessionWebMapper;
     private final UserWebMapper userWebMapper;
 
@@ -31,6 +35,26 @@ public class AuthController {
     public ResponseEntity<UserSessionDto> login(@Valid @RequestBody AuthRequest authRequest) {
         return ResponseEntity.ok(sessionWebMapper.toDto(
                 authenticateUserUseCase.authenticate(authRequest.getIdentifier(), authRequest.getPassword())));
+    }
+
+    /**
+     * Rotación de la sesión opaca (refresh token): devuelve un sessionId nuevo
+     * y el anterior queda cerrado. Falla con 401 si la sesión venció o ya fue
+     * renovada (un solo uso).
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<UserSessionDto> refresh(@Valid @RequestBody RefreshSessionRequest request,
+                                                  HttpServletRequest httpRequest) {
+        return ResponseEntity.ok(sessionWebMapper.toDto(
+                refreshSessionUseCase.refresh(request.getSessionId(), clientIp(httpRequest))));
+    }
+
+    private static String clientIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            return forwarded.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 
     @PostMapping("/logout")

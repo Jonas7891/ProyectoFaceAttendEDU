@@ -11,6 +11,7 @@ import com.faceattend_edu.identity_service.domain.model.UserSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -47,5 +48,11 @@ public class UserSessionPersistenceAdapter implements LoadUserSessionPort, LoadU
     @Override
     public void updateUserSession(UserSession session) {
         repository.save(mapper.toEntity(session));
+    }
+
+    @Override
+    public int closeSessionIfActive(UUID sessionId, LocalDateTime closedAt) {
+        return repository.closeIfActive(sessionId, closedAt,
+                UserSession.STATUS_ACTIVE, UserSession.STATUS_CLOSED);
     }
 }

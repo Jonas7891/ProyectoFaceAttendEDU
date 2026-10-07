@@ -123,6 +123,14 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         // Bootstrap: login/logout/me públicos; el resto de /api/** exige sesión.
         if (path.equals("/api/v1/auth/login") && method.equalsIgnoreCase("POST")) return true;
         if (path.equals("/api/v1/auth/logout") && method.equalsIgnoreCase("POST")) return true;
+        // Rotación de sesión (refresh token): el sessionId viejo viaja en el cuerpo
+        // y se cierra al emitir el nuevo, por eso no exige bearer previo.
+        if (path.equals("/api/v1/auth/refresh") && method.equalsIgnoreCase("POST")) return true;
+        // Recuperación de contraseña: todavía no hay sesión; la autorización la da
+        // el reto verificado que vive en el almacén de códigos.
+        if (path.equals("/api/v1/auth/forgot-password") && method.equalsIgnoreCase("POST")) return true;
+        if (path.equals("/api/v1/auth/verify-code") && method.equalsIgnoreCase("POST")) return true;
+        if (path.equals("/api/v1/auth/reset-password") && method.equalsIgnoreCase("POST")) return true;
         if (path.equals("/api/v1/auth/me") && method.equalsIgnoreCase("GET")) return true;
         // Lectura de sesión por UUID: la usa el propio filtro (fetchSession) en cada
         // MS. Sin bypass, la validación se llamaría a sí misma por HTTP en bucle

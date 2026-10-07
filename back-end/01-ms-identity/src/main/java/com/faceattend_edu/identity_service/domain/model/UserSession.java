@@ -44,6 +44,17 @@ public class UserSession {
         return STATUS_ACTIVE.equals(this.sessionStatus) && this.endDate == null;
     }
 
+    /**
+     * La sesión expira si supera el timeout configurado desde su apertura. El
+     * timeout se evalúa aquí (y no en cada microservicio) porque identity es la
+     * única fuente de verdad: los demás MS validan contra GET /sessions/{id}.
+     */
+    public boolean isExpired(Duration timeout) {
+        if (!isActive() || timeout == null || timeout.isZero() || timeout.isNegative()) return false;
+        if (this.startDate == null) return true;
+        return this.startDate.plus(timeout).isBefore(LocalDateTime.now());
+    }
+
     public long durationSeconds() {
         if (this.startDate == null) return 0L;
         LocalDateTime end = this.endDate == null ? LocalDateTime.now() : this.endDate;
