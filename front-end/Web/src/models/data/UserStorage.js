@@ -19,6 +19,8 @@ import { roleNamesFrom, toUiRole } from "../../core/utils/backendRoles";
 import {
     fullName,
     instructorCourseNamesByPerson,
+    getActiveSchool,
+    listActors,
     listUsers,
     normalizeStatus,
     optional,
@@ -62,8 +64,18 @@ async function rolesOneByOne(users) {
 
 async function usersFromApi() {
     // Usuarios y personas son necesarios: sin personas no hay nombre ni correo.
-    const [users, persons] = await Promise.all([listUsers(), personMap()]);
-    if (!Array.isArray(users)) return [];
+    const [allUsers, persons] = await Promise.all([listUsers(), personMap()]);
+    if (!Array.isArray(allUsers)) return [];
+
+    // app_user no tiene sede (la identidad es agnóstica de sede, MODELO §2.6) y
+    // tampoco hay endpoint que la filtre, así que se acota por las personas que sí
+    // son actores de la sede activa. Sin sede activa se devuelven todos.
+    const users = getActiveSchool() == null
+        ? allUsers
+        : await (async () => {
+            const personIds = new Set((await listActors()).map((a) => a.personId));
+            return allUsers.filter((u) => personIds.has(u.personId));
+        })();
 
     // Roles: una sola petición por lote a GET /user-roles. Antes se pedía uno por
     // usuario, lo que con 88 cuentas eran 88 viajes de ida y vuelta (~3 min). Si el
