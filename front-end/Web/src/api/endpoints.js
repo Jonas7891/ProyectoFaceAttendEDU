@@ -66,6 +66,7 @@ export const endpoints = {
         actorTypes: `${API_V1}/actor-types`,
         actorTypeById: (id) => `${API_V1}/actor-types/${id}`,
         actors: `${API_V1}/academic-actors`,
+        actorsByPerson: (personId) => `${API_V1}/academic-actors?personId=${personId}`,
         actorById: (id) => `${API_V1}/academic-actors/${id}`,
         actorStatus: (id) => `${API_V1}/academic-actors/${id}/status`,
         actorEnrollments: (actorId) => `${API_V1}/academic-actors/${actorId}/enrollments`,

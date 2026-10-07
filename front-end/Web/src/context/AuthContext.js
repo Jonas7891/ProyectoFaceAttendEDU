@@ -155,9 +155,16 @@ export function AuthProvider({ children }) {
             }
         }
 
+        // Sede del usuario: vive en academic_actor (person es agnostica de sede,
+        // MODELO §2.6). Sin esto el admin no tenia con que acotar lo que ve y la
+        // aplicacion mostraba las dos instituciones mezcladas.
+        const school = personId ? await authApi.schoolOf(personId) : null;
+
         const sessionUser = {
             id: userId,
             personId,
+            schoolId: school?.schoolId ?? null,
+            academicActorId: school?.academicActorId ?? null,
             username: userDto?.username ?? credentials.email,
             email: person?.email ?? credentials.email,
             name: person
