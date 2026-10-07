@@ -13,7 +13,7 @@
 //    const { students, addStudent, ... } = useAppData();
 // ============================================================
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import { resetReferenceData } from "../services/api/referenceData";
 import { useAuth } from "./AuthContext";
@@ -83,6 +83,11 @@ function splitStaff(users) {
     };
 }
 
+// ── Revelado progresivo (efecto persiana) ─────────────────
+// Tandas fijas: la animación tarda lo mismo con 20 filas que con 2.000.
+const REVEAL_STEPS = 12;
+const REVEAL_INTERVAL_MS = 150;
+
 // ── Context ───────────────────────────────────────────────
 
 const AppDataContext = createContext(null);
@@ -102,6 +107,10 @@ export function AppDataProvider({ children }) {
     const [loadedTeachers, setLoadedTeachers] = useState([]);
     const [loadedAdmins, setLoadedAdmins] = useState([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(true);
+
+    // Temporizador del revelado: se guarda para poder cancelarlo al cerrar sesión o
+    // al desmontar. Sin esto un login tras un logout dejaba dos revelados en marcha.
+    const revealTimer = useRef(null);
 
     // Obtener tipo de período académico
     const periodType = useMemo(() => getConfiguredAcademicPeriodType(), []);
@@ -164,35 +173,41 @@ export function AppDataProvider({ children }) {
         
         // Combinar todos los usuarios (el personal sale de la API, no de mocks)
         const { teacherRows, adminRows } = splitStaff(allUsers);
-        const allUsersToLoad = [
-            ...enrichedStudents,
-            ...teacherRows,
-            ...adminRows,
-        ];
-        
-        // Cargar usuarios progresivamente (cada 150ms)
-        let currentIndex = 0;
+        const total = enrichedStudents.length + teacherRows.length + adminRows.length;
+
+        // Revelado progresivo por tandas. Antes se revelaba UNA fila cada 150 ms con
+        // `prev => [...prev, user]`: con 1.688 estudiantes eran ~4,2 min de espera y
+        // una copia del arreglo completo por fila (coste cuadrático), con la vista
+        // re-renderizando 1.688 veces. Ahora la animación siempre dura REVEAL_STEPS
+        // tandas, así que el coste no depende del tamaño del conjunto de datos.
+        clearInterval(revealTimer.current);
+
+        let revealed = 0;
+        const step = Math.max(1, Math.ceil(total / REVEAL_STEPS));
+        const clamp = (value, max) => Math.min(Math.max(value, 0), max);
+
         const loadInterval = setInterval(() => {
-            if (currentIndex < allUsersToLoad.length) {
-                const user = allUsersToLoad[currentIndex];
-                
-                // Agregar al array correspondiente según tipo
-                if (currentIndex < enrichedStudents.length) {
-                    setLoadedStudents(prev => [...prev, user]);
-                } else if (currentIndex < enrichedStudents.length + teacherRows.length) {
-                    setLoadedTeachers(prev => [...prev, user]);
-                } else {
-                    setLoadedAdmins(prev => [...prev, user]);
-                }
-                
-                currentIndex++;
-            } else {
-                // Terminó de cargar todos
+            revealed = Math.min(revealed + step, total);
+
+            // slice() sobre el origen en vez de acumular: una copia por tanda, no por fila.
+            setLoadedStudents(enrichedStudents.slice(0, clamp(revealed, enrichedStudents.length)));
+            setLoadedTeachers(
+                teacherRows.slice(0, clamp(revealed - enrichedStudents.length, teacherRows.length))
+            );
+            setLoadedAdmins(
+                adminRows.slice(
+                    0,
+                    clamp(revealed - enrichedStudents.length - teacherRows.length, adminRows.length)
+                )
+            );
+
+            if (revealed >= total) {
                 clearInterval(loadInterval);
                 setIsLoadingUsers(false);
             }
-        }, 150); // 150ms entre cada usuario (ajustable)
-        
+        }, REVEAL_INTERVAL_MS);
+
+        revealTimer.current = loadInterval;
         return () => clearInterval(loadInterval);
     }, [periodType]);
 
@@ -236,6 +251,7 @@ export function AppDataProvider({ children }) {
 
         return () => {
             cancelled = true;
+            clearInterval(revealTimer.current); // corta un revelado a medias
         };
     }, [isLoadingAuth, user, startProgressiveUserLoading]);
 
