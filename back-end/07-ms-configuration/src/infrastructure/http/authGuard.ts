@@ -21,7 +21,7 @@ function deny(reply: FastifyReply, status: number, message: string, path: string
   });
 }
 
-async function getJson(url: string, token: string): Promise<{ status: number; body: any }> {
+export async function getJson(url: string, token: string): Promise<{ status: number; body: any }> {
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` },
     signal: AbortSignal.timeout(TIMEOUT_MS),
@@ -68,5 +68,6 @@ export function registerAuthGuard(app: FastifyInstance, requiredPermission: Perm
       if (!allowed) return deny(reply, 403, `Forbidden: requires ${permission}`, path);
     }
     (req as any).userId = userId;
+    (req as any).authToken = token;
   });
 }

@@ -69,7 +69,7 @@ services:
     url: http://ms-attendance:8085
     routes:
       - name: attendance-route
-        paths: [/api/v1/attendance-records, /api/v1/justifications, /api/v1/justification-types, /api/v1/supporting-documents]
+        paths: [/api/v1/attendance-records, /api/v1/attendance-reports, /api/v1/justifications, /api/v1/justification-types, /api/v1/supporting-documents]
         strip_path: false
       - name: attendance-nested-route
         paths: ["~/api/v1/class-sessions/.+/attendance", "~/api/v1/academic-actors/.+/attendance", "~/api/v1/attendance/.+/justification", "~/api/v1/justifications/.+/documents"]

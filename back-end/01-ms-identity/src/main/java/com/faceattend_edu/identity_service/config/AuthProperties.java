@@ -41,6 +41,14 @@ public class AuthProperties {
     @Value("${faceattend.recovery.resend-cooldown-seconds:60}")
     private long resendCooldownSeconds = 60;
 
+    /** Failed logins before the identifier is locked (mirrors security_configuration max_login_attempts). */
+    @Value("${faceattend.auth.max-login-attempts:5}")
+    private int maxLoginAttempts = 5;
+
+    /** Lock length in minutes (mirrors security_configuration lockout_duration_minutes). */
+    @Value("${faceattend.auth.lockout-minutes:30}")
+    private long lockoutMinutes = 30;
+
     /** URL interna de notification (red compose: http://ms-notification:8088). */
     @Value("${faceattend.notification.base-url:http://localhost:8088}")
     private String notificationBaseUrl = "http://localhost:8088";
@@ -51,6 +59,10 @@ public class AuthProperties {
 
     public Duration sessionTimeout() {
         return Duration.ofMinutes(sessionTimeoutMinutes);
+    }
+
+    public Duration lockoutDuration() {
+        return Duration.ofMinutes(lockoutMinutes);
     }
 
     public Duration codeTtl() {
