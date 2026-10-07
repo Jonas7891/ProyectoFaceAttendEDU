@@ -47,7 +47,11 @@ public class AttendanceRecord {
         if (capturedAt == null) capturedAt = Instant.now();
         if (rowVersion == 0) rowVersion = 1L;
     }
-    public void touchUpdated() { updatedAt = Instant.now(); rowVersion++; }
+    public void touchUpdated() {
+        updatedAt = Instant.now();
+        // row_version is owned by JPA @Version (reinforced by fn_audit_timestamps trigger);
+        // pre-incrementing it here makes merge() fail with StaleObjectStateException
+    }
 
     @Override public boolean equals(Object o) {
         if (this == o) return true;
