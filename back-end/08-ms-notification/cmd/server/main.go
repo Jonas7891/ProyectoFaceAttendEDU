@@ -98,6 +98,9 @@ func main() {
 		if container.AlertTypeHandler != nil {
 			container.AlertTypeHandler.Register(r)
 		}
+		if container.EmailHandler != nil {
+			container.EmailHandler.Register(r)
+		}
 	}
 
 	port := os.Getenv("PORT")
