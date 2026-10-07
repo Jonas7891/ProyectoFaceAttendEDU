@@ -19,14 +19,13 @@ import { roleNamesFrom, toUiRole } from "../../core/utils/backendRoles";
 import {
     fullName,
     instructorCourseNamesByPerson,
-    getActiveSchool,
     listActors,
-    listUsers,
     normalizeStatus,
     optional,
     personMap,
     rolesForUser,
     rolesForUsers,
+    userByPersonMap,
 } from "../../services/api/referenceData";
 
 const STORAGE_KEY = "@faceattend_users";
@@ -63,19 +62,30 @@ async function rolesOneByOne(users) {
 }
 
 async function usersFromApi() {
-    // Usuarios y personas son necesarios: sin personas no hay nombre ni correo.
-    const [allUsers, persons] = await Promise.all([listUsers(), personMap()]);
-    if (!Array.isArray(allUsers)) return [];
+    // La lista se arma desde academic_actor, no desde /users: el actor es lo que
+    // ata una persona a una sede (app_user no tiene sede, MODELO §2.6), así que
+    // recorrerlo es lo que hace que la vista respete la institución del usuario.
+    // listActors() ya viene acotado a la sede activa.
+    //
+    // Consecuencia: una cuenta sin academic_actor no aparece — no pertenece a
+    // ninguna institución — y un actor sin cuenta tampoco, porque no hay usuario
+    // que mostrar.
+    const [actors, usersByPerson, persons] = await Promise.all([
+        listActors(),
+        userByPersonMap(),
+        personMap(),
+    ]);
+    if (!Array.isArray(actors)) return [];
 
-    // app_user no tiene sede (la identidad es agnóstica de sede, MODELO §2.6) y
-    // tampoco hay endpoint que la filtre, así que se acota por las personas que sí
-    // son actores de la sede activa. Sin sede activa se devuelven todos.
-    const users = getActiveSchool() == null
-        ? allUsers
-        : await (async () => {
-            const personIds = new Set((await listActors()).map((a) => a.personId));
-            return allUsers.filter((u) => personIds.has(u.personId));
-        })();
+    const seen = new Set();
+    const users = [];
+    for (const actor of actors) {
+        const user = usersByPerson.get(actor.personId);
+        // Una persona puede ser actor en varias sedes: su cuenta es una sola.
+        if (!user || seen.has(user.userId)) continue;
+        seen.add(user.userId);
+        users.push(user);
+    }
 
     // Roles: una sola petición por lote a GET /user-roles. Antes se pedía uno por
     // usuario, lo que con 88 cuentas eran 88 viajes de ida y vuelta (~3 min). Si el
