@@ -225,6 +225,9 @@ const LEGACY_SCHOOL_CODES = ["ANDES-01", "SAM-02", "ROS-03", "SEED-SCH"];
 // del catalogo y los tres en espanol, asi que /justification-types devolvia
 // ocho filas para tres conceptos. Se desactivan, no se borran (soft delete).
 const LEGACY_JUSTIFICATION_TYPES = ["Seed Medical", "Seed Calamity"];
+// Tipos de alerta que el seed creaba por su cuenta antes de reusar el catalogo:
+// dejaban dos alertas por estudiante, una por cada copia del mismo motivo.
+const LEGACY_ALERT_TYPE_CODES = ["ABSENTEEISM", "TARDINESS", "LOW_ATTENDANCE", "SEED_ABSENCE"];
 const PROGRAMS = [
   { code: "BTI-26", name: "Bachillerato Técnico en Informática" },
   { code: "BNC-26", name: "Bachillerato con Énfasis en Ciencias Naturales" },
@@ -508,6 +511,7 @@ async function seedAuthorization() {
 // cohorts (6 grades x 2 tracks) -> courses -> actors (1600 + 80) -> enrollments.
 async function seedAcademic() {
   const done = banner("academic");
+  const existingEnrollments = [];
   const loadIndexes = async () => {
     for (const s of await listPaged("academic", "/api/v1/schools")) M.schools.set(s.code, s);
     for (const p of await listPaged("academic", "/api/v1/programs")) M.programs.set(`${p.schoolId}:${p.code}`, p.programId);
@@ -515,7 +519,10 @@ async function seedAcademic() {
     for (const c of await listPaged("academic", "/api/v1/cohorts")) M.cohorts.set(c.code, c.cohortId);
     for (const c of await listPaged("academic", "/api/v1/courses")) M.courses.set(`${c.programId}:${c.code}`, c.courseId);
     for (const a of await listPaged("academic", "/api/v1/academic-actors")) M.actors.set(a.actorCode, a.academicActorId);
-    for (const e of await listPaged("academic", "/api/v1/enrollments")) M.enrollments.add(`${e.academicActorId}:${e.cohortId}`);
+    for (const e of await listPaged("academic", "/api/v1/enrollments")) {
+      M.enrollments.add(`${e.academicActorId}:${e.cohortId}`);
+      existingEnrollments.push(e);
+    }
   };
   await loadIndexes();
 
@@ -631,6 +638,19 @@ async function seedAcademic() {
     tickEnr();
   });
 
+  // Las matriculas creadas en corridas anteriores ya existen, y el bucle de arriba
+  // las salta, asi que en una base sembrada seguian todas en "Active". Se reparte
+  // el estado tambien sobre esas, con la misma proporcion.
+  const stale = existingEnrollments
+    .map((e, i) => ({ id: pick(e, "enrollmentId", "id"), current: e.enrollmentStatus, wanted: enrollmentStatusFor(i) }))
+    .filter((e) => e.id != null && e.wanted !== e.current && e.current === "Active");
+  if (stale.length) {
+    const tickFix = progress(stale.length, 50, "enrollment states");
+    await pooled(stale, CONCURRENCY, async (e) => {
+      await call("academic", "PATCH", "/api/v1/enrollments/" + e.id + "/status", { enrollmentStatus: e.wanted }, true);
+      tickFix();
+    });
+  }
   // Cohort descriptors consumed by scheduling (blocks + sessions).
   ids.cohorts = [];
   for (let schoolIdx = 0; schoolIdx < SCHOOLS.length; schoolIdx++) {
@@ -807,9 +827,11 @@ async function seedAttendance() {
     if (id != null) await call("attendance", "PUT", "/api/v1/justification-types/" + id, { status: false }, true);
   }
 
+  const existingJustifications = [];
   for (const j of asArray(await get("attendance", "/api/v1/justifications"))) {
     const rid = pick(j, "attendanceRecordId", "attendance_record_id");
     if (rid != null) M.justifications.add(String(rid));
+    existingJustifications.push(j);
   }
 
   // attendance_status is the native enum ('Present','Absent','Late','Justified') and
@@ -894,6 +916,26 @@ async function seedAttendance() {
     }
     tickJust();
   });
+  // Las justificaciones de corridas anteriores ya existen y el bucle de arriba las
+  // salta, asi que en una base sembrada seguian todas en Pending. Se les aplica el
+  // mismo reparto para que la bandeja tenga historial desde la primera consulta.
+  const unreviewed = existingJustifications
+    .map((j, i) => ({ id: pick(j, "justificationId", "id"), status: pick(j, "reviewStatus", "review_status"), slot: i % 20 }))
+    .filter((j) => j.id != null && j.status === "Pending" && j.slot < 13);
+  if (unreviewed.length && ids.userId) {
+    const tickRev = progress(unreviewed.length, 50, "justification reviews");
+    await pooled(unreviewed, CONCURRENCY, async (j, i) => {
+      const approved = j.slot < 9;
+      await call("attendance", "PATCH", "/api/v1/justifications/" + j.id + "/review", {
+        reviewStatus: approved ? "Approved" : "Rejected",
+        reviewedBy: ids.userId,
+        resolutionNotes: approved
+          ? APPROVAL_NOTES[i % APPROVAL_NOTES.length]
+          : REJECTION_NOTES[i % REJECTION_NOTES.length],
+      }, true);
+      tickRev();
+    });
+  }
   done();
 }
 
@@ -1012,8 +1054,10 @@ async function seedNotification() {
     const id = created ? pick(created, "AlertTypeID", "alertTypeId", "id") : null;
     if (id != null) M.alertTypes.set(t.code, id);
   }
+  const existingAlerts = [];
   for (const a of await listPaged("notification", "/api/v1/alerts")) {
     M.alerts.add(`${pick(a, "AcademicActorID", "academic_actor_id")}:${pick(a, "AlertTypeID", "alert_type_id")}`);
+    existingAlerts.push(a);
   }
 
   const alertJobs = [];
@@ -1041,10 +1085,38 @@ async function seedNotification() {
     // lo que el tablero no tenia historial y resolved_at era NULL en todas.
     const alertId = created ? pick(created, "AlertID", "alertId", "id") : null;
     if (alertId != null && i % 3 === 0) {
-      await call("notification", "POST", "/api/v1/alerts/" + alertId + "/resolve", {}, true);
+      await call("notification", "PATCH", "/api/v1/alerts/" + alertId + "/resolve", {}, true);
     }
     tick();
   });
+  // Alertas levantadas contra los tipos duplicados de corridas anteriores: se
+  // borran (soft delete) para que cada estudiante tenga UNA alerta por motivo y
+  // no dos, una por cada copia del catalogo.
+  const legacyTypeIds = new Set(
+    LEGACY_ALERT_TYPE_CODES.map((code) => M.alertTypes.get(code)).filter((v) => v != null)
+  );
+  const orphans = existingAlerts.filter((a) => legacyTypeIds.has(pick(a, "AlertTypeID", "alert_type_id")));
+  if (orphans.length) {
+    const tickDel = progress(orphans.length, 100, "duplicate alerts");
+    await pooled(orphans, CONCURRENCY, async (a) => {
+      await call("notification", "DELETE", "/api/v1/alerts/" + pick(a, "AlertID", "alertId", "id"), undefined, true);
+      tickDel();
+    });
+  }
+
+  // Y se cierra 1 de cada 3 de las que siguen abiertas: el bucle de creacion solo
+  // resuelve las nuevas, asi que en una base ya sembrada no se cerraba ninguna.
+  const openAlerts = existingAlerts.filter(
+    (a) => !legacyTypeIds.has(pick(a, "AlertTypeID", "alert_type_id")) && !pick(a, "ResolvedAt", "resolved_at")
+  );
+  const toResolve = openAlerts.filter((_, i) => i % 3 === 0);
+  if (toResolve.length) {
+    const tickRes = progress(toResolve.length, 100, "alert resolutions");
+    await pooled(toResolve, CONCURRENCY, async (a) => {
+      await call("notification", "PATCH", "/api/v1/alerts/" + pick(a, "AlertID", "alertId", "id") + "/resolve", {}, true);
+      tickRes();
+    });
+  }
   await get("notification", "/api/v1/alerts?limit=5");
   done();
 }
