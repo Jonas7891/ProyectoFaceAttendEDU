@@ -11,6 +11,8 @@ import com.faceattend_edu.identity_service.application.port.out.LoadUserByUserna
 import com.faceattend_edu.identity_service.application.port.out.ListUsersPort;
 import com.faceattend_edu.identity_service.domain.model.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -53,9 +55,18 @@ public class UserPersistenceAdapter implements LoadUserPort, SaveUserPort, Updat
         return matches.size() == 1 ? mapper.toDomain(matches.get(0)) : null;
     }
 
+    // Sorted by the primary key: without a deterministic order Postgres may repeat or skip
+    // rows between pages, so a client walking every page would not see the table exactly once.
     @Override
-    public List<User> listUsers() {
-        return repository.findAll().stream().map(mapper::toDomain).collect(Collectors.toList());
+    public List<User> listUsers(int pageIndex, int limit) {
+        return repository.findAll(PageRequest.of(pageIndex, limit, Sort.by("userId")))
+                .map(mapper::toDomain)
+                .getContent();
+    }
+
+    @Override
+    public long countUsers() {
+        return repository.count();
     }
 
     @Override

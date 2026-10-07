@@ -16,6 +16,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { mockStudents } from "./mockData";
 import {
     actorTypeMap,
+    attendanceSummaryFor,
     cohortMap,
     courseMap,
     fullName,
@@ -86,8 +87,25 @@ async function studentsFromApi() {
         }
     }
 
-    return actors
-        .filter((actor) => actor.actorTypeId === studentType.actorTypeId)
+    const students = actors.filter((actor) => actor.actorTypeId === studentType.actorTypeId);
+
+    // Porcentaje real de asistencia. Antes esta lista salía con attendance: 0 para
+    // todos y nadie pedía nunca los registros, así que la vista de Reportes y los
+    // indicadores del panel se calculaban sobre ceros: 0 % global y el 100 % de los
+    // estudiantes marcados "en riesgo". El resumen llega agregado en SQL.
+    const attendance = await optional(
+        attendanceSummaryFor(students.map((actor) => actor.academicActorId)),
+        new Map()
+    );
+    // Asistió = no estuvo ausente; la tardanza cuenta como asistencia y la
+    // puntualidad se mide aparte.
+    const rateOf = (actorId) => {
+        const counts = attendance.get(actorId);
+        if (!counts?.total) return 0;
+        return Math.round(((counts.present + counts.late + counts.justified) / counts.total) * 100);
+    };
+
+    return students
         .map((actor) => {
             const person = persons.get(actor.personId);
             const cohortId = cohortOfActor.get(actor.academicActorId);
@@ -101,8 +119,12 @@ async function studentsFromApi() {
                 email: person?.email ?? "",
                 code: actor.actorCode ?? "",
                 course: course?.code ?? "", // vacío: la UI lo omite de los programas
+                // El código y el nombre del curso se repiten entre sedes ("MAT" existe
+                // en las dos), así que buscar por ellos cuelga al estudiante del curso
+                // equivocado. El id sí es único: es el que debe usarse para cruzar.
+                courseId: courseId != null ? String(courseId) : null,
                 grade: null, // lo rellena AppDataContext con el período del curso
-                attendance: 0, // pendiente de la fase de consulta
+                attendance: rateOf(actor.academicActorId),
                 status: normalizeStatus(actor.status),
                 hasFacial: false,
                 hasFingerprint: false,

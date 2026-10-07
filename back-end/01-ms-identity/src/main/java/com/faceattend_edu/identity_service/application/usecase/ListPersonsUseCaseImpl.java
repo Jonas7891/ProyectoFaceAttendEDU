@@ -15,7 +15,12 @@ public class ListPersonsUseCaseImpl implements ListPersonsUseCase {
     private final ListPersonsPort listPersonsPort;
 
     @Override
-    public List<Person> listPersons() {
-        return listPersonsPort.listPersons();
+    public List<Person> listPersons(int pageIndex, int limit) {
+        return listPersonsPort.listPersons(pageIndex, limit);
+    }
+
+    @Override
+    public long countPersons() {
+        return listPersonsPort.countPersons();
     }
 }

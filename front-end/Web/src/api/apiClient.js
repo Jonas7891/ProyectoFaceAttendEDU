@@ -190,7 +190,7 @@ export async function request(path, opts = {}) {
             const res = await fetchWithTimeout(url, init, timeoutMs);
             const data = await parseBody(res);
             if (!res.ok) throw toApiError(res.status, data);
-            return unwrapPage(data);
+            return opts.unwrap === false ? data : unwrapPage(data);
         } catch (e) {
             lastErr = e;
             if (e instanceof ApiError) throw e; // no reintentar errores HTTP
@@ -212,20 +212,68 @@ export async function request(path, opts = {}) {
  * Recorre todas las páginas de un endpoint paginado y devuelve un solo arreglo.
  * - by "page":   query { page, limit }   (ms-identity)
  * - by "offset": query { limit, offset } (ms-academic)
+ *
+ * Las páginas NO se piden en serie: con 1.700 personas eran 17 viajes de ida y vuelta
+ * encadenados. Si la respuesta trae envelope { data, meta } se usa meta.total para pedir
+ * las páginas restantes de una vez; si llega un arreglo desnudo (ms-academic) se avanza
+ * en ventanas de `concurrency` hasta dar con una página incompleta.
+ *
  * Corta con una página incompleta, vacía o al llegar a maxPages.
  */
 export async function fetchAllPages(path, query = {}, opts = {}) {
-    const { by = "offset", pageSize = 100, maxPages = 50 } = opts;
-    const all = [];
-    for (let index = 0; index < maxPages; index += 1) {
-        const paging =
-            by === "page"
-                ? { page: index + 1, limit: pageSize }
-                : { limit: pageSize, offset: index * pageSize };
-        const chunk = await request(path, { method: "GET", query: { ...query, ...paging } });
-        const items = Array.isArray(chunk) ? chunk : [];
-        all.push(...items);
-        if (items.length < pageSize) break;
+    const { by = "offset", pageSize = 100, maxPages = 50, concurrency = 6 } = opts;
+
+    const pagingFor = (index) =>
+        by === "page"
+            ? { page: index + 1, limit: pageSize }
+            : { limit: pageSize, offset: index * pageSize };
+
+    // unwrap: false para poder leer meta.total; el envelope se desarma aquí.
+    const fetchPage = async (index) => {
+        const payload = await request(path, {
+            method: "GET",
+            query: { ...query, ...pagingFor(index) },
+            unwrap: false,
+        });
+        const items = isPageEnvelope(payload) ? payload.data : payload;
+        return {
+            items: Array.isArray(items) ? items : [],
+            total: isPageEnvelope(payload) ? Number(payload.meta.total) : null,
+        };
+    };
+
+    const first = await fetchPage(0);
+    if (first.items.length < pageSize) return first.items;
+
+    // Más filas que el límite pedido = el endpoint no pagina (ms-scheduling ignora
+    // limit/offset). Seguir pidiendo páginas devolvía la MISMA lista maxPages veces:
+    // 50 peticiones y 50 copias de las mismas filas en el arreglo final.
+    if (first.items.length > pageSize) return first.items;
+
+    const all = [...first.items];
+
+    // Camino rápido: el backend dijo cuántas filas hay, así que se sabe exactamente
+    // cuántas páginas faltan y se piden todas juntas (en tandas de `concurrency`).
+    if (Number.isFinite(first.total)) {
+        const lastPage = Math.min(Math.ceil(first.total / pageSize), maxPages);
+        for (let from = 1; from < lastPage; from += concurrency) {
+            const indexes = [];
+            for (let i = from; i < Math.min(from + concurrency, lastPage); i += 1) indexes.push(i);
+            const pages = await Promise.all(indexes.map(fetchPage));
+            for (const page of pages) all.push(...page.items);
+        }
+        return all;
+    }
+
+    // Sin total: ventanas en paralelo, cortando en la primera página incompleta.
+    for (let from = 1; from < maxPages; from += concurrency) {
+        const indexes = [];
+        for (let i = from; i < Math.min(from + concurrency, maxPages); i += 1) indexes.push(i);
+        const pages = await Promise.all(indexes.map(fetchPage));
+        for (const page of pages) {
+            all.push(...page.items);
+            if (page.items.length < pageSize) return all;
+        }
     }
     return all;
 }

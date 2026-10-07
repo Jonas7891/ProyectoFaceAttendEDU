@@ -17,6 +17,7 @@ import { mockCourses } from "./mockData";
 import { colorAt } from "../../core/constants/dataColors";
 import {
     actorMap,
+    attendanceSummaryFor,
     dayLabel,
     fullName,
     listBlocks,
@@ -82,6 +83,18 @@ async function coursesFromApi() {
 
     const environmentsById = new Map(environments.map((env) => [env.environmentId, env]));
 
+    // Mismo resumen agregado que estudiantes y fichas: la tarjeta de cada curso
+    // mostraba "Asistencia promedio 0%" porque el dato nunca se pedía.
+    const attendance = await optional(
+        attendanceSummaryFor(enrollments.map((e) => e.academicActorId).filter((v) => v != null)),
+        new Map()
+    );
+    const rateOf = (actorId) => {
+        const counts = attendance.get(actorId);
+        if (!counts?.total) return null;
+        return Math.round(((counts.present + counts.late + counts.justified) / counts.total) * 100);
+    };
+
     return courses.map((course, index) => {
         const courseBlocks = blocks.filter((block) => block.courseId === course.courseId);
 
@@ -117,7 +130,10 @@ async function coursesFromApi() {
             startDate: null, // sin fechas en el backend: el período muestra '—'
             endDate: null,
             semester: null,
-            avgAttendance: 0, // pendiente de la fase de consulta
+            avgAttendance: (() => {
+                const rates = [...studentIds].map(rateOf).filter((v) => v != null);
+                return rates.length ? Math.round(rates.reduce((sum, r) => sum + r, 0) / rates.length) : 0;
+            })(),
             status: normalizeStatus(course.status),
             color: colorAt(index),
             creditHours: course.creditHours ?? null,

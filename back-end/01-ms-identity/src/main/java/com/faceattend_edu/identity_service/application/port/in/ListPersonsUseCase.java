@@ -6,5 +6,7 @@ import java.util.List;
 
 public interface ListPersonsUseCase {
 
-    List<Person> listPersons();
+    List<Person> listPersons(int pageIndex, int limit);
+
+    long countPersons();
 }

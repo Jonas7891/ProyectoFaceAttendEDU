@@ -2,6 +2,7 @@ package com.faceattend_edu.scheduling_service.infrastructure.web.controller;
 
 import com.faceattend_edu.scheduling_service.domain.model.ScheduleBlock;
 import com.faceattend_edu.scheduling_service.domain.port.in.*;
+import com.faceattend_edu.scheduling_service.infrastructure.web.Paging;
 import com.faceattend_edu.scheduling_service.infrastructure.web.dto.*;
 import com.faceattend_edu.scheduling_service.infrastructure.web.mapper.ScheduleBlockWebMapper;
 import jakarta.validation.Valid;
@@ -29,14 +30,16 @@ public class ScheduleBlockController {
             @RequestParam(required = false) Long cohortId,
             @RequestParam(required = false) Integer environmentId,
             @RequestParam(required = false) Long instructorActorId,
-            @RequestParam(required = false) Integer courseId) {
+            @RequestParam(required = false) Integer courseId,
+            @RequestParam(required = false) Integer limit,
+            @RequestParam(required = false) Integer offset) {
         List<ScheduleBlockResponse> list = listUseCase.list().stream()
                 .filter(b -> cohortId == null || cohortId.equals(b.getCohortId()))
                 .filter(b -> environmentId == null || environmentId.equals(b.getEnvironmentId()))
                 .filter(b -> instructorActorId == null || instructorActorId.equals(b.getInstructorActorId()))
                 .filter(b -> courseId == null || courseId.equals(b.getCourseId()))
                 .map(mapper::toResponse).collect(Collectors.toList());
-        return ResponseEntity.ok(list);
+        return Paging.slice(list, limit, offset);
     }
 
     @PostMapping

@@ -6,5 +6,11 @@ import java.util.List;
 
 public interface ListUsersPort {
 
-    List<User> listUsers();
+    /**
+     * One page straight from SQL. Paging is not optional here: with a seeded school the table
+     * holds thousands of rows and loading all of them per request was the dominant cost.
+     */
+    List<User> listUsers(int pageIndex, int limit);
+
+    long countUsers();
 }

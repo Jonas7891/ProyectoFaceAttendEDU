@@ -28,6 +28,24 @@ export const authApi = {
                 : { username: identifier },
         }),
 
+    /**
+     * Sede del usuario, leida de su academic_actor. Devuelve null si la persona
+     * no tiene actor (p. ej. el super admin global), y en ese caso la aplicacion
+     * sigue mostrando todas las sedes.
+     */
+    schoolOf: async (personId) => {
+        try {
+            const actors = await request(endpoints.academic.actorsByPerson(personId), { method: "GET" });
+            const list = Array.isArray(actors) ? actors : [];
+            const active = list.find((a) => a?.status !== false) ?? list[0];
+            return active?.schoolId != null
+                ? { schoolId: active.schoolId, academicActorId: active.academicActorId }
+                : null;
+        } catch {
+            return null;
+        }
+    },
+
     // ── Roles y permisos del usuario autenticado ────────
     userRoles: (userId) =>
         request(endpoints.authorization.userRoles(userId), { method: "GET" }),

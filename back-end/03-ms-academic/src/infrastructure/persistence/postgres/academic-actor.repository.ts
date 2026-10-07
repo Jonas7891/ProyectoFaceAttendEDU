@@ -43,4 +43,12 @@ export class PostgresAcademicActorRepository
   countBySchool(schoolId: number): Promise<number> {
     return this.countWhere([this.filterOn('schoolId', schoolId)]);
   }
+
+  findByPerson(personId: string, page?: PageOptions): Promise<AcademicActorRecord[]> {
+    return this.listWhere([this.filterOn('personId', personId)], page);
+  }
+
+  countByPerson(personId: string): Promise<number> {
+    return this.countWhere([this.filterOn('personId', personId)]);
+  }
 }
