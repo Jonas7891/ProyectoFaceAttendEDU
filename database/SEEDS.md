@@ -187,9 +187,13 @@ databaseChangeLog:
               - column: { name: name, value: 'Sports leave' }
               - column: { name: description, value: 'Sports competition' }
               - column: { name: requires_attachment, value: false }
-              - column: { name: created_at, valueDate: { dateFunction: now } }
+              - column: { name: created_at, valueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, valueComputed: CURRENT_TIMESTAMP }
               - column: { name: row_version, value: 1 }
 ```
+
+> `valueDate: { dateFunction: now }` is **not** valid Liquibase syntax: it compiles to
+> `NULL` and breaks `created_at NOT NULL` on fresh databases. Use `valueComputed`.
 
 > Never modify existing seed changesets in production. Always add incremental changesets.
 
