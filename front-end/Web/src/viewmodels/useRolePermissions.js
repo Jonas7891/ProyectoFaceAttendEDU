@@ -69,7 +69,7 @@ function buildPermissions(role) {
 
         // Cursos
         canViewCourses: true,
-        canManageCourses: isAdmin || isTeacher,
+        canManageCourses: isAdmin,
 
         // Ambientes
         canViewEnvironments: isAdmin || isTeacher,
