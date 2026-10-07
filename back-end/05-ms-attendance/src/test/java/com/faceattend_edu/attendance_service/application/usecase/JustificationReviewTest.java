@@ -4,7 +4,11 @@ import com.faceattend_edu.attendance_service.domain.exception.DuplicateEntityExc
 import com.faceattend_edu.attendance_service.domain.exception.EntityNotFoundException;
 import com.faceattend_edu.attendance_service.domain.exception.ValidationException;
 import com.faceattend_edu.attendance_service.domain.model.Justification;
+import com.faceattend_edu.attendance_service.domain.model.JustificationType;
+import com.faceattend_edu.attendance_service.domain.model.SupportingDocument;
 import com.faceattend_edu.attendance_service.domain.port.out.JustificationRepository;
+import com.faceattend_edu.attendance_service.domain.port.out.JustificationTypeRepository;
+import com.faceattend_edu.attendance_service.domain.port.out.SupportingDocumentRepository;
 import com.faceattend_edu.attendance_service.infrastructure.messaging.DomainEventPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -32,6 +37,8 @@ class JustificationReviewTest {
     private static final long RECORD = 9L;
 
     @Mock JustificationRepository repository;
+    @Mock JustificationTypeRepository typeRepository;
+    @Mock SupportingDocumentRepository documentRepository;
     @Mock DomainEventPublisher eventPublisher;
 
     private CreateJustificationUseCaseImpl create;
@@ -40,7 +47,7 @@ class JustificationReviewTest {
     @BeforeEach
     void setUp() {
         create = new CreateJustificationUseCaseImpl(repository, eventPublisher);
-        review = new ReviewJustificationUseCaseImpl(repository);
+        review = new ReviewJustificationUseCaseImpl(repository, typeRepository, documentRepository);
         lenient().when(repository.save(any(Justification.class))).thenAnswer(call -> call.getArgument(0));
     }
 
@@ -137,5 +144,58 @@ class JustificationReviewTest {
         when(repository.findById(ID)).thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, () -> review.review(ID, "Approved", UUID.randomUUID(), null));
+    }
+
+    private JustificationType typeRequiringAttachment(boolean requires) {
+        JustificationType type = new JustificationType();
+        type.setJustificationTypeId(1);
+        type.setRequiresAttachment(requires);
+        return type;
+    }
+
+    @Test
+    void approvingNeedsADocumentWhenTheTypeRequiresOne() {
+        when(repository.findById(ID)).thenReturn(Optional.of(pending()));
+        when(typeRepository.findById(1)).thenReturn(Optional.of(typeRequiringAttachment(true)));
+        when(documentRepository.findByJustificationId(ID)).thenReturn(List.of());
+
+        assertThrows(ValidationException.class, () -> review.review(ID, "Approved", UUID.randomUUID(), null));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void approvingWorksOnceTheRequiredDocumentIsThere() {
+        when(repository.findById(ID)).thenReturn(Optional.of(pending()));
+        when(typeRepository.findById(1)).thenReturn(Optional.of(typeRequiringAttachment(true)));
+        when(documentRepository.findByJustificationId(ID)).thenReturn(List.of(new SupportingDocument()));
+
+        assertEquals("Approved", review.review(ID, "Approved", UUID.randomUUID(), "ok").getReviewStatus());
+    }
+
+    @Test
+    void rejectingNeverNeedsADocument() {
+        when(repository.findById(ID)).thenReturn(Optional.of(pending()));
+
+        assertEquals("Rejected", review.review(ID, "Rejected", UUID.randomUUID(), "no proof").getReviewStatus());
+        verify(documentRepository, never()).findByJustificationId(any());
+    }
+
+    @Test
+    void aTypeWithoutAttachmentRequirementApprovesWithoutDocuments() {
+        when(repository.findById(ID)).thenReturn(Optional.of(pending()));
+        when(typeRepository.findById(1)).thenReturn(Optional.of(typeRequiringAttachment(false)));
+
+        assertEquals("Approved", review.review(ID, "Approved", UUID.randomUUID(), null).getReviewStatus());
+    }
+
+    @Test
+    void aResolvedJustificationCannotBeReviewedAgain() {
+        Justification resolved = pending();
+        resolved.setReviewStatus("Approved");
+        when(repository.findById(ID)).thenReturn(Optional.of(resolved));
+
+        assertThrows(ValidationException.class, () -> review.review(ID, "Rejected", UUID.randomUUID(), null));
+        assertThrows(ValidationException.class, () -> review.review(ID, "Approved", UUID.randomUUID(), null));
+        verify(repository, never()).save(any());
     }
 }
