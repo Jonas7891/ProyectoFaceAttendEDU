@@ -24,7 +24,8 @@ public class RecordAttendanceUseCaseImpl implements RecordAttendanceUseCase {
         r.setAttendanceStatus(attendanceStatus);
         r.setCaptureMethod(captureMethod);
         r.setMatchScore(matchScore);
-        r.setCapturedAt(Instant.now());
+        // An absence has no capture: captured_at stays NULL (see AttendanceRecord.touchCreated).
+        r.setCapturedAt("Absent".equals(attendanceStatus) ? null : Instant.now());
         r.validate();
         r.touchCreated();
         repository.findByClassSessionIdAndAcademicActorId(classSessionId, academicActorId).ifPresent(existing -> {
