@@ -22,9 +22,15 @@ from infrastructure.config.dependencies import (
     get_similarity_threshold,
 )
 from infrastructure.web.match_audit import record_match
+from infrastructure.web.security import require_permission
 from infrastructure.web.schemas.responses import template_response
 
-router = APIRouter(prefix="/api/v1/biometric/facial", tags=["facial"])
+# Templates are sensitive: only roles that capture attendance (admin, instructor).
+router = APIRouter(
+    prefix="/api/v1/biometric/facial",
+    tags=["facial"],
+    dependencies=[Depends(require_permission("attendance.record:write"))],
+)
 
 OPERATION_VERIFY = "VERIFY"
 OPERATION_IDENTIFY = "IDENTIFY"

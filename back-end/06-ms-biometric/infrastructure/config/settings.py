@@ -71,6 +71,17 @@ class Settings(BaseSettings):
     mongo_db_name: str = DEFAULT_MONGO_DB_NAME
     server_selection_timeout_ms: int = 3_000
 
+    # ── Authentication (session validated against identity, RBAC by authorization) ──
+    auth_enabled: bool = True
+    identity_url: str = Field(
+        default="http://localhost:8081",
+        validation_alias=AliasChoices("BIOMETRIC_IDENTITY_URL", "IDENTITY_URL"),
+    )
+    authorization_url: str = Field(
+        default="http://localhost:8082",
+        validation_alias=AliasChoices("BIOMETRIC_AUTHORIZATION_URL", "AUTHORIZATION_URL"),
+    )
+
     # ── Health probes ──────────────────────────────────────────────────
     health_ping_timeout_seconds: float = 2.0
     health_cache_seconds: float = 5.0
