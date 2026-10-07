@@ -228,6 +228,8 @@ const LEGACY_JUSTIFICATION_TYPES = ["Seed Medical", "Seed Calamity"];
 // Tipos de alerta que el seed creaba por su cuenta antes de reusar el catalogo:
 // dejaban dos alertas por estudiante, una por cada copia del mismo motivo.
 const LEGACY_ALERT_TYPE_CODES = ["ABSENTEEISM", "TARDINESS", "LOW_ATTENDANCE", "SEED_ABSENCE"];
+// Actor de pruebas de una corrida vieja: encabezaba la lista de estudiantes.
+const LEGACY_ACTOR_CODES = ["SEED-STU-01"];
 const PROGRAMS = [
   { code: "BTI-26", name: "Bachillerato Técnico en Informática" },
   { code: "BNC-26", name: "Bachillerato con Énfasis en Ciencias Naturales" },
@@ -605,6 +607,12 @@ async function seedAcademic() {
     });
     tickActors();
   });
+  // Los actores de corridas viejas se desactivan (soft delete), no se borran: sin
+  // esto SEED-STU-01 seguia apareciendo como el primer estudiante de la lista.
+  for (const code of LEGACY_ACTOR_CODES) {
+    const id = M.actors.get(code);
+    if (id != null) await call("academic", "PATCH", "/api/v1/academic-actors/" + id + "/status", { status: false }, true);
+  }
   // Roster per cohort feeds roll call (attendance) and blocks (scheduling).
   ids.rosterByCohort = new Map();
   for (const s of STUDENTS) {
