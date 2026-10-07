@@ -516,5 +516,19 @@ export function useUsersViewModel(
         // Acciones de CRUD
         registerUser,
         importUsers,
+        
+        // Función para manejar actualización de usuario desde el modal de edición
+        handleUserUpdated: (updatedUser) => {
+            console.log('handleUserUpdated llamado con:', updatedUser);
+            
+            // Actualizar el usuario seleccionado con los nuevos datos
+            setSelected(updatedUser);
+            
+            // Forzar un re-render de la lista completa
+            // Esto debería provocar que el contexto se recalcule
+            setTimeout(() => {
+                console.log('Forzando actualización de la vista...');
+            }, 100);
+        },
     };
 }

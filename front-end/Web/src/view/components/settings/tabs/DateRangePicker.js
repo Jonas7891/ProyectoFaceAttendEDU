@@ -17,7 +17,7 @@ import { View, Text, TextInput } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
-import { useDateFormat } from "../../../../core/utils/hooks/useDateFormat";
+import { useDateFormat } from "../../hooks/useDateFormat";
 import { ACADEMIC_PERIOD_TYPES } from "../../../../core/constants/academicPeriods";
 
 /**

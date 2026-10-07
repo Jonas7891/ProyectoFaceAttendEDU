@@ -4,13 +4,15 @@
 // ============================================================
 
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Button, BaseModal } from "../common";
 import TextInput from "../common/inputs/TextInput";
 import { useTheme } from "../hooks/useTheme";
 import { useResponsive } from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
+import { usePushNotification } from "../common/feedback/PushNotification";
+import { getInstitutionConfig } from "../../../core/config/institutionConfig";
 import { EMPTY_ENV_FORM } from "../../../viewmodels/useEnvironmentsViewModel";
 
 // Placeholders rotativos para mostrar variedad de identificadores
@@ -37,12 +39,11 @@ export default function EnvironmentFormModal({
     const { theme } = useTheme();
     const { isSmall } = useResponsive();
     const { t } = useTranslation();
+    const pushNotification = usePushNotification();
     const c = theme.colors;
 
     const [form, setForm] = useState(EMPTY_ENV_FORM);
-    const [error, setError] = useState(null);
     const [saving, setSaving] = useState(false);
-    const [success, setSuccess] = useState(false);
     const [showErrors, setShowErrors] = useState(false);
     const [placeholderIndex, setPlaceholderIndex] = useState(0);
     const placeholderIntervalRef = useRef(null);
@@ -57,9 +58,7 @@ export default function EnvironmentFormModal({
         } else if (visible) {
             setForm(EMPTY_ENV_FORM);
         }
-        setError(null);
         setSaving(false);
-        setSuccess(false);
         setShowErrors(false);
     }, [visible, mode, environment]);
 
@@ -96,25 +95,46 @@ export default function EnvironmentFormModal({
             setForm((prev) => ({ ...prev, [key]: value }));
         }
         
-        if (showErrors) setError(null);
+        // No necesitamos limpiar error aquí ya que usamos push notifications
     };
 
     const handleSubmit = async () => {
         setShowErrors(true);
         setSaving(true);
-        setError(null);
         
+        const config = getInstitutionConfig();
         const err = await onSubmit(form);
         setSaving(false);
         
         if (err) {
-            setError(t(err));
+            // Mostrar notificación de error
+            if (config.pushNotifications) {
+                pushNotification.error(
+                    t("Error de validación"),
+                    t(err),
+                    {
+                        source: "environment-form",
+                        priority: "high",
+                        duration: 6000,
+                    }
+                );
+            }
         } else {
-            setSuccess(true);
-            setTimeout(() => {
-                setSuccess(false);
-                onClose();
-            }, 800);
+            // Mostrar notificación de éxito
+            if (config.pushNotifications) {
+                pushNotification.success(
+                    t("¡Ambiente guardado!"),
+                    mode === "register" 
+                        ? t("Ambiente registrado correctamente") 
+                        : t("Cambios guardados correctamente"),
+                    {
+                        source: "environment-form",
+                        priority: "normal",
+                        duration: 3000,
+                    }
+                );
+            }
+            onClose();
         }
     };
 
@@ -129,12 +149,10 @@ export default function EnvironmentFormModal({
                 variant="primary"
                 size="md"
                 onPress={handleSubmit}
-                disabled={saving || success}
+                disabled={saving}
                 leftIcon={
                     saving ? (
                         <ActivityIndicator size="small" color="#fff" />
-                    ) : success ? (
-                        <Feather name="check" size={16} color="#fff" />
                     ) : (
                         <Feather name="home" size={16} color="#fff" />
                     )
@@ -142,8 +160,6 @@ export default function EnvironmentFormModal({
             >
                 {saving
                     ? t("Guardando...")
-                    : success
-                    ? t("¡Guardado!")
                     : mode === "register"
                     ? t("Registrar ambiente")
                     : t("Guardar cambios")}
@@ -162,43 +178,6 @@ export default function EnvironmentFormModal({
             size="md"
             footer={footer}
         >
-            {/* Error alert */}
-            {error && (
-                <View
-                    style={{
-                        backgroundColor: c.status.dangerLight,
-                        borderRadius: 12,
-                        padding: 14,
-                        flexDirection: "row",
-                        gap: 10,
-                        marginBottom: 20,
-                    }}
-                >
-                    <Feather name="alert-circle" size={16} color={c.status.danger} />
-                    <Text style={{ fontSize: 13, color: c.status.danger, flex: 1 }}>
-                        {error}
-                    </Text>
-                </View>
-            )}
-
-            {/* Success alert */}
-            {success && (
-                <View
-                    style={{
-                        backgroundColor: c.status.successLight,
-                        borderRadius: 12,
-                        padding: 14,
-                        flexDirection: "row",
-                        gap: 10,
-                        marginBottom: 20,
-                    }}
-                >
-                    <Feather name="check-circle" size={16} color={c.status.success} />
-                    <Text style={{ fontSize: 13, color: c.status.successDark, flex: 1 }}>
-                        {t("Ambiente guardado correctamente")}
-                    </Text>
-                </View>
-            )}
 
             {/* Form fields */}
             <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 14 }}>

@@ -53,6 +53,7 @@ export function ConfirmModal({
     <BaseModal
       visible={visible}
       onClose={onClose}
+      closeOnBackdrop={true}
       title={title}
       icon={icons[variant]}
       iconColor={colors[variant]}

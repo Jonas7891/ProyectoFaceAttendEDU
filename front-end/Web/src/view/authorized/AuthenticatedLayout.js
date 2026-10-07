@@ -1,28 +1,27 @@
 // ============================================================
-//  FaceAttend EDU — Authenticated Navigator
+//  FaceAttend EDU — Authenticated Layout
 // ============================================================
-//  RESPONSABILIDAD: Navegación entre pantallas autenticadas
+//  RESPONSABILIDAD: Layout wrapper para pantallas autenticadas
 //
-//  Este navigator maneja las rutas internas de la aplicación autenticada.
-//  Ahora el Sidebar está FUERA del ciclo de navegación para mantener estado.
+//  Este componente:
+//  ✓ Proporciona sidebar persistente (desktop)
+//  ✓ Proporciona bottom tabs (móvil)  
+//  ✓ Maneja navegación entre pantallas
+//  ✓ Mantiene estado compartido del sidebar
 //
-//  Arquitectura:
-//  AppNavigator → AuthenticatedNavigator → [Sidebar persistente + Stack de Screens]
+//  NO debe:
+//  ✗ Crear jerarquías de rutas (Stack.Navigator)
+//  ✗ Validar autenticación (eso es AuthMiddleware)
+//  ✗ Renderizar NotAuthorized
+//
+//  Es un layout puro que wrappea el contenido de la pantalla
 // ============================================================
 
 import React from "react";
-import { View , Text, TouchableOpacity } from "react-native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation, useRoute } from "@react-navigation/native";
-
-// ── Importación de Screens ────────────────────────────────────
-import DashboardScreen from "../view/screens/DashboardScreen";
-import UsersScreen from "../view/screens/UsersScreen";
-import CoursesScreen from "../view/screens/CoursesScreen";
-import EnvironmentsScreen from "../view/screens/EnvironmentsScreen";
-import ReportsScreen from "../view/screens/ReportsScreen";
-import SettingsScreen from "../view/screens/SettingsScreen";
+import { View, Text, TouchableOpacity } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Feather } from "@expo/vector-icons";
 
 // ── Importación de Layout Components ──────────────────────────
 import { 
@@ -32,35 +31,22 @@ import {
     SidebarItemCollapsible, 
     SidebarFooter,
     CollapsibleSidebar 
-} from "../view/components/common/layout";
+} from "../components/common/layout";
 
 // ── Importación de componentes de seguridad ───────────────────
-import { NotAuthorized, AUTH_EXCEPTION_TYPES } from "../view/authorized/NotAuthorized";
+import { SessionManager } from "../components/auth";
 
 // ── Importación de Hooks ──────────────────────────────────────
-import { useTheme } from "../view/components/hooks/useTheme";
-import { useResponsive } from "../view/components/hooks/useResponsive";
-import { useAuth } from "../context/AuthContext";
-import { useRolePermissions } from "../viewmodels/useRolePermissions";
-import { useDashboardScreenViewModel } from "../viewmodels/useDashboardScreenViewModel";
-import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
-import { Feather } from "@expo/vector-icons";
-import { SessionManager } from "../view/components/auth";
-
-const Stack = createNativeStackNavigator();
-
-// ── Contexto para compartir estado del sidebar ────────────────
-const SidebarStateContext = React.createContext({
-    sidebarSelectedTab: "dashboard",
-    sidebarSelectedSubTab: null,
-    setSidebarSelectedTab: () => {},
-    setSidebarSelectedSubTab: () => {},
-});
+import { useTheme } from "../components/hooks/useTheme";
+import { useResponsive } from "../components/hooks/useResponsive";
+import { useAuth } from "../../context/AuthContext";
+import { useDashboardScreenViewModel } from "../../viewmodels/useDashboardScreenViewModel";
+import { useTranslation } from "../../core/utils/i18n/hooks/useTranslation";
 
 // ── Constantes de mapeo de rutas ────────────────────────────
 const ROUTE_MAP = {
     "dashboard": "Dashboard",
-    "users": "Users",
+    "users": "Users", 
     "courses": "Courses",
     "environments": "Environments",
     "reports": "Reports",
@@ -76,8 +62,15 @@ const ROUTE_TO_KEY_MAP = {
     "Settings": "settings",
 };
 
+// ── Contexto para compartir estado del sidebar ────────────────
+const SidebarStateContext = React.createContext({
+    sidebarSelectedTab: "dashboard",
+    sidebarSelectedSubTab: null,
+    setSidebarSelectedTab: () => {},
+    setSidebarSelectedSubTab: () => {},
+});
+
 // ── Sidebar Persistente Component ────────────────────────────
-// Este componente DEBE estar dentro del Stack.Navigator para tener acceso a useNavigation
 function PersistentSidebar() {
     const navigation = useNavigation();
     const { theme } = useTheme();
@@ -151,13 +144,9 @@ function PersistentSidebar() {
     // Manejo de logout
     const handleLogout = React.useCallback(async () => {
         await logout();
-        const parent = navigation.getParent();
-        if (parent) {
-            parent.replace("FaceAttendEDU");
-        }
+        navigation.navigate("FaceAttendEDU");
     }, [logout, navigation]);
     
-    // NO usar early return - el padre decide si renderizar este componente
     return (
         <CollapsibleSidebar width={240}>
             {user && (
@@ -246,23 +235,6 @@ function PersistentSidebar() {
     );
 }
 
-// ── Wrapper que renderiza Sidebar + Screen ───────────────────
-function ScreenWithSidebar({ children }) {
-    const { isSmall } = useResponsive();
-    
-    return (
-        <View style={{ flex: 1, flexDirection: "row" }}>
-            {/* Sidebar persistente - renderizado condicional en PADRE */}
-            {!isSmall && <PersistentSidebar />}
-            
-            {/* Contenido de la screen */}
-            <View style={{ flex: 1 }}>
-                {children}
-            </View>
-        </View>
-    );
-}
-
 // ── Bottom Tabs Component (solo móvil) ───────────────────────
 function BottomTabs() {
     const navigation = useNavigation();
@@ -314,7 +286,6 @@ function BottomTabs() {
         navigation.navigate(routeName, params);
     }, [navigation, setSidebarSelectedTab, setSidebarSelectedSubTab]);
     
-    // NO usar early return - el padre decide si renderizar este componente
     return (
         <View style={{
             position: "absolute",
@@ -373,13 +344,11 @@ function BottomTabs() {
     );
 }
 
-export default function AuthenticatedNavigator() {
-    const { theme } = useTheme();
+// ── Layout Principal ──────────────────────────────────────────
+export default function AuthenticatedLayout({ children }) {
     const { isSmall } = useResponsive();
-    const { user, sessionExpiredByTimeout, isLoadingTimeoutFlag, saveIntendedRoute, clearIntendedRoute } = useAuth();
-    const permissions = useRolePermissions();
-    const route = useRoute();
-    const c = theme.colors;
+    const { user, saveIntendedRoute, clearIntendedRoute } = useAuth();
+    const navigation = useNavigation();
     
     // ============================================================
     // HOOKS - Deben estar ANTES de cualquier return condicional
@@ -395,192 +364,66 @@ export default function AuthenticatedNavigator() {
     }), [sidebarSelectedTab, sidebarSelectedSubTab]);
     
     const bottomPadding = isSmall ? 64 : 0;
-    const navigation = useNavigation();
 
     // ============================================================
+    // TRACKING DE RUTA INTERNA para guardar intención de navegación
     // ============================================================
-    // TRACKING CORRECTO DE RUTA INTERNA - Solo DESPUÉS de autenticación completa
-    // ============================================================
     
-    // Flag para rastrear si ya se inició el tracking (una sola vez por sesión)
-    const [isRouteTrackingActive, setIsRouteTrackingActive] = React.useState(false);
+    // Flag para rastrear si ya se inició el tracking (derivado del usuario)
+    const isRouteTrackingActive = React.useMemo(() => {
+        return user !== null;
+    }, [user]);
     
-    // Activar tracking SOLO después de autenticación completa y renderizado inicial
-    React.useEffect(() => {
-        // Solo activar si hay usuario, no hay proceso de logout, y aún no está activo el tracking
-        if (!user || sessionExpiredByTimeout || isRouteTrackingActive) return;
-        
-        // Dar un pequeño delay para asegurar que el componente esté completamente montado
-        // y que la navegación inicial (redirectTo) ya se haya procesado
-        const timer = setTimeout(() => {
-            console.log('[AuthenticatedNavigator] Activating route tracking after authentication');
-            setIsRouteTrackingActive(true);
-        }, 100); // Pequeño delay de 100ms
-        
-        return () => clearTimeout(timer);
-    }, [user, sessionExpiredByTimeout, isRouteTrackingActive]);
-    
-    // Listener de navegación - solo se activa después del flag
+    // Listener de navegación - solo se activa cuando hay usuario
     React.useEffect(() => {
         if (!isRouteTrackingActive) return;
         
-        console.log('[AuthenticatedNavigator] Starting navigation listener for route tracking');
+        //console.log('[AuthenticatedLayout] Starting navigation listener for route tracking');
         
         const unsubscribe = navigation.addListener('focus', () => {
-            // Obtener el estado del navigation stack interno
+            // Obtener el estado del navigation stack
             const state = navigation.getState();
             if (state?.routes && state.routes.length > 0) {
                 const activeRoute = state.routes[state.index];
                 const routeName = activeRoute?.name || "Dashboard";
                 const routeParams = activeRoute?.params || {};
                 
-                console.log('[AuthenticatedNavigator] Current internal route:', routeName, routeParams);
+                console.log('[AuthenticatedLayout] Current route:', routeName, routeParams);
                 
-                // Solo guardar rutas internas que no sean Dashboard
-                if (routeName !== "Dashboard") {
-                    const routeInfo = {
-                        name: routeName,
-                        params: routeParams
-                    };
-                    console.log('[AuthenticatedNavigator] Saving route for future redirect:', routeInfo);
-                    saveIntendedRoute(routeInfo);
-                } else {
-                    // Si navega al Dashboard, limpiar la ruta guardada
-                    console.log('[AuthenticatedNavigator] Navigated to Dashboard, clearing saved route');
-                    clearIntendedRoute();
-                }
+                // Guardar TODAS las rutas autenticadas para redirección futura
+                const routeInfo = {
+                    name: routeName,
+                    params: routeParams
+                };
+                console.log('[AuthenticatedLayout] Saving route for future redirect:', routeInfo);
+                saveIntendedRoute(routeInfo);
             }
         });
         
         return unsubscribe;
     }, [isRouteTrackingActive, navigation, saveIntendedRoute, clearIntendedRoute]);
-    
-    // Limpiar el flag de tracking cuando el usuario se desloguee
-    React.useEffect(() => {
-        if (!user) {
-            console.log('[AuthenticatedNavigator] User logged out, deactivating route tracking');
-            setIsRouteTrackingActive(false);
-        }
-    }, [user]);
-    // ============================================================
-    // REDIRECCIÓN POST-LOGIN
-    // ============================================================
-    
-    // Redirección post-login con validación de permisos
-    React.useEffect(() => {
-        const redirectTo = route.params?.redirectTo;
-        console.log('[AuthenticatedNavigator] Checking redirect:', { 
-            redirectTo, 
-            user: !!user, 
-            routeParams: route.params 
-        });
-        
-        if (redirectTo && user) {
-            const routeName = redirectTo.name;
-            const routeParams = redirectTo.params;
-            
-            console.log('[AuthenticatedNavigator] Will redirect to:', routeName, routeParams);
-            
-            // Limpiar parámetros inmediatamente
-            navigation.setParams({ redirectTo: undefined });
-            
-            // Usar replace en lugar de navigate para evitar stack issues
-            if (routeName && routeName !== "Dashboard") {
-                console.log('[AuthenticatedNavigator] Executing navigation.replace to:', routeName);
-                navigation.replace(routeName, routeParams);
-            } else {
-                console.log('[AuthenticatedNavigator] Route is Dashboard, no redirect needed');
-            }
-        } else {
-            if (!redirectTo) console.log('[AuthenticatedNavigator] No redirectTo in route params');
-            if (!user) console.log('[AuthenticatedNavigator] No user available yet');
-        }
-    }, [user, route.params?.redirectTo, navigation]);
-    
-    // ============================================================
-    // VALIDACIÓN GLOBAL DE AUTORIZACIÓN
-    // Si el usuario NO está autorizado, renderizar SOLO NotAuthorized
-    // Esto previene que se renderice CUALQUIER layout (sidebar, tabs, etc.)
-    // ============================================================
-    
-    // 1. Verificar sesión activa
-    if (!user) {
-        // Esperar a que termine de cargar el flag de timeout antes de decidir
-        if (isLoadingTimeoutFlag) {
-            return null; // o un spinner de carga
-        }
-        
-        // Determinar si fue por timeout o porque nunca se logueó
-        const errorType = sessionExpiredByTimeout 
-            ? AUTH_EXCEPTION_TYPES.SESSION_EXPIRED 
-            : AUTH_EXCEPTION_TYPES.NO_SESSION;
-            
-        return <NotAuthorized type={errorType} />;
-    }
-    
-    // 2. Verificar rol asignado
-    if (!user.role) {
-        return <NotAuthorized type={AUTH_EXCEPTION_TYPES.NO_ROLE} />;
-    }
-    
-    // 3. Verificar que el rol sea válido
-    if (!permissions.isAdmin && !permissions.isTeacher && !permissions.isStudent) {
-        return <NotAuthorized type={AUTH_EXCEPTION_TYPES.INSUFFICIENT_PERMISSIONS} />;
-    }
-    
-    // ============================================================
-    // USUARIO AUTORIZADO - Renderizar navegación normal
-    // ============================================================
-    
+
     return (
         <SidebarStateContext.Provider value={sidebarState}>
-            <SafeAreaProvider>
-                <SafeAreaView
-                    style={{ flex: 1, flexDirection: "row", backgroundColor: c.background.app }}
-                    edges={["top", "bottom"]}
-                >
-                    {/* Contenedor del Stack Navigator con Sidebar integrado */}
-                    <View style={{ 
-                        flex: 1,
-                        overflow: "hidden",
-                        paddingBottom: bottomPadding,
-                    }}>
-                        <Stack.Navigator
-                            initialRouteName="Dashboard"
-                            screenOptions={{
-                                headerShown: false,
-                                animation: "fade",
-                                animationDuration: 150,
-                            }}
-                        >
-                            <Stack.Screen name="Dashboard">
-                                {(props) => <ScreenWithSidebar><DashboardScreen {...props} /></ScreenWithSidebar>}
-                            </Stack.Screen>
-                            <Stack.Screen name="Users">
-                                {(props) => <ScreenWithSidebar><UsersScreen {...props} /></ScreenWithSidebar>}
-                            </Stack.Screen>
-                            <Stack.Screen name="Courses">
-                                {(props) => <ScreenWithSidebar><CoursesScreen {...props} /></ScreenWithSidebar>}
-                            </Stack.Screen>
-                            <Stack.Screen name="Environments">
-                                {(props) => <ScreenWithSidebar><EnvironmentsScreen {...props} /></ScreenWithSidebar>}
-                            </Stack.Screen>
-                            <Stack.Screen name="Reports">
-                                {(props) => <ScreenWithSidebar><ReportsScreen {...props} /></ScreenWithSidebar>}
-                            </Stack.Screen>
-                            <Stack.Screen name="Settings">
-                                {(props) => <ScreenWithSidebar><SettingsScreen {...props} /></ScreenWithSidebar>}
-                            </Stack.Screen>
-                        </Stack.Navigator>
-                    </View>
-                    
-                    {/* Bottom tabs (solo móvil) - renderizado condicional */}
-                    {isSmall && <BottomTabs />}
-                </SafeAreaView>
+            <View style={{ flex: 1, flexDirection: "row" }}>
+                {/* Sidebar persistente - solo desktop */}
+                {!isSmall && <PersistentSidebar />}
+                
+                {/* Contenido de la pantalla */}
+                <View style={{ 
+                    flex: 1,
+                    paddingBottom: bottomPadding,
+                    overflow: "hidden",
+                }}>
+                    {children}
+                </View>
+                
+                {/* Bottom tabs - solo móvil */}
+                {isSmall && <BottomTabs />}
+            </View>
 
-                {/* Session Manager - Gestiona advertencias de timeout */}
-                <SessionManager />
-            </SafeAreaProvider>
+            {/* Session Manager - Gestiona advertencias de timeout */}
+            <SessionManager />
         </SidebarStateContext.Provider>
     );
 }

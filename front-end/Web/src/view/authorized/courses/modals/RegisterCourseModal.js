@@ -13,7 +13,7 @@ import { useTheme } from "../../../components/hooks/useTheme";
 import { useResponsive } from "../../../components/hooks/useResponsive";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../../../../context/AppDataContext";
-import { useDateFormat } from "../../../../core/utils/hooks/useDateFormat";
+import { useDateFormat } from "../../../components/hooks/useDateFormat";
 import { getInstitutionConfig } from "../../../../core/config/institutionConfig";
 import {
     EMPTY_COURSE_FORM,

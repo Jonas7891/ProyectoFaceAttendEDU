@@ -20,9 +20,9 @@ import { useUsersViewModel } from "../../../viewmodels/useUsersViewModel";
 import { useRolePermissions } from "../../../viewmodels/useRolePermissions";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../../../context/AppDataContext";
-import RegisterStudentModal from "../../components/students/RegisterStudentModal";
-import ImportStudentsModal from "../../components/students/ImportStudentsModal";
-import StudentDetailModal from "../../components/students/StudentDetailModal";
+import RegisterStudentModal from "../../components/users/RegisterStudentModal";
+import ImportStudentsModal from "../../components/users/ImportStudentsModal";
+import StudentDetailModal from "../../components/users/StudentDetailModal";
 import { UsersFilterBar, UsersTable } from "./sections";
 import { COLUMNS, ROLE_VARIANT, createCompactRowConfig } from "./columns/usersColumns";
 
@@ -130,6 +130,7 @@ export function AdminUsers({ section, vm: vmProp }) {
             <StudentDetailModal
                 student={vm.selected}
                 onClose={vm.clearSelection}
+                onUserUpdated={vm.handleUserUpdated}
                 canManage={canManage}
                 canRegisterFace={permissions.canRegisterFace}
             />

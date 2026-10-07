@@ -26,6 +26,216 @@ import { useResponsive } from "./components/hooks/useResponsive";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useReportsViewModel } from "../viewmodels/useReportsViewModel";
 import { useRolePermissions } from "../viewmodels/useRolePermissions";
+import { useAttendanceStatus } from "./components/common/badges/StatusBadge";
+import { getAttendanceThresholds } from "../models/data/userDerivedData";
+
+// ── Componente interno StudentRow ────────────────────────
+
+function StudentRow({ student, index, isLast, onPress }) {
+    const { theme } = useTheme();
+    const { t } = useTranslation();
+    const permissions = useRolePermissions();
+    const c = theme.colors;
+    const thresholds = getAttendanceThresholds();
+    const attendanceStatus = useAttendanceStatus(student.attendance);
+    
+    const isAtRisk = student.attendance < thresholds.minAttendance;
+    
+    // Determinar variante del badge basado en el nivel de attendanceStatus
+    // Sistema simplificado de 3 colores
+    const badgeVariantMap = {
+        excellent: "success",   // Verde
+        warning: "warning",     // Ámbar
+        "at-risk": "danger",    // Rojo
+        critical: "danger",     // Rojo
+    };
+    const badgeVariant = badgeVariantMap[attendanceStatus.level] || "default";
+
+    return (
+        <TouchableOpacity
+            onPress={onPress}
+            style={{
+                flexDirection: "row",
+                alignItems: "center",
+                padding: 16,
+                gap: 12,
+                borderBottomWidth: isLast ? 0 : 1,
+                borderBottomColor: c.border.primary,
+                backgroundColor: isAtRisk && index === 0 
+                    ? c.status.dangerLight 
+                    : "transparent",
+            }}
+        >
+            {/* Avatar con indicador de riesgo */}
+            <View style={{ position: "relative" }}>
+                <Avatar name={student.name} size={48} />
+                {isAtRisk && (
+                    <View style={{
+                        position: "absolute",
+                        bottom: -2,
+                        right: -2,
+                        width: 20,
+                        height: 20,
+                        borderRadius: 10,
+                        backgroundColor: c.status.danger,
+                        borderWidth: 2,
+                        borderColor: c.background.surface,
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}>
+                        <Feather name="alert-octagon" size={10} color="#fff" />
+                    </View>
+                )}
+            </View>
+
+            {/* Información del estudiante */}
+            <View style={{ flex: 1, gap: 6 }}>
+                {/* Nombre + Badge de asistencia */}
+                <View style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 8,
+                }}>
+                    <Text style={{
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: c.text.primary,
+                        flex: 1,
+                    }} numberOfLines={1}>
+                        {student.name}
+                    </Text>
+
+                    <Badge variant={badgeVariant} size="sm">
+                        {student.attendance}%
+                    </Badge>
+                </View>
+
+                {/* Código + Programa/Ficha */}
+                <View style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 8,
+                }}>
+                    <Text style={{
+                        fontSize: 12,
+                        color: c.text.secondary,
+                    }}>
+                        {student.code}
+                    </Text>
+                    <Text style={{
+                        fontSize: 12,
+                        color: c.text.secondary,
+                    }}>
+                        •
+                    </Text>
+                    <Text style={{
+                        fontSize: 12,
+                        color: c.text.secondary,
+                        flex: 1,
+                    }} numberOfLines={1}>
+                        {student.courseName || student.course || "—"}
+                    </Text>
+                    {student.grade && (
+                        <>
+                            <Text style={{
+                                fontSize: 12,
+                                color: c.text.secondary,
+                            }}>
+                                •
+                            </Text>
+                            <Text style={{
+                                fontSize: 12,
+                                color: c.text.secondary,
+                            }}>
+                                {student.grade}
+                            </Text>
+                        </>
+                    )}
+                </View>
+
+                {/* Estado del estudiante */}
+                <View style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 8,
+                }}>
+                    <View style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 4,
+                    }}>
+                        <View style={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: 3,
+                            backgroundColor: student.status === "active" 
+                                ? c.status.success 
+                                : c.text.disabled,
+                        }} />
+                        <Text style={{
+                            fontSize: 11,
+                            color: c.text.secondary,
+                        }}>
+                            {student.status === "active" ? t("Activo") : t("Inactivo")}
+                        </Text>
+                    </View>
+
+                    {student.registered && (
+                        <>
+                            <Text style={{
+                                fontSize: 11,
+                                color: c.text.disabled,
+                            }}>
+                                •
+                            </Text>
+                            <View style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 4,
+                            }}>
+                                <Feather name="check-circle" size={11} color={c.brand.primary} />
+                                <Text style={{
+                                    fontSize: 11,
+                                    color: c.text.secondary,
+                                }}>
+                                    {t("Reconocimiento facial")}
+                                </Text>
+                            </View>
+                        </>
+                    )}
+                </View>
+            </View>
+
+            {/* Botón de notificar + Chevron */}
+            <View style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+            }}>
+                {permissions.canExportReports && isAtRisk && (
+                    <TouchableOpacity
+                        onPress={(e) => {
+                            e.stopPropagation();
+                            // vm.notifyStudent(student.id); // Nota: vm no está disponible aquí, se maneja desde el padre
+                        }}
+                        style={{
+                            padding: 8,
+                            borderRadius: 8,
+                            backgroundColor: c.status.dangerLight,
+                        }}
+                    >
+                        <Feather name="bell" size={16} color={c.status.danger} />
+                    </TouchableOpacity>
+                )}
+                
+                <Feather name="chevron-right" size={20} color={c.text.secondary} />
+            </View>
+        </TouchableOpacity>
+    );
+}
+
+// ── Componente principal ReportsView ─────────────────────
 
 export default function ReportsView({ 
     filterType = null,
@@ -185,199 +395,7 @@ export default function ReportsView({
                             }
                         />
                     ) : (
-                        vm.filteredStudents.map((student, index) => {
-                            const isLast = index === vm.filteredStudents.length - 1;
-                            const isAtRisk = student.attendance < attendanceThreshold;
-                            
-                            // Determinar variante del badge según asistencia
-                            const badgeVariant = 
-                                student.attendance >= 85 ? "success" :
-                                student.attendance >= attendanceThreshold ? "warning" :
-                                "danger";
-
-                            return (
-                                <TouchableOpacity
-                                    key={student.id}
-                                    onPress={() => vm.viewStudentDetails(student.id)}
-                                    style={{
-                                        flexDirection: "row",
-                                        alignItems: "center",
-                                        padding: 16,
-                                        gap: 12,
-                                        borderBottomWidth: isLast ? 0 : 1,
-                                        borderBottomColor: c.border.primary,
-                                        backgroundColor: isAtRisk && index === 0 
-                                            ? c.status.dangerLight 
-                                            : "transparent",
-                                    }}
-                                >
-                                    {/* Avatar con indicador de riesgo */}
-                                    <View style={{ position: "relative" }}>
-                                        <Avatar name={student.name} size={48} />
-                                        {isAtRisk && (
-                                            <View style={{
-                                                position: "absolute",
-                                                bottom: -2,
-                                                right: -2,
-                                                width: 20,
-                                                height: 20,
-                                                borderRadius: 10,
-                                                backgroundColor: c.status.danger,
-                                                borderWidth: 2,
-                                                borderColor: c.background.surface,
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                            }}>
-                                                <Feather name="alert-octagon" size={10} color="#fff" />
-                                            </View>
-                                        )}
-                                    </View>
-
-                                    {/* Información del estudiante */}
-                                    <View style={{ flex: 1, gap: 6 }}>
-                                        {/* Nombre + Badge de asistencia */}
-                                        <View style={{
-                                            flexDirection: "row",
-                                            alignItems: "center",
-                                            justifyContent: "space-between",
-                                            gap: 8,
-                                        }}>
-                                            <Text style={{
-                                                fontSize: 14,
-                                                fontWeight: "600",
-                                                color: c.text.primary,
-                                                flex: 1,
-                                            }} numberOfLines={1}>
-                                                {student.name}
-                                            </Text>
-
-                                            <Badge variant={badgeVariant} size="sm">
-                                                {student.attendance}%
-                                            </Badge>
-                                        </View>
-
-                                        {/* Código + Programa/Ficha */}
-                                        <View style={{
-                                            flexDirection: "row",
-                                            alignItems: "center",
-                                            gap: 8,
-                                        }}>
-                                            <Text style={{
-                                                fontSize: 12,
-                                                color: c.text.secondary,
-                                            }}>
-                                                {student.code}
-                                            </Text>
-                                            <Text style={{
-                                                fontSize: 12,
-                                                color: c.text.secondary,
-                                            }}>
-                                                •
-                                            </Text>
-                                            <Text style={{
-                                                fontSize: 12,
-                                                color: c.text.secondary,
-                                            }} numberOfLines={1}>
-                                                {student.courseName || student.course}
-                                            </Text>
-                                            {student.grade && (
-                                                <>
-                                                    <Text style={{
-                                                        fontSize: 12,
-                                                        color: c.text.secondary,
-                                                    }}>
-                                                        •
-                                                    </Text>
-                                                    <Text style={{
-                                                        fontSize: 12,
-                                                        color: c.text.secondary,
-                                                    }}>
-                                                        {student.grade}
-                                                    </Text>
-                                                </>
-                                            )}
-                                        </View>
-
-                                        {/* Estado del estudiante */}
-                                        <View style={{
-                                            flexDirection: "row",
-                                            alignItems: "center",
-                                            gap: 8,
-                                        }}>
-                                            <View style={{
-                                                flexDirection: "row",
-                                                alignItems: "center",
-                                                gap: 4,
-                                            }}>
-                                                <View style={{
-                                                    width: 6,
-                                                    height: 6,
-                                                    borderRadius: 3,
-                                                    backgroundColor: student.status === "active" 
-                                                        ? c.status.success 
-                                                        : c.text.disabled,
-                                                }} />
-                                                <Text style={{
-                                                    fontSize: 11,
-                                                    color: c.text.secondary,
-                                                }}>
-                                                    {student.status === "active" ? t("Activo") : t("Inactivo")}
-                                                </Text>
-                                            </View>
-
-                                            {student.registered && (
-                                                <>
-                                                    <Text style={{
-                                                        fontSize: 11,
-                                                        color: c.text.disabled,
-                                                    }}>
-                                                        •
-                                                    </Text>
-                                                    <View style={{
-                                                        flexDirection: "row",
-                                                        alignItems: "center",
-                                                        gap: 4,
-                                                    }}>
-                                                        <Feather name="check-circle" size={11} color={c.brand.primary} />
-                                                        <Text style={{
-                                                            fontSize: 11,
-                                                            color: c.text.secondary,
-                                                        }}>
-                                                            {t("Reconocimiento facial")}
-                                                        </Text>
-                                                    </View>
-                                                </>
-                                            )}
-                                        </View>
-                                    </View>
-
-                                    {/* Botón de notificar + Chevron */}
-                                    <View style={{
-                                        flexDirection: "row",
-                                        alignItems: "center",
-                                        gap: 8,
-                                    }}>
-                                        {permissions.canExportReports && isAtRisk && (
-                                            <TouchableOpacity
-                                                onPress={(e) => {
-                                                    e.stopPropagation();
-                                                    vm.notifyStudent(student.id);
-                                                }}
-                                                style={{
-                                                    padding: 8,
-                                                    borderRadius: 8,
-                                                    backgroundColor: c.status.dangerLight,
-                                                }}
-                                            >
-                                                <Feather name="bell" size={16} color={c.status.danger} />
-                                            </TouchableOpacity>
-                                        )}
-                                        
-                                        <Feather name="chevron-right" size={20} color={c.text.secondary} />
-                                    </View>
-                                </TouchableOpacity>
-                            );
-                        })
+                        vm.filteredStudents.map((student, index) => <StudentRow key={student.id} student={student} index={index} isLast={index === vm.filteredStudents.length - 1} onPress={() => vm.viewStudentDetails(student.id)} />)
                     )}
                 </Card>
 

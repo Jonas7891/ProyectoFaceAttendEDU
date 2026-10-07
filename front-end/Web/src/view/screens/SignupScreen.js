@@ -29,7 +29,7 @@ export default function SignupScreen() {
         
         // El registro ya se maneja en el ViewModel
         // Por diseño, signup SIEMPRE va al Dashboard (sin redirección guardada)
-        navigation.replace("FaceAttendEDU-Dashboard");
+        navigation.replace("Dashboard");
     }
 
     // ── Navegación a login ────────────────────────────────────

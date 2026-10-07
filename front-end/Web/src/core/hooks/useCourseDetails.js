@@ -13,7 +13,7 @@
 
 import { useMemo } from "react";
 import { useAppData } from "../../context/AppDataContext";
-import { useDateFormat } from "../utils/hooks/useDateFormat";
+import { useDateFormat } from "../../view/components/hooks/useDateFormat";
 
 /**
  * Obtiene el día actual en formato corto español

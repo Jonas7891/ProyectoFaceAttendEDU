@@ -30,13 +30,11 @@ export default function LoginScreen() {
         console.log('[LoginScreen] Login success callback:', { redirectRoute });
         
         if (redirectRoute) {
-            console.log('[LoginScreen] Navigating with redirect to:', redirectRoute);
-            navigation.replace("FaceAttendEDU-Dashboard", {
-                redirectTo: redirectRoute 
-            });
+            console.log('[LoginScreen] Navigating with redirect to:', redirectRoute.name);
+            navigation.replace(redirectRoute.name, redirectRoute.params);
         } else {
             console.log('[LoginScreen] Navigating to dashboard (no redirect)');
-            navigation.replace("FaceAttendEDU-Dashboard");
+            navigation.replace("Dashboard");
         }
     }
 

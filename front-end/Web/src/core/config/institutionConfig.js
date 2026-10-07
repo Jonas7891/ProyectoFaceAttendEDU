@@ -68,6 +68,7 @@ const DEFAULT_INSTITUTION_CONFIG = {
     // Asistencia
     minAttendance: 80,
     daysUntilSanction: 15,
+    consecutiveDaysForSanction: 3, // Días consecutivos de inasistencia para sanción (1-5)
     
     // Idioma
     language: "es",
@@ -87,7 +88,7 @@ const DEFAULT_INSTITUTION_CONFIG = {
     atRiskAlert: true,
     dailySummary: false,
     pushNotifications: true, // Activadas por defecto
-    pushDuration: 4, // Valor por defecto: 4 segundos
+    pushDuration: 4, // Valor por defecto: 4 segundos (configuración global)
     pushNotificationLimit: 15, // Límite total mostrado: 15 notificaciones
     pushNotificationLimitByType: 5, // Límite por tipo: 5 notificaciones del mismo tipo
     

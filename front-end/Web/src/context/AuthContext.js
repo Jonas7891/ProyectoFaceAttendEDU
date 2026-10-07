@@ -204,11 +204,16 @@ export function AuthProvider({ children }) {
     // ============================================================
     
     const handleSessionTimeout = useCallback(async () => {
+        console.log('[AuthContext] Session timeout triggered');
+        
         // Marcar que fue por timeout y limpiar sesión
         await setTimeoutFlag(true); 
         setSessionExpiredByTimeout(true); 
         await sessionRemove(); 
         setUser(null); 
+        
+        // IMPORTANTE: No limpiar el timer aquí porque el hook ya se encarga
+        // El timer se detendrá automáticamente cuando enabled sea false (user === null)
         
         // La ruta ya está guardada desde que el usuario navegó
     }, []);
@@ -217,16 +222,16 @@ export function AuthProvider({ children }) {
     const sessionTimeout = useSessionTimeout({
         timeoutMinutes: config.sessionTime || 60,
         onTimeout: handleSessionTimeout,
-        warningMinutes: config.sessionWarningTime || 5, // Usar configuración o default
+        warningMinutes: 2, // 2 minutos de advertencia antes del timeout
         enabled: user !== null // Solo activar si hay usuario logueado
     });
 
-    // Efecto para reiniciar timer cuando cambie la configuración
-    useEffect(() => {
-        if (sessionTimeout && user) {
-            sessionTimeout.resetTimer(); // Reiniciar con nueva configuración
-        }
-    }, [config.sessionTime, config.sessionWarningTime]); // SOLO las config values
+    // COMENTADO: Efecto para reiniciar timer - puede causar problemas de timers residuales
+    // useEffect(() => {
+    //     if (sessionTimeout && user) {
+    //         sessionTimeout.resetTimer(); // Reiniciar con nueva configuración
+    //     }
+    // }, [config.sessionTime, config.sessionWarningTime]); // SOLO las config values
 
     // Recuperar sesión guardada al montar
     useEffect(() => {
@@ -294,6 +299,10 @@ export function AuthProvider({ children }) {
         console.log('[AuthContext] Login: redirectRoute obtained:', redirectRoute);
 
         // LIMPIAR COMPLETAMENTE cualquier estado anterior antes de establecer nueva sesión
+        if (sessionTimeout && sessionTimeout.clearTimer) {
+            sessionTimeout.clearTimer(); // Detener cualquier timer anterior
+        }
+        
         await removeTimeoutFlag(); // Limpiar flag persistente 
         await removeIntendedRoute(); // Limpiar ruta deseada del storage
         await sessionRemove(); // Limpiar sesión anterior por seguridad
@@ -306,22 +315,24 @@ export function AuthProvider({ children }) {
         await sessionSet(JSON.stringify(found));
         setUser(found);
         
-        // Resetear el timer de sesión al hacer login
-        sessionTimeout.resetTimer();
+        // El timer se reiniciará automáticamente cuando enabled=true (user !== null)
         
         console.log('[AuthContext] Login successful, returning:', { success: true, redirectRoute });
         return { success: true, redirectRoute };
     }, [consumeIntendedRoute, sessionTimeout]);
 
     const logout = useCallback(async () => {
+        // IMPORTANTE: Detener completamente el timer ANTES de limpiar el resto
+        if (sessionTimeout && sessionTimeout.clearTimer) {
+            sessionTimeout.clearTimer();
+        }
+        
         await removeTimeoutFlag(); // Limpiar flag persistente
         await removeIntendedRoute(); // Limpiar ruta deseada
         setSessionExpiredByTimeout(false); // Limpiar flag de timeout para logout manual
         setIntendedRoute(null);
         await sessionRemove();
         setUser(null);
-        // Resetear el timer de sesión al hacer logout manual
-        sessionTimeout.resetTimer();
     }, [sessionTimeout]);
 
     const register = useCallback(async (userData) => {
@@ -360,8 +371,8 @@ export function AuthProvider({ children }) {
         await removeIntendedRoute(); // Limpiar ruta deseada al registrarse
         await removeTimeoutFlag(); // Limpiar flag persistente al registrarse
         setSessionExpiredByTimeout(false); // Limpiar flag al registrarse
-        // Resetear el timer de sesión al registrarse
-        sessionTimeout.resetTimer();
+        
+        // El timer se iniciará automáticamente cuando enabled=true (user !== null)
         
         return { success: true, redirectRoute: null }; // No hay redirección en registro
     }, [sessionTimeout]);

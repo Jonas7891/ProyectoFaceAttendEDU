@@ -11,9 +11,241 @@ import { Feather } from "@expo/vector-icons";
 import { Card, Badge, Avatar, ProgressBar } from "../common";
 import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
+import { getInstitutionConfig } from "../../../core/config/institutionConfig";
+import { getAttendanceThresholds } from "../../../models/data/userDerivedData";
+import { useAttendanceColor } from "../common/badges/StatusBadge";
+
+/**
+ * Componente interno para renderizar cada estudiante en riesgo con colores dinámicos
+ */
+function StudentRow({ student, index, isLast, onPress, c, t }) {
+    const config = getInstitutionConfig();
+    const thresholds = getAttendanceThresholds();
+    const attColor = useAttendanceColor(student.attendanceRate);
+    
+    // Calcular umbral de advertencia crítica dinámicamente (mitad de días configurados)
+    const criticalDaysThreshold = Math.ceil(config.daysUntilSanction / 2);
+    
+    // Determinar nivel de riesgo basándose en umbrales dinámicos
+    // Alto riesgo: asistencia < danger O días críticos
+    // Medio riesgo: asistencia < warning
+    // Bajo riesgo: asistencia < minAttendance
+    const isHighRisk = student.attendanceRate < thresholds.danger || 
+                       student.daysUntilSanction <= criticalDaysThreshold;
+    const isMediumRisk = !isHighRisk && student.attendanceRate < thresholds.warning;
+    
+    let variant = "warning";
+    let icon = "alert-circle";
+    let bgColor = c.status.warningLight;
+    
+    if (isHighRisk) {
+        variant = "danger";
+        icon = "alert-octagon";
+        bgColor = c.status.dangerLight;
+    } else if (isMediumRisk) {
+        variant = "warning";
+        icon = "alert-triangle";
+        bgColor = c.status.warningLight;
+    }
+
+    return (
+        <TouchableOpacity
+            onPress={() => onPress?.(student)}
+            style={{
+                flexDirection: "row",
+                alignItems: "center",
+                padding: 16,
+                gap: 12,
+                borderBottomWidth: isLast ? 0 : 1,
+                borderBottomColor: c.border.primary,
+                backgroundColor: index === 0 && isHighRisk 
+                    ? bgColor 
+                    : "transparent",
+            }}
+        >
+            {/* Avatar con indicador de riesgo */}
+            <View style={{ position: "relative" }}>
+                <Avatar name={student.name} size={48} />
+                <View style={{
+                    position: "absolute",
+                    bottom: -2,
+                    right: -2,
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    backgroundColor: attColor,
+                    borderWidth: 2,
+                    borderColor: c.background.surface,
+                    alignItems: "center",
+                    justifyContent: "center",
+                }}>
+                    <Feather name={icon} size={10} color="#fff" />
+                </View>
+            </View>
+
+            {/* Información */}
+            <View style={{ flex: 1, gap: 6 }}>
+                {/* Header: Nombre + (Última asistencia + Badge) */}
+                <View style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 8,
+                }}>
+                    <Text style={{
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: c.text.primary,
+                        flex: 1,
+                    }} numberOfLines={1}>
+                        {student.name}
+                    </Text>
+
+                    <View style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 8,
+                    }}>
+                        <Text style={{
+                            fontSize: 11,
+                            color: c.text.disabled,
+                        }}>
+                            {t("Última")}: {student.lastAttendance}
+                        </Text>
+                        
+                        <Badge variant={variant} size="sm">
+                            {student.attendanceRate}%
+                        </Badge>
+                    </View>
+                </View>
+
+                {/* Segunda línea: Código + Ficha + Stats */}
+                <View style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 8,
+                }}>
+                    <View style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 8,
+                        flex: 1,
+                    }}>
+                        <Text style={{
+                            fontSize: 12,
+                            color: c.text.secondary,
+                        }}>
+                            {student.code}
+                        </Text>
+                        <Text style={{
+                            fontSize: 12,
+                            color: c.text.secondary,
+                        }}>
+                            • {student.fichaName}
+                        </Text>
+                    </View>
+
+                    {/* Stats: faltas + seguidas */}
+                    <View style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 10,
+                    }}>
+                        <View style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 4,
+                        }}>
+                            <Feather name="x-circle" size={12} color={c.status.danger} />
+                            <Text style={{
+                                fontSize: 11,
+                                color: c.text.secondary,
+                            }}>
+                                {student.totalAbsences} {t("faltas")}
+                            </Text>
+                        </View>
+
+                        {student.consecutiveAbsences > 0 && (
+                            <View style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 4,
+                            }}>
+                                <Feather name="repeat" size={12} color={c.status.warning} />
+                                <Text style={{
+                                    fontSize: 11,
+                                    color: c.text.secondary,
+                                }}>
+                                    {student.consecutiveAbsences} {t("seguidas")}
+                                </Text>
+                            </View>
+                        )}
+                    </View>
+                </View>
+
+                {/* Barra de progreso con color dinámico */}
+                <ProgressBar
+                    value={student.attendanceRate}
+                    color={attColor}
+                    size="sm"
+                />
+                
+                {/* Advertencia de días consecutivos (CRÍTICO) */}
+                {student.hasExceededConsecutiveDays && (
+                    <View style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 4,
+                        marginTop: 2,
+                    }}>
+                        <Feather name="alert-octagon" size={10} color={c.status.danger} />
+                        <Text style={{
+                            fontSize: 10,
+                            color: c.status.danger,
+                            fontWeight: "700",
+                        }}>
+                            {t("Sanción por ausencias consecutivas")} ({student.consecutiveAbsences} {t("días seguidos")})
+                        </Text>
+                    </View>
+                )}
+                
+                {/* Advertencia de días hasta sanción (si está en umbral crítico Y no ha excedido consecutivas) */}
+                {!student.hasExceededConsecutiveDays && student.daysUntilSanction <= criticalDaysThreshold && (
+                    <View style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 4,
+                        marginTop: 2,
+                    }}>
+                        <Feather 
+                            name={student.daysUntilSanction === 0 ? "alert-octagon" : "clock"} 
+                            size={10} 
+                            color={student.daysUntilSanction === 0 ? c.status.danger : c.status.warning} 
+                        />
+                        <Text style={{
+                            fontSize: 10,
+                            color: student.daysUntilSanction === 0 ? c.status.danger : c.status.warning,
+                            fontWeight: "600",
+                        }}>
+                            {student.daysUntilSanction === 0
+                                ? t("Umbral de sanción alcanzado")
+                                : `${student.daysUntilSanction} ${t("días hasta posible sanción")}`
+                            }
+                        </Text>
+                    </View>
+                )}
+            </View>
+
+            {/* Chevron - Indicador de clickeable */}
+            <Feather name="chevron-right" size={20} color={c.text.secondary} />
+        </TouchableOpacity>
+    );
+}
 
 /**
  * Lista de estudiantes en riesgo de sanción
+ * Usa configuración dinámica de umbrales de asistencia y días hasta sanción
  * 
  * @param {Array} students - Array de estudiantes en riesgo
  * @param {number} maxItems - Número máximo de items (default: 10)
@@ -32,40 +264,13 @@ export function AtRiskStudentsList({
     const { t } = useTranslation();
     const c = theme.colors;
 
-    // Ordenar por nivel de riesgo y días hasta sanción
+    // Ordenar por nivel de riesgo y días hasta sanción (usa datos dinámicos ya calculados)
     const sortedStudents = [...students].sort((a, b) => {
-        const riskOrder = { high: 0, medium: 1, low: 2 };
-        const riskDiff = riskOrder[a.riskLevel] - riskOrder[b.riskLevel];
-        if (riskDiff !== 0) return riskDiff;
-        return a.daysUntilSanction - b.daysUntilSanction;
+        // Primero ordenar por asistencia (menor a mayor = más riesgo primero)
+        return a.attendanceRate - b.attendanceRate;
     });
 
     const displayedStudents = sortedStudents.slice(0, maxItems);
-
-    // Configuración de niveles de riesgo
-    const riskConfig = {
-        high: {
-            color: c.status.danger,
-            bgColor: c.status.dangerLight,
-            variant: "danger",
-            label: t("Alto Riesgo"),
-            icon: "alert-octagon",
-        },
-        medium: {
-            color: c.status.warning,
-            bgColor: c.status.warningLight,
-            variant: "warning",
-            label: t("Riesgo Medio"),
-            icon: "alert-triangle",
-        },
-        low: {
-            color: c.brand.primary,
-            bgColor: c.brand.primaryLight,
-            variant: "primary",
-            label: t("Riesgo Bajo"),
-            icon: "alert-circle",
-        },
-    };
 
     if (students.length === 0) {
         return (
@@ -104,163 +309,17 @@ export function AtRiskStudentsList({
 
     return (
         <Card padding={0}>
-            {displayedStudents.map((student, index) => {
-                const config = riskConfig[student.riskLevel] || riskConfig.low;
-                const isLast = index === displayedStudents.length - 1;
-                
-                // Calcular progreso inverso (100% = sin riesgo, 0% = crítico)
-                const progressValue = student.attendanceRate;
-
-                return (
-                    <TouchableOpacity
-                        key={student.id}
-                        onPress={() => onStudentPress?.(student)}
-                        style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            padding: 16,
-                            gap: 12,
-                            borderBottomWidth: isLast ? 0 : 1,
-                            borderBottomColor: c.border.primary,
-                            backgroundColor: index === 0 && student.riskLevel === "high" 
-                                ? config.bgColor 
-                                : "transparent",
-                        }}
-                    >
-                        {/* Avatar con indicador de riesgo */}
-                        <View style={{ position: "relative" }}>
-                            <Avatar name={student.name} size={48} />
-                            <View style={{
-                                position: "absolute",
-                                bottom: -2,
-                                right: -2,
-                                width: 20,
-                                height: 20,
-                                borderRadius: 10,
-                                backgroundColor: config.color,
-                                borderWidth: 2,
-                                borderColor: c.background.surface,
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}>
-                                <Feather name={config.icon} size={10} color="#fff" />
-                            </View>
-                        </View>
-
-                        {/* Información */}
-                        <View style={{ flex: 1, gap: 6 }}>
-                            {/* Header: Nombre + (Última asistencia + Badge) */}
-                            <View style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                gap: 8,
-                            }}>
-                                <Text style={{
-                                    fontSize: 14,
-                                    fontWeight: "600",
-                                    color: c.text.primary,
-                                    flex: 1,
-                                }} numberOfLines={1}>
-                                    {student.name}
-                                </Text>
-
-                                <View style={{
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    gap: 8,
-                                }}>
-                                    <Text style={{
-                                        fontSize: 11,
-                                        color: c.text.disabled,
-                                    }}>
-                                        {t("Última asistencia")}: {student.lastAttendance}
-                                    </Text>
-                                    
-                                    <Badge variant={config.variant} size="sm">
-                                        {student.attendanceRate}%
-                                    </Badge>
-                                </View>
-                            </View>
-
-                            {/* Segunda línea: Código + Ficha + Stats */}
-                            <View style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                gap: 8,
-                            }}>
-                                <View style={{
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    gap: 8,
-                                    flex: 1,
-                                }}>
-                                    <Text style={{
-                                        fontSize: 12,
-                                        color: c.text.secondary,
-                                    }}>
-                                        {student.code}
-                                    </Text>
-                                    <Text style={{
-                                        fontSize: 12,
-                                        color: c.text.secondary,
-                                    }}>
-                                        • {student.fichaName}
-                                    </Text>
-                                </View>
-
-                                {/* Stats: faltas + seguidas */}
-                                <View style={{
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    gap: 10,
-                                }}>
-                                    <View style={{
-                                        flexDirection: "row",
-                                        alignItems: "center",
-                                        gap: 4,
-                                    }}>
-                                        <Feather name="x-circle" size={12} color={c.status.danger} />
-                                        <Text style={{
-                                            fontSize: 11,
-                                            color: c.text.secondary,
-                                        }}>
-                                            {student.totalAbsences} {t("faltas")}
-                                        </Text>
-                                    </View>
-
-                                    {student.consecutiveAbsences > 0 && (
-                                        <View style={{
-                                            flexDirection: "row",
-                                            alignItems: "center",
-                                            gap: 4,
-                                        }}>
-                                            <Feather name="repeat" size={12} color={c.status.warning} />
-                                            <Text style={{
-                                                fontSize: 11,
-                                                color: c.text.secondary,
-                                            }}>
-                                                {student.consecutiveAbsences} {t("seguidas")}
-                                            </Text>
-                                        </View>
-                                    )}
-                                </View>
-                            </View>
-
-                            {/* Barra de progreso */}
-                            <ProgressBar
-                                value={progressValue}
-                                color={config.color}
-                                size="sm"
-                            />
-                        </View>
-
-                        {/* Chevron - Indicador de clickeable */}
-                        <Feather name="chevron-right" size={20} color={c.text.secondary} />
-                    </TouchableOpacity>
-                );
-            })}
+            {displayedStudents.map((student, index) => (
+                <StudentRow
+                    key={student.id}
+                    student={student}
+                    index={index}
+                    isLast={index === displayedStudents.length - 1}
+                    onPress={onStudentPress}
+                    c={c}
+                    t={t}
+                />
+            ))}
 
             {students.length > maxItems && (
                 <TouchableOpacity

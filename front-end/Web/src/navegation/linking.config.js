@@ -32,7 +32,7 @@ export const linkingConfig = {
         'faceattend://',
     ],
     
-    // Configuración de rutas
+    // Configuración de rutas DESCENTRALIZADAS
     config: {
         screens: {
             // ── Rutas públicas ────────────────────────────────
@@ -40,37 +40,31 @@ export const linkingConfig = {
             'FaceAttendEDU-Login': 'login',
             'FaceAttendEDU-Register': 'register',
             
-            // ── Rutas autenticadas ────────────────────────────
-            // Nested navigator para rutas protegidas bajo /app
-            'FaceAttendEDU-Dashboard': {
-                path: 'app',
-                screens: {
-                    Dashboard: '',  // /app → Dashboard por defecto
-                    Users: {
-                        path: 'users/:section?',  // /app/users o /app/users/teachers
-                        parse: {
-                            // Parsear el parámetro section desde la URL
-                            section: (section) => section || null,
-                        },
-                        stringify: {
-                            // Convertir el parámetro section a string para la URL
-                            section: (section) => section || '',
-                        },
-                    },
-                    Courses: 'courses',  // /app/courses
-                    Environments: 'environments',  // /app/environments
-                    Reports: 'reports',  // /app/reports
-                    Settings: {
-                        path: 'settings/:section?',  // /app/settings o /app/settings/general
-                        parse: {
-                            // Parsear el parámetro section desde la URL
-                            section: (section) => section || null,
-                        },
-                        stringify: {
-                            // Convertir el parámetro section a string para la URL
-                            section: (section) => section || '',
-                        },
-                    },
+            // ── Rutas autenticadas DIRECTAS ───────────────────
+            Dashboard: 'app',  // /app → Dashboard
+            Users: {
+                path: 'app/users/:section?',  // /app/users o /app/users/teachers
+                parse: {
+                    // Parsear el parámetro section desde la URL
+                    section: (section) => section || null,
+                },
+                stringify: {
+                    // Convertir el parámetro section a string para la URL
+                    section: (section) => section || '',
+                },
+            },
+            Courses: 'app/courses',  // /app/courses
+            Environments: 'app/environments',  // /app/environments
+            Reports: 'app/reports',  // /app/reports
+            Settings: {
+                path: 'app/settings/:section?',  // /app/settings o /app/settings/general
+                parse: {
+                    // Parsear el parámetro section desde la URL
+                    section: (section) => section || null,
+                },
+                stringify: {
+                    // Convertir el parámetro section a string para la URL
+                    section: (section) => section || '',
                 },
             },
         },

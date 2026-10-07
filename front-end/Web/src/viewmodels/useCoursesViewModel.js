@@ -13,6 +13,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
+import { getAttendanceThresholds, getAtRiskStudents } from "../models/data/userDerivedData";
 
 // ── Formulario vacío ───────────────────────────────────────
 
@@ -113,7 +114,6 @@ export function useCoursesViewModel() {
     const [statusFilter, setStatusFilter] = useState("");
     const [selected, setSelected] = useState(null);
     const [showRegisterModal, setShowRegisterModal] = useState(false);
-    const [showImportModal, setShowImportModal] = useState(false);
 
     // ── Estado de filtrado avanzado ────────────────────────────
     
@@ -248,22 +248,61 @@ export function useCoursesViewModel() {
 
     // ── Estadísticas derivadas ─────────────────────────────────
     
-    const totalStudents = useMemo(() => 
-        courses.reduce((a, x) => a + x.students, 0), 
-        [courses]
-    );
+    const totalStudents = useMemo(() => {
+        // Contar estudiantes REALES que están en alguno de estos cursos
+        // En lugar del campo hardcodeado 'students'
+        const courseCodes = new Set(courses.map(course => course.code));
+        const students = appData.students || [];
+        
+        return students.filter(student => 
+            student.status === "active" && 
+            courseCodes.has(student.course)
+        ).length;
+    }, [courses, appData.students]);
 
-    const avgAttendance = useMemo(
-        () => courses.length === 0
-            ? 0
-            : Math.round(courses.reduce((a, x) => a + x.avgAttendance, 0) / courses.length),
-        [courses]
-    );
+    const avgAttendance = useMemo(() => {
+        if (courses.length === 0) return 0;
+        
+        // Calcular asistencia promedio REAL basada en estudiantes
+        const students = appData.students || [];
+        const courseCodes = new Set(courses.map(course => course.code));
+        
+        const courseStudents = students.filter(student => 
+            student.status === "active" && 
+            courseCodes.has(student.course)
+        );
+        
+        if (courseStudents.length === 0) return 0;
+        
+        const totalAttendance = courseStudents.reduce((sum, student) => 
+            sum + (student.attendance || 0), 0
+        );
+        
+        return Math.round(totalAttendance / courseStudents.length);
+    }, [courses, appData.students]);
 
-    const alertCount = useMemo(() => 
-        courses.filter((x) => x.avgAttendance < 80).length, 
-        [courses]
-    );
+    const alertCount = useMemo(() => {
+        // Usar la MISMA lógica que getAtRiskStudents para ser consistente
+        const students = appData.students || [];
+        const courseCodes = new Set(courses.map(course => course.code));
+        
+        const courseStudents = students.filter(student => 
+            student.status === "active" && 
+            courseCodes.has(student.course)
+        );
+        
+        const thresholds = getAttendanceThresholds();
+        const config = {
+            minAttendance: thresholds.minAttendance,
+            daysUntilSanction: 30, // Por defecto, debería venir de config
+            consecutiveDaysForSanction: thresholds.consecutiveDaysForSanction
+        };
+        
+        // Usar getAtRiskStudents con los estudiantes de estos cursos
+        const atRiskStudents = getAtRiskStudents(courseStudents, config.minAttendance);
+        
+        return atRiskStudents.length;
+    }, [courses, appData.students]);
     
     const stats = useMemo(() => {
         const total = courses.length;
@@ -298,16 +337,6 @@ export function useCoursesViewModel() {
             });
             
             return null;
-        },
-        [appData]
-    );
-
-    const importCourses = useCallback(
-        async (drafts) => {
-            // TODO: Implementar importCourses en AppDataContext
-            // return appData.importCourses(drafts);
-            console.log("Importar cursos:", drafts);
-            return { success: 0, errors: [] };
         },
         [appData]
     );
@@ -385,7 +414,6 @@ export function useCoursesViewModel() {
         
         // Estado de modales
         showRegisterModal,
-        showImportModal,
         
         // Setters de filtros básicos
         setSearch,
@@ -405,12 +433,9 @@ export function useCoursesViewModel() {
         // Acciones de modales
         openRegisterModal: () => setShowRegisterModal(true),
         closeRegisterModal: () => setShowRegisterModal(false),
-        openImportModal: () => setShowImportModal(true),
-        closeImportModal: () => setShowImportModal(false),
         
         // Acciones de CRUD
         registerCourse,
-        importCourses,
         
         // Estadísticas (legacy - mantener por compatibilidad)
         totalStudents,

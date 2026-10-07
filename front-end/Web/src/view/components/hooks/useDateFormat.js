@@ -3,12 +3,12 @@
 // ============================================================
 
 import { useState, useCallback, useEffect } from "react";
-import { getInstitutionConfig, onInstitutionConfigChange } from "../../config/institutionConfig";
+import { getInstitutionConfig, onInstitutionConfigChange } from "../../../core/config/institutionConfig";
 import {
     formatDate as formatDateUtil,
     formatTime as formatTimeUtil,
     formatDateTime as formatDateTimeUtil,
-} from "../../constants/dateFormats";
+} from "../../../core/constants/dateFormats";
 
 /**
  * Hook para obtener y usar el formato de fecha configurado

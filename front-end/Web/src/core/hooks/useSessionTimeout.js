@@ -7,12 +7,14 @@
 //  ✓ Reinicia el contador cuando detecta actividad
 //  ✓ Ejecuta logout automático cuando se cumple el tiempo configurado
 //  ✓ Proporciona tiempo restante para mostrar advertencias
+//  ✓ Se limpia automáticamente cuando se deshabilita (logout)
 //
 //  Uso:
 //    const { timeRemaining, isWarning, resetTimer } = useSessionTimeout({
 //        timeoutMinutes: 60,
 //        onTimeout: logout,
-//        warningMinutes: 5
+//        warningMinutes: 5,
+//        enabled: user !== null // IMPORTANTE: deshabilitar al hacer logout
 //    });
 // ============================================================
 
@@ -38,30 +40,55 @@ export function useSessionTimeout({
         onTimeoutRef.current = onTimeout;
     }, [onTimeout]);
 
+    // Función para limpiar el interval
+    const clearTimerInterval = useCallback(() => {
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
+    }, []);
+
     // Función para resetear el timer de inactividad
     const resetTimer = useCallback(() => {
-        if (!enabled) return;
+        // Si está deshabilitado, limpiar timer y resetear estados
+        if (!enabled) {
+            clearTimerInterval();
+            setTimeRemaining(timeoutMinutes * 60);
+            setIsWarning(false);
+            setIsExpired(false);
+            return;
+        }
         
         lastActivityRef.current = Date.now();
         setTimeRemaining(timeoutMinutes * 60);
         setIsWarning(false);
         setIsExpired(false);
-    }, [enabled, timeoutMinutes]);
+    }, [enabled, timeoutMinutes, clearTimerInterval]);
 
     // Función para registrar actividad del usuario
     const handleActivity = useCallback(() => {
+        if (!enabled) return; // Guardia adicional
+        
         resetTimer();
-    }, [resetTimer]);
+        
+        // ===== NUEVO: Emitir evento para cerrar push notifications de sesión =====
+        if (Platform.OS === 'web') {
+            window.dispatchEvent(new CustomEvent('userActivityDetected', {
+                detail: { timestamp: Date.now() }
+            }));
+        }
+    }, [resetTimer, enabled]); // Agregar enabled como dependencia
 
     // Configurar listeners de actividad
     useEffect(() => {
         if (!enabled) return;
 
         const events = Platform.OS === 'web' 
-            ? ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click']
+            ? ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click']
             : ['touchstart', 'touchmove'];
 
-        const throttledHandler = throttle(handleActivity, 1000); // Throttle a 1 segundo
+        // Reducir throttle a 500ms para mejor respuesta
+        const throttledHandler = throttle(handleActivity, 500);
 
         events.forEach(event => {
             if (Platform.OS === 'web') {
@@ -78,13 +105,42 @@ export function useSessionTimeout({
         };
     }, [handleActivity, enabled]);
 
+    // Efecto de limpieza final cuando el hook se desmonta
+    useEffect(() => {
+        return () => {
+            // Limpiar interval al desmontar el componente completamente
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
+        };
+    }, []);
+
     // Timer principal que actualiza el tiempo restante
     useEffect(() => {
-        if (!enabled) return;
+        // Si está deshabilitado, limpiar cualquier timer existente
+        if (!enabled) {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
+            // Resetear estados cuando se deshabilita
+            setTimeRemaining(timeoutMinutes * 60);
+            setIsWarning(false);
+            setIsExpired(false);
+            return;
+        }
+
+
 
         // Inicializar lastActivityRef si es necesario
         if (typeof lastActivityRef.current === 'function') {
             lastActivityRef.current = lastActivityRef.current();
+        }
+
+        // Limpiar interval anterior si existe
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
         }
 
         intervalRef.current = setInterval(() => {
@@ -113,6 +169,7 @@ export function useSessionTimeout({
         return () => {
             if (intervalRef.current) {
                 clearInterval(intervalRef.current);
+                intervalRef.current = null;
             }
         };
     }, [enabled, warningMinutes, timeoutMinutes]);
@@ -130,7 +187,8 @@ export function useSessionTimeout({
         isWarning,
         isExpired,
         resetTimer,
-        handleActivity
+        handleActivity,
+        clearTimer: clearTimerInterval // Exponer función para limpiar timer externamente
     };
 }
 

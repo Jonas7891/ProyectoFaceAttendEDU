@@ -18,30 +18,27 @@ import { useAppData }             from "../../../context/AppDataContext";
 import { usePushNotification }    from "../common/feedback/PushNotification";
 import { getInstitutionConfig }   from "../../../core/config/institutionConfig";
 import { isValidEmail }           from "../../../core/utils/validation";
+import { titleCase }             from "../../../core/utils/formatting";
 import FaceRegistrationModal      from "./FaceRegistrationModal";
 
 // ── Funciones auxiliares para formateo ────────────────────
 
 /**
- * Filtra el texto para permitir solo letras y espacios
+ * Filtra el texto para permitir solo letras y espacios manteniendo acentos
  */
 const filterLettersAndSpaces = (text) => {
-    return text.replace(/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/g, '');
+    if (!text) return '';
+    // Permite letras con acentos, espacios, ñ, ü, etc.
+    return text.replace(/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑç\s]/g, '');
 };
 
 /**
- * Capitaliza la primera letra de cada palabra
- */
-const capitalizeWords = (text) => {
-    return text.replace(/\b\w/g, (char) => char.toUpperCase());
-};
-
-/**
- * Formatea el nombre: filtra caracteres no válidos y capitaliza
+ * Formatea el nombre: filtra caracteres no válidos y capitaliza usando titleCase
  */
 const formatName = (text) => {
+    if (!text) return '';
     const filtered = filterLettersAndSpaces(text);
-    return capitalizeWords(filtered);
+    return titleCase(filtered);
 };
 import {
     EMPTY_FORM,

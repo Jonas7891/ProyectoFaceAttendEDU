@@ -3,19 +3,16 @@ import { View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Badge } from "./Badge";
 import { useTheme } from "../../hooks/useTheme";
+import { getAttendanceThresholds } from "../../../../models/data/userDerivedData";
 
 /**
- * Badge para mostrar estados con umbrales
- * Útil para asistencia, progreso, calificaciones, etc.
- * 
- * @param {number} value - Valor numérico (0-100)
- * @param {Object} thresholds - Umbrales: { excellent, good, warning }
- * @param {boolean} showIcon - Mostrar icono
- * @param {string} suffix - Sufijo (ej: "%")
+ * Badge para mostrar estados con umbrales genéricos
+ * Útil para progreso, calificaciones, etc. (NO para asistencia)
+ * Para asistencia usa AttendanceBadge o useAttendanceStatus
  */
 export function StatusBadge({
   value,
-  thresholds = { excellent: 85, good: 75, warning: 60 },
+  thresholds,
   showIcon = false,
   suffix = "%",
   size = "md",
@@ -47,16 +44,23 @@ export function StatusBadge({
 }
 
 /**
- * Badge específico para asistencia
+ * Badge específico para asistencia - Usa configuración dinámica
  */
 export function AttendanceBadge({ attendance, showIcon = false, size = "md" }) {
+  const status = useAttendanceStatus(attendance);
+  
+  const variantMap = {
+    excellent: "success",
+    warning: "warning",
+    danger: "danger",
+    inactive: "default",
+  };
+
   return (
-    <StatusBadge
-      value={attendance}
-      thresholds={{ excellent: 85, good: 75, warning: 60 }}
-      showIcon={showIcon}
-      size={size}
-    />
+    <Badge variant={variantMap[status.level]} size={size}>
+      {showIcon && status.level !== "inactive" && `${status.level === "excellent" ? "✓" : status.level === "warning" ? "!" : "⚠"} `}
+      {attendance}%
+    </Badge>
   );
 }
 
@@ -87,21 +91,73 @@ export function AttendanceStatusBadge({ status, label }) {
 
 export default StatusBadge;
 
-// Hook para obtener color basado en porcentaje de asistencia
-export function useAttendanceColor(attendance) {
+// ═══════════════════════════════════════════════════════════
+// HOOKS DE ASISTENCIA - Usan configuración dinámica
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Hook para obtener el estado completo de asistencia (DINÁMICO)
+ * Única fuente de verdad para colores de asistencia
+ */
+export function useAttendanceStatus(attendance, isActive = true) {
   const { theme } = useTheme();
   const c = theme.colors;
   
-  if (attendance >= 85) return c.status.success;
-  if (attendance >= 75) return c.status.warning;
-  return c.status.danger;
+  // Obtener umbrales dinámicos de configuración
+  const thresholds = getAttendanceThresholds();
+  
+  if (!isActive) {
+    return {
+      color: c.text.disabled,
+      bgColor: c.background.secondary,
+      level: "inactive",
+      label: "Inactivo"
+    };
+  }
+  
+  // Lógica simplificada de 3 niveles:
+  // 1. EXCELLENT (verde): >= warning (ej: >= 82%)
+  // 2. WARNING (ámbar): >= minAttendance pero < warning (ej: 80-82%)
+  // 3. DANGER (rojo): < minAttendance (ej: < 80%)
+  
+  if (attendance >= thresholds.excellent) {
+    // Por encima del warning threshold → EXCELLENT (verde)
+    return {
+      color: c.status.success,
+      bgColor: c.status.successLight || "#ECFDF5",
+      level: "excellent",
+      label: "Excelente"
+    };
+  } else if (attendance >= thresholds.warning ) {
+    // Entre mínimo y warning → WARNING (ámbar)
+    return {
+      color: c.status.warning,
+      bgColor: c.status.warningLight || "#FFFBEB",
+      level: "warning", 
+      label: "Aceptable"
+    };
+  } else {
+    // Por debajo del mínimo → DANGER (rojo)
+    return {
+      color: c.status.danger,
+      bgColor: c.status.dangerLight || "#FEF2F2",
+      level: "danger",
+      label: "En riesgo"
+    };
+  }
 }
 
 /**
- * Icono circular para estado de asistencia
- * 
- * @param {string} status - Estado: 'on_time', 'late', 'absent', 'present'
- * @param {number} size - Tamaño del contenedor (default: 32)
+ * Hook para obtener solo el color de asistencia (DINÁMICO)
+ * Usa useAttendanceStatus internamente
+ */
+export function useAttendanceColor(attendance) {
+  const status = useAttendanceStatus(attendance);
+  return status.color;
+}
+
+/**
+ * Icono circular para estado de asistencia (on_time, late, absent, present)
  */
 export function AttendanceStatusIcon({ status, size = 32 }) {
   const { theme } = useTheme();
@@ -150,10 +206,3 @@ export function AttendanceStatusIcon({ status, size = 32 }) {
     </View>
   );
 }
-
-// Umbrales de asistencia
-export const ATTENDANCE_THRESHOLDS = {
-  excellent: 85,
-  good: 75,
-  warning: 60,
-};

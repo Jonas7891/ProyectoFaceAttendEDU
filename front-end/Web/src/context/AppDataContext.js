@@ -79,6 +79,7 @@ export function AppDataProvider({ children }) {
     const [loadedTeachers, setLoadedTeachers] = useState([]);
     const [loadedAdmins, setLoadedAdmins] = useState([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(true);
+    const [refreshTrigger, setRefreshTrigger] = useState(0); // Para forzar re-renders
 
     // Carga inicial de datos base (environments, fichas, courses)
     useEffect(() => {
@@ -270,12 +271,23 @@ export function AppDataProvider({ children }) {
         [students, enrichedCourses]
     );
 
+    // Función para forzar refresh del contexto
+    const forceRefresh = useCallback(() => {
+        setRefreshTrigger(prev => prev + 1);
+    }, []);
+
     const updateStudentFn = useCallback(
         async (id, patch) => {
-            const updated = students.map((s) => (s.id === id ? { ...s, ...patch } : s));
+            // Actualizar en ambos estados: students (interno) y loadedStudents (expuesto)
+            const updateStudentInArray = (studentArray) => {
+                return studentArray.map((s) => (s.id === id ? { ...s, ...patch } : s));
+            };
+            
+            const updatedStudents = updateStudentInArray(students);
+            const updatedLoadedStudents = updateStudentInArray(loadedStudents);
             
             // Re-heredar período del curso para el estudiante actualizado
-            const enrichedUpdated = updated.map(student => {
+            const enrichStudent = (student) => {
                 if (student.id === id) {
                     const studentCourse = enrichedCourses.find(
                         c => c.code === student.course || c.name === student.course || c.id === student.course
@@ -287,13 +299,22 @@ export function AppDataProvider({ children }) {
                     };
                 }
                 return student;
-            });
+            };
             
-            await saveStudents(enrichedUpdated);
-            setStudents(enrichedUpdated);
-            setLoadedStudents(enrichedUpdated);
+            const enrichedStudents = updatedStudents.map(enrichStudent);
+            const enrichedLoadedStudents = updatedLoadedStudents.map(enrichStudent);
+            
+            // Persistir y actualizar estados
+            await saveStudents(enrichedStudents);
+            setStudents(enrichedStudents);
+            setLoadedStudents(enrichedLoadedStudents);
+            
+            // Forzar un refresh para asegurar que la UI se actualice
+            setTimeout(() => {
+                forceRefresh();
+            }, 100);
         },
-        [students, enrichedCourses]
+        [students, loadedStudents, enrichedCourses, forceRefresh]
     );
 
     const removeStudentFn = useCallback(
@@ -318,10 +339,16 @@ export function AppDataProvider({ children }) {
 
     const updateUserFn = useCallback(
         async (id, patch) => {
+            console.log('updateUserFn: Actualizando usuario', id, 'con patch:', patch);
             const updated = await storageUpdateUser(users, id, patch);
             setUsers(updated);
+            
+            // Forzar un refresh para asegurar que la UI se actualice
+            setTimeout(() => {
+                forceRefresh();
+            }, 100);
         },
-        [users]
+        [users, forceRefresh]
     );
 
     const removeUserFn = useCallback(
@@ -474,6 +501,9 @@ export function AppDataProvider({ children }) {
             addCourse: addCourseFn,
             updateCourse: updateCourseFn,
             removeCourse: removeCourseFn,
+            
+            // Utilidades
+            forceRefresh,
         }),
         [
             isLoading,
@@ -505,6 +535,8 @@ export function AppDataProvider({ children }) {
             addCourseFn,
             updateCourseFn,
             removeCourseFn,
+            forceRefresh,
+            refreshTrigger, // Incluir refreshTrigger para forzar re-cálculos
         ]
     );
 

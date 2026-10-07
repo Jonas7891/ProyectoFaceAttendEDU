@@ -11,6 +11,7 @@ import { BaseModal, Button } from "../../../components/common";
 import { useTheme } from "../../../components/hooks/useTheme";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { useCourseDetails } from "../../../../core/hooks/useCourseDetails";
+import { useAttendanceColor } from "../../../components/common/badges/StatusBadge";
 
 export default function CourseDetailModal({ course, onClose, canManage }) {
     const { theme } = useTheme();
@@ -26,6 +27,9 @@ export default function CourseDetailModal({ course, onClose, canManage }) {
         courseShift,
         coursePeriodDisplay,
     } = useCourseDetails(course);
+    
+    // Obtener color dinámico para la asistencia
+    const attColor = useAttendanceColor(courseAvgAttendance);
 
     if (!course) return null;
 
@@ -33,6 +37,7 @@ export default function CourseDetailModal({ course, onClose, canManage }) {
         <BaseModal
             visible={!!course}
             onClose={onClose}
+            closeOnBackdrop={true}
             title={course.name}
             subtitle={course.code}
             icon="book-open"
@@ -177,11 +182,7 @@ export default function CourseDetailModal({ course, onClose, canManage }) {
                             style={{
                                 fontSize: 20,
                                 fontWeight: "700",
-                                color: courseAvgAttendance >= 80 
-                                    ? c.status.success 
-                                    : courseAvgAttendance >= 60 
-                                    ? c.status.warning 
-                                    : c.status.error,
+                                color: attColor,
                             }}
                         >
                             {courseAvgAttendance}%
@@ -202,11 +203,7 @@ export default function CourseDetailModal({ course, onClose, canManage }) {
                             style={{
                                 height: "100%",
                                 width: `${courseAvgAttendance}%`,
-                                backgroundColor: courseAvgAttendance >= 80 
-                                    ? c.status.success 
-                                    : courseAvgAttendance >= 60 
-                                    ? c.status.warning 
-                                    : c.status.error,
+                                backgroundColor: attColor,
                                 borderRadius: 10,
                             }}
                         />

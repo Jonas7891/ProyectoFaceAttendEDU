@@ -52,18 +52,6 @@ export default function CoursesView() {
                 subtitle={pageSubtitle}
                 actions={
                     <>
-                        {/* Importar — solo admin/teacher */}
-                        {permissions.canManageCourses && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onPress={vm.openImportModal}
-                                leftIcon={<Feather name="upload" size={16} color={c.text.secondary} />}
-                            >
-                                {t("Importar")}
-                            </Button>
-                        )}
-
                         {/* Nuevo curso — solo admin/teacher */}
                         {permissions.canManageCourses && (
                             <Button

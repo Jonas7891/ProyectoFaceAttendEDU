@@ -9,8 +9,9 @@
 //  UI pura. Sin estado propio.
 //
 //  Props:
-//   - minAttendance / onMinAttendanceChange       : number + setter
-//   - daysUntilSanction / onDaysSanctionChange    : number + setter
+//   - minAttendance / onMinAttendanceChange              : number + setter
+//   - daysUntilSanction / onDaysSanctionChange           : number + setter
+//   - consecutiveDaysForSanction / onConsecutiveDaysChange : number + setter
 // ============================================================
 import React from "react";
 import { View, Text } from "react-native";
@@ -23,6 +24,7 @@ import { useSettingsSectionStyles } from "../../modals/useSettingsSectionStyles"
 export function AttendanceThresholds({
     minAttendance, onMinAttendanceChange,
     daysUntilSanction, onDaysSanctionChange,
+    consecutiveDaysForSanction, onConsecutiveDaysChange,
 }) {
     const { t } = useTranslation();
     const { c, labelStyle, descStyle } = useSettingsSectionStyles();
@@ -106,6 +108,51 @@ export function AttendanceThresholds({
                             : daysUntilSanction <= 15
                             ? t("Umbral moderado — Balance entre seguimiento temprano y flexibilidad. Valor recomendado para la mayoría de instituciones.")
                             : t("Umbral flexible — Los estudiantes tienen más margen antes de recibir alerta. Útil para programas con clases semanales o menor frecuencia.")}
+                    </Text>
+                </View>
+            </View>
+
+            <Divider />
+
+            {/* Días consecutivos para sanción */}
+            <View>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 8 }}>
+                    <View>
+                        <Text style={labelStyle}>{t("Días consecutivos para sanción")}</Text>
+                        <Text style={[descStyle, { marginTop: 0 }]}>{t("Número de días consecutivos que activa sanción inmediata")}</Text>
+                    </View>
+                    <Text style={{ fontSize: 18, fontWeight: "800", color: c.brand.primary }}>{consecutiveDaysForSanction} {t("días")}</Text>
+                </View>
+                <Slider
+                    minimumValue={1} maximumValue={5} step={1}
+                    value={consecutiveDaysForSanction} onValueChange={onConsecutiveDaysChange}
+                    minimumTrackTintColor={c.brand.primary}
+                    maximumTrackTintColor={c.border.primary}
+                />
+                <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 4 }}>
+                    {[1, 2, 3, 4, 5].map((v) => (
+                        <Text key={v} style={{ fontSize: 12, color: v === consecutiveDaysForSanction ? c.brand.primary : c.text.disabled, fontWeight: v === consecutiveDaysForSanction ? "700" : "400" }}>
+                            {v}
+                        </Text>
+                    ))}
+                </View>
+                <View style={{
+                    marginTop: 10,
+                    backgroundColor: consecutiveDaysForSanction === 1 ? c.status.dangerLight : consecutiveDaysForSanction <= 2 ? c.status.warningLight : c.brand.primaryLight,
+                    borderRadius: 14, padding: 12, flexDirection: "row", gap: 8,
+                }}>
+                    <Feather
+                        name={consecutiveDaysForSanction === 1 ? "alert-circle" : consecutiveDaysForSanction <= 2 ? "alert-triangle" : "info"}
+                        size={13}
+                        color={consecutiveDaysForSanction === 1 ? c.status.danger : consecutiveDaysForSanction <= 2 ? c.status.warning : c.brand.primary}
+                        style={{ marginTop: 1 }}
+                    />
+                    <Text style={{ fontSize: 12, color: consecutiveDaysForSanction === 1 ? c.status.dangerDark : consecutiveDaysForSanction <= 2 ? c.status.warningDark : c.brand.primary, flex: 1, lineHeight: 18 }}>
+                        {consecutiveDaysForSanction === 1
+                            ? t("Sanción inmediata — Un solo día de falta consecutiva activa la sanción. Muy estricto, solo para programas con asistencia obligatoria crítica.")
+                            : consecutiveDaysForSanction <= 2
+                            ? t("Política estricta — Dos días consecutivos activan sanción. Recomendado para instituciones con reglas de asistencia rigurosas.")
+                            : t("Política equilibrada — Permite margen razonable antes de aplicar sanciones. Recomendado para la mayoría de instituciones.")}
                     </Text>
                 </View>
             </View>

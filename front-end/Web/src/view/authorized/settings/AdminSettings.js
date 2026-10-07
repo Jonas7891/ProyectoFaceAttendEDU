@@ -12,7 +12,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Card } from "../../components/common";
 import { useResponsive } from "../../components/hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
-import { useDateFormat } from "../../../core/utils/hooks/useDateFormat";
+import { useDateFormat } from "../../components/hooks/useDateFormat";
 import { useEditableConfig } from "../../components/hooks/useEditableConfig";
 import { SecurityMeter } from "../../components/settings/tabs";
 import {
@@ -72,6 +72,7 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
             timeFormat24h: config.timeFormat24h ?? false,
             minAttendance: config.minAttendance,
             daysUntilSanction: config.daysUntilSanction,
+            consecutiveDaysForSanction: config.consecutiveDaysForSanction ?? 3,
             confidence: config.confidenceThreshold,
             autoRegister: config.autoRegister,
             savePhotos: config.savePhotos,
@@ -188,6 +189,8 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                         onMinAttendanceChange={(value) => updateConfig("minAttendance", value)}
                         daysUntilSanction={config.daysUntilSanction}
                         onDaysSanctionChange={(value) => updateConfig("daysUntilSanction", value)}
+                        consecutiveDaysForSanction={config.consecutiveDaysForSanction}
+                        onConsecutiveDaysChange={(value) => updateConfig("consecutiveDaysForSanction", value)}
                     />,
                     <ConfidenceSlider
                         value={config.confidence}

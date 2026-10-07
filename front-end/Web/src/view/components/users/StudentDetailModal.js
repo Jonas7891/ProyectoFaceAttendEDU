@@ -4,13 +4,15 @@
 //  Los botones de gestión se muestran según permisos.
 // ============================================================
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { View, Text, TouchableOpacity, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Badge, Avatar, Button, ProgressBar, useAttendanceColor, ATTENDANCE_THRESHOLDS } from "../common";
+import { Badge, Avatar, Button, ProgressBar, useAttendanceColor } from "../common";
 import { useTheme }       from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../../../context/AppDataContext";
+import { getAttendanceThresholds } from "../../../models/data/userDerivedData";
+import EditUserProfileModal from "./EditUserProfileModal";
 
 
 export default function StudentDetailModal({
@@ -18,13 +20,37 @@ export default function StudentDetailModal({
     onClose,
     canManage,
     canRegisterFace,
+    onUserUpdated, // Callback para cuando se actualiza el usuario
+    closeOnBackdrop = true, // Los modals de información sí pueden cerrarse haciendo clic fuera
 }) {
     const { theme } = useTheme();
     const { t }     = useTranslation();
     const c         = theme.colors;
     const { courses } = useAppData();
 
+    // Estado para controlar la modal de edición
+    const [showEditModal, setShowEditModal] = useState(false);
+
     const attColor = useAttendanceColor(student?.attendance ?? 0);
+    const thresholds = getAttendanceThresholds();
+    
+    // Función para manejar la apertura de la modal de edición
+    const handleEditUser = () => {
+        setShowEditModal(true);
+    };
+
+    // Función para manejar el guardado de cambios del usuario
+    const handleUserSaved = (updatedUser) => {
+        console.log('Usuario guardado en modal principal:', updatedUser);
+        setShowEditModal(false);
+        
+        // Notificar al componente padre si hay un callback
+        if (onUserUpdated) {
+            onUserUpdated(updatedUser);
+        }
+        
+        onClose();
+    };
     
     // Obtener nombre completo del curso
     const courseName = useMemo(() => {
@@ -45,8 +71,9 @@ export default function StudentDetailModal({
                     alignItems: "center",
                     padding: 24,
                 }}
-                onPress={onClose}
+                onPress={closeOnBackdrop ? onClose : undefined}
                 activeOpacity={1}
+                disabled={!closeOnBackdrop}
             >
                 <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
                     <View style={{
@@ -126,9 +153,9 @@ export default function StudentDetailModal({
                                     </View>
                                     <ProgressBar value={student.attendance} color={attColor} height={6} />
                                     <Text style={{ fontSize: 11, color: c.text.secondary, marginTop: 6 }}>
-                                        {student.attendance >= ATTENDANCE_THRESHOLDS.MIN_ACCEPTABLE
-                                            ? t("Cumple el mínimo requerido (80%)")
-                                            : t("⚠ Por debajo del mínimo requerido (80%)")}
+                                        {student.attendance >= thresholds.minAttendance
+                                            ? t(`Cumple el mínimo requerido (${thresholds.minAttendance.toFixed(0)}%)`)
+                                            : t(`⚠ Por debajo del mínimo requerido (${thresholds.minAttendance.toFixed(0)}%)`)}
                                     </Text>
                                 </View>
                             )}
@@ -165,7 +192,7 @@ export default function StudentDetailModal({
                                     pending: { 
                                         icon: "x-circle", 
                                         color: c.text.secondary, 
-                                        text: t("Sin registro biométrico"),
+                                        text: t("Sin registro ningun biométrico"),
                                         showButton: true
                                     },
                                 };
@@ -213,7 +240,7 @@ export default function StudentDetailModal({
                             <Button variant="ghost" onPress={onClose}>{t("Cerrar")}</Button>
                             {/* Editar solo para quienes pueden gestionar */}
                             {canManage && (
-                                <Button variant="primary">
+                                <Button variant="primary" onPress={handleEditUser}>
                                     {student.userType === "admin" ? t("Editar administrador") : 
                                      student.userType === "teacher" ? t("Editar docente") : 
                                      t("Editar estudiante")}
@@ -223,6 +250,16 @@ export default function StudentDetailModal({
                     </View>
                 </TouchableOpacity>
             </TouchableOpacity>
+
+            {/* Modal de edición */}
+            {showEditModal && (
+                <EditUserProfileModal
+                    user={student}
+                    visible={showEditModal}
+                    onClose={() => setShowEditModal(false)}
+                    onSave={handleUserSaved}
+                />
+            )}
         </Modal>
     );
 }

@@ -18,6 +18,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useTheme } from "../view/components/hooks/useTheme";
+import { getAttendanceThresholds } from "../models/data/userDerivedData";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../context/AppDataContext";
 import { mockAttendanceByDay, mockAttendanceByWeek } from "../models/data/mockData";
@@ -365,9 +366,12 @@ export function useReportsViewModel(
                 { name: t("Ausentes"), value: 0, color: c.status.danger },
             ];
 
-        const onTime = students.filter((s) => s.attendance >= 85).length;
-        const late = students.filter((s) => s.attendance >= 75 && s.attendance < 85).length;
-        const absent = students.filter((s) => s.attendance < 75).length;
+        // Obtener umbrales dinámicos
+        const thresholds = getAttendanceThresholds();
+        
+        const onTime = students.filter((s) => s.attendance >= thresholds.excellent).length;
+        const late = students.filter((s) => s.attendance >= thresholds.warning && s.attendance < thresholds.excellent).length;
+        const absent = students.filter((s) => s.attendance < thresholds.warning).length;
         const total = students.length;
 
         return [
