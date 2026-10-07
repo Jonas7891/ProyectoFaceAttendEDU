@@ -115,14 +115,13 @@ class ClassSessionTransitionsTest {
     }
 
     @Test
-    void aNewSessionMustCarryAnExplicitStatus() {
-        // validate() runs before touchCreated(), so its "Open" default is never applied
-        // through the use case: the caller has to send the status.
+    void aNewSessionWithoutStatusStartsOpen() {
         ClassSession input = sessionIn(null);
         input.setClassSessionId(null);
 
-        assertThrows(IllegalArgumentException.class, () -> create.create(input));
-        verify(repository, never()).save(any());
+        ClassSession saved = create.create(input);
+
+        assertEquals("Open", saved.getSessionStatus());
     }
 
     @Test
