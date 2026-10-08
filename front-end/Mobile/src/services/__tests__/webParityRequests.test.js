@@ -15,6 +15,10 @@ import {
   QualityService,
   FaceAuthService,
   ActorService,
+  ClassSessionService,
+  AlertService,
+  BiometricCaseService,
+  AcademicConfigService,
 } from '../index';
 
 jest.mock('../../storage/TokenStorage', () => ({
@@ -256,7 +260,101 @@ describe('FaceAuthService (biometría vía /face-auth)', () => {
   });
 });
 
+describe('acciones dedicadas del backend', () => {
+  test.each([
+    ['openById', () => ClassSessionService.openById(12, 5), '/api/v1/class-sessions/12/open', { openedBy: 5 }],
+    ['openById sin actor', () => ClassSessionService.openById(12), '/api/v1/class-sessions/12/open', undefined],
+    ['closeById', () => ClassSessionService.closeById(12, 5), '/api/v1/class-sessions/12/close', { closedBy: 5 }],
+    ['cancelById', () => ClassSessionService.cancelById(12), '/api/v1/class-sessions/12/cancel', undefined],
+  ])('ClassSessionService.%s hace POST y mapea la sesión', async (_name, call, path, body) => {
+    mockResponse({ classSessionId: 12, scheduleBlockId: 3, sessionStatus: 'Open' });
+
+    const session = await call();
+
+    const sent = lastCall();
+    expect(sent.method).toBe('POST');
+    expect(sent.url).toBe(`${BASE}${path}`);
+    expect(sent.body).toEqual(body);
+    expect(session).toMatchObject({ classSessionId: 12, scheduleBlockId: 3, sessionStatus: 'Open' });
+  });
+
+  test('AlertService.markResolved hace PATCH /alerts/:id/resolve y mapea la respuesta PascalCase', async () => {
+    mockResponse({ AlertID: 4, AcademicActorID: 9, AlertTypeID: 1, RaisedAt: '2026-10-01T00:00:00Z', ResolvedAt: '2026-10-02T00:00:00Z' });
+
+    const alert = await AlertService.markResolved(4);
+
+    expect(lastCall()).toMatchObject({ method: 'PATCH', url: `${BASE}/api/v1/alerts/4/resolve` });
+    expect(alert).toMatchObject({ alertId: 4, academicActorId: 9, alertTypeId: 1 });
+  });
+
+  test('BiometricCaseService.review hace PATCH con updateStatus y solo envía lo informado', async () => {
+    mockResponse({ caseId: 'c-1', personId: 'p-1', updateStatus: 'Approved', reviewedBy: 'u-1' });
+
+    const reviewed = await BiometricCaseService.review('c-1', {
+      updateStatus: 'Approved',
+      reviewedBy: 'u-1',
+      resolutionNotes: 'Ok',
+    });
+
+    expect(lastCall()).toMatchObject({
+      method: 'PATCH',
+      url: `${BASE}/api/v1/biometric-update-cases/c-1/review`,
+      body: { updateStatus: 'Approved', reviewedBy: 'u-1', resolutionNotes: 'Ok' },
+    });
+    expect(reviewed).toMatchObject({ caseId: 'c-1', updateStatus: 'Approved' });
+
+    await BiometricCaseService.review('c-1', { updateStatus: 'In_Review' });
+    expect(lastCall().body).toEqual({ updateStatus: 'In_Review' });
+  });
+});
+
+describe('configuración y tipos de alerta', () => {
+  test('AcademicConfigService.listBySchool usa la ruta anidada de la sede', async () => {
+    mockResponse([{ configurationId: 2, schoolId: 3, configurationName: 'tardy_tolerance_minutes', configurationValue: '10' }]);
+
+    const [config] = await AcademicConfigService.listBySchool(3);
+
+    expect(lastCall()).toMatchObject({ method: 'GET', url: `${BASE}/api/v1/schools/3/configurations` });
+    expect(config).toMatchObject({ configurationId: 2, schoolId: 3, configurationValue: '10' });
+  });
+
+  test('AlertTypeService.getAll desenvuelve { alert_types } del servicio Go', async () => {
+    mockResponse({ alert_types: [{ AlertTypeID: 1, Code: 'ATTENDANCE_ABSENTEEISM', Name: 'Recurrent absenteeism' }] });
+
+    const types = await AlertTypeService.getAll();
+
+    expect(lastCall()).toMatchObject({ method: 'GET', url: `${BASE}/api/v1/alert-types` });
+    expect(types).toHaveLength(1);
+    expect(types[0]).toMatchObject({ alertTypeId: 1, code: 'ATTENDANCE_ABSENTEEISM' });
+  });
+
+  test('AlertTypeService.getAll con { alert_types: null } devuelve []', async () => {
+    mockResponse({ alert_types: null });
+    await expect(AlertTypeService.getAll()).resolves.toEqual([]);
+  });
+});
+
 describe('las peticiones existentes no cambian', () => {
+  test('ClassSessionService.close/cancel siguen usando PUT', async () => {
+    mockResponse({ class_session_id: 1 });
+
+    await ClassSessionService.cancel(1);
+    expect(lastCall()).toMatchObject({ method: 'PUT', url: `${BASE}/api/v1/class-sessions/1` });
+
+    await ClassSessionService.close(1, 5);
+    expect(lastCall()).toMatchObject({ method: 'PUT', url: `${BASE}/api/v1/class-sessions/1` });
+  });
+
+  test('AlertService.resolve y BiometricCaseService.approve siguen usando PUT', async () => {
+    mockResponse({});
+
+    await AlertService.resolve(4);
+    expect(lastCall()).toMatchObject({ method: 'PUT', url: `${BASE}/api/v1/alerts/4` });
+
+    await BiometricCaseService.approve('c-1', 'u-1');
+    expect(lastCall()).toMatchObject({ method: 'PUT', url: `${BASE}/api/v1/biometric-update-cases/c-1` });
+  });
+
   test('CourseService.getByProgram sigue usando el filtro legacy por query', async () => {
     mockResponse([]);
 
