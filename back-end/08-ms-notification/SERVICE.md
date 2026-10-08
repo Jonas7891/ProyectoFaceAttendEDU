@@ -269,6 +269,35 @@ notification:
 En desarrollo basta apuntar a un MailHog local (`SMTP_HOST=host.docker.internal`,
 `SMTP_PORT=1025`, `SMTP_STARTTLS=false`) para ver los correos en su UI.
 
+### 9.2 Variables de entorno del webhook de alertas
+
+`alert_type.channel` (EMAIL/PUSH/DASHBOARD) se guardaba pero nunca se
+consultaba: crear una alerta no disparaba ninguna notificación externa.
+Ahora, al crear una alerta cuyo `alert_type.channel` sea `EMAIL` o `PUSH`
+(las `DASHBOARD` solo se muestran en la app, no requieren salida externa),
+el servicio hace un POST JSON a `WEBHOOK_URL` en segundo plano (no bloquea
+la respuesta del POST /api/v1/alerts).
+
+| Variable | Por defecto | Descripcion |
+|----------|-------------|-------------|
+| `WEBHOOK_URL` | *(vacia)* | Endpoint que recibe el POST. Vacía = entrega deshabilitada (no-op) |
+| `WEBHOOK_SECRET` | *(vacia)* | Si se define, firma el cuerpo con HMAC-SHA256 en el header `X-Webhook-Signature` |
+| `WEBHOOK_TIMEOUT_SECONDS` | `5` | Timeout de la petición saliente |
+
+Cuerpo del POST:
+
+```json
+{
+  "alert_id": 123,
+  "academic_actor_id": 45,
+  "alert_type_id": 2,
+  "alert_type_code": "ATTENDANCE_ABSENTEEISM",
+  "severity": "WARNING",
+  "channel": "EMAIL",
+  "raised_at": "2026-10-08T14:32:00Z"
+}
+```
+
 ---
 
 ## 10. Puertos del Servidor
