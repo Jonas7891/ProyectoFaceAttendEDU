@@ -109,7 +109,11 @@ services:
       context: ./front-end/Web
       dockerfile: Dockerfile
       args:
-        EXPO_PUBLIC_API_URL: ${EXPO_PUBLIC_API_URL:-http://localhost:8080}
+        # Vacío por defecto: el bundle infiere el host de Kong desde
+        # location.hostname en runtime (ver front-end/Web/src/config/env.ts).
+        # Solo fijar EXPO_PUBLIC_API_URL en .env si el gateway vive en un
+        # host distinto al que sirve este frontend.
+        EXPO_PUBLIC_API_URL: ${EXPO_PUBLIC_API_URL:-}
     image: faceattend/frontend-web:latest
     container_name: faceattend-frontend-web
     mem_limit: 128m
