@@ -6,7 +6,7 @@ no in-memory fallback lives in this module.
 """
 from __future__ import annotations
 
-from fastapi import Depends, Request
+from fastapi import Depends, HTTPException, Request, status
 
 from domain.ports.out.biometric_repository import BiometricRepositoryPort
 from domain.ports.out.match_log_repository import MatchLogRepositoryPort
@@ -18,6 +18,7 @@ from infrastructure.persistence.mongo_client import MongoClient
 from infrastructure.persistence.mongo_embedding_repository import MongoEmbeddingRepository
 from infrastructure.persistence.mongo_match_log_repository import MongoMatchLogRepository
 from infrastructure.persistence.mongo_update_case_repository import MongoUpdateCaseRepository
+from infrastructure.security.rate_limit import RateLimiter
 
 
 def get_mongo_client(request: Request) -> MongoClient:
@@ -61,3 +62,36 @@ def get_match_log_repository(
 def get_similarity_threshold(settings: Settings = Depends(get_settings)) -> float:
     """Cosine score at or above which a comparison counts as a match."""
     return settings.similarity_threshold
+
+
+def get_fingerprint_match_threshold(settings: Settings = Depends(get_settings)) -> int:
+    """Keypoint-match count at or above which two fingerprint samples match."""
+    return settings.fingerprint_match_threshold
+
+
+def get_liveness_secret(settings: Settings = Depends(get_settings)) -> str:
+    return settings.liveness_secret_or_ephemeral
+
+
+# One limiter instance per logical bucket, shared across requests for the life
+# of the process (same single-process posture as the source service's limiter).
+_rate_limiters: dict[str, RateLimiter] = {}
+
+
+def rate_limit(key: str):
+    """Build a 429 dependency for `key`, bucketed per logical endpoint + client IP."""
+
+    def dependency(request: Request, settings: Settings = Depends(get_settings)) -> None:
+        limiter = _rate_limiters.get(key)
+        if limiter is None or (
+            limiter.max_attempts != settings.rate_limit_max_attempts
+            or limiter.window_seconds != settings.rate_limit_window_seconds
+        ):
+            limiter = RateLimiter(settings.rate_limit_max_attempts, settings.rate_limit_window_seconds)
+            _rate_limiters[key] = limiter
+        client_host = request.client.host if request.client else "unknown"
+        allowed, _ = limiter.check(f"{key}:{client_host}")
+        if not allowed:
+            raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "Too many attempts, slow down")
+
+    return dependency

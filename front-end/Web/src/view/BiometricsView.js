@@ -5,7 +5,7 @@
 //   1. Registro facial            (section = "face-register")
 //   2. Reconocimiento facial      (section = "face-login")
 //   3. Registro de huella         (section = "fingerprint")
-//  Backend: 10-ms-face-auth vía Kong (/face-auth/*), ver faceAuthApi.
+//  Backend: ms-biometric vía Kong (/api/v1/biometric/*), ver biometricCaptureApi.
 //
 //  La sección activa llega de la URL (/app/biometrics/:section) y la
 //  barra lateral comparte el mismo estado, así que la navegación es
@@ -15,8 +15,8 @@
 import React from "react";
 import { View, ScrollView, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { PageHeader, Card, Alert, Button, TextInput, Badge } from "./components/common";
-import { FaceModule, FingerprintModule, BiometricDirectory } from "./components/biometrics";
+import { PageHeader, Card, Alert, Button, Badge } from "./components/common";
+import { FaceModule, FingerprintModule, BiometricDirectory, PersonAutocomplete } from "./components/biometrics";
 import { useTheme } from "./components/hooks/useTheme";
 import { useResponsive } from "./components/hooks/useResponsive";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
@@ -97,7 +97,7 @@ export default function BiometricsView({ section: sectionParam, onSectionChange 
     ];
     const current = tabs.find((tab) => tab.key === section);
 
-    const needsUsername = section !== "face-login";
+    const needsPerson = section !== "face-login";
     const apiBadge =
         vm.health === "ok"
             ? { variant: "success", text: t("API conectada") }
@@ -116,7 +116,7 @@ export default function BiometricsView({ section: sectionParam, onSectionChange 
                     size="sm"
                     leftIcon={<Feather name="refresh-cw" size={14} color={c.text.secondary} />}
                     onPress={async () => {
-                        if (await vm.checkHealth()) vm.loadUsers();
+                        if (await vm.checkHealth()) await vm.refreshSummary();
                     }}
                 >
                     {t("Reintentar")}
@@ -145,7 +145,7 @@ export default function BiometricsView({ section: sectionParam, onSectionChange 
                             type="error"
                             title={t("Servicio de biometría no disponible")}
                             message={t(
-                                "No se pudo contactar con 10-ms-face-auth a través del gateway. Verifica que los contenedores face-auth-api y kong-gateway estén en ejecución."
+                                "No se pudo contactar con ms-biometric a través del gateway. Verifica que los contenedores ms-biometric y kong-gateway estén en ejecución."
                             )}
                         />
                     )}
@@ -171,28 +171,24 @@ export default function BiometricsView({ section: sectionParam, onSectionChange 
                                     </Text>
                                 </View>
 
-                                {needsUsername && (
+                                {needsPerson && (
                                     <View style={{ gap: 6 }}>
-                                        <TextInput
-                                            label={t("Usuario")}
-                                            value={vm.username}
-                                            onChangeText={vm.setUsername}
-                                            placeholder={t("Usuario")}
-                                            autoCapitalize="none"
-                                            autoCorrect={false}
-                                            helperText={
-                                                section === "fingerprint"
-                                                    ? t("Persona a la que se asocia la huella al guardar la muestra.")
-                                                    : t("Persona a la que se asocia el rostro.")
-                                            }
-                                        />
+                                        <Text style={{ color: c.text.secondary, fontSize: 13, fontWeight: "600" }}>
+                                            {t("Persona")}
+                                        </Text>
+                                        <PersonAutocomplete personId={vm.person?.personId} onSelect={vm.setPerson} />
+                                        <Text style={{ color: c.text.secondary, fontSize: 12 }}>
+                                            {section === "fingerprint"
+                                                ? t("Persona a la que se asocia la huella al guardar la muestra.")
+                                                : t("Persona a la que se asocia el rostro.")}
+                                        </Text>
                                         <Button
                                             variant="ghost"
                                             size="sm"
                                             style={{ alignSelf: "flex-start" }}
-                                            disabled={vm.busy}
+                                            disabled={vm.busy || !vm.person}
                                             leftIcon={<Feather name="search" size={14} color={c.text.secondary} />}
-                                            onPress={vm.checkUser}
+                                            onPress={vm.checkPerson}
                                         >
                                             {t("Verificar disponibilidad")}
                                         </Button>

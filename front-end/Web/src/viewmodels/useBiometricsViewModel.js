@@ -1,16 +1,17 @@
 // ============================================================
 //  FaceAttend EDU — useBiometricsViewModel
 //
-//  Estado compartido de la pantalla «Biometría»: identidad (usuario),
-//  estado/mensajes, directorio de personas registradas y sesiones
-//  biométricas activas. La captura de rostro y de huella viven en
+//  Estado compartido de la pantalla «Biometría»: persona seleccionada,
+//  estado/mensajes y resumen biométrico (rostro/huella) de esa persona.
+//  ms-biometric está indexado por person_id (UUID), no por username, así
+//  que la identidad ya no es un texto libre: se elige con PersonAutocomplete
+//  (ver BiometricsView). La captura de rostro y de huella viven en
 //  useFaceCapture / useFingerprintReader (se montan solo cuando su
 //  módulo está visible, para soltar cámara y lector al salir).
 // ============================================================
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { faceAuthApi } from "../services/api/faceAuthApi";
-import { useAuth } from "../context/AuthContext";
+import { biometricCaptureApi } from "../services/api/biometricCaptureApi";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 
 export const BIOMETRIC_SECTIONS = ["face-register", "face-login", "fingerprint"];
@@ -22,19 +23,18 @@ export function normalizeBiometricSection(section) {
 
 export function useBiometricsViewModel() {
     const { t } = useTranslation();
-    const { user } = useAuth();
 
-    // Se precarga con el usuario de la sesión; se puede cambiar para registrar a otra persona.
-    const [username, setUsername] = useState(user?.username ?? "");
+    // La persona a registrar/verificar se elige del directorio (PersonAutocomplete),
+    // no se precarga con la sesión del operador: quien usa esta pantalla es un
+    // admin/profesor registrando a OTRA persona (estudiante), no a sí mismo.
+    const [person, setPersonState] = useState(null);
     const [busy, setBusy] = useState(false);
     const [status, setStatusState] = useState({
-        text: t("Elige un módulo y sigue las instrucciones."),
+        text: t("Elige un módulo, selecciona una persona y sigue las instrucciones."),
         tone: "info",
     });
     const [health, setHealth] = useState("checking"); // checking | ok | down
-    const [users, setUsers] = useState([]);
-    const [activeUsers, setActiveUsers] = useState([]);
-    const [sideView, setSideView] = useState("directory"); // directory | active
+    const [summary, setSummary] = useState(null); // { has_face, has_fingerprint } | null
     const mounted = useRef(true);
 
     useEffect(() => {
@@ -48,23 +48,9 @@ export function useBiometricsViewModel() {
         if (mounted.current) setStatusState({ text, tone });
     }, []);
 
-    const loadUsers = useCallback(async () => {
-        try {
-            const [all, active] = await Promise.all([
-                faceAuthApi.listUsers(),
-                faceAuthApi.listActiveUsers(),
-            ]);
-            if (!mounted.current) return;
-            setUsers(Array.isArray(all) ? all : []);
-            setActiveUsers(Array.isArray(active) ? active : []);
-        } catch (e) {
-            setStatus(e.message, "error");
-        }
-    }, [setStatus]);
-
     const checkHealth = useCallback(async () => {
         try {
-            const data = await faceAuthApi.health();
+            const data = await biometricCaptureApi.health();
             if (mounted.current) setHealth(data?.status === "ok" ? "ok" : "down");
             return data?.status === "ok";
         } catch {
@@ -74,10 +60,31 @@ export function useBiometricsViewModel() {
     }, []);
 
     useEffect(() => {
-        (async () => {
-            if (await checkHealth()) await loadUsers();
-        })();
-    }, [checkHealth, loadUsers]);
+        checkHealth();
+    }, [checkHealth]);
+
+    const refreshSummary = useCallback(async () => {
+        if (!person?.personId) {
+            setSummary(null);
+            return null;
+        }
+        try {
+            const data = await biometricCaptureApi.summary(person.personId);
+            if (mounted.current) setSummary(data);
+            return data;
+        } catch (e) {
+            if (mounted.current) setStatus(e.message, "error");
+            return null;
+        }
+    }, [person, setStatus]);
+
+    useEffect(() => {
+        refreshSummary();
+    }, [refreshSummary]);
+
+    const setPerson = useCallback((selected) => {
+        setPersonState(selected ?? null);
+    }, []);
 
     /** Ejecuta una operación con bloqueo anti doble envío y reporte de errores unificado. */
     const run = useCallback(
@@ -95,46 +102,38 @@ export function useBiometricsViewModel() {
         [busy, setStatus, t]
     );
 
-    const requireUsername = useCallback(() => {
-        const name = username.trim();
-        if (!name) throw new Error(t("Escribe un usuario."));
-        return name;
-    }, [username, t]);
+    const requirePersonId = useCallback(() => {
+        if (!person?.personId) throw new Error(t("Selecciona una persona."));
+        return person.personId;
+    }, [person, t]);
 
-    const checkUser = useCallback(
+    const checkPerson = useCallback(
         () =>
             run(async () => {
-                const name = requireUsername();
-                setStatus(t("Consultando usuario..."));
-                const data = await faceAuthApi.userExists(name);
-                if (!data?.exists) {
-                    setStatus(`"${name}" ${t("no está registrado todavía.")}`);
-                    return;
-                }
+                requirePersonId();
+                setStatus(t("Consultando persona..."));
+                const data = await refreshSummary();
                 setStatus(
-                    `"${name}" ${t("existe")} — ${t("rostro")}: ${data.has_face ? t("sí") : t("no")}, ${t("huella")}: ${
-                        data.has_fingerprint ? t("sí") : t("no")
+                    `${t("rostro")}: ${data?.has_face ? t("sí") : t("no")}, ${t("huella")}: ${
+                        data?.has_fingerprint ? t("sí") : t("no")
                     }`
                 );
             }),
-        [run, requireUsername, setStatus, t]
+        [run, requirePersonId, setStatus, refreshSummary, t]
     );
 
     return {
-        username,
-        setUsername,
-        requireUsername,
+        person,
+        setPerson,
+        requirePersonId,
         busy,
         run,
         status,
         setStatus,
         health,
         checkHealth,
-        users,
-        activeUsers,
-        loadUsers,
-        sideView,
-        setSideView,
-        checkUser,
+        summary,
+        refreshSummary,
+        checkPerson,
     };
 }

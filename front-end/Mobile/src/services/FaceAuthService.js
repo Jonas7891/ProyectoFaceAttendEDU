@@ -1,49 +1,51 @@
 import { request, GET, POST, DELETE } from '../api/apiClient';
 import ENV from '../config/env';
 
-// Biometría web (10-ms-face-auth) tras el gateway Kong: /face-auth/<ruta del servicio>.
-// Usa la misma sesión Bearer de FaceAttend; el 401 con { detail } es una respuesta de negocio
-// (rostro/huella no reconocidos) y apiClient no lo trata como sesión caducada.
-const BASE = () => `${ENV.API_BASE_URL}face-auth/api`;
+// Biometría (06-ms-biometric) tras el gateway Kong: /api/v1/biometric/<ruta>.
+// Usa la misma sesión Bearer de FaceAttend; el servicio delega la validación de
+// sesión/permiso en ms-identity/ms-authorization (require_permission), igual
+// que el resto de microservicios — ya no emite ni valida un token propio.
+// No hay pantalla Mobile todavía que consuma esto (ver webParityRequests.test.js).
+const BASE = () => `${ENV.API_BASE_URL}api/v1/biometric`;
 
-// Procesar imágenes con dlib es lento: más holgura que el timeout general.
+// Procesar imágenes/muestras con dlib/OpenCV es lento: más holgura que el timeout general.
 const BIOMETRIC_TIMEOUT_MS = 60000;
 
 const call = (method, path, extra = {}) =>
   request({ method, url: `${BASE()}${path}`, requiresAuth: true, timeoutMs: BIOMETRIC_TIMEOUT_MS, ...extra });
 
-const enc = encodeURIComponent;
-
 export const FaceAuthService = {
+  // /api/v1/biometric/health: Kong only proxies the /api/v1/biometric prefix,
+  // so the service's bare /health has no route of its own behind the gateway.
   health: () => call(GET, '/health', { timeoutMs: 8000 }),
 
   // ── Prueba de vida (gestos aleatorios firmados por el backend) ──
-  getLivenessChallenge: (actions = 3) => call(GET, '/face/liveness-challenge', { params: { actions } }),
+  getLivenessChallenge: (actions = 3) => call(GET, '/facial/liveness-challenge', { params: { actions } }),
   submitLivenessStep: ({ challengeToken, actionIndex, images }) =>
-    call(POST, '/face/liveness-step', {
+    call(POST, '/facial/liveness-step', {
       data: { challenge_token: challengeToken, action_index: actionIndex, images },
     }),
 
-  // ── Rostro ──
-  registerFace: ({ username, image, challengeToken }) =>
-    call(POST, '/register/face', { data: { username, image, challenge_token: challengeToken } }),
-  loginFace: ({ image, challengeToken }) =>
-    call(POST, '/login/face', { data: { image, challenge_token: challengeToken } }),
-
-  // ── Huella ──
-  registerFingerprint: ({ username, sampleFormat, data, quality }) =>
-    call(POST, '/register/fingerprint-sample', {
-      data: { username, sample_format: sampleFormat, data_base64: data, quality },
+  // ── Rostro (person_id, no username: este servicio no tiene identidad propia) ──
+  enrollFace: ({ personId, imageBase64, challengeToken }) =>
+    call(POST, '/facial/enroll-image', {
+      data: { person_id: personId, image_base64: imageBase64, challenge_token: challengeToken },
     }),
-  loginFingerprint: ({ sampleFormat, data, quality }) =>
-    call(POST, '/login/fingerprint-sample', {
-      data: { sample_format: sampleFormat, data_base64: data, quality },
+  identifyFace: ({ imageBase64, challengeToken }) =>
+    call(POST, '/facial/identify-image', { data: { image_base64: imageBase64, challenge_token: challengeToken } }),
+
+  // ── Huella (muestra cruda + matching por keypoints, no vector/coseno) ──
+  enrollFingerprint: ({ personId, fingerNumber, sampleFormat, data, quality }) =>
+    call(POST, '/fingerprint/enroll-sample', {
+      data: { person_id: personId, finger_number: fingerNumber, sample_format: sampleFormat, data_base64: data, quality },
+    }),
+  identifyFingerprint: ({ sampleFormat, data, quality, fingerNumber }) =>
+    call(POST, '/fingerprint/identify-sample', {
+      data: { sample_format: sampleFormat, data_base64: data, quality, finger_number: fingerNumber },
     }),
 
-  // ── Directorio y ciclo de vida ──
-  userExists: (username) => call(GET, `/users/${enc(username)}/exists`),
-  listUsers: () => call(GET, '/users'),
-  listActiveUsers: () => call(GET, '/users/active'),
-  revokeTemplate: (username) => call(POST, `/templates/${enc(username)}/revoke`),
-  deleteSubject: (username) => call(DELETE, `/subjects/${enc(username)}`),
+  // ── Resumen y ciclo de vida (person_id) ──
+  summary: (personId) => call(GET, `/${personId}/summary`),
+  revokeFace: (personId) => call(DELETE, `/facial/${personId}`),
+  deleteFingerprint: (personId, fingerNumber) => call(DELETE, `/fingerprint/${personId}/${fingerNumber}`),
 };

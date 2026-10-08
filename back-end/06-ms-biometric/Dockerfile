@@ -1,5 +1,9 @@
 FROM python:3.12-slim AS builder
 WORKDIR /app
+# face-recognition (dlib) and opencv-python-headless compile native extensions.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential cmake pkg-config libopenblas-dev liblapack-dev \
+    && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir poetry==1.8.3 && poetry config virtualenvs.in-project true
 COPY pyproject.toml poetry.lock* ./
 RUN poetry install --no-root --only main --no-interaction --no-ansi

@@ -13,7 +13,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Platform } from "react-native";
-import { faceAuthApi } from "../services/api/faceAuthApi";
+import { biometricCaptureApi } from "../services/api/biometricCaptureApi";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 
 const FRAMES_PER_GESTURE = 6;
@@ -36,7 +36,7 @@ export const CAMERA_SUPPORTED =
 
 export function useFaceCapture({ vm }) {
     const { t } = useTranslation();
-    const { run, setStatus, requireUsername, loadUsers } = vm;
+    const { run, setStatus, requirePersonId, refreshSummary } = vm;
 
     const videoRef = useRef(null);
     const streamRef = useRef(null);
@@ -113,7 +113,7 @@ export function useFaceCapture({ vm }) {
 
     const captureLiveness = useCallback(
         async (gestureCount) => {
-            const challenge = await faceAuthApi.livenessChallenge(gestureCount);
+            const challenge = await biometricCaptureApi.livenessChallenge(gestureCount);
             let token = challenge.challenge_token;
             const frames = [];
             const total = challenge.actions.length;
@@ -131,7 +131,7 @@ export function useFaceCapture({ vm }) {
                         if (frame < FRAMES_PER_GESTURE - 1) await wait(FRAME_INTERVAL_MS);
                     }
                     try {
-                        const result = await faceAuthApi.livenessStep({
+                        const result = await biometricCaptureApi.livenessStep({
                             challengeToken: token,
                             actionIndex,
                             images: actionFrames,
@@ -167,38 +167,37 @@ export function useFaceCapture({ vm }) {
     const registerFace = useCallback(
         () =>
             withLiveness(async () => {
-                const name = requireUsername();
-                setStatus(t("Te pediremos 3 gestos para registrar tu rostro."));
+                const personId = requirePersonId();
+                setStatus(t("Te pediremos 3 gestos para registrar el rostro."));
                 const liveness = await captureLiveness(3);
                 setStatus(t("Registrando rostro..."));
-                const data = await faceAuthApi.registerFace({
-                    username: name,
-                    image: liveness.image,
+                await biometricCaptureApi.enrollFace({
+                    personId,
+                    imageBase64: liveness.image,
                     challengeToken: liveness.challengeToken,
                 });
-                setStatus(data.message || t("Rostro registrado"), "ok");
-                await loadUsers();
+                setStatus(t("Rostro registrado"), "ok");
+                await refreshSummary();
             }),
-        [withLiveness, requireUsername, setStatus, captureLiveness, loadUsers, t]
+        [withLiveness, requirePersonId, setStatus, captureLiveness, refreshSummary, t]
     );
 
     const loginFace = useCallback(
         () =>
             withLiveness(async () => {
-                setStatus(t("Te pediremos 2 gestos para verificar tu identidad."));
+                setStatus(t("Te pediremos 2 gestos para reconocer el rostro."));
                 const liveness = await captureLiveness(2);
                 setStatus(t("Verificando rostro..."));
-                const data = await faceAuthApi.loginFace({
-                    image: liveness.image,
+                const data = await biometricCaptureApi.identifyFace({
+                    imageBase64: liveness.image,
                     challengeToken: liveness.challengeToken,
                 });
                 setStatus(
-                    `${t("Persona reconocida")}: ${data.username} (${t("distancia")}: ${Number(data.distance).toFixed(3)})`,
+                    `${t("Persona reconocida")}: ${data.person_id} (${t("puntaje")}: ${Number(data.score).toFixed(3)})`,
                     "ok"
                 );
-                await loadUsers();
             }),
-        [withLiveness, setStatus, captureLiveness, loadUsers, t]
+        [withLiveness, setStatus, captureLiveness, t]
     );
 
     return {

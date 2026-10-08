@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# FaceAttend EDU — backup de las 3 bases de datos del stack.
+# FaceAttend EDU — backup de las 2 bases de datos del stack.
 #
 # No hay retención/backup automático hoy: `docker compose down -v` borra los
 # volúmenes sin preguntar dos veces. Este script hace un dump lógico de cada
@@ -27,13 +27,8 @@ docker exec faceattend-postgres pg_dump -U "${POSTGRES_USER:-postgres}" -d "${PO
 docker cp faceattend-postgres:/tmp/faceattend_db.dump "$OUT/faceattend_db.dump"
 docker exec faceattend-postgres rm /tmp/faceattend_db.dump
 
-# ── face_auth (propia de 10-ms-face-auth, sin FK hacia faceattend_db) ──
-docker exec faceattend-face-auth-postgres pg_dump -U "${FACE_AUTH_POSTGRES_USER:-faceauth}" -d "${FACE_AUTH_POSTGRES_DB:-face_auth}" \
-  --format=custom --file=/tmp/face_auth.dump
-docker cp faceattend-face-auth-postgres:/tmp/face_auth.dump "$OUT/face_auth.dump"
-docker exec faceattend-face-auth-postgres rm /tmp/face_auth.dump
-
-# ── MongoDB (embeddings biométricos + datos de face-auth) ──
+# ── MongoDB (embeddings biométricos de ms-biometric, incluida la biometría
+#    web fusionada desde el antiguo 10-ms-face-auth) ──
 docker exec faceattend-mongo mongodump \
   --username "${MONGO_USER:-mongoadmin}" --password "${MONGO_PASSWORD:-mongopass}" \
   --authenticationDatabase admin --archive=/tmp/mongo.archive --gzip
@@ -42,5 +37,4 @@ docker exec faceattend-mongo rm /tmp/mongo.archive
 
 echo "Done: $OUT"
 echo "  faceattend_db.dump  (restore: pg_restore --clean -d faceattend_db)"
-echo "  face_auth.dump      (restore: pg_restore --clean -d face_auth)"
 echo "  mongo.archive.gz    (restore: mongorestore --gzip --archive=...)"

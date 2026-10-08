@@ -14,12 +14,16 @@ source for this service.
 """
 from __future__ import annotations
 
+import logging
 import os
+import secrets
 from functools import lru_cache
 from pathlib import Path
 
 from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+logger = logging.getLogger("biometric.config")
 
 
 def _load_root_env() -> None:
@@ -98,13 +102,50 @@ class Settings(BaseSettings):
     # Upper bound for the 1:N identify scan. Reaching it is logged as a warning:
     # it means candidates were not considered, so it must never pass silently.
     identify_scan_limit: int = 10_000
+    # Fingerprint raw-sample matching (ported from 10-ms-face-auth) is a
+    # keypoint-match COUNT, never compared against `similarity_threshold`
+    # (which is cosine-only and face-specific).
+    fingerprint_match_threshold: int = 8
+
+    # ── Image/sample compute path (enroll-image, identify-image, enroll-sample,
+    # identify-sample, liveness) — ported from 10-ms-face-auth ────────────
+    liveness_challenge_secret: str = ""
+    liveness_ttl_seconds: int = 120
+    rate_limit_max_attempts: int = 20
+    rate_limit_window_seconds: int = 60
+    max_image_bytes: int = 3 * 1024 * 1024
+    max_image_pixels: int = 16_000_000
 
     @property
     def match_log_ttl_seconds(self) -> int:
         return self.match_log_retention_days * SECONDS_PER_DAY
+
+    @property
+    def liveness_secret_or_ephemeral(self) -> str:
+        """HMAC key for liveness challenge tokens.
+
+        Dev/test convenience only: without `BIOMETRIC_LIVENESS_CHALLENGE_SECRET`
+        set, a per-process random secret is used (generated once and memoized,
+        not regenerated on every call, otherwise tokens signed a moment ago
+        would fail to verify) — restarting the process invalidates any
+        in-flight challenge. Independent from any JWT/session secret elsewhere
+        in the stack — this service never issues JWTs.
+        """
+        if self.liveness_challenge_secret:
+            return self.liveness_challenge_secret
+        return _ephemeral_liveness_secret()
 
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     """Process-wide settings. Cached; tests call `get_settings.cache_clear()`."""
     return Settings()
+
+
+@lru_cache(maxsize=1)
+def _ephemeral_liveness_secret() -> str:
+    logger.warning(
+        "BIOMETRIC_LIVENESS_CHALLENGE_SECRET not configured: using an "
+        "ephemeral per-process secret (development only)"
+    )
+    return secrets.token_urlsafe(32)

@@ -77,8 +77,6 @@ jobs:
       matrix:
         include:
           - service: 06-ms-biometric
-            system_deps: false
-          - service: 10-ms-face-auth
             system_deps: true
     steps:
       - uses: actions/checkout@v4
@@ -90,9 +88,10 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends build-essential cmake pkg-config libopenblas-dev liblapack-dev
       - name: Install poetry
         run: pip install --no-cache-dir poetry==1.8.3
-      # dlib (a face-recognition dependency of 10-ms-face-auth) compiles from
-      # source and takes a long time; cache the venv keyed on the lockfile so
-      # only a changed lockfile pays that cost again.
+      # dlib (a face-recognition dependency, merged in from the former
+      # 10-ms-face-auth service) compiles from source and takes a long time;
+      # cache the venv keyed on the lockfile so only a changed lockfile pays
+      # that cost again.
       - name: Cache poetry virtualenv
         uses: actions/cache@v4
         with:
