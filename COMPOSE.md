@@ -267,3 +267,36 @@ sondeando cada 3 s mientras el módulo está abierto.
 **Prueba de vida.** El registro pide 3 gestos y el reconocimiento 2 (parpadear,
 girar la cabeza, abrir la boca), validados en el servidor. Es una defensa básica,
 no un anti-spoofing certificado.
+
+---
+
+## 10. TLS / HTTPS (opcional)
+
+El compose base sirve todo en HTTP plano (8080/8090); no hay nada que termine
+TLS por defecto. `docker-compose.tls.yml` agrega un Caddy delante de
+`kong-gateway` y `frontend-web` sin tocar el compose base:
+
+```bash
+# DOMAIN real con DNS -> este host (y api.<DOMAIN> para Mobile): Let's Encrypt
+# automático. Sin DOMAIN: certificado de la CA local de Caddy (solo para probar
+# el flujo HTTPS, el navegador lo marca como no confiable).
+docker compose -f docker-compose.yml -f docker-compose.tls.yml up -d
+```
+
+Los puertos 8080/8090 en HTTP siguen publicados en paralelo (no se tocó el
+compose base) para no romper el flujo de desarrollo actual; para forzar
+solo-HTTPS en un despliegue real, quita esas dos líneas `ports:` una vez que
+Caddy esté validado. Mobile debe apuntar `EXPO_PUBLIC_API_URL` a
+`https://api.<DOMAIN>`; Web, a `https://<DOMAIN>` (nginx ya hace de `/api/*` y
+`/face-auth/*` hacia Kong internamente, ver `front-end/Web/nginx.conf`).
+
+---
+
+## 11. Backups
+
+No hay backup/retención automático: `docker compose down -v` borra los
+volúmenes sin preguntar dos veces. `database/scripts/backup.sh` vuelca las 3
+bases (`faceattend_db`, `face_auth`, MongoDB) a `database/backups/<timestamp>/`
+(gitignored); `database/scripts/restore.sh <carpeta>` las restaura. Ninguno de
+los dos programa nada — hoy es manual; en un despliegue real, llama a
+`backup.sh` desde un cron del host o del orquestador.
