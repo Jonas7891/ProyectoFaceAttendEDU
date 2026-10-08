@@ -3,7 +3,8 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '../utils/i18n';
-import {hasValidToken, removeToken} from '../storage/TokenStorage';
+import {getToken, removeToken} from '../storage/TokenStorage';
+import {onSessionExpired, request} from '../api/apiClient';
 import {useUser} from '../utils/UserContext';
 import HomesScreen from '../view/screens/login/Login';
 import MenuScreen from '../view/screens/MenuScreen';
@@ -31,6 +32,36 @@ import {SuccessScreen} from "../view/components/auth/SuccessScreen";
 
 const Stack = createStackNavigator();
 
+// Claves locales de sesión; el mismo conjunto borra checkAuth, handleLogout
+// y la purga por sesión caducada (handleSessionExpired).
+const SESSION_KEYS = ['userRole', 'userEmail', 'userProfile', 'appLanguage', 'alertsConfig'];
+
+async function clearLocalSession() {
+    await removeToken();
+    await AsyncStorage.multiRemove(SESSION_KEYS);
+}
+
+/**
+ * ¿El sessionId sigue vivo en el backend? El token opaco caduca a las 8 h
+ * (security_configuration.session_timeout_minutes) aunque localmente no
+ * tenga expiresAt, y esa expiración es perezosa: el primer GET de sesión lo
+ * marca "Closed". La llamada lleva el propio sessionId como bearer, así que
+ * Kong (pre-function del edge) la responde con 401 en cuanto la sesión deja
+ * de estar Active.
+ *
+ * Solo se descarta la sesión con una respuesta definitiva (401/404): si el
+ * backend no responde se conserva, para no cerrar la sesión por un arranque
+ * sin conexión.
+ */
+async function isSessionAlive(token) {
+    try {
+        const session = await request({method: 'GET', url: `api/v1/sessions/${token}`, requiresAuth: false});
+        return session?.sessionStatus === 'Active';
+    } catch (e) {
+        return e?.status !== 401 && e?.status !== 404;
+    }
+}
+
 export default function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(null);
     const [userRole, setUserRole] = useState(null);
@@ -44,14 +75,16 @@ export default function App() {
     const checkAuth = async () => {
         try {
             const role = await AsyncStorage.getItem('userRole');
-            const tokenValid = await hasValidToken();
+            const token = await getToken();
 
-            if (role && tokenValid) {
+            // Solo hay sesión si el token local sigue vigente Y el backend lo
+            // reconoce: sin la segunda condición la app arrancaba "logueada"
+            // con un sessionId ya cerrado y todas las llamadas devolvían 401.
+            if (role && token && (await isSessionAlive(token))) {
                 setIsAuthenticated(true);
                 setUserRole(role);
             } else {
-                await removeToken();
-                await AsyncStorage.multiRemove(['userRole', 'userEmail', 'userProfile', 'appLanguage', 'alertsConfig']);
+                await clearLocalSession();
                 setIsAuthenticated(false);
                 setUserRole(null);
             }
@@ -61,6 +94,25 @@ export default function App() {
             setUserRole(null);
         }
     };
+
+    // El backend rechazó un sessionId que la app seguía usando: caducó
+    // (session_timeout_minutes) y quedó Closed. Se purga la sesión local y se
+    // vuelve al login en lugar de seguir disparando 401 en cada llamada; no se
+    // intenta cerrar la sesión remota porque ya está muerta (logout daría 401).
+    useEffect(() => {
+        const handleSessionExpired = async () => {
+            console.warn('Sesión caducada en el backend: volviendo al login');
+            try {
+                await clearLocalSession();
+            } catch (e) {
+                console.error('Error purgando sesión caducada:', e);
+            }
+            setIsAuthenticated(false);
+            setUserRole(null);
+            await loadUserData();
+        };
+        return onSessionExpired(() => { void handleSessionExpired(); });
+    }, [loadUserData]);
 
     const handleLogin = async (role, token) => {
         try {
@@ -81,14 +133,7 @@ export default function App() {
                 const sessionId = await getToken();
                 await AuthService.logout(sessionId);
             } catch {}
-            await removeToken();
-            await AsyncStorage.multiRemove([
-                'userRole',
-                'userEmail',
-                'userProfile',
-                'appLanguage',
-                'alertsConfig',
-            ]);
+            await clearLocalSession();
 
             await i18n.changeLanguage('es');
 
