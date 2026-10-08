@@ -97,6 +97,14 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
             showError(t('manageAmbientes.validation'), t('manageAmbientes.locationRequired'));
             return;
         }
+        if (!form.tipo) {
+            showError(t('manageAmbientes.validation'), t('manageAmbientes.typeRequired'));
+            return;
+        }
+        if (!form.capacidad || isNaN(form.capacidad) || Number(form.capacidad) <= 0) {
+            showError(t('manageAmbientes.validation'), t('manageAmbientes.capacityInvalid'));
+            return;
+        }
 
         if (modalMode === 'edit') {
             updateAmbiente({...editing, ...form});

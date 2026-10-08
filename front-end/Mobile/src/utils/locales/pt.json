@@ -682,6 +682,7 @@
     "subject": "Matéria",
     "validation": "Validação",
     "nameRequired": "O nome é obrigatório",
+    "invalidEmail": "O email informado não é válido",
     "confirm": "Confirmar",
     "deleteQuestion": "Excluir registro?",
     "accessDenied": "Acesso negado",
@@ -767,7 +768,9 @@
       "required": "Este campo é obrigatório",
       "invalidEmail": "E-mail inválido",
       "invalidPhone": "Telefone inválido",
-      "mustBeNumber": "Deve ser um número"
+      "mustBeNumber": "Deve ser um número maior ou igual a 0",
+      "invalidDateRange": "A data de início deve ser anterior à data de término",
+      "fixErrorsBeforeSaving": "Corrija os campos marcados antes de salvar"
     },
     "errors": {
       "schoolNotFound": "Não foi possível identificar a escola a ser atualizada",
@@ -928,6 +931,8 @@
     "validation": "Validação",
     "nameRequired": "O nome é obrigatório.",
     "locationRequired": "A localização é obrigatória.",
+    "typeRequired": "O tipo é obrigatório.",
+    "capacityInvalid": "A capacidade deve ser um número maior que 0.",
     "confirm": "Confirmar",
     "deleteQuestion": "Tem certeza de que deseja excluir este ambiente?"
   },
