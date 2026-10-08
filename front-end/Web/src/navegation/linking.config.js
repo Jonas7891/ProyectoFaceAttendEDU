@@ -60,6 +60,16 @@ export const linkingConfig = {
                     Courses: 'courses',  // /app/courses
                     Environments: 'environments',  // /app/environments
                     Reports: 'reports',  // /app/reports
+                    Biometrics: {
+                        // /app/biometrics, /app/biometrics/face-login, /app/biometrics/fingerprint
+                        path: 'biometrics/:section?',
+                        parse: {
+                            section: (section) => section || null,
+                        },
+                        stringify: {
+                            section: (section) => section || '',
+                        },
+                    },
                     Settings: {
                         path: 'settings/:section?',  // /app/settings o /app/settings/general
                         parse: {
@@ -133,6 +143,7 @@ export function buildUrl(screen, params = {}) {
         'Courses': '/app/courses',
         'Environments': '/app/environments',
         'Reports': '/app/reports',
+        'Biometrics': params.section ? `/app/biometrics/${params.section}` : '/app/biometrics',
         'Settings': params.section ? `/app/settings/${params.section}` : '/app/settings',
     };
     

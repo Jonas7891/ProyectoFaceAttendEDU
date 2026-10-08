@@ -43,9 +43,9 @@ function getTabLabel(tabKey, role) {
 function getVisibleTabs(role) {
     switch (role) {
         case "admin":
-            return ["dashboard", "users", "courses", "environments", "reports", "settings"];
+            return ["dashboard", "users", "courses", "environments", "reports", "biometrics", "settings"];
         case "teacher":
-            return ["dashboard", "users", "courses", "reports", "settings"];
+            return ["dashboard", "users", "courses", "reports", "biometrics", "settings"];
         case "student":
             return ["dashboard", "courses", "settings"];
         default:
