@@ -23,17 +23,6 @@ const ALL_TABS = [
     { key: "courses",      label: "Cursos",        icon: "book-open"   },
     { key: "environments", label: "Ambientes",     icon: "home"        },
     { key: "reports",      label: "Reportes",      icon: "bar-chart-2" },
-    {
-        key: "biometrics",
-        label: "Biometría",
-        icon: "camera",
-        // El item padre abre «Registro facial»; los hijos enlazan a /app/biometrics/:section
-        children: [
-            { key: "face-register", label: "Registro facial",       icon: "user-plus",  adminOnly: false },
-            { key: "face-login",    label: "Reconocimiento facial", icon: "user-check", adminOnly: false },
-            { key: "fingerprint",   label: "Registro de huella",    icon: "target",     adminOnly: false },
-        ]
-    },
     { 
         key: "settings",     
         label: "Configuración",  

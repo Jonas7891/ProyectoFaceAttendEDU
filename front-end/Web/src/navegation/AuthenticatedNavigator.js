@@ -64,7 +64,6 @@ const ROUTE_MAP = {
     "courses": "Courses",
     "environments": "Environments",
     "reports": "Reports",
-    "biometrics": "Biometrics",
     "settings": "Settings",
 };
 
@@ -74,7 +73,6 @@ const ROUTE_TO_KEY_MAP = {
     "Courses": "courses",
     "Environments": "environments",
     "Reports": "reports",
-    "Biometrics": "biometrics",
     "Settings": "settings",
 };
 
@@ -358,9 +356,8 @@ function BottomTabs() {
                             size={20}
                             color={active ? c.brand.primary : c.text.secondary}
                         />
-                        <Text numberOfLines={1} style={{
-                            // Con más de 6 pestañas (admin/profesor + Biometría) 11px no cabe en 375px.
-                            fontSize: vm.bottomTabs.length > 6 ? 9 : 11,
+                        <Text style={{
+                            fontSize: 11,
                             marginTop: 2,
                             color: active ? c.brand.primary : c.text.secondary,
                             fontWeight: active ? "600" : "400",
@@ -457,6 +454,7 @@ export default function AuthenticatedNavigator() {
                             <Stack.Screen name="Reports">
                                 {(props) => <ScreenWithSidebar><ReportsScreen {...props} /></ScreenWithSidebar>}
                             </Stack.Screen>
+                            {/* Sin item en la sidebar: se abre desde «Tomar asistencia» en Inicio. */}
                             <Stack.Screen name="Biometrics">
                                 {(props) => <ScreenWithSidebar><BiometricsScreen {...props} /></ScreenWithSidebar>}
                             </Stack.Screen>

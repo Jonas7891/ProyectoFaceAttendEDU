@@ -861,6 +861,7 @@ export default function DashboardView({ navigation: navigationProp }) {
                             variant="primary" 
                             size="sm"
                             leftIcon={<Feather name="camera" size={16} color="#fff" />}
+                            onPress={() => navigation.navigate("Biometrics")}
                         >
                             {t("Tomar asistencia")}
                         </Button>

@@ -245,7 +245,7 @@ facial** y **registro/reconocimiento de huella** (más el directorio de personas
 | `face-auth-postgres` | `back-end/docker-compose.yml` | PostgreSQL 17 **propio** (`person`/`app_user` del servicio); sin FK hacia `faceattend_db` |
 | MongoDB | contenedor `mongodb` compartido | base `faceattend_face_auth` (plantillas, auditoría) |
 | Ruta Kong | `kong.yml` → `face-auth-service` | `/face-auth/*` → `face-auth-api:8000/*` (`strip_path`); exige sesión FaceAttend como el resto de rutas |
-| Pantalla web | `/app/biometrics/:section` | `face-register` · `face-login` · `fingerprint`; visible para **admin y profesor** (`canRegisterFace`) |
+| Pantalla web | `/app/biometrics/:section` | `face-register` · `face-login` · `fingerprint`; se abre con **«Tomar asistencia»** en Inicio (sin item en la sidebar), solo **admin y profesor** (`canRegisterFace`) |
 
 Misma configuración en local y en remoto: el frontend llama a
 `EXPO_PUBLIC_API_URL + /face-auth/...` con el Bearer de la sesión. Para remoto:
