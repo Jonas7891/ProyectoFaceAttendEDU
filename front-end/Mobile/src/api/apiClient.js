@@ -59,6 +59,27 @@ function isCredentialFlow(url) {
   return url.includes('/api/v1/auth/');
 }
 
+/**
+ * 401 de negocio del servicio de biometría (rostro/huella no reconocidos, gesto
+ * fallido): FastAPI responde { detail } mientras que el gateway Kong responde
+ * { message }, así que solo el primero es una respuesta de negocio y no una
+ * sesión muerta.
+ */
+function isBusinessUnauthorized(url, body) {
+  return url.includes('/face-auth/') && !!body && typeof body === 'object' && 'detail' in body;
+}
+
+/** FastAPI devuelve { detail: string | [{loc, msg}] } en lugar de { message }. */
+function readErrorMessage(body, status) {
+  if (body?.message) return body.message;
+  const detail = body?.detail;
+  if (typeof detail === 'string' && detail) return detail;
+  if (Array.isArray(detail) && detail.length) {
+    return detail.map((d) => `${(d?.loc ?? []).join('.') || 'campo'}: ${d?.msg ?? ''}`).join('; ');
+  }
+  return `Error ${status}`;
+}
+
 function notifySessionExpired() {
   // Una sola vez por sesión caída: varias llamadas fallan en paralelo.
   if (sessionExpiredNotified || !sessionExpiredHandler) return;
@@ -166,7 +187,7 @@ function unwrapPage(payload) {
   return payload;
 }
 
-export async function request({ method, url, data = null, params = null, requiresAuth = true }) {
+export async function request({ method, url, data = null, params = null, requiresAuth = true, timeoutMs = TIMEOUT }) {
   const rewritten = rewriteUserRoleQuery(url, params);
   let fullUrl = buildUrl(rewritten.url);
   params = rewritten.params;
@@ -189,7 +210,7 @@ export async function request({ method, url, data = null, params = null, require
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   options.signal = controller.signal;
 
   try {
@@ -204,10 +225,10 @@ export async function request({ method, url, data = null, params = null, require
     }
 
     if (!response.ok) {
-      if (response.status === 401 && !isCredentialFlow(fullUrl)) {
+      if (response.status === 401 && !isCredentialFlow(fullUrl) && !isBusinessUnauthorized(fullUrl, result)) {
         notifySessionExpired();
       }
-      throw new ApiError(response.status, result?.message || `Error ${response.status}`, result);
+      throw new ApiError(response.status, readErrorMessage(result, response.status), result);
     }
 
     // Respuesta válida: rearma el aviso de sesión caducada para el próximo login.
