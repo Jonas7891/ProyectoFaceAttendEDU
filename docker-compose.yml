@@ -112,6 +112,8 @@ services:
         EXPO_PUBLIC_API_URL: ${EXPO_PUBLIC_API_URL:-http://localhost:8080}
     image: faceattend/frontend-web:latest
     container_name: faceattend-frontend-web
+    mem_limit: 128m
+    cpus: "0.5"
     depends_on:
       kong-gateway:
         condition: service_healthy

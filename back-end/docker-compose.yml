@@ -11,6 +11,8 @@ services:
   mongodb:
     image: mongo:7
     container_name: faceattend-mongo
+    mem_limit: 768m
+    cpus: "1.0"
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-mongoadmin}
@@ -32,6 +34,8 @@ services:
   redis:
     image: redis:7-alpine
     container_name: faceattend-redis
+    mem_limit: 128m
+    cpus: "0.5"
     restart: unless-stopped
     ports:
       - "${BIND_IP:-127.0.0.1}:${REDIS_PORT:-6379}:6379"
@@ -49,6 +53,8 @@ services:
   kafka:
     image: apache/kafka:3.8.0
     container_name: faceattend-kafka
+    mem_limit: 1g
+    cpus: "1.0"
     restart: unless-stopped
     ports:
       - "${BIND_IP:-127.0.0.1}:${KAFKA_PORT:-9092}:9092"
@@ -89,6 +95,8 @@ services:
       dockerfile: Dockerfile
     image: faceattend/ms-identity:latest
     container_name: faceattend-ms-identity
+    mem_limit: 1g
+    cpus: "1.0"
     depends_on:
       postgres:
         condition: service_healthy
@@ -136,6 +144,8 @@ services:
       dockerfile: Dockerfile
     image: faceattend/ms-authorization:latest
     container_name: faceattend-ms-authorization
+    mem_limit: 1g
+    cpus: "1.0"
     depends_on:
       postgres:
         condition: service_healthy
@@ -175,6 +185,8 @@ services:
       dockerfile: Dockerfile
     image: faceattend/ms-scheduling:latest
     container_name: faceattend-ms-scheduling
+    mem_limit: 1g
+    cpus: "1.0"
     depends_on:
       postgres:
         condition: service_healthy
@@ -212,6 +224,8 @@ services:
       dockerfile: Dockerfile
     image: faceattend/ms-attendance:latest
     container_name: faceattend-ms-attendance
+    mem_limit: 1g
+    cpus: "1.0"
     depends_on:
       postgres:
         condition: service_healthy
@@ -257,6 +271,8 @@ services:
       dockerfile: Dockerfile
     image: faceattend/ms-academic:latest
     container_name: faceattend-ms-academic
+    mem_limit: 256m
+    cpus: "0.5"
     depends_on:
       postgres:
         condition: service_healthy
@@ -290,6 +306,8 @@ services:
       dockerfile: Dockerfile
     image: faceattend/ms-configuration:latest
     container_name: faceattend-ms-configuration
+    mem_limit: 256m
+    cpus: "0.5"
     depends_on:
       postgres:
         condition: service_healthy
@@ -328,6 +346,8 @@ services:
       dockerfile: Dockerfile
     image: faceattend/ms-biometric:latest
     container_name: faceattend-ms-biometric
+    mem_limit: 512m
+    cpus: "1.0"
     depends_on:
       mongodb:
         condition: service_healthy
@@ -364,6 +384,8 @@ services:
       dockerfile: Dockerfile
     image: faceattend/ms-notification:latest
     container_name: faceattend-ms-notification
+    mem_limit: 128m
+    cpus: "0.5"
     depends_on:
       postgres:
         condition: service_healthy
@@ -419,6 +441,8 @@ services:
       dockerfile: Dockerfile
     image: faceattend/ms-quality:latest
     container_name: faceattend-ms-quality
+    mem_limit: 256m
+    cpus: "0.5"
     depends_on:
       postgres:
         condition: service_healthy
@@ -456,6 +480,8 @@ services:
   face-auth-postgres:
     image: postgres:17-alpine
     container_name: faceattend-face-auth-postgres
+    mem_limit: 256m
+    cpus: "0.5"
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${FACE_AUTH_POSTGRES_DB:-face_auth}
@@ -477,6 +503,8 @@ services:
       dockerfile: Dockerfile
     image: faceattend/ms-face-auth:latest
     container_name: faceattend-face-auth-api
+    mem_limit: 1g
+    cpus: "1.0"
     depends_on:
       face-auth-postgres:
         condition: service_healthy
@@ -519,6 +547,8 @@ services:
   kong-gateway:
     image: kong:3.6
     container_name: faceattend-kong
+    mem_limit: 2g
+    cpus: "1.0"
     depends_on:
       redis:
         condition: service_healthy
