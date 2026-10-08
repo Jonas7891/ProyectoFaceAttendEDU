@@ -202,7 +202,13 @@ plugins:
           end
   - name: cors
     config:
-      origins: ["http://localhost:3000", "http://localhost:5173", "http://localhost:8090"]
+      # "*" + credentials true: Kong refleja el Origin real de cada petición
+      # (el navegador prohíbe "*" literal junto con credenciales), igual que
+      # ya hacía identity-service. Antes solo :3000/:5173/:8090 pasaban, así
+      # que abrir el frontend desde otra IP de la LAN (u otro puerto) dejaba
+      # bloqueadas por CORS las 6 rutas sin cors propio (academic, scheduling,
+      # attendance, authorization, biometric, configuration, notification).
+      origins: ["*"]
       methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
       headers: [Authorization, Content-Type, X-Requested-With]
       credentials: true
