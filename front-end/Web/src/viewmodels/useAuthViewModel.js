@@ -438,19 +438,22 @@ export function useSignupViewModel(onSuccess) {
         return isValid;
     }
 
+    // El backend no expone un endpoint público de auto-registro: las cuentas
+    // las crea un administrador (POST /api/v1/users). No hay onSuccess real
+    // que llamar aquí, solo informar al usuario en vez de fingir un alta.
     function handleRegister() {
         if (!validate()) return;
-        
+
         setLoading(true);
-        // TODO: reemplazar con llamada real a API de registro
         setTimeout(() => {
             setLoading(false);
-            onSuccess({
-                username: usernameRef.current,
-                email: emailRef.current,
-                password: passwordRef.current,
-            });
-        }, 900);
+            setUsernameError(t("El autorregistro no está disponible. Contacta a tu administrador."));
+            setUsernameValid(false);
+            setShakeFields({ username: true, email: false, password: false });
+            setTimeout(() => {
+                setShakeFields({ username: false, email: false, password: false });
+            }, 300);
+        }, 400);
     }
 
     return {
