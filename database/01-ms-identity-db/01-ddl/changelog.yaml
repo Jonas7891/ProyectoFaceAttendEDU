@@ -29,3 +29,6 @@ databaseChangeLog:
   - include:
       file: 09-indexes/001-person-email-unique-index.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 03-tables/007-enforce-updated-at-not-null.yaml
+      relativeToChangelogFile: true
