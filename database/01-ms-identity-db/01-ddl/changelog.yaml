@@ -32,3 +32,6 @@ databaseChangeLog:
   - include:
       file: 03-tables/007-enforce-updated-at-not-null.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 03-tables/008-drop-city-table.yaml
+      relativeToChangelogFile: true
