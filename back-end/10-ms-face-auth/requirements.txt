@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+pymongo
+psycopg[binary]
+pydantic
+pydantic-settings
+PyJWT
+numpy<2
+opencv-python-headless
+face-recognition
+Pillow

@@ -22,6 +22,7 @@ import UsersScreen from "../view/screens/UsersScreen";
 import CoursesScreen from "../view/screens/CoursesScreen";
 import EnvironmentsScreen from "../view/screens/EnvironmentsScreen";
 import ReportsScreen from "../view/screens/ReportsScreen";
+import BiometricsScreen from "../view/screens/BiometricsScreen";
 import SettingsScreen from "../view/screens/SettingsScreen";
 
 // ── Importación de Layout Components ──────────────────────────
@@ -452,6 +453,10 @@ export default function AuthenticatedNavigator() {
                             </Stack.Screen>
                             <Stack.Screen name="Reports">
                                 {(props) => <ScreenWithSidebar><ReportsScreen {...props} /></ScreenWithSidebar>}
+                            </Stack.Screen>
+                            {/* Sin item en la sidebar: se abre desde «Tomar asistencia» en Inicio. */}
+                            <Stack.Screen name="Biometrics">
+                                {(props) => <ScreenWithSidebar><BiometricsScreen {...props} /></ScreenWithSidebar>}
                             </Stack.Screen>
                             <Stack.Screen name="Settings">
                                 {(props) => <ScreenWithSidebar><SettingsScreen {...props} /></ScreenWithSidebar>}

@@ -11,7 +11,8 @@ ENV EXPO_PUBLIC_API_URL=${EXPO_PUBLIC_API_URL}
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY . ./
-RUN npx expo export --platform web
+# El SDK DigitalPersona (huella) se copia a public/vendor y Expo lo incluye en dist/.
+RUN node scripts/copy-digitalpersona.mjs && npx expo export --platform web
 
 FROM nginx:1.27-alpine AS runtime
 COPY nginx.conf /etc/nginx/conf.d/default.conf

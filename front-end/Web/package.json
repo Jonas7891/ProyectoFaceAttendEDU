@@ -3,6 +3,9 @@
   "main": "index.js",
   "version": "1.0.0",
   "scripts": {
+    "vendor:digitalpersona": "node scripts/copy-digitalpersona.mjs",
+    "prestart": "npm run vendor:digitalpersona",
+    "preweb": "npm run vendor:digitalpersona",
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
@@ -13,6 +16,8 @@
     "storybook:android": "cross-env STORYBOOK_ENABLED=true expo start --android"
   },
   "dependencies": {
+    "@digitalpersona/fingerprint": "^1.0.0",
+    "@digitalpersona/websdk": "^1.1.0",
     "@expo/vector-icons": "^15.0.3",
     "@gorhom/bottom-sheet": "latest",
     "@react-native-async-storage/async-storage": "2.2.0",

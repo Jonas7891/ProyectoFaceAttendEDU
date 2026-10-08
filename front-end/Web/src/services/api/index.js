@@ -6,3 +6,4 @@ export * from "./schedulingApi";
 export * from "./configurationApi";
 export * from "./notificationApi";
 export * from "./qualityApi";
+export * from "./faceAuthApi";

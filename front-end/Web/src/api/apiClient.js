@@ -139,13 +139,24 @@ async function parseBody(res) {
     }
 }
 
+/** FastAPI responde { detail: string | [{loc, msg}] }; el resto del stack, { message }. */
+function readDetail(detail) {
+    if (typeof detail === "string") return detail;
+    if (Array.isArray(detail)) {
+        return detail.map((d) => `${(d?.loc ?? []).join(".") || "campo"}: ${d?.msg ?? ""}`).join("; ");
+    }
+    return "";
+}
+
 function toApiError(status, payload) {
     if (payload && typeof payload === "object") {
         const p = payload;
+        const message =
+            (typeof p.message === "string" && p.message) || readDetail(p.detail) || `Error ${status}`;
         return new ApiError({
             status,
-            code: typeof p.error === "string" ? p.error : `HTTP_${status}`,
-            message: typeof p.message === "string" && p.message ? p.message : `Error ${status}`,
+            code: typeof p.error === "string" ? p.error : typeof p.code === "string" ? p.code : `HTTP_${status}`,
+            message,
             details: p.details,
         });
     }
@@ -211,7 +222,15 @@ export async function request(path, opts = {}) {
             const res = await fetchWithTimeout(url, init, timeoutMs);
             const data = await parseBody(res);
             if (!res.ok) {
-                if (res.status === 401 && !isCredentialFlow(path)) {
+                // Con businessUnauthorized, un 401 con cuerpo FastAPI ({detail}) es una respuesta
+                // de negocio (rostro/huella no reconocidos, gesto fallido), no una sesión muerta.
+                // El 401 del gateway lleva {message}, así que sigue purgando la sesión.
+                const businessUnauthorized =
+                    opts.businessUnauthorized === true &&
+                    data !== null &&
+                    typeof data === "object" &&
+                    "detail" in data;
+                if (res.status === 401 && !isCredentialFlow(path) && !businessUnauthorized) {
                     try {
                         unauthorizedHandler?.();
                     } catch {

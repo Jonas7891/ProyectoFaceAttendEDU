@@ -19,7 +19,7 @@ raíz solo orquesta.
 | Carpeta | Capa | Aporta al stack |
 |---|---|---|
 | `database/` | **Datos** | `postgres` (única instancia) + 8 migraciones Liquibase (una por bounded context) + `database-init/` (crea los 8 schemas en el primer arranque) |
-| `back-end/` | **Aplicación** | 9 microservicios (`ms-identity` … `ms-quality`) + `kong-gateway` + `mongodb`, `redis`, `kafka` |
+| `back-end/` | **Aplicación** | 9 microservicios (`ms-identity` … `ms-quality`) + `face-auth-api` (biometría web, §9) + `kong-gateway` + `mongodb`, `redis`, `kafka` |
 | `front-end/Web/` | **Presentación** | servicio `frontend-web` (Expo export → nginx), definido en el compose raíz porque es una preocupación de presentación |
 | raíz (`FULL/`) | **Orquestación** | `docker-compose.yml` (incluye los dos de arriba y encadena todo), `.env` / `.env.example` |
 
@@ -118,6 +118,7 @@ invisibles para el resto de la LAN:
 | 8001 | `kong-gateway` (admin) | `BIND_IP` | administración local |
 | 5432 / 27017 / 6379 / 9092 | postgres / mongodb / redis / kafka | `BIND_IP` | bases y broker: nunca exponerlos |
 | 8081–8089 | los 9 microservicios | `BIND_IP` | solo los consume Kong (y el IDE/curl locales) |
+| 8091 | `face-auth-api` (interno 8000) | `BIND_IP` | depuración local; el navegador entra por Kong `/face-auth/*` |
 
 Cambiar el perímetro sin tocar los compose: `BIND_IP=0.0.0.0` en `.env` (útil
 para depurar desde otro equipo o probar desde el celular) y volver a
@@ -186,7 +187,8 @@ Variables principales (ver `.env.example`): `POSTGRES_*`, `FACEATTEND_LIQUIBASE_
 | Volumen | Contenido |
 |---|---|
 | `postgres_data` | `faceattend_db` (8 schemas, migraciones Liquibase) |
-| `mongo_data` | embeddings biométricos |
+| `mongo_data` | embeddings biométricos (`faceattend_biometric`) y la base `faceattend_face_auth` de la pantalla Biometría |
+| `face_auth_postgres_data` | `face_auth` (`person`/`app_user` propios de `face-auth-api`, ajenos al modelo de 8 schemas) |
 | `redis_data` | rate-limit / caché de Kong |
 | `kafka_data` | topics de eventos |
 
@@ -223,4 +225,45 @@ cd database/01-ms-identity-db && docker compose up liquibase   # un contexto
 | `port is already allocated` al usar 8082 para el frontend | 8082 es `ms-authorization`; el frontend va en **8090** |
 | `502` de Kong | el microservicio upstream no está `healthy` aún; revisa `docker compose ps` y `docker compose logs <ms>` |
 | El navegador no conecta con la API | `EXPO_PUBLIC_API_URL` se hornea en el build; cambia `.env` y vuelve a `docker compose up -d --build frontend-web` |
+| Biometría: `401 Missing or invalid bearer token` en `/face-auth/*` | todo `/face-auth` exige sesión FaceAttend (la pantalla va dentro del dashboard); inicia sesión primero |
+| Biometría: «La cámara no está disponible» / permiso denegado | `getUserMedia` solo funciona en `localhost` o por **HTTPS**; en remoto sirve el frontend y Kong por HTTPS |
+| Biometría: «Runtime DigitalPersona no detectado» | falta el runtime del lector **en el equipo del usuario** (§9); no es un fallo del stack |
+| Cambié `kong.yml` y no surte efecto | Kong DB-less lee el archivo al arrancar: `docker compose restart kong-gateway` |
 | Redes duplicadas viejas (`back-end_*`, `full_*`) | proyectos abandonados; `docker compose down` en cada carpeta y `docker network rm <red>` (los volúmenes quedan intactos) |
+
+---
+
+## 9. Biometría web (rostro + huella)
+
+Integra [face-auth](https://github.com/Jonas7891/face-auth) en el stack. Un solo
+servicio cubre las tres capacidades: **registro de rostro**, **reconocimiento
+facial** y **registro/reconocimiento de huella** (más el directorio de personas).
+
+| Pieza | Dónde | Notas |
+|---|---|---|
+| `face-auth-api` | `back-end/10-ms-face-auth/` (FastAPI + OpenCV/dlib) | arranca con `docker compose up -d --build`; la primera build compila dlib (varios minutos) |
+| `face-auth-postgres` | `back-end/docker-compose.yml` | PostgreSQL 17 **propio** (`person`/`app_user` del servicio); sin FK hacia `faceattend_db` |
+| MongoDB | contenedor `mongodb` compartido | base `faceattend_face_auth` (plantillas, auditoría) |
+| Ruta Kong | `kong.yml` → `face-auth-service` | `/face-auth/*` → `face-auth-api:8000/*` (`strip_path`); exige sesión FaceAttend como el resto de rutas |
+| Pantalla web | `/app/biometrics/:section` | `face-register` · `face-login` · `fingerprint`; se abre con **«Tomar asistencia»** en Inicio (sin item en la sidebar), solo **admin y profesor** (`canRegisterFace`) |
+
+Misma configuración en local y en remoto: el frontend llama a
+`EXPO_PUBLIC_API_URL + /face-auth/...` con el Bearer de la sesión. Para remoto:
+
+1. `EXPO_PUBLIC_API_URL=https://<host-de-kong>` y reconstruir el frontend.
+2. Añadir el origen del frontend a `cors.origins` en `kong.yml` y
+   `docker compose restart kong-gateway`.
+3. Servir **frontend y Kong por HTTPS**: el navegador solo concede la cámara en
+   `localhost` o HTTPS.
+4. Producción: definir `FACE_AUTH_JWT_SECRET` (≥ 32 caracteres aleatorios) en `.env`.
+
+**Lector de huella (DigitalPersona 4500).** El SDK web habla con el *runtime*
+DigitalPersona instalado **en el equipo donde está el lector** (driver + runtime
+oficial); no corre en Docker ni en el servidor, y un lector USB de otro equipo no
+es accesible por red. Los scripts del SDK se copian a `/vendor` en el build
+(`scripts/copy-digitalpersona.mjs`). Sin runtime, la pantalla lo indica y sigue
+sondeando cada 3 s mientras el módulo está abierto.
+
+**Prueba de vida.** El registro pide 3 gestos y el reconocimiento 2 (parpadear,
+girar la cabeza, abrir la boca), validados en el servidor. Es una defensa básica,
+no un anti-spoofing certificado.

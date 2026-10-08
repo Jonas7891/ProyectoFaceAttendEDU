@@ -55,6 +55,7 @@ function AppContent() {
                                 'Courses': 'Cursos | FaceAttend EDU',
                                 'Environments': 'Ambientes | FaceAttend EDU',
                                 'Reports': 'Reportes | FaceAttend EDU',
+                                'Biometrics': 'Biometría | FaceAttend EDU',
                                 'Settings': 'Configuración | FaceAttend EDU',
                             };
                             return routeTitles[route?.name] || 'FaceAttend EDU';
