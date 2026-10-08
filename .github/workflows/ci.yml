@@ -60,6 +60,14 @@ jobs:
       - name: npm run build
         working-directory: back-end/${{ matrix.service }}
         run: npm run build
+      # Informational only: several high-severity findings today are transitive
+      # build-tooling deps with no fix available yet. Dependabot (see
+      # .github/dependabot.yml) tracks these over time; this step just keeps
+      # them visible on every PR without turning CI red for pre-existing debt.
+      - name: npm audit (informational)
+        working-directory: back-end/${{ matrix.service }}
+        run: npm audit --audit-level=high
+        continue-on-error: true
 
   python-services:
     name: python / ${{ matrix.service }}
@@ -96,6 +104,10 @@ jobs:
       - name: pytest
         working-directory: back-end/${{ matrix.service }}
         run: poetry run pytest
+      - name: bandit (informational)
+        working-directory: back-end/${{ matrix.service }}
+        run: poetry run pip install --quiet bandit && poetry run bandit -r . -x ./tests,./.venv
+        continue-on-error: true
 
   go-service:
     name: go / 08-ms-notification
@@ -109,6 +121,10 @@ jobs:
       - name: go test
         working-directory: back-end/08-ms-notification
         run: go test ./...
+      - name: govulncheck (informational)
+        working-directory: back-end/08-ms-notification
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+        continue-on-error: true
 
   mobile:
     name: mobile
@@ -126,6 +142,10 @@ jobs:
       - name: npm test
         working-directory: front-end/Mobile
         run: npm test
+      - name: npm audit (informational)
+        working-directory: front-end/Mobile
+        run: npm audit --audit-level=high
+        continue-on-error: true
 
   web:
     name: web
@@ -146,3 +166,7 @@ jobs:
       - name: expo export --platform web
         working-directory: front-end/Web
         run: npx expo export --platform web
+      - name: npm audit (informational)
+        working-directory: front-end/Web
+        run: npm audit --audit-level=high
+        continue-on-error: true
