@@ -187,7 +187,30 @@ function unwrapPage(payload) {
   return payload;
 }
 
-export async function request({ method, url, data = null, params = null, requiresAuth = true, timeoutMs = TIMEOUT }) {
+// Dos pantallas pidiendo el mismo GET a la vez (p. ej. al montar en
+// paralelo) no deben disparar dos viajes de red: comparten la misma
+// promesa mientras está en vuelo. Se limpia al terminar (éxito o error),
+// así un fallo no queda "cacheado" para la próxima petición.
+const inFlightGets = new Map();
+
+export function request({ method, url, data = null, params = null, requiresAuth = true, timeoutMs = TIMEOUT }) {
+  if (method !== 'GET') {
+    return performRequest({ method, url, data, params, requiresAuth, timeoutMs });
+  }
+
+  const rewritten = rewriteUserRoleQuery(url, params);
+  const key = `${buildUrl(rewritten.url)}?${JSON.stringify(rewritten.params || {})}`;
+  const pending = inFlightGets.get(key);
+  if (pending) return pending;
+
+  const promise = performRequest({ method, url, data, params, requiresAuth, timeoutMs }).finally(() => {
+    inFlightGets.delete(key);
+  });
+  inFlightGets.set(key, promise);
+  return promise;
+}
+
+async function performRequest({ method, url, data = null, params = null, requiresAuth = true, timeoutMs = TIMEOUT }) {
   const rewritten = rewriteUserRoleQuery(url, params);
   let fullUrl = buildUrl(rewritten.url);
   params = rewritten.params;

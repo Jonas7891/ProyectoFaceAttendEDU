@@ -197,9 +197,29 @@ function isCredentialFlow(path) {
     return path.replace(/^\/+/, "").startsWith("api/v1/auth/");
 }
 
+// Dos componentes pidiendo el mismo GET a la vez (p. ej. al montar en
+// paralelo) no deben disparar dos viajes de red: comparten la misma
+// promesa mientras está en vuelo. Se limpia al terminar (éxito o error),
+// así un fallo no queda "cacheado" para la próxima petición.
+const inFlightGets = new Map();
+
 /** Petición genérica. Lanza ApiError si !ok. */
-export async function request(path, opts = {}) {
+export function request(path, opts = {}) {
     const method = opts.method ?? "GET";
+    if (method !== "GET") return performRequest(path, opts, method);
+
+    const key = buildUrl(path, opts.query, opts.baseUrl);
+    const pending = inFlightGets.get(key);
+    if (pending) return pending;
+
+    const promise = performRequest(path, opts, method).finally(() => {
+        inFlightGets.delete(key);
+    });
+    inFlightGets.set(key, promise);
+    return promise;
+}
+
+async function performRequest(path, opts, method) {
     const timeoutMs = opts.timeoutMs ?? API_TIMEOUT_MS;
     const token = await getToken();
     const headers = {
