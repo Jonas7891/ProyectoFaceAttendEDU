@@ -13,6 +13,7 @@
 // ============================================================
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { API_MODE } from "../../config/env";
 import { mockCourses } from "./mockData";
 import { colorAt } from "../../core/constants/dataColors";
 import {
@@ -151,8 +152,11 @@ export async function loadCourses() {
     try {
         return [...(await coursesFromApi()), ...local];
     } catch (error) {
-        console.warn("[FaceAttend] loadCourses: API no disponible, uso mock —", error?.message);
-        return [...mockCourses, ...local];
+        if (API_MODE === "mock") {
+            console.warn("[FaceAttend] loadCourses: API no disponible, uso mock —", error?.message);
+            return [...mockCourses, ...local];
+        }
+        throw error;
     }
 }
 

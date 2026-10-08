@@ -13,6 +13,7 @@
 // ============================================================
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { API_MODE } from "../../config/env";
 import { mockFichas } from "./mockData";
 import { colorAt } from "../../core/constants/dataColors";
 import {
@@ -151,8 +152,11 @@ export async function loadFichas() {
     try {
         return ensureFichasHaveColors([...(await fichasFromApi()), ...local]);
     } catch (error) {
-        console.warn("[FaceAttend] loadFichas: API no disponible, uso mock —", error?.message);
-        return ensureFichasHaveColors([...mockFichas, ...local]);
+        if (API_MODE === "mock") {
+            console.warn("[FaceAttend] loadFichas: API no disponible, uso mock —", error?.message);
+            return ensureFichasHaveColors([...mockFichas, ...local]);
+        }
+        throw error;
     }
 }
 

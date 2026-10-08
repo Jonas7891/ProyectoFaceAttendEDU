@@ -13,6 +13,7 @@
 // ============================================================
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { API_MODE } from "../../config/env";
 import { mockStudents } from "./mockData";
 import {
     actorTypeMap,
@@ -144,8 +145,11 @@ export async function loadStudents() {
     try {
         return [...(await studentsFromApi()), ...local];
     } catch (error) {
-        console.warn("[FaceAttend] loadStudents: API no disponible, uso mock —", error?.message);
-        return [...mockStudents, ...local];
+        if (API_MODE === "mock") {
+            console.warn("[FaceAttend] loadStudents: API no disponible, uso mock —", error?.message);
+            return [...mockStudents, ...local];
+        }
+        throw error;
     }
 }
 

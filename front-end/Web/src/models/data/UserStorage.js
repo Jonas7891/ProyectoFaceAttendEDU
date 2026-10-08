@@ -14,6 +14,7 @@
 // ============================================================
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { API_MODE } from "../../config/env";
 import { mockAppUsers } from "./mockData";
 import { roleNamesFrom, toUiRole } from "../../core/utils/backendRoles";
 import {
@@ -129,8 +130,11 @@ export async function loadUsers() {
     try {
         return [...(await usersFromApi()), ...local];
     } catch (error) {
-        console.warn("[FaceAttend] loadUsers: API no disponible, uso mock —", error?.message);
-        return [...mockAppUsers, ...local];
+        if (API_MODE === "mock") {
+            console.warn("[FaceAttend] loadUsers: API no disponible, uso mock —", error?.message);
+            return [...mockAppUsers, ...local];
+        }
+        throw error;
     }
 }
 
