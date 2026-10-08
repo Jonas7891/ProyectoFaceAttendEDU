@@ -157,6 +157,7 @@ export function useReportsViewModel(
     const [search, setSearch] = useState("");
     const [fichaFilter, setFichaFilter] = useState(fichaId || "");
     const [statusFilter, setStatusFilter] = useState("active");
+    const [sortBy, setSortBy] = useState("none");
 
     // ── Hooks de contexto ─────────────────────────────────────
     const { theme } = useTheme();
@@ -281,11 +282,20 @@ export function useReportsViewModel(
         }
 
         // Enriquecer con nombre completo del curso
-        return result.map(student => ({
+        result = result.map(student => ({
             ...student,
             courseName: getCourseName(student.course),
         }));
-    }, [students, filterType, fichaId, fichaFilter, userId, attendanceThreshold, search, statusFilter, getCourseName]);
+
+        // Orden por asistencia: menor a mayor primero (para ubicar casos críticos)
+        if (sortBy === "attendance-asc") {
+            result = [...result].sort((a, b) => a.attendance - b.attendance);
+        } else if (sortBy === "attendance-desc") {
+            result = [...result].sort((a, b) => b.attendance - a.attendance);
+        }
+
+        return result;
+    }, [students, filterType, fichaId, fichaFilter, userId, attendanceThreshold, search, statusFilter, sortBy, getCourseName]);
 
     /**
      * Estudiantes en riesgo (asistencia < 75%)
@@ -614,6 +624,8 @@ export function useReportsViewModel(
         setFichaFilter,
         statusFilter,
         setStatusFilter,
+        sortBy,
+        setSortBy,
         fichaName,
 
         // Acciones memoizadas

@@ -157,7 +157,17 @@ export default function ReportsView({
                             ]}
                             onStatusChange={vm.setStatusFilter}
                             showStatusFilter={true}
-                            
+
+                            // Orden por asistencia (ubicar primero los casos críticos)
+                            sortFilter={vm.sortBy}
+                            sortFilters={[
+                                { value: "none", label: t("Sin ordenar") },
+                                { value: "attendance-asc", label: t("Menor asistencia primero") },
+                                { value: "attendance-desc", label: t("Mayor asistencia primero") },
+                            ]}
+                            onSortChange={vm.setSortBy}
+                            showSortFilter={true}
+
                             // No mostrar filtro de tipo de usuario
                             showUserTypeFilter={false}
                         />
