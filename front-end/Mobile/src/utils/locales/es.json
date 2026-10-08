@@ -330,6 +330,8 @@
     "successMessage": "¡Justificación enviada correctamente!",
     "dateFormat": "YYYY-MM-DD",
     "timeFormat": "HH:MM AM/PM",
+    "invalidDateFormat": "Ingresa la fecha en formato YYYY-MM-DD",
+    "invalidTimeFormat": "Ingresa la hora en formato HH:MM AM/PM",
     "descriptionPlaceholder": "Escribe aquí la descripción del motivo...",
     "attachDocument": "Adjuntar Documento",
     "selectFile": "Seleccionar Archivo",

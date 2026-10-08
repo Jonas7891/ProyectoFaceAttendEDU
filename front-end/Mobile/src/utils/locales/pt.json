@@ -332,6 +332,8 @@
     "successMessage": "Justificativa enviada com sucesso!",
     "dateFormat": "AAAA-MM-DD",
     "timeFormat": "HH:MM AM/PM",
+    "invalidDateFormat": "Informe a data no formato AAAA-MM-DD",
+    "invalidTimeFormat": "Informe a hora no formato HH:MM AM/PM",
     "descriptionPlaceholder": "Escreva aqui a descrição do motivo...",
     "attachDocument": "Anexar Documento",
     "selectFile": "Selecionar Arquivo",

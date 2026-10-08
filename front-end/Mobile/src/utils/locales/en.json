@@ -332,6 +332,8 @@
     "successMessage": "Justification sent successfully!",
     "dateFormat": "YYYY-MM-DD",
     "timeFormat": "HH:MM AM/PM",
+    "invalidDateFormat": "Enter the date in YYYY-MM-DD format",
+    "invalidTimeFormat": "Enter the time in HH:MM AM/PM format",
     "descriptionPlaceholder": "Write the description of the reason here...",
     "attachDocument": "Attach Document",
     "selectFile": "Select File",

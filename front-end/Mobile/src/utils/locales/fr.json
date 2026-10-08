@@ -332,6 +332,8 @@
     "successMessage": "Justification envoyée avec succès !",
     "dateFormat": "AAAA-MM-JJ",
     "timeFormat": "HH:MM AM/PM",
+    "invalidDateFormat": "Saisissez la date au format AAAA-MM-JJ",
+    "invalidTimeFormat": "Saisissez l'heure au format HH:MM AM/PM",
     "descriptionPlaceholder": "Écrivez ici la description du motif...",
     "attachDocument": "Joindre un document",
     "selectFile": "Sélectionner un fichier",
