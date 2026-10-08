@@ -488,8 +488,12 @@ services:
       POSTGRES_URL: postgresql://${FACE_AUTH_POSTGRES_USER:-faceauth}:${FACE_AUTH_POSTGRES_PASSWORD:-faceauth}@face-auth-postgres:5432/${FACE_AUTH_POSTGRES_DB:-face_auth}
       MATCH_THRESHOLD: ${FACE_AUTH_MATCH_THRESHOLD:-0.6}
       FINGERPRINT_MATCH_THRESHOLD: ${FACE_AUTH_FINGERPRINT_MATCH_THRESHOLD:-8}
-      # >= 32 chars; firma los tokens que devuelve el login biométrico. Cambiar en producción.
-      JWT_SECRET: ${FACE_AUTH_JWT_SECRET:-faceattend-dev-only-face-auth-jwt-secret-change-me}
+      # >= 32 chars; firma los tokens que devuelve el login biométrico.
+      # Sin fallback a propósito: un secreto conocido/commiteado que "funciona"
+      # sin .env es exactamente el que alguien podría usar para forjar tokens
+      # si la var se olvida en un despliegue real. .env.example ya trae un
+      # valor de desarrollo; en producción usa uno propio.
+      JWT_SECRET: ${FACE_AUTH_JWT_SECRET:?Set FACE_AUTH_JWT_SECRET in .env (>= 32 random chars)}
       # El navegador entra por Kong (CORS lo resuelve el gateway), no directo al servicio.
       CORS_ORIGINS: ${FACE_AUTH_CORS_ORIGINS:-}
       # Rate limit por IP real del cliente (la que Kong añade a X-Forwarded-For).
