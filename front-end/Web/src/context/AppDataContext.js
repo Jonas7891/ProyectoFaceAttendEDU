@@ -101,7 +101,8 @@ export function AppDataProvider({ children }) {
     const [fichas, setFichas] = useState([]);
     const [courses, setCourses] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    
+    const [loadError, setLoadError] = useState(null);
+
     // Estados para carga progresiva de usuarios
     const [loadedStudents, setLoadedStudents] = useState([]);
     const [loadedTeachers, setLoadedTeachers] = useState([]);
@@ -243,6 +244,7 @@ export function AppDataProvider({ children }) {
             loadCourses(),
         ]).then(([s, u, e, f, c]) => {
             if (cancelled) return;
+            setLoadError(null);
             setStudents(s);
             setUsers(u);
             setEnvironments(e);
@@ -252,6 +254,14 @@ export function AppDataProvider({ children }) {
 
             // Carga progresiva de usuarios (efecto persiana)
             startProgressiveUserLoading(s, c, u);
+        }).catch((error) => {
+            if (cancelled) return;
+            // Backend no disponible: no mostrar datos falsos como si fueran reales,
+            // dejar las listas vacías y avisar para que la UI muestre el error.
+            console.error("[FaceAttend] AppDataContext: fallo cargando datos del backend —", error?.message);
+            setLoadError(error?.message || "No se pudo conectar con el servidor");
+            setIsLoading(false);
+            setIsLoadingUsers(false);
         });
 
         return () => {
@@ -511,6 +521,7 @@ export function AppDataProvider({ children }) {
     const value = useMemo(
         () => ({
             isLoading: isLoading || isLoadingUsers, // Incluye carga progresiva de usuarios
+            loadError,
 
             students: loadedStudents, // Usuarios cargados progresivamente
             addStudent: addStudentFn,
@@ -550,6 +561,7 @@ export function AppDataProvider({ children }) {
         [
             isLoading,
             isLoadingUsers,
+            loadError,
             loadedStudents,
             loadedTeachers,
             loadedAdmins,

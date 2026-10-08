@@ -11,6 +11,7 @@ import { ResponsiveProvider } from "./src/context/ResponsiveContext";
 import { LanguageProvider, useLanguageContext } from "./src/core/utils/i18n/context/LanguageContext";
 import { AppDataProvider }  from "./src/context/AppDataContext";
 import { AuthProvider }     from "./src/context/AuthContext";
+import { DataLoadErrorBanner } from "./src/view/components/common/DataLoadErrorBanner";
 
 import AppNavigator from "./src/navegation/appNavigator";
 import { linkingConfig } from "./src/navegation/linking.config";
@@ -39,6 +40,7 @@ function AppContent() {
     return (
         <AuthProvider>
             <AppDataProvider>
+                <DataLoadErrorBanner />
                 <NavigationContainer
                     linking={linkingConfig}
                     onReady={onReady}
