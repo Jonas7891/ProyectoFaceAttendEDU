@@ -6,6 +6,8 @@ services:
   postgres:
     image: postgres:17-alpine
     container_name: faceattend-postgres
+    mem_limit: 1g
+    cpus: "1.0"
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -29,6 +31,8 @@ services:
   identity-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
     container_name: faceattend-identity-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
     depends_on:
       postgres:
         condition: service_healthy
@@ -47,6 +51,8 @@ services:
   authorization-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
     container_name: faceattend-authorization-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
     depends_on:
       postgres:
         condition: service_healthy
@@ -65,6 +71,8 @@ services:
   academic-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
     container_name: faceattend-academic-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
     depends_on:
       postgres:
         condition: service_healthy
@@ -83,6 +91,8 @@ services:
   scheduling-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
     container_name: faceattend-scheduling-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
     depends_on:
       postgres:
         condition: service_healthy
@@ -101,6 +111,8 @@ services:
   attendance-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
     container_name: faceattend-attendance-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
     depends_on:
       postgres:
         condition: service_healthy
@@ -119,6 +131,8 @@ services:
   biometric-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
     container_name: faceattend-biometric-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
     depends_on:
       postgres:
         condition: service_healthy
@@ -137,6 +151,8 @@ services:
   configuration-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
     container_name: faceattend-configuration-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
     depends_on:
       postgres:
         condition: service_healthy
@@ -155,6 +171,8 @@ services:
   notification-liquibase:
     image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
     container_name: faceattend-notification-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
     depends_on:
       postgres:
         condition: service_healthy

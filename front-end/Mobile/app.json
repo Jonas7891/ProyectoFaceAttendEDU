@@ -19,7 +19,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "edu.faceattend.app"
     },
     "android": {
       "usesCleartextTraffic": true,
@@ -27,7 +28,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.faceattendedu",
+      "package": "edu.faceattend.app",
       "statusBar": {
         "translucent": true,
         "backgroundColor": "#00000000"
@@ -36,7 +37,13 @@
     "plugins": [
       "expo-localization",
       "@react-native-community/datetimepicker",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "FaceAttend EDU needs camera access to capture your face for attendance verification."
+        }
+      ]
     ]
   }
 }

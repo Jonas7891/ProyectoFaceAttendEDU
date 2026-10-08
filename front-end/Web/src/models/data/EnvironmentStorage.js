@@ -7,6 +7,7 @@
 // ============================================================
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { API_MODE } from "../../config/env";
 import { mockEnvironments } from "./mockData";
 import {
     dayLabel,
@@ -97,8 +98,11 @@ export async function loadEnvironments() {
     try {
         return [...(await environmentsFromApi()), ...local];
     } catch (error) {
-        console.warn("[FaceAttend] loadEnvironments: API no disponible, uso mock —", error?.message);
-        return [...mockEnvironments, ...local];
+        if (API_MODE === "mock") {
+            console.warn("[FaceAttend] loadEnvironments: API no disponible, uso mock —", error?.message);
+            return [...mockEnvironments, ...local];
+        }
+        throw error;
     }
 }
 

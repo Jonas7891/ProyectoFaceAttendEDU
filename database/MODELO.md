@@ -17,7 +17,9 @@ FaceAttend-Edu es una plataforma de **gestión de asistencia mediante reconocimi
 
 ## 2. Bounded Contexts (Contextos delimitados)
 
-El modelo se divide en **8 contextos**, cada uno responsable de un área de negocio:
+El modelo se divide en **9 contextos**, cada uno responsable de un área de negocio
+(el diagrama de abajo muestra los 8 contextos núcleo; ver §9.5 para Quality, que se
+sumó después y no está dibujado aquí):
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -191,6 +193,30 @@ enrollment → cohort
 - `biometric_type`: FACIAL / FINGERPRINT (ENUM)
 - `finger_number`: Solo para FINGERPRINT (1..10), nulo para FACIAL
 - `current_embedding_ref`: Referencia lógica al documento activo en NoSQL
+
+---
+
+## 9.5 Contexto: Quality
+
+**Responsabilidad:** Instrumento de evaluación de calidad (ISO/IEC 25010, ISO/IEC 29110,
+ISTQB) sobre los demás microservicios. Dueño lógico: `09-ms-quality`; hospedaje físico
+transitorio en el schema `quality` dentro de `07-ms-configuration-db`, porque no existe
+un servicio `quality-liquibase` independiente — deuda documentada, no mover sin migración
+compatibilizada.
+
+| Tabla | Descripción | PK |
+|---|---|---|
+| `quality_project` | Proyecto de software evaluado (ISO/IEC 29110) | `project_id` (BIGINT) |
+| `quality_evaluation` | Evaluación ISO/IEC 25010 de un microservicio | `evaluation_id` (BIGINT) |
+| `quality_evaluation_item` | Puntaje 1-5 por subcaracterística 25010 | `evaluation_item_id` (BIGINT) |
+| `process_assessment` | Valoración de proceso ISO/IEC 29110 (PM/SI) | `assessment_id` (BIGINT) |
+| `process_assessment_rating` | Calificación N/P/L/F por objetivo 29110 | `process_rating_id` (BIGINT) |
+| `istqb_assessment` | Evaluación ISTQB CTFL v4.0 de un microservicio | `istqb_assessment_id` (BIGINT) |
+| `istqb_assessment_item` | Puntaje 1-5 por ítem ISTQB | `istqb_assessment_item_id` (BIGINT) |
+
+Los catálogos de subcaracterísticas/objetivos/ítems (ej. `tech-bva`, `PM.O1`) viven en
+código (`09-ms-quality/src/domain/{iso25010,iso29110,istqb}.ts`), no en tablas: el
+instrumento es inmutable, así que no llevan FK.
 
 ---
 

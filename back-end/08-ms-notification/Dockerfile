@@ -8,7 +8,8 @@ RUN CGO_ENABLED=0 go build -o /app/server ./cmd/server
 # Runtime con shell para que el healthcheck (wget/curl) funcione.
 # distroless no tiene shell y rompe healthcheck -> usar alpine.
 FROM alpine:3.20
-RUN apk add --no-cache ca-certificates curl wget
+RUN apk add --no-cache ca-certificates curl wget && addgroup -S app && adduser -S app -G app
 COPY --from=builder /app/server /server
+USER app
 EXPOSE 8088
 ENTRYPOINT ["/server"]

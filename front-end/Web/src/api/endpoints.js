@@ -28,8 +28,6 @@ export const endpoints = {
         sessions: `${API_V1}/sessions`,
         sessionById: (id) => `${API_V1}/sessions/${id}`,
         sessionsByUser: (userId) => `${API_V1}/sessions/user/${userId}`,
-        cities: `${API_V1}/cities`,
-        cityById: (id) => `${API_V1}/cities/${id}`,
         passwordPolicies: `${API_V1}/password-policies`,
         passwordPolicyById: (id) => `${API_V1}/password-policies/${id}`,
     },

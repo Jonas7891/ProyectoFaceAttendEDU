@@ -97,7 +97,6 @@ export const authApi = {
         }),
 
     // ── Catálogos y política de contraseñas ─────────────
-    listCities: (params) => request(endpoints.identity.cities, { method: "GET", query: params }),
     getPasswordPolicies: () =>
         request(endpoints.identity.passwordPolicies, { method: "GET" }),
 };
