@@ -138,6 +138,22 @@ export const endpoints = {
         alertTypes: `${API_V1}/alert-types`,
         alertTypeById: (id) => `${API_V1}/alert-types/${id}`,
     },
+    // 10-ms-face-auth tras Kong: /face-auth/<ruta del servicio> (Kong quita el prefijo).
+    faceAuth: {
+        health: "/face-auth/api/health",
+        livenessChallenge: "/face-auth/api/face/liveness-challenge",
+        livenessStep: "/face-auth/api/face/liveness-step",
+        registerFace: "/face-auth/api/register/face",
+        loginFace: "/face-auth/api/login/face",
+        registerFingerprint: "/face-auth/api/register/fingerprint-sample",
+        loginFingerprint: "/face-auth/api/login/fingerprint-sample",
+        users: "/face-auth/api/users",
+        activeUsers: "/face-auth/api/users/active",
+        // El nombre de usuario llega ya codificado (encodeURIComponent) desde faceAuthApi.
+        userExists: (username) => `/face-auth/api/users/${username}/exists`,
+        revokeTemplate: (username) => `/face-auth/api/templates/${username}/revoke`,
+        subject: (username) => `/face-auth/api/subjects/${username}`,
+    },
     quality: {
         characteristics: `${API_V1}/quality/characteristics`,
         evaluations: `${API_V1}/quality/evaluations`,
