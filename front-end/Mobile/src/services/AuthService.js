@@ -2,6 +2,7 @@ import { request, GET, POST } from '../api/apiClient';
 import { toSnakeDeep } from '../api/backend';
 import AuthResponse from '../models/identity/AuthResponse';
 import AuthRequest from '../models/identity/AuthRequest';
+import AppUser from '../models/identity/AppUser';
 import { saveToken } from '../storage/TokenStorage';
 import { VerificationService } from './verificationService';
 import { PasswordService } from './passwordService';
@@ -162,6 +163,18 @@ export const AuthService = {
         person: person || null,
       },
     });
+  },
+
+  // GET /api/v1/auth/me?email=|username= — perfil de usuario por identificador (público en el gateway).
+  me: async (identifier) => {
+    const value = String(identifier || '').trim();
+    const data = await request({
+      method: GET,
+      url: 'api/v1/auth/me',
+      params: value.includes('@') ? { email: value } : { username: value },
+      requiresAuth: false,
+    });
+    return AppUser.fromApi(toSnakeDeep(data));
   },
 
   refreshToken: async () => {

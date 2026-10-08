@@ -1,4 +1,5 @@
-import { request, GET, POST, PUT, DELETE } from '../api/apiClient';
+import { request, GET, POST, PUT, PATCH, DELETE } from '../api/apiClient';
+import { toSnakeDeep } from '../api/backend';
 import BiometricUpdateCase from '../models/configuration/BiometricUpdateCase';
 
 const ENDPOINT = 'biometric_update_case';
@@ -69,6 +70,22 @@ export const BiometricCaseService = {
       requiresAuth: false,
     });
     return BiometricUpdateCase.fromApi(data);
+  },
+
+  // PATCH /api/v1/biometric-update-cases/:id/review — revisión dedicada del backend:
+  // { updateStatus: In_Review | Approved | Rejected, reviewedBy?, resolutionNotes? }.
+  review: async (id, { updateStatus, reviewedBy, resolutionNotes }) => {
+    const data = await request({
+      method: PATCH,
+      url: `api/v1/biometric-update-cases/${id}/review`,
+      data: {
+        updateStatus,
+        ...(reviewedBy ? { reviewedBy } : {}),
+        ...(resolutionNotes !== undefined && resolutionNotes !== null ? { resolutionNotes } : {}),
+      },
+      requiresAuth: false,
+    });
+    return BiometricUpdateCase.fromApi(toSnakeDeep(data));
   },
 
   delete: async (id) => {
