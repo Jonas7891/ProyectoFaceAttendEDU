@@ -330,6 +330,8 @@
     "successMessage": "¡Justificación enviada correctamente!",
     "dateFormat": "YYYY-MM-DD",
     "timeFormat": "HH:MM AM/PM",
+    "invalidDateFormat": "Ingresa la fecha en formato YYYY-MM-DD",
+    "invalidTimeFormat": "Ingresa la hora en formato HH:MM AM/PM",
     "descriptionPlaceholder": "Escribe aquí la descripción del motivo...",
     "attachDocument": "Adjuntar Documento",
     "selectFile": "Seleccionar Archivo",
@@ -682,6 +684,7 @@
     "subject": "Materia",
     "validation": "Validación",
     "nameRequired": "El nombre es obligatorio",
+    "invalidEmail": "El email ingresado no es válido",
     "confirm": "Confirmar",
     "deleteQuestion": "¿Eliminar registro?",
     "accessDenied": "Acceso denegado",
@@ -767,7 +770,9 @@
       "required": "Este campo es requerido",
       "invalidEmail": "Email inválido",
       "invalidPhone": "Teléfono inválido",
-      "mustBeNumber": "Debe ser un número"
+      "mustBeNumber": "Debe ser un número mayor o igual a 0",
+      "invalidDateRange": "La fecha de inicio debe ser anterior a la fecha de fin",
+      "fixErrorsBeforeSaving": "Corrige los campos marcados antes de guardar"
     },
     "errors": {
       "schoolNotFound": "No se pudo identificar el colegio a actualizar",
@@ -904,6 +909,8 @@
     "validation": "Validación",
     "nameRequired": "El nombre es obligatorio.",
     "locationRequired": "La ubicación es obligatoria.",
+    "typeRequired": "El tipo es obligatorio.",
+    "capacityInvalid": "La capacidad debe ser un número mayor a 0.",
     "confirm": "Confirmar",
     "deleteQuestion": "¿Seguro que quieres eliminar este ambiente?"
   },

@@ -1,12 +1,15 @@
 # ============================================================
 #  FaceAttend EDU — Frontend Web (Expo Web estático + nginx)
 #  Build: expo export --platform web → dist/ → nginx :80
-#  Backend: EXPO_PUBLIC_API_URL (default http://kong-gateway:8000
-#  en compose; en local http://localhost:8080)
+#  Backend: EXPO_PUBLIC_API_URL es opcional. Si no se pasa, el
+#  bundle infiere el host de Kong a partir de location.hostname
+#  en runtime (src/config/env.ts) en vez de hornear "localhost",
+#  que solo funciona cuando el navegador corre en la misma
+#  máquina que el gateway.
 # ============================================================
 FROM node:20-alpine AS build
 WORKDIR /app
-ARG EXPO_PUBLIC_API_URL=http://localhost:8080
+ARG EXPO_PUBLIC_API_URL=
 ENV EXPO_PUBLIC_API_URL=${EXPO_PUBLIC_API_URL}
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund

@@ -410,6 +410,11 @@ services:
       SMTP_STARTTLS: "${SMTP_STARTTLS:-true}"
       SMTP_TIMEOUT_SECONDS: "${SMTP_TIMEOUT_SECONDS:-10}"
       EMAIL_INTERNAL_TOKEN: "${EMAIL_INTERNAL_TOKEN:-}"
+      # Webhook de alertas EMAIL/PUSH (SERVICE.md §9.2): WEBHOOK_URL vacío =
+      # entrega deshabilitada (no-op), igual que SMTP_HOST arriba.
+      WEBHOOK_URL: "${WEBHOOK_URL:-}"
+      WEBHOOK_SECRET: "${WEBHOOK_SECRET:-}"
+      WEBHOOK_TIMEOUT_SECONDS: "${WEBHOOK_TIMEOUT_SECONDS:-5}"
     ports:
       - "${BIND_IP:-127.0.0.1}:8088:8088"
     extra_hosts:

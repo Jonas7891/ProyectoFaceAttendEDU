@@ -332,6 +332,8 @@
     "successMessage": "Justification sent successfully!",
     "dateFormat": "YYYY-MM-DD",
     "timeFormat": "HH:MM AM/PM",
+    "invalidDateFormat": "Enter the date in YYYY-MM-DD format",
+    "invalidTimeFormat": "Enter the time in HH:MM AM/PM format",
     "descriptionPlaceholder": "Write the description of the reason here...",
     "attachDocument": "Attach Document",
     "selectFile": "Select File",
@@ -682,6 +684,7 @@
     "subject": "Subject",
     "validation": "Validation",
     "nameRequired": "Name is required",
+    "invalidEmail": "The email entered is not valid",
     "confirm": "Confirm",
     "deleteQuestion": "Delete record?",
     "accessDenied": "Access denied",
@@ -767,7 +770,9 @@
       "required": "This field is required",
       "invalidEmail": "Invalid email",
       "invalidPhone": "Invalid phone number",
-      "mustBeNumber": "Must be a number"
+      "mustBeNumber": "Must be a number greater than or equal to 0",
+      "invalidDateRange": "Start date must be before end date",
+      "fixErrorsBeforeSaving": "Fix the marked fields before saving"
     },
     "errors": {
       "schoolNotFound": "The school to update could not be identified",
@@ -928,6 +933,8 @@
     "validation": "Validation",
     "nameRequired": "Name is required.",
     "locationRequired": "Location is required.",
+    "typeRequired": "Type is required.",
+    "capacityInvalid": "Capacity must be a number greater than 0.",
     "confirm": "Confirm",
     "deleteQuestion": "Are you sure you want to delete this environment?"
   },

@@ -21,6 +21,7 @@ import {useCustomAlert} from '../components/common/useCustomAlert';
 import CustomAlert from '../components/common/CustomAlert';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import {useManageUsersViewModel} from '../../viewmodels/useManageUsersViewModel';
+import {validateEmail} from '../../utils/validators';
 
 export default function ManageUsersScreen({navigation, userRole, onLogout}) {
     const {t} = useTranslation();
@@ -40,7 +41,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
         addTeacher,
         updateTeacher,
         deleteTeacher,
-    } = useManageUsersViewModel();
+    } = useManageUsersViewModel(userRole === 'Administrador');
 
     const [tab, setTab] = useState('students');
     const [modalVisible, setModalVisible] = useState(false);
@@ -100,6 +101,10 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
         Keyboard.dismiss();
         if (!form.nombre) {
             showError(t('manageUsers.validation'), t('manageUsers.nameRequired'));
+            return;
+        }
+        if (form.email && !validateEmail(form.email)) {
+            showError(t('manageUsers.validation'), t('manageUsers.invalidEmail'));
             return;
         }
         if (modalMode === 'edit') {

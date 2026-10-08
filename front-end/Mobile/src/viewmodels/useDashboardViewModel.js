@@ -197,9 +197,27 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                     const absent = records.filter(r => r.attendance_status === 'Absent').length;
                     const late = records.filter(r => r.attendance_status === 'Late').length;
                     const total = records.length || 1;
+
+                    // "Profesores presentes": instructores (actor_type_id 2) que
+                    // abrieron al menos una sesión de clase hoy, sobre el total
+                    // de instructores — antes se mezclaban estudiantes y
+                    // registros de cualquier fecha (attendance-records sin filtro
+                    // de fecha ni de tipo de actor).
+                    const todayKeyAdmin = formatDateKey(new Date());
+                    const [instructorsRaw, sessionsToday] = await Promise.all([
+                        backendGet(ACAD(), 'api/v1/academic-actors', { limit: 2000 }, { useCache: true }),
+                        backendGet(SCHED(), 'api/v1/class-sessions', {}, { useCache: true }),
+                    ]);
+                    const totalInstructors = instructorsRaw.filter((a) => a.actor_type_id === 2).length;
+                    const instructorsPresentToday = new Set(
+                        sessionsToday
+                            .filter((s) => s.session_date === todayKeyAdmin && s.opened_by != null)
+                            .map((s) => s.opened_by)
+                    ).size;
+
                     setAdminStats({
-                        totalEmpleados: total,
-                        presentesHoy: present,
+                        totalEmpleados: totalInstructors || total,
+                        presentesHoy: instructorsPresentToday,
                         ausentesHoy: absent,
                         tardanzasHoy: late,
                         porcentajeAsistencia: Math.round((present / total) * 100),

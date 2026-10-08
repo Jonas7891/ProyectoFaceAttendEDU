@@ -4,6 +4,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -23,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,6 +40,8 @@ import java.util.regex.Pattern;
  */
 @Component
 public class AuthTokenFilter extends OncePerRequestFilter {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthTokenFilter.class);
 
     private static final List<String> PUBLIC_PREFIXES = List.of(
             "/health", "/api/v1/health", "/api/health",
@@ -144,20 +149,44 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         return headers;
     }
 
+    /**
+     * Un reintento tras una pausa corta: justo después de `docker compose up`,
+     * identity/authorization pueden pasar su healthcheck mientras su pool de
+     * conexiones a Postgres todavía calienta, y esa primera llamada lenta
+     * superaba el timeout y denegaba sesiones válidas con 401/403 silenciosos
+     * (sin ningún log que lo explicara).
+     */
+    private <T> T withRetry(Supplier<T> call, T onFailure, String what) {
+        try {
+            return call.get();
+        } catch (Exception first) {
+            try {
+                Thread.sleep(250);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                return onFailure;
+            }
+            try {
+                return call.get();
+            } catch (Exception second) {
+                log.warn("AuthTokenFilter: {} failed twice: {}", what, second.getMessage());
+                return onFailure;
+            }
+        }
+    }
+
     @SuppressWarnings("unchecked")
     private Map<?, ?> fetchSession(String rawToken, UUID sessionId) {
-        try {
+        return withRetry(() -> {
             ResponseEntity<Map> response = restTemplate.exchange(
                     identityUrl + "/api/v1/sessions/" + sessionId, HttpMethod.GET,
                     new HttpEntity<>(bearerHeaders(rawToken)), Map.class);
             return response.getBody();
-        } catch (Exception e) {
-            return null;
-        }
+        }, null, "fetchSession(" + sessionId + ")");
     }
 
     private List<String> fetchRoles(String rawToken, String userId) {
-        try {
+        return withRetry(() -> {
             ResponseEntity<List> response = restTemplate.exchange(
                     authorizationUrl + "/api/v1/users/" + userId + "/roles", HttpMethod.GET,
                     new HttpEntity<>(bearerHeaders(rawToken)), List.class);
@@ -171,22 +200,18 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                 }
             }
             return roles;
-        } catch (Exception e) {
-            return null;
-        }
+        }, null, "fetchRoles(" + userId + ")");
     }
 
     @SuppressWarnings("unchecked")
     private boolean evaluate(String rawToken, String userId, String permission) {
-        try {
+        return withRetry(() -> {
             ResponseEntity<Map> response = restTemplate.exchange(
                     authorizationUrl + "/api/v1/auth/evaluate?userId=" + userId + "&permission=" + permission,
                     HttpMethod.GET, new HttpEntity<>(bearerHeaders(rawToken)), Map.class);
             Map<?, ?> result = response.getBody();
             return result != null && Boolean.TRUE.equals(result.get("allowed"));
-        } catch (Exception e) {
-            return false;
-        }
+        }, false, "evaluate(" + userId + ", " + permission + ")");
     }
 
     /**

@@ -2,7 +2,7 @@ import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
 const API_PORT = 8080;
-const DEFAULT_HOST = '10.3.233.33';
+const DEFAULT_HOST = '192.168.1.3';
 
 /**
  * Resolución automática del host del backend:

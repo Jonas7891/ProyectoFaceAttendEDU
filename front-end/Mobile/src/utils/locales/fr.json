@@ -332,6 +332,8 @@
     "successMessage": "Justification envoyée avec succès !",
     "dateFormat": "AAAA-MM-JJ",
     "timeFormat": "HH:MM AM/PM",
+    "invalidDateFormat": "Saisissez la date au format AAAA-MM-JJ",
+    "invalidTimeFormat": "Saisissez l'heure au format HH:MM AM/PM",
     "descriptionPlaceholder": "Écrivez ici la description du motif...",
     "attachDocument": "Joindre un document",
     "selectFile": "Sélectionner un fichier",
@@ -682,6 +684,7 @@
     "subject": "Matière",
     "validation": "Validation",
     "nameRequired": "Le nom est requis",
+    "invalidEmail": "L'e-mail saisi n'est pas valide",
     "confirm": "Confirmer",
     "deleteQuestion": "Supprimer l'enregistrement?",
     "accessDenied": "Accès refusé",
@@ -767,7 +770,9 @@
       "required": "Ce champ est obligatoire",
       "invalidEmail": "E-mail invalide",
       "invalidPhone": "Numéro de téléphone invalide",
-      "mustBeNumber": "Doit être un nombre"
+      "mustBeNumber": "Doit être un nombre supérieur ou égal à 0",
+      "invalidDateRange": "La date de début doit être antérieure à la date de fin",
+      "fixErrorsBeforeSaving": "Corrigez les champs signalés avant d'enregistrer"
     },
     "errors": {
       "schoolNotFound": "Impossible d'identifier l'établissement à mettre à jour",
@@ -928,6 +933,8 @@
     "validation": "Validation",
     "nameRequired": "Le nom est obligatoire.",
     "locationRequired": "L'emplacement est obligatoire.",
+    "typeRequired": "Le type est obligatoire.",
+    "capacityInvalid": "La capacité doit être un nombre supérieur à 0.",
     "confirm": "Confirmer",
     "deleteQuestion": "Voulez-vous vraiment supprimer cet environnement ?"
   },
