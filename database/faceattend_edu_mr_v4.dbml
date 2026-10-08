@@ -704,6 +704,180 @@ Table biometric_update_case {
 
 
 ////////////////////////////////////////////////////////////
+// QUALITY
+// Instrumento ISO/IEC 25010, ISO/IEC 29110 e ISTQB de 09-ms-quality.
+// Hospedaje físico transitorio en el schema `quality` dentro de
+// 07-ms-configuration-db (no existe changelog propio para 09-ms-quality).
+// Catálogos de subcaracterísticas/objetivos/ítems viven en código
+// (09-ms-quality/src/domain/{iso25010,iso29110,istqb}.ts), no en tablas.
+////////////////////////////////////////////////////////////
+
+Table quality_project {
+  project_id bigint [pk, increment]
+  project_name varchar [not null]
+  description varchar [null]
+  customer varchar [null, note: 'Cliente/usuario que acepta la entrega (evidencia WP10)']
+  planned_start_on date [null]
+  planned_end_on date [null]
+  chk_quality_project_dates planned_start_on [note: 'CHECK: planned_start_on <= planned_end_on']
+  project_status varchar [not null, default: 'Planned', note: 'ENUM: Planned / Active / Closed']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    project_status [name: 'idx_quality_project_status']
+    deleted_at [name: 'idx_quality_project_deleted']
+  }
+}
+
+Table quality_evaluation {
+  evaluation_id bigint [pk, increment]
+  service_name varchar [not null, note: 'Microservicio evaluado, ej. 03-ms-academic (sin FK)']
+  evaluator_name varchar [not null]
+  evaluation_scope varchar [not null]
+  project_id bigint [null, note: 'Trazabilidad ISO/IEC 29110 SI.O2']
+  evaluation_status varchar [not null, default: 'Draft', note: 'ENUM: Draft / Completed']
+  comments text [null]
+  global_score decimal [null, note: 'Puntaje ponderado 1-5, derivado de quality_evaluation_item']
+  percentage decimal [null]
+  quality_level varchar [null, note: 'ENUM: Deficiente / En proceso / Aceptable / Bueno / Excelente']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    service_name [name: 'idx_quality_evaluation_service']
+    evaluation_status [name: 'idx_quality_evaluation_status']
+    project_id [name: 'idx_quality_evaluation_project']
+    deleted_at [name: 'idx_quality_evaluation_deleted']
+  }
+}
+
+Table quality_evaluation_item {
+  evaluation_item_id bigint [pk, increment]
+  evaluation_id bigint [not null]
+  subcharacteristic_code varchar [not null, note: 'Catálogo ISO/IEC 25010 en código, sin FK']
+  score smallint [not null, note: 'CHECK: 1..5']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes { (evaluation_id, subcharacteristic_code) [unique, name: 'uq_quality_evaluation_item_code'] }
+}
+
+Table process_assessment {
+  assessment_id bigint [pk, increment]
+  project_id bigint [not null]
+  process_code varchar [not null, note: 'ENUM: PM (Gestión de Proyecto) / SI (Implementación de Software)']
+  assessor_name varchar [not null]
+  assessment_status varchar [not null, default: 'Draft', note: 'ENUM: Draft / Completed']
+  comments text [null]
+  process_score decimal [null, note: '% de logro 0-100, derivado de process_assessment_rating']
+  process_rating varchar [null, note: 'ENUM: N / P / L / F']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    project_id [name: 'idx_process_assessment_project']
+    process_code [name: 'idx_process_assessment_process']
+    deleted_at [name: 'idx_process_assessment_deleted']
+  }
+}
+
+Table process_assessment_rating {
+  process_rating_id bigint [pk, increment]
+  assessment_id bigint [not null]
+  objective_code varchar [not null, note: 'Catálogo ISO/IEC 29110 en código, ej. PM.O1, sin FK']
+  objective_rating varchar [not null, note: 'ENUM: N / P / L / F']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes { (assessment_id, objective_code) [unique, name: 'uq_process_assessment_rating_objective'] }
+}
+
+Table istqb_assessment {
+  istqb_assessment_id bigint [pk, increment]
+  service_name varchar [not null, note: 'Microservicio evaluado (sin FK)']
+  evaluator_name varchar [not null]
+  assessment_scope varchar [not null]
+  project_id bigint [null, note: 'Trazabilidad ISO/IEC 29110 SI.O2/SI.O7']
+  assessment_status varchar [not null, default: 'Draft', note: 'ENUM: Draft / Completed']
+  comments text [null]
+  global_score decimal [null]
+  percentage decimal [null]
+  quality_level varchar [null, note: 'ENUM: Deficiente / En proceso / Aceptable / Bueno / Excelente']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    service_name [name: 'idx_istqb_assessment_service']
+    assessment_status [name: 'idx_istqb_assessment_status']
+    project_id [name: 'idx_istqb_assessment_project']
+    deleted_at [name: 'idx_istqb_assessment_deleted']
+  }
+}
+
+Table istqb_assessment_item {
+  istqb_assessment_item_id bigint [pk, increment]
+  istqb_assessment_id bigint [not null]
+  item_code varchar [not null, note: 'Catálogo ISTQB CTFL v4.0 en código, sin FK']
+  score smallint [not null, note: 'CHECK: 1..5']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes { (istqb_assessment_id, item_code) [unique, name: 'uq_istqb_assessment_item_code'] }
+}
+
+// Relaciones internas (Quality)
+Ref: quality_evaluation.project_id > quality_project.project_id
+Ref: quality_evaluation_item.evaluation_id > quality_evaluation.evaluation_id
+Ref: process_assessment.project_id > quality_project.project_id
+Ref: process_assessment_rating.assessment_id > process_assessment.assessment_id
+Ref: istqb_assessment.project_id > quality_project.project_id
+Ref: istqb_assessment_item.istqb_assessment_id > istqb_assessment.istqb_assessment_id
+
+
+////////////////////////////////////////////////////////////
 // BOUNDED CONTEXTS (AgrupaciÃ³n visual)
 ////////////////////////////////////////////////////////////
 
@@ -755,6 +929,16 @@ TableGroup Configuration [color: #34495e] {
   academic_configuration
   security_configuration
   biometric_update_case
+}
+
+TableGroup Quality [color: #8e44ad] {
+  quality_project
+  quality_evaluation
+  quality_evaluation_item
+  process_assessment
+  process_assessment_rating
+  istqb_assessment
+  istqb_assessment_item
 }
 
 // Nota: el grupo "Biometric" ya no contiene tablas SQL en este archivo.

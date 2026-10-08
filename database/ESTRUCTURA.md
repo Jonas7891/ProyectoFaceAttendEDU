@@ -34,10 +34,11 @@ database/
 | 02 | `02-ms-authorization-db` | Authorization | `authorization` | `role`, `permission`, `role_permission`, `user_role` |
 | 03 | `03-ms-academic-db` | Academic | `academic` | `school`, `program`, `academic_period`, `cohort`, `course`, `academic_actor_type`, `academic_actor`, `enrollment` |
 | 04 | `04-ms-scheduling-db` | Scheduling | `scheduling` | `environment`, `schedule_block`, `class_session` |
-| 05 | `05-ms-attendance-db` | Attendance | `attendance` | `attendance_record`, `justification_type`, `justification`, `supporting_document` |
+| 05 | `05-ms-attendance-db` | Attendance | `attendance` | `attendance_record`, `justification_type`, `justification`, `supporting_document`, `attendance_report` |
 | 06 | `06-ms-biometric-db` | Biometric | `biometric` | Solo schema (colecciones NoSQL documentadas aparte) |
 | 07 | `07-ms-configuration-db` | Configuration | `configuration` | `academic_configuration`, `security_configuration`, `biometric_update_case` |
 | 08 | `08-ms-notification-db` | Notification | `notification` | `alert_type`, `alert` |
+| — | `07-ms-configuration-db` (hospedado) | Quality | `quality` | `quality_project`, `quality_evaluation`, `quality_evaluation_item`, `process_assessment`, `process_assessment_rating`, `istqb_assessment`, `istqb_assessment_item` — sin changelog propio: no existe un servicio `quality-liquibase`, así que migra junto con Configuration |
 
 ---
 
