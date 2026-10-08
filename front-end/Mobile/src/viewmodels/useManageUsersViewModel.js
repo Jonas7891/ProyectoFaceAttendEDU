@@ -14,7 +14,7 @@ function unwrap(data) {
   return [];
 }
 
-export function useManageUsersViewModel() {
+export function useManageUsersViewModel(enabled = true) {
   const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -72,8 +72,14 @@ export function useManageUsersViewModel() {
   }, []);
 
   useEffect(() => {
+    // Solo Administrador puede listar/gestionar usuarios: evita la petición
+    // mientras la pantalla valida el rol (o si se monta sin permiso).
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
     fetchUsers();
-  }, [fetchUsers]);
+  }, [enabled, fetchUsers]);
 
   const searchStudents = useCallback((query) => {
     if (!query || !query.trim()) return [];

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     FlatList,
     Keyboard,
@@ -33,7 +33,14 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
         addAmbiente,
         updateAmbiente,
         deleteAmbiente,
-    } = useManageEnvironmentViewModel();
+    } = useManageEnvironmentViewModel(userRole === 'Administrador');
+
+    useEffect(() => {
+        if (userRole && userRole !== 'Administrador') {
+            showError(t('manageUsers.accessDenied'), t('manageUsers.onlyAdmins'));
+            navigation.goBack();
+        }
+    }, [userRole, navigation, showError]);
 
     const [modalVisible, setModalVisible] = useState(false);
     const [modalMode, setModalMode] = useState(null);

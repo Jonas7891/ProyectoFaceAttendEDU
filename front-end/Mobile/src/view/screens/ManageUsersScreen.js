@@ -40,7 +40,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
         addTeacher,
         updateTeacher,
         deleteTeacher,
-    } = useManageUsersViewModel();
+    } = useManageUsersViewModel(userRole === 'Administrador');
 
     const [tab, setTab] = useState('students');
     const [modalVisible, setModalVisible] = useState(false);

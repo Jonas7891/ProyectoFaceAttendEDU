@@ -220,7 +220,14 @@ export default function App() {
                                 />
                             )}
                         </Stack.Screen>
-                        <Stack.Screen name="ManageEnviromentScreen" component={ManageEnviromentScreen}/>
+                        <Stack.Screen name="ManageEnviromentScreen">
+                            {props => (
+                                <ManageEnviromentScreen
+                                    {...props}
+                                    userRole={userRole}
+                                />
+                            )}
+                        </Stack.Screen>
                         <Stack.Screen name="AttendanceReportScreen" component={AttendanceReportScreen}/>
                         <Stack.Screen name="SchoolConfigurationScreen" component={SchoolConfigurationScreen}/>
                         <Stack.Screen name="PendingJustificationScreen" component={PendingJustificationScreen}/>
