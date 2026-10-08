@@ -22,6 +22,7 @@ import {
     dayLabel,
     fullName,
     listBlocks,
+    listCohorts,
     listCourses,
     listEnrollments,
     listEnvironments,
@@ -56,27 +57,37 @@ async function coursesFromApi() {
     const [courses, blocks] = await Promise.all([listCourses(), listBlocks()]);
     if (!Array.isArray(courses)) return [];
 
-    const [enrollments, actors, persons, environments] = await Promise.all([
+    const [enrollments, actors, persons, environments, cohorts] = await Promise.all([
         optional(listEnrollments(), []),
         optional(actorMap(), new Map()),
         optional(personMap(), new Map()),
         optional(listEnvironments(), []),
+        optional(listCohorts(), []),
     ]);
 
-    // courseId -> Set(cohortId): los cohortes que imparten este curso
+    // Un curso reutiliza el mismo courseId en períodos distintos (bloques de
+    // semestres pasados quedan igual enlazados), así que solo los cohortes
+    // vigentes cuentan para "cantidad de estudiantes".
+    const activeCohortIds = new Set(
+        cohorts.filter((cohort) => cohort.status !== false).map((cohort) => cohort.cohortId)
+    );
+
+    // courseId -> Set(cohortId): los cohortes vigentes que imparten este curso
     const courseCohorts = new Map();
     for (const block of blocks) {
         if (!block.cohortId || !block.courseId) continue;
+        if (!activeCohortIds.has(block.cohortId)) continue;
         const set = courseCohorts.get(block.courseId) ?? new Set();
         set.add(block.cohortId);
         courseCohorts.set(block.courseId, set);
     }
 
-    // Matrículas activas por cohorte (el alto se cuenta por actor único)
+    // Matrículas activas por cohorte (el alto se cuenta por actor único);
+    // "Completed"/"Withdrawn" ya no son estudiantes actuales del curso.
     const actorsByCohort = new Map();
     for (const enrollment of enrollments) {
         const status = String(enrollment.enrollmentStatus ?? "").toLowerCase();
-        if (status === "withdrawn") continue;
+        if (status !== "active") continue;
         const set = actorsByCohort.get(enrollment.cohortId) ?? new Set();
         set.add(enrollment.academicActorId);
         actorsByCohort.set(enrollment.cohortId, set);
