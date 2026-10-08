@@ -1,4 +1,5 @@
 import { request, GET, POST, PUT, DELETE } from '../api/apiClient';
+import { toSnakeDeep } from '../api/backend';
 import AcademicConfiguration from '../models/configuration/AcademicConfiguration';
 
 const ENDPOINT = 'academic_configuration';
@@ -19,6 +20,12 @@ export const AcademicConfigService = {
   getAll: async (params = {}) => {
     const data = await request({ method: GET, url: ENDPOINT, params, requiresAuth: false });
     return unwrap(data).map(AcademicConfiguration.fromApi);
+  },
+
+  // GET /api/v1/schools/:schoolId/configurations — configuraciones académicas de una sede, filtradas en el servidor.
+  listBySchool: async (schoolId) => {
+    const data = await request({ method: GET, url: `api/v1/schools/${schoolId}/configurations`, requiresAuth: false });
+    return unwrap(data).map((c) => AcademicConfiguration.fromApi(toSnakeDeep(c)));
   },
 
   getById: async (id) => {
