@@ -73,7 +73,14 @@ export default function AcademicView() {
 
     return (
         <View style={{ flex: 1, backgroundColor: c.background.app }}>
-            <PageHeader title={t("Sección académica")} subtitle={t("Estructura académica de tu sede")} />
+            <PageHeader
+                title={t("Sección académica")}
+                subtitle={
+                    vm.hasSchool
+                        ? t("Estructura académica de tu sede")
+                        : t("Estructura académica de la institución")
+                }
+            />
 
             <ScrollView
                 contentContainerStyle={{ padding: isSmall ? 16 : 24, gap: 24 }}

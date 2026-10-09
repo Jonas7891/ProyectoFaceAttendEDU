@@ -66,6 +66,9 @@ export function useAcademicViewModel() {
         periods,
         cohorts,
         courses,
+        // false cuando la sesión no tiene sede (super admin): no se le habla
+        // de "tu sede" porque no pertenece a ninguna.
+        hasSchool: schoolId != null,
         programName,
         refresh: load,
     };
