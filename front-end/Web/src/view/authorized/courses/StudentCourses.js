@@ -11,7 +11,6 @@
 import React from "react";
 import { View, Text, ScrollView, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
 import { Card, EmptyState } from "../../components/common";
 import { useTheme } from "../../components/hooks/useTheme";
 import { useResponsive } from "../../components/hooks/useResponsive";
@@ -27,20 +26,6 @@ export function StudentCourses({ vm: vmProp }) {
     const vmLocal = useCoursesViewModel();
     const vm = vmProp || vmLocal;
     const { t } = useTranslation();
-    const navigation = useNavigation();
-
-    const handleNavigateToClassmates = React.useCallback(
-        (course) => {
-            navigation.navigate("Users", {
-                section: "students",
-                searchQuery: course.code,
-                sortBy: "name",
-                sortOrder: "asc",
-                filterColumn: "name",
-            });
-        },
-        [navigation]
-    );
 
     if (vm.isLoading) {
         return (
@@ -50,9 +35,10 @@ export function StudentCourses({ vm: vmProp }) {
         );
     }
 
-    // "Compañeros" vive en Usuarios (misma ficha/cohortId) — acá solo se
-    // resume lo propio de Cursos, sin recalcular esa cuenta con datos
-    // parciales (un curso puede compartirse con otra ficha distinta).
+    // Solo lo propio de Cursos: la sección "Compañeros" se retiró del menú
+    // del estudiante, así que la tarjeta ya no enlaza a Usuarios. Acá se
+    // resume sin recalcular cuentas con datos parciales (un curso puede
+    // compartirse con otra ficha distinta).
     const statCards = [
         { label: t("Mis cursos"), value: vm.myStats.total, color: c.brand.primary, icon: "book-open" },
         { label: t("Asistencia promedio"), value: `${vm.myStats.avgAttendance}%`, color: c.status.success, icon: "percent" },
@@ -114,7 +100,6 @@ export function StudentCourses({ vm: vmProp }) {
                             <CourseCard
                                 course={course}
                                 onPress={() => vm.selectCourse(course)}
-                                onStudentsPress={handleNavigateToClassmates}
                             />
                         </View>
                     ))}

@@ -31,7 +31,6 @@ const TAB_LABELS_BY_ROLE = {
         courses: "Mis cursos",
     },
     student: {
-        users: "Compañeros",
         courses: "Mis cursos",
     },
 };
@@ -45,17 +44,17 @@ function getTabLabel(tabKey, role) {
 function getVisibleTabs(role) {
     switch (role) {
         case "admin":
+            // Super admin: sin sede propia, sin "Historial" de personas
+            // (su interés son los reportes y la gestión de escuelas) y sin
+            // "Sede"/"Contactos" como tabs: viven dentro de Configuración.
             return [
                 "dashboard",
+                "reports",
                 "users",
                 "courses",
                 "environments",
-                "reports",
-                "history",
                 "justifications",
-                "schoolInfo",
                 "academic",
-                "contacts",
                 "settings",
             ];
         case "teacher":
@@ -66,24 +65,18 @@ function getVisibleTabs(role) {
                 "reports",
                 "history",
                 "justifications",
-                "schoolInfo",
                 "academic",
-                "contacts",
                 "settings",
             ];
         case "student":
-            // "users" (etiquetado "Compañeros" vía TAB_LABELS_BY_ROLE) ya existía el
-            // componente y el label, pero nunca estuvo en la lista de tabs visibles:
-            // el estudiante no tenía forma de llegar a ver a sus compañeros de ficha.
+            // Sin "users" (Compañeros): el estudiante no necesita consultar
+            // a sus compañeros. "Sede" y "Contactos" viven en Configuración.
             return [
                 "dashboard",
                 "history",
                 "justifications",
-                "schoolInfo",
                 "academic",
-                "contacts",
                 "courses",
-                "users",
                 "settings",
             ];
         default:
