@@ -45,14 +45,47 @@ function getTabLabel(tabKey, role) {
 function getVisibleTabs(role) {
     switch (role) {
         case "admin":
-            return ["dashboard", "users", "courses", "environments", "reports", "settings"];
+            return [
+                "dashboard",
+                "users",
+                "courses",
+                "environments",
+                "reports",
+                "history",
+                "justifications",
+                "schoolInfo",
+                "academic",
+                "contacts",
+                "settings",
+            ];
         case "teacher":
-            return ["dashboard", "users", "courses", "reports", "settings"];
+            return [
+                "dashboard",
+                "users",
+                "courses",
+                "reports",
+                "history",
+                "justifications",
+                "schoolInfo",
+                "academic",
+                "contacts",
+                "settings",
+            ];
         case "student":
             // "users" (etiquetado "Compañeros" vía TAB_LABELS_BY_ROLE) ya existía el
             // componente y el label, pero nunca estuvo en la lista de tabs visibles:
             // el estudiante no tenía forma de llegar a ver a sus compañeros de ficha.
-            return ["dashboard", "courses", "users", "settings"];
+            return [
+                "dashboard",
+                "history",
+                "justifications",
+                "schoolInfo",
+                "academic",
+                "contacts",
+                "courses",
+                "users",
+                "settings",
+            ];
         default:
             return []; //Vacio aproposito, no queremos fugas aunque alguien logre pasar las validaciones
     }
@@ -85,6 +118,23 @@ function buildPermissions(role) {
         canExportReports: isAdmin || isTeacher,
         canNotifyAll: isAdmin,
         canViewAllReports: isAdmin,
+
+        // Historial de asistencia (HU-HIST-001: consulta los 3 roles, AC10/AC11/AC12)
+        canViewHistory: true,
+
+        // Justificaciones (HU-JUS-001 alumno · HU-JUS-002 instructor/admin)
+        // Nota: la matriz de acceso marca Instructor ✅ también para enviar, pero las
+        // reglas de navegación y el mapa de pantallas dicen "solo alumnos".
+        canSubmitJustifications: isStudent,
+        canReviewJustifications: isAdmin || isTeacher,
+
+        // Información de la sede (lectura los 3 roles, edición solo admin)
+        canViewSchoolInfo: true,
+        canEditSchoolInfo: isAdmin,
+
+        // Sección académica y contactos (solo lectura, los 3 roles)
+        canViewAcademic: true,
+        canViewContacts: true,
 
         // Configuración
         canEditAppearance: true,
