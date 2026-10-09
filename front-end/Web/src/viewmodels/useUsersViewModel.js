@@ -20,6 +20,10 @@ import { useAppData } from "../context/AppDataContext";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 
+// Usuarios pintados por página (la vista de Usuarios pagina en el cliente
+// para no cargar miles de filas de golpe en el DOM).
+export const USERS_PAGE_SIZE = 25;
+
 // ── Tipos de usuario ───────────────────────────────────────
 
 export const USER_TYPES = {
@@ -381,6 +385,21 @@ export function useUsersViewModel(
         [scopedUsers, search, userTypeFilter, courseFilter, statusFilter, advancedFilter, roleFilterFromSection, sortBy, sortOrder]
     );
 
+    // ── Paginación ────────────────────────────────────────────
+    // El listado completo (AppData) alimenta además reportes y paneles,
+    // así que no se recorta la consulta: se limita lo que se pinta por
+    // pantalla en páginas de USERS_PAGE_SIZE y se pagina en el cliente.
+    const [page, setPage] = useState(0);
+    const totalUsers = filteredUsers.length;
+    const totalPages = Math.max(1, Math.ceil(totalUsers / USERS_PAGE_SIZE));
+    // Recorte sin useEffect: si los filtros dejan la página fuera de rango
+    // se usa la última válida (regla de hooks: nada de setState en efecto).
+    const safePage = Math.min(page, totalPages - 1);
+    const pageUsers = filteredUsers.slice(
+        safePage * USERS_PAGE_SIZE,
+        safePage * USERS_PAGE_SIZE + USERS_PAGE_SIZE
+    );
+
     // ── Estadísticas derivadas ─────────────────────────────────
     
     const stats = useMemo(() => {
@@ -494,6 +513,13 @@ export function useUsersViewModel(
         // Datos
         allUsers,
         filteredUsers,
+        // Paginación (solo lo que se pinta por página)
+        pageUsers,
+        page: safePage,
+        totalPages,
+        totalUsers,
+        pageSize: USERS_PAGE_SIZE,
+        setPage,
         courses,
         userTypeFilters,
         statusFilters,
