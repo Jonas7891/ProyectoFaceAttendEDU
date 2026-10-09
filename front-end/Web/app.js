@@ -3,6 +3,9 @@ import { NavigationContainer } from "@react-navigation/native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { enableScreens } from "react-native-screens";
 
+// Barras de scroll visibles en web (RN-web las oculta por defecto)
+import "./src/core/utils/webScrollbars";
+
 // Habilitar react-native-screens para mejor performance
 enableScreens();
 
