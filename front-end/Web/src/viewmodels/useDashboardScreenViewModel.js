@@ -8,6 +8,9 @@ import { useTranslation }     from "../core/utils/i18n/hooks/useTranslation";
 // Soporta estructura jerárquica mediante la propiedad "children"
 const ALL_TABS = [
     { key: "dashboard",    label: "Inicio",        icon: "layout"      },
+    // Pantallas de asistencia y de consulta (HU-HIST / HU-JUS / nav-map)
+    { key: "history",       label: "Historial",       icon: "clock"      },
+    { key: "justifications",label: "Justificaciones", icon: "file-text"  },
     { 
         key: "users",     
         label: "Usuarios",       
@@ -23,6 +26,10 @@ const ALL_TABS = [
     { key: "courses",      label: "Cursos",        icon: "book-open"   },
     { key: "environments", label: "Ambientes",     icon: "home"        },
     { key: "reports",      label: "Reportes",      icon: "bar-chart-2" },
+    // Lectura de la sede y del contexto académico (nav-map /school-info, /academic, /contacts)
+    { key: "schoolInfo",   label: "Sede",          icon: "map-pin"     },
+    { key: "academic",     label: "Académico",     icon: "award"       },
+    { key: "contacts",     label: "Contactos",     icon: "mail"        },
     { 
         key: "settings",     
         label: "Configuración",  
