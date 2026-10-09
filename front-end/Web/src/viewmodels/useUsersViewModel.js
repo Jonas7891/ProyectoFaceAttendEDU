@@ -17,6 +17,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
+import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 
 // ── Tipos de usuario ───────────────────────────────────────
@@ -141,6 +142,7 @@ export function useUsersViewModel(
     initialFilterColumn = null
 ) {
     const appData = useAppData();
+    const { user } = useAuth();
     const { t } = useTranslation();
 
     const [search, setSearch] = useState(initialSearchQuery || "");
@@ -206,6 +208,47 @@ export function useUsersViewModel(
         return [...students, ...teachers, ...admins];
     }, [appData.students, appData.teachers, appData.admins]);
 
+    // ── Alcance por rol: "mis estudiantes" (teacher) / "mis compañeros" (student) ──
+    // Teacher: estudiantes matriculados en fichas donde es instructor.
+    // Student: compañeros matriculados en su misma ficha (excluyéndose a sí mismo).
+    // RN de dominio: schedule_block.instructor_actor_id / enrollment.cohort_id
+    // (ver 02-domain/entities-and-rules.md, HU-ACAD-003/004).
+
+    const myCourseIds = useMemo(() => {
+        if (!user || user.role !== "teacher") return null;
+        return (appData.courses || [])
+            .filter((c) => Array.isArray(c.instructorActorIds) && c.instructorActorIds.includes(user.academicActorId))
+            .map((c) => c.id);
+    }, [appData.courses, user]);
+
+    const myStudentRecord = useMemo(() => {
+        if (!user || user.role !== "student") return null;
+        return (appData.students || []).find((s) => s.personId === user.personId) || null;
+    }, [appData.students, user]);
+
+    const scopedUsers = useMemo(() => {
+        if (!user || user.role === "admin") return allUsers;
+
+        if (user.role === "teacher") {
+            if (!myCourseIds) return [];
+            return allUsers.filter(
+                (u) => u.userType === USER_TYPES.STUDENT && myCourseIds.includes(u.courseId)
+            );
+        }
+
+        if (user.role === "student") {
+            if (!myStudentRecord) return [];
+            return allUsers.filter(
+                (u) =>
+                    u.userType === USER_TYPES.STUDENT &&
+                    u.courseId === myStudentRecord.courseId &&
+                    u.id !== myStudentRecord.id
+            );
+        }
+
+        return allUsers;
+    }, [allUsers, user, myCourseIds, myStudentRecord]);
+
     // ── Programas únicos para filtro ──────────────────────────
     
     const courses = useMemo(
@@ -238,7 +281,7 @@ export function useUsersViewModel(
     
     const filteredUsers = useMemo(
         () => {
-            let result = allUsers.filter((user) => {
+            let result = scopedUsers.filter((user) => {
                 // Filtro de búsqueda por nombre, código o email
                 const matchSearch = !search ||
                     user.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -325,7 +368,7 @@ export function useUsersViewModel(
             
             return result;
         },
-        [allUsers, search, userTypeFilter, courseFilter, statusFilter, advancedFilter, roleFilterFromSection, sortBy, sortOrder]
+        [scopedUsers, search, userTypeFilter, courseFilter, statusFilter, advancedFilter, roleFilterFromSection, sortBy, sortOrder]
     );
 
     // ── Estadísticas derivadas ─────────────────────────────────

@@ -25,7 +25,7 @@ import { CourseDetailModal, RegisterCourseModal, ImportCoursesModal } from "./mo
 
 // ── CourseCard (diseño original con datos dinámicos) ──────────────────────────
 
-function CourseCard({ course, onPress, onStudentsPress }) {
+export function CourseCard({ course, onPress, onStudentsPress }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
     const c = theme.colors;

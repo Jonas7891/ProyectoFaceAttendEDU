@@ -24,7 +24,7 @@ import { useResponsive } from "./components/hooks/useResponsive";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useRolePermissions } from "../viewmodels/useRolePermissions";
 import { useCoursesViewModel } from "../viewmodels/useCoursesViewModel";
-import AdminCourses from "./authorized/courses/AdminCourses";
+import { AdminCourses, TeacherCourses, StudentCourses } from "./authorized/courses";
 
 export default function CoursesView() {
     const { isSmall } = useResponsive();
@@ -37,12 +37,29 @@ export default function CoursesView() {
     // Título dinámico según el rol del usuario
     const pageTitle = permissions.getTabLabel("courses") || t("Cursos");
 
-    // Subtitle dinámico con contador de cursos
+    // Subtitle dinámico: admin ve el total del sistema, teacher/student ven
+    // el tamaño de su propio alcance (mis fichas / mi ficha).
+    const visibleCount = permissions.isAdmin ? vm.filtered.length : vm.myFiltered.length;
+    const baseLabel = permissions.isAdmin
+        ? t("Gestiona los cursos del sistema")
+        : permissions.isTeacher
+        ? t("Consulta las fichas que tienes asignadas")
+        : t("Consulta tu ficha y tu progreso");
     const pageSubtitle = vm.isLoading
-        ? `${t("Gestiona los cursos del sistema")} (${t("Cargando cursos")}...)`
-        : `${t("Gestiona los cursos del sistema")} (${vm.filtered.length} ${
-              vm.filtered.length !== 1 ? t("cursos encontrados") : t("curso encontrado")
+        ? `${baseLabel} (${t("Cargando cursos")}...)`
+        : `${baseLabel} (${visibleCount} ${
+              visibleCount !== 1 ? t("cursos encontrados") : t("curso encontrado")
           })`;
+
+    // Determinar qué componente de courses renderizar según rol
+    let CoursesComponent;
+    if (permissions.isAdmin) {
+        CoursesComponent = <AdminCourses vm={vm} />;
+    } else if (permissions.isTeacher) {
+        CoursesComponent = <TeacherCourses vm={vm} />;
+    } else {
+        CoursesComponent = <StudentCourses vm={vm} />;
+    }
 
     // Renderizar UI completa
     return (
@@ -79,7 +96,7 @@ export default function CoursesView() {
                 }
             />
 
-            <AdminCourses vm={vm} />
+            {CoursesComponent}
         </View>
     );
 }

@@ -116,10 +116,14 @@ async function coursesFromApi() {
         }
 
         const professorNames = [];
+        const instructorActorIds = [];
         for (const block of courseBlocks) {
             const person = personOf(block.instructorActorId, actors, persons);
             const name = fullName(person);
             if (name && !professorNames.includes(name)) professorNames.push(name);
+            if (block.instructorActorId != null && !instructorActorIds.includes(block.instructorActorId)) {
+                instructorActorIds.push(block.instructorActorId);
+            }
         }
 
         const days = [];
@@ -136,6 +140,9 @@ async function coursesFromApi() {
             code: course.code ?? "",
             name: course.name ?? "",
             professor: professorNames.length ? professorNames.join(", ") : null,
+            // IDs de los instructores (academic_actor_id) de los bloques de este curso.
+            // Permite acotar "mis fichas" para el rol teacher; `professor` es solo el nombre.
+            instructorActorIds,
             students: studentIds.size,
             schedule: days.join(", ") || null,
             room: environment ? String(environment.code ?? environment.name ?? "") : null,
