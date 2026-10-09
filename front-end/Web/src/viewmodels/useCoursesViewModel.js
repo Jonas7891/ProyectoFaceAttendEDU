@@ -13,6 +13,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
+import { useAuth } from "../context/AuthContext";
 
 // ── Formulario vacío ───────────────────────────────────────
 
@@ -107,6 +108,7 @@ function sortByColumn(array, column, direction) {
 
 export function useCoursesViewModel() {
     const appData = useAppData();
+    const { user } = useAuth();
 
     const [search, setSearch] = useState("");
     const [instructorFilter, setInstructorFilter] = useState("");
@@ -246,10 +248,55 @@ export function useCoursesViewModel() {
         [courses, search, instructorFilter, statusFilter, advancedFilter]
     );
 
+    // ── Alcance por rol: "mis fichas" (teacher) / "mi ficha" (student) ──
+    // Teacher: fichas donde es instructor de algún bloque (instructorActorIds).
+    // Student: la ficha en la que está matriculado (su propio courseId).
+    // RN de dominio: schedule_block.instructor_actor_id / enrollment.academic_actor_id
+    // (ver 02-domain/entities-and-rules.md, HU-ACAD-003/004).
+
+    const myCourseIds = useMemo(() => {
+        if (!user) return [];
+        if (user.role === "teacher") {
+            return courses
+                .filter((c) => Array.isArray(c.instructorActorIds) && c.instructorActorIds.includes(user.academicActorId))
+                .map((c) => c.id);
+        }
+        if (user.role === "student") {
+            const mine = (appData.students || []).find((s) => s.personId === user.personId);
+            return mine ? [mine.courseId] : [];
+        }
+        return [];
+    }, [courses, user, appData.students]);
+
+    const myCourses = useMemo(
+        () => courses.filter((c) => myCourseIds.includes(c.id)),
+        [courses, myCourseIds]
+    );
+
+    const myFiltered = useMemo(() => {
+        if (!search) return myCourses;
+        const q = search.toLowerCase();
+        return myCourses.filter(
+            (c) =>
+                c.name.toLowerCase().includes(q) ||
+                c.code.toLowerCase().includes(q) ||
+                (c.professor && c.professor.toLowerCase().includes(q))
+        );
+    }, [myCourses, search]);
+
+    const myStats = useMemo(() => {
+        const totalStudents = myCourses.reduce((a, x) => a + (x.students || 0), 0);
+        const avgAttendance = myCourses.length === 0
+            ? 0
+            : Math.round(myCourses.reduce((a, x) => a + (x.avgAttendance || 0), 0) / myCourses.length);
+        const alertCount = myCourses.filter((x) => (x.avgAttendance || 0) < 80).length;
+        return { total: myCourses.length, totalStudents, avgAttendance, alertCount };
+    }, [myCourses]);
+
     // ── Estadísticas derivadas ─────────────────────────────────
-    
-    const totalStudents = useMemo(() => 
-        courses.reduce((a, x) => a + x.students, 0), 
+
+    const totalStudents = useMemo(() =>
+        courses.reduce((a, x) => a + x.students, 0),
         [courses]
     );
 
@@ -367,6 +414,9 @@ export function useCoursesViewModel() {
         // Datos
         courses: courses || [],
         filtered: filtered || [],
+        myCourses,
+        myFiltered,
+        myStats,
         instructors,
         statusFilters,
         selected,

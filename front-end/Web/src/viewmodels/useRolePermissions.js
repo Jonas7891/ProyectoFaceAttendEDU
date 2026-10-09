@@ -28,9 +28,11 @@ const TAB_LABELS_BY_ROLE = {
     },
     teacher: {
         users: "Alumnos",
+        courses: "Mis fichas",
     },
     student: {
         users: "Compañeros",
+        courses: "Mi ficha",
     },
 };
 
@@ -47,7 +49,10 @@ function getVisibleTabs(role) {
         case "teacher":
             return ["dashboard", "users", "courses", "reports", "settings"];
         case "student":
-            return ["dashboard", "courses", "settings"];
+            // "users" (etiquetado "Compañeros" vía TAB_LABELS_BY_ROLE) ya existía el
+            // componente y el label, pero nunca estuvo en la lista de tabs visibles:
+            // el estudiante no tenía forma de llegar a ver a sus compañeros de ficha.
+            return ["dashboard", "courses", "users", "settings"];
         default:
             return []; //Vacio aproposito, no queremos fugas aunque alguien logre pasar las validaciones
     }
