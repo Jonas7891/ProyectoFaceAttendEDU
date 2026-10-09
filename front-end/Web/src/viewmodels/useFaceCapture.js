@@ -14,6 +14,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Platform } from "react-native";
 import { biometricCaptureApi } from "../services/api/biometricCaptureApi";
+import { personMap, fullName } from "../services/api/referenceData";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 
 const FRAMES_PER_GESTURE = 6;
@@ -192,10 +193,9 @@ export function useFaceCapture({ vm }) {
                     imageBase64: liveness.image,
                     challengeToken: liveness.challengeToken,
                 });
-                setStatus(
-                    `${t("Persona reconocida")}: ${data.person_id} (${t("puntaje")}: ${Number(data.score).toFixed(3)})`,
-                    "ok"
-                );
+                const persons = await personMap();
+                const name = fullName(persons.get(data.person_id)) || data.person_id;
+                setStatus(`${t("Persona reconocida")}: ${name}`, "ok");
             }),
         [withLiveness, setStatus, captureLiveness, t]
     );

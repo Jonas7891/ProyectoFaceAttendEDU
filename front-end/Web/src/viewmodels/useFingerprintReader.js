@@ -14,6 +14,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Platform } from "react-native";
 import { biometricCaptureApi } from "../services/api/biometricCaptureApi";
+import { personMap, fullName } from "../services/api/referenceData";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 
 // ms-biometric exige finger_number (1..10); el lector no lo reporta, así que
@@ -334,7 +335,9 @@ export function useFingerprintReader({ vm }) {
                     quality: sample.quality,
                 });
                 consumeSample();
-                setStatus(`${t("Huella reconocida")}: ${data.person_id}`, "ok");
+                const persons = await personMap();
+                const name = fullName(persons.get(data.person_id)) || data.person_id;
+                setStatus(`${t("Huella reconocida")}: ${name}`, "ok");
             }),
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [run, setStatus, t]
