@@ -81,6 +81,22 @@ async function studentsFromApi() {
             .map((e) => [e.academicActorId, e.cohortId])
     );
 
+    // Un cohorte/ficha cursa VARIOS cursos a la vez (un schedule_block por
+    // curso, cada uno con su propio instructor) — por eso se guarda el Set
+    // completo, no solo "el primer bloque encontrado": con un solo curso por
+    // cohorte, un estudiante quedaba con el curso equivocado en cuanto su
+    // ficha tenía más de un bloque (p. ej. Cálculo en vez de Programación),
+    // y no aparecía entre los estudiantes del instructor que sí lo tiene.
+    const coursesByCohort = new Map();
+    for (const block of blocks) {
+        if (!block.cohortId || !block.courseId) continue;
+        const set = coursesByCohort.get(block.cohortId) ?? new Set();
+        set.add(block.courseId);
+        coursesByCohort.set(block.cohortId, set);
+    }
+    // Compat: "el" curso de la ficha para las columnas que muestran uno solo
+    // (p. ej. "Programa" en la tabla de usuarios). Resuelto por orden de
+    // bloques; se mantiene por compatibilidad visual, no para cruces de datos.
     const courseByCohort = new Map();
     for (const block of blocks) {
         if (block.cohortId && block.courseId && !courseByCohort.has(block.cohortId)) {
@@ -113,6 +129,9 @@ async function studentsFromApi() {
             const cohort = cohortId ? cohorts.get(cohortId) : null;
             const courseId = cohortId ? courseByCohort.get(cohortId) : null;
             const course = courseId ? courses.get(courseId) : null;
+            const courseIds = cohortId
+                ? [...(coursesByCohort.get(cohortId) ?? [])].map(String)
+                : [];
 
             return {
                 id: String(actor.academicActorId),
@@ -124,6 +143,12 @@ async function studentsFromApi() {
                 // en las dos), así que buscar por ellos cuelga al estudiante del curso
                 // equivocado. El id sí es único: es el que debe usarse para cruzar.
                 courseId: courseId != null ? String(courseId) : null,
+                // Todos los cursos de la ficha del estudiante (no solo el primero):
+                // para acotar "mis estudiantes" (teacher) por curso hay que mirar
+                // todos, no asumir uno solo por ficha.
+                courseIds,
+                // Ficha (cohort) del estudiante: compañeros = misma cohortId.
+                cohortId: cohortId != null ? String(cohortId) : null,
                 grade: null, // lo rellena AppDataContext con el período del curso
                 attendance: rateOf(actor.academicActorId),
                 status: normalizeStatus(actor.status),

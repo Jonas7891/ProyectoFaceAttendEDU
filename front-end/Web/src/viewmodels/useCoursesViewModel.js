@@ -263,7 +263,9 @@ export function useCoursesViewModel() {
         }
         if (user.role === "student") {
             const mine = (appData.students || []).find((s) => s.personId === user.personId);
-            return mine ? [mine.courseId] : [];
+            // Una ficha cursa varios cursos a la vez: courseIds trae todos los
+            // que tiene asignados su cohorte, no solo el primero (courseId).
+            return mine && Array.isArray(mine.courseIds) ? mine.courseIds : [];
         }
         return [];
     }, [courses, user, appData.students]);

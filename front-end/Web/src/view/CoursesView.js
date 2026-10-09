@@ -43,8 +43,8 @@ export default function CoursesView() {
     const baseLabel = permissions.isAdmin
         ? t("Gestiona los cursos del sistema")
         : permissions.isTeacher
-        ? t("Consulta las fichas que tienes asignadas")
-        : t("Consulta tu ficha y tu progreso");
+        ? t("Consulta los cursos que tienes asignados")
+        : t("Consulta tus cursos y tu progreso");
     const pageSubtitle = vm.isLoading
         ? `${baseLabel} (${t("Cargando cursos")}...)`
         : `${baseLabel} (${visibleCount} ${

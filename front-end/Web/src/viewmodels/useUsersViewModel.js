@@ -231,17 +231,27 @@ export function useUsersViewModel(
 
         if (user.role === "teacher") {
             if (!myCourseIds) return [];
+            // Una ficha cursa varios cursos a la vez (un bloque por curso, cada
+            // uno con su propio instructor): hay que mirar TODOS los cursos del
+            // estudiante (courseIds), no solo el primero que trae su registro.
             return allUsers.filter(
-                (u) => u.userType === USER_TYPES.STUDENT && myCourseIds.includes(u.courseId)
+                (u) =>
+                    u.userType === USER_TYPES.STUDENT &&
+                    Array.isArray(u.courseIds) &&
+                    u.courseIds.some((id) => myCourseIds.includes(id))
             );
         }
 
         if (user.role === "student") {
             if (!myStudentRecord) return [];
+            // "Compañeros" = misma ficha (cohortId), no el mismo curso puntual:
+            // dos compañeros de ficha pueden tener cursos distintos entre sí
+            // en algún bloque, pero siguen siendo compañeros de ficha.
             return allUsers.filter(
                 (u) =>
                     u.userType === USER_TYPES.STUDENT &&
-                    u.courseId === myStudentRecord.courseId &&
+                    u.cohortId != null &&
+                    u.cohortId === myStudentRecord.cohortId &&
                     u.id !== myStudentRecord.id
             );
         }

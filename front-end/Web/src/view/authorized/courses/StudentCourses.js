@@ -50,13 +50,12 @@ export function StudentCourses({ vm: vmProp }) {
         );
     }
 
-    // "Compañeros" = matriculados en la ficha sin contarme a mí mismo.
-    const classmatesCount = Math.max(0, (vm.myCourses[0]?.students || 0) - 1);
-
+    // "Compañeros" vive en Usuarios (misma ficha/cohortId) — acá solo se
+    // resume lo propio de Cursos, sin recalcular esa cuenta con datos
+    // parciales (un curso puede compartirse con otra ficha distinta).
     const statCards = [
-        { label: t("Mi ficha"), value: vm.myStats.total, color: c.brand.primary, icon: "book-open" },
-        { label: t("Compañeros"), value: classmatesCount, color: c.status.success, icon: "users" },
-        { label: t("Asistencia del curso"), value: `${vm.myStats.avgAttendance}%`, color: c.brand.primary, icon: "percent" },
+        { label: t("Mis cursos"), value: vm.myStats.total, color: c.brand.primary, icon: "book-open" },
+        { label: t("Asistencia promedio"), value: `${vm.myStats.avgAttendance}%`, color: c.status.success, icon: "percent" },
     ];
 
     return (
@@ -64,13 +63,13 @@ export function StudentCourses({ vm: vmProp }) {
             contentContainerStyle={{ padding: isSmall ? 16 : 24, gap: 16 }}
             showsVerticalScrollIndicator={false}
         >
-            {/* Mini stats de mi ficha */}
+            {/* Mini stats de mis cursos */}
             <View style={{ flexDirection: "row", gap: 12, flexWrap: "wrap" }}>
                 {statCards.map(({ label, value, color, icon }) => (
                     <View
                         key={label}
                         style={{
-                            flexBasis: isSmall ? "47%" : "31%",
+                            flexBasis: isSmall ? "47%" : "23%",
                             flexGrow: 1,
                             backgroundColor: c.background.surface,
                             borderRadius: 12,
@@ -99,13 +98,13 @@ export function StudentCourses({ vm: vmProp }) {
                 ))}
             </View>
 
-            {/* Mi ficha */}
+            {/* Mis cursos */}
             {vm.myFiltered.length === 0 ? (
                 <Card>
                     <EmptyState
                         icon={<Feather name="book-open" size={40} color={c.text.secondary} />}
-                        title={t("Sin ficha asignada")}
-                        description={t("Aún no estás matriculado en ninguna ficha")}
+                        title={t("Sin cursos asignados")}
+                        description={t("Aún no estás matriculado en ningún curso")}
                     />
                 </Card>
             ) : (

@@ -49,7 +49,7 @@ export function TeacherCourses({ vm: vmProp }) {
     }
 
     const statCards = [
-        { label: t("Mis fichas"), value: vm.myStats.total, color: c.brand.primary, icon: "book-open" },
+        { label: t("Mis cursos"), value: vm.myStats.total, color: c.brand.primary, icon: "book-open" },
         { label: t("Mis estudiantes"), value: vm.myStats.totalStudents, color: c.status.success, icon: "users" },
         { label: t("Asistencia prom."), value: `${vm.myStats.avgAttendance}%`, color: c.brand.primary, icon: "percent" },
         { label: t("Con alerta"), value: vm.myStats.alertCount, color: c.status.warning, icon: "alert-triangle" },
@@ -100,8 +100,8 @@ export function TeacherCourses({ vm: vmProp }) {
                 <Card>
                     <EmptyState
                         icon={<Feather name="book-open" size={40} color={c.text.secondary} />}
-                        title={t("Sin fichas asignadas")}
-                        description={t("Aún no tienes fichas asignadas como instructor")}
+                        title={t("Sin cursos asignados")}
+                        description={t("Aún no tienes cursos asignados como instructor")}
                     />
                 </Card>
             ) : (

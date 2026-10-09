@@ -28,11 +28,11 @@ const TAB_LABELS_BY_ROLE = {
     },
     teacher: {
         users: "Alumnos",
-        courses: "Mis fichas",
+        courses: "Mis cursos",
     },
     student: {
         users: "Compañeros",
-        courses: "Mi ficha",
+        courses: "Mis cursos",
     },
 };
 
