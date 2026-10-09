@@ -105,6 +105,7 @@ export const endpoints = {
         justificationDocuments: (id) => `${API_V1}/justifications/${id}/documents`,
     },
     biometric: {
+        health: `${API_V1}/biometric/health`,
         facialEnroll: `${API_V1}/biometric/facial/enroll`,
         facialVerify: `${API_V1}/biometric/facial/verify`,
         facialIdentify: `${API_V1}/biometric/facial/identify`,
@@ -114,9 +115,20 @@ export const endpoints = {
         fingerprintVerify: `${API_V1}/biometric/fingerprint/verify`,
         fingerprintIdentify: `${API_V1}/biometric/fingerprint/identify`,
         fingerprintsByPerson: (personId) => `${API_V1}/biometric/fingerprint/${personId}`,
+        fingerprintByPersonFinger: (personId, finger) => `${API_V1}/biometric/fingerprint/${personId}/${finger}`,
         updateRequest: `${API_V1}/biometric/update-request`,
         updateRequestsByPerson: (personId) => `${API_V1}/biometric/update-requests/${personId}`,
         reviewUpdateRequest: (requestId) => `${API_V1}/biometric/update-request/${requestId}/review`,
+        // Captura biométrica (rostro/huella desde imagen cruda), fusionada desde
+        // 10-ms-face-auth. person_id, no username: este servicio no tiene
+        // identidad propia, opera sobre personas ya conocidas por Identity/Academic.
+        facialLivenessChallenge: `${API_V1}/biometric/facial/liveness-challenge`,
+        facialLivenessStep: `${API_V1}/biometric/facial/liveness-step`,
+        facialEnrollImage: `${API_V1}/biometric/facial/enroll-image`,
+        facialIdentifyImage: `${API_V1}/biometric/facial/identify-image`,
+        fingerprintEnrollSample: `${API_V1}/biometric/fingerprint/enroll-sample`,
+        fingerprintIdentifySample: `${API_V1}/biometric/fingerprint/identify-sample`,
+        summaryByPerson: (personId) => `${API_V1}/biometric/${personId}/summary`,
     },
     configuration: {
         academic: `${API_V1}/configurations/academic`,
@@ -135,22 +147,6 @@ export const endpoints = {
         alertResolve: (id) => `${API_V1}/alerts/${id}/resolve`,
         alertTypes: `${API_V1}/alert-types`,
         alertTypeById: (id) => `${API_V1}/alert-types/${id}`,
-    },
-    // 10-ms-face-auth tras Kong: /face-auth/<ruta del servicio> (Kong quita el prefijo).
-    faceAuth: {
-        health: "/face-auth/api/health",
-        livenessChallenge: "/face-auth/api/face/liveness-challenge",
-        livenessStep: "/face-auth/api/face/liveness-step",
-        registerFace: "/face-auth/api/register/face",
-        loginFace: "/face-auth/api/login/face",
-        registerFingerprint: "/face-auth/api/register/fingerprint-sample",
-        loginFingerprint: "/face-auth/api/login/fingerprint-sample",
-        users: "/face-auth/api/users",
-        activeUsers: "/face-auth/api/users/active",
-        // El nombre de usuario llega ya codificado (encodeURIComponent) desde faceAuthApi.
-        userExists: (username) => `/face-auth/api/users/${username}/exists`,
-        revokeTemplate: (username) => `/face-auth/api/templates/${username}/revoke`,
-        subject: (username) => `/face-auth/api/subjects/${username}`,
     },
     quality: {
         characteristics: `${API_V1}/quality/characteristics`,

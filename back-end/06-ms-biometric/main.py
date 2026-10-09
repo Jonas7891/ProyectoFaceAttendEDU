@@ -44,7 +44,11 @@ from infrastructure.persistence.mongo_client import (
 )
 from infrastructure.web.routers.facial_router import router as facial_router
 from infrastructure.web.routers.fingerprint_router import router as fingerprint_router
+from infrastructure.web.routers.summary_router import router as summary_router
 from infrastructure.web.routers.update_router import router as update_router
+from infrastructure.web.routers.ws_router import router as ws_router
+from infrastructure.web.ws.connection_manager import ConnectionManager
+from infrastructure.web.ws.idempotency import IdempotencyCache
 
 if not logging.getLogger().handlers:
     logging.basicConfig(
@@ -64,6 +68,14 @@ async def lifespan(app: FastAPI):
     client = MongoClient(settings)
     app.state.mongo_client = client
     app.state.settings = settings
+    # WS-only state: in-process, reset on every (re)start — no cross-replica
+    # fan-out and no idempotency replay across a restart, documented in
+    # infrastructure/web/routers/ws_router.py.
+    app.state.ws_connection_manager = ConnectionManager()
+    app.state.ws_idempotency_cache = IdempotencyCache(
+        max_entries=settings.ws_idempotency_max_entries,
+        ttl_seconds=settings.ws_idempotency_ttl_seconds,
+    )
     await client.connect()  # never raises; failure is logged and reported by /health/ready
     try:
         yield
@@ -192,6 +204,8 @@ def _mongo_client(request: Request) -> MongoClient | None:
 app.include_router(facial_router)
 app.include_router(fingerprint_router)
 app.include_router(update_router)
+app.include_router(summary_router)
+app.include_router(ws_router)
 
 
 @app.get("/health")
@@ -238,6 +252,20 @@ async def health_ready(request: Request):
 
 @app.get("/api/v1/health")
 async def api_health(request: Request):
+    return await health(request)
+
+
+@app.get("/api/v1/biometric/health")
+async def gateway_prefixed_health(request: Request):
+    """Same payload as `/health`, reachable through Kong.
+
+    Kong only forwards `/api/v1/biometric/*` to this service (`strip_path:
+    false`); a bare `/health` or `/api/v1/health` has no route of its own here
+    (unlike `ms-quality`'s dedicated `/health/quality` Kong route), so clients
+    behind the gateway — including the merged biometric-capture front-end
+    clients that used to hit `/face-auth/api/health` — need this alias under
+    the one prefix Kong does proxy.
+    """
     return await health(request)
 
 

@@ -337,7 +337,9 @@ services:
 
   # ──────────────────────────────────────────────────────────────
   # Python — FastAPI + Motor (ADR-005 §6)
-  # 06 biometric 8086 — MongoDB vector search, OpenCV
+  # 06 biometric 8086 — MongoDB vector search, OpenCV/dlib (incluye lo que antes
+  # era 10-ms-face-auth / github.com/Jonas7891/face-auth: registro de rostro,
+  # reconocimiento facial y huella, ahora bajo /api/v1/biometric/*)
   # Hexagonal: _stacks/python-fastapi.md
   # ──────────────────────────────────────────────────────────────
   ms-biometric:
@@ -346,7 +348,7 @@ services:
       dockerfile: Dockerfile
     image: faceattend/ms-biometric:latest
     container_name: faceattend-ms-biometric
-    mem_limit: 512m
+    mem_limit: 1g
     cpus: "1.0"
     depends_on:
       mongodb:
@@ -360,6 +362,20 @@ services:
       IDENTITY_URL: http://ms-identity:8081
       AUTHORIZATION_URL: http://ms-authorization:8082
       KAFKA_BROKERS: kafka:29092
+      BIOMETRIC_FINGERPRINT_MATCH_THRESHOLD: ${BIOMETRIC_FINGERPRINT_MATCH_THRESHOLD:-8}
+      # >= 32 chars; firma los retos de prueba de vida (liveness), nunca un JWT
+      # de sesión — el servicio no emite sesiones, delega en identity/authorization.
+      # Sin fallback a propósito, igual que el resto de secretos del stack.
+      BIOMETRIC_LIVENESS_CHALLENGE_SECRET: ${BIOMETRIC_LIVENESS_CHALLENGE_SECRET:?Set BIOMETRIC_LIVENESS_CHALLENGE_SECRET in .env (>= 32 random chars)}
+      BIOMETRIC_LIVENESS_TTL_SECONDS: ${BIOMETRIC_LIVENESS_TTL_SECONDS:-120}
+      BIOMETRIC_RATE_LIMIT_MAX_ATTEMPTS: ${BIOMETRIC_RATE_LIMIT_MAX_ATTEMPTS:-20}
+      BIOMETRIC_RATE_LIMIT_WINDOW_SECONDS: ${BIOMETRIC_RATE_LIMIT_WINDOW_SECONDS:-60}
+      BIOMETRIC_MAX_IMAGE_BYTES: ${BIOMETRIC_MAX_IMAGE_BYTES:-3145728}
+      BIOMETRIC_MAX_IMAGE_PIXELS: ${BIOMETRIC_MAX_IMAGE_PIXELS:-16000000}
+      # WebSocket channel (SERVICE.md §4.5): all optional, compose defaults match Settings.
+      BIOMETRIC_WS_IDLE_TIMEOUT_SECONDS: "${BIOMETRIC_WS_IDLE_TIMEOUT_SECONDS:-60}"
+      BIOMETRIC_WS_IDEMPOTENCY_TTL_SECONDS: "${BIOMETRIC_WS_IDEMPOTENCY_TTL_SECONDS:-300}"
+      BIOMETRIC_WS_IDEMPOTENCY_MAX_ENTRIES: "${BIOMETRIC_WS_IDEMPOTENCY_MAX_ENTRIES:-2000}"
     ports:
       - "${BIND_IP:-127.0.0.1}:8086:8086"
     networks:
@@ -476,76 +492,6 @@ services:
       start_period: 30s
 
   # ──────────────────────────────────────────────────────────────
-  # Python — FastAPI + OpenCV/dlib (integrado desde github.com/Jonas7891/face-auth)
-  # 10 face-auth 8000 (interno) — pantalla web «Biometría». Un solo servicio
-  # cubre registro de rostro, reconocimiento facial y registro de huella.
-  # Datos propios: face-auth-postgres (person/app_user) + base
-  # `faceattend_face_auth` en el MongoDB compartido. Sin FKs hacia faceattend_db.
-  # ──────────────────────────────────────────────────────────────
-  face-auth-postgres:
-    image: postgres:17-alpine
-    container_name: faceattend-face-auth-postgres
-    mem_limit: 256m
-    cpus: "0.5"
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${FACE_AUTH_POSTGRES_DB:-face_auth}
-      POSTGRES_USER: ${FACE_AUTH_POSTGRES_USER:-faceauth}
-      POSTGRES_PASSWORD: ${FACE_AUTH_POSTGRES_PASSWORD:-faceauth}
-    volumes:
-      - face_auth_postgres_data:/var/lib/postgresql/data
-    networks:
-      - faceattend-data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${FACE_AUTH_POSTGRES_USER:-faceauth} -d ${FACE_AUTH_POSTGRES_DB:-face_auth}"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-
-  face-auth-api:
-    build:
-      context: ./10-ms-face-auth
-      dockerfile: Dockerfile
-    image: faceattend/ms-face-auth:latest
-    container_name: faceattend-face-auth-api
-    mem_limit: 1g
-    cpus: "1.0"
-    depends_on:
-      face-auth-postgres:
-        condition: service_healthy
-      mongodb:
-        condition: service_healthy
-    environment:
-      MONGO_URL: mongodb://${MONGO_USER:-mongoadmin}:${MONGO_PASSWORD:-mongopass}@mongodb:27017/?authSource=admin
-      MONGO_DB: ${FACE_AUTH_MONGO_DB:-faceattend_face_auth}
-      POSTGRES_URL: postgresql://${FACE_AUTH_POSTGRES_USER:-faceauth}:${FACE_AUTH_POSTGRES_PASSWORD:-faceauth}@face-auth-postgres:5432/${FACE_AUTH_POSTGRES_DB:-face_auth}
-      MATCH_THRESHOLD: ${FACE_AUTH_MATCH_THRESHOLD:-0.6}
-      FINGERPRINT_MATCH_THRESHOLD: ${FACE_AUTH_FINGERPRINT_MATCH_THRESHOLD:-8}
-      # >= 32 chars; firma los tokens que devuelve el login biométrico.
-      # Sin fallback a propósito: un secreto conocido/commiteado que "funciona"
-      # sin .env es exactamente el que alguien podría usar para forjar tokens
-      # si la var se olvida en un despliegue real. .env.example ya trae un
-      # valor de desarrollo; en producción usa uno propio.
-      JWT_SECRET: ${FACE_AUTH_JWT_SECRET:?Set FACE_AUTH_JWT_SECRET in .env (>= 32 random chars)}
-      # El navegador entra por Kong (CORS lo resuelve el gateway), no directo al servicio.
-      CORS_ORIGINS: ${FACE_AUTH_CORS_ORIGINS:-}
-      # Rate limit por IP real del cliente (la que Kong añade a X-Forwarded-For).
-      TRUST_PROXY_HEADERS: "1"
-    ports:
-      # Solo loopback: depuración local. El acceso normal es Kong -> /face-auth/*.
-      - "${BIND_IP:-127.0.0.1}:${FACE_AUTH_PORT:-8091}:8000"
-    networks:
-      - faceattend-app
-      - faceattend-data
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/ready', timeout=3)\""]
-      interval: 20s
-      timeout: 5s
-      retries: 5
-      start_period: 40s
-
-  # ──────────────────────────────────────────────────────────────
   # API Gateway — Kong OSS 3.6 DB-less + Redis (ADR-007, ADR-005 §10)
   # 99 gateway 8080 proxy / 8001 admin
   # ──────────────────────────────────────────────────────────────
@@ -576,8 +522,6 @@ services:
       ms-notification:
         condition: service_healthy
       ms-quality:
-        condition: service_healthy
-      face-auth-api:
         condition: service_healthy
     environment:
       KONG_DATABASE: "off"
@@ -624,4 +568,3 @@ volumes:
   mongo_data:
   redis_data:
   kafka_data:
-  face_auth_postgres_data:

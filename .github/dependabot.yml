@@ -39,9 +39,6 @@ updates:
   - package-ecosystem: pip
     directory: /back-end/06-ms-biometric
     schedule: { interval: weekly }
-  - package-ecosystem: pip
-    directory: /back-end/10-ms-face-auth
-    schedule: { interval: weekly }
 
   # ── Go ──
   - package-ecosystem: gomod
@@ -75,9 +72,6 @@ updates:
     schedule: { interval: weekly }
   - package-ecosystem: docker
     directory: /back-end/09-ms-quality
-    schedule: { interval: weekly }
-  - package-ecosystem: docker
-    directory: /back-end/10-ms-face-auth
     schedule: { interval: weekly }
   - package-ecosystem: docker
     directory: /front-end/Web

@@ -13,8 +13,15 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Platform } from "react-native";
-import { faceAuthApi } from "../services/api/faceAuthApi";
+import { biometricCaptureApi } from "../services/api/biometricCaptureApi";
+import { personMap, fullName } from "../services/api/referenceData";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
+
+// ms-biometric exige finger_number (1..10); el lector no lo reporta, así que
+// se usa un valor fijo por defecto para esta pantalla. Si en el futuro se
+// necesita capturar varios dedos por persona, este sería el punto a extender
+// con un selector de dedo en la UI.
+const DEFAULT_FINGER_NUMBER = 1;
 
 const POLL_INTERVAL_MS = 3000;
 const SDK_SCRIPTS = ["/vendor/websdk.client.ui.js", "/vendor/fingerprint.sdk.js"];
@@ -85,7 +92,7 @@ const deviceKey = (value) =>
 
 export function useFingerprintReader({ vm }) {
     const { t } = useTranslation();
-    const { run, setStatus, requireUsername, loadUsers } = vm;
+    const { run, setStatus, requirePersonId, refreshSummary } = vm;
 
     const [readerState, setReaderState] = useState(t("Comprobando lector..."));
     const [readerChecking, setReaderChecking] = useState(false);
@@ -301,37 +308,39 @@ export function useFingerprintReader({ vm }) {
         () =>
             run(async () => {
                 const sample = takeSample();
-                const name = requireUsername();
-                const data = await faceAuthApi.registerFingerprint({
-                    username: name,
+                const personId = requirePersonId();
+                await biometricCaptureApi.enrollFingerprint({
+                    personId,
+                    fingerNumber: DEFAULT_FINGER_NUMBER,
                     sampleFormat: sample.format,
                     data: sample.data,
                     quality: sample.quality,
                 });
                 consumeSample();
-                setStatus(data.message, "ok");
+                setStatus(t("Huella guardada en el servidor."), "ok");
                 setReaderState(t("Muestra guardada en el servidor."));
-                await loadUsers();
+                await refreshSummary();
             }),
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [run, requireUsername, setStatus, loadUsers, t]
+        [run, requirePersonId, setStatus, refreshSummary, t]
     );
 
     const loginFingerprint = useCallback(
         () =>
             run(async () => {
                 const sample = takeSample();
-                const data = await faceAuthApi.loginFingerprint({
+                const data = await biometricCaptureApi.identifyFingerprint({
                     sampleFormat: sample.format,
                     data: sample.data,
                     quality: sample.quality,
                 });
                 consumeSample();
-                setStatus(`${t("Huella reconocida")}: ${data.username}`, "ok");
-                await loadUsers();
+                const persons = await personMap();
+                const name = fullName(persons.get(data.person_id)) || data.person_id;
+                setStatus(`${t("Huella reconocida")}: ${name}`, "ok");
             }),
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [run, setStatus, loadUsers, t]
+        [run, setStatus, t]
     );
 
     return {

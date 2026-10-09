@@ -84,23 +84,18 @@ services:
           redis_port: 6379
           redis_database: 0
           policy: redis
+  # Incluye registro/reconocimiento facial y de huella (rostro -> encoding vía
+  # dlib, huella -> keypoints OpenCV), fusionado desde el antiguo face-auth-api;
+  # read_timeout elevado por el costo de ese cómputo en /enroll-image,
+  # /identify-image, /enroll-sample e /identify-sample.
   - name: biometric-service
     url: http://ms-biometric:8086
+    read_timeout: 60000
     routes:
       - name: biometric-route
         paths: [/api/v1/biometric]
         strip_path: false
-    # Sin plugins propios: el enforcement lo hace el MS.
-  # Pantalla web «Biometría» (registro de rostro, reconocimiento facial, huella).
-  # /face-auth/api/... -> face-auth-api:8000/api/... (strip_path). Sin ruta pública:
-  # el pre-function global exige una sesión FaceAttend activa.
-  - name: face-auth-service
-    url: http://face-auth-api:8000
-    read_timeout: 60000
-    routes:
-      - name: face-auth-route
-        paths: [/face-auth]
-        strip_path: true
+    # Sin plugins propios: el enforcement lo hace el MS (require_permission).
   - name: configuration-service
     url: http://ms-configuration:8087
     routes:

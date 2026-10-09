@@ -115,6 +115,59 @@ httpx = "^0.27.0"             # Client HTTP
 | POST | `/api/v1/biometric/update-request` | Solicitar actualizacion de plantilla |
 | GET | `/api/v1/biometric/update-requests/{personId}` | Solicitudes de una persona |
 
+### 4.5 Canal WebSocket (tiempo real, convive con REST)
+
+`WS /api/v1/biometric/ws` — canal adicional, **no reemplaza** ningun endpoint
+REST de 4.1-4.3. No hay una segunda copia de las reglas de negocio: cada
+mensaje llama directamente a las funciones de los routers REST
+(`facial_router.enroll_facial/verify_facial/identify_facial` y sus pares de
+`fingerprint_router`), con una sesión/permiso resueltos para el socket en vez
+de por request — así un enroll por REST se puede identificar por WS y
+viceversa, sin divergencia posible entre los dos caminos.
+
+Un solo mensaje JSON de texto por frame: `{"type": "...", "client_message_id": "...", "payload": {...}}`.
+
+| `type` | Equivalente REST | Respuesta |
+|--------|-------------------|-----------|
+| `facial.enroll` / `fingerprint.enroll` | `POST .../enroll` | `<type>.ack` con el template persistido |
+| `facial.verify` / `fingerprint.verify` | `POST .../verify` | `<type>.ack` con `{match, score}` |
+| `facial.identify` / `fingerprint.identify` | `POST .../identify` | `<type>.ack`; además dispara `attendance.event` a todas las **demás** conexiones activas |
+| `ping` | — | `pong` (latido) |
+
+`payload` se valida con el mismo modelo Pydantic que usa el router REST
+correspondiente (`EnrollFacialRequest`, `IdentifyFingerprintRequest`, etc.) —
+un mensaje inválido responde `{"type": "error", "error": "BadRequest", ...}`
+sin cerrar la conexión. Fuera de alcance deliberadamente: los endpoints de
+imagen/muestra/liveness (`/enroll-image`, `/identify-image`, `/enroll-sample`,
+`/identify-sample`, `/liveness-*`) — son un flujo de UI de varios pasos, no
+un evento único de asistencia, y siguen siendo solo REST.
+
+`attendance.event` lleva `person_id`, `biometric_type`, `event_type`
+(`CHECK_IN` / `CHECK_OUT`, tomado del `direction` del mensaje `identify`, o
+`FACIAL_ENROLLED` / `FINGERPRINT_ENROLLED` para un enroll) y `timestamp` —
+es la notificación en tiempo real de "quién fue registrado".
+
+**Auth:** misma sesión + permiso `attendance.record:write` que REST
+(`infrastructure/web/security.py`). El navegador no puede fijar cabeceras en
+el handshake de WS, así que el token viaja como `?token=<session-uuid>`
+(también se acepta `Authorization: Bearer` para clientes no-browser). Un
+token inválido o sin permiso cierra el socket con un código 4401/4403/4503
+(mismo significado que 401/403/503 en REST).
+
+**Heartbeat / reconexión:** el cliente debe enviar `{"type": "ping"}`
+periódicamente (recibe `pong`); una conexión que no envía nada durante
+`BIOMETRIC_WS_IDLE_TIMEOUT_SECONDS` (60s por defecto) se cierra con código
+1001. Si la conexión cae, el cliente reconecta y puede reenviar el último
+mensaje con el mismo `client_message_id`: el servidor guarda la respuesta de
+cada mensaje por `client_message_id` (`BIOMETRIC_WS_IDEMPOTENCY_TTL_SECONDS`,
+300s por defecto) y la repite en vez de reprocesar — así un enroll o un
+identify no se duplica ni se pierde por una reconexión.
+
+**Límite conocido:** el registro de conexiones y la caché de idempotencia son
+en memoria de este proceso (no hay un segundo réplica ni Redis detrás); con
+una sola instancia en `docker-compose.yml` es correcto, y queda documentado
+para no asumir fan-out entre réplicas.
+
 ---
 
 ## 5. Domain Events

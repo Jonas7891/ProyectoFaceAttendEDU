@@ -101,7 +101,7 @@ Polyglot modular monolith: JVM + Node + Python + Go + Kong. 4 runtimes + gateway
 **Responsabilidad:** `attendance_record`, `justification_type`, `justification`, `supporting_document` (+ `attendance_report`) — Ver `06-data/domains/05-attendance.md`
 
 ### 3.6 Biometric (`06-ms-biometric`) — Python FastAPI 8086
-**Responsabilidad:** Híbrido SQL vacío + MongoDB `facial_embeddings`, `fingerprint_embeddings`; caso en `configuration.biometric_update_case` — Ver `06-data/domains/06-biometric.md`
+**Responsabilidad:** Híbrido SQL vacío + MongoDB `facial_embeddings`, `fingerprint_embeddings`; caso en `configuration.biometric_update_case` — Ver `06-data/domains/06-biometric.md`. Incluye el cómputo de embeddings a partir de imagen/muestra (liveness, rostro vía dlib, huella vía matching de keypoints OpenCV), fusionado desde el antiguo `10-ms-face-auth`.
 **Stack:** `_stacks/python-fastapi.md`
 
 ### 3.7 Configuration (`07-ms-configuration`) — TS Fastify 8087

@@ -59,16 +59,6 @@ function isCredentialFlow(url) {
   return url.includes('/api/v1/auth/');
 }
 
-/**
- * 401 de negocio del servicio de biometría (rostro/huella no reconocidos, gesto
- * fallido): FastAPI responde { detail } mientras que el gateway Kong responde
- * { message }, así que solo el primero es una respuesta de negocio y no una
- * sesión muerta.
- */
-function isBusinessUnauthorized(url, body) {
-  return url.includes('/face-auth/') && !!body && typeof body === 'object' && 'detail' in body;
-}
-
 /** FastAPI devuelve { detail: string | [{loc, msg}] } en lugar de { message }. */
 function readErrorMessage(body, status) {
   if (body?.message) return body.message;
@@ -248,7 +238,7 @@ async function performRequest({ method, url, data = null, params = null, require
     }
 
     if (!response.ok) {
-      if (response.status === 401 && !isCredentialFlow(fullUrl) && !isBusinessUnauthorized(fullUrl, result)) {
+      if (response.status === 401 && !isCredentialFlow(fullUrl)) {
         notifySessionExpired();
       }
       throw new ApiError(response.status, readErrorMessage(result, response.status), result);

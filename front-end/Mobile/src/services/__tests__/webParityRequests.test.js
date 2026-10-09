@@ -191,53 +191,51 @@ describe('notificación y calidad', () => {
   });
 });
 
-describe('FaceAuthService (biometría vía /face-auth)', () => {
-  const F = `${BASE}/face-auth/api`;
+describe('FaceAuthService (biometría vía /api/v1/biometric, fusionado en ms-biometric)', () => {
+  const F = `${BASE}/api/v1/biometric`;
 
   test.each([
     ['health', () => FaceAuthService.health(), 'GET', '/health', undefined],
-    ['getLivenessChallenge', () => FaceAuthService.getLivenessChallenge(2), 'GET', '/face/liveness-challenge?actions=2', undefined],
-    ['getLivenessChallenge (3 por defecto)', () => FaceAuthService.getLivenessChallenge(), 'GET', '/face/liveness-challenge?actions=3', undefined],
+    ['getLivenessChallenge', () => FaceAuthService.getLivenessChallenge(2), 'GET', '/facial/liveness-challenge?actions=2', undefined],
+    ['getLivenessChallenge (3 por defecto)', () => FaceAuthService.getLivenessChallenge(), 'GET', '/facial/liveness-challenge?actions=3', undefined],
     [
       'submitLivenessStep',
       () => FaceAuthService.submitLivenessStep({ challengeToken: 'tok', actionIndex: 1, images: ['a', 'b'] }),
       'POST',
-      '/face/liveness-step',
+      '/facial/liveness-step',
       { challenge_token: 'tok', action_index: 1, images: ['a', 'b'] },
     ],
     [
-      'registerFace',
-      () => FaceAuthService.registerFace({ username: 'ana', image: 'img', challengeToken: 'tok' }),
+      'enrollFace',
+      () => FaceAuthService.enrollFace({ personId: 'p-1', imageBase64: 'img', challengeToken: 'tok' }),
       'POST',
-      '/register/face',
-      { username: 'ana', image: 'img', challenge_token: 'tok' },
+      '/facial/enroll-image',
+      { person_id: 'p-1', image_base64: 'img', challenge_token: 'tok' },
     ],
     [
-      'loginFace',
-      () => FaceAuthService.loginFace({ image: 'img', challengeToken: 'tok' }),
+      'identifyFace',
+      () => FaceAuthService.identifyFace({ imageBase64: 'img', challengeToken: 'tok' }),
       'POST',
-      '/login/face',
-      { image: 'img', challenge_token: 'tok' },
+      '/facial/identify-image',
+      { image_base64: 'img', challenge_token: 'tok' },
     ],
     [
-      'registerFingerprint',
-      () => FaceAuthService.registerFingerprint({ username: 'ana', sampleFormat: 5, data: 'b64', quality: 80 }),
+      'enrollFingerprint',
+      () => FaceAuthService.enrollFingerprint({ personId: 'p-1', fingerNumber: 1, sampleFormat: 5, data: 'b64', quality: 80 }),
       'POST',
-      '/register/fingerprint-sample',
-      { username: 'ana', sample_format: 5, data_base64: 'b64', quality: 80 },
+      '/fingerprint/enroll-sample',
+      { person_id: 'p-1', finger_number: 1, sample_format: 5, data_base64: 'b64', quality: 80 },
     ],
     [
-      'loginFingerprint',
-      () => FaceAuthService.loginFingerprint({ sampleFormat: 5, data: 'b64', quality: 80 }),
+      'identifyFingerprint',
+      () => FaceAuthService.identifyFingerprint({ sampleFormat: 5, data: 'b64', quality: 80, fingerNumber: 1 }),
       'POST',
-      '/login/fingerprint-sample',
-      { sample_format: 5, data_base64: 'b64', quality: 80 },
+      '/fingerprint/identify-sample',
+      { sample_format: 5, data_base64: 'b64', quality: 80, finger_number: 1 },
     ],
-    ['userExists (codifica el usuario)', () => FaceAuthService.userExists('ana/pérez'), 'GET', '/users/ana%2Fp%C3%A9rez/exists', undefined],
-    ['listUsers', () => FaceAuthService.listUsers(), 'GET', '/users', undefined],
-    ['listActiveUsers', () => FaceAuthService.listActiveUsers(), 'GET', '/users/active', undefined],
-    ['revokeTemplate', () => FaceAuthService.revokeTemplate('ana'), 'POST', '/templates/ana/revoke', undefined],
-    ['deleteSubject', () => FaceAuthService.deleteSubject('ana'), 'DELETE', '/subjects/ana', undefined],
+    ['summary', () => FaceAuthService.summary('p-1'), 'GET', '/p-1/summary', undefined],
+    ['revokeFace', () => FaceAuthService.revokeFace('p-1'), 'DELETE', '/facial/p-1', undefined],
+    ['deleteFingerprint', () => FaceAuthService.deleteFingerprint('p-1', 1), 'DELETE', '/fingerprint/p-1/1', undefined],
   ])('%s', async (_name, call, method, path, body) => {
     mockResponse({ ok: true });
 
@@ -250,12 +248,12 @@ describe('FaceAuthService (biometría vía /face-auth)', () => {
     expect(sent.headers.Authorization).toBe('Bearer session-token');
   });
 
-  test('un rostro no reconocido (401 { detail }) llega como error de negocio con su mensaje', async () => {
-    mockResponse({ detail: 'Rostro no reconocido', code: 'forbidden' }, 401);
+  test('una huella/rostro no reconocidos llegan como 404, no como sesión caducada', async () => {
+    mockResponse({ error: 'NotFound', message: 'no match found' }, 404);
 
-    await expect(FaceAuthService.loginFace({ image: 'img', challengeToken: 'tok' })).rejects.toMatchObject({
-      status: 401,
-      message: 'Rostro no reconocido',
+    await expect(FaceAuthService.identifyFace({ imageBase64: 'img', challengeToken: 'tok' })).rejects.toMatchObject({
+      status: 404,
+      message: 'no match found',
     });
   });
 });
