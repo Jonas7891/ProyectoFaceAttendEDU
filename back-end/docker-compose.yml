@@ -11,7 +11,12 @@ services:
   mongodb:
     image: mongo:7
     container_name: faceattend-mongo
-    mem_limit: 768m
+    # Was 768m: it now also hosts ms-biometric's facial/fingerprint
+    # templates + match logs + the merged face-auth collections, and was
+    # observed pinned at the limit (760Mi/768Mi) — tight enough that the
+    # healthcheck's own `mongosh` process couldn't start in time, which
+    # cascaded into every dependent service staying stuck at "Created".
+    mem_limit: 1536m
     cpus: "1.0"
     restart: unless-stopped
     environment:
