@@ -8,6 +8,9 @@ import { useTranslation }     from "../core/utils/i18n/hooks/useTranslation";
 // Soporta estructura jerárquica mediante la propiedad "children"
 const ALL_TABS = [
     { key: "dashboard",    label: "Inicio",        icon: "layout"      },
+    // Reportes de escuelas: para el super admin es su consulta principal
+    // (está justo después de Inicio en todos los roles que lo ven).
+    { key: "reports",      label: "Reportes",      icon: "bar-chart-2" },
     // Pantallas de asistencia y de consulta (HU-HIST / HU-JUS / nav-map)
     { key: "history",       label: "Historial",       icon: "clock"      },
     { key: "justifications",label: "Justificaciones", icon: "file-text"  },
@@ -25,11 +28,7 @@ const ALL_TABS = [
     },
     { key: "courses",      label: "Cursos",        icon: "book-open"   },
     { key: "environments", label: "Ambientes",     icon: "home"        },
-    { key: "reports",      label: "Reportes",      icon: "bar-chart-2" },
-    // Lectura de la sede y del contexto académico (nav-map /school-info, /academic, /contacts)
-    { key: "schoolInfo",   label: "Sede",          icon: "map-pin"     },
     { key: "academic",     label: "Académico",     icon: "award"       },
-    { key: "contacts",     label: "Contactos",     icon: "mail"        },
     { 
         key: "settings",     
         label: "Configuración",  
@@ -42,6 +41,9 @@ const ALL_TABS = [
             { key: "notifications",  label: "Notificaciones",  icon: "bell",     adminOnly: false },
             { key: "security",       label: "Seguridad",       icon: "shield",   adminOnly: true },
             { key: "appearance",     label: "Apariencia",      icon: "sliders",  adminOnly: false },
+            // Sede y Contactos dejaron de ser tabs propios: se consultan aquí.
+            { key: "schoolInfo",     label: "Sede",            icon: "map-pin",  adminOnly: false },
+            { key: "contacts",       label: "Contactos",       icon: "mail",     adminOnly: false },
         ]
     },
 ];

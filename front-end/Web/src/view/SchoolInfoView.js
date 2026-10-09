@@ -51,7 +51,7 @@ function InfoField({ label, value, icon }) {
     );
 }
 
-export default function SchoolInfoView() {
+export default function SchoolInfoView({ embedded = false }) {
     const { isSmall } = useResponsive();
     const { theme } = useTheme();
     const c = theme.colors;
@@ -60,20 +60,55 @@ export default function SchoolInfoView() {
 
     if (vm.isLoading) {
         return (
-            <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+            <View
+                style={
+                    embedded
+                        ? { padding: 24, alignItems: "center" }
+                        : { flex: 1, alignItems: "center", justifyContent: "center" }
+                }
+            >
                 <ActivityIndicator size="large" color={c.brand.primary} />
             </View>
         );
     }
 
+    // Modo embebido (Configuración > Sede): el PageHeader y el scroll los
+    // aporta SettingsView, aquí solo se pinta el contenido.
+    const Scroll = embedded ? View : ScrollView;
+    const scrollProps = embedded
+        ? {}
+        : {
+            contentContainerStyle: { padding: isSmall ? 16 : 24, gap: 16 },
+            showsVerticalScrollIndicator: false,
+        };
+
     return (
         <View style={{ flex: 1, backgroundColor: c.background.app }}>
-            <PageHeader
-                title={t("Información de la sede")}
-                subtitle={vm.school ? vm.school.name : t("Datos de la institución")}
-                actions={
-                    vm.canEdit &&
-                    vm.school && (
+            {!embedded && (
+                <PageHeader
+                    title={t("Información de la sede")}
+                    subtitle={vm.school ? vm.school.name : t("Datos de la institución")}
+                    actions={
+                        vm.canEdit &&
+                        vm.school && (
+                            <Button
+                                variant="primary"
+                                size="sm"
+                                onPress={vm.openEdit}
+                                leftIcon={<Feather name="edit-2" size={16} color={c.brand.textOnPrimary} />}
+                            >
+                                {t("Editar")}
+                            </Button>
+                        )
+                    }
+                />
+            )}
+
+            <Scroll {...scrollProps}>
+                {/* Modo embebido (Configuración > Sede): el botón vive aquí,
+                    porque el PageHeader con sus acciones queda fuera. */}
+                {embedded && vm.canEdit && vm.school && (
+                    <View style={{ alignItems: "flex-end" }}>
                         <Button
                             variant="primary"
                             size="sm"
@@ -82,14 +117,9 @@ export default function SchoolInfoView() {
                         >
                             {t("Editar")}
                         </Button>
-                    )
-                }
-            />
+                    </View>
+                )}
 
-            <ScrollView
-                contentContainerStyle={{ padding: isSmall ? 16 : 24, gap: 16 }}
-                showsVerticalScrollIndicator={false}
-            >
                 {vm.error && (
                     <Alert type="error" title={t("Sin información")} message={vm.error} closable />
                 )}
@@ -163,7 +193,7 @@ export default function SchoolInfoView() {
                         message={t("Tu rol puede consultar la información de la sede. Solo el administrador puede modificarla.")}
                     />
                 ) : null}
-            </ScrollView>
+            </Scroll>
 
             {/* Edición (solo admin) */}
             {vm.editOpen && <EditModal vm={vm} t={t} />}

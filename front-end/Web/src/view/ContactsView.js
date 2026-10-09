@@ -28,7 +28,7 @@ function ContactLine({ icon, value }) {
     );
 }
 
-export default function ContactsView() {
+export default function ContactsView({ embedded = false }) {
     const { isSmall } = useResponsive();
     const { theme } = useTheme();
     const c = theme.colors;
@@ -37,23 +37,42 @@ export default function ContactsView() {
 
     if (vm.isLoading) {
         return (
-            <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+            <View
+                style={
+                    embedded
+                        ? { padding: 24, alignItems: "center" }
+                        : { flex: 1, alignItems: "center", justifyContent: "center" }
+                }
+            >
                 <ActivityIndicator size="large" color={c.brand.primary} />
             </View>
         );
     }
 
+    // Modo embebido (Configuración > Contactos): el PageHeader y el scroll
+    // los aporta SettingsView, aquí solo se pinta el contenido.
+    const Scroll = embedded ? View : ScrollView;
+    const scrollProps = embedded
+        ? {}
+        : {
+            contentContainerStyle: { padding: isSmall ? 16 : 24, gap: 24 },
+            showsVerticalScrollIndicator: false,
+        };
+
     return (
         <View style={{ flex: 1, backgroundColor: c.background.app }}>
-            <PageHeader
-                title={t("Contactos")}
-                subtitle={t("Canales de contacto de tu sede y de tus instructores")}
-            />
+            {!embedded && (
+                <PageHeader
+                    title={t("Contactos")}
+                    subtitle={
+                        vm.school
+                            ? t("Canales de contacto de tu sede y de tus instructores")
+                            : t("Canales de contacto de los instructores")
+                    }
+                />
+            )}
 
-            <ScrollView
-                contentContainerStyle={{ padding: isSmall ? 16 : 24, gap: 24 }}
-                showsVerticalScrollIndicator={false}
-            >
+            <Scroll {...scrollProps}>
                 {vm.error && <Alert type="error" title={t("No se pudo cargar")} message={vm.error} closable />}
 
                 {/* Sede */}
@@ -134,7 +153,7 @@ export default function ContactsView() {
                         </View>
                     )}
                 </View>
-            </ScrollView>
+            </Scroll>
         </View>
     );
 }
