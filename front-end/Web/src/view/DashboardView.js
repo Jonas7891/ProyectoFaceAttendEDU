@@ -562,6 +562,7 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                 maxWeeks={5}
                 showTrend={false}
                 colorByPerformance={true}
+                academicPeriod={academicPeriod}
                 weeklyTitle={t("Tendencia de mis fichas")}
                 weeklySubtitle={weeklySubtitle}
                 dailyTitle={t("Asistencia por día")}
