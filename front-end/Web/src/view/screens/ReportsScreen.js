@@ -4,8 +4,8 @@
 //  RESPONSABILIDAD: Orquestación y punto de entrada
 //
 //  Este componente:
-//  ✓ Actúa como punto de entrada para navegación
-//  ✓ Extrae parámetros de ruta (filtros, fichas, usuarios)
+//  ✓ Actúa como punto de entrada para la navegación
+//  ✓ Extrae parámetros de ruta (sección o filtros legacy)
 //  ✓ Delega presentación a ReportsView
 //
 //  NO debe:
@@ -22,14 +22,18 @@ import ReportsView from "../ReportsView";
 export default function ReportsScreen() {
     const route = useRoute();
     
-    // Parámetros para filtrado y navegación desde otras vistas
-    const filterType = route.params?.filterType; // "at-risk" | "ficha" | "user" | null
-    const fichaId = route.params?.fichaId; // ID de ficha específica
-    const userId = route.params?.userId; // ID de usuario específico
-    const attendanceThreshold = route.params?.attendanceThreshold; // % mínimo de asistencia
+    // Parámetros para la nueva estructura de secciones
+    const section = route.params?.section; // No default, para detectar vista padre
+    
+    // Parámetros legacy para filtrado específico
+    const filterType = route.params?.filterType;
+    const fichaId = route.params?.fichaId;
+    const userId = route.params?.userId;
+    const attendanceThreshold = route.params?.attendanceThreshold;
     
     return (
-        <ReportsView 
+        <ReportsView
+            section={section}
             filterType={filterType}
             fichaId={fichaId}
             userId={userId}

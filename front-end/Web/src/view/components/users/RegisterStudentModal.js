@@ -72,7 +72,6 @@ export default function RegisterStudentModal({
     const [form,          setForm]          = useState({ ...EMPTY_FORM, role: initialRole || "" });
     const [saving,        setSaving]        = useState(false);
     const [showErrors,    setShowErrors]    = useState(false);
-    const [success,       setSuccess]       = useState(false);
     const [showFaceModal, setShowFaceModal] = useState(false);
     const pendingFormRef = useRef(null);
 
@@ -241,7 +240,6 @@ export default function RegisterStudentModal({
     const handleClose = () => {
         setForm({ ...EMPTY_FORM, role: initialRole || "" });
         setShowErrors(false);
-        setSuccess(false);
         onClose();
     };
 
@@ -317,13 +315,10 @@ export default function RegisterStudentModal({
                 );
             }
             
-            setSuccess(true);
-            setTimeout(() => {
-                setForm(EMPTY_FORM);
-                setShowErrors(false);
-                setSuccess(false);
-                onClose();
-            }, 900);
+            // Cerrar modal inmediatamente
+            setForm(EMPTY_FORM);
+            setShowErrors(false);
+            onClose();
         }
     };
 
@@ -412,33 +407,14 @@ export default function RegisterStudentModal({
                         <Button variant="ghost" onPress={handleClose} disabled={saving}>
                             {t("Cancelar")}
                         </Button>
-                        <Button variant="primary" onPress={handleSubmit} disabled={saving || success}>
+                        <Button variant="primary" onPress={handleSubmit} disabled={saving}>
                             {saving
                                 ? <ActivityIndicator size="small" color={c.brand.textOnPrimary} />
-                                : success
-                                    ? <React.Fragment><Feather name="check" size={14} color={c.brand.textOnPrimary} /> {t("¡Guardado!")}</React.Fragment>
-                                    : config.buttonLabel}
+                                : config.buttonLabel}
                         </Button>
                     </React.Fragment>
                 }
             >
-                {/* Notificación de éxito local (sin afectar scroll) */}
-                {success && (
-                    <View style={{
-                        backgroundColor: c.status.successLight,
-                        borderRadius: 14,
-                        padding: 12,
-                        flexDirection: "row",
-                        gap: 8,
-                        marginBottom: 14,
-                    }}>
-                        <Feather name="check-circle" size={14} color={c.status.success} />
-                        <Text style={{ fontSize: 11, color: c.status.success, flex: 1 }}>
-                            {config.successMessage}
-                        </Text>
-                    </View>
-                )}
-
                 {/* Fila 1 — Nombre y Programa (intercambiados) */}
                 <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12, marginTop:-10 }}>
                     <View style={{ flex: 1,}}>

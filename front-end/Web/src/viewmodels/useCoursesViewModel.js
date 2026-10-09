@@ -21,7 +21,6 @@ export const EMPTY_COURSE_FORM = {
     code: "",
     name: "",
     schedule: "mañana",
-    room: "",
     startDate: "",
     endDate: "",
 };
@@ -29,8 +28,8 @@ export const EMPTY_COURSE_FORM = {
 // ── Validación de formulario ──────────────────────────────
 
 export function validateCourseForm(form) {
-    if (!form.code.trim()) return "El código es requerido";
     if (!form.name.trim()) return "El nombre es requerido";
+    if (!form.code.trim()) return "El código es requerido";
     
     return null;
 }
@@ -330,7 +329,6 @@ export function useCoursesViewModel() {
                 code: form.code.trim(),
                 name: form.name.trim(),
                 schedule: form.schedule,
-                room: form.room, // ID del ambiente
                 startDate: form.startDate,
                 endDate: form.endDate,
                 status: "active",

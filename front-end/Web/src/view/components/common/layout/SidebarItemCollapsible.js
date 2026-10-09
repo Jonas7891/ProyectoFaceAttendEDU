@@ -208,7 +208,7 @@ export default function SidebarItemCollapsible({
                     <Feather 
                         name={icon} 
                         size={20} 
-                        color={active || hasActiveChild || isExpanded ? colors.icon : c.text.primary} 
+                        color={colors.icon} 
                     />
                 )}
 
@@ -217,7 +217,7 @@ export default function SidebarItemCollapsible({
                     style={{
                         fontSize: 14,
                         fontWeight: active || hasActiveChild || isExpanded ? "600" : "400",
-                        color: active || hasActiveChild || isExpanded ? colors.text : c.text.primary,
+                        color: colors.text,
                         flex: 1,
                     }}
                     numberOfLines={1}
@@ -339,7 +339,8 @@ export default function SidebarItemCollapsible({
                                         <Feather 
                                             name={child.icon} 
                                             size={16} 
-                                            color={child.active ? childColors.icon : c.text.secondary} 
+                                            color={childColors.icon}
+                                            style={{ opacity: child.active ? 1 : 0.85 }}
                                         />
                                     )}
 
@@ -348,8 +349,9 @@ export default function SidebarItemCollapsible({
                                         style={{
                                             fontSize: 13,
                                             fontWeight: child.active ? "600" : "400",
-                                            color: child.active ? childColors.text : c.text.secondary,
+                                            color: childColors.text,
                                             flex: 1,
+                                            opacity: child.active ? 1 : 0.85,
                                         }}
                                         numberOfLines={1}
                                         ellipsizeMode="tail"

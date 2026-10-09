@@ -22,7 +22,17 @@ const ALL_TABS = [
     },
     { key: "courses",      label: "Cursos",        icon: "book-open"   },
     { key: "environments", label: "Ambientes",     icon: "home"        },
-    { key: "reports",      label: "Reportes",      icon: "bar-chart-2" },
+    { 
+        key: "reports",      
+        label: "Reportes",      
+        icon: "bar-chart-2",
+        // SIN optionalNavigation - el item padre navega directamente
+        // Sub-secciones de reportes
+        children: [
+            { key: "historicos", label: "Históricos", icon: "clock",          adminOnly: false },
+            { key: "sanciones",  label: "Sanciones",  icon: "alert-triangle", adminOnly: false },
+        ]
+    },
     { 
         key: "settings",     
         label: "Configuración",  

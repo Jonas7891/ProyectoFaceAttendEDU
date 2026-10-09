@@ -12,8 +12,8 @@
 //  si el usuario YA está autorizado.
 // ============================================================
 
-import React, { useState, useRef } from "react";
-import { View, Text, ScrollView } from "react-native";
+import React, { useState, useRef, useEffect } from "react";
+import { View, Text, ScrollView, Animated } from "react-native";
 import { Button, PageHeader } from "./components/common";
 import { useTheme } from "./components/hooks/useTheme";
 import { generateTheme } from "../core/theme/generateTheme";
@@ -39,6 +39,9 @@ export default function SettingsView({ section = "appearance" }) {
     const [hasColorChanges, setHasColorChanges] = useState(false);
     const [saved, setSaved] = useState(false);
     
+    // Animación para el fade del botón
+    const buttonOpacity = useRef(new Animated.Value(1)).current;
+    
     // Ref para almacenar la función de guardado del componente hijo
     const saveConfigRef = useRef(null);
     const discardConfigRef = useRef(null);
@@ -62,6 +65,30 @@ export default function SettingsView({ section = "appearance" }) {
 
     // Combinar todos los tipos de cambios
     const anyUnsavedChanges = hasUnsavedAccent || hasConfigChanges || hasColorChanges;
+
+    // Función para animar el estado de guardado
+    function animateSaved() {
+        setSaved(true);
+        
+        // Fade out rápido
+        Animated.timing(buttonOpacity, {
+            toValue: 0.3,
+            duration: 200,
+            useNativeDriver: true,
+        }).start(() => {
+            // Fade in de vuelta
+            Animated.timing(buttonOpacity, {
+                toValue: 1,
+                duration: 300,
+                useNativeDriver: true,
+            }).start();
+        });
+        
+        // Después de 2.5 segundos, volver al texto normal
+        setTimeout(() => {
+            setSaved(false);
+        }, 2500);
+    }
 
     function handleSave() {
         // Ejecutar la función de guardado del componente hijo
@@ -87,8 +114,7 @@ export default function SettingsView({ section = "appearance" }) {
                     setHasColorChanges(false);
                 }, 0);
                 
-                setSaved(true);
-                setTimeout(() => setSaved(false), 2500);
+                animateSaved();
             }
         } else {
             // Si no hay función de guardado (solo cambios de UI)
@@ -107,8 +133,7 @@ export default function SettingsView({ section = "appearance" }) {
                 setHasColorChanges(false);
             }, 0);
             
-            setSaved(true);
-            setTimeout(() => setSaved(false), 2500);
+            animateSaved();
         }
     }
 
@@ -201,9 +226,15 @@ export default function SettingsView({ section = "appearance" }) {
                                 <Button variant="ghost" size="sm" onPress={handleDiscard}>
                                     {t("Descartar")}
                                 </Button>
-                                <Button variant="primary" onPress={handleSave} size="sm">
-                                    {saved ? t("¡Guardado!") : t("Guardar cambios")}
-                                </Button>
+                                <Animated.View style={{ opacity: buttonOpacity }}>
+                                    <Button 
+                                        variant="primary" 
+                                        onPress={handleSave} 
+                                        size="sm"
+                                    >
+                                        {saved ? t("¡Guardado!") : t("Guardar cambios")}
+                                    </Button>
+                                </Animated.View>
                             </>
                         )}
                     </>

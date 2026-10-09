@@ -91,7 +91,7 @@ export function getVariantColors({ variant = "default", active = false, disabled
             return {
                 bg: "transparent",
                 text: c.text.primary,
-                icon: c.text.secondary,
+                icon: c.text.primary,
                 border: "transparent",
             };
     }
