@@ -140,7 +140,12 @@ export function useHistoryViewModel() {
             return { kind: "teacher", label: t("Asistencia de tus estudiantes"), students: mine };
         }
 
-        return { kind: "admin", label: t("Asistencia de toda tu sede"), students };
+        // El super admin no tiene sede propia: no se le habla de "tu sede".
+        return {
+            kind: "admin",
+            label: user.schoolId != null ? t("Asistencia de toda tu sede") : t("Asistencia registrada"),
+            students,
+        };
     }, [user, appData.students, appData.courses, t]);
 
     // ── Opciones de filtros ──────────────────────────────────

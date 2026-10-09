@@ -50,6 +50,7 @@ import { useAuth } from "../context/AuthContext";
 import { useRolePermissions } from "../viewmodels/useRolePermissions";
 import { useDashboardScreenViewModel } from "../viewmodels/useDashboardScreenViewModel";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
+import { roleDisplayLabel } from "../core/utils/backendRoles";
 import { Feather } from "@expo/vector-icons";
 
 const Stack = createNativeStackNavigator();
@@ -185,11 +186,15 @@ function PersistentSidebar() {
                     }}>
                         {user.name}
                     </Text>
-                    <Text style={{
-                        fontSize: 12,
-                        color: c.text.secondary,
-                    }}>
-                        {user.role}
+                    <Text
+                        style={{
+                            fontSize: 12,
+                            color: c.text.secondary,
+                        }}
+                    >
+                        {/* "admin" es el rol total del sistema (sin sede propia):
+                            se etiqueta como Super Admin para que se entienda. */}
+                        {t(roleDisplayLabel(user))}
                     </Text>
                 </SidebarHeader>
             )}

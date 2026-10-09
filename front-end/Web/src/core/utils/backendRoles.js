@@ -54,3 +54,42 @@ export function roleNamesFrom(payload) {
           : [];
     return list.map((role) => role?.roleName ?? role?.role_name).filter(Boolean);
 }
+
+// ── Etiqueta visible del rol (sidebar, bajo el nombre) ───────
+// En la UI se muestra el rol "crudo" (admin/teacher/student), lo que deja
+// fuera su significado real: el catálogo unificado convirtió SUPER_ADMIN
+// en "Administrador" (acceso total, sin sede propia) y ese es el rol que
+// debe leerse como "Super Admin".
+const ROLE_DISPLAY_LABEL = {
+    SUPER_ADMIN: "Super Admin",
+    ADMINISTRADOR: "Super Admin",
+    ADMIN: "Super Admin",
+    SCHOOL_ADMIN: "Admin de sede",
+    RECTOR: "Rector",
+    COORDINATOR: "Coordinador",
+    INSTRUCTOR: "Docente",
+    DOCENTE: "Docente",
+    TEACHER: "Docente",
+    APRENDIZ: "Estudiante",
+    STUDENT: "Estudiante",
+    ESTUDIANTE: "Estudiante",
+};
+
+/**
+ * Etiqueta a mostrar bajo el nombre del usuario en la UI.
+ * Prioriza los nombres de rol del backend (user.roles) y, si ninguno se
+ * reconoce, cae al rol de la UI (user.role).
+ * @param {{ roles?: string[], role?: string }} user
+ * @returns {string}
+ */
+export function roleDisplayLabel(user) {
+    const fromBackend = (user?.roles ?? [])
+        .map((name) => ROLE_DISPLAY_LABEL[String(name ?? "").trim().toUpperCase()])
+        .find(Boolean);
+    if (fromBackend) return fromBackend;
+    const ui = user?.role;
+    if (ui === "admin") return "Super Admin";
+    if (ui === "teacher") return "Docente";
+    if (ui === "student") return "Estudiante";
+    return ui ?? "";
+}
