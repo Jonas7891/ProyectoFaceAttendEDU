@@ -125,12 +125,30 @@ class TestLiveness:
         assert replay.status_code == 400
 
 
+def _completed_challenge_token(client, monkeypatch, actions=2):
+    """A liveness token that has actually been advanced through every step —
+    `consume_liveness_challenge` (used by enroll-image/identify-image)
+    requires `step == len(actions)`, so grabbing a freshly-created token
+    without walking the liveness-step flow first always fails with
+    "not completed". Confirmed by hitting exactly that 400 before fixing."""
+    monkeypatch.setattr(facial_router, "decode_image", lambda data, max_bytes, max_pixels: "decoded")
+    monkeypatch.setattr(facial_router, "validate_liveness", lambda images, action: True)
+    challenge = _challenge(client, actions=actions)
+    token = challenge["challenge_token"]
+    for step in range(len(challenge["actions"])):
+        response = client.post(
+            f"{FACIAL_PREFIX}/liveness-step",
+            json={"challenge_token": token, "action_index": step, "images": [FAKE_IMAGE] * 6},
+        )
+        assert response.status_code == 200, response.json()
+        token = response.json()["challenge_token"]
+    return token
+
+
 class TestEnrollImage:
     def _consume_challenge(self, client, monkeypatch, encoding):
         monkeypatch.setattr(facial_router, "face_encoding", lambda image: encoding)
-        monkeypatch.setattr(facial_router, "decode_image", lambda data, max_bytes, max_pixels: "decoded")
-        challenge = _challenge(client, actions=2)
-        return challenge["challenge_token"]
+        return _completed_challenge_token(client, monkeypatch)
 
     def test_enroll_image_persists_the_computed_encoding(self, client, monkeypatch):
         token = self._consume_challenge(client, monkeypatch, [1.0, 0.0, 0.0, 0.0])
@@ -173,9 +191,7 @@ class TestEnrollImage:
 class TestIdentifyImage:
     def _consume_challenge(self, client, monkeypatch, encoding):
         monkeypatch.setattr(facial_router, "face_encoding", lambda image: encoding)
-        monkeypatch.setattr(facial_router, "decode_image", lambda data, max_bytes, max_pixels: "decoded")
-        challenge = _challenge(client, actions=2)
-        return challenge["challenge_token"]
+        return _completed_challenge_token(client, monkeypatch)
 
     def test_identify_image_finds_the_closest_person(self, client, monkeypatch):
         enroll_token = self._consume_challenge(client, monkeypatch, [1.0, 0.0, 0.0, 0.0])

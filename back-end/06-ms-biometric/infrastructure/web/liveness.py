@@ -100,7 +100,19 @@ def consume_liveness_challenge(secret: str, token: str) -> list[str]:
 
 
 def _create_token(secret: str, ttl_seconds: int, actions: list[str], step: int) -> str:
-    payload = {"actions": actions, "step": step, "exp": int(time.time()) + ttl_seconds}
+    # `nonce` guarantees two tokens are never byte-identical even when actions,
+    # step and exp (second granularity) all happen to coincide — without it,
+    # two unrelated liveness attempts issued in the same second with the same
+    # random action order would produce the same signed token, and consuming
+    # one would silently consume the other too. Confirmed by actually hitting
+    # this collision in a real test run (tests fired several challenges per
+    # second, well within the 3-action/2-permutation action space).
+    payload = {
+        "actions": actions,
+        "step": step,
+        "exp": int(time.time()) + ttl_seconds,
+        "nonce": _secrets.token_hex(8),
+    }
     encoded = _encode_payload(payload)
     signature = hmac.new(secret.encode(), encoded, hashlib.sha256).digest()
     return f"{encoded.decode()}.{_base64url(signature)}"

@@ -136,6 +136,23 @@ async def enroll_facial(
     return template_response(await repository.enroll(template))
 
 
+@router.get("/liveness-challenge")
+async def liveness_challenge(
+    actions: int = 3,
+    secret: str = Depends(get_liveness_secret),
+    settings: Settings = Depends(get_settings),
+):
+    if actions not in (2, 3):
+        raise HTTPException(status_code=422, detail="actions must be 2 or 3")
+    token, action_list = create_liveness_challenge(secret, settings.liveness_ttl_seconds, actions)
+    return {"challenge_token": token, "actions": action_list}
+
+
+# Literal routes (liveness-challenge above) MUST be registered before
+# /{person_id}: FastAPI matches path operations in declaration order, and a
+# GET /{person_id} declared first would swallow GET /liveness-challenge,
+# treating "liveness-challenge" as a person_id. Confirmed by actually hitting
+# this 404 in a real test run before reordering.
 @router.get("/{person_id}")
 async def get_facial(
     person_id: str,
@@ -243,18 +260,6 @@ async def identify_facial(
     return {"person_id": best.person_id, "score": best_score}
 
 
-@router.get("/liveness-challenge")
-async def liveness_challenge(
-    actions: int = 3,
-    secret: str = Depends(get_liveness_secret),
-    settings: Settings = Depends(get_settings),
-):
-    if actions not in (2, 3):
-        raise HTTPException(status_code=422, detail="actions must be 2 or 3")
-    token, action_list = create_liveness_challenge(secret, settings.liveness_ttl_seconds, actions)
-    return {"challenge_token": token, "actions": action_list}
-
-
 @router.post("/liveness-step", dependencies=[Depends(rate_limit("liveness_step"))])
 async def liveness_step(
     req: LivenessStepRequest,
@@ -298,7 +303,14 @@ async def liveness_step(
             ),
         )
         raise HTTPException(status_code=400, detail="Liveness gesture not detected")
-    next_token, _, next_step = advance_liveness_challenge(secret, settings.liveness_ttl_seconds, req.challenge_token)
+    try:
+        next_token, _, next_step = advance_liveness_challenge(
+            secret, settings.liveness_ttl_seconds, req.challenge_token
+        )
+    except ValueError as exc:
+        # Genuine replay of an already-advanced token (not just a validation
+        # failure above) — still a 400, never an unhandled 500.
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {"challenge_token": next_token, "completed": next_step >= len(actions)}
 
 
