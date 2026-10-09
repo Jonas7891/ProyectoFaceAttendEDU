@@ -6,7 +6,7 @@ no in-memory fallback lives in this module.
 """
 from __future__ import annotations
 
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, HTTPException, Request, WebSocket, status
 
 from domain.ports.out.biometric_repository import BiometricRepositoryPort
 from domain.ports.out.match_log_repository import MatchLogRepositoryPort
@@ -76,6 +76,43 @@ def get_liveness_secret(settings: Settings = Depends(get_settings)) -> str:
 # One limiter instance per logical bucket, shared across requests for the life
 # of the process (same single-process posture as the source service's limiter).
 _rate_limiters: dict[str, RateLimiter] = {}
+
+
+# ── WebSocket variants ──────────────────────────────────────────────────
+# A websocket connection is not a `Request`, so the dependencies above cannot
+# be reused as-is: FastAPI resolves a `Request`-typed sub-dependency only for
+# HTTP routes. These mirror them 1:1 off `WebSocket` instead, so the WS router
+# can be tested the same way (`app.dependency_overrides[...]`).
+
+
+def get_mongo_client_ws(websocket: WebSocket) -> MongoClient:
+    client = getattr(websocket.app.state, "mongo_client", None)
+    if client is None:
+        raise PersistenceUnavailableError(
+            "MongoDB client was never initialised; the service did not start correctly"
+        )
+    return client
+
+
+def get_facial_repository_ws(
+    client: MongoClient = Depends(get_mongo_client_ws),
+    settings: Settings = Depends(get_settings),
+) -> BiometricRepositoryPort:
+    return MongoEmbeddingRepository(client, settings, BiometricType.FACIAL)
+
+
+def get_fingerprint_repository_ws(
+    client: MongoClient = Depends(get_mongo_client_ws),
+    settings: Settings = Depends(get_settings),
+) -> BiometricRepositoryPort:
+    return MongoEmbeddingRepository(client, settings, BiometricType.FINGERPRINT)
+
+
+def get_match_log_repository_ws(
+    client: MongoClient = Depends(get_mongo_client_ws),
+    settings: Settings = Depends(get_settings),
+) -> MatchLogRepositoryPort:
+    return MongoMatchLogRepository(client, settings)
 
 
 def rate_limit(key: str):

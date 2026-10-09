@@ -116,6 +116,17 @@ class Settings(BaseSettings):
     max_image_bytes: int = 3 * 1024 * 1024
     max_image_pixels: int = 16_000_000
 
+    # ── WebSocket channel (REST/WS coexistence) ───────────────────────
+    # A connection that sends nothing (not even a ping) within this window is
+    # presumed dead and closed, so a half-open TCP socket does not pin a slot
+    # forever.
+    ws_idle_timeout_seconds: int = 60
+    # Bounds the idempotency cache below: entries older than this are evicted
+    # even if the cache is not full, so a reconnect long after the original
+    # attempt reprocesses instead of replaying a stale response.
+    ws_idempotency_ttl_seconds: int = 300
+    ws_idempotency_max_entries: int = 2_000
+
     @property
     def match_log_ttl_seconds(self) -> int:
         return self.match_log_retention_days * SECONDS_PER_DAY
