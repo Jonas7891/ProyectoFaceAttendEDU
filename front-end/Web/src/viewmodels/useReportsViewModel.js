@@ -16,16 +16,24 @@
 //  Patrón MVVM: ViewModel = lógica + estado
 // ============================================================
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useTheme } from "../view/components/hooks/useTheme";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../context/AppDataContext";
+import { useRolePermissions } from "./useRolePermissions";
+import { academicApi } from "../services/api";
+import { optional } from "../services/api/referenceData";
 import { mockAttendanceByDay, mockAttendanceByWeek } from "../models/data/mockData";
 import { exportToExcel, exportToPDF, buildReportHTML, buildHTMLTable, formatPercentageWithColor, formatStatusBadge } from "../core/utils/exportHelpers";
 
 // ══════════════════════════════════════════════════════════
 // CONSTANTES Y TIPOS PÚBLICOS
 // ══════════════════════════════════════════════════════════
+
+// Estudiantes pintados por página: la consulta no se recorta (alimenta
+// también stats y exportaciones), pero la vista solo pinta una página
+// de golpe para no cargar miles de filas en el DOM.
+export const REPORTS_PAGE_SIZE = 25;
 
 /**
  * Opciones de período disponibles para reportes
@@ -163,6 +171,7 @@ export function useReportsViewModel(
     const { theme } = useTheme();
     const { t } = useTranslation();
     const appData = useAppData();
+    const permissions = useRolePermissions();
     const c = theme.colors;
 
     // ── Datos del contexto global ─────────────────────────────
@@ -303,6 +312,64 @@ export function useReportsViewModel(
     const atRiskStudents = useMemo(
         () => filteredStudents.filter((s) => s.attendance < 75),
         [filteredStudents]
+    );
+
+    // ── Reportes por sede (solo super admin) ──────────────────
+    // El super admin no pertenece a ninguna escuela: su consulta son los
+    // reportes agregados por sede, no los registros de personas concretas.
+    const [schoolsById, setSchoolsById] = useState({});
+
+    useEffect(() => {
+        if (!permissions.isSuperAdmin) return undefined;
+        let cancelled = false;
+        optional(academicApi.listSchools(), []).then((list) => {
+            if (cancelled) return;
+            const rows = Array.isArray(list) ? list : list?.content ?? [];
+            const map = {};
+            for (const school of rows) map[String(school.schoolId)] = school.name;
+            setSchoolsById(map);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [permissions.isSuperAdmin]);
+
+    const schoolSummaries = useMemo(() => {
+        if (!permissions.isSuperAdmin) return [];
+        const bySchool = new Map();
+        for (const s of students) {
+            const key = s.schoolId ?? "sin-sede";
+            const entry =
+                bySchool.get(key) ??
+                { schoolId: s.schoolId ?? null, total: 0, active: 0, atRisk: 0, attendanceSum: 0 };
+            entry.total += 1;
+            if (s.status === "active") entry.active += 1;
+            if (s.attendance < 75) entry.atRisk += 1;
+            entry.attendanceSum += s.attendance || 0;
+            bySchool.set(key, entry);
+        }
+        return [...bySchool.values()]
+            .map((entry) => ({
+                ...entry,
+                name:
+                    entry.schoolId != null
+                        ? schoolsById[String(entry.schoolId)] || `${t("Sede")} #${entry.schoolId}`
+                        : t("Sin sede"),
+                avgAttendance: entry.total ? Math.round(entry.attendanceSum / entry.total) : 0,
+            }))
+            .sort((a, b) => b.total - a.total);
+    }, [permissions.isSuperAdmin, students, schoolsById, t]);
+
+    // ── Paginación ────────────────────────────────────────────
+    // Se pinta solo la página actual; los filtros que dejan la página fuera
+    // de rango usan la última válida (recorte sin useEffect).
+    const [page, setPage] = useState(0);
+    const totalStudents = filteredStudents.length;
+    const totalPages = Math.max(1, Math.ceil(totalStudents / REPORTS_PAGE_SIZE));
+    const safePage = Math.min(page, totalPages - 1);
+    const pageStudents = filteredStudents.slice(
+        safePage * REPORTS_PAGE_SIZE,
+        safePage * REPORTS_PAGE_SIZE + REPORTS_PAGE_SIZE
     );
 
     /**
@@ -648,6 +715,17 @@ export function useReportsViewModel(
         atRiskStudents: atRiskStudents || [],
         filteredStudents: filteredStudents || [],
         availableFichas: availableFichas || [],
+
+        // Paginación (solo una página se pinta a la vez)
+        pageStudents: pageStudents || [],
+        page: safePage,
+        totalPages,
+        totalStudents,
+        pageSize: REPORTS_PAGE_SIZE,
+        setPage,
+
+        // Reportes por sede (vacío salvo para el super admin)
+        schoolSummaries: schoolSummaries || [],
 
         // Estado de carga
         isLoading,

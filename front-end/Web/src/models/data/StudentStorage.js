@@ -138,6 +138,9 @@ async function studentsFromApi() {
                 name: fullName(person) || actor.actorCode || "",
                 email: person?.email ?? "",
                 code: actor.actorCode ?? "",
+                // Sede del actor: permite al super admin agregar los reportes
+                // por escuela en vez de por persona.
+                schoolId: actor.schoolId != null ? String(actor.schoolId) : null,
                 course: course?.code ?? "", // vacío: la UI lo omite de los programas
                 // El código y el nombre del curso se repiten entre sedes ("MAT" existe
                 // en las dos), así que buscar por ellos cuelga al estudiante del curso
