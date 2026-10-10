@@ -263,16 +263,23 @@ export function useUsersViewModel(
         return allUsers;
     }, [allUsers, user, myCourseIds, myStudentRecord]);
 
-    // ── Programas únicos para filtro ──────────────────────────
-    
-    const courses = useMemo(
-        () => appData.programs.map((p) => ({
-            value: p.name,
-            label: p.name,
-            icon: "book-open"
-        })),
-        [appData.programs]
-    );
+    // ── Cursos reales para el filtro de Curso ──────────────────
+    // El docente solo ve los cursos donde es instructor (myCourseIds);
+    // el admin, todos los de la sede activa. Se compara por id: el
+    // código y el nombre se repiten entre sedes.
+    const courseOptions = useMemo(() => {
+        const source = (appData.courses || []).filter(
+            (course) => !myCourseIds || myCourseIds.includes(course.id)
+        );
+        return [
+            { value: "", label: t("Todos los cursos"), icon: "filter" },
+            ...source.map((course) => ({
+                value: String(course.id),
+                label: course.name,
+                icon: "book-open",
+            })),
+        ];
+    }, [appData.courses, myCourseIds, t]);
 
     // ── Filtros de tipo de usuario ────────────────────────────
     
@@ -307,10 +314,13 @@ export function useUsersViewModel(
                 const matchUserType = effectiveUserTypeFilter === USER_TYPES.ALL || 
                     user.userType === effectiveUserTypeFilter;
                 
-                // Filtro por curso (solo aplicable a estudiantes)
-                const matchCourse = !courseFilter || 
-                    user.course === courseFilter ||
-                    user.userType !== USER_TYPES.STUDENT;
+                // Filtro por curso (solo aplica a estudiantes): compara por id
+                // (único entre sedes) con fallback al código/nombre del mock
+                const matchCourse = !courseFilter ||
+                    user.userType !== USER_TYPES.STUDENT ||
+                    (Array.isArray(user.courseIds) && user.courseIds.map(String).includes(courseFilter)) ||
+                    user.courseId === courseFilter ||
+                    user.course === courseFilter;
                 
                 // Filtro por estado
                 const matchStatus = !statusFilter || user.status === statusFilter;
@@ -520,7 +530,7 @@ export function useUsersViewModel(
         totalUsers,
         pageSize: USERS_PAGE_SIZE,
         setPage,
-        courses,
+        courseOptions,
         userTypeFilters,
         statusFilters,
         selected,
