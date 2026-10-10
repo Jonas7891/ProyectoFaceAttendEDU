@@ -1,11 +1,11 @@
 // ============================================================
 //  FaceAttend EDU — Históricos Section
 //
-//  Sección para mostrar todo el historial del usuario.
-//  Incluye buscador con filtros por nombre, ficha y día/s.
+//  Sección para mostrar la lista de usuarios con asistencia.
+//  Incluye filtros por nombre, ficha y fecha.
 // ============================================================
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { 
@@ -15,18 +15,38 @@ import {
     DatePicker,
     Avatar,
     Badge,
-    EmptyState
+    EmptyState,
+    Loader
 } from "../../../components/common";
 import { useTheme } from "../../../components/hooks/useTheme";
 import { useResponsive } from "../../../components/hooks/useResponsive";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { useDateFormat } from "../../../components/hooks/useDateFormat";
+import { useAppData } from "../../../../context/AppDataContext";
 
-function HistorialRow({ record, index, isLast, onPress }) {
+function UserRow({ user, index, isLast, onPress }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
     const { formatDate } = useDateFormat();
     const c = theme.colors;
+    
+    // Determinar el icono y color según el estado del último registro
+    const statusConfig = {
+        present: {
+            variant: "success",
+            label: user.late ? t("Presente (Tarde)") : t("Presente"),
+            icon: "check-circle",
+            iconColor: c.status.success,
+        },
+        absent: {
+            variant: "danger",
+            label: t("Ausente"),
+            icon: "x-circle",
+            iconColor: c.status.danger,
+        }
+    };
+    
+    const config = statusConfig[user.status] || statusConfig.present;
     
     return (
         <TouchableOpacity
@@ -40,11 +60,31 @@ function HistorialRow({ record, index, isLast, onPress }) {
                 borderBottomColor: c.border.primary,
             }}
         >
-            {/* Avatar */}
-            <Avatar name={record.studentName} size={40} />
+            {/* Avatar con indicador de estado */}
+            <View style={{ position: "relative" }}>
+                <Avatar name={user.studentName} size={40} />
+                {user.date && (
+                    <View style={{
+                        position: "absolute",
+                        bottom: -2,
+                        right: -2,
+                        width: 16,
+                        height: 16,
+                        borderRadius: 8,
+                        backgroundColor: config.iconColor,
+                        borderWidth: 2,
+                        borderColor: c.background.surface,
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}>
+                        <Feather name={config.icon} size={8} color="#fff" />
+                    </View>
+                )}
+            </View>
 
             {/* Información principal */}
-            <View style={{ flex: 1, gap: 4 }}>
+            <View style={{ flex: 1, gap: 5 }}>
+                {/* Primera línea: Nombre y Badge */}
                 <View style={{
                     flexDirection: "row",
                     alignItems: "center",
@@ -57,54 +97,98 @@ function HistorialRow({ record, index, isLast, onPress }) {
                         color: c.text.primary,
                         flex: 1,
                     }} numberOfLines={1}>
-                        {record.studentName}
+                        {user.studentName}
                     </Text>
                     
-                    <Badge 
-                        variant={record.status === "present" ? "success" : "danger"}
-                        size="sm"
-                    >
-                        {record.status === "present" ? t("Presente") : t("Ausente")}
-                    </Badge>
+                    {user.date && (
+                        <Badge 
+                            variant={config.variant}
+                            size="sm"
+                        >
+                            {config.label}
+                        </Badge>
+                    )}
                 </View>
 
+                {/* Segunda línea: Código, Ficha, Fecha y Hora */}
                 <View style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    gap: 8,
+                    gap: 6,
+                    flexWrap: "wrap",
                 }}>
-                    <Text style={{
-                        fontSize: 12,
-                        color: c.text.secondary,
+                    {/* Código */}
+                    <View style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 4,
                     }}>
-                        {record.ficha}
-                    </Text>
-                    <Text style={{
-                        fontSize: 12,
-                        color: c.text.secondary,
+                        <Feather name="hash" size={12} color={c.text.secondary} />
+                        <Text style={{
+                            fontSize: 12,
+                            color: c.text.secondary,
+                            fontWeight: "500",
+                        }}>
+                            {user.studentCode}
+                        </Text>
+                    </View>
+                    
+                    <Text style={{ fontSize: 12, color: c.text.disabled }}>•</Text>
+                    
+                    {/* Ficha */}
+                    <View style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 4,
                     }}>
-                        •
-                    </Text>
-                    <Text style={{
-                        fontSize: 12,
-                        color: c.text.secondary,
-                    }}>
-                        {formatDate(record.date, "DD/MM/YYYY")}
-                    </Text>
-                    {record.time && (
+                        <Feather name="book-open" size={12} color={c.text.secondary} />
+                        <Text style={{
+                            fontSize: 12,
+                            color: c.text.secondary,
+                        }}>
+                            {user.ficha}
+                        </Text>
+                    </View>
+                    
+                    {user.date && (
                         <>
-                            <Text style={{
-                                fontSize: 12,
-                                color: c.text.secondary,
+                            <Text style={{ fontSize: 12, color: c.text.disabled }}>•</Text>
+                            
+                            {/* Fecha */}
+                            <View style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 4,
                             }}>
-                                •
-                            </Text>
-                            <Text style={{
-                                fontSize: 12,
-                                color: c.text.secondary,
+                                <Feather name="calendar" size={12} color={c.text.secondary} />
+                                <Text style={{
+                                    fontSize: 12,
+                                    color: c.text.secondary,
+                                }}>
+                                    {formatDate(user.date, "DD/MM/YYYY")}
+                                </Text>
+                            </View>
+                        </>
+                    )}
+                    
+                    {user.time && (
+                        <>
+                            <Text style={{ fontSize: 12, color: c.text.disabled }}>•</Text>
+                            
+                            {/* Hora */}
+                            <View style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 4,
                             }}>
-                                {record.time}
-                            </Text>
+                                <Feather name="clock" size={12} color={c.text.secondary} />
+                                <Text style={{
+                                    fontSize: 12,
+                                    color: c.text.secondary,
+                                }}>
+                                    {user.time}
+                                </Text>
+                            </View>
                         </>
                     )}
                 </View>
@@ -115,10 +199,11 @@ function HistorialRow({ record, index, isLast, onPress }) {
     );
 }
 
-export function HistoricosSection({ title }) {
+export function HistoricosSection({ showFilters, onToggleFilters, onStatsChange }) {
     const { theme } = useTheme();
     const { isSmall } = useResponsive();
     const { t } = useTranslation();
+    const appData = useAppData();
     const c = theme.colors;
 
     // Estado para filtros
@@ -126,89 +211,114 @@ export function HistoricosSection({ title }) {
     const [selectedFicha, setSelectedFicha] = useState("");
     const [selectedDate, setSelectedDate] = useState(null);
     const [dateRange, setDateRange] = useState({ start: null, end: null });
-    const [showFilters, setShowFilters] = useState(false);
 
-    // Datos mockeados de historial (en producción vendría del contexto o API)
-    const mockHistorialData = useMemo(() => [
-        {
-            id: "1",
-            studentName: "Ana García",
-            ficha: "2640001",
-            date: "2024-12-06",
-            time: "08:15",
-            status: "present"
-        },
-        {
-            id: "2",
-            studentName: "Carlos Rodríguez",
-            ficha: "2640001",
-            date: "2024-12-06",
-            time: "08:45",
-            status: "absent"
-        },
-        {
-            id: "3",
-            studentName: "María López",
-            ficha: "2640002",
-            date: "2024-12-05",
-            time: "09:00",
-            status: "present"
-        },
-        {
-            id: "4",
-            studentName: "Pedro Martínez",
-            ficha: "2640002",
-            date: "2024-12-05",
-            time: "08:30",
-            status: "present"
-        },
-        {
-            id: "5",
-            studentName: "Ana García",
-            ficha: "2640001",
-            date: "2024-12-04",
-            time: "08:20",
-            status: "present"
-        }
-    ], []);
+    // Construir lista de usuarios con su información de asistencia
+    const usersData = useMemo(() => {
+        // Solo estudiantes (excluyendo administradores y profesores)
+        const students = appData.students || [];
+        
+        return students.map(student => {
+            // Calcular el último registro de asistencia
+            let lastRecord = null;
+            if (student.attendanceHistory && student.attendanceHistory.length > 0) {
+                // Ordenar por fecha descendente y tomar el primero
+                const sortedHistory = [...student.attendanceHistory].sort(
+                    (a, b) => new Date(b.date) - new Date(a.date)
+                );
+                lastRecord = sortedHistory[0];
+            }
+            
+            // Generar hora simulada para el último registro
+            const baseHour = 8;
+            const minuteVariation = (parseInt(student.id) * 7) % 60;
+            const time = `${baseHour.toString().padStart(2, '0')}:${minuteVariation.toString().padStart(2, '0')}`;
+            
+            return {
+                id: student.id,
+                studentName: student.name,
+                studentCode: student.code,
+                ficha: student.course,
+                fichaName: student.courseName,
+                date: lastRecord?.date || null,
+                time: lastRecord ? time : null,
+                status: lastRecord?.present ? "present" : "absent",
+                late: lastRecord?.late || false,
+                totalRecords: student.attendanceHistory?.length || 0,
+                attendance: student.attendance,
+            };
+        });
+    }, [appData.students]);
 
-    // Fichas disponibles para filtrado
-    const availableFichas = useMemo(() => [
-        { value: "", label: t("Todas las fichas") },
-        { value: "2640001", label: "2640001 - ADSO" },
-        { value: "2640002", label: "2640002 - Multimedia" },
-        { value: "2640003", label: "2640003 - Redes" },
-    ], [t]);
+    // Fichas disponibles para filtrado (extraídas dinámicamente de los cursos)
+    const availableFichas = useMemo(() => {
+        const fichasSet = new Set();
+        
+        // Recopilar todas las fichas únicas de los estudiantes
+        (appData.students || []).forEach(student => {
+            if (student.course) {
+                fichasSet.add(student.course);
+            }
+        });
+        
+        // Convertir a array de opciones
+        const fichaOptions = Array.from(fichasSet)
+            .sort()
+            .map(ficha => {
+                // Buscar el nombre del curso si está disponible
+                const course = (appData.courses || []).find(c => c.code === ficha || c.id === ficha);
+                return {
+                    value: ficha,
+                    label: course ? `${ficha} - ${course.name}` : ficha
+                };
+            });
+        
+        return [
+            { value: "", label: t("Todas las fichas") },
+            ...fichaOptions
+        ];
+    }, [appData.students, appData.courses, t]);
 
-    // Filtrar datos del historial
-    const filteredHistorial = useMemo(() => {
-        let result = mockHistorialData;
+    // Filtrar datos de usuarios
+    const filteredUsers = useMemo(() => {
+        let result = usersData;
 
         // Filtro por nombre
         if (searchName) {
             const searchLower = searchName.toLowerCase();
-            result = result.filter(record => 
-                record.studentName.toLowerCase().includes(searchLower)
+            result = result.filter(user => 
+                user.studentName.toLowerCase().includes(searchLower) ||
+                user.studentCode.toLowerCase().includes(searchLower)
             );
         }
 
         // Filtro por ficha
         if (selectedFicha) {
-            result = result.filter(record => record.ficha === selectedFicha);
+            result = result.filter(user => user.ficha === selectedFicha);
         }
 
-        // Filtro por fecha específica o rango
+        // Filtro por fecha específica o rango (filtrar usuarios que tienen registro en ese rango)
         if (selectedDate) {
-            result = result.filter(record => record.date === selectedDate);
+            result = result.filter(user => user.date === selectedDate);
         } else if (dateRange.start && dateRange.end) {
-            result = result.filter(record => 
-                record.date >= dateRange.start && record.date <= dateRange.end
+            result = result.filter(user => 
+                user.date && user.date >= dateRange.start && user.date <= dateRange.end
             );
         }
 
-        // Ordenar por fecha descendente (más recientes primero)
-        return result.sort((a, b) => new Date(b.date) - new Date(a.date));
-    }, [mockHistorialData, searchName, selectedFicha, selectedDate, dateRange]);
+        // Ordenar por nombre
+        return result.sort((a, b) => a.studentName.localeCompare(b.studentName));
+    }, [usersData, searchName, selectedFicha, selectedDate, dateRange]);
+
+    // Actualizar estadísticas en el padre
+    useEffect(() => {
+        if (onStatsChange) {
+            const totalRecords = usersData.reduce((sum, user) => sum + user.totalRecords, 0);
+            onStatsChange({
+                totalRecords,
+                totalUsers: usersData.length,
+            });
+        }
+    }, [usersData, onStatsChange]);
 
     const clearFilters = () => {
         setSearchName("");
@@ -217,8 +327,13 @@ export function HistoricosSection({ title }) {
         setDateRange({ start: null, end: null });
     };
 
+    // Mostrar loader mientras se cargan los datos
+    if (appData.isLoading) {
+        return <Loader fullScreen message={t("Cargando históricos...")} />;
+    }
+
     return (
-        <View style={{ padding: 24, gap: 20 }}>
+        <View style={{ gap: 20 }}>
             {/* Panel de filtros */}
             {showFilters && (
                 <View style={{
@@ -226,6 +341,8 @@ export function HistoricosSection({ title }) {
                     backgroundColor: c.background.surface,
                     borderRadius: 12,
                     gap: 16,
+                    borderWidth: 1,
+                    borderColor: c.border.primary,
                 }}>
                     <Text style={{
                         fontSize: 16,
@@ -339,7 +456,7 @@ export function HistoricosSection({ title }) {
                         <Button
                             variant="primary"
                             size="sm"
-                            onPress={() => setShowFilters(false)}
+                            onPress={() => onToggleFilters && onToggleFilters(false)}
                         >
                             {t("Aplicar")}
                         </Button>
@@ -352,47 +469,116 @@ export function HistoricosSection({ title }) {
                 backgroundColor: c.background.surface,
                 borderRadius: 12,
                 overflow: "hidden",
+                borderWidth: 1,
+                borderColor: c.border.primary,
             }}>
-                {filteredHistorial.length === 0 ? (
-                    <EmptyState
-                        icon="clock"
-                        title={t("No hay registros")}
-                        description={
-                            searchName || selectedFicha || selectedDate || (dateRange.start && dateRange.end)
-                                ? t("No se encontraron registros con los filtros aplicados")
-                                : t("No hay historial de asistencia disponible")
-                        }
-                    />
+                {filteredUsers.length === 0 ? (
+                    <View style={{ padding: 24 }}>
+                        <EmptyState
+                            icon="users"
+                            title={t("No hay usuarios")}
+                            description={
+                                searchName || selectedFicha || selectedDate || (dateRange.start && dateRange.end)
+                                    ? t("No se encontraron usuarios con los filtros aplicados")
+                                    : t("No hay usuarios registrados en el sistema")
+                            }
+                        />
+                    </View>
                 ) : (
                     <>
-                        {/* Header con contador */}
+                        {/* Header con contador y filtros activos */}
                         <View style={{
                             padding: 16,
                             borderBottomWidth: 1,
                             borderBottomColor: c.border.primary,
                             backgroundColor: c.background.surfaceVariant,
                         }}>
-                            <Text style={{
-                                fontSize: 14,
-                                fontWeight: "600",
-                                color: c.text.primary,
+                            <View style={{
+                                flexDirection: isSmall ? "column" : "row",
+                                justifyContent: "space-between",
+                                alignItems: isSmall ? "flex-start" : "center",
+                                gap: 8,
                             }}>
-                                {filteredHistorial.length} {filteredHistorial.length === 1 ? t("registro") : t("registros")}
-                            </Text>
+                                <Text style={{
+                                    fontSize: 14,
+                                    fontWeight: "600",
+                                    color: c.text.primary,
+                                }}>
+                                    {filteredUsers.length} {filteredUsers.length === 1 ? t("registro") : t("registros")}
+                                </Text>
+                                
+                                {/* Indicador de filtros activos */}
+                                {(searchName || selectedFicha || selectedDate || (dateRange.start && dateRange.end)) && (
+                                    <View style={{
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        gap: 8,
+                                    }}>
+                                        <View style={{
+                                            flexDirection: "row",
+                                            alignItems: "center",
+                                            gap: 5,
+                                            paddingHorizontal: 8,
+                                            paddingVertical: 4,
+                                            borderRadius: 6,
+                                            backgroundColor: c.primary + "20",
+                                        }}>
+                                            <Feather name="filter" size={12} color={c.primary} />
+                                            <Text style={{
+                                                fontSize: 12,
+                                                color: c.primary,
+                                                fontWeight: "500",
+                                            }}>
+                                                {t("Filtros activos")}
+                                            </Text>
+                                        </View>
+                                        <TouchableOpacity onPress={clearFilters}>
+                                            <Text style={{
+                                                fontSize: 12,
+                                                color: c.status.danger,
+                                                fontWeight: "500",
+                                            }}>
+                                                {t("Limpiar")}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                )}
+                            </View>
                         </View>
 
-                        {/* Lista de registros */}
-                        <ScrollView style={{ maxHeight: 400 }}>
-                            {filteredHistorial.map((record, index) => (
-                                <HistorialRow
-                                    key={record.id}
-                                    record={record}
+                        {/* Lista de usuarios */}
+                        <ScrollView style={{ maxHeight: 500 }}>
+                            {filteredUsers.map((user, index) => (
+                                <UserRow
+                                    key={user.id}
+                                    user={user}
                                     index={index}
-                                    isLast={index === filteredHistorial.length - 1}
-                                    onPress={() => console.log("Ver detalles:", record.id)}
+                                    isLast={index === filteredUsers.length - 1}
+                                    onPress={() => console.log("Ver detalles de usuario:", user.id)}
                                 />
                             ))}
                         </ScrollView>
+
+                        {/* Footer con mensaje final */}
+                        {filteredUsers.length > 5 && (
+                            <View style={{
+                                padding: 16,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor: c.background.surfaceVariant,
+                                borderTopWidth: 1,
+                                borderTopColor: c.border.primary,
+                            }}>
+                                <Feather name="check-circle" size={20} color={c.status.success} style={{ marginBottom: 6 }} />
+                                <Text style={{
+                                    fontSize: 13,
+                                    color: c.text.secondary,
+                                    textAlign: "center",
+                                }}>
+                                    {t("Has llegado al final de la lista")}
+                                </Text>
+                            </View>
+                        )}
                     </>
                 )}
             </View>

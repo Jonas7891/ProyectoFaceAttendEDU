@@ -11,46 +11,61 @@
 import React, { useState, useMemo, useRef } from "react";
 import { View, ScrollView, Text, TouchableOpacity, Animated } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { PageHeader, Button, Card, Loader, Avatar, Badge, EmptyState } from "../../components/common";
+import { PageHeader, Button, Card, Loader, Avatar, Badge, EmptyState, ProgressBar } from "../../components/common";
 import { useTheme } from "../../components/hooks/useTheme";
 import { useResponsive } from "../../components/hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useRolePermissions } from "../../../viewmodels/useRolePermissions";
-import { useAttendanceStatus } from "../../components/common/badges/StatusBadge";
+import { useAttendanceColor } from "../../components/common/badges/StatusBadge";
 import { getAttendanceThresholds, getAtRiskStudents } from "../../../models/data/userDerivedData";
 import { getInstitutionConfig } from "../../../core/config/institutionConfig";
 import { useAppData } from "../../../context/AppDataContext";
 import { usePushNotification } from "../../components/common/feedback/PushNotification";
 import { HistoricosSection, SancionesSection } from "./sections";
 import { createBulkSanctions, hasActiveSanctions } from "../../../models/data/sanctionsData";
+import { getRelativeTime } from "../../../core/utils/dates";
 
-// ── Componente interno StudentRow ────────────────────────
+// ── Componente interno StudentRow (adaptado de AtRiskStudentsList) ────
 
 function StudentRow({ student, index, isLast, onPress, onNotify }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
     const c = theme.colors;
     
-    // Usar la lógica existente de attendance status (única fuente de verdad)
-    const attendanceStatus = useAttendanceStatus(student.attendance);
+    const config = getInstitutionConfig();
+    const thresholds = getAttendanceThresholds();
+    const attColor = useAttendanceColor(student.attendanceRate);
     
-    // Si están en reportes, están en riesgo
-    const isAtRisk = true;
+    // Calcular umbral de advertencia crítica dinámicamente
+    const criticalDaysThreshold = Math.ceil(config.daysUntilSanction / 2);
     
-    // Mapear level a variant para Badge
-    const badgeVariantMap = {
-        excellent: "success",
-        warning: "warning",
-        danger: "danger",
-    };
-    const badgeVariant = badgeVariantMap[attendanceStatus.level] || "danger";
+    // Determinar nivel de riesgo basándose en umbrales dinámicos (IGUAL QUE DASHBOARD)
+    const isHighRisk = student.attendanceRate < thresholds.danger || 
+                       student.daysUntilSanction <= criticalDaysThreshold;
+    const isMediumRisk = !isHighRisk && student.attendanceRate < thresholds.warning;
     
-    // Usar el bgColor que ya viene del hook
-    const backgroundColor = attendanceStatus.bgColor;
+    let variant = "warning";
+    let icon = "alert-circle";
+    let bgColor = c.status.warningLight;
+    
+    if (isHighRisk) {
+        variant = "danger";
+        icon = "alert-octagon";
+        bgColor = c.status.dangerLight;
+    } else if (isMediumRisk) {
+        variant = "warning";
+        icon = "alert-triangle";
+        bgColor = c.status.warningLight;
+    }
+    
+    // Formatear última asistencia
+    const lastAttendanceText = student.lastAttendanceDate 
+        ? getRelativeTime(student.lastAttendanceDate)
+        : student.lastAttendance || t("Sin registro");
 
     return (
         <TouchableOpacity
-            onPress={onPress}
+            onPress={() => onPress?.(student.id)}
             style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -58,31 +73,32 @@ function StudentRow({ student, index, isLast, onPress, onNotify }) {
                 gap: 12,
                 borderBottomWidth: isLast ? 0 : 1,
                 borderBottomColor: c.border.primary,
-                backgroundColor,
+                backgroundColor: bgColor,
             }}
         >
+            {/* Avatar con indicador de riesgo */}
             <View style={{ position: "relative" }}>
                 <Avatar name={student.name} size={48} />
-                {isAtRisk && (
-                    <View style={{
-                        position: "absolute",
-                        bottom: -2,
-                        right: -2,
-                        width: 20,
-                        height: 20,
-                        borderRadius: 10,
-                        backgroundColor: c.status.danger,
-                        borderWidth: 2,
-                        borderColor: c.background.surface,
-                        alignItems: "center",
-                        justifyContent: "center",
-                    }}>
-                        <Feather name="alert-octagon" size={10} color="#fff" />
-                    </View>
-                )}
+                <View style={{
+                    position: "absolute",
+                    bottom: -2,
+                    right: -2,
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    backgroundColor: attColor,
+                    borderWidth: 2,
+                    borderColor: bgColor,
+                    alignItems: "center",
+                    justifyContent: "center",
+                }}>
+                    <Feather name={icon} size={10} color="#fff" />
+                </View>
             </View>
 
+            {/* Información */}
             <View style={{ flex: 1, gap: 6 }}>
+                {/* Header: Nombre + Última asistencia + Badge */}
                 <View style={{
                     flexDirection: "row",
                     alignItems: "center",
@@ -98,79 +114,156 @@ function StudentRow({ student, index, isLast, onPress, onNotify }) {
                         {student.name}
                     </Text>
 
-                    <Badge variant={badgeVariant} size="sm">
-                        {student.attendance}%
-                    </Badge>
+                    <View style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 8,
+                    }}>
+                        <Text style={{
+                            fontSize: 11,
+                            color: c.text.disabled,
+                        }}>
+                            {lastAttendanceText}
+                        </Text>
+                        
+                        <Badge variant={variant} size="sm">
+                            {student.attendanceRate}%
+                        </Badge>
+                    </View>
                 </View>
 
+                {/* Segunda línea: Código + Ficha + Stats */}
                 <View style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    gap: 8,
-                }}>
-                    <Text style={{ fontSize: 12, color: c.text.secondary }}>
-                        {student.code}
-                    </Text>
-                    <Text style={{ fontSize: 12, color: c.text.secondary }}>•</Text>
-                    <Text style={{
-                        fontSize: 12,
-                        color: c.text.secondary,
-                        flex: 1,
-                    }} numberOfLines={1}>
-                        {student.courseName || student.course || "—"}
-                    </Text>
-                </View>
-
-                <View style={{
-                    flexDirection: "row",
-                    alignItems: "center",
+                    justifyContent: "space-between",
                     gap: 8,
                 }}>
                     <View style={{
                         flexDirection: "row",
                         alignItems: "center",
-                        gap: 4,
+                        gap: 8,
+                        flex: 1,
                     }}>
-                        <View style={{
-                            width: 6,
-                            height: 6,
-                            borderRadius: 3,
-                            backgroundColor: student.status === "active" 
-                                ? c.status.success 
-                                : c.text.disabled,
-                        }} />
-                        <Text style={{ fontSize: 11, color: c.text.secondary }}>
-                            {student.status === "active" ? t("Activo") : t("Inactivo")}
+                        <Text style={{ fontSize: 12, color: c.text.secondary }}>
+                            {student.code}
+                        </Text>
+                        <Text style={{ fontSize: 12, color: c.text.secondary }}>
+                            • {student.fichaName || student.courseName}
                         </Text>
                     </View>
+
+                    {/* Stats: faltas + seguidas */}
+                    <View style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 10,
+                    }}>
+                        <View style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 4,
+                        }}>
+                            <Feather name="x-circle" size={12} color={c.status.danger} />
+                            <Text style={{ fontSize: 11, color: c.text.secondary }}>
+                                {student.totalAbsences} {t("faltas")}
+                            </Text>
+                        </View>
+
+                        {student.consecutiveAbsences > 0 && (
+                            <View style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 4,
+                            }}>
+                                <Feather name="repeat" size={12} color={c.status.warning} />
+                                <Text style={{ fontSize: 11, color: c.text.secondary }}>
+                                    {student.consecutiveAbsences} {t("seguidas")}
+                                </Text>
+                            </View>
+                        )}
+                    </View>
                 </View>
+
+                {/* Barra de progreso */}
+                <ProgressBar
+                    value={student.attendanceRate}
+                    color={attColor}
+                    size="sm"
+                />
+                
+                {/* Advertencia de días consecutivos (CRÍTICO) */}
+                {student.hasExceededConsecutiveDays && (
+                    <View style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 4,
+                        marginTop: 2,
+                    }}>
+                        <Feather name="alert-octagon" size={10} color={c.status.danger} />
+                        <Text style={{
+                            fontSize: 10,
+                            color: c.status.danger,
+                            fontWeight: "700",
+                        }}>
+                            {t("Sanción por ausencias consecutivas")} ({student.consecutiveAbsences} {t("días seguidos")})
+                        </Text>
+                    </View>
+                )}
+                
+                {/* Advertencia de días hasta sanción */}
+                {!student.hasExceededConsecutiveDays && student.daysUntilSanction <= criticalDaysThreshold && (
+                    <View style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 4,
+                        marginTop: 2,
+                    }}>
+                        <Feather 
+                            name={student.daysUntilSanction === 0 ? "alert-octagon" : "clock"} 
+                            size={10} 
+                            color={student.daysUntilSanction === 0 ? c.status.danger : c.status.warning} 
+                        />
+                        <Text style={{
+                            fontSize: 10,
+                            color: student.daysUntilSanction === 0 ? c.status.danger : c.status.warning,
+                            fontWeight: "600",
+                        }}>
+                            {student.daysUntilSanction === 0
+                                ? t("Umbral de sanción alcanzado")
+                                : `${student.daysUntilSanction} ${t("días hasta posible sanción")}`
+                            }
+                        </Text>
+                    </View>
+                )}
             </View>
 
-            <View style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 12,
-            }}>
-                {/* Botón de notificación individual */}
-                <TouchableOpacity
-                    onPress={(e) => {
-                        e.stopPropagation();
-                        onNotify(student);
-                    }}
-                    style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 18,
-                        backgroundColor: c.status.dangerLight,
-                        alignItems: "center",
-                        justifyContent: "center",
-                    }}
-                >
-                    <Feather name="bell" size={16} color={c.status.danger} />
-                </TouchableOpacity>
-                
-                <Feather name="chevron-right" size={20} color={c.text.secondary} />
-            </View>
+            {/* Botón de notificación individual con borde */}
+            <TouchableOpacity
+                onPress={(e) => {
+                    e.stopPropagation();
+                    onNotify(student);
+                }}
+                style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: c.background.surface,
+                    borderWidth: 2,
+                    borderColor: c.status.danger,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    shadowColor: c.status.danger,
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.15,
+                    shadowRadius: 4,
+                    elevation: 3,
+                }}
+            >
+                <Feather name="bell" size={18} color={c.status.danger} />
+            </TouchableOpacity>
+            
+            <Feather name="chevron-right" size={22} color={c.text.secondary} />
         </TouchableOpacity>
     );
 }
@@ -186,11 +279,9 @@ export function AdminReports({ section }) {
     const pushNotification = usePushNotification();
     const c = theme.colors;
 
-    // Usar useReducer en lugar de useState para forzar re-renders
-    const [, forceUpdate] = React.useReducer(x => x + 1, 0);
-    
     // Estado y animación para el botón de recargar
     const [isReloading, setIsReloading] = useState(false);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
     const rotateAnim = useRef(new Animated.Value(0)).current;
 
     // ── IMPORTANTE: Todos los hooks deben estar ANTES de cualquier return early ──
@@ -222,7 +313,9 @@ export function AdminReports({ section }) {
                 totalAbsences: student.totalAbsences,
                 consecutiveAbsences: student.consecutiveAbsences,
                 daysUntilSanction: student.daysUntilSanction,
+                hasExceededConsecutiveDays: student.hasExceededConsecutiveDays,
                 lastAttendance: student.lastAttendance,
+                lastAttendanceDate: originalStudent?.lastAttendanceDate || student.lastAttendanceDate,
             };
         });
 
@@ -230,7 +323,7 @@ export function AdminReports({ section }) {
             students: formattedStudents,
             isLoading: appData.isLoading,
         };
-    }, [appData.students, appData.isLoading]); // Sin refreshKey - confiamos en forceUpdate
+    }, [appData.students, appData.isLoading, refreshTrigger]); // refreshTrigger fuerza recálculo
 
     // ── Determinar qué sección mostrar (DESPUÉS de todos los hooks) ──
     const isMainView = !section || section === "all";
@@ -239,12 +332,124 @@ export function AdminReports({ section }) {
 
     // ── Renderizar sección de Históricos ──────────────────
     if (isHistoricos) {
+        // Estado para las estadísticas y el toggle de filtros
+        const [historicosStats, setHistoricosStats] = React.useState({ totalRecords: 0, totalUsers: 0 });
+        const [showHistoricosFilters, setShowHistoricosFilters] = React.useState(false);
+
         return (
             <>
-                <PageHeader
-                    title={t("Históricos")}
-                    subtitle={t("Historial completo de asistencia de todos los usuarios")}
-                />
+                {/* Header compacto con estadísticas */}
+                <View
+                    style={{
+                        paddingTop: 16,
+                        paddingBottom: 16,
+                        paddingHorizontal: isSmall ? 16 : 24,
+                        backgroundColor: c.background.app,
+                        borderBottomWidth: 1,
+                        borderBottomColor: c.border.primary,
+                    }}
+                >
+                    <View style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        gap: 24,
+                    }}>
+                        {/* Lado izquierdo: Título y Subtítulo */}
+                        <View style={{ flex: 1 }}>
+                            <Text style={{
+                                fontSize: 24,
+                                fontWeight: "700",
+                                color: c.text.primary,
+                                marginBottom: 4,
+                            }}>
+                                {t("Históricos")}
+                            </Text>
+                            <Text style={{
+                                fontSize: 14,
+                                color: c.text.secondary,
+                            }}>
+                                {t("Historial completo de asistencia de todos los usuarios")}
+                            </Text>
+                        </View>
+
+                        {/* Lado derecho: Estadísticas y Botón de Filtros */}
+                        <View style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 32,
+                        }}>
+                            {/* Estadísticas */}
+                            <View style={{
+                                flexDirection: "row",
+                                gap: 32,
+                            }}>
+                                <View>
+                                    <Text style={{
+                                        fontSize: 12,
+                                        color: c.text.secondary,
+                                        fontWeight: "500",
+                                        marginBottom: 4,
+                                    }}>
+                                        {t("Total registros")}
+                                    </Text>
+                                    <Text style={{
+                                        fontSize: 24,
+                                        fontWeight: "700",
+                                        color: c.text.primary,
+                                    }}>
+                                        {historicosStats.totalRecords}
+                                    </Text>
+                                </View>
+                                
+                                <View>
+                                    <Text style={{
+                                        fontSize: 12,
+                                        color: c.text.secondary,
+                                        fontWeight: "500",
+                                        marginBottom: 4,
+                                    }}>
+                                        {t("Usuarios registrados")}
+                                    </Text>
+                                    <Text style={{
+                                        fontSize: 24,
+                                        fontWeight: "700",
+                                        color: c.text.primary,
+                                    }}>
+                                        {historicosStats.totalUsers}
+                                    </Text>
+                                </View>
+                            </View>
+
+                            {/* Botón de filtros */}
+                            <TouchableOpacity
+                                onPress={() => setShowHistoricosFilters(!showHistoricosFilters)}
+                                style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: 8,
+                                    paddingHorizontal: 16,
+                                    paddingVertical: 10,
+                                    backgroundColor: c.background.surface,
+                                    borderRadius: 8,
+                                    borderWidth: 1,
+                                    borderColor: c.border.primary,
+                                }}
+                            >
+                                <Feather name="filter" size={16} color={c.text.primary} />
+                                <Text style={{
+                                    fontSize: 14,
+                                    fontWeight: "500",
+                                    color: c.text.primary,
+                                }}>
+                                    {t("Filtros")}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+
                 <ScrollView
                     contentContainerStyle={{
                         padding: isSmall ? 16 : 24,
@@ -252,7 +457,11 @@ export function AdminReports({ section }) {
                     }}
                     showsVerticalScrollIndicator={false}
                 >
-                    <HistoricosSection />
+                    <HistoricosSection 
+                        onStatsChange={setHistoricosStats}
+                        showFilters={showHistoricosFilters}
+                        onToggleFilters={setShowHistoricosFilters}
+                    />
                 </ScrollView>
             </>
         );
@@ -304,8 +513,8 @@ export function AdminReports({ section }) {
             `Se han notificado ${studentCount} estudiantes en riesgo`
         );
         
-        // Forzar re-render INMEDIATAMENTE
-        forceUpdate();
+        // Forzar recálculo inmediato
+        setRefreshTrigger(prev => prev + 1);
     };
 
     // Handler para notificar un estudiante individual
@@ -319,8 +528,8 @@ export function AdminReports({ section }) {
             `Se ha notificado a ${student.name}`
         );
         
-        // Forzar re-render INMEDIATAMENTE
-        forceUpdate();
+        // Forzar recálculo inmediato
+        setRefreshTrigger(prev => prev + 1);
     };
 
     // Handler para ver detalles de estudiante
@@ -339,8 +548,8 @@ export function AdminReports({ section }) {
         // Marcar inicio del proceso
         const startTime = Date.now();
         
-        // Ejecutar forceUpdate (que recalcula studentsData y lee de localStorage)
-        forceUpdate();
+        // Forzar recálculo
+        setRefreshTrigger(prev => prev + 1);
         
         // Esperar al siguiente frame para que React termine de renderizar
         await new Promise(resolve => requestAnimationFrame(resolve));
@@ -350,7 +559,7 @@ export function AdminReports({ section }) {
         
         // Animar por la duración real del proceso
         Animated.timing(rotateAnim, {
-            toValue: 1,
+            toValue: 20,
             duration: Math.max(actualDuration, 2000), // Mínimo 200ms para que sea visible
             useNativeDriver: true,
             isInteraction: false,
@@ -431,7 +640,7 @@ export function AdminReports({ section }) {
                                     student={student} 
                                     index={index} 
                                     isLast={index === studentCount - 1} 
-                                    onPress={() => handleViewStudent(student.id)}
+                                    onPress={handleViewStudent}
                                     onNotify={handleNotifyOne}
                                 />
                             ))}

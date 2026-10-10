@@ -203,7 +203,7 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                         />
                         {stat.subtitle && (
                             <Text style={{
-                                fontSize: 11,
+                                fontSize: 12,
                                 color: c.text.secondary,
                                 marginTop: 4,
                                 marginLeft: 16,
