@@ -1,8 +1,11 @@
 // ============================================================
 //  FaceAttend EDU — Contacts VIEW (Presentation Layer)
 //
-//  RESPONSABILIDAD: Contacto de la sede y directorio de
-//  instructores (nav-map /contacts · solo lectura).
+//  RESPONSABILIDAD: Directorio de instructores de la sede
+//  (solo lectura). Antes era una pantalla propia; ahora se
+//  embebe dentro de Configuración > Sede, junto con los datos
+//  de la institución (hideSchoolSection evita duplicar la
+//  tarjeta de la sede que ya pinta SchoolInfoView).
 //
 //  Toda la lógica de negocio está en useContactsViewModel.
 // ============================================================
@@ -28,7 +31,7 @@ function ContactLine({ icon, value }) {
     );
 }
 
-export default function ContactsView({ embedded = false }) {
+export default function ContactsView({ embedded = false, hideSchoolSection = false }) {
     const { isSmall } = useResponsive();
     const { theme } = useTheme();
     const c = theme.colors;
@@ -75,8 +78,8 @@ export default function ContactsView({ embedded = false }) {
             <Scroll {...scrollProps}>
                 {vm.error && <Alert type="error" title={t("No se pudo cargar")} message={vm.error} closable />}
 
-                {/* Sede */}
-                {vm.school && (
+                {/* Sede (oculta al embeberse en Sede: sus datos ya están arriba) */}
+                {vm.school && !hideSchoolSection && (
                     <View style={{ gap: 12 }}>
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                             <Feather name="home" size={16} color={c.brand.primary} />

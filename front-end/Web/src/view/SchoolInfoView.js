@@ -151,7 +151,11 @@ export default function SchoolInfoView({ embedded = false }) {
                     <EmptyState
                         icon="map-pin"
                         title={t("Sin información de la sede")}
-                        message={t("No hay datos disponibles para tu sede")}
+                        message={
+                            vm.canChooseSchool
+                                ? t("Selecciona una sede arriba para consultar su información")
+                                : t("No hay datos disponibles para tu sede")
+                        }
                     />
                 ) : (
                     <Card variant="outlined">
