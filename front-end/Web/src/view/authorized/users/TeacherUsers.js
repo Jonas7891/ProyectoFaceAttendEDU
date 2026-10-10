@@ -57,6 +57,7 @@ export function TeacherUsers({ vm: vmProp }) {
                 options={{
                     filterColumns,
                     searchPlaceholder: t("Buscar por nombre o código..."),
+                    showCourseFilter: true,
                 }}
             />
 
