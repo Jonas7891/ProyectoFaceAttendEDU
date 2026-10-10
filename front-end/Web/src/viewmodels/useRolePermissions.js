@@ -47,6 +47,8 @@ function getVisibleTabs(role) {
             // Super admin: sin sede propia, sin "Historial" de personas
             // (su interés son los reportes y la gestión de escuelas) y sin
             // "Sede"/"Contactos" como tabs: viven dentro de Configuración.
+            // "Académico" se cayó por redundante: cursos, fichas y reportes
+            // ya exponen esa información con mucho más detalle.
             return [
                 "dashboard",
                 "reports",
@@ -54,10 +56,10 @@ function getVisibleTabs(role) {
                 "courses",
                 "environments",
                 "justifications",
-                "academic",
                 "settings",
             ];
         case "teacher":
+            // Sin "Académico" (redundante con "Mis cursos" y Reportes).
             return [
                 "dashboard",
                 "users",
@@ -65,7 +67,6 @@ function getVisibleTabs(role) {
                 "reports",
                 "history",
                 "justifications",
-                "academic",
                 "settings",
             ];
         case "student":
