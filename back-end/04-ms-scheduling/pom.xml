@@ -109,6 +109,14 @@
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!-- Base de datos embebida para los tests @DataJpaTest.
+		     La versión (2.4.240) la fija el BOM de spring-boot-starter-parent 4.1.1
+		     para garantizar compatibilidad; no declarar versión explícita. -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
