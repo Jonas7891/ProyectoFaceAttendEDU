@@ -57,13 +57,14 @@ export function roleNamesFrom(payload) {
 
 // ── Etiqueta visible del rol (sidebar, bajo el nombre) ───────
 // En la UI se muestra el rol "crudo" (admin/teacher/student), lo que deja
-// fuera su significado real: el catálogo unificado convirtió SUPER_ADMIN
-// en "Administrador" (acceso total, sin sede propia) y ese es el rol que
-// debe leerse como "Super Admin".
+// fuera su significado real. El catálogo unificado dejó UN solo rol de
+// administración ("Administrador"), así que la distinción Admin vs Super
+// Admin se deriva de si la cuenta tiene sede propia:
+//   - sin sede → Super Admin (global, no pertenece a ninguna escuela)
+//   - con sede → Admin de sede
+// Los nombres legados siguen mapeando directo por compatibilidad.
 const ROLE_DISPLAY_LABEL = {
     SUPER_ADMIN: "Super Admin",
-    ADMINISTRADOR: "Super Admin",
-    ADMIN: "Super Admin",
     SCHOOL_ADMIN: "Admin de sede",
     RECTOR: "Rector",
     COORDINATOR: "Coordinador",
@@ -78,8 +79,9 @@ const ROLE_DISPLAY_LABEL = {
 /**
  * Etiqueta a mostrar bajo el nombre del usuario en la UI.
  * Prioriza los nombres de rol del backend (user.roles) y, si ninguno se
- * reconoce, cae al rol de la UI (user.role).
- * @param {{ roles?: string[], role?: string }} user
+ * reconoce, cae al rol de la UI (user.role) — para admin, derivando
+ * Super Admin vs Admin de sede según la sede de la cuenta.
+ * @param {{ roles?: string[], role?: string, schoolId?: number|null }} user
  * @returns {string}
  */
 export function roleDisplayLabel(user) {
@@ -88,7 +90,7 @@ export function roleDisplayLabel(user) {
         .find(Boolean);
     if (fromBackend) return fromBackend;
     const ui = user?.role;
-    if (ui === "admin") return "Super Admin";
+    if (ui === "admin") return user?.schoolId == null ? "Super Admin" : "Admin de sede";
     if (ui === "teacher") return "Docente";
     if (ui === "student") return "Estudiante";
     return ui ?? "";

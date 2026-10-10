@@ -192,8 +192,8 @@ function PersistentSidebar() {
                             color: c.text.secondary,
                         }}
                     >
-                        {/* "admin" es el rol total del sistema (sin sede propia):
-                            se etiqueta como Super Admin para que se entienda. */}
+                        {/* "admin" sin sede propia = Super Admin; con sede,
+                            "Admin de sede" (ver backendRoles). */}
                         {t(roleDisplayLabel(user))}
                     </Text>
                 </SidebarHeader>
