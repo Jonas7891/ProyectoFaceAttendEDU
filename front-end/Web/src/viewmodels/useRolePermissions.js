@@ -9,7 +9,8 @@
 //    {canManageStudents && <UIButton>+ Nuevo</UIButton>}
 //
 //  Roles:
-//    admin   → acceso total
+//    admin   → acceso total; sin sede propia es "Super Admin",
+//              con sede es "Admin de sede"
 //    teacher → acceso parcial (sus cursos, sin gestión de usuarios/ambientes)
 //    student → acceso mínimo (solo su perfil y sus cursos)
 // ============================================================
@@ -41,12 +42,24 @@ function getTabLabel(tabKey, role) {
 
 // ── Cálculo de tabs visibles ────────────────────────────────
 
-function getVisibleTabs(role) {
+function getVisibleTabs(role, isSuperAdmin) {
     switch (role) {
         case "admin":
-            // Super admin: sin sede propia, sin "Historial" de personas
-            // (su interés son los reportes y la gestión de escuelas) y sin
-            // "Sede"/"Contactos" como tabs: viven dentro de Configuración.
+            if (isSuperAdmin) {
+                // Super admin: sin sede propia y sin interés en expedientes de
+                // personas concretas (sin Justificaciones ni Historial): su
+                // consulta son los reportes por sede y la gestión de escuelas.
+                return [
+                    "dashboard",
+                    "reports",
+                    "users",
+                    "courses",
+                    "environments",
+                    "settings",
+                ];
+            }
+            // Admin de sede: gestión de su sede, sin "Historial" de personas
+            // y sin "Sede"/"Contactos" como tabs: viven dentro de Configuración.
             // "Académico" se cayó por redundante: cursos, fichas y reportes
             // ya exponen esa información con mucho más detalle.
             return [
@@ -71,7 +84,7 @@ function getVisibleTabs(role) {
             ];
         case "student":
             // Sin "users" (Compañeros): el estudiante no necesita consultar
-            // a sus compañeros. "Sede" y "Contactos" viven en Configuración.
+            // a sus compañeros. "Sede" (con instructores) vive en Configuración.
             return [
                 "dashboard",
                 "history",
@@ -87,10 +100,13 @@ function getVisibleTabs(role) {
 
 // ── Cálculo de permisos ──────────────────────────────────────
 
-function buildPermissions(role) {
+function buildPermissions(role, schoolId = null) {
     const isAdmin = role === "admin";
     const isTeacher = role === "teacher";
     const isStudent = role === "student";
+    // El catálogo unificado dejó un solo rol de administración: la distinción
+    // entre Super Admin (global) y Admin de sede es la sede de la cuenta.
+    const isSuperAdmin = isAdmin && schoolId == null;
 
     return {
         // Estudiantes
@@ -136,12 +152,13 @@ function buildPermissions(role) {
         canViewSettings: true,
 
         // Navegación
-        visibleTabs: getVisibleTabs(role),
+        visibleTabs: getVisibleTabs(role, isSuperAdmin),
         getTabLabel: (tabKey) => getTabLabel(tabKey, role),
 
         // Metadatos
         role,
         isAdmin,
+        isSuperAdmin,
         isTeacher,
         isStudent,
     };
@@ -156,5 +173,8 @@ const GUEST_PERMISSIONS = buildPermissions("student");
 export function useRolePermissions() {
     const { user } = useAuth();
 
-    return useMemo(() => (user ? buildPermissions(user.role) : GUEST_PERMISSIONS), [user]);
+    return useMemo(
+        () => (user ? buildPermissions(user.role, user.schoolId ?? null) : GUEST_PERMISSIONS),
+        [user]
+    );
 }
