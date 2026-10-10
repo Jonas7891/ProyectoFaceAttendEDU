@@ -50,9 +50,10 @@ export function useAcademicViewModel() {
     }, [schoolId, t]);
 
     useEffect(() => {
+        // Deps en [load]: si la sesión resuelve la sede DESPUÉS del montaje,
+        // load se recrea y se vuelve a pedir; con [] los períodos se saltaban.
         load();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [load]);
 
     const programName = useCallback(
         (programId) => programs.find((p) => Number(p.programId) === Number(programId))?.name || "—",
