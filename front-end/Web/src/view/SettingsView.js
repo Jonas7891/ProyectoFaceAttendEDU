@@ -167,16 +167,23 @@ export default function SettingsView({ section = "appearance" }) {
         SettingsComponent = <StudentSettings {...sharedProps} />;
     }
 
-    // Sede y Contactos dejaron de ser pantallas propias: se consultan aquí,
-    // dentro de Configuración (sus Views se embeben sin PageHeader/ScrollView).
-    const infoSection =
-        section === "schoolInfo" ? <SchoolInfoView embedded />
-        : section === "contacts" ? <ContactsView embedded />
-        : SettingsComponent;
+    // Sede y Contactos dejaron de ser pantallas propias y se unificaron en
+    // UNA sola sección dentro de Configuración: "Sede" reúne los datos de la
+    // institución y el directorio de instructores (sus Views se embeben sin
+    // PageHeader/ScrollView). "contacts" se mapea aquí por compatibilidad con
+    // los deep links antiguos.
+    const isSchoolSection = section === "schoolInfo" || section === "contacts";
+    const infoSection = isSchoolSection ? (
+        <>
+            <SchoolInfoView embedded />
+            <ContactsView embedded hideSchoolSection />
+        </>
+    ) : (
+        SettingsComponent
+    );
 
-    const headerSubtitle =
-        section === "schoolInfo" ? t("Datos de la institución")
-        : section === "contacts" ? t("Canales de contacto")
+    const headerSubtitle = isSchoolSection
+        ? t("Datos de la institución y directorio de instructores")
         : t("Personaliza FaceAttend EDU a tu institución");
 
     // Renderizar UI completa para usuarios autorizados

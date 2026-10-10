@@ -41,9 +41,10 @@ const ALL_TABS = [
             { key: "notifications",  label: "Notificaciones",  icon: "bell",     adminOnly: false },
             { key: "security",       label: "Seguridad",       icon: "shield",   adminOnly: true },
             { key: "appearance",     label: "Apariencia",      icon: "sliders",  adminOnly: false },
-            // Sede y Contactos dejaron de ser tabs propios: se consultan aquí.
+            // Sede y Contactos dejaron de ser tabs propios y ahora son una
+            // sola sección: "Sede" reúne los datos de la institución y el
+            // directorio de instructores (antes "Contactos").
             { key: "schoolInfo",     label: "Sede",            icon: "map-pin",  adminOnly: false },
-            { key: "contacts",       label: "Contactos",       icon: "mail",     adminOnly: false },
         ]
     },
 ];

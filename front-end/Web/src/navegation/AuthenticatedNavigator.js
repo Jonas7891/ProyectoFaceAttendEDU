@@ -333,8 +333,8 @@ function BottomTabs() {
     }, [navigation, setSidebarSelectedTab, setSidebarSelectedSubTab]);
     
     // NO usar early return - el padre decide si renderizar este componente
-    // Con más tabs que pantallas fijas (Historial, Justificaciones, Sede,
-    // Académico, Contactos) la barra se desplaza horizontalmente.
+    // Con más tabs que pantallas fijas (Historial, Justificaciones y Sede)
+    // la barra se desplaza horizontalmente.
     return (
         <ScrollView
             horizontal

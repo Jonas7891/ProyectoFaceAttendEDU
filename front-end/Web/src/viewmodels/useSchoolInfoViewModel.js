@@ -56,7 +56,10 @@ export function useSchoolInfoViewModel() {
             }
             const list = await academicApi.listSchools();
             const rows = Array.isArray(list) ? list : list?.content ?? [];
-            const chosen = selectedSchoolId ?? rows[0]?.schoolId ?? null;
+            // Sin sede propia NO se autoselecciona la primera de la lista: una
+            // cuenta global (super admin) no pertenece a ninguna escuela, así
+            // que la sede se elige explícitamente desde el selector.
+            const chosen = selectedSchoolId ?? null;
             setSchools(rows);
             setSelectedSchoolId(chosen);
             setSchool(rows.find((s) => s.schoolId === chosen) ?? null);
