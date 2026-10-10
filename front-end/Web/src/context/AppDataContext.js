@@ -236,15 +236,28 @@ export function AppDataProvider({ children }) {
         setActiveSchool(user.schoolId ?? null);
 
         let cancelled = false;
-        Promise.all([
+        // allSettled en vez de all: si UNA carga falla (p. ej. /cohorts), las
+        // demás (usuarios, ambientes, cursos...) sí se muestran; antes un solo
+        // rechazo descartaba todo y el Inicio del docente quedaba vacío.
+        Promise.allSettled([
             loadStudents(),
             loadUsers(),
             loadEnvironments(),
             loadFichas(),
             loadCourses(),
-        ]).then(([s, u, e, f, c]) => {
+        ]).then((results) => {
             if (cancelled) return;
-            setLoadError(null);
+            const [s, u, e, f, c] = results.map((r) =>
+                r.status === "fulfilled" ? r.value : []
+            );
+            const failed = results.filter((r) => r.status === "rejected");
+            if (failed.length > 0) {
+                const messages = failed.map((r) => r.reason?.message || "error desconocido");
+                console.error("[FaceAttend] AppDataContext: cargas parciales fallidas —", messages.join(" | "));
+                setLoadError(messages[0]);
+            } else {
+                setLoadError(null);
+            }
             setStudents(s);
             setUsers(u);
             setEnvironments(e);
@@ -254,14 +267,6 @@ export function AppDataProvider({ children }) {
 
             // Carga progresiva de usuarios (efecto persiana)
             startProgressiveUserLoading(s, c, u);
-        }).catch((error) => {
-            if (cancelled) return;
-            // Backend no disponible: no mostrar datos falsos como si fueran reales,
-            // dejar las listas vacías y avisar para que la UI muestre el error.
-            console.error("[FaceAttend] AppDataContext: fallo cargando datos del backend —", error?.message);
-            setLoadError(error?.message || "No se pudo conectar con el servidor");
-            setIsLoading(false);
-            setIsLoadingUsers(false);
         });
 
         return () => {
