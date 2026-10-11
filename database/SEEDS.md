@@ -19,10 +19,11 @@ RBAC roles. Assigned via `user_role`.
 | 1 | `Administrador` | Rol Mobile: acceso total |
 | 2 | `Instructor` | Rol Mobile: docencia y asistencia |
 | 3 | `Aprendiz` | Rol Mobile: consulta propia |
+| — | `Super Administrador` | Rol Web: administrador global sin sede (id asignado por migración) |
 
-**File:** `02-ms-authorization-db/02-dml/001-seed-role-table.yaml` (legado de 4 roles) + `004-unify-mobile-roles.yaml` (unificación a 3 roles Mobile; renombra `SUPER_ADMIN`→`Administrador`, `INSTRUCTOR`→`Instructor`, `STUDENT`→`Aprendiz`, fusiona `SCHOOL_ADMIN` en `Administrador` y carga la matriz `role_permission`)
+**File:** `02-ms-authorization-db/02-dml/001-seed-role-table.yaml` (legado de 4 roles) + `004-unify-mobile-roles.yaml` (unificación a 3 roles Mobile; renombra `SUPER_ADMIN`→`Administrador`, `INSTRUCTOR`→`Instructor`, `STUDENT`→`Aprendiz`, fusiona `SCHOOL_ADMIN` en `Administrador` y carga la matriz `role_permission`) + `007-split-super-admin-role.yaml` (rol explícito `Super Administrador`, con los 12 permisos, y reasignación del admin bootstrap desde `Administrador`)
 
-> Bootstrap: `01-ms-identity-db/02-dml/001-bootstrap-admin-user.yaml` crea `person` + `app_user` (`admin.faceattend` / `Admin123!ChangeMe`, **cambiar en producción**), `002-bootstrap-demo-users.yaml` crea `instructor.faceattend` / `Instructor123!ChangeMe` y `aprendiz.faceattend` / `Aprendiz123!ChangeMe`, y `005/006-bootstrap-*-role-assignment.yaml` les asignan `Administrador`, `Instructor` y `Aprendiz`. Sin estos usuarios iniciales ningún endpoint protegido sería alcanzable.
+> Bootstrap: `01-ms-identity-db/02-dml/001-bootstrap-admin-user.yaml` crea `person` + `app_user` (`admin.faceattend` / `Admin123!ChangeMe`, **cambiar en producción**), `002-bootstrap-demo-users.yaml` crea `instructor.faceattend` / `Instructor123!ChangeMe` y `aprendiz.faceattend` / `Aprendiz123!ChangeMe`, y `005/006-bootstrap-*-role-assignment.yaml` les asignan `Administrador`, `Instructor` y `Aprendiz` (`007` posteriormente pasa `admin.faceattend` a `Super Administrador`). Sin estos usuarios iniciales ningún endpoint protegido sería alcanzable.
 
 ---
 
@@ -47,22 +48,22 @@ Atomic permissions with bounded-context prefix (`context.resource:action`). Assi
 
 **File:** `02-ms-authorization-db/02-dml/002-seed-permission-table.yaml`
 
-### Role × permission matrix (enforced by `004-unify-mobile-roles.yaml`)
+### Role × permission matrix (enforced by `004-unify-mobile-roles.yaml` and `007-split-super-admin-role.yaml`)
 
-| Permission | Administrador | Instructor | Aprendiz |
-|---------|:-------------:|:----------:|:--------:|
-| `identity.person:read` | ✅ | ✅ | ✅ |
-| `identity.person:write` | ✅ | ❌ | ❌ |
-| `academic.school:manage` | ✅ | ❌ | ❌ |
-| `academic.enrollment:manage` | ✅ | ❌ | ❌ |
-| `scheduling.session:manage` | ✅ | ✅ | ❌ |
-| `attendance.record:read` | ✅ | ✅ | ✅ |
-| `attendance.record:write` | ✅ | ✅ | ❌ |
-| `attendance.justification:approve` | ✅ | ✅ | ❌ |
-| `biometric.case:request` | ✅ | ✅ | ✅ |
-| `biometric.case:review` | ✅ | ✅ | ❌ |
-| `configuration:manage` | ✅ | ❌ | ❌ |
-| `notification.alert:read` | ✅ | ✅ | ✅ |
+| Permission | Super Administrador | Administrador | Instructor | Aprendiz |
+|---------|:-------------------:|:-------------:|:----------:|:--------:|
+| `identity.person:read` | ✅ | ✅ | ✅ | ✅ |
+| `identity.person:write` | ✅ | ✅ | ❌ | ❌ |
+| `academic.school:manage` | ✅ | ✅ | ❌ | ❌ |
+| `academic.enrollment:manage` | ✅ | ✅ | ❌ | ❌ |
+| `scheduling.session:manage` | ✅ | ✅ | ✅ | ❌ |
+| `attendance.record:read` | ✅ | ✅ | ✅ | ✅ |
+| `attendance.record:write` | ✅ | ✅ | ✅ | ❌ |
+| `attendance.justification:approve` | ✅ | ✅ | ✅ | ❌ |
+| `biometric.case:request` | ✅ | ✅ | ✅ | ✅ |
+| `biometric.case:review` | ✅ | ✅ | ✅ | ❌ |
+| `configuration:manage` | ✅ | ✅ | ❌ | ❌ |
+| `notification.alert:read` | ✅ | ✅ | ✅ | ✅ |
 
 ---
 
@@ -155,7 +156,7 @@ Alert types with `severity` and `channel` for `AlertsConfigContext` mapping.
 
 | Domain | Catalog table | Records | Seed file |
 |---------|---------------|:---------:|--------------|
-| Authorization | `role` | 3 | `02-ms-authorization-db/02-dml/001-seed-role-table.yaml` + `004-unify-mobile-roles.yaml` |
+| Authorization | `role` | 4 | `02-ms-authorization-db/02-dml/001-seed-role-table.yaml` + `004-unify-mobile-roles.yaml` + `007-split-super-admin-role.yaml` |
 | Authorization | `permission` | 12 | `02-ms-authorization-db/02-dml/002-seed-permission-table.yaml` |
 | Academic | `academic_actor_type` | 2 | `03-ms-academic-db/02-dml/001-seed-academic-actor-type-table.yaml` |
 | Attendance | `justification_type` | 3 | `05-ms-attendance-db/02-dml/001-seed-justification-type-table.yaml` |
@@ -164,7 +165,7 @@ Alert types with `severity` and `channel` for `AlertsConfigContext` mapping.
 | Identity | `password_policy` | 1 | `01-ms-identity-db/02-dml/001-seed-password-policy-table.yaml` |
 | Notification | `alert_type` | 5 | `08-ms-notification-db/02-dml/001-seed-alert-type-table.yaml` |
 
-**Total: 34 seed records in 8 catalog tables.** `identity.city` removed (external API).
+**Total: 35 seed records in 8 catalog tables.** `identity.city` removed (external API).
 
 ---
 

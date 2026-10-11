@@ -17,3 +17,6 @@ databaseChangeLog:
   - include:
       file: 006-bootstrap-demo-role-assignments.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 007-split-super-admin-role.yaml
+      relativeToChangelogFile: true
