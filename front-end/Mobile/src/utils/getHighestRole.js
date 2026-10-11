@@ -1,11 +1,14 @@
 import {ROLES_HIERARCHY} from "../services/constants/rolesHierarchy";
 
 // Mapper único backend -> Mobile. Canónicos: Administrador, Instructor, Aprendiz.
-// Acepta nombres legados (SUPER_ADMIN, SCHOOL_ADMIN, INSTRUCTOR, STUDENT,
-// Docente, Estudiante, ADMIN, teacher...) para bases aún sin migrar.
+// El rol global "Super Administrador" (007-split-super-admin-role) se trata
+// como Administrador en Mobile. Acepta nombres legados (SUPER_ADMIN,
+// SCHOOL_ADMIN, INSTRUCTOR, STUDENT, Docente, Estudiante, ADMIN, teacher...)
+// para bases aún sin migrar.
 const ROLE_MAP = {
   'ADMIN': 'Administrador',
   'ADMINISTRADOR': 'Administrador',
+  'SUPER_ADMINISTRADOR': 'Administrador',
   'SUPER_ADMIN': 'Administrador',
   'SCHOOL_ADMIN': 'Administrador',
   'RECTOR': 'Administrador',
