@@ -50,10 +50,12 @@ function getVisibleTabs(role, isSuperAdmin) {
             if (isSuperAdmin) {
                 // Super Admin (rol explícito "Super Administrador"): sin
                 // interés en expedientes de personas concretas (sin
-                // Justificaciones ni Historial): su consulta son los
-                // reportes por sede y la gestión de escuelas.
+                // Justificaciones ni Historial): su consulta son las
+                // escuelas ("Escuelas", su sección de gestión) y los
+                // reportes por sede.
                 return [
                     "dashboard",
+                    "schools",
                     "reports",
                     "users",
                     "courses",
@@ -146,6 +148,9 @@ function buildPermissions(role, schoolId = null, roleNames = []) {
         // Información de la sede (lectura los 3 roles, edición solo admin)
         canViewSchoolInfo: true,
         canEditSchoolInfo: isAdmin,
+
+        // Gestión de escuelas (CRUD de sedes): solo el super admin
+        canManageSchools: isSuperAdmin,
 
         // Sección académica y contactos (solo lectura, los 3 roles)
         canViewAcademic: true,
