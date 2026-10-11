@@ -190,51 +190,6 @@ function StudentRow({ student, index, isLast, onPress, c, t }) {
                     color={attColor}
                     size="sm"
                 />
-                
-                {/* Advertencia de días consecutivos (CRÍTICO) */}
-                {student.hasExceededConsecutiveDays && (
-                    <View style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 4,
-                        marginTop: 2,
-                    }}>
-                        <Feather name="alert-octagon" size={10} color={c.status.danger} />
-                        <Text style={{
-                            fontSize: 10,
-                            color: c.status.danger,
-                            fontWeight: "700",
-                        }}>
-                            {t("Sanción por ausencias consecutivas")} ({student.consecutiveAbsences} {t("días seguidos")})
-                        </Text>
-                    </View>
-                )}
-                
-                {/* Advertencia de días hasta sanción (si está en umbral crítico Y no ha excedido consecutivas) */}
-                {!student.hasExceededConsecutiveDays && student.daysUntilSanction <= criticalDaysThreshold && (
-                    <View style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 4,
-                        marginTop: 2,
-                    }}>
-                        <Feather 
-                            name={student.daysUntilSanction === 0 ? "alert-octagon" : "clock"} 
-                            size={10} 
-                            color={student.daysUntilSanction === 0 ? c.status.danger : c.status.warning} 
-                        />
-                        <Text style={{
-                            fontSize: 10,
-                            color: student.daysUntilSanction === 0 ? c.status.danger : c.status.warning,
-                            fontWeight: "600",
-                        }}>
-                            {student.daysUntilSanction === 0
-                                ? t("Umbral de sanción alcanzado")
-                                : `${student.daysUntilSanction} ${t("días hasta posible sanción")}`
-                            }
-                        </Text>
-                    </View>
-                )}
             </View>
 
             {/* Chevron - Indicador de clickeable */}

@@ -24,6 +24,7 @@ import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation
 import { useDateFormat } from "../../../components/hooks/useDateFormat";
 import { useAppData } from "../../../../context/AppDataContext";
 import { titleCase } from "../../../../core/utils/formatting";
+import UserHistoryModal from "../../../components/reports/UserHistoryModal";
 
 function UserRow({ user, index, isLast, onPress }) {
     const { theme } = useTheme();
@@ -34,9 +35,15 @@ function UserRow({ user, index, isLast, onPress }) {
     const statusConfig = {
         present: {
             variant: "success",
-            label: user.late ? t("Presente (Tarde)") : t("Presente"),
+            label: t("Presente"),
             icon: "check-circle",
             iconColor: c.status.success,
+        },
+        late: {
+            variant: "warning",
+            label: t("Retardo"),
+            icon: "alert-circle",
+            iconColor: c.status.warning,
         },
         absent: {
             variant: "danger",
@@ -46,7 +53,7 @@ function UserRow({ user, index, isLast, onPress }) {
         }
     };
     
-    const config = statusConfig[user.status] || statusConfig.present;
+    const config = user.late ? statusConfig.late : (user.status === "present" ? statusConfig.present : statusConfig.absent);
     
     return (
         <TouchableOpacity
@@ -195,6 +202,8 @@ export function HistoricosSection({ showFilters, onToggleFilters, onStatsChange 
     const [searchName, setSearchName] = useState("");
     const [selectedFicha, setSelectedFicha] = useState("");
     const [dateRange, setDateRange] = useState({ start: null, end: null });
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
 
     /**
      * Filtra el texto para permitir solo letras y espacios manteniendo acentos
@@ -369,6 +378,16 @@ export function HistoricosSection({ showFilters, onToggleFilters, onStatsChange 
         setSearchName("");
         setSelectedFicha("");
         setDateRange({ start: null, end: null });
+    };
+
+    const handleUserClick = (user) => {
+        setSelectedUser(user);
+        setShowHistoryModal(true);
+    };
+
+    const handleCloseHistoryModal = () => {
+        setShowHistoryModal(false);
+        setSelectedUser(null);
     };
 
     if (appData.isLoading) {
@@ -562,7 +581,7 @@ export function HistoricosSection({ showFilters, onToggleFilters, onStatsChange 
                                     user={user}
                                     index={index}
                                     isLast={index === filteredUsers.length - 1}
-                                    onPress={() => console.log("Ver detalles de usuario:", user.id)}
+                                    onPress={() => handleUserClick(user)}
                                     
                                 />
                             ))}
@@ -590,6 +609,14 @@ export function HistoricosSection({ showFilters, onToggleFilters, onStatsChange 
                     </>
                 )}
             </View>
+
+            {/* Modal de historial de usuario */}
+            {showHistoryModal && selectedUser && (
+                <UserHistoryModal
+                    user={selectedUser}
+                    onClose={handleCloseHistoryModal}
+                />
+            )}
         </View>
     );
 }

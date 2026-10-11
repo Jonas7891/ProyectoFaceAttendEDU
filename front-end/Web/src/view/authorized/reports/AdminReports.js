@@ -192,50 +192,99 @@ function StudentRow({ student, index, isLast, onPress, onNotify }) {
                     size="sm"
                 />
                 
-                {/* Advertencia de días consecutivos (CRÍTICO) */}
-                {student.hasExceededConsecutiveDays && (
-                    <View style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 4,
-                        marginTop: 2,
-                    }}>
-                        <Feather name="alert-octagon" size={10} color={c.status.danger} />
-                        <Text style={{
-                            fontSize: 10,
-                            color: c.status.danger,
-                            fontWeight: "700",
-                        }}>
-                            {t("Sanción por ausencias consecutivas")} ({student.consecutiveAbsences} {t("días seguidos")})
-                        </Text>
-                    </View>
-                )}
-                
-                {/* Advertencia de días hasta sanción */}
-                {!student.hasExceededConsecutiveDays && student.daysUntilSanction <= criticalDaysThreshold && (
-                    <View style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 4,
-                        marginTop: 2,
-                    }}>
-                        <Feather 
-                            name={student.daysUntilSanction === 0 ? "alert-octagon" : "clock"} 
-                            size={10} 
-                            color={student.daysUntilSanction === 0 ? c.status.danger : c.status.warning} 
-                        />
-                        <Text style={{
-                            fontSize: 10,
-                            color: student.daysUntilSanction === 0 ? c.status.danger : c.status.warning,
-                            fontWeight: "600",
-                        }}>
-                            {student.daysUntilSanction === 0
-                                ? t("Umbral de sanción alcanzado")
-                                : `${student.daysUntilSanction} ${t("días hasta posible sanción")}`
-                            }
-                        </Text>
-                    </View>
-                )}
+                {/* Mensaje informativo del porque está en riesgo */}
+                {(() => {
+                    // Determinar el mensaje prioritario según la razón de riesgo
+                    if (student.hasExceededConsecutiveDays) {
+                        // Caso 1: Ausencias consecutivas excedidas (CRÍTICO)
+                        return (
+                            <View style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 4,
+                                marginTop: 2,
+                            }}>
+                                <Feather name="alert-octagon" size={10} color={c.status.danger} />
+                                <Text style={{
+                                    fontSize: 10,
+                                    color: c.status.danger,
+                                    fontWeight: "700",
+                                }}>
+                                    {t("Sanción por ausencias consecutivas")} ({student.consecutiveAbsences} {t("días seguidos")})
+                                </Text>
+                            </View>
+                        );
+                    } else if (student.daysUntilSanction !== undefined && student.daysUntilSanction <= criticalDaysThreshold) {
+                        // Caso 2: Días hasta sanción en zona crítica
+                        return (
+                            <View style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 4,
+                                marginTop: 2,
+                            }}>
+                                <Feather 
+                                    name={student.daysUntilSanction === 0 ? "alert-octagon" : "clock"} 
+                                    size={10} 
+                                    color={student.daysUntilSanction === 0 ? c.status.danger : c.status.warning} 
+                                />
+                                <Text style={{
+                                    fontSize: 10,
+                                    color: student.daysUntilSanction === 0 ? c.status.danger : c.status.warning,
+                                    fontWeight: "600",
+                                }}>
+                                    {student.daysUntilSanction === 0
+                                        ? t("Umbral de sanción alcanzado")
+                                        : `${student.daysUntilSanction} ${t("días hasta posible sanción")}`
+                                    }
+                                </Text>
+                            </View>
+                        );
+                    } else if (student.attendanceRate < config.minAttendance) {
+                        // Caso 3: Asistencia por debajo del umbral mínimo configurado
+                        const attendanceGap = config.minAttendance - student.attendanceRate;
+                        return (
+                            <View style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 4,
+                                marginTop: 2,
+                            }}>
+                                <Feather 
+                                    name="trending-down" 
+                                    size={10} 
+                                    color={isHighRisk ? c.status.danger : c.status.warning} 
+                                />
+                                <Text style={{
+                                    fontSize: 10,
+                                    color: isHighRisk ? c.status.danger : c.status.warning,
+                                    fontWeight: "600",
+                                }}>
+                                    {t("Asistencia por debajo del mínimo requerido")} ({config.minAttendance}%) · {t("Falta")} {attendanceGap.toFixed(1)}%
+                                </Text>
+                            </View>
+                        );
+                    } else {
+                        // Caso 4: En riesgo general (fallback informativo)
+                        return (
+                            <View style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 4,
+                                marginTop: 2,
+                            }}>
+                                <Feather name="info" size={10} color={c.text.secondary} />
+                                <Text style={{
+                                    fontSize: 10,
+                                    color: c.text.secondary,
+                                    fontWeight: "500",
+                                }}>
+                                    {t("Estudiante requiere seguimiento de asistencia")}
+                                </Text>
+                            </View>
+                        );
+                    }
+                })()}
             </View>
 
             {/* Botón de notificación individual con borde */}
