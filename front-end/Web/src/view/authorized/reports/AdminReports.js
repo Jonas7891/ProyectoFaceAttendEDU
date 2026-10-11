@@ -332,6 +332,12 @@ export function AdminReports({ section }) {
     const [isReloading, setIsReloading] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
     const rotateAnim = useRef(new Animated.Value(0)).current;
+    
+    // Crear interpolación una sola vez
+    const rotateInterpolation = rotateAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['0deg', '360deg']
+    });
 
     // ── IMPORTANTE: Todos los hooks deben estar ANTES de cualquier return early ──
     
@@ -377,10 +383,83 @@ export function AdminReports({ section }) {
             students: formattedStudents,
             isLoading: appData.isLoading,
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [appData.students, appData.isLoading, refreshTrigger]); // refreshTrigger fuerza recálculo
 
+    // ── Handlers (ANTES de cualquier return) ──────────────
+    
+    // Handler para notificar estudiantes
+    const handleNotifyAll = React.useCallback(() => {
+        const students = studentsData.students;
+        if (students.length === 0) return;
+        
+        // Crear sanciones en lote para todos los estudiantes
+        createBulkSanctions(students);
+        
+        // Mostrar notificación
+        pushNotification.success(
+            'Notificación enviada', 
+            `Se han notificado ${students.length} estudiantes en riesgo`
+        );
+        
+        // Forzar recálculo inmediato
+        setRefreshTrigger(prev => prev + 1);
+    }, [studentsData.students, pushNotification]);
+
+    // Handler para notificar un estudiante individual
+    const handleNotifyOne = React.useCallback((student) => {
+        // Crear sanción individual
+        createBulkSanctions([student]);
+        
+        // Mostrar notificación
+        pushNotification.success(
+            'Notificación enviada', 
+            `Se ha notificado a ${student.name}`
+        );
+        
+        // Forzar recálculo inmediato
+        setRefreshTrigger(prev => prev + 1);
+    }, [pushNotification]);
+
+    // Handler para ver detalles de estudiante
+    const handleViewStudent = React.useCallback((studentId) => {
+        console.log("Ver detalles:", studentId);
+        // TODO: Implementar navegación a detalle de estudiante
+    }, []);
+
+    // Handler para recargar la lista
+    const handleReload = React.useCallback(async () => {
+        if (isReloading) return; // Prevenir múltiples clicks
+        
+        setIsReloading(true);
+        rotateAnim.setValue(0);
+        
+        // Marcar inicio del proceso
+        const startTime = Date.now();
+        
+        // Forzar recálculo
+        setRefreshTrigger(prev => prev + 1);
+        
+        // Esperar al siguiente frame para que React termine de renderizar
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        
+        // Calcular duración real del proceso
+        const actualDuration = Date.now() - startTime;
+        
+        // Animar por la duración real del proceso
+        Animated.timing(rotateAnim, {
+            toValue: 20,
+            duration: Math.max(actualDuration, 2000), // Mínimo 200ms para que sea visible
+            useNativeDriver: true,
+            isInteraction: false,
+        }).start(() => {
+            // Resetear al finalizar
+            rotateAnim.setValue(0);
+            setIsReloading(false);
+        });
+    }, [isReloading, rotateAnim]);
+
     // ── Determinar qué sección mostrar (DESPUÉS de todos los hooks) ──
-    const isMainView = !section || section === "all";
     const isHistoricos = section === "historicos";
     const isSanciones = section === "sanciones";
 
@@ -550,76 +629,6 @@ export function AdminReports({ section }) {
     const studentCount = students.length;
     const studentLabel = studentCount === 1 ? t("estudiante") : t("estudiantes");
 
-    // Handler para notificar estudiantes
-    const handleNotifyAll = () => {
-        if (studentCount === 0) return;
-        
-        // Crear sanciones en lote para todos los estudiantes
-        createBulkSanctions(students);
-        
-        // Mostrar notificación
-        pushNotification.success(
-            'Notificación enviada', 
-            `Se han notificado ${studentCount} estudiantes en riesgo`
-        );
-        
-        // Forzar recálculo inmediato
-        setRefreshTrigger(prev => prev + 1);
-    };
-
-    // Handler para notificar un estudiante individual
-    const handleNotifyOne = (student) => {
-        // Crear sanción individual
-        createBulkSanctions([student]);
-        
-        // Mostrar notificación
-        pushNotification.success(
-            'Notificación enviada', 
-            `Se ha notificado a ${student.name}`
-        );
-        
-        // Forzar recálculo inmediato
-        setRefreshTrigger(prev => prev + 1);
-    };
-
-    // Handler para ver detalles de estudiante
-    const handleViewStudent = (studentId) => {
-        console.log("Ver detalles:", studentId);
-        // TODO: Implementar navegación a detalle de estudiante
-    };
-
-    // Handler para recargar la lista
-    const handleReload = async () => {
-        if (isReloading) return; // Prevenir múltiples clicks
-        
-        setIsReloading(true);
-        rotateAnim.setValue(0);
-        
-        // Marcar inicio del proceso
-        const startTime = Date.now();
-        
-        // Forzar recálculo
-        setRefreshTrigger(prev => prev + 1);
-        
-        // Esperar al siguiente frame para que React termine de renderizar
-        await new Promise(resolve => requestAnimationFrame(resolve));
-        
-        // Calcular duración real del proceso
-        const actualDuration = Date.now() - startTime;
-        
-        // Animar por la duración real del proceso
-        Animated.timing(rotateAnim, {
-            toValue: 20,
-            duration: Math.max(actualDuration, 2000), // Mínimo 200ms para que sea visible
-            useNativeDriver: true,
-            isInteraction: false,
-        }).start(() => {
-            // Resetear al finalizar
-            rotateAnim.setValue(0);
-            setIsReloading(false);
-        });
-    };
-
     return (
         <>
             <PageHeader
@@ -653,12 +662,7 @@ export function AdminReports({ section }) {
                         >
                             <Animated.View
                                 style={{
-                                    transform: [{
-                                        rotate: rotateAnim.interpolate({
-                                            inputRange: [0, 1],
-                                            outputRange: ['0deg', '360deg']
-                                        })
-                                    }]
+                                    transform: [{ rotate: rotateInterpolation }]
                                 }}
                             >
                                 <Feather name="refresh-cw" size={18} color={c.text.primary} />

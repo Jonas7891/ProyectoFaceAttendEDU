@@ -5,9 +5,10 @@
 //  Incluye filtros por nombre, ficha y fecha.
 // ============================================================
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, forwardRef, useImperativeHandle } from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { createPortal } from "react-dom";
 import { 
     Button, 
     TextInput, 
@@ -16,17 +17,21 @@ import {
     Avatar,
     Badge,
     EmptyState,
-    Loader
+    Loader,
+    Checkbox
 } from "../../../components/common";
 import { useTheme } from "../../../components/hooks/useTheme";
-import { useResponsive } from "../../../components/hooks/useResponsive";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { useDateFormat } from "../../../components/hooks/useDateFormat";
 import { useAppData } from "../../../../context/AppDataContext";
 import { titleCase } from "../../../../core/utils/formatting";
 import UserHistoryModal from "../../../components/reports/UserHistoryModal";
+import { ExportConfigModal } from "../../../components/reports/ExportConfigModal";
+import { useHistoricosViewModel } from "../../../../viewmodels/useHistoricosViewModel";
+import { usePushNotification } from "../../../components/common/feedback/PushNotification";
+import { exportToExcel, exportToPDF, buildHTMLTable, formatPercentageWithColor, formatStatusBadge } from "../../../../core/utils/exportHelpers";
 
-function UserRow({ user, index, isLast, onPress }) {
+function UserRow({ user, index, isLast, onPress, isExportMode, isSelected, onToggleSelect }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
     const { formatDate } = useDateFormat();
@@ -57,7 +62,13 @@ function UserRow({ user, index, isLast, onPress }) {
     
     return (
         <TouchableOpacity
-            onPress={onPress}
+            onPress={() => {
+                if (isExportMode) {
+                    onToggleSelect(user.id);
+                } else {
+                    onPress();
+                }
+            }}
             style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -65,8 +76,21 @@ function UserRow({ user, index, isLast, onPress }) {
                 gap: 12,
                 borderBottomWidth: isLast ? 0 : 1,
                 borderBottomColor: c.border.primary,
+                backgroundColor: isSelected ? c.primary + "10" : "transparent",
             }}
         >
+            {/* Checkbox en modo exportación */}
+            {isExportMode && (
+                <View style={{ marginRight: 4 }}>
+                    <Checkbox
+                        checked={isSelected}
+                        onToggle={() => onToggleSelect(user.id)}
+                        size="sm"
+                        variant="primary"
+                    />
+                </View>
+            )}
+
             <View style={{ position: "relative" }}>
                 <Avatar name={user.studentName} size={40} />
                 {user.date && (
@@ -187,16 +211,17 @@ function UserRow({ user, index, isLast, onPress }) {
                 )}
             </View>
 
-            <Feather name="chevron-right" size={20} color={c.text.secondary} />
+            {!isExportMode && <Feather name="chevron-right" size={20} color={c.text.secondary} />}
         </TouchableOpacity>
     );
 }
 
-export function HistoricosSection({ showFilters, onToggleFilters, onStatsChange }) {
+export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onStatsChange }, ref) => {
     const { theme } = useTheme();
-    const { isSmall } = useResponsive();
     const { t } = useTranslation();
     const appData = useAppData();
+    const pushNotification = usePushNotification();
+    const { formatDate } = useDateFormat();
     const c = theme.colors;
 
     const [searchName, setSearchName] = useState("");
@@ -204,6 +229,11 @@ export function HistoricosSection({ showFilters, onToggleFilters, onStatsChange 
     const [dateRange, setDateRange] = useState({ start: null, end: null });
     const [selectedUser, setSelectedUser] = useState(null);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
+    
+    // Estados para modo de exportación
+    const [isExportMode, setIsExportMode] = useState(false);
+    const [selectedUsers, setSelectedUsers] = useState(new Set());
+    const [showExportModal, setShowExportModal] = useState(false);
 
     /**
      * Filtra el texto para permitir solo letras y espacios manteniendo acentos
@@ -364,6 +394,344 @@ export function HistoricosSection({ showFilters, onToggleFilters, onStatsChange 
         return result.sort((a, b) => a.studentName.localeCompare(b.studentName));
     }, [usersData, searchName, selectedFicha, dateRange]);
 
+    // Hook para manejar exportaciones
+    const { exportExcel, exportPDF } = useHistoricosViewModel(filteredUsers);
+
+    // Handlers de exportación con feedback
+    const handleExportExcel = () => {
+        const result = exportExcel();
+        if (result.success) {
+            pushNotification.success(
+                t("Exportación exitosa"),
+                t("El archivo Excel se ha descargado correctamente")
+            );
+        } else {
+            pushNotification.error(
+                t("Error al exportar"),
+                t("No se pudo generar el archivo Excel")
+            );
+        }
+    };
+
+    const handleExportPDF = () => {
+        const result = exportPDF();
+        if (result.success) {
+            pushNotification.success(
+                t("Exportación exitosa"),
+                t("El archivo PDF se está generando")
+            );
+        } else {
+            pushNotification.error(
+                t("Error al exportar"),
+                t("No se pudo generar el archivo PDF")
+            );
+        }
+    };
+
+    // Exponer métodos de exportación al componente padre
+    useImperativeHandle(ref, () => ({
+        exportExcel: handleExportExcel,
+        exportPDF: handleExportPDF,
+    }));
+
+    // Handlers para modo de exportación
+    const handleToggleExportMode = () => {
+        setIsExportMode(!isExportMode);
+        setSelectedUsers(new Set()); // Limpiar selección al cambiar modo
+    };
+
+    const handleToggleSelectUser = (userId) => {
+        const newSelected = new Set(selectedUsers);
+        if (newSelected.has(userId)) {
+            newSelected.delete(userId);
+        } else {
+            newSelected.add(userId);
+        }
+        setSelectedUsers(newSelected);
+    };
+
+    const handleSelectAll = () => {
+        if (selectedUsers.size === filteredUsers.length) {
+            setSelectedUsers(new Set());
+        } else {
+            setSelectedUsers(new Set(filteredUsers.map(u => u.id)));
+        }
+    };
+
+    const handleOpenExportModal = () => {
+        if (selectedUsers.size === 0) {
+            pushNotification.warning(
+                t("Sin selección"),
+                t("Debes seleccionar al menos un usuario para exportar")
+            );
+            return;
+        }
+        setShowExportModal(true);
+    };
+
+    const handleCloseExportModal = () => {
+        setShowExportModal(false);
+    };
+
+    const handleExportSelected = (format) => {
+        // IMPORTANTE: Usar todos los usuarios, no solo los filtrados
+        // Los usuarios seleccionados pueden estar en cualquier parte de la lista original
+        const usersToExport = usersData.filter(u => selectedUsers.has(u.id));
+        
+        if (usersToExport.length === 0) {
+            pushNotification.warning(
+                t("Sin selección"),
+                t("No hay usuarios seleccionados para exportar")
+            );
+            return;
+        }
+        
+        if (format === "excel") {
+            // Construir filas de Excel con usuarios seleccionados
+            const rows = usersToExport.map(user => ({
+                [t("Código")]: user.studentCode,
+                [t("Nombre")]: user.studentName,
+                [t("Ficha")]: user.fichaName || user.ficha,
+                [t("Ambiente")]: user.environment,
+                [t("Fecha")]: user.date ? formatDate(user.date, "DD/MM/YYYY") : t("Sin registro"),
+                [t("Estado")]: user.late ? t("Retardo") : (user.status === "present" ? t("Presente") : t("Ausente")),
+                [t("Horario Programado")]: user.scheduledStartTime && user.scheduledEndTime 
+                    ? `${user.scheduledStartTime} - ${user.scheduledEndTime}` 
+                    : t("N/A"),
+                [t("Registro Real")]: user.actualCheckInTime && user.actualCheckOutTime 
+                    ? `${user.actualCheckInTime} - ${user.actualCheckOutTime}` 
+                    : t("N/A"),
+                [t("Total de Registros")]: user.totalRecords,
+                [t("Asistencia (%)")]: user.attendance || 0,
+            }));
+
+            const sheets = [{
+                name: t("Históricos de Asistencia"),
+                data: rows,
+                columns: [
+                    { wch: 12 },  // Código
+                    { wch: 32 },  // Nombre
+                    { wch: 16 },  // Ficha
+                    { wch: 14 },  // Ambiente
+                    { wch: 14 },  // Fecha
+                    { wch: 12 },  // Estado
+                    { wch: 20 },  // Horario Programado
+                    { wch: 20 },  // Registro Real
+                    { wch: 14 },  // Total Registros
+                    { wch: 14 },  // Asistencia (%)
+                ],
+            }];
+
+            const filename = `Historicos_Seleccionados_${formatDate(new Date(), "YYYY-MM-DD")}.xlsx`;
+            const result = exportToExcel(sheets, filename);
+
+            if (result.success) {
+                pushNotification.success(
+                    t("Exportación exitosa"),
+                    `${usersToExport.length} ${usersToExport.length === 1 ? t("registro exportado") : t("registros exportados")} a Excel`
+                );
+            } else {
+                pushNotification.error(
+                    t("Error al exportar"),
+                    t("No se pudo generar el archivo Excel")
+                );
+            }
+        } else if (format === "pdf") {
+            // Construir PDF con usuarios seleccionados
+            const historicosTable = buildHTMLTable(usersToExport, [
+                { key: "studentCode", label: t("Código"), width: "10%" },
+                { key: "studentName", label: t("Nombre"), width: "20%" },
+                { key: "fichaName", label: t("Ficha"), width: "12%" },
+                { key: "environment", label: t("Ambiente"), width: "10%" },
+                { 
+                    key: "date", 
+                    label: t("Fecha"), 
+                    width: "12%",
+                    render: (value) => value ? formatDate(value, "DD/MM/YYYY") : t("Sin registro")
+                },
+                {
+                    key: "status",
+                    label: t("Estado"),
+                    width: "10%",
+                    align: "center",
+                    render: (value, row) => {
+                        const status = row.late ? "late" : (value === "present" ? "present" : "absent");
+                        return formatStatusBadge(status, {
+                            present: { text: t("Presente"), color: c.status.success },
+                            late: { text: t("Retardo"), color: c.status.warning },
+                            absent: { text: t("Ausente"), color: c.status.danger },
+                        });
+                    },
+                },
+                {
+                    key: "attendance",
+                    label: t("Asistencia"),
+                    width: "10%",
+                    align: "center",
+                    render: (value) => formatPercentageWithColor(value || 0, 75, 60),
+                },
+            ]);
+
+            const html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>${t("Históricos de Asistencia Seleccionados")}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            padding: 40px;
+            background: #ffffff;
+            color: #1a1a1a;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid ${c.primary};
+        }
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: ${c.primary};
+            margin-bottom: 8px;
+        }
+        .header p {
+            font-size: 14px;
+            color: #666;
+            margin-top: 4px;
+        }
+        .summary {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .summary-item {
+            text-align: center;
+        }
+        .summary-item .value {
+            font-size: 36px;
+            font-weight: 700;
+            color: ${c.primary};
+            margin-bottom: 4px;
+        }
+        .summary-item .label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        thead {
+            background: ${c.primary};
+            color: white;
+        }
+        th {
+            padding: 14px 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 13px;
+        }
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+        @media print {
+            body {
+                padding: 20px;
+            }
+            .header h1 {
+                font-size: 24px;
+            }
+            .summary-item .value {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>${t("Históricos de Asistencia Seleccionados")}</h1>
+        <p>${t("Registros seleccionados para exportación")}</p>
+        <p>${t("Fecha de generación")}: ${formatDate(new Date(), "DD/MM/YYYY HH:mm")}</p>
+    </div>
+
+    <div class="summary">
+        <div class="summary-item">
+            <div class="value">${usersToExport.length}</div>
+            <div class="label">${usersToExport.length === 1 ? t("Registro seleccionado") : t("Registros seleccionados")}</div>
+        </div>
+        <div class="summary-item">
+            <div class="value">${new Set(usersToExport.map(u => u.id)).size}</div>
+            <div class="label">${t("Usuarios únicos")}</div>
+        </div>
+        <div class="summary-item">
+            <div class="value">${usersToExport.reduce((sum, u) => sum + u.totalRecords, 0)}</div>
+            <div class="label">${t("Total de asistencias")}</div>
+        </div>
+    </div>
+
+    ${historicosTable}
+
+    <div class="footer">
+        <p>FaceAttend EDU © ${new Date().getFullYear()}</p>
+        <p>${t("Sistema de Control de Asistencia")}</p>
+    </div>
+</body>
+</html>
+            `;
+
+            const result = exportToPDF(html, `Historicos_Seleccionados_${formatDate(new Date(), "YYYY-MM-DD")}`);
+
+            if (result.success) {
+                pushNotification.success(
+                    t("Exportación exitosa"),
+                    `${usersToExport.length} ${usersToExport.length === 1 ? t("registro exportado") : t("registros exportados")} a PDF`
+                );
+            } else {
+                pushNotification.error(
+                    t("Error al exportar"),
+                    t("No se pudo generar el archivo PDF")
+                );
+            }
+        }
+        
+        // Cerrar modal y resetear modo
+        setShowExportModal(false);
+        setIsExportMode(false);
+        setSelectedUsers(new Set());
+    };
+
     useEffect(() => {
         if (onStatsChange) {
             const totalRecords = usersData.reduce((sum, user) => sum + user.totalRecords, 0);
@@ -395,7 +763,7 @@ export function HistoricosSection({ showFilters, onToggleFilters, onStatsChange 
     }
 
     return (
-        <View style={{ gap: 20 }}>
+        <View style={{ gap: 20, position: "relative" }}>
             {/* Panel de filtros */}
             {showFilters && (
                 <View style={{
@@ -520,61 +888,116 @@ export function HistoricosSection({ showFilters, onToggleFilters, onStatsChange 
                 ) : (
                     <>
                         <View style={{
-                            height: 52, // ALTURA FIJA para evitar deformación
+                            minHeight: 52,
                             paddingHorizontal: 16,
+                            paddingVertical: 12,
                             flexDirection: "row",
                             justifyContent: "space-between",
                             alignItems: "center",
                             borderBottomWidth: 1,
                             borderBottomColor: c.border.primary,
                             backgroundColor: c.background.surfaceVariant,
+                            gap: 12,
                         }}>
-                            <Text style={{
-                                fontSize: 14,
-                                fontWeight: "600",
-                                color: c.text.primary,
+                            {/* Lado izquierdo: Contador o Checkbox de seleccionar todos */}
+                            <View style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 12,
                             }}>
-                                {filteredUsers.length} {filteredUsers.length === 1 ? t("registro") : t("registros")}
-                            </Text>
-                            
-                            {(searchName || selectedFicha || (dateRange.start && dateRange.end)) && (
-                                <View style={{
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    gap: 8,
+                                {isExportMode && (
+                                    <Checkbox
+                                        checked={selectedUsers.size === filteredUsers.length}
+                                        indeterminate={selectedUsers.size > 0 && selectedUsers.size < filteredUsers.length}
+                                        onToggle={handleSelectAll}
+                                        size="sm"
+                                        variant="primary"
+                                    />
+                                )}
+                                
+                                <Text style={{
+                                    fontSize: 14,
+                                    fontWeight: "600",
+                                    color: c.text.primary,
                                 }}>
-                                    <View style={{
+                                    {isExportMode && selectedUsers.size > 0
+                                        ? `${selectedUsers.size} ${selectedUsers.size === 1 ? t("seleccionado") : t("seleccionados")}`
+                                        : `${filteredUsers.length} ${filteredUsers.length === 1 ? t("registro") : t("registros")}`
+                                    }
+                                </Text>
+                            </View>
+                            
+                            {/* Lado derecho: Botón Exportar o Filtros activos */}
+                            <View style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 8,
+                            }}>
+                                {!isExportMode && (searchName || selectedFicha || (dateRange.start && dateRange.end)) && (
+                                    <>
+                                        <View style={{
+                                            flexDirection: "row",
+                                            alignItems: "center",
+                                            gap: 5,
+                                            paddingHorizontal: 8,
+                                            paddingVertical: 3,
+                                            borderRadius: 6,
+                                            backgroundColor: c.primary + "20",
+                                        }}>
+                                            <Feather name="filter" size={12} color={c.primary} />
+                                            <Text style={{
+                                                fontSize: 12,
+                                                color: c.primary,
+                                                fontWeight: "500",
+                                            }}>
+                                                {t("Filtros activos")}
+                                            </Text>
+                                        </View>
+                                        <TouchableOpacity onPress={clearFilters}>
+                                            <Text style={{
+                                                fontSize: 12,
+                                                color: c.status.danger,
+                                                fontWeight: "500",
+                                            }}>
+                                                {t("Limpiar")}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </>
+                                )}
+                                
+                                {/* Botón Exportar / Cancelar */}
+                                <TouchableOpacity
+                                    onPress={handleToggleExportMode}
+                                    style={{
                                         flexDirection: "row",
                                         alignItems: "center",
-                                        gap: 5,
-                                        paddingHorizontal: 8,
-                                        paddingVertical: 3,
-                                        borderRadius: 6,
-                                        backgroundColor: c.primary + "20",
+                                        justifyContent: "center",
+                                        gap: 8,
+                                        paddingHorizontal: 16,
+                                        paddingVertical: 10,
+                                        backgroundColor: isExportMode ? c.status.danger + "15" : c.background.surface,
+                                        borderRadius: 8,
+                                        borderWidth: 1,
+                                        borderColor: isExportMode ? c.status.danger : c.border.primary,
+                                    }}
+                                >
+                                    <Feather 
+                                        name={isExportMode ? "x" : "download"} 
+                                        size={16} 
+                                        color={isExportMode ? c.status.danger : c.text.primary} 
+                                    />
+                                    <Text style={{
+                                        fontSize: 14,
+                                        fontWeight: "500",
+                                        color: isExportMode ? c.status.danger : c.text.primary,
                                     }}>
-                                        <Feather name="filter" size={12} color={c.primary} />
-                                        <Text style={{
-                                            fontSize: 12,
-                                            color: c.primary,
-                                            fontWeight: "500",
-                                        }}>
-                                            {t("Filtros activos")}
-                                        </Text>
-                                    </View>
-                                    <TouchableOpacity onPress={clearFilters}>
-                                        <Text style={{
-                                            fontSize: 12,
-                                            color: c.status.danger,
-                                            fontWeight: "500",
-                                        }}>
-                                            {t("Limpiar")}
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View>
-                            )}
+                                        {isExportMode ? t("Cancelar") : t("Exportar")}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
 
-                        <ScrollView style={{ maxHeight: 363,  }}showsVerticalScrollIndicator={false}>
+                        <ScrollView style={{ maxHeight: 363 }} showsVerticalScrollIndicator={false}>
                             {filteredUsers.map((user, index) => (
                                 <UserRow
                                     key={user.id}
@@ -582,7 +1005,9 @@ export function HistoricosSection({ showFilters, onToggleFilters, onStatsChange 
                                     index={index}
                                     isLast={index === filteredUsers.length - 1}
                                     onPress={() => handleUserClick(user)}
-                                    
+                                    isExportMode={isExportMode}
+                                    isSelected={selectedUsers.has(user.id)}
+                                    onToggleSelect={handleToggleSelectUser}
                                 />
                             ))}
                         </ScrollView>
@@ -617,6 +1042,53 @@ export function HistoricosSection({ showFilters, onToggleFilters, onStatsChange 
                     onClose={handleCloseHistoryModal}
                 />
             )}
+            
+            {/* Modal de configuración de exportación */}
+            <ExportConfigModal
+                visible={showExportModal}
+                onClose={handleCloseExportModal}
+                onExport={handleExportSelected}
+                selectedCount={selectedUsers.size}
+            />
+            
+            {/* Botón flotante usando Portal - Se renderiza en el body, fuera de cualquier scroll */}
+            {isExportMode && selectedUsers.size > 0 && typeof document !== 'undefined' && createPortal(
+                <View style={{
+                    position: "fixed",
+                    bottom: 32,
+                    right: 32,
+                    zIndex: 9999,
+                }}>
+                    <Button
+                        variant="primary"
+                        onPress={handleOpenExportModal}
+                        leftIcon={<Feather 
+                                    name="download" 
+                                    size={24} 
+                                    color="#fff" 
+                                    style={{
+                                            transform: [
+                                                { translateX: 4 },
+                                                { translateY: -3 },
+                                        ],
+                                }}/>}
+                        style={{
+                            width: 64,
+                            height: 64,
+                            borderRadius: 32,
+                            shadowColor: "#000",
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.3,
+                            shadowRadius: 8,
+                            elevation: 8,
+                        }}
+                    />
+                </View>,
+                document.body
+            )}
         </View>
     );
-}
+});
+
+// Agregar displayName para ESLint
+HistoricosSection.displayName = "HistoricosSection";
