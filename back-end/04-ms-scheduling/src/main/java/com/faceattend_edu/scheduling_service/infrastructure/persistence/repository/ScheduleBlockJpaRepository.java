@@ -12,7 +12,8 @@ public interface ScheduleBlockJpaRepository extends JpaRepository<ScheduleBlockJ
     @Query("""
             select count(b) > 0 from ScheduleBlockJpaEntity b
             where b.deletedAt is null and b.environmentId = :environmentId and b.dayOfWeek = :dayOfWeek
-              and b.startsAt < :endsAt and b.endsAt > :startsAt and b.scheduleBlockId <> :excludeId
+              and b.startsAt < :endsAt and b.endsAt > :startsAt
+              and (:excludeId is null or b.scheduleBlockId <> :excludeId)
             """)
     boolean existsEnvironmentOverlap(@Param("environmentId") Integer environmentId, @Param("dayOfWeek") Short dayOfWeek,
                                      @Param("startsAt") LocalTime startsAt, @Param("endsAt") LocalTime endsAt,
@@ -21,7 +22,8 @@ public interface ScheduleBlockJpaRepository extends JpaRepository<ScheduleBlockJ
     @Query("""
             select count(b) > 0 from ScheduleBlockJpaEntity b
             where b.deletedAt is null and b.instructorActorId = :instructorActorId and b.dayOfWeek = :dayOfWeek
-              and b.startsAt < :endsAt and b.endsAt > :startsAt and b.scheduleBlockId <> :excludeId
+              and b.startsAt < :endsAt and b.endsAt > :startsAt
+              and (:excludeId is null or b.scheduleBlockId <> :excludeId)
             """)
     boolean existsInstructorOverlap(@Param("instructorActorId") Long instructorActorId, @Param("dayOfWeek") Short dayOfWeek,
                                     @Param("startsAt") LocalTime startsAt, @Param("endsAt") LocalTime endsAt,

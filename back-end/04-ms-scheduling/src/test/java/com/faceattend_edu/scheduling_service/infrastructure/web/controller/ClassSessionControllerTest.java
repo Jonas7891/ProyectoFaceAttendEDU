@@ -277,8 +277,10 @@ class ClassSessionControllerTest {
         @Test
         @DisplayName("givenOpenSession_whenClose_thenReturn200Closed")
         void givenOpenSession_whenClose_thenReturn200Closed() throws Exception {
-            // Arrange
-            when(closeUseCase.close(5L, 88L)).thenReturn(withStatus(openSession, "Closed"));
+            // Arrange: el use case real setea closedBy/closedAt antes de guardar
+            ClassSession closed = withStatus(openSession, "Closed");
+            closed.setClosedBy(88L);
+            when(closeUseCase.close(5L, 88L)).thenReturn(closed);
 
             // Act & Assert
             mockMvc.perform(post("/api/v1/class-sessions/5/close")
