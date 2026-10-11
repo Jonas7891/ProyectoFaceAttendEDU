@@ -8,8 +8,10 @@ import { useTranslation }     from "../core/utils/i18n/hooks/useTranslation";
 // Soporta estructura jerárquica mediante la propiedad "children"
 const ALL_TABS = [
     { key: "dashboard",    label: "Inicio",        icon: "layout"      },
-    // Reportes de escuelas: para el super admin es su consulta principal
-    // (está justo después de Inicio en todos los roles que lo ven).
+    // Sección del super admin: gestión de escuelas y su asistencia
+    { key: "schools",      label: "Escuelas",      icon: "map"         },
+    // Reportes de escuelas: consulta principal de todos los roles que lo ven
+    // (el super admin tiene además "Escuelas" justo antes).
     { key: "reports",      label: "Reportes",      icon: "bar-chart-2" },
     // Pantallas de asistencia y de consulta (HU-HIST / HU-JUS / nav-map)
     { key: "history",       label: "Historial",       icon: "clock"      },

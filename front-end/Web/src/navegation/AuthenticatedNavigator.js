@@ -18,6 +18,7 @@ import { useNavigation } from "@react-navigation/native";
 
 // ── Importación de Screens ────────────────────────────────────
 import DashboardScreen from "../view/screens/DashboardScreen";
+import SchoolsScreen from "../view/screens/SchoolsScreen";
 import UsersScreen from "../view/screens/UsersScreen";
 import CoursesScreen from "../view/screens/CoursesScreen";
 import EnvironmentsScreen from "../view/screens/EnvironmentsScreen";
@@ -66,6 +67,7 @@ const SidebarStateContext = React.createContext({
 // ── Constantes de mapeo de rutas ────────────────────────────
 const ROUTE_MAP = {
     "dashboard": "Dashboard",
+    "schools": "Schools",
     "users": "Users",
     "courses": "Courses",
     "environments": "Environments",
@@ -80,6 +82,7 @@ const ROUTE_MAP = {
 
 const ROUTE_TO_KEY_MAP = {
     "Dashboard": "dashboard",
+    "Schools": "schools",
     "Users": "users",
     "Courses": "courses",
     "Environments": "environments",
@@ -471,6 +474,9 @@ export default function AuthenticatedNavigator() {
                         >
                             <Stack.Screen name="Dashboard">
                                 {(props) => <ScreenWithSidebar><DashboardScreen {...props} /></ScreenWithSidebar>}
+                            </Stack.Screen>
+                            <Stack.Screen name="Schools">
+                                {(props) => <ScreenWithSidebar><SchoolsScreen {...props} /></ScreenWithSidebar>}
                             </Stack.Screen>
                             <Stack.Screen name="Users">
                                 {(props) => <ScreenWithSidebar><UsersScreen {...props} /></ScreenWithSidebar>}
