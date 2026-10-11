@@ -285,6 +285,11 @@ export function AdminReports({ section }) {
     const rotateAnim = useRef(new Animated.Value(0)).current;
 
     // ── IMPORTANTE: Todos los hooks deben estar ANTES de cualquier return early ──
+    
+    // Estados para la sección de Históricos (siempre inicializados, se usan solo si es necesario)
+    const [historicosStats, setHistoricosStats] = useState({ totalRecords: 0, totalUsers: 0 });
+    const [showHistoricosFilters, setShowHistoricosFilters] = useState(false);
+    
     // Lógica de estudiantes en riesgo (se calcula siempre para respetar reglas de hooks)
     const studentsData = useMemo(() => {
         const config = getInstitutionConfig();
@@ -332,10 +337,6 @@ export function AdminReports({ section }) {
 
     // ── Renderizar sección de Históricos ──────────────────
     if (isHistoricos) {
-        // Estado para las estadísticas y el toggle de filtros
-        const [historicosStats, setHistoricosStats] = React.useState({ totalRecords: 0, totalUsers: 0 });
-        const [showHistoricosFilters, setShowHistoricosFilters] = React.useState(false);
-
         return (
             <>
                 {/* Header compacto con estadísticas */}

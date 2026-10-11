@@ -68,6 +68,7 @@ export function DatePicker({
   disabled = false,
   required = false,
   style,
+  buttonStyle,
 }) {
   const { theme } = useTheme();
   const [showPicker, setShowPicker] = useState(false);
@@ -146,6 +147,7 @@ export function DatePicker({
               ? theme.colors.background.hover
               : theme.colors.background.surface,
           },
+          buttonStyle, // Permite sobrescribir height desde fuera
         ]}
         accessibilityRole="button"
         accessibilityLabel={label || "Seleccionar fecha"}

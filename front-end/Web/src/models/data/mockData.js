@@ -86,10 +86,35 @@ function generateAttendanceHistory(attendanceRate, totalClasses = 45) {
         // Determinar tardanzas (solo si asistió)
         const late = present && Math.random() < 0.08; // 8% de tardanzas
         
+        // Simular horas de entrada y salida realistas
+        let checkInTime = null;
+        let checkOutTime = null;
+        
+        if (present) {
+            // Hora de entrada: 7:00-9:00 para jornada mañana, 13:00-15:00 para tarde
+            const baseCheckIn = Math.random() < 0.5 ? 8 : 14; // 50% mañana, 50% tarde
+            const checkInMinutes = late 
+                ? Math.floor(Math.random() * 30) + 10 // 10-40 min tarde si late=true
+                : Math.floor(Math.random() * 15); // 0-15 min variación normal
+            
+            const checkInHour = baseCheckIn + Math.floor(checkInMinutes / 60);
+            const checkInMin = checkInMinutes % 60;
+            checkInTime = `${checkInHour.toString().padStart(2, '0')}:${checkInMin.toString().padStart(2, '0')}`;
+            
+            // Hora de salida: 2-4 horas después de la entrada
+            const duration = Math.floor(Math.random() * 120) + 120; // 120-240 min (2-4 horas)
+            const totalMinutes = checkInHour * 60 + checkInMin + duration;
+            const checkOutHour = Math.floor(totalMinutes / 60);
+            const checkOutMin = totalMinutes % 60;
+            checkOutTime = `${checkOutHour.toString().padStart(2, '0')}:${checkOutMin.toString().padStart(2, '0')}`;
+        }
+        
         history.push({
             date: date.toISOString().split('T')[0],
             present,
             late,
+            checkInTime,   // Hora real de entrada (ej: "08:05", "14:23")
+            checkOutTime,  // Hora real de salida (ej: "10:30", "17:45")
         });
     }
     

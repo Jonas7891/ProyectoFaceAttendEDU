@@ -11,8 +11,8 @@ import { Feather } from "@expo/vector-icons";
 import { 
     Button, 
     TextInput, 
-    Select as Dropdown,
-    DatePicker,
+    AnimatedDropdown,
+    DateRangeCalendar,
     Avatar,
     Badge,
     EmptyState,
@@ -23,6 +23,7 @@ import { useResponsive } from "../../../components/hooks/useResponsive";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { useDateFormat } from "../../../components/hooks/useDateFormat";
 import { useAppData } from "../../../../context/AppDataContext";
+import { titleCase } from "../../../../core/utils/formatting";
 
 function UserRow({ user, index, isLast, onPress }) {
     const { theme } = useTheme();
@@ -30,7 +31,6 @@ function UserRow({ user, index, isLast, onPress }) {
     const { formatDate } = useDateFormat();
     const c = theme.colors;
     
-    // Determinar el icono y color según el estado del último registro
     const statusConfig = {
         present: {
             variant: "success",
@@ -60,7 +60,6 @@ function UserRow({ user, index, isLast, onPress }) {
                 borderBottomColor: c.border.primary,
             }}
         >
-            {/* Avatar con indicador de estado */}
             <View style={{ position: "relative" }}>
                 <Avatar name={user.studentName} size={40} />
                 {user.date && (
@@ -82,9 +81,7 @@ function UserRow({ user, index, isLast, onPress }) {
                 )}
             </View>
 
-            {/* Información principal */}
             <View style={{ flex: 1, gap: 5 }}>
-                {/* Primera línea: Nombre y Badge */}
                 <View style={{
                     flexDirection: "row",
                     alignItems: "center",
@@ -101,97 +98,86 @@ function UserRow({ user, index, isLast, onPress }) {
                     </Text>
                     
                     {user.date && (
-                        <Badge 
-                            variant={config.variant}
-                            size="sm"
-                        >
+                        <Badge variant={config.variant} size="sm">
                             {config.label}
                         </Badge>
                     )}
                 </View>
 
-                {/* Segunda línea: Código, Ficha, Fecha y Hora */}
                 <View style={{
                     flexDirection: "row",
                     alignItems: "center",
                     gap: 6,
                     flexWrap: "wrap",
                 }}>
-                    {/* Código */}
-                    <View style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 4,
-                    }}>
-                        <Feather name="hash" size={12} color={c.text.secondary} />
-                        <Text style={{
-                            fontSize: 12,
-                            color: c.text.secondary,
-                            fontWeight: "500",
-                        }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                        <Feather name="hash" size={12} color={c.text.secondary} style={{ marginTop: 1 }} />
+                        <Text style={{ fontSize: 12, color: c.text.secondary, fontWeight: "500", lineHeight: 14 }}>
                             {user.studentCode}
                         </Text>
                     </View>
                     
-                    <Text style={{ fontSize: 12, color: c.text.disabled }}>•</Text>
+                    <Text style={{ fontSize: 12, color: c.text.disabled, lineHeight: 14 }}>•</Text>
                     
-                    {/* Ficha */}
-                    <View style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 4,
-                    }}>
-                        <Feather name="book-open" size={12} color={c.text.secondary} />
-                        <Text style={{
-                            fontSize: 12,
-                            color: c.text.secondary,
-                        }}>
-                            {user.ficha}
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                        <Feather name="map-pin" size={12} color={c.text.secondary} style={{ marginTop: 1 }} />
+                        <Text style={{ fontSize: 12, color: c.text.secondary, lineHeight: 14 }}>
+                            {user.environment}
                         </Text>
                     </View>
                     
                     {user.date && (
                         <>
-                            <Text style={{ fontSize: 12, color: c.text.disabled }}>•</Text>
-                            
-                            {/* Fecha */}
-                            <View style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 4,
-                            }}>
-                                <Feather name="calendar" size={12} color={c.text.secondary} />
-                                <Text style={{
-                                    fontSize: 12,
-                                    color: c.text.secondary,
-                                }}>
+                            <Text style={{ fontSize: 12, color: c.text.disabled, lineHeight: 14 }}>•</Text>
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                                <Feather name="calendar" size={12} color={c.text.secondary} style={{ marginTop: 1 }} />
+                                <Text style={{ fontSize: 12, color: c.text.secondary, lineHeight: 14 }}>
                                     {formatDate(user.date, "DD/MM/YYYY")}
                                 </Text>
                             </View>
                         </>
                     )}
-                    
-                    {user.time && (
-                        <>
-                            <Text style={{ fontSize: 12, color: c.text.disabled }}>•</Text>
-                            
-                            {/* Hora */}
-                            <View style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 4,
-                            }}>
-                                <Feather name="clock" size={12} color={c.text.secondary} />
-                                <Text style={{
-                                    fontSize: 12,
-                                    color: c.text.secondary,
-                                }}>
-                                    {user.time}
+                </View>
+                
+                {/* Horarios - solo mostrar si hay datos de tiempo */}
+                {(user.scheduledStartTime || user.actualCheckInTime) && (
+                    <View style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 8,
+                        marginTop: 2,
+                    }}>
+                        {/* Horario programado */}
+                        {user.scheduledStartTime && user.scheduledEndTime && (
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                                <Feather name="clock" size={11} color={c.text.tertiary} style={{ marginTop: 1 }} />
+                                <Text style={{ fontSize: 11, color: c.text.tertiary, lineHeight: 13 }}>
+                                    Horario: {user.scheduledStartTime} - {user.scheduledEndTime}
                                 </Text>
                             </View>
-                        </>
-                    )}
-                </View>
+                        )}
+                        
+                        {/* Registro real */}
+                        {user.actualCheckInTime && user.actualCheckOutTime && (
+                            <>
+                                {user.scheduledStartTime && (
+                                    <Text style={{ fontSize: 11, color: c.text.disabled, lineHeight: 13 }}>|</Text>
+                                )}
+                                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                                    <Feather name="activity" size={11} color={user.late ? c.status.warning : c.status.success} style={{ marginTop: 1 }} />
+                                    <Text style={{ 
+                                        fontSize: 11, 
+                                        color: user.late ? c.status.warning : c.text.secondary,
+                                        lineHeight: 13,
+                                        fontWeight: user.late ? "600" : "400"
+                                    }}>
+                                        Real: {user.actualCheckInTime} - {user.actualCheckOutTime}
+                                    </Text>
+                                </View>
+                            </>
+                        )}
+                    </View>
+                )}
             </View>
 
             <Feather name="chevron-right" size={20} color={c.text.secondary} />
@@ -206,32 +192,95 @@ export function HistoricosSection({ showFilters, onToggleFilters, onStatsChange 
     const appData = useAppData();
     const c = theme.colors;
 
-    // Estado para filtros
     const [searchName, setSearchName] = useState("");
     const [selectedFicha, setSelectedFicha] = useState("");
-    const [selectedDate, setSelectedDate] = useState(null);
     const [dateRange, setDateRange] = useState({ start: null, end: null });
 
-    // Construir lista de usuarios con su información de asistencia
+    /**
+     * Filtra el texto para permitir solo letras y espacios manteniendo acentos
+     */
+    const filterLettersAndSpaces = (text) => {
+        if (!text) return '';
+        // Permite letras con acentos, espacios, ñ, ü, etc.
+        return text.replace(/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑç\s]/g, '');
+    };
+
+    /**
+     * Formatea el nombre: filtra caracteres no válidos y capitaliza usando titleCase
+     */
+    const formatName = (text) => {
+        if (!text) return '';
+        const filtered = filterLettersAndSpaces(text);
+        return titleCase(filtered);
+    };
+
+    /**
+     * Handler para el input de nombre con auto-capitalización
+     */
+    const handleNameChange = (text) => {
+        const formatted = formatName(text);
+        setSearchName(formatted);
+    };
+
+    /**
+     * Handler para cambio de rango de fechas
+     */
+    const handleDateRangeChange = (range) => {
+        setDateRange(range);
+    };
+
     const usersData = useMemo(() => {
-        // Solo estudiantes (excluyendo administradores y profesores)
         const students = appData.students || [];
+        const courses = appData.courses || [];
+        const environments = appData.environments || [];
         
         return students.map(student => {
-            // Calcular el último registro de asistencia
             let lastRecord = null;
+            let environmentName = t("Sin ambiente");
+            
             if (student.attendanceHistory && student.attendanceHistory.length > 0) {
-                // Ordenar por fecha descendente y tomar el primero
                 const sortedHistory = [...student.attendanceHistory].sort(
                     (a, b) => new Date(b.date) - new Date(a.date)
                 );
                 lastRecord = sortedHistory[0];
             }
             
-            // Generar hora simulada para el último registro
-            const baseHour = 8;
-            const minuteVariation = (parseInt(student.id) * 7) % 60;
-            const time = `${baseHour.toString().padStart(2, '0')}:${minuteVariation.toString().padStart(2, '0')}`;
+            // Obtener el ambiente y horario desde el curso del estudiante
+            const studentCourse = courses.find(c => c.code === student.course || c.id === student.course);
+            let scheduledStartTime = null;
+            let scheduledEndTime = null;
+            let actualCheckInTime = null;
+            let actualCheckOutTime = null;
+            
+            if (studentCourse?.room) {
+                // room contiene el ID del ambiente (ej: "env1"), buscar en environments
+                const environment = environments.find(env => env.id === studentCourse.room);
+                if (environment?.number) {
+                    environmentName = environment.number;
+                }
+                
+                // Obtener horario programado del curso
+                if (environment?.schedules && environment.schedules.length > 0) {
+                    // Buscar el schedule que corresponde al curso del estudiante
+                    const courseSchedule = environment.schedules.find(
+                        sch => sch.courseCode === student.course
+                    );
+                    if (courseSchedule) {
+                        scheduledStartTime = courseSchedule.startTime;
+                        scheduledEndTime = courseSchedule.endTime;
+                    } else if (environment.schedules[0]) {
+                        // Fallback: usar primer horario si no se encuentra el específico
+                        scheduledStartTime = environment.schedules[0].startTime;
+                        scheduledEndTime = environment.schedules[0].endTime;
+                    }
+                }
+            }
+            
+            // Obtener horas reales del último registro de asistencia
+            if (lastRecord) {
+                actualCheckInTime = lastRecord.checkInTime || null;
+                actualCheckOutTime = lastRecord.checkOutTime || null;
+            }
             
             return {
                 id: student.id,
@@ -239,50 +288,52 @@ export function HistoricosSection({ showFilters, onToggleFilters, onStatsChange 
                 studentCode: student.code,
                 ficha: student.course,
                 fichaName: student.courseName,
+                environment: environmentName,
                 date: lastRecord?.date || null,
-                time: lastRecord ? time : null,
+                // Horario programado del curso
+                scheduledStartTime,
+                scheduledEndTime,
+                // Hora real del último registro
+                actualCheckInTime,
+                actualCheckOutTime,
                 status: lastRecord?.present ? "present" : "absent",
                 late: lastRecord?.late || false,
                 totalRecords: student.attendanceHistory?.length || 0,
                 attendance: student.attendance,
             };
         });
-    }, [appData.students]);
+    }, [appData.students, appData.courses, appData.environments, t]);
 
-    // Fichas disponibles para filtrado (extraídas dinámicamente de los cursos)
     const availableFichas = useMemo(() => {
         const fichasSet = new Set();
         
-        // Recopilar todas las fichas únicas de los estudiantes
         (appData.students || []).forEach(student => {
             if (student.course) {
                 fichasSet.add(student.course);
             }
         });
         
-        // Convertir a array de opciones
         const fichaOptions = Array.from(fichasSet)
             .sort()
             .map(ficha => {
-                // Buscar el nombre del curso si está disponible
                 const course = (appData.courses || []).find(c => c.code === ficha || c.id === ficha);
                 return {
                     value: ficha,
-                    label: course ? `${ficha} - ${course.name}` : ficha
+                    label: course?.name || ficha,
+                    description: `Ficha ${ficha}`,
+                    icon: "book-open",
                 };
             });
         
         return [
-            { value: "", label: t("Todas las fichas") },
+            { value: "", label: t("Todas las fichas"), description: t("Sin filtro"), icon: "filter" },
             ...fichaOptions
         ];
     }, [appData.students, appData.courses, t]);
 
-    // Filtrar datos de usuarios
     const filteredUsers = useMemo(() => {
         let result = usersData;
 
-        // Filtro por nombre
         if (searchName) {
             const searchLower = searchName.toLowerCase();
             result = result.filter(user => 
@@ -291,25 +342,19 @@ export function HistoricosSection({ showFilters, onToggleFilters, onStatsChange 
             );
         }
 
-        // Filtro por ficha
         if (selectedFicha) {
             result = result.filter(user => user.ficha === selectedFicha);
         }
 
-        // Filtro por fecha específica o rango (filtrar usuarios que tienen registro en ese rango)
-        if (selectedDate) {
-            result = result.filter(user => user.date === selectedDate);
-        } else if (dateRange.start && dateRange.end) {
+        if (dateRange.start && dateRange.end) {
             result = result.filter(user => 
                 user.date && user.date >= dateRange.start && user.date <= dateRange.end
             );
         }
 
-        // Ordenar por nombre
         return result.sort((a, b) => a.studentName.localeCompare(b.studentName));
-    }, [usersData, searchName, selectedFicha, selectedDate, dateRange]);
+    }, [usersData, searchName, selectedFicha, dateRange]);
 
-    // Actualizar estadísticas en el padre
     useEffect(() => {
         if (onStatsChange) {
             const totalRecords = usersData.reduce((sum, user) => sum + user.totalRecords, 0);
@@ -323,11 +368,9 @@ export function HistoricosSection({ showFilters, onToggleFilters, onStatsChange 
     const clearFilters = () => {
         setSearchName("");
         setSelectedFicha("");
-        setSelectedDate(null);
         setDateRange({ start: null, end: null });
     };
 
-    // Mostrar loader mientras se cargan los datos
     if (appData.isLoading) {
         return <Loader fullScreen message={t("Cargando históricos...")} />;
     }
@@ -337,134 +380,105 @@ export function HistoricosSection({ showFilters, onToggleFilters, onStatsChange 
             {/* Panel de filtros */}
             {showFilters && (
                 <View style={{
-                    padding: 16,
+                    padding: 14, // Reducido de 20 a 16
                     backgroundColor: c.background.surface,
                     borderRadius: 12,
-                    gap: 16,
+                    gap: 12, // Reducido de 16 a 12
                     borderWidth: 1,
                     borderColor: c.border.primary,
+                    zIndex: 10,
                 }}>
-                    <Text style={{
-                        fontSize: 16,
-                        fontWeight: "600",
-                        color: c.text.primary,
+                    {/* Header: Título + Botones */}
+                    <View style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "baseline", // Alinear por línea base del texto
+                        marginTop: -8,
+                        marginBottom: -12,
                     }}>
-                        {t("Filtros de búsqueda")}
-                    </Text>
-
-                    {/* Filtro por nombre */}
-                    <View>
                         <Text style={{
-                            fontSize: 14,
-                            fontWeight: "500",
+                            fontSize: 15,
+                            fontWeight: "600",
                             color: c.text.primary,
-                            marginBottom: 8,
+                            lineHeight: 20, // Altura de línea explícita
                         }}>
-                            {t("Nombre del estudiante")}
+                            {t("Filtros de búsqueda")}
                         </Text>
-                        <TextInput
-                            value={searchName}
-                            onChangeText={setSearchName}
-                            placeholder={t("Buscar por nombre...")}
-                            leftIcon={<Feather name="user" size={16} color={c.text.secondary} />}
-                        />
-                    </View>
 
-                    {/* Filtro por ficha */}
-                    <View>
-                        <Text style={{
-                            fontSize: 14,
-                            fontWeight: "500",
-                            color: c.text.primary,
-                            marginBottom: 8,
-                        }}>
-                            {t("Ficha")}
-                        </Text>
-                        <Dropdown
-                            value={selectedFicha}
-                            onValueChange={setSelectedFicha}
-                            options={availableFichas}
-                            placeholder={t("Seleccionar ficha")}
-                        />
-                    </View>
-
-                    {/* Filtro por fecha */}
-                    <View>
-                        <Text style={{
-                            fontSize: 14,
-                            fontWeight: "500",
-                            color: c.text.primary,
-                            marginBottom: 8,
-                        }}>
-                            {t("Fecha")}
-                        </Text>
                         <View style={{
-                            flexDirection: isSmall ? "column" : "row",
+                            flexDirection: "row",
                             gap: 12,
+                            position: 'relative',
+                            top: 4, // Mover visualmente hacia abajo sin cambiar altura
                         }}>
-                            <View style={{ flex: 1 }}>
-                                <DatePicker
-                                    value={selectedDate}
-                                    onValueChange={setSelectedDate}
-                                    placeholder={t("Fecha específica")}
-                                />
-                            </View>
-                            <Text style={{
-                                alignSelf: "center",
-                                color: c.text.secondary,
-                                fontWeight: "500",
-                            }}>
-                                {t("o")}
-                            </Text>
-                            <View style={{ 
-                                flex: 1,
-                                flexDirection: "row",
-                                gap: 8,
-                            }}>
-                                <DatePicker
-                                    value={dateRange.start}
-                                    onValueChange={(date) => setDateRange(prev => ({ ...prev, start: date }))}
-                                    placeholder={t("Desde")}
-                                    style={{ flex: 1 }}
-                                />
-                                <DatePicker
-                                    value={dateRange.end}
-                                    onValueChange={(date) => setDateRange(prev => ({ ...prev, end: date }))}
-                                    placeholder={t("Hasta")}
-                                    style={{ flex: 1 }}
-                                />
-                            </View>
+                            <Button variant="ghost" size="sm" onPress={clearFilters}>
+                                {t("Limpiar")}
+                            </Button>
+                            <Button variant="primary" size="sm" onPress={() => onToggleFilters && onToggleFilters(false)}>
+                                {t("Aplicar")}
+                            </Button>
                         </View>
                     </View>
 
-                    {/* Botones de acción */}
+                    {/* Fila única con 3 inputs compactos */}
                     <View style={{
                         flexDirection: "row",
-                        justifyContent: "flex-end",
+                        alignItems: "flex-end",
                         gap: 12,
-                        paddingTop: 8,
-                        borderTopWidth: 1,
-                        borderTopColor: c.border.primary,
+                        position: 'relative',
                     }}>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onPress={clearFilters}
-                        >
-                            {t("Limpiar")}
-                        </Button>
-                        <Button
-                            variant="primary"
-                            size="sm"
-                            onPress={() => onToggleFilters && onToggleFilters(false)}
-                        >
-                            {t("Aplicar")}
-                        </Button>
+                        {/* Nombre - MÁS ANCHO */}
+                        <View style={{ flex: 2 }}>
+                            <TextInput
+                                label={t("Nombre")}
+                                value={searchName}
+                                onChangeText={handleNameChange}
+                                placeholder={t("Buscar...")}
+                                leftIcon={<Feather name="user" size={16} color={c.text.secondary} />}
+                                containerStyle={{ height: 42, minHeight: 42 }}
+                                style={{ marginBottom: 0 }}
+                            />
+                        </View>
+
+                        {/* Ficha - MÁS ANCHO */}
+                        <View style={{ flex: 1.5, zIndex: 90 }}>
+                            <Text style={{
+                                fontSize: 14,
+                                fontWeight: "600",
+                                color: c.text.secondary,
+                                marginBottom: 6,
+                            }}>
+                                {t("Ficha")}
+                            </Text>
+                            <AnimatedDropdown
+                                items={availableFichas}
+                                value={selectedFicha}
+                                onSelect={setSelectedFicha}
+                                placeholder={t("Todas las fichas")}
+                                searchable={true}
+                                searchPlaceholder={t("Buscar ficha...")}
+                                maxVisible={5}
+                                triggerIcon="book-open"
+                                triggerHeight={42}
+                            />
+                        </View>
+
+                        {/* Calendario de rango - MÁS ALTO z-index */}
+                        <View style={{ flex: 2, zIndex: 100 }}>
+                            <DateRangeCalendar
+                                label={t("Fecha")}
+                                startDate={dateRange.start}
+                                endDate={dateRange.end}
+                                onDateChange={handleDateRangeChange}
+                                placeholder={t("Seleccionar rango")}
+                                style={{ marginBottom: 0 }}
+                            />
+                        </View>
                     </View>
                 </View>
             )}
 
-            {/* Resultados */}
+            {/* Lista de usuarios */}
             <View style={{
                 backgroundColor: c.background.surface,
                 borderRadius: 12,
@@ -478,7 +492,7 @@ export function HistoricosSection({ showFilters, onToggleFilters, onStatsChange 
                             icon="users"
                             title={t("No hay usuarios")}
                             description={
-                                searchName || selectedFicha || selectedDate || (dateRange.start && dateRange.end)
+                                searchName || selectedFicha || (dateRange.start && dateRange.end)
                                     ? t("No se encontraron usuarios con los filtros aplicados")
                                     : t("No hay usuarios registrados en el sistema")
                             }
@@ -486,68 +500,62 @@ export function HistoricosSection({ showFilters, onToggleFilters, onStatsChange 
                     </View>
                 ) : (
                     <>
-                        {/* Header con contador y filtros activos */}
                         <View style={{
-                            padding: 16,
+                            height: 52, // ALTURA FIJA para evitar deformación
+                            paddingHorizontal: 16,
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            alignItems: "center",
                             borderBottomWidth: 1,
                             borderBottomColor: c.border.primary,
                             backgroundColor: c.background.surfaceVariant,
                         }}>
-                            <View style={{
-                                flexDirection: isSmall ? "column" : "row",
-                                justifyContent: "space-between",
-                                alignItems: isSmall ? "flex-start" : "center",
-                                gap: 8,
+                            <Text style={{
+                                fontSize: 14,
+                                fontWeight: "600",
+                                color: c.text.primary,
                             }}>
-                                <Text style={{
-                                    fontSize: 14,
-                                    fontWeight: "600",
-                                    color: c.text.primary,
+                                {filteredUsers.length} {filteredUsers.length === 1 ? t("registro") : t("registros")}
+                            </Text>
+                            
+                            {(searchName || selectedFicha || (dateRange.start && dateRange.end)) && (
+                                <View style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    gap: 8,
                                 }}>
-                                    {filteredUsers.length} {filteredUsers.length === 1 ? t("registro") : t("registros")}
-                                </Text>
-                                
-                                {/* Indicador de filtros activos */}
-                                {(searchName || selectedFicha || selectedDate || (dateRange.start && dateRange.end)) && (
                                     <View style={{
                                         flexDirection: "row",
                                         alignItems: "center",
-                                        gap: 8,
+                                        gap: 5,
+                                        paddingHorizontal: 8,
+                                        paddingVertical: 3,
+                                        borderRadius: 6,
+                                        backgroundColor: c.primary + "20",
                                     }}>
-                                        <View style={{
-                                            flexDirection: "row",
-                                            alignItems: "center",
-                                            gap: 5,
-                                            paddingHorizontal: 8,
-                                            paddingVertical: 4,
-                                            borderRadius: 6,
-                                            backgroundColor: c.primary + "20",
+                                        <Feather name="filter" size={12} color={c.primary} />
+                                        <Text style={{
+                                            fontSize: 12,
+                                            color: c.primary,
+                                            fontWeight: "500",
                                         }}>
-                                            <Feather name="filter" size={12} color={c.primary} />
-                                            <Text style={{
-                                                fontSize: 12,
-                                                color: c.primary,
-                                                fontWeight: "500",
-                                            }}>
-                                                {t("Filtros activos")}
-                                            </Text>
-                                        </View>
-                                        <TouchableOpacity onPress={clearFilters}>
-                                            <Text style={{
-                                                fontSize: 12,
-                                                color: c.status.danger,
-                                                fontWeight: "500",
-                                            }}>
-                                                {t("Limpiar")}
-                                            </Text>
-                                        </TouchableOpacity>
+                                            {t("Filtros activos")}
+                                        </Text>
                                     </View>
-                                )}
-                            </View>
+                                    <TouchableOpacity onPress={clearFilters}>
+                                        <Text style={{
+                                            fontSize: 12,
+                                            color: c.status.danger,
+                                            fontWeight: "500",
+                                        }}>
+                                            {t("Limpiar")}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
                         </View>
 
-                        {/* Lista de usuarios */}
-                        <ScrollView style={{ maxHeight: 500 }}>
+                        <ScrollView style={{ maxHeight: 363,  }}showsVerticalScrollIndicator={false}>
                             {filteredUsers.map((user, index) => (
                                 <UserRow
                                     key={user.id}
@@ -555,21 +563,21 @@ export function HistoricosSection({ showFilters, onToggleFilters, onStatsChange 
                                     index={index}
                                     isLast={index === filteredUsers.length - 1}
                                     onPress={() => console.log("Ver detalles de usuario:", user.id)}
+                                    
                                 />
                             ))}
                         </ScrollView>
 
-                        {/* Footer con mensaje final */}
                         {filteredUsers.length > 5 && (
                             <View style={{
-                                padding: 16,
+                                padding: 12, // Reducido de 16 a 12
                                 alignItems: "center",
                                 justifyContent: "center",
                                 backgroundColor: c.background.surfaceVariant,
                                 borderTopWidth: 1,
                                 borderTopColor: c.border.primary,
                             }}>
-                                <Feather name="check-circle" size={20} color={c.status.success} style={{ marginBottom: 6 }} />
+                                <Feather name="check-circle" size={20} color={c.status.success} style={{ marginBottom: 4 }} />
                                 <Text style={{
                                     fontSize: 13,
                                     color: c.text.secondary,

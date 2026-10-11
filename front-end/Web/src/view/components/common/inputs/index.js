@@ -20,6 +20,7 @@ export { Autocomplete } from './Autocomplete';
 
 // Date/Time Inputs (placeholders)
 export { DatePicker } from './DatePicker';
+export { DateRangeCalendar } from './DateRangeCalendar';
 export { TimePicker } from './TimePicker';
 
 // File & Media
