@@ -9,6 +9,8 @@ export const academicApi = {
     createSchool: (b) => request(endpoints.academic.schools, { method: "POST", body: b }),
     getSchool: (id) => request(endpoints.academic.schoolById(id), { method: "GET" }),
     updateSchool: (id, b) => request(endpoints.academic.schoolById(id), { method: "PUT", body: b }),
+    updateSchoolStatus: (id, status) =>
+        request(endpoints.academic.schoolStatus(id), { method: "PATCH", body: { status } }),
     deleteSchool: (id) => request(endpoints.academic.schoolById(id), { method: "DELETE" }),
     listPrograms: (p) => request(endpoints.academic.programs, { method: "GET", query: p }),
     createProgram: (b) => request(endpoints.academic.programs, { method: "POST", body: b }),
