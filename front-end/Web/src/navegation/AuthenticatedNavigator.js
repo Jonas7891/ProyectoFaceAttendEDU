@@ -192,8 +192,9 @@ function PersistentSidebar() {
                             color: c.text.secondary,
                         }}
                     >
-                        {/* "admin" sin sede propia = Super Admin; con sede,
-                            "Admin de sede" (ver backendRoles). */}
+                        {/* Rol "Super Administrador" explícito (007) =
+                            Super Admin; "Administrador" = Admin de sede
+                            (ver backendRoles). */}
                         {t(roleDisplayLabel(user))}
                     </Text>
                 </SidebarHeader>

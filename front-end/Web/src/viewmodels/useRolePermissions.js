@@ -9,14 +9,16 @@
 //    {canManageStudents && <UIButton>+ Nuevo</UIButton>}
 //
 //  Roles:
-//    admin   → acceso total; sin sede propia es "Super Admin",
-//              con sede es "Admin de sede"
+//    admin   → acceso total; el rol explícito "Super Administrador"
+//              (o sin sede propia) es "Super Admin", el resto es
+//              "Admin de sede"
 //    teacher → acceso parcial (sus cursos, sin gestión de usuarios/ambientes)
 //    student → acceso mínimo (solo su perfil y sus cursos)
 // ============================================================
 
 import { useMemo } from "react";
 import { useAuth } from "../context/AuthContext";
+import { hasSuperAdminRole } from "../core/utils/backendRoles";
 
 // ── Permisos por rol ────────────────────────────────────────
 
@@ -46,9 +48,10 @@ function getVisibleTabs(role, isSuperAdmin) {
     switch (role) {
         case "admin":
             if (isSuperAdmin) {
-                // Super admin: sin sede propia y sin interés en expedientes de
-                // personas concretas (sin Justificaciones ni Historial): su
-                // consulta son los reportes por sede y la gestión de escuelas.
+                // Super Admin (rol explícito "Super Administrador"): sin
+                // interés en expedientes de personas concretas (sin
+                // Justificaciones ni Historial): su consulta son los
+                // reportes por sede y la gestión de escuelas.
                 return [
                     "dashboard",
                     "reports",
@@ -100,13 +103,15 @@ function getVisibleTabs(role, isSuperAdmin) {
 
 // ── Cálculo de permisos ──────────────────────────────────────
 
-function buildPermissions(role, schoolId = null) {
+function buildPermissions(role, schoolId = null, roleNames = []) {
     const isAdmin = role === "admin";
     const isTeacher = role === "teacher";
     const isStudent = role === "student";
-    // El catálogo unificado dejó un solo rol de administración: la distinción
-    // entre Super Admin (global) y Admin de sede es la sede de la cuenta.
-    const isSuperAdmin = isAdmin && schoolId == null;
+    // La distinción es explícita en la DB: el rol "Super Administrador"
+    // (007-split-super-admin-role) marca al administrador global. El
+    // fallback por sede cubre cuentas con roles no reconocidos en la
+    // respuesta del backend.
+    const isSuperAdmin = isAdmin && (hasSuperAdminRole(roleNames) || schoolId == null);
 
     return {
         // Estudiantes
@@ -174,7 +179,10 @@ export function useRolePermissions() {
     const { user } = useAuth();
 
     return useMemo(
-        () => (user ? buildPermissions(user.role, user.schoolId ?? null) : GUEST_PERMISSIONS),
+        () =>
+            user
+                ? buildPermissions(user.role, user.schoolId ?? null, user.roles ?? [])
+                : GUEST_PERMISSIONS,
         [user]
     );
 }
