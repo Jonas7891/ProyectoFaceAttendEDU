@@ -11,6 +11,14 @@
 // Super Administrador | Administrador | Instructor | Aprendiz.
 // Se aceptan también los nombres legados (001-seed-role-table)
 // por si la base todavía no fue migrada.
+// Normaliza un nombre de rol del backend a la llave de los mapas: mayúsculas
+// y espacios (cualquier racha) unificados como guion bajo. El catálogo guarda
+// "Super Administrador" (con espacio, 007-split-super-admin-role); sin esto la
+// llave resultante "SUPER ADMINISTRADOR" no coincidiría con
+// SUPER_ADMINISTRADOR y la cuenta se rechazaría como rol no reconocido.
+const normalizeRoleKey = (name) =>
+    String(name ?? "").trim().replace(/\s+/g, "_").toUpperCase();
+
 export const ROLE_BY_BACKEND_ROLE = {
     // Vigentes
     SUPER_ADMINISTRADOR: "admin",
@@ -39,7 +47,7 @@ const SUPER_ADMIN_ROLE_NAMES = new Set(["SUPER_ADMINISTRADOR", "SUPER_ADMIN"]);
  */
 export function hasSuperAdminRole(roleNames) {
     return (roleNames ?? []).some((name) =>
-        SUPER_ADMIN_ROLE_NAMES.has(String(name ?? "").trim().toUpperCase())
+        SUPER_ADMIN_ROLE_NAMES.has(normalizeRoleKey(name))
     );
 }
 
@@ -52,7 +60,7 @@ export const ROLE_PRIORITY = ["admin", "teacher", "student"];
  */
 export function toUiRole(roleNames) {
     const mapped = (roleNames ?? [])
-        .map((name) => ROLE_BY_BACKEND_ROLE[String(name ?? "").trim().toUpperCase()])
+        .map((name) => ROLE_BY_BACKEND_ROLE[normalizeRoleKey(name)])
         .filter(Boolean);
     return ROLE_PRIORITY.find((role) => mapped.includes(role)) ?? null;
 }
@@ -104,7 +112,7 @@ export function roleDisplayLabel(user) {
     // El rol explícito de administrador global gana sobre cualquier otro rol.
     if (hasSuperAdminRole(user?.roles)) return "Super Admin";
     const fromBackend = (user?.roles ?? [])
-        .map((name) => ROLE_DISPLAY_LABEL[String(name ?? "").trim().toUpperCase()])
+        .map((name) => ROLE_DISPLAY_LABEL[normalizeRoleKey(name)])
         .find(Boolean);
     if (fromBackend) return fromBackend;
     const ui = user?.role;
