@@ -23,9 +23,14 @@ const ROLE_MAP = {
 
 export const normalizeBackendRole = (role) => {
   if (role === null || role === undefined) return null;
-  const key = String(role).trim().toUpperCase();
+  // Unifica espacios como guion bajo: el catálogo guarda
+  // "Super Administrador" (con espacio, 007-split-super-admin-role); sin esto
+  // la llave "SUPER ADMINISTRADOR" no coincidiría con SUPER_ADMINISTRADOR.
+  const key = String(role).trim().replace(/\s+/g, "_").toUpperCase();
   if (ROLE_MAP[key]) return ROLE_MAP[key];
-  const canonical = ROLES_HIERARCHY.find((c) => c.toUpperCase() === key);
+  const canonical = ROLES_HIERARCHY.find(
+    (c) => c.toUpperCase().replace(/\s+/g, "_") === key
+  );
   return canonical ?? null;
 };
 
