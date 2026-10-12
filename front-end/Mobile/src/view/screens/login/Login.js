@@ -209,7 +209,7 @@ export default function LoginScreen({ onLogin, navigation }) {
                                             style={{ position: 'absolute', right: 10, bottom: 10, padding: 6 }}
                                         >
                                             <Image
-                                                source={require('../../assets/images/esconder.png')}
+                                                source={require('../../../assets/images/esconder.png')}
                                                 style={{
                                                     width: 22,
                                                     height: 22,
