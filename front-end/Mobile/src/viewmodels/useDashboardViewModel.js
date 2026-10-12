@@ -204,17 +204,22 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                     // filas y tumba la petición en el dispositivo (timeout).
                     try {
                         const records = await backendGet(ATT(), 'api/v1/attendance-records', {page: 1, limit: 200}, { useCache: true });
-                    const present = records.filter(r => r.attendance_status === 'Present').length;
-                    const absent = records.filter(r => r.attendance_status === 'Absent').length;
-                    const late = records.filter(r => r.attendance_status === 'Late').length;
-                    const total = records.length || 1;
+                    // "Hoy" es hoy: antes se mezclaban registros de cualquier fecha
+                    // en los contadores y el porcentaje (el backend no pagina ni
+                    // filtra por fecha). Sin registros de hoy se usa el global.
+                    const todayKeyAdmin = formatDateKey(new Date());
+                    const dayRecords = records.filter((r) => (r.captured_at || '').slice(0, 10) === todayKeyAdmin);
+                    const base = dayRecords.length > 0 ? dayRecords : records;
+                    const present = base.filter(r => r.attendance_status === 'Present').length;
+                    const absent = base.filter(r => r.attendance_status === 'Absent').length;
+                    const late = base.filter(r => r.attendance_status === 'Late').length;
+                    const total = base.length || 1;
 
                     // "Profesores presentes": instructores (actor_type_id 2) que
                     // abrieron al menos una sesión de clase hoy, sobre el total
                     // de instructores — antes se mezclaban estudiantes y
                     // registros de cualquier fecha (attendance-records sin filtro
                     // de fecha ni de tipo de actor).
-                    const todayKeyAdmin = formatDateKey(new Date());
                     const [instructorsRaw, sessionsToday] = await Promise.all([
                         backendGet(ACAD(), 'api/v1/academic-actors', { limit: 2000 }, { useCache: true }),
                         backendGet(SCHED(), 'api/v1/class-sessions', {}, { useCache: true }),
@@ -227,7 +232,7 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                     ).size;
 
                     setAdminStats({
-                        totalEmpleados: totalInstructors || total,
+                        totalEmpleados: totalInstructors,
                         presentesHoy: instructorsPresentToday,
                         ausentesHoy: absent,
                         tardanzasHoy: late,
@@ -266,8 +271,12 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                         teacherRecords = recordsNested.flat();
                     }
 
-                    const present = teacherRecords.filter(r => r.attendance_status === 'Present').length;
-                    const total = teacherRecords.length || 1;
+                    // Igual que admin: el porcentaje es de hoy (con fallback al
+                    // global si aún no hay registros hoy).
+                    const teacherDayRecords = teacherRecords.filter((r) => (r.captured_at || '').slice(0, 10) === todayKey);
+                    const teacherBase = teacherDayRecords.length > 0 ? teacherDayRecords : teacherRecords;
+                    const present = teacherBase.filter(r => r.attendance_status === 'Present').length;
+                    const total = teacherBase.length || 1;
 
                     let pendingJustifications = 0;
                     try {
