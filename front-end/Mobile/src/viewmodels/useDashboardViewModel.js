@@ -88,24 +88,26 @@ async function fetchRecentNovedades(t) {
     const items = [];
     let actorById = {};
     try {
-      const actors = await backendGet(ACAD(), 'api/v1/academic-actors', { limit: 2000 });
+      const actors = await backendGet(ACAD(), 'api/v1/academic-actors', { limit: 2000 }, { useCache: true });
       actors.forEach((x) => { actorById[String(x.academic_actor_id)] = x; });
     } catch {}
-    for (let i = 0; i < alerts.length; i++) {
-      const a = alerts[i];
-      let personName = '';
+    // Personas en paralelo: en serie cada aviso sumaba un viaje.
+    const names = await Promise.all(alerts.map(async (a) => {
       try {
         const actor = actorById[String(a.academic_actor_id)];
         if (actor?.person_id) {
           const person = unwrap(await backendGet(API(), `api/v1/persons/${actor.person_id}`))[0];
-          if (person) personName = `${person.name || ''} ${person.last_name || person.lastName || ''}`.trim();
+          if (person) return `${person.name || ''} ${person.last_name || person.lastName || ''}`.trim();
         }
       } catch {}
-
+      return '';
+    }));
+    for (let i = 0; i < alerts.length; i++) {
+      const a = alerts[i];
       items.push({
         id: a.alert_id ?? i + 1,
         titulo: typeMap[a.alert_type_id] || '',
-        descripcion: personName,
+        descripcion: names[i],
         tiempo: formatRelativeTime(a.raised_at, t),
         tipo: a.resolved_at ? 'success' : 'warning',
       });
