@@ -118,6 +118,17 @@ function resolveRole(storedRole) {
   return "student";
 }
 
+// La persona puede tener varios actores (p. ej. instructor y estudiante):
+// se prefiere el del tipo acorde al rol; actors[0] a ciegas devolvía el
+// actor equivocado y la pantalla quedaba vacía ("sin fichas") con datos.
+function pickActor(actors, role) {
+  if (!actors || actors.length === 0) return null;
+  const wantType = role === "teacher" ? 2 : 1;
+  return (
+    actors.find((a) => (a.actorTypeId ?? a.actor_type_id) === wantType) ?? actors[0]
+  );
+}
+
 export function useMyCoursesViewModel() {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -134,12 +145,12 @@ export function useMyCoursesViewModel() {
 
       const user = await getCurrentUser();
       const actors = user?.personId ? await ActorService.getByPerson(user.personId) : [];
-      const myActor = actors?.length > 0 ? actors[0] : null;
+      const currentRole = resolveRole(storedRole);
+      const myActor = pickActor(actors, currentRole);
       if (!myActor) {
         setFichas([]);
         return;
       }
-      const currentRole = resolveRole(storedRole);
       setRole(currentRole);
       setFichas(
         currentRole === "teacher"
