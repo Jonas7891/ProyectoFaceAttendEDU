@@ -1,6 +1,7 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useCustomAlert} from '../view/components/common/useCustomAlert';
+import {request, GET} from '../api/apiClient';
 import {backendGet} from '../api/backend';
 import ENV from '../config/env';
 import {getCurrentUserRole, getCurrentUser} from '../services/UserService';
@@ -32,51 +33,66 @@ export function useAttendanceReportViewModel() {
         const fetchData = async () => {
             try {
                 setIsLoading(true);
-                // El backend no pagina este listado: ignora params desconocidos
-                // (el `_limit` anterior no hacía nada). Se trae todo y se
-                // enriquece en paralelo acotado para no colgar el dispositivo.
-                const arData = await backendGet(ENV.ATTENDANCE_BASE_URL, 'api/v1/attendance-records');
-                const records = Array.isArray(arData) ? arData : [];
-
-                const actorMap = {};
-                for (const r of records) {
-                    const aid = r.academic_actor_id;
-                    if (!actorMap[aid]) actorMap[aid] = { id: aid, absences: 0, lateness: 0, name: '', code: '', course: '', type: 'student' };
-                    if (r.attendance_status === 'Absent') actorMap[aid].absences++;
-                    if (r.attendance_status === 'Late') actorMap[aid].lateness++;
-                }
-
-                const enrichOne = async ([aid, stats]) => {
+                // Conteos agregados en SQL vía /summary: descargar la tabla
+                // entera y enriquecer actor por actor no terminaba nunca en el
+                // dispositivo con volumen real.
+                const actorsRaw = (await backendGet(ENV.ACADEMIC_BASE_URL, 'api/v1/academic-actors', { limit: 100 })) ?? [];
+                const actors = Array.isArray(actorsRaw) ? actorsRaw : [];
+                const ids = actors
+                    .map((a) => a.academic_actor_id)
+                    .filter((id) => id !== undefined && id !== null)
+                    .slice(0, 300);
+                let summary = {};
+                if (ids.length > 0) {
+                    const query = ids.map((id) => `academicActorIds=${encodeURIComponent(id)}`).join('&');
                     try {
-                        // Backend: academic-actors y persons solo filtran por id en ruta.
-                        const actorData = await backendGet(ENV.ACADEMIC_BASE_URL, `api/v1/academic-actors/${aid}`);
-                        const actor = (actorData?.value || actorData || [])[0] || {};
-                        const personData = actor.person_id
-                            ? await backendGet(ENV.API_BASE_URL, `api/v1/persons/${actor.person_id}`)
-                            : [];
-                        const person = (personData?.value || personData || [])[0] || {};
-                        return {
-                            ...stats,
-                            name: `${person.name || ''} ${person.last_name || ''}`.trim() || t('attendance.unknownPerson', {id: aid}),
-                            code: actor.actor_code || '—',
-                            course: '—',
-                            type: actor.actor_type_id === 1 ? 'student' : 'teacher',
-                        };
-                    } catch (e) {
-                        return null;
+                        summary = await request({
+                            method: GET,
+                            url: `${ENV.ATTENDANCE_BASE_URL}api/v1/attendance-records/summary?${query}`,
+                            requiresAuth: true,
+                        });
+                    } catch {
+                        summary = {};
                     }
-                };
-
-                const ENRICH_CHUNK_SIZE = 10;
-                const entries = Object.entries(actorMap);
-                const enriched = [];
-                for (let i = 0; i < entries.length; i += ENRICH_CHUNK_SIZE) {
-                    const chunk = await Promise.all(entries.slice(i, i + ENRICH_CHUNK_SIZE).map(enrichOne));
-                    enriched.push(...chunk.filter(Boolean));
                 }
 
-                setStudents(enriched.filter(e => e.type === 'student'));
-                setTeachers(enriched.filter(e => e.type === 'teacher'));
+                const perActor = actors.map((actor) => {
+                    const s = (summary && summary[String(actor.academic_actor_id)]) || {};
+                    return {
+                        id: actor.academic_actor_id,
+                        absences: s.absent ?? 0,
+                        lateness: s.late ?? 0,
+                        name: '',
+                        code: actor.actor_code || '—',
+                        course: '—',
+                        type: actor.actor_type_id === 1 ? 'student' : 'teacher',
+                        personId: actor.person_id ?? null,
+                    };
+                });
+
+                // Personas solo para quienes superan umbrales (lo único que se
+                // lista); el resto conserva el conteo para el resumen.
+                const flagged = perActor.filter((p) => p.absences > ABSENCE_LIMIT || p.lateness > LATENESS_LIMIT);
+                const ENRICH_CHUNK_SIZE = 10;
+                for (let i = 0; i < flagged.length; i += ENRICH_CHUNK_SIZE) {
+                    await Promise.all(flagged.slice(i, i + ENRICH_CHUNK_SIZE).map(async (p) => {
+                        if (!p.personId) return;
+                        try {
+                            const personData = await backendGet(ENV.API_BASE_URL, `api/v1/persons/${p.personId}`);
+                            const person = (personData?.value || personData || [])[0] || {};
+                            const full = `${person.name || ''} ${person.last_name || ''}`.trim();
+                            if (full) p.name = full;
+                        } catch {}
+                    }));
+                }
+
+                const withNames = perActor.map((p) => ({
+                    ...p,
+                    name: p.name || t('attendance.unknownPerson', {id: p.id}),
+                }));
+
+                setStudents(withNames.filter(e => e.type === 'student'));
+                setTeachers(withNames.filter(e => e.type === 'teacher'));
             } catch (error) {
                 console.error('Error fetching report data:', error);
             } finally {
