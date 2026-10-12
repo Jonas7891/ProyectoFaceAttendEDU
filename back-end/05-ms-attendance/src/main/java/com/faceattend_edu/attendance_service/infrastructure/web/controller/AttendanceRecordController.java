@@ -5,6 +5,7 @@ import com.faceattend_edu.attendance_service.domain.port.in.*;
 import com.faceattend_edu.attendance_service.infrastructure.web.dto.*;
 import com.faceattend_edu.attendance_service.infrastructure.persistence.repository.ActorAttendanceCount;
 import com.faceattend_edu.attendance_service.infrastructure.persistence.repository.AttendanceRecordJpaRepository;
+import com.faceattend_edu.attendance_service.infrastructure.web.Paging;
 import com.faceattend_edu.attendance_service.infrastructure.web.mapper.AttendanceRecordWebMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -69,13 +70,15 @@ public class AttendanceRecordController {
     public ResponseEntity<List<AttendanceRecordResponse>> list(
             @RequestParam(required = false) Long classSessionId,
             @RequestParam(required = false) Long academicActorId,
-            @RequestParam(required = false) String attendanceStatus){
+            @RequestParam(required = false) String attendanceStatus,
+            @RequestParam(required = false) Integer limit,
+            @RequestParam(required = false) Integer offset){
         List<AttendanceRecordResponse> list = listUseCase.list().stream()
                 .filter(r -> classSessionId == null || classSessionId.equals(r.getClassSessionId()))
                 .filter(r -> academicActorId == null || academicActorId.equals(r.getAcademicActorId()))
                 .filter(r -> attendanceStatus == null || attendanceStatus.equals(r.getAttendanceStatus()))
                 .map(mapper::toResponse).collect(Collectors.toList());
-        return ResponseEntity.ok(list);
+        return Paging.slice(list, limit, offset);
     }
 
     @PostMapping

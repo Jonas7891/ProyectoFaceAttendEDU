@@ -193,7 +193,7 @@ class AttendanceRecordControllerTest {
             when(mapper.toResponse(any())).thenReturn(sampleResponse);
 
             // Act
-            var response = controller.list(null, null, null);
+            var response = controller.list(null, null, null, null, null);
 
             // Assert
             assertEquals(200, response.getStatusCode().value());
@@ -208,10 +208,26 @@ class AttendanceRecordControllerTest {
             when(mapper.toResponse(any())).thenReturn(sampleResponse);
 
             // Act
-            var response = controller.list(null, null, "Present");
+            var response = controller.list(null, null, "Present", null, null);
 
             // Assert
             assertEquals(200, response.getStatusCode().value());
+        }
+
+        @Test
+        @DisplayName("Should paginate records with limit and offset")
+        void shouldPaginateRecords() {
+            // Arrange
+            when(listUseCase.list()).thenReturn(Arrays.asList(sampleRecord, sampleRecord, sampleRecord));
+            when(mapper.toResponse(any())).thenReturn(sampleResponse);
+
+            // Act
+            var response = controller.list(null, null, null, 2, 1);
+
+            // Assert
+            assertEquals(200, response.getStatusCode().value());
+            assertEquals(2, response.getBody().size());
+            assertEquals("3", response.getHeaders().getFirst("X-Total-Count"));
         }
     }
 
