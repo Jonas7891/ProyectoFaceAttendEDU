@@ -271,7 +271,11 @@
     "statusPresent": "Présent",
     "statusLate": "En retard",
     "manageUsers": "Gestion des Utilisateurs",
-    "manageUsersDesc": "Ajoutez ou supprimez des utilisateurs de votre école."
+    "manageUsersDesc": "Ajoutez ou supprimez des utilisateurs de votre école.",
+    "news": "Actualités",
+    "newsDesc": "Rattrapez les avis récents",
+    "schoolConfig": "Établissement",
+    "schoolConfigDesc": "Données et configuration de votre site"
   },
   "consultJustify": {
     "mainTitle": "Justificatifs approuvés",
@@ -503,7 +507,8 @@
     "present": "Présent",
     "seeAll": "Voir tout",
     "myCourses": "Mes cours",
-    "myCoursesDesc": "Consultez vos cohortes et cours assignés"
+    "myCoursesDesc": "Consultez vos cohortes et cours assignés",
+    "reportsDesc": "Élèves à risque de vos groupes"
   },
   "student": {
     "greeting": "Bonjour étudiant",

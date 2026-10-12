@@ -365,6 +365,8 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
         ...(isSuperAdmin
             ? [{ id: 4, title: t('schools.title'), description: t('schools.subtitle'), color: '#673AB7', screen: 'Schools' }]
             : []),
+        { id: 5, title: t('dashboard.news'), description: t('dashboard.newsDesc'), color: '#00ACC1', screen: 'Novedades' },
+        { id: 6, title: t('dashboard.schoolConfig'), description: t('dashboard.schoolConfigDesc'), color: '#6D4C41', screen: 'SchoolConfigurationScreen' },
     ];
     const menuAccionesEstudiante = [
         { id: 1, title: t('student.registerFace'), description: t('student.registerFaceDesc'), color: '#4CAF50', screen: 'RegisterFace' },
@@ -372,6 +374,7 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
         { id: 3, title: t('student.myCourses'), description: t('student.myCoursesDesc'), color: '#9C27B0', screen: 'MyCourses' },
         { id: 4, title: t('student.myJustifications'), description: t('student.myJustificationsDesc'), color: '#FF9800', screen: 'MenuJustify' },
         { id: 5, title: t('student.UpdateFace'), description: t('student.UpdateFaceDesc'), color: '#f32152', screen: 'UpdatePhoto' },
+        { id: 6, title: t('dashboard.news'), description: t('dashboard.newsDesc'), color: '#00ACC1', screen: 'Novedades' },
     ];
     const menuAccionesDocente = [
         { id: 1, title: t('teacher.updateFace'), description: t('teacher.updateFaceDesc'), color: '#2196F3', screen: 'UpdatePhoto' },
@@ -379,6 +382,8 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
         { id: 3, title: t('teacher.myCourses'), description: t('teacher.myCoursesDesc'), color: '#9C27B0', screen: 'MyCourses' },
         { id: 4, title: t('teacher.pendingJustifications'), description: t('teacher.pendingJustificationsDesc'), color: '#FF9800', screen: 'PendingJustificationScreen' },
         { id: 5, title: t('student.registerFace'), description: t('student.registerFaceDesc'), color: '#4CAF50', screen: 'RegisterFace' },
+        { id: 6, title: t('dashboard.reports'), description: t('teacher.reportsDesc'), color: '#F4511E', screen: 'AttendanceReportScreen' },
+        { id: 7, title: t('dashboard.news'), description: t('dashboard.newsDesc'), color: '#00ACC1', screen: 'Novedades' },
     ];
 
     const menuAcciones = isAdmin ? menuAccionesAdmin : isTeacher ? menuAccionesDocente : menuAccionesEstudiante;

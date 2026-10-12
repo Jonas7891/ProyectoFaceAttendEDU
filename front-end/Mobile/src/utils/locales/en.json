@@ -271,7 +271,11 @@
     "statusPresent": "Present",
     "statusLate": "Late",
     "manageUsers": "User Management",
-    "manageUsersDesc": "Add or remove users from your school."
+    "manageUsersDesc": "Add or remove users from your school.",
+    "news": "News",
+    "newsDesc": "Catch up on recent notices",
+    "schoolConfig": "School site",
+    "schoolConfigDesc": "Your site data and configuration"
   },
   "consultJustify": {
     "mainTitle": "Approved Justifications",
@@ -503,7 +507,8 @@
     "attendanceRecorded": "Attendance Recorded",
     "newJustification": "New Justification",
     "myCourses": "My courses",
-    "myCoursesDesc": "View your assigned cohorts and courses"
+    "myCoursesDesc": "View your assigned cohorts and courses",
+    "reportsDesc": "At-risk students in your groups"
   },
   "student": {
     "greeting": "Hello student",

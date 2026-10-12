@@ -271,7 +271,11 @@
     "statusPresent": "Presente",
     "statusLate": "Atrasado",
     "manageUsers": "Gestão de Usuários",
-    "manageUsersDesc": "Adicione ou remova usuários da sua escola."
+    "manageUsersDesc": "Adicione ou remova usuários da sua escola.",
+    "news": "Novidades",
+    "newsDesc": "Acompanhe os avisos recentes",
+    "schoolConfig": "Unidade",
+    "schoolConfigDesc": "Dados e configuração da sua unidade"
   },
   "consultJustify": {
     "mainTitle": "Justificativas Aceitas",
@@ -499,6 +503,7 @@
     "newJustification": "Nova justificativa",
     "myCourses": "Meus cursos",
     "myCoursesDesc": "Consulte suas turmas e cursos atribuídos",
+    "reportsDesc": "Estudantes em risco das suas turmas",
     "justificationMathMsg": "Juan Pérez enviou uma justificativa para a aula de Matemática.",
     "attendanceGroupMsg": "A presença do grupo 10-A foi registrada com sucesso.",
     "late": "Atrasado",

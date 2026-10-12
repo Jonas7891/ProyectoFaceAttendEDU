@@ -267,6 +267,10 @@
     "viewAttendance": "Ver Asistencia Detallada",
     "manageUsers": "Gestión de Usuarios",
     "manageUsersDesc": "Ingresa o Elimina usuarios de tu colegio.",
+    "news": "Novedades",
+    "newsDesc": "Ponte al día con los avisos recientes",
+    "schoolConfig": "Sede",
+    "schoolConfigDesc": "Datos y configuración de tu sede",
     "admin": "Administrador",
     "registerAttendance": "Actualizar Parámetros",
     "seeAll": "Ver todos",
@@ -503,7 +507,8 @@
     "present": "Presente",
     "seeAll": "Ver todos",
     "myCourses": "Mis cursos",
-    "myCoursesDesc": "Consulta tus fichas y cursos asignados"
+    "myCoursesDesc": "Consulta tus fichas y cursos asignados",
+    "reportsDesc": "Estudiantes en riesgo de tus grupos"
   },
   "student": {
     "greeting": "Hola Estudiante",
