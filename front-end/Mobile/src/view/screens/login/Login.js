@@ -206,7 +206,11 @@ export default function LoginScreen({ onLogin, navigation }) {
                                             activeOpacity={0.7}
                                             accessibilityRole="button"
                                             accessibilityLabel={t(showPassword ? 'login.hidePassword' : 'login.showPassword')}
-                                            style={{ position: 'absolute', right: 10, bottom: 10, padding: 6 }}
+                                            // Centrado vertical sobre la caja del input: el contenedor
+                                            // deja marginBottom 20 y la caja mide ~42 (texto 16 +
+                                            // paddings) frente a 34 del botón (22 + padding 6*2):
+                                            // 20 + (42-34)/2 = 24 desde abajo.
+                                            style={{ position: 'absolute', right: 10, bottom: 24, padding: 6 }}
                                         >
                                             <Image
                                                 source={require('../../../assets/images/esconder.png')}
