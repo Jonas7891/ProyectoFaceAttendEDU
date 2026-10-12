@@ -32,7 +32,10 @@ export function useAttendanceReportViewModel() {
         const fetchData = async () => {
             try {
                 setIsLoading(true);
-                const arData = await backendGet(ENV.ATTENDANCE_BASE_URL, 'api/v1/attendance-records', {_limit: 500});
+                // El backend no pagina este listado: ignora params desconocidos
+                // (el `_limit` anterior no hacía nada). Se trae todo y se
+                // enriquece en paralelo acotado para no colgar el dispositivo.
+                const arData = await backendGet(ENV.ATTENDANCE_BASE_URL, 'api/v1/attendance-records');
                 const records = Array.isArray(arData) ? arData : [];
 
                 const actorMap = {};
@@ -43,8 +46,7 @@ export function useAttendanceReportViewModel() {
                     if (r.attendance_status === 'Late') actorMap[aid].lateness++;
                 }
 
-                const enriched = [];
-                for (const [aid, stats] of Object.entries(actorMap)) {
+                const enrichOne = async ([aid, stats]) => {
                     try {
                         // Backend: academic-actors y persons solo filtran por id en ruta.
                         const actorData = await backendGet(ENV.ACADEMIC_BASE_URL, `api/v1/academic-actors/${aid}`);
@@ -53,16 +55,24 @@ export function useAttendanceReportViewModel() {
                             ? await backendGet(ENV.API_BASE_URL, `api/v1/persons/${actor.person_id}`)
                             : [];
                         const person = (personData?.value || personData || [])[0] || {};
-                        enriched.push({
+                        return {
                             ...stats,
                             name: `${person.name || ''} ${person.last_name || ''}`.trim() || t('attendance.unknownPerson', {id: aid}),
                             code: actor.actor_code || '—',
                             course: '—',
                             type: actor.actor_type_id === 1 ? 'student' : 'teacher',
-                        });
+                        };
                     } catch (e) {
-                        continue;
+                        return null;
                     }
+                };
+
+                const ENRICH_CHUNK_SIZE = 10;
+                const entries = Object.entries(actorMap);
+                const enriched = [];
+                for (let i = 0; i < entries.length; i += ENRICH_CHUNK_SIZE) {
+                    const chunk = await Promise.all(entries.slice(i, i + ENRICH_CHUNK_SIZE).map(enrichOne));
+                    enriched.push(...chunk.filter(Boolean));
                 }
 
                 setStudents(enriched.filter(e => e.type === 'student'));
