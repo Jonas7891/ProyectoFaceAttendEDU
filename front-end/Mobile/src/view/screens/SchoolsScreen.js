@@ -93,7 +93,10 @@ export default function SchoolsScreen({ navigation }) {
             <Text style={[styles.centerText, { color: colors.text }]}>{t("schools.empty")}</Text>
           </View>
         ) : (
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 24 }}
+          >
             {schools.map((school) => (
               <SchoolCard key={school.schoolId} school={school} colors={colors} t={t} />
             ))}

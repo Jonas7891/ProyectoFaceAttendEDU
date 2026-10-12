@@ -111,7 +111,10 @@ export default function MyCoursesScreen({ navigation }) {
             <Text style={[styles.centerText, { color: colors.text }]}>{t("courses.empty")}</Text>
           </View>
         ) : (
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 24 }}
+          >
             {fichas.map((ficha) => (
               <FichaCard
                 key={ficha.cohortId ?? ficha.cohortCode}
