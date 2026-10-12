@@ -1,6 +1,7 @@
 import React from 'react';
 import {
     FlatList,
+    Image,
     KeyboardAvoidingView,
     Platform,
     SafeAreaView,
@@ -10,7 +11,6 @@ import {
     View,
 } from 'react-native';
 import {useTranslation} from 'react-i18next';
-import PrimaryButton from '../components/auth/PrimaryButton';
 import Separador from '../components/common/Separador';
 import styles from './Styles/ConsultJustifyScreen/Style';
 import {useTheme} from '../components/common/ThemeContext';
@@ -85,13 +85,29 @@ export default function ValidJustificationsScreen() {
                     keyboardShouldPersistTaps="handled"
                 >
                     <View style={styles.containerValidJustifications}>
-                        <Text style={[styles.mainTitleValidJustifications, { color: colors.text }]}>
-                            {t('consultJustify.mainTitle')}
-                        </Text>
+                        <View style={styles.headerTopRowValidJustifications}>
+                            <TouchableOpacity
+                                onPress={handleBack}
+                                activeOpacity={0.7}
+                                accessibilityRole="button"
+                                accessibilityLabel={t('common.back')}
+                                style={{ padding: 6 }}
+                            >
+                                <Image
+                                    source={require('../../assets/images/flecha-volver.png')}
+                                    style={[styles.headerBackImageValidJustifications, { tintColor: colors.text }]}
+                                />
+                            </TouchableOpacity>
+                            <View style={{ flex: 1 }}>
+                                <Text style={[styles.mainTitleValidJustifications, { color: colors.text }]}>
+                                    {t('consultJustify.mainTitle')}
+                                </Text>
 
-                        <Text style={[styles.subTitleValidJustifications, { color: colors.textSecondary }]}>
-                            {t('consultJustify.subtitle')}
-                        </Text>
+                                <Text style={[styles.subTitleValidJustifications, { color: colors.textSecondary }]}>
+                                    {t('consultJustify.subtitle')}
+                                </Text>
+                            </View>
+                        </View>
 
                         <Separador />
 
@@ -223,9 +239,6 @@ export default function ValidJustificationsScreen() {
                             </View>
                         )}
 
-                        <View style={styles.buttonContainer}>
-                            <PrimaryButton title={t('common.back')} onPress={handleBack}/>
-                        </View>
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>

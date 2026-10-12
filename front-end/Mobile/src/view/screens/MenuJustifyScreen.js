@@ -5,13 +5,11 @@ import {
   Platform,
   SafeAreaView,
   ScrollView,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import {useTranslation} from 'react-i18next';
-import PrimaryButton from '../components/auth/PrimaryButton';
 import CustomLogo from '../components/common/logo';
 import Separador from '../components/common/Separador';
 import styles from './Styles/MenuJustifyScreen/Style';
@@ -22,17 +20,6 @@ import {useUser} from '../../utils/UserContext';
 export default function MenuJustifyScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
-
-  const fixedButtonStyles = StyleSheet.create({
-    buttonContainerFixed: {
-      position: 'absolute',
-      bottom: 20,
-      left: 20,
-      right: 20,
-      zIndex: 100,
-      alignItems: 'center',
-    }
-  });
 
   const {isAdmin, isStudent, isTeacher} = useUser();
 
@@ -83,9 +70,21 @@ export default function MenuJustifyScreen() {
 
           <ScrollView
               style={styles.ScrollView}
-              contentContainerStyle={[styles.ScrollViewContent, { paddingBottom: 100 }]}
+              contentContainerStyle={[styles.ScrollViewContent, { paddingBottom: 24 }]}
               showsVerticalScrollIndicator={false}
           >
+            <TouchableOpacity
+                onPress={handleBack}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={t('common.back')}
+                style={{ alignSelf: 'flex-start', padding: 6, marginBottom: 4 }}
+            >
+              <Image
+                  source={require('../../assets/images/flecha-volver.png')}
+                  style={{ width: 26, height: 26, tintColor: colors.text }}
+              />
+            </TouchableOpacity>
             <View style={styles.containerMenuJustify}>
               <View style={styles.mainContent}>
                 <Header title={isStudent ? t('justify.title') : t('admin.justificationManagement')} />
@@ -105,13 +104,6 @@ export default function MenuJustifyScreen() {
               </View>
             </View>
           </ScrollView>
-
-          <View style={fixedButtonStyles.buttonContainerFixed}>
-            <PrimaryButton
-                title={t('common.back')}
-                onPress={handleBack}
-            />
-          </View>
 
         </KeyboardAvoidingView>
       </SafeAreaView>
