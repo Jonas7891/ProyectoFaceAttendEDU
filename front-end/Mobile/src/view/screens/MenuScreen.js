@@ -63,6 +63,7 @@ export default function MenuScreen({ onLogout }) {
     };
 
     const handleBack = () => navigateTo("DashboardScreen");
+    const handleMyCourses = () => navigateTo("MyCourses");
     const handleUpdatePhoto = () => navigateTo("UpdatePhoto");
     const handleFacialFail = () => navigateTo("FacialFail");
     const handleMenuJustify = () => navigateTo("MenuJustify");
@@ -134,6 +135,13 @@ export default function MenuScreen({ onLogout }) {
                                     <MenuItem
                                         label={t('menu.updateFacialParams')}
                                         onPress={handleUpdatePhoto}
+                                    />
+                                )}
+
+                                {(isStudent || isTeacher) && (
+                                    <MenuItem
+                                        label={t('courses.title')}
+                                        onPress={handleMyCourses}
                                     />
                                 )}
 

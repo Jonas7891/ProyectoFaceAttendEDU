@@ -529,7 +529,20 @@
     "UpdateFace": "Atualização de Rosto",
     "UpdateFaceDesc": "Atualização dos seus dados biométricos",
     "faceRecognizedMsg": "Seu rosto foi reconhecido com sucesso hoje às 08:15",
-    "attendanceReminderDesc": "Não se esqueça de registrar sua presença por reconhecimento facial."
+    "attendanceReminderDesc": "Não se esqueça de registrar sua presença por reconhecimento facial.",
+    "myCourses": "Meus cursos",
+    "myCoursesDesc": "Consulte sua turma e seus cursos"
+  },
+  "courses": {
+    "title": "Meus cursos",
+    "program": "Programa",
+    "enrolledOn": "Matriculado",
+    "students": "Estudantes",
+    "courses": "Cursos",
+    "noCourses": "Nenhum curso registrado",
+    "empty": "Você não tem turmas atribuídas",
+    "loadError": "Não foi possível carregar seus cursos",
+    "retry": "Tentar novamente"
   },
   "subjects": {
     "math": "Matemática",

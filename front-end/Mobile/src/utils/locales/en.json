@@ -529,7 +529,20 @@
     "UpdateFace": "Face Update",
     "UpdateFaceDesc": "Update your biometric data",
     "faceRecognizedMsg": "Your face was successfully recognized today at 08:15 AM",
-    "attendanceReminderDesc": "Don't forget to register your attendance by facial recognition."
+    "attendanceReminderDesc": "Don't forget to register your attendance by facial recognition.",
+    "myCourses": "My courses",
+    "myCoursesDesc": "View your cohort and courses"
+  },
+  "courses": {
+    "title": "My courses",
+    "program": "Program",
+    "enrolledOn": "Enrolled",
+    "students": "Students",
+    "courses": "Courses",
+    "noCourses": "No courses registered",
+    "empty": "You have no assigned cohorts",
+    "loadError": "Could not load your courses",
+    "retry": "Retry"
   },
   "subjects": {
     "math": "Math",

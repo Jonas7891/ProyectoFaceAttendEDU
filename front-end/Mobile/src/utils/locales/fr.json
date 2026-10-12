@@ -529,7 +529,20 @@
     "UpdateFace": "Mise à jour du visage",
     "UpdateFaceDesc": "Mettez à jour vos données biométriques",
     "faceRecognizedMsg": "Votre visage a été reconnu avec succès aujourd'hui à 08h15",
-    "attendanceReminderDesc": "N'oubliez pas d'enregistrer votre présence par reconnaissance faciale."
+    "attendanceReminderDesc": "N'oubliez pas d'enregistrer votre présence par reconnaissance faciale.",
+    "myCourses": "Mes cours",
+    "myCoursesDesc": "Consultez votre cohorte et vos cours"
+  },
+  "courses": {
+    "title": "Mes cours",
+    "program": "Programme",
+    "enrolledOn": "Inscrit",
+    "students": "Étudiants",
+    "courses": "Cours",
+    "noCourses": "Aucun cours enregistré",
+    "empty": "Aucune cohorte assignée",
+    "loadError": "Impossible de charger vos cours",
+    "retry": "Réessayer"
   },
   "subjects": {
     "math": "Mathématiques",

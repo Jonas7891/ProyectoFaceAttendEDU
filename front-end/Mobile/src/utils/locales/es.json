@@ -529,7 +529,20 @@
     "attendanceReminderDesc": "No olvides registrar tu asistencia por reconocimiento facial.",
     "late": "Tarde",
     "present": "Presente",
-    "seeAll": "Ver historial"
+    "seeAll": "Ver historial",
+    "myCourses": "Mis cursos",
+    "myCoursesDesc": "Consulta tu ficha y tus cursos"
+  },
+  "courses": {
+    "title": "Mis cursos",
+    "program": "Programa",
+    "enrolledOn": "Matriculado",
+    "students": "Estudiantes",
+    "courses": "Cursos",
+    "noCourses": "Sin cursos registrados",
+    "empty": "No tienes fichas asignadas",
+    "loadError": "No se pudieron cargar tus cursos",
+    "retry": "Reintentar"
   },
   "subjects": {
     "math": "Matemáticas",
