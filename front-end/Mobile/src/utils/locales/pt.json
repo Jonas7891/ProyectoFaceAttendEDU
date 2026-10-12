@@ -51,7 +51,9 @@
     "connectionError": "Não foi possível conectar ao servidor. Verifique sua conexão com a internet e tente novamente.",
     "loginError": "Ocorreu um erro ao fazer login",
     "acceptTerms": "Aceite os termos e condições",
-    "forgotPassword": "Esqueceu sua senha?"
+    "forgotPassword": "Esqueceu sua senha?",
+    "showPassword": "Mostrar senha",
+    "hidePassword": "Ocultar senha"
   },
   "tabs": {
     "home": "Início",

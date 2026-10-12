@@ -51,7 +51,9 @@
     "connectionError": "Could not connect to the server. Check your internet connection and try again.",
     "loginError": "An error occurred while logging in",
     "acceptTerms": "Accept the terms and conditions",
-    "forgotPassword": "Forgot password?"
+    "forgotPassword": "Forgot password?",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "tabs": {
     "home": "Home",

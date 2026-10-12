@@ -119,6 +119,7 @@ export default function LoginScreen({ onLogin, navigation }) {
 
     const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
     const [isTerminosModalVisible, setIsTerminosModalVisible] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const {
         email, password, terms, isLoading, error, errorTimestamp,
@@ -192,12 +193,24 @@ export default function LoginScreen({ onLogin, navigation }) {
                                         value={password}
                                         onChangeText={setPassword}
                                         placeholder={t('login.passwordPlaceholder')}
-                                        secureTextEntry
+                                        secureTextEntry={!showPassword}
                                         textContentType="password"
                                         returnKeyType="done"
                                         onSubmitEditing={Keyboard.dismiss}
                                         accessibilityLabel={t('login.password')}
                                     />
+
+                                    <TouchableOpacity
+                                        onPress={() => setShowPassword((v) => !v)}
+                                        activeOpacity={0.7}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={t(showPassword ? 'login.hidePassword' : 'login.showPassword')}
+                                        style={{ alignSelf: 'flex-end', marginTop: 6 }}
+                                    >
+                                        <Text style={[styles.forgotPasswordText, { color: colors.primary }]}>
+                                            {t(showPassword ? 'login.hidePassword' : 'login.showPassword')}
+                                        </Text>
+                                    </TouchableOpacity>
 
                                     {showForgotLink && (
                                         <Animated.View style={[styles.forgotPasswordContainer, animatedStyles]}>

@@ -51,7 +51,9 @@
     "connectionError": "Impossible de se connecter au serveur. Vérifiez votre connexion internet et réessayez.",
     "loginError": "Une erreur s'est produite lors de la connexion",
     "acceptTerms": "Acceptez les conditions générales",
-    "forgotPassword": "Mot de passe oublié ?"
+    "forgotPassword": "Mot de passe oublié ?",
+    "showPassword": "Afficher le mot de passe",
+    "hidePassword": "Masquer le mot de passe"
   },
   "tabs": {
     "home": "Accueil",
