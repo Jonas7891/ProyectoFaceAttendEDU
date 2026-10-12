@@ -22,6 +22,17 @@ function unwrap(data) {
   return [];
 }
 
+// Una lista que falla devuelve [] en vez de tumbar la sección: el dashboard
+// pinta ceros parciales en lugar de quedarse sin datos por un timeout.
+async function safeList(promise) {
+  try {
+    const list = await promise;
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
 function formatDateKey(date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -243,14 +254,16 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                     let sessionsTodayCount = 0;
                     const todayKey = formatDateKey(new Date());
                     if (myActor) {
-                        const blocks = await backendGet(SCHED(), 'api/v1/schedule-blocks', { instructorActorId: myActor.academicActorId });
-                        for (const block of blocks) {
-                            const sessions = await backendGet(SCHED(), 'api/v1/class-sessions', { scheduleBlockId: block.schedule_block_id });
-                            sessionsTodayCount += sessions.filter((s) => s.session_date === todayKey).length;
-                            for (const session of sessions) {
-                                teacherRecords.push(...await backendGet(ATT(), 'api/v1/attendance-records', { classSessionId: session.class_session_id }));
-                            }
-                        }
+                        const blocks = await safeList(backendGet(SCHED(), 'api/v1/schedule-blocks', { instructorActorId: myActor.academicActorId }));
+                        const sessionsNested = await Promise.all(
+                            blocks.map((block) => safeList(backendGet(SCHED(), 'api/v1/class-sessions', { scheduleBlockId: block.schedule_block_id })))
+                        );
+                        const sessions = sessionsNested.flat();
+                        sessionsTodayCount = sessions.filter((s) => s.session_date === todayKey).length;
+                        const recordsNested = await Promise.all(
+                            sessions.map((session) => safeList(backendGet(ATT(), 'api/v1/attendance-records', { classSessionId: session.class_session_id })))
+                        );
+                        teacherRecords = recordsNested.flat();
                     }
 
                     const present = teacherRecords.filter(r => r.attendance_status === 'Present').length;
@@ -295,18 +308,17 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                     });
 
                     const recentSlice = records.slice(-4).reverse();
-                    const myRecords = [];
-                    for (let i = 0; i < recentSlice.length; i++) {
-                        const r = recentSlice[i];
-                        const courseName = await getCourseNameForRecord(r);
-                        myRecords.push({
+                    const courseNames = await Promise.all(recentSlice.map((r) => getCourseNameForRecord(r)));
+                    const myRecords = recentSlice.map((r, i) => {
+                        const courseName = courseNames[i];
+                        return {
                             id: r.attendance_record_id ?? i + 1,
                             materia: courseName || '—',
                             hora: r.captured_at ? new Date(r.captured_at).toLocaleTimeString(timeLocale, {hour: '2-digit', minute: '2-digit'}) : '—',
                             estado: r.attendance_status === 'Present' ? 'presente' : 'ausente',
                             fecha: r.captured_at ? r.captured_at.split('T')[0] : '—',
-                        });
-                    }
+                        };
+                    });
                     setMisRegistrosRecientes(myRecords);
                     } catch (sectionError) {
                         console.error('Error fetching student dashboard section:', sectionError);

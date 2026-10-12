@@ -16,6 +16,107 @@ function unwrap(data) {
   return [];
 }
 
+// Una petición que falla no tumba el registro: devuelve null y el campo
+// se pinta '—'. Antes un solo 404 descartaba el registro entero (continue).
+async function safe(promise) {
+  try {
+    return await promise;
+  } catch {
+    return null;
+  }
+}
+
+// Registros recientes a enriquecer y tamaño del lote paralelo. 50
+// registros x ~7 peticiones secuenciales colgaban el dispositivo (timeout);
+// por lotes de 10 con lecturas independientes en paralelo el mismo trabajo
+// baja de minutos a segundos en red local.
+const RECENT_LIMIT = 50;
+const ENRICH_CHUNK_SIZE = 10;
+
+async function enrichRecord(record, { locale, t, activePeriod }) {
+  try {
+    const [sessionData, actorData] = await Promise.all([
+      record.class_session_id
+        ? safe(backendGet(ENV.SCHEDULING_BASE_URL, `api/v1/class-sessions/${record.class_session_id}`))
+        : null,
+      record.academic_actor_id
+        ? safe(backendGet(ENV.ACADEMIC_BASE_URL, `api/v1/academic-actors/${record.academic_actor_id}`))
+        : null,
+    ]);
+    const session = unwrap(sessionData)[0] || {};
+    const actor = unwrap(actorData)[0] || {};
+
+    const [blockData, personData] = await Promise.all([
+      session.schedule_block_id
+        ? safe(backendGet(ENV.SCHEDULING_BASE_URL, `api/v1/schedule-blocks/${session.schedule_block_id}`))
+        : null,
+      actor.person_id
+        ? safe(backendGet(ENV.API_BASE_URL, `api/v1/persons/${actor.person_id}`))
+        : null,
+    ]);
+    const block = unwrap(blockData)[0] || {};
+    const person = unwrap(personData)[0] || {};
+
+    const [courseData, envData, instrActorData] = await Promise.all([
+      block.course_id
+        ? safe(backendGet(ENV.ACADEMIC_BASE_URL, `api/v1/courses/${block.course_id}`))
+        : null,
+      block.environment_id
+        ? safe(backendGet(ENV.SCHEDULING_BASE_URL, `api/v1/environments/${block.environment_id}`))
+        : null,
+      block.instructor_actor_id
+        ? safe(backendGet(ENV.ACADEMIC_BASE_URL, `api/v1/academic-actors/${block.instructor_actor_id}`))
+        : null,
+    ]);
+    const course = unwrap(courseData)[0] || {};
+    const env = unwrap(envData)[0] || {};
+    const instrActor = unwrap(instrActorData)[0] || {};
+
+    let docenteName = '—';
+    if (instrActor?.person_id) {
+      const instrPersonData = await safe(backendGet(ENV.API_BASE_URL, `api/v1/persons/${instrActor.person_id}`));
+      const instrPerson = unwrap(instrPersonData)[0];
+      if (instrPerson) {
+        docenteName = `${instrPerson.name || ''} ${instrPerson.last_name || ''}`.trim() || '—';
+      }
+    }
+
+    const statusMap = { Present: 'presente', Late: 'tarde', Absent: 'ausente' };
+    const when = record.captured_at || record.created_at || null;
+    const hora = when ? new Date(when).toLocaleTimeString(locale, {hour: '2-digit', minute: '2-digit'}) : '—';
+
+    return {
+      id: record.attendance_record_id,
+      nombre: `${person.name || ''} ${person.last_name || ''}`.trim() || t('attendance.unknownPerson', {id: record.academic_actor_id}),
+      fecha: when ? when.split('T')[0] : '',
+      hora,
+      estado: statusMap[record.attendance_status] || 'ausente',
+      materia: course.name || course.code || '—',
+      codigo_curso: course.code || '—',
+      dia: getDayLabel(block.day_of_week, locale),
+      hora_inicio: block.starts_at || '—',
+      hora_fin: block.ends_at || '—',
+      salon: env.name || '—',
+      periodo: activePeriod?.name || '—',
+      periodo_inicio: activePeriod?.startsOn || '—',
+      periodo_fin: activePeriod?.endsOn || '—',
+      docente: docenteName,
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+async function enrichRecords(records, ctx) {
+  const enriched = [];
+  const recent = records.slice(-RECENT_LIMIT);
+  for (let i = 0; i < recent.length; i += ENRICH_CHUNK_SIZE) {
+    const chunk = await Promise.all(recent.slice(i, i + ENRICH_CHUNK_SIZE).map((r) => enrichRecord(r, ctx)));
+    enriched.push(...chunk.filter(Boolean));
+  }
+  return enriched;
+}
+
 export const STATUS_CONFIG = {
     presente: {color: "#22C55E", bg: "#DCFCE7", darkBg: "#14532D", label: "attendance.present"},
     tarde: {color: "#F59E0B", bg: "#FEF3C7", darkBg: "#451A03", label: "attendance.late"},
@@ -147,70 +248,7 @@ export function useAttendanceViewModel() {
                     : (await PeriodService.getAll({is_active: true}))[0] || null;
             } catch (e) {}
 
-            const enriched = [];
-            for (const record of records.slice(-50)) {
-                try {
-                    // Backend: estas colecciones solo filtran por id en ruta.
-                    const sessionData = await backendGet(ENV.SCHEDULING_BASE_URL, `api/v1/class-sessions/${record.class_session_id}`);
-                    const session = unwrap(sessionData)[0] || {};
-
-                    const blockData = await backendGet(ENV.SCHEDULING_BASE_URL, `api/v1/schedule-blocks/${session.schedule_block_id}`);
-                    const block = unwrap(blockData)[0] || {};
-
-                    const courseData = await backendGet(ENV.ACADEMIC_BASE_URL, `api/v1/courses/${block.course_id}`);
-                    const course = unwrap(courseData)[0] || {};
-
-                    const envData = await backendGet(ENV.SCHEDULING_BASE_URL, `api/v1/environments/${block.environment_id}`);
-                    const env = unwrap(envData)[0] || {};
-
-                    const actorData = await backendGet(ENV.ACADEMIC_BASE_URL, `api/v1/academic-actors/${record.academic_actor_id}`);
-                    const actor = unwrap(actorData)[0] || {};
-
-                    const personData = actor.person_id
-                        ? await backendGet(ENV.API_BASE_URL, `api/v1/persons/${actor.person_id}`)
-                        : [];
-                    const person = unwrap(personData)[0] || {};
-
-                    let docenteName = '—';
-                    if (block.instructor_actor_id) {
-                        try {
-                            const instrActorData = await backendGet(ENV.ACADEMIC_BASE_URL, `api/v1/academic-actors/${block.instructor_actor_id}`);
-                            const instrActor = unwrap(instrActorData)[0];
-                            if (instrActor?.person_id) {
-                                const instrPersonData = await backendGet(ENV.API_BASE_URL, `api/v1/persons/${instrActor.person_id}`);
-                                const instrPerson = unwrap(instrPersonData)[0];
-                                if (instrPerson) {
-                                    docenteName = `${instrPerson.name || ''} ${instrPerson.last_name || ''}`.trim() || '—';
-                                }
-                            }
-                        } catch (e) {}
-                    }
-
-                    const statusMap = { Present: 'presente', Late: 'tarde', Absent: 'ausente' };
-                    const when = record.captured_at || record.created_at || null;
-                    const hora = when ? new Date(when).toLocaleTimeString(locale, {hour: '2-digit', minute: '2-digit'}) : '—';
-
-                    enriched.push({
-                        id: record.attendance_record_id,
-                        nombre: `${person.name || ''} ${person.last_name || ''}`.trim() || t('attendance.unknownPerson', {id: record.academic_actor_id}),
-                        fecha: when ? when.split('T')[0] : '',
-                        hora,
-                        estado: statusMap[record.attendance_status] || 'ausente',
-                        materia: course.name || course.code || '—',
-                        codigo_curso: course.code || '—',
-                        dia: getDayLabel(block.day_of_week, locale),
-                        hora_inicio: block.starts_at || '—',
-                        hora_fin: block.ends_at || '—',
-                        salon: env.name || '—',
-                        periodo: activePeriod?.name || '—',
-                        periodo_inicio: activePeriod?.startsOn || '—',
-                        periodo_fin: activePeriod?.endsOn || '—',
-                        docente: docenteName,
-                    });
-                } catch (e) {
-                    continue;
-                }
-            }
+            const enriched = await enrichRecords(records, { locale, t, activePeriod });
 
             setTeacherData(enriched);
             setMyAttendance(enriched.slice(-10));
