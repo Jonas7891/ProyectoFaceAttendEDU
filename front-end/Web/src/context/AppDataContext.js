@@ -57,6 +57,7 @@ import { mockTeachers, mockAdmins } from "../models/data/mockData";
 import { calculateStudentCurrentPeriod } from "../core/utils/studentPeriodCalculator";
 import { getConfiguredAcademicPeriodType } from "../core/constants/academicPeriods";
 import { getStudentPeriodFromData } from "../core/utils/studentPeriodCalculator";
+import { onInstitutionConfigChange } from "../core/config/institutionConfig";
 
 // ── Context ───────────────────────────────────────────────
 
@@ -80,6 +81,14 @@ export function AppDataProvider({ children }) {
     const [loadedAdmins, setLoadedAdmins] = useState([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(true);
     const [refreshTrigger, setRefreshTrigger] = useState(0); // Para forzar re-renders
+    
+    // Estado para el tipo de período académico (reactivo a cambios en Settings)
+    const [periodType, setPeriodType] = useState(() => getConfiguredAcademicPeriodType());
+    
+    // Función para forzar refresh del contexto (definida antes para usarla en efectos)
+    const forceRefresh = useCallback(() => {
+        setRefreshTrigger(prev => prev + 1);
+    }, []);
 
     // Carga inicial de datos base (environments, fichas, courses)
     useEffect(() => {
@@ -102,8 +111,51 @@ export function AppDataProvider({ children }) {
         });
     }, []);
     
-    // Obtener tipo de período académico
-    const periodType = useMemo(() => getConfiguredAcademicPeriodType(), []);
+    // Escuchar cambios en la configuración institucional
+    useEffect(() => {
+        const cleanup = onInstitutionConfigChange((newConfig) => {
+            // Actualizar el tipo de período si cambió
+            if (newConfig.academicPeriodType && newConfig.academicPeriodType !== periodType) {
+                console.log('[AppDataContext] Tipo de período cambió:', newConfig.academicPeriodType);
+                setPeriodType(newConfig.academicPeriodType);
+                // Forzar recálculo de datos enriquecidos
+                forceRefresh();
+            }
+        });
+        
+        return cleanup;
+    }, [periodType, forceRefresh]);
+    
+    // Recalcular estudiantes cuando cambia el periodType
+    useEffect(() => {
+        if (students.length > 0 && courses.length > 0) {
+            console.log('[AppDataContext] Recalculando estudiantes por cambio de período:', periodType);
+            // Re-enriquecer estudiantes con el nuevo tipo de período
+            const enrichedStudents = students.map(student => {
+                const studentCourse = courses.find(
+                    c => c.code === student.course || c.name === student.course || c.id === student.course
+                );
+                
+                if (studentCourse) {
+                    const periodInfo = calculateStudentCurrentPeriod(
+                        studentCourse.startDate,
+                        studentCourse.endDate,
+                        periodType
+                    );
+                    
+                    return {
+                        ...student,
+                        grade: periodInfo.label || '—',
+                        periodInfo,
+                    };
+                }
+                
+                return student;
+            });
+            
+            setLoadedStudents(enrichedStudents);
+        }
+    }, [periodType, students, courses]);
     
     // Cursos enriquecidos con período calculado (fuente de verdad)
     const enrichedCourses = useMemo(() => {
@@ -270,11 +322,6 @@ export function AppDataProvider({ children }) {
         },
         [students, enrichedCourses]
     );
-
-    // Función para forzar refresh del contexto
-    const forceRefresh = useCallback(() => {
-        setRefreshTrigger(prev => prev + 1);
-    }, []);
 
     const updateStudentFn = useCallback(
         async (id, patch) => {

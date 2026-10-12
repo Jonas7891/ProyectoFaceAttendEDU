@@ -30,6 +30,8 @@ import { ExportConfigModal } from "../../../components/reports/ExportConfigModal
 import { useHistoricosViewModel } from "../../../../viewmodels/useHistoricosViewModel";
 import { usePushNotification } from "../../../components/common/feedback/PushNotification";
 import { exportToExcel, exportToPDF, buildHTMLTable, formatPercentageWithColor, formatStatusBadge } from "../../../../core/utils/exportHelpers";
+import { getInstitutionConfig } from "../../../../core/config/institutionConfig";
+import { getAttendanceThresholds } from "../../../../models/data/userDerivedData";
 
 function UserRow({ user, index, isLast, onPress, isExportMode, isSelected, onToggleSelect }) {
     const { theme } = useTheme();
@@ -262,7 +264,7 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
     };
 
     /**
-     * Handler para cambio de rango de fechas
+     * Handler para cambio de rango de fechas (aplicado directamente)
      */
     const handleDateRangeChange = (range) => {
         setDateRange(range);
@@ -273,26 +275,93 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
         const courses = appData.courses || [];
         const environments = appData.environments || [];
         
-        return students.map(student => {
-            let lastRecord = null;
-            let environmentName = t("Sin ambiente");
-            
-            if (student.attendanceHistory && student.attendanceHistory.length > 0) {
-                const sortedHistory = [...student.attendanceHistory].sort(
-                    (a, b) => new Date(b.date) - new Date(a.date)
-                );
-                lastRecord = sortedHistory[0];
-            }
-            
-            // Obtener el ambiente y horario desde el curso del estudiante
+        // Deduplicar estudiantes por ID para evitar registros duplicados
+        const uniqueStudents = Array.from(
+            new Map(students.map(s => [s.id, s])).values()
+        );
+        
+        // Si NO hay filtro de fechas aplicado, mostrar solo el último registro por estudiante
+        if (!dateRange.start || !dateRange.end) {
+            return uniqueStudents.map(student => {
+                let lastRecord = null;
+                let environmentName = t("Sin ambiente");
+                
+                if (student.attendanceHistory && student.attendanceHistory.length > 0) {
+                    const sortedHistory = [...student.attendanceHistory].sort(
+                        (a, b) => new Date(b.date) - new Date(a.date)
+                    );
+                    lastRecord = sortedHistory[0];
+                }
+                
+                // Obtener el ambiente y horario desde el curso del estudiante
+                const studentCourse = courses.find(c => c.code === student.course || c.id === student.course);
+                let scheduledStartTime = null;
+                let scheduledEndTime = null;
+                let actualCheckInTime = null;
+                let actualCheckOutTime = null;
+                
+                if (studentCourse?.room) {
+                    const environment = environments.find(env => env.id === studentCourse.room);
+                    if (environment?.number) {
+                        environmentName = environment.number;
+                    }
+                    
+                    // Obtener horario programado del curso
+                    if (environment?.schedules && environment.schedules.length > 0) {
+                        const courseSchedule = environment.schedules.find(
+                            sch => sch.courseCode === student.course
+                        );
+                        if (courseSchedule) {
+                            scheduledStartTime = courseSchedule.startTime;
+                            scheduledEndTime = courseSchedule.endTime;
+                        } else if (environment.schedules[0]) {
+                            scheduledStartTime = environment.schedules[0].startTime;
+                            scheduledEndTime = environment.schedules[0].endTime;
+                        }
+                    }
+                }
+                
+                // Obtener horas reales del último registro de asistencia
+                if (lastRecord) {
+                    actualCheckInTime = lastRecord.checkInTime || null;
+                    actualCheckOutTime = lastRecord.checkOutTime || null;
+                }
+                
+                // Obtener el nombre de la ficha desde el curso
+                const fichaName = studentCourse?.name || student.courseName || student.course || t("Sin ficha");
+                
+                return {
+                    id: student.id,
+                    studentId: student.id,
+                    studentName: student.name,
+                    studentCode: student.code,
+                    ficha: student.course,
+                    fichaName: fichaName,
+                    environment: environmentName,
+                    date: lastRecord?.date || null,
+                    scheduledStartTime,
+                    scheduledEndTime,
+                    actualCheckInTime,
+                    actualCheckOutTime,
+                    status: lastRecord?.present ? "present" : "absent",
+                    late: lastRecord?.late || false,
+                    totalRecords: student.attendanceHistory?.length || 0,
+                    attendance: student.attendance,
+                };
+            });
+        }
+        
+        // Si HAY filtro de fechas, expandir TODOS los registros de asistencia
+        const allRecords = [];
+        
+        uniqueStudents.forEach(student => {
             const studentCourse = courses.find(c => c.code === student.course || c.id === student.course);
+            let environmentName = t("Sin ambiente");
             let scheduledStartTime = null;
             let scheduledEndTime = null;
-            let actualCheckInTime = null;
-            let actualCheckOutTime = null;
             
+            // Obtener información del ambiente
             if (studentCourse?.room) {
-                // room contiene el ID del ambiente (ej: "env1"), buscar en environments
                 const environment = environments.find(env => env.id === studentCourse.room);
                 if (environment?.number) {
                     environmentName = environment.number;
@@ -300,7 +369,6 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
                 
                 // Obtener horario programado del curso
                 if (environment?.schedules && environment.schedules.length > 0) {
-                    // Buscar el schedule que corresponde al curso del estudiante
                     const courseSchedule = environment.schedules.find(
                         sch => sch.courseCode === student.course
                     );
@@ -308,40 +376,42 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
                         scheduledStartTime = courseSchedule.startTime;
                         scheduledEndTime = courseSchedule.endTime;
                     } else if (environment.schedules[0]) {
-                        // Fallback: usar primer horario si no se encuentra el específico
                         scheduledStartTime = environment.schedules[0].startTime;
                         scheduledEndTime = environment.schedules[0].endTime;
                     }
                 }
             }
             
-            // Obtener horas reales del último registro de asistencia
-            if (lastRecord) {
-                actualCheckInTime = lastRecord.checkInTime || null;
-                actualCheckOutTime = lastRecord.checkOutTime || null;
-            }
+            // Obtener el nombre de la ficha desde el curso
+            const fichaName = studentCourse?.name || student.courseName || student.course || t("Sin ficha");
             
-            return {
-                id: student.id,
-                studentName: student.name,
-                studentCode: student.code,
-                ficha: student.course,
-                fichaName: student.courseName,
-                environment: environmentName,
-                date: lastRecord?.date || null,
-                // Horario programado del curso
-                scheduledStartTime,
-                scheduledEndTime,
-                // Hora real del último registro
-                actualCheckInTime,
-                actualCheckOutTime,
-                status: lastRecord?.present ? "present" : "absent",
-                late: lastRecord?.late || false,
-                totalRecords: student.attendanceHistory?.length || 0,
-                attendance: student.attendance,
-            };
+            // Si el estudiante tiene historial de asistencia, crear un registro por cada entrada
+            if (student.attendanceHistory && student.attendanceHistory.length > 0) {
+                student.attendanceHistory.forEach(record => {
+                    allRecords.push({
+                        id: `${student.id}-${record.date}`, // ID único por estudiante + fecha
+                        studentId: student.id,
+                        studentName: student.name,
+                        studentCode: student.code,
+                        ficha: student.course,
+                        fichaName: fichaName,
+                        environment: environmentName,
+                        date: record.date,
+                        scheduledStartTime,
+                        scheduledEndTime,
+                        actualCheckInTime: record.checkInTime || null,
+                        actualCheckOutTime: record.checkOutTime || null,
+                        status: record.present ? "present" : "absent",
+                        late: record.late || false,
+                        totalRecords: student.attendanceHistory.length,
+                        attendance: student.attendance,
+                    });
+                });
+            }
         });
-    }, [appData.students, appData.courses, appData.environments, t]);
+        
+        return allRecords;
+    }, [appData.students, appData.courses, appData.environments, t, dateRange.start, dateRange.end]);
 
     const availableFichas = useMemo(() => {
         const fichasSet = new Set();
@@ -386,12 +456,38 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
         }
 
         if (dateRange.start && dateRange.end) {
-            result = result.filter(user => 
-                user.date && user.date >= dateRange.start && user.date <= dateRange.end
-            );
+            result = result.filter(user => {
+                if (!user.date) return false;
+                
+                // Normalizar fechas para comparación (solo fecha, sin hora)
+                const userDate = new Date(user.date);
+                userDate.setHours(0, 0, 0, 0);
+                
+                const startDate = new Date(dateRange.start);
+                startDate.setHours(0, 0, 0, 0);
+                
+                const endDate = new Date(dateRange.end);
+                endDate.setHours(23, 59, 59, 999);
+                
+                return userDate >= startDate && userDate <= endDate;
+            });
         }
 
-        return result.sort((a, b) => a.studentName.localeCompare(b.studentName));
+        // Ordenar por fecha descendente (más reciente primero) y luego por nombre
+        return result.sort((a, b) => {
+            // Primero por fecha
+            if (a.date && b.date) {
+                const dateCompare = new Date(b.date) - new Date(a.date);
+                if (dateCompare !== 0) return dateCompare;
+            } else if (a.date && !b.date) {
+                return -1;
+            } else if (!a.date && b.date) {
+                return 1;
+            }
+            
+            // Luego por nombre
+            return a.studentName.localeCompare(b.studentName);
+        });
     }, [usersData, searchName, selectedFicha, dateRange]);
 
     // Hook para manejar exportaciones
@@ -473,7 +569,7 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
         setShowExportModal(false);
     };
 
-    const handleExportSelected = (format) => {
+    const handleExportSelected = (format, exportType) => {
         // IMPORTANTE: Usar todos los usuarios, no solo los filtrados
         // Los usuarios seleccionados pueden estar en cualquier parte de la lista original
         const usersToExport = usersData.filter(u => selectedUsers.has(u.id));
@@ -485,6 +581,9 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
             );
             return;
         }
+        
+        // TODO: Implementar lógica según exportType ("simple" o "detailed")
+        console.log(`[HistoricalSection] Exportando ${usersToExport.length} usuarios en formato ${format} con tipo ${exportType}`);
         
         if (format === "excel") {
             // Construir filas de Excel con usuarios seleccionados
@@ -537,40 +636,155 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
                 );
             }
         } else if (format === "pdf") {
-            // Construir PDF con usuarios seleccionados
-            const historicosTable = buildHTMLTable(usersToExport, [
-                { key: "studentCode", label: t("Código"), width: "10%" },
-                { key: "studentName", label: t("Nombre"), width: "20%" },
-                { key: "fichaName", label: t("Ficha"), width: "12%" },
-                { key: "environment", label: t("Ambiente"), width: "10%" },
-                { 
-                    key: "date", 
-                    label: t("Fecha"), 
-                    width: "12%",
-                    render: (value) => value ? formatDate(value, "DD/MM/YYYY") : t("Sin registro")
-                },
-                {
-                    key: "status",
-                    label: t("Estado"),
-                    width: "10%",
-                    align: "center",
-                    render: (value, row) => {
-                        const status = row.late ? "late" : (value === "present" ? "present" : "absent");
-                        return formatStatusBadge(status, {
-                            present: { text: t("Presente"), color: c.status.success },
-                            late: { text: t("Retardo"), color: c.status.warning },
-                            absent: { text: t("Ausente"), color: c.status.danger },
-                        });
+            // Obtener umbrales de asistencia desde la función centralizada
+            const thresholds = getAttendanceThresholds();
+            const minAttendance = thresholds.minAttendance;
+            const warning = thresholds.warning;
+            const excellent = thresholds.excellent;
+            
+            // Obtener colores del tema para consistencia
+            const successColor = c.status.success;
+            const warningColor = c.status.warning;
+            const dangerColor = c.status.danger;
+            
+            // Calcular usuarios únicos
+            const uniqueUsers = new Set(usersToExport.map(u => u.studentId || u.id)).size;
+            
+            // Obtener rol del usuario (para usuario único)
+            let userRole = null;
+            if (uniqueUsers === 1 && usersToExport.length > 0) {
+                // Por ahora, todos los usuarios en históricos son estudiantes
+                userRole = t("Estudiante");
+            }
+            
+            // Determinar estado para usuario único
+            let userStatus = null;
+            if (uniqueUsers === 1 && usersToExport.length > 0) {
+                const attendance = usersToExport[0].attendance || 0;
+                
+                // Lógica de estado:
+                // 1. EXCELENTE: Si el porcentaje es exactamente igual al configurado en settings
+                // 2. BUENO: >= excellent (threshold.excellent)
+                // 3. REGULAR: >= warning pero < excellent
+                // 4. EN RIESGO: < warning
+                
+                if (attendance === minAttendance) {
+                    userStatus = {
+                        label: t("Excelente"),
+                        color: successColor,
+                        icon: "⭐",
+                    };
+                } else if (attendance >= excellent) {
+                    userStatus = {
+                        label: t("Bueno"),
+                        color: successColor,
+                        icon: "✓",
+                    };
+                } else if (attendance >= warning) {
+                    userStatus = {
+                        label: t("Regular"),
+                        color: warningColor,
+                        icon: "⚠",
+                    };
+                } else {
+                    userStatus = {
+                        label: t("En riesgo"),
+                        color: dangerColor,
+                        icon: "⚠",
+                    };
+                }
+            }
+            
+            // Determinar columnas según el tipo de exportación
+            let columns;
+            
+            if (exportType === "simple") {
+                // Exportación SENCILLA: Solo nombre, ficha y asistencia con progressbar
+                columns = [
+                    { key: "studentName", label: t("Nombre"), width: "40%" },
+                    { key: "fichaName", label: t("Ficha"), width: "30%", align: "center" },
+                    {
+                        key: "attendance",
+                        label: t("Asistencia"),
+                        width: "30%",
+                        align: "center",
+                        render: (value) => {
+                            const percentage = value || 0;
+                            // Determinar color según umbrales del tema
+                            let barColor = successColor; // Verde por defecto (>= excellent)
+                            if (percentage < warning) {
+                                barColor = dangerColor; // Rojo
+                            } else if (percentage < excellent) {
+                                barColor = warningColor; // Amarillo
+                            }
+                            
+                            return `
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="flex: 1; height: 8px; background: #E5E7EB; border-radius: 4px; overflow: hidden;">
+                                        <div style="height: 100%; background: ${barColor}; width: ${percentage}%; transition: width 0.3s;"></div>
+                                    </div>
+                                    <strong style="color: ${barColor}; font-size: 14px; min-width: 45px; text-align: right;">${percentage}%</strong>
+                                </div>
+                            `;
+                        },
                     },
-                },
-                {
-                    key: "attendance",
-                    label: t("Asistencia"),
-                    width: "10%",
-                    align: "center",
-                    render: (value) => formatPercentageWithColor(value || 0, 75, 60),
-                },
-            ]);
+                ];
+            } else {
+                // Exportación DETALLADA: Todos los campos
+                columns = [
+                    { key: "studentName", label: t("Nombre"), width: "25%" },
+                    { key: "fichaName", label: t("Curso"), width: "20%" },
+                    { key: "environment", label: t("Ambiente"), width: "15%" },
+                    { 
+                        key: "date", 
+                        label: t("Fecha"), 
+                        width: "15%",
+                        render: (value) => value ? formatDate(value, "DD/MM/YYYY") : t("Sin registro")
+                    },
+                    {
+                        key: "status",
+                        label: t("Estado"),
+                        width: "10%",
+                        align: "center",
+                        render: (value, row) => {
+                            const status = row.late ? "late" : (value === "present" ? "present" : "absent");
+                            return formatStatusBadge(status, {
+                                present: { text: t("Presente"), color: c.status.success },
+                                late: { text: t("Retardo"), color: c.status.warning },
+                                absent: { text: t("Ausente"), color: c.status.danger },
+                            });
+                        },
+                    },
+                    {
+                        key: "attendance",
+                        label: t("Asistencia"),
+                        width: "15%",
+                        align: "center",
+                        render: (value) => {
+                            const percentage = value || 0;
+                            // Determinar color según umbrales del tema
+                            let barColor = successColor; // Verde por defecto (>= excellent)
+                            if (percentage < warning) {
+                                barColor = dangerColor; // Rojo
+                            } else if (percentage < excellent) {
+                                barColor = warningColor; // Amarillo
+                            }
+                            
+                            return `
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="flex: 1; height: 8px; background: #E5E7EB; border-radius: 4px; overflow: hidden;">
+                                        <div style="height: 100%; background: ${barColor}; width: ${percentage}%; transition: width 0.3s;"></div>
+                                    </div>
+                                    <strong style="color: ${barColor}; font-size: 14px; min-width: 45px; text-align: right;">${percentage}%</strong>
+                                </div>
+                            `;
+                        },
+                    },
+                ];
+            }
+            
+            // Construir tabla HTML con las columnas según el tipo
+            const historicosTable = buildHTMLTable(usersToExport, columns);
 
             const html = `
 <!DOCTYPE html>
@@ -594,12 +808,12 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
             text-align: center;
             margin-bottom: 40px;
             padding-bottom: 20px;
-            border-bottom: 3px solid ${c.primary};
+            border-bottom: 3px solid ${c.brand.primary};
         }
         .header h1 {
             font-size: 32px;
             font-weight: 700;
-            color: ${c.primary};
+            color: ${c.brand.primary};
             margin-bottom: 8px;
         }
         .header p {
@@ -621,13 +835,16 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
         .summary-item .value {
             font-size: 36px;
             font-weight: 700;
-            color: ${c.primary};
+            color: ${c.brand.primary};
             margin-bottom: 4px;
         }
         .summary-item .label {
             font-size: 14px;
             color: #666;
             font-weight: 500;
+        }
+        .summary-item.status .value {
+            color: ${userStatus?.color || c.brand.primary};
         }
         table {
             width: 100%;
@@ -636,7 +853,7 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         thead {
-            background: ${c.primary};
+            background: ${c.brand.primary};
             color: white;
         }
         th {
@@ -682,21 +899,28 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
 <body>
     <div class="header">
         <h1>${t("Históricos de Asistencia Seleccionados")}</h1>
-        <p>${t("Registros seleccionados para exportación")}</p>
+        <p>${t("Registros seleccionados para exportación")} - ${exportType === "simple" ? t("Exportación sencilla") : t("Exportación detallada")}</p>
         <p>${t("Fecha de generación")}: ${formatDate(new Date(), "DD/MM/YYYY HH:mm")}</p>
     </div>
 
     <div class="summary">
+        ${userStatus ? `
+        <div class="summary-item status">
+            <div class="value">${userStatus.label}</div>
+            <div class="label">${userStatus.icon} ${t("Estado")}</div>
+        </div>
+        ` : `
         <div class="summary-item">
             <div class="value">${usersToExport.length}</div>
             <div class="label">${usersToExport.length === 1 ? t("Registro seleccionado") : t("Registros seleccionados")}</div>
         </div>
+        `}
         <div class="summary-item">
-            <div class="value">${new Set(usersToExport.map(u => u.id)).size}</div>
-            <div class="label">${t("Usuarios únicos")}</div>
+            <div class="value">${uniqueUsers === 1 ? userRole : uniqueUsers}</div>
+            <div class="label">${uniqueUsers === 1 ? t("Tipo de usuario") : t("Usuarios únicos")}</div>
         </div>
         <div class="summary-item">
-            <div class="value">${usersToExport.reduce((sum, u) => sum + u.totalRecords, 0)}</div>
+            <div class="value">${usersToExport.reduce((sum, u) => sum + (u.totalRecords || 0), 0)}</div>
             <div class="label">${t("Total de asistencias")}</div>
         </div>
     </div>
@@ -734,13 +958,39 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
 
     useEffect(() => {
         if (onStatsChange) {
-            const totalRecords = usersData.reduce((sum, user) => sum + user.totalRecords, 0);
+            // Deduplicar estudiantes para cálculos precisos
+            const allStudents = appData.students || [];
+            const uniqueStudents = Array.from(
+                new Map(allStudents.map(s => [s.id, s])).values()
+            );
+            
+            // Calcular total de registros ÚNICOS (sin duplicar)
+            // Si NO hay filtro de fechas, sumar totalRecords de cada usuario único
+            // Si HAY filtro de fechas, contar los registros expandidos
+            let totalRecords;
+            let totalUsers;
+            
+            if (!dateRange.start || !dateRange.end) {
+                // Sin filtro: sumar totalRecords de cada usuario único
+                totalRecords = usersData.reduce((sum, user) => sum + user.totalRecords, 0);
+                totalUsers = usersData.length;
+            } else {
+                // Con filtro: contar registros únicos por estudiante
+                const uniqueStudentIds = new Set(usersData.map(u => u.studentId));
+                totalUsers = uniqueStudentIds.size;
+                
+                // Total de registros = todos los registros de todos los estudiantes únicos
+                totalRecords = uniqueStudents.reduce((sum, student) => {
+                    return sum + (student.attendanceHistory?.length || 0);
+                }, 0);
+            }
+            
             onStatsChange({
                 totalRecords,
-                totalUsers: usersData.length,
+                totalUsers,
             });
         }
-    }, [usersData, onStatsChange]);
+    }, [usersData, onStatsChange, dateRange.start, dateRange.end, appData.students]);
 
     const clearFilters = () => {
         setSearchName("");

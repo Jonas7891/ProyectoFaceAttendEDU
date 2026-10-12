@@ -85,6 +85,7 @@ export function DateRangeCalendar({
     startDate,
     endDate,
     onDateChange,
+    onApply, // Callback cuando se presiona "Aplicar"
     label,
     placeholder = "Seleccionar rango",
     error = false,
@@ -131,95 +132,89 @@ export function DateRangeCalendar({
         const today = new Date();
         setCurrentMonth(today.getMonth());
         setCurrentYear(today.getFullYear());
+        
+        // Seleccionar el día de hoy como fecha única (inicio = fin = hoy)
+        // PERO NO aplicar automáticamente, esperar a que presionen "Aplicar"
+        const todayStr = formatDateString(today);
+        setTempStart(todayStr);
+        setTempEnd(todayStr);
+        setIsSelectingRange(false);
     };
 
     const handleDayPress = (day) => {
         const dateStr = formatDateString(day.fullDate);
         const clickedTime = day.fullDate.getTime();
         
+        // Caso 1: Sin selección previa -> establecer como inicio
         if (!tempStart && !tempEnd) {
-            // Sin selección previa: establecer como inicio
             setTempStart(dateStr);
             setTempEnd(null);
             setIsSelectingRange(true);
-        } else if (tempStart && !tempEnd) {
-            // Solo hay fecha de inicio: establecer como fin
+            return; // Importante: salir para evitar más lógica
+        }
+        
+        // Caso 2: Solo hay fecha de inicio -> establecer como fin
+        if (tempStart && !tempEnd) {
             const startTime = parseDate(tempStart).getTime();
             
             if (clickedTime >= startTime) {
-                // Fecha válida como fin
+                // Fecha válida como fin (posterior o igual a inicio)
                 setTempEnd(dateStr);
-                onDateChange({ start: tempStart, end: dateStr });
                 setIsSelectingRange(false);
             } else {
                 // Si es anterior, se convierte en el nuevo inicio
                 setTempStart(dateStr);
                 setTempEnd(null);
+                setIsSelectingRange(true);
             }
-        } else if (tempStart && tempEnd) {
-            // Ya hay un rango completo: ajustar dinámicamente
-            const startTime = parseDate(tempStart).getTime();
-            const endTime = parseDate(tempEnd).getTime();
-            
-            // Si hace click en el mismo día que está seleccionado (inicio o fin), seleccionar solo ese día
-            if (clickedTime === startTime || clickedTime === endTime) {
-                setTempStart(dateStr);
-                setTempEnd(dateStr);
-                onDateChange({ start: dateStr, end: dateStr });
-                return;
-            }
-            
-            // Calcular distancias
-            const distanceToStart = Math.abs(clickedTime - startTime);
-            const distanceToEnd = Math.abs(clickedTime - endTime);
-            
-            if (distanceToStart < distanceToEnd) {
-                // Más cerca del inicio: ajustar fecha de inicio
-                if (clickedTime <= endTime) {
-                    setTempStart(dateStr);
-                    onDateChange({ start: dateStr, end: tempEnd });
-                } else {
-                    // Si la nueva fecha es posterior al fin, intercambiar
-                    setTempStart(tempEnd);
-                    setTempEnd(dateStr);
-                    onDateChange({ start: tempEnd, end: dateStr });
-                }
-            } else {
-                // Más cerca del fin: ajustar fecha de fin
-                if (clickedTime >= startTime) {
-                    setTempEnd(dateStr);
-                    onDateChange({ start: tempStart, end: dateStr });
-                } else {
-                    // Si la nueva fecha es anterior al inicio, intercambiar
-                    setTempEnd(tempStart);
-                    setTempStart(dateStr);
-                    onDateChange({ start: dateStr, end: tempStart });
-                }
-            }
+            return;
+        }
+        
+        // Caso 3: Ya hay un rango completo -> reiniciar con nuevo inicio
+        if (tempStart && tempEnd) {
+            // Comportamiento simplificado: siempre reiniciar la selección
+            setTempStart(dateStr);
+            setTempEnd(null);
+            setIsSelectingRange(true);
         }
     };
 
     const handleClear = () => {
+        // Limpiar selección temporal (pero NO cerrar el dropdown)
         setTempStart(null);
         setTempEnd(null);
         setIsSelectingRange(false);
-        onDateChange({ start: null, end: null });
+        // NO llamar onDateChange aquí - solo limpia la UI del calendario
+        // El padre solo se entera cuando presionas "Aplicar" o cierras sin aplicar
     };
 
     const handleApply = () => {
         // Aplicar y cerrar
         if (tempStart && tempEnd) {
             onDateChange({ start: tempStart, end: tempEnd });
+            // Llamar al callback onApply si existe (para confirmar la aplicación del filtro)
+            if (onApply) {
+                onApply();
+            }
         }
         setIsOpen(false);
     };
 
     const handleToggleDropdown = () => {
         if (!isOpen) {
-            // Al abrir, cargar las fechas actuales
-            setTempStart(startDate);
-            setTempEnd(endDate);
+            // Al abrir, cargar las fechas actuales como estado temporal
+            setTempStart(startDate || null);
+            setTempEnd(endDate || null);
             setIsSelectingRange(!!startDate && !endDate);
+            
+            // Si hay fechas seleccionadas, navegar al mes de la fecha de inicio
+            if (startDate) {
+                const parsed = parseDate(startDate);
+                if (parsed) {
+                    setCurrentMonth(parsed.getMonth());
+                    setCurrentYear(parsed.getFullYear());
+                }
+            }
         }
         setIsOpen(!isOpen);
     };
@@ -371,6 +366,12 @@ export function DateRangeCalendar({
                                         inRange && { backgroundColor: c.brand.primaryLight },
                                         (isStart || isEnd) && {
                                             backgroundColor: c.brand.primary,
+                                        },
+                                        // Indicador visual para el primer día seleccionado (sin fin aún)
+                                        isStart && !tempEnd && {
+                                            backgroundColor: c.brand.primary,
+                                            borderWidth: 2,
+                                            borderColor: c.brand.primary + '80',
                                         }
                                     ]}
                                 >

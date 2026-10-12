@@ -15,7 +15,7 @@
 //  - STUDENT: Vista personal
 // ============================================================
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -49,6 +49,7 @@ import {
     getAcademicPeriodConfig,
     getConfiguredAcademicPeriodType
 } from "../core/constants/academicPeriods";
+import { onInstitutionConfigChange } from "../core/config/institutionConfig";
 
 // ──────────────────────────────────────────────────────────────
 // HELPERS
@@ -158,6 +159,19 @@ function SectionHeader({ title, subtitle, totalItems, maxItems, onSeeAll, colors
 // ──────────────────────────────────────────────────────────────
 
 function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
+    // Estado para el período académico (reactivo a cambios en Settings)
+    const [academicPeriod, setAcademicPeriod] = useState(() => getConfiguredAcademicPeriodType());
+    
+    // Escuchar cambios en la configuración institucional
+    useEffect(() => {
+        const cleanup = onInstitutionConfigChange((newConfig) => {
+            if (newConfig.academicPeriodType && newConfig.academicPeriodType !== academicPeriod) {
+                setAcademicPeriod(newConfig.academicPeriodType);
+            }
+        });
+        return cleanup;
+    }, [academicPeriod]);
+    
     // Hook para orquestar selección de semanas - DEBE ejecutarse siempre
     const {
         selectedWeek,
@@ -169,8 +183,7 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
         isCurrentWeek,
     } = useWeeklyAttendanceController(vm.attendanceByWeek, vm.attendanceByDay);
     
-    // Obtener período académico de la configuración (Settings)
-    const academicPeriod = getConfiguredAcademicPeriodType();
+    // Obtener subtítulo con el período académico reactivo
     const weeklySubtitle = getWeeklyTrendSubtitle(academicPeriod, t);
     
     // Early return DESPUÉS de todos los hooks
@@ -245,14 +258,14 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                             fontWeight: "700",
                             color: c.text.primary,
                         }}>
-                            {t("Mejores Fichas")} 🏆
+                            {t("Mejores Cursos")} 🏆
                         </Text>
                         <Text style={{
                             fontSize: 13,
                             color: c.text.secondary,
                             marginTop: 2,
                         }}>
-                            {t("Grupos con mejor asistencia")}
+                            {t("Cursos con mejor asistencia")}
                         </Text>
                     </View>
                     
@@ -273,14 +286,14 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                             fontWeight: "700",
                             color: c.text.primary,
                         }}>
-                            {t("Fichas que Necesitan Atención")} ⚠️
+                            {t("Cursos que Necesitan Atención")} ⚠️
                         </Text>
                         <Text style={{
                             fontSize: 13,
                             color: c.text.secondary,
                             marginTop: 2,
                         }}>
-                            {t("Grupos con menor asistencia")}
+                            {t("Cursos con menor asistencia")}
                         </Text>
                     </View>
                     
@@ -424,10 +437,22 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
 // ──────────────────────────────────────────────────────────────
 
 function TeacherDashboard({ vm, permissions, isSmall, c, t, navigation }) {
+    // Estado para el período académico (reactivo a cambios en Settings)
+    const [academicPeriod, setAcademicPeriod] = useState(() => getConfiguredAcademicPeriodType());
+    
+    // Escuchar cambios en la configuración institucional
+    useEffect(() => {
+        const cleanup = onInstitutionConfigChange((newConfig) => {
+            if (newConfig.academicPeriodType && newConfig.academicPeriodType !== academicPeriod) {
+                setAcademicPeriod(newConfig.academicPeriodType);
+            }
+        });
+        return cleanup;
+    }, [academicPeriod]);
+    
     if (!vm.teacherData) return null;
     
-    // Obtener período académico de la configuración (Settings)
-    const academicPeriod = getConfiguredAcademicPeriodType();
+    // Obtener subtítulo con el período académico reactivo
     const weeklySubtitle = getWeeklyTrendSubtitle(academicPeriod, t);
 
     return (
@@ -451,7 +476,7 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                 ))}
             </View>
 
-            {/* Mis fichas */}
+            {/* Mis cursos */}
             <View>
                 <Text style={{
                     fontSize: 16,
@@ -459,7 +484,7 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                     color: c.text.primary,
                     marginBottom: 12,
                 }}>
-                    {t("Mis Fichas")}
+                    {t("Mis Cursos")}
                 </Text>
                 
                 <TopPerformingGroups
@@ -488,7 +513,7 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                         color: c.text.secondary,
                         marginBottom: 16,
                     }}>
-                        {t("Mis fichas asignadas")}
+                        {t("Mis cursos asignados")}
                     </Text>
                     <View style={{ gap: 14 }}>
                         {vm.courseAttendance.map(item => (
@@ -534,7 +559,7 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                         color: c.text.primary,
                         marginBottom: 4,
                     }}>
-                        {t("Tendencia de mis fichas")}
+                        {t("Tendencia de mis cursos")}
                     </Text>
                     <Text style={{
                         fontSize: 12,
@@ -562,10 +587,10 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                 maxWeeks={5}
                 showTrend={false}
                 colorByPerformance={true}
-                weeklyTitle={t("Tendencia de mis fichas")}
+                weeklyTitle={t("Tendencia de mis cursos")}
                 weeklySubtitle={weeklySubtitle}
                 dailyTitle={t("Asistencia por día")}
-                currentWeekLabel={t("En mis fichas esta semana")}
+                currentWeekLabel={t("En mis cursos esta semana")}
                 isSmall={isSmall}
             />
 
@@ -600,6 +625,19 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t, navigation }) {
 // ──────────────────────────────────────────────────────────────
 
 function StudentDashboard({ vm, permissions, isSmall, c, t }) {
+    // Estado para el período académico (reactivo a cambios en Settings)
+    const [academicPeriod, setAcademicPeriod] = useState(() => getConfiguredAcademicPeriodType());
+    
+    // Escuchar cambios en la configuración institucional
+    useEffect(() => {
+        const cleanup = onInstitutionConfigChange((newConfig) => {
+            if (newConfig.academicPeriodType && newConfig.academicPeriodType !== academicPeriod) {
+                setAcademicPeriod(newConfig.academicPeriodType);
+            }
+        });
+        return cleanup;
+    }, [academicPeriod]);
+    
     // Hook para orquestar selección de semanas
     const {
         selectedWeek,
@@ -611,8 +649,7 @@ function StudentDashboard({ vm, permissions, isSmall, c, t }) {
         isCurrentWeek,
     } = useWeeklyAttendanceController(vm.attendanceByWeek, vm.attendanceByDay);
     
-    // Obtener período académico de la configuración (Settings)
-    const academicPeriod = getConfiguredAcademicPeriodType();
+    // Obtener subtítulo con el período académico reactivo
     const weeklySubtitle = getWeeklyTrendSubtitle(academicPeriod, t);
     
     // Early return DESPUÉS de todos los hooks

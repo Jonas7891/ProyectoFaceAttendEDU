@@ -59,6 +59,22 @@ export function useDateFormat() {
         },
         [config.dateFormat, config.timeFormat24h]
     );
+    
+    // Función para formatear fecha para inputs HTML (YYYY-MM-DD)
+    const formatDateForInput = useCallback(
+        (date) => {
+            if (!date) return "";
+            const d = new Date(date);
+            if (isNaN(d.getTime())) return "";
+            
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}`;
+        },
+        []
+    );
 
     return {
         dateFormat: config.dateFormat,
@@ -66,5 +82,6 @@ export function useDateFormat() {
         formatDate,
         formatTime,
         formatDateTime,
+        formatDateForInput,
     };
 }

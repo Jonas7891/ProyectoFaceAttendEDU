@@ -8,7 +8,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Button, AnimatedDropdown, BaseModal, TextInput } from "../../../components/common";
+import { Button, AnimatedDropdown, BaseModal, TextInput, DateInput } from "../../../components/common";
 import { useTheme } from "../../../components/hooks/useTheme";
 import { useResponsive } from "../../../components/hooks/useResponsive";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
@@ -54,13 +54,14 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
     const [success, setSuccess] = useState(false);
     const { formatDate } = useDateFormat();
 
-    // Calcular placeholders dinámicos basados en HOY y el período configurado
-    const [datePlaceholders, setDatePlaceholders] = useState({ start: "", end: "" });
+    // Calcular fechas automáticas y sus placeholders
+    const [datePlaceholders, setDatePlaceholders] = useState({ start: "", end: "", startInternal: "", endInternal: "" });
     
     useEffect(() => {
         // Fecha de inicio: HOY
         const today = new Date();
-        const startPlaceholder = formatDate(today);
+        const startInternal = today.toISOString().split('T')[0]; // YYYY-MM-DD (formato interno)
+        const startDisplay = formatDate(today); // Formato según configuración
         
         // Fecha de finalización: calculada según tipo de período
         const config = getInstitutionConfig();
@@ -74,9 +75,15 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
         const daysToAdd = periodConfig[config.academicPeriodType] || 90;
         const endDate = new Date(today);
         endDate.setDate(endDate.getDate() + daysToAdd);
-        const endPlaceholder = formatDate(endDate);
+        const endInternal = endDate.toISOString().split('T')[0]; // YYYY-MM-DD (formato interno)
+        const endDisplay = formatDate(endDate); // Formato según configuración
         
-        setDatePlaceholders({ start: startPlaceholder, end: endPlaceholder });
+        setDatePlaceholders({ 
+            start: startDisplay, 
+            end: endDisplay,
+            startInternal,
+            endInternal
+        });
     }, [formatDate]);
 
     const setField = (key, value) => {
@@ -118,11 +125,11 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
         const endDate = new Date(today);
         endDate.setDate(endDate.getDate() + daysToAdd);
 
-        // Preparar el formulario con las fechas calculadas
+        // Preparar el formulario con las fechas calculadas (usar formato interno si están vacías)
         const submissionForm = {
             ...form,
-            startDate: form.startDate.trim() || formatDate(today),
-            endDate: form.endDate.trim() || formatDate(endDate),
+            startDate: form.startDate.trim() || datePlaceholders.startInternal,
+            endDate: form.endDate.trim() || datePlaceholders.endInternal,
         };
 
         setSaving(true);
@@ -230,7 +237,7 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
             {/* Fechas */}
             <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
                 <View style={{ flex: 1 }}>
-                    <TextInput
+                    <DateInput
                         label={t("Fecha de inicio")}
                         value={form.startDate}
                         onChangeText={v => setField("startDate", v)}
@@ -239,7 +246,7 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
                     />
                 </View>
                 <View style={{ flex: 1 }}>
-                    <TextInput
+                    <DateInput
                         label={t("Fecha de finalización")}
                         value={form.endDate}
                         onChangeText={v => setField("endDate", v)}

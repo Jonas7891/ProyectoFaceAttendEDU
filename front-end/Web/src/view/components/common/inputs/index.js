@@ -4,6 +4,7 @@
 
 // Basic Inputs
 export { TextInput } from './TextInput';
+export { DateInput } from './DateInput';
 export { Select } from './Select';
 export { TextArea } from './TextArea';
 

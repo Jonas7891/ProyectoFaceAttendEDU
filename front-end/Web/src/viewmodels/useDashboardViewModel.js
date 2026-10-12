@@ -308,7 +308,7 @@ export function useDashboardViewModel() {
                 icon: "users",
             },
             {
-                label: t("Fichas activas"),
+                label: t("Cursos activos"),
                 value: `${activeFichas}/${totalFichas}`,
                 subtitle: problematicFichas > 0 ? `${problematicFichas} ${t("requieren atención")}` : t("Todas OK"),
                 color: problematicFichas > 0 ? c.status.warning : c.status.success,
@@ -682,25 +682,60 @@ export function useDashboardViewModel() {
         const perfectAttendanceStudents = getPerfectAttendanceStudents(students, minAttendanceThreshold);
         
         // Validaciones defensivas
-        if (!fichas || fichas.length === 0) return null;
+        if (!courses || courses.length === 0) return null;
+        
+        // ═══════════════════════════════════════════════════════════════════
+        // CALCULAR FICHAS REALES DINÁMICAMENTE DESDE CURSOS
+        // ═══════════════════════════════════════════════════════════════════
+        const realCoursesData = courses.map(course => {
+            // Obtener estudiantes de este curso
+            const courseStudents = students.filter(s => 
+                s.course === course.code || s.course === course.name || s.course === course.id
+            );
+            
+            // Calcular métricas del curso
+            const totalStudents = courseStudents.length;
+            const activeStudents = courseStudents.filter(s => s.status === "active").length;
+            const avgAttendance = totalStudents > 0
+                ? courseStudents.reduce((sum, s) => sum + (s.attendance || 0), 0) / totalStudents
+                : 0;
+            const atRiskCount = courseStudents.filter(s => s.attendance < minAttendanceThreshold).length;
+            
+            // Obtener instructor del curso
+            const instructor = teachers.find(t => t.id === course.instructor);
+            const instructorName = instructor ? instructor.name : "Sin asignar";
+            
+            return {
+                id: course.id,
+                code: course.code,
+                name: course.name,
+                program: course.name, // El nombre del curso es el programa
+                color: course.color || "#3B82F6",
+                instructor: instructorName,
+                totalStudents,
+                activeStudents,
+                avgAttendance,
+                atRiskStudents: atRiskCount,
+            };
+        });
 
         return {
             instructorAttendance: instructorAttendance || [],
-            fichas: fichas || [],
+            fichas: realCoursesData, // AHORA USA CURSOS REALES
             atRiskStudents: atRiskStudents || [],
             perfectAttendanceStudents: perfectAttendanceStudents || [],
             
-            // Top 5 fichas
-            topFichas: [...fichas]
-                .sort((a, b) => (b.avgAttendance || 0) - (a.avgAttendance || 0))
+            // Top 5 fichas (cursos con mejor asistencia)
+            topFichas: [...realCoursesData]
+                .sort((a, b) => b.avgAttendance - a.avgAttendance)
                 .slice(0, 5),
             
-            // Bottom 3 fichas
-            bottomFichas: [...fichas]
-                .sort((a, b) => (a.avgAttendance || 0) - (b.avgAttendance || 0))
+            // Bottom 3 fichas (cursos con peor asistencia)
+            bottomFichas: [...realCoursesData]
+                .sort((a, b) => a.avgAttendance - b.avgAttendance)
                 .slice(0, 3),
         };
-    }, [userRole, fichas, students, teachers, institutionConfig.minAttendance, institutionConfig.daysUntilSanction, institutionConfig.consecutiveDaysForSanction]);
+    }, [userRole, courses, students, teachers, institutionConfig.minAttendance, institutionConfig.daysUntilSanction, institutionConfig.consecutiveDaysForSanction]);
 
     // ── Datos específicos de TEACHER ──────────────────────────
 
@@ -714,21 +749,52 @@ export function useDashboardViewModel() {
         const atRiskStudents = getAtRiskStudents(students, minAttendanceThreshold);
         
         // Validaciones defensivas
-        if (!fichas || fichas.length === 0) return null;
+        if (!courses || courses.length === 0) return null;
 
-        // Mock: fichas del teacher
-        const teacherFichas = fichas.slice(0, 2);
+        // CALCULAR CURSOS DEL TEACHER DINÁMICAMENTE
+        // TODO: Filtrar por user.assignedCourses cuando esté implementado
+        const teacherCourses = courses.slice(0, 2).map(course => {
+            // Obtener estudiantes de este curso
+            const courseStudents = students.filter(s => 
+                s.course === course.code || s.course === course.name || s.course === course.id
+            );
+            
+            // Calcular métricas del curso
+            const totalStudents = courseStudents.length;
+            const activeStudents = courseStudents.filter(s => s.status === "active").length;
+            const avgAttendance = totalStudents > 0
+                ? courseStudents.reduce((sum, s) => sum + (s.attendance || 0), 0) / totalStudents
+                : 0;
+            const atRiskCount = courseStudents.filter(s => s.attendance < minAttendanceThreshold).length;
+            
+            // Obtener instructor del curso
+            const instructor = teachers.find(t => t.id === course.instructor);
+            const instructorName = instructor ? instructor.name : "Sin asignar";
+            
+            return {
+                id: course.id,
+                code: course.code,
+                name: course.name,
+                program: course.name,
+                color: course.color || "#3B82F6",
+                instructor: instructorName,
+                totalStudents,
+                activeStudents,
+                avgAttendance,
+                atRiskStudents: atRiskCount,
+            };
+        });
         
-        // Estudiantes en riesgo de las fichas del teacher
+        // Estudiantes en riesgo de los cursos del teacher
         const teacherAtRiskStudents = (atRiskStudents || []).filter(s =>
-            teacherFichas.some(f => f.code === s.ficha)
+            teacherCourses.some(c => c.code === s.course || c.code === s.ficha)
         );
 
         return {
-            myFichas: teacherFichas,
+            myFichas: teacherCourses,
             myAtRiskStudents: teacherAtRiskStudents,
         };
-    }, [userRole, fichas, students, institutionConfig.minAttendance, institutionConfig.daysUntilSanction, institutionConfig.consecutiveDaysForSanction]);
+    }, [userRole, courses, students, teachers, institutionConfig.minAttendance, institutionConfig.daysUntilSanction, institutionConfig.consecutiveDaysForSanction]);
 
     // ── Datos específicos de STUDENT ──────────────────────────
 

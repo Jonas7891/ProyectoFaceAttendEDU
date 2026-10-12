@@ -5,137 +5,21 @@
 //  de un usuario específico.
 // ============================================================
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, Modal, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Badge, Avatar, Button } from "../common";
+import { AnimatedDropdown } from "../common/animation/AnimatedDropdown";
 import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useDateFormat } from "../hooks/useDateFormat";
 import { useAppData } from "../../../context/AppDataContext";
-
-function AttendanceRecordRow({ record, index, isLast, theme }) {
-    const { formatDate } = useDateFormat();
-    const c = theme.colors;
-    
-    const statusConfig = {
-        present: {
-            variant: "success",
-            label: "Presente",
-            icon: "check-circle",
-            iconColor: c.status.success,
-        },
-        late: {
-            variant: "warning",
-            label: "Retardo",
-            icon: "alert-circle",
-            iconColor: c.status.warning,
-        },
-        absent: {
-            variant: "danger",
-            label: "Ausente",
-            icon: "x-circle",
-            iconColor: c.status.danger,
-        }
-    };
-    
-    const config = record.late ? statusConfig.late : (record.present ? statusConfig.present : statusConfig.absent);
-    
-    return (
-        <View
-            style={{
-                flexDirection: "row",
-                alignItems: "center",
-                padding: 16,
-                gap: 14,
-                borderBottomWidth: isLast ? 0 : 1,
-                borderBottomColor: c.border.primary,
-                backgroundColor: index % 2 === 0 ? c.background.surface : c.background.app,
-            }}
-        >
-            {/* Icono de estado */}
-            <View style={{
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                backgroundColor: config.iconColor + "20",
-                alignItems: "center",
-                justifyContent: "center",
-            }}>
-                <Feather name={config.icon} size={18} color={config.iconColor} />
-            </View>
-
-            {/* Información principal */}
-            <View style={{ flex: 1, gap: 6 }}>
-                {/* Fecha */}
-                <View style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 8,
-                }}>
-                    <Feather name="calendar" size={14} color={c.text.secondary} />
-                    <Text style={{
-                        fontSize: 15,
-                        fontWeight: "700",
-                        color: c.text.primary,
-                    }}>
-                        {formatDate(record.date, "DD/MM/YYYY")}
-                    </Text>
-                    <Text style={{ fontSize: 13, color: c.text.disabled }}>•</Text>
-                    <Text style={{
-                        fontSize: 14,
-                        color: c.text.secondary,
-                        fontWeight: "500",
-                    }}>
-                        {formatDate(record.date, "dddd")}
-                    </Text>
-                </View>
-
-                {/* Horarios */}
-                {record.present && (record.checkInTime || record.checkOutTime) && (
-                    <View style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 12,
-                        flexWrap: "wrap",
-                    }}>
-                        {record.checkInTime && (
-                            <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                                <Feather name="log-in" size={13} color={record.late ? c.status.warning : c.status.success} />
-                                <Text style={{
-                                    fontSize: 13,
-                                    color: record.late ? c.status.warning : c.text.secondary,
-                                    fontWeight: record.late ? "700" : "500",
-                                }}>
-                                    Entrada: {record.checkInTime}
-                                </Text>
-                            </View>
-                        )}
-                        
-                        {record.checkOutTime && (
-                            <>
-                                {record.checkInTime && (
-                                    <Text style={{ fontSize: 13, color: c.text.disabled, fontWeight: "600" }}>|</Text>
-                                )}
-                                <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                                    <Feather name="log-out" size={13} color={c.text.secondary} />
-                                    <Text style={{ fontSize: 13, color: c.text.secondary, fontWeight: "500" }}>
-                                        Salida: {record.checkOutTime}
-                                    </Text>
-                                </View>
-                            </>
-                        )}
-                    </View>
-                )}
-            </View>
-
-            {/* Badge de estado */}
-            <Badge variant={config.variant} size="sm">
-                {config.label}
-            </Badge>
-        </View>
-    );
-}
+import {
+    getConfiguredAcademicPeriodType,
+    getYearAcademicPeriodsByMonth,
+    formatPeriodLabel,
+} from "../../../core/constants/academicPeriods";
+import { onInstitutionConfigChange } from "../../../core/config/institutionConfig";
 
 export default function UserHistoryModal({
     user,
@@ -145,21 +29,207 @@ export default function UserHistoryModal({
     const { theme } = useTheme();
     const { t } = useTranslation();
     const { students, courses, environments } = useAppData();
+    const { formatDate } = useDateFormat();
     const c = theme.colors;
+
+    // Componente interno para renderizar cada registro de asistencia
+    function AttendanceRecordRow({ record, index, isLast }) {
+        const statusConfig = {
+            present: {
+                variant: "success",
+                label: "Presente",
+                icon: "check-circle",
+                iconColor: c.status.success,
+            },
+            late: {
+                variant: "warning",
+                label: "Retardo",
+                icon: "alert-circle",
+                iconColor: c.status.warning,
+            },
+            absent: {
+                variant: "danger",
+                label: "Ausente",
+                icon: "x-circle",
+                iconColor: c.status.danger,
+            }
+        };
+        
+        const config = record.late ? statusConfig.late : (record.present ? statusConfig.present : statusConfig.absent);
+        
+        return (
+            <View
+                style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    padding: 16,
+                    gap: 14,
+                    borderBottomWidth: isLast ? 0 : 1,
+                    borderBottomColor: c.border.primary,
+                    backgroundColor: index % 2 === 0 ? c.background.surface : c.background.app,
+                }}
+            >
+                {/* Icono de estado */}
+                <View style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    backgroundColor: config.iconColor + "20",
+                    alignItems: "center",
+                    justifyContent: "center",
+                }}>
+                    <Feather name={config.icon} size={18} color={config.iconColor} />
+                </View>
+
+                {/* Información principal */}
+                <View style={{ flex: 1, gap: 6 }}>
+                    {/* Fecha */}
+                    <View style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 8,
+                    }}>
+                        <Feather name="calendar" size={14} color={c.text.secondary} />
+                        <Text style={{
+                            fontSize: 15,
+                            fontWeight: "700",
+                            color: c.text.primary,
+                        }}>
+                            {formatDate(record.date, "DD/MM/YYYY")}
+                        </Text>
+                        <Text style={{ fontSize: 13, color: c.text.disabled }}>•</Text>
+                        <Text style={{
+                            fontSize: 14,
+                            color: c.text.secondary,
+                            fontWeight: "500",
+                        }}>
+                            {formatDate(record.date, "dddd")}
+                        </Text>
+                    </View>
+
+                    {/* Horarios */}
+                    {record.present && (record.checkInTime || record.checkOutTime) && (
+                        <View style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 12,
+                            flexWrap: "wrap",
+                        }}>
+                            {record.checkInTime && (
+                                <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                                    <Feather name="log-in" size={13} color={record.late ? c.status.warning : c.status.success} />
+                                    <Text style={{
+                                        fontSize: 13,
+                                        color: record.late ? c.status.warning : c.text.secondary,
+                                        fontWeight: record.late ? "700" : "500",
+                                    }}>
+                                        Entrada: {record.checkInTime}
+                                    </Text>
+                                </View>
+                            )}
+                            
+                            {record.checkOutTime && (
+                                <>
+                                    {record.checkInTime && (
+                                        <Text style={{ fontSize: 13, color: c.text.disabled, fontWeight: "600" }}>|</Text>
+                                    )}
+                                    <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                                        <Feather name="log-out" size={13} color={c.text.secondary} />
+                                        <Text style={{ fontSize: 13, color: c.text.secondary, fontWeight: "500" }}>
+                                            Salida: {record.checkOutTime}
+                                        </Text>
+                                    </View>
+                                </>
+                            )}
+                        </View>
+                    )}
+                </View>
+
+                {/* Badge de estado */}
+                <Badge variant={config.variant} size="sm">
+                    {config.label}
+                </Badge>
+            </View>
+        );
+    }
+
+    // Estado para el tipo de período académico (reactivo a cambios en Settings)
+    const [academicPeriodType, setAcademicPeriodType] = useState(() => getConfiguredAcademicPeriodType());
+    
+    // Escuchar cambios en la configuración institucional
+    useEffect(() => {
+        const cleanup = onInstitutionConfigChange((newConfig) => {
+            // Actualizar el tipo de período si cambió
+            if (newConfig.academicPeriodType && newConfig.academicPeriodType !== academicPeriodType) {
+                setAcademicPeriodType(newConfig.academicPeriodType);
+            }
+        });
+        
+        return cleanup;
+    }, [academicPeriodType]);
+    
+    // Obtener año actual
+    const currentYear = new Date().getFullYear();
+    
+    // Obtener todos los períodos del año vigente
+    const yearPeriods = useMemo(() => {
+        return getYearAcademicPeriodsByMonth(academicPeriodType, currentYear);
+    }, [academicPeriodType, currentYear]);
+    
+    // Encontrar el período actual
+    const currentPeriod = useMemo(() => {
+        return yearPeriods.find(p => p.isCurrent) || yearPeriods[0];
+    }, [yearPeriods]);
+    
+    // Estado para el período seleccionado
+    const [selectedPeriod, setSelectedPeriod] = useState(currentPeriod);
+    
+    // Actualizar el período seleccionado cuando cambian los yearPeriods o el tipo de período
+    useEffect(() => {
+        console.log('[UserHistoryModal] Actualizando período seleccionado:', {
+            academicPeriodType,
+            currentPeriod: currentPeriod?.label,
+            selectedPeriod: selectedPeriod?.label
+        });
+        
+        // SIEMPRE resetear al período actual cuando cambia el tipo de período académico
+        setSelectedPeriod(currentPeriod);
+    }, [academicPeriodType, currentPeriod]);
 
     // Obtener el estudiante completo con su historial
     const fullStudent = useMemo(() => {
-        return students.find(s => s.id === user.id);
-    }, [students, user.id]);
+        // Usar studentId si está disponible (para registros expandidos), sino user.id
+        const idToSearch = user.studentId || user.id;
+        return students.find(s => s.id === idToSearch);
+    }, [students, user.id, user.studentId]);
 
     // Obtener y ordenar el historial de asistencia (más reciente primero)
+    // Filtrado por el período seleccionado
     const attendanceHistory = useMemo(() => {
         if (!fullStudent?.attendanceHistory) return [];
         
-        return [...fullStudent.attendanceHistory].sort(
+        // Obtener todas las fechas del historial
+        let filteredHistory = [...fullStudent.attendanceHistory];
+        
+        // Si hay un período seleccionado, filtrar por las semanas del período
+        if (selectedPeriod) {
+            filteredHistory = filteredHistory.filter(record => {
+                const recordDate = new Date(record.date);
+                const yearStart = new Date(recordDate.getFullYear(), 0, 1);
+                
+                // Calcular número de semana del año para el registro
+                const dayOfYear = Math.floor((recordDate - yearStart) / (24 * 60 * 60 * 1000)) + 1;
+                const weekNumber = Math.ceil(dayOfYear / 7);
+                
+                // Verificar si la semana está dentro del rango del período seleccionado
+                return weekNumber >= selectedPeriod.startWeek && weekNumber <= selectedPeriod.endWeek;
+            });
+        }
+        
+        return filteredHistory.sort(
             (a, b) => new Date(b.date) - new Date(a.date)
         );
-    }, [fullStudent]);
+    }, [fullStudent, selectedPeriod]);
 
     // Calcular estadísticas
     const stats = useMemo(() => {
@@ -193,6 +263,25 @@ export default function UserHistoryModal({
             environment: environmentName,
         };
     }, [fullStudent, courses, environments]);
+
+    // Handler para cambio de período
+    const handlePeriodSelect = (periodId) => {
+        const period = yearPeriods.find(p => p.id === periodId);
+        if (period) {
+            setSelectedPeriod(period);
+        }
+    };
+
+    // Preparar items del dropdown con descripción de semanas e indicador de período actual
+    const dropdownItems = useMemo(() => {
+        return yearPeriods.map(period => ({
+            value: period.id,
+            label: period.isCurrent 
+                ? `${formatPeriodLabel(period, academicPeriodType)} • Actual`
+                : formatPeriodLabel(period, academicPeriodType),
+            description: `Semanas ${period.startWeek}-${period.endWeek}`,
+        }));
+    }, [yearPeriods, academicPeriodType]);
 
     if (!user || !fullStudent) return null;
 
@@ -387,12 +476,81 @@ export default function UserHistoryModal({
                         </View>
                     </View>
 
-                    {/* Lista de registros */}
+                    {/* Encabezado del historial con filtros - SIEMPRE visible */}
+                    <View style={{
+                        padding: 10,
+                        paddingHorizontal: 16,
+                        backgroundColor: c.background.surfaceVariant,
+                        borderBottomWidth: 1,
+                        borderBottomColor: c.border.primary,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 12,
+                        flexWrap: "nowrap",
+                    }}>
+                        {/* Título */}
+                        <Text 
+                            style={{
+                                fontSize: 13,
+                                fontWeight: "700",
+                                color: c.text.primary,
+                            }}
+                            numberOfLines={1}
+                        >
+                            Historial de asistencia ({attendanceHistory.length} {attendanceHistory.length === 1 ? 'registro' : 'registros'})
+                        </Text>
+                        
+                        {/* Filtro de período académico */}
+                        <View style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 10,
+                            flexShrink: 0,
+                        }}>
+                            <View style={{ alignItems: "flex-end", flexShrink: 0 }}>
+                                <Text 
+                                    style={{
+                                        fontSize: 10,
+                                        fontWeight: "600",
+                                        color: c.text.secondary,
+                                        whiteSpace: "nowrap",
+                                    }}
+                                    numberOfLines={1}
+                                >
+                                    Filtrar por período académico
+                                </Text>
+                                <Text 
+                                    style={{
+                                        fontSize: 9,
+                                        color: c.text.tertiary,
+                                        whiteSpace: "nowrap",
+                                    }}
+                                    numberOfLines={1}
+                                >
+                                    {selectedPeriod ? `Semanas ${selectedPeriod.startWeek}-${selectedPeriod.endWeek}` : ''}
+                                </Text>
+                            </View>
+                            <View style={{ width: 200, flexShrink: 0 }}>
+                                <AnimatedDropdown
+                                    items={dropdownItems}
+                                    value={selectedPeriod?.id}
+                                    onSelect={handlePeriodSelect}
+                                    placeholder="Selecciona período"
+                                    triggerHeight={32}
+                                    maxVisible={6}
+                                />
+                            </View>
+                        </View>
+                    </View>
+                    
+                    {/* Lista de registros o mensaje vacío */}
                     {attendanceHistory.length === 0 ? (
                         <View style={{
                             padding: 48,
                             alignItems: "center",
                             justifyContent: "center",
+                            minHeight: 285,
                         }}>
                             <Feather name="calendar" size={56} color={c.text.disabled} style={{ marginBottom: 16 }} />
                             <Text style={{
@@ -412,38 +570,19 @@ export default function UserHistoryModal({
                             </Text>
                         </View>
                     ) : (
-                        <>
-                            <View style={{
-                                padding: 10,
-                                paddingHorizontal: 16,
-                                backgroundColor: c.background.surfaceVariant,
-                                borderBottomWidth: 1,
-                                borderBottomColor: c.border.primary,
-                            }}>
-                                <Text style={{
-                                    fontSize: 13,
-                                    fontWeight: "700",
-                                    color: c.text.primary,
-                                }}>
-                                    Historial de asistencia ({attendanceHistory.length} {attendanceHistory.length === 1 ? 'registro' : 'registros'})
-                                </Text>
-                            </View>
-                            
-                            <ScrollView 
-                                style={{ maxHeight: 285 }}
-                                showsVerticalScrollIndicator={true}
-                            >
-                                {attendanceHistory.map((record, index) => (
-                                    <AttendanceRecordRow
-                                        key={`${record.date}-${index}`}
-                                        record={record}
-                                        index={index}
-                                        isLast={index === attendanceHistory.length - 1}
-                                        theme={theme}
-                                    />
-                                ))}
-                            </ScrollView>
-                        </>
+                        <ScrollView 
+                            style={{ maxHeight: 285 }}
+                            showsVerticalScrollIndicator={true}
+                        >
+                            {attendanceHistory.map((record, index) => (
+                                <AttendanceRecordRow
+                                    key={`${record.date}-${index}`}
+                                    record={record}
+                                    index={index}
+                                    isLast={index === attendanceHistory.length - 1}
+                                />
+                            ))}
+                        </ScrollView>
                     )}
 
                     {/* Footer */}

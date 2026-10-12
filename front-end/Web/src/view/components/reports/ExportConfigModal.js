@@ -7,7 +7,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Modal as RNModal } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Button } from "../common";
+import { Button, AnimatedDropdown } from "../common";
 import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 
@@ -16,24 +16,41 @@ export function ExportConfigModal({ visible, onClose, onExport, selectedCount })
     const { t } = useTranslation();
     const c = theme.colors;
 
-    const [exportExcel, setExportExcel] = useState(true);
-    const [exportPDF, setExportPDF] = useState(false);
+    const [exportFormat, setExportFormat] = useState("excel"); // "excel", "pdf", "both"
+    const [exportType, setExportType] = useState("simple"); // "simple" o "detailed"
+
+    const formatOptions = [
+        {
+            value: "excel",
+            label: t("Excel"),
+            description: t("Archivo .xlsx con datos tabulados"),
+            icon: "file-text",
+        },
+        {
+            value: "pdf",
+            label: t("PDF"),
+            description: t("Documento con formato de impresión"),
+            icon: "file",
+        },
+        {
+            value: "both",
+            label: t("Excel y PDF"),
+            description: t("Exportar ambos formatos"),
+            icon: "copy",
+        },
+    ];
 
     const handleExport = () => {
-        if (!exportExcel && !exportPDF) {
-            return; // No hacer nada si no hay formato seleccionado
-        }
-
         // Exportar según selección
-        if (exportExcel) {
-            onExport("excel");
-        }
-        if (exportPDF) {
-            onExport("pdf");
+        if (exportFormat === "excel") {
+            onExport("excel", exportType);
+        } else if (exportFormat === "pdf") {
+            onExport("pdf", exportType);
+        } else if (exportFormat === "both") {
+            onExport("excel", exportType);
+            onExport("pdf", exportType);
         }
     };
-
-    const canExport = exportExcel || exportPDF;
 
     return (
         <RNModal
@@ -113,6 +130,35 @@ export function ExportConfigModal({ visible, onClose, onExport, selectedCount })
 
                     {/* Body */}
                     <View style={{ padding: 24, gap: 20 }}>
+                        {/* Sección: Formato de exportación */}
+                        <View>
+                            <View style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                gap: 16,
+                            }}>
+                                <Text style={{
+                                    fontSize: 14,
+                                    fontWeight: "600",
+                                    color: c.text.primary,
+                                    flex: 1,
+                                }}>
+                                    {t("Selecciona el formato de exportación:")}
+                                </Text>
+
+                                <View style={{ width: 160 }}>
+                                    <AnimatedDropdown
+                                        items={formatOptions}
+                                        value={exportFormat}
+                                        onSelect={setExportFormat}
+                                        placeholder={t("Selecciona formato")}
+                                    />
+                                </View>
+                            </View>
+                        </View>
+
+                        {/* Sección: Tipo de exportación */}
                         <View>
                             <Text style={{
                                 fontSize: 14,
@@ -120,145 +166,130 @@ export function ExportConfigModal({ visible, onClose, onExport, selectedCount })
                                 color: c.text.primary,
                                 marginBottom: 12,
                             }}>
-                                {t("Selecciona el formato de exportación")}
+                                {t("Tipo de exportación")}
                             </Text>
 
-                            {/* Opción Excel */}
-                            <TouchableOpacity
-                                onPress={() => setExportExcel(!exportExcel)}
-                                style={{
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    padding: 16,
-                                    gap: 12,
-                                    borderRadius: 8,
-                                    borderWidth: 2,
-                                    borderColor: exportExcel ? c.status.success : c.border.primary,
-                                    backgroundColor: exportExcel ? c.status.success + "10" : "transparent",
-                                    marginBottom: 12,
-                                }}
-                            >
-                                {/* Checkbox */}
-                                <View style={{
-                                    width: 24,
-                                    height: 24,
-                                    borderRadius: 6,
-                                    borderWidth: 2,
-                                    borderColor: exportExcel ? c.status.success : c.border.primary,
-                                    backgroundColor: exportExcel ? c.status.success : "transparent",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}>
-                                    {exportExcel && <Feather name="check" size={16} color="#fff" />}
-                                </View>
-
-                                {/* Icono y texto */}
-                                <View style={{
-                                    width: 40,
-                                    height: 40,
-                                    borderRadius: 8,
-                                    backgroundColor: c.status.success + "20",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}>
-                                    <Feather name="file-text" size={20} color={c.status.success} />
-                                </View>
-
-                                <View style={{ flex: 1 }}>
-                                    <Text style={{
-                                        fontSize: 15,
-                                        fontWeight: "600",
-                                        color: c.text.primary,
-                                        marginBottom: 2,
-                                    }}>
-                                        {t("Exportar a Excel")}
-                                    </Text>
-                                    <Text style={{
-                                        fontSize: 13,
-                                        color: c.text.secondary,
-                                    }}>
-                                        {t("Archivo .xlsx con datos tabulados")}
-                                    </Text>
-                                </View>
-                            </TouchableOpacity>
-
-                            {/* Opción PDF */}
-                            <TouchableOpacity
-                                onPress={() => setExportPDF(!exportPDF)}
-                                style={{
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    padding: 16,
-                                    gap: 12,
-                                    borderRadius: 8,
-                                    borderWidth: 2,
-                                    borderColor: exportPDF ? c.status.danger : c.border.primary,
-                                    backgroundColor: exportPDF ? c.status.danger + "10" : "transparent",
-                                }}
-                            >
-                                {/* Checkbox */}
-                                <View style={{
-                                    width: 24,
-                                    height: 24,
-                                    borderRadius: 6,
-                                    borderWidth: 2,
-                                    borderColor: exportPDF ? c.status.danger : c.border.primary,
-                                    backgroundColor: exportPDF ? c.status.danger : "transparent",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}>
-                                    {exportPDF && <Feather name="check" size={16} color="#fff" />}
-                                </View>
-
-                                {/* Icono y texto */}
-                                <View style={{
-                                    width: 40,
-                                    height: 40,
-                                    borderRadius: 8,
-                                    backgroundColor: c.status.danger + "20",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}>
-                                    <Feather name="file" size={20} color={c.status.danger} />
-                                </View>
-
-                                <View style={{ flex: 1 }}>
-                                    <Text style={{
-                                        fontSize: 15,
-                                        fontWeight: "600",
-                                        color: c.text.primary,
-                                        marginBottom: 2,
-                                    }}>
-                                        {t("Exportar a PDF")}
-                                    </Text>
-                                    <Text style={{
-                                        fontSize: 13,
-                                        color: c.text.secondary,
-                                    }}>
-                                        {t("Documento con formato de impresión")}
-                                    </Text>
-                                </View>
-                            </TouchableOpacity>
-                        </View>
-
-                        {/* Info adicional */}
-                        <View style={{
-                            flexDirection: "row",
-                            alignItems: "flex-start",
-                            gap: 8,
-                            padding: 12,
-                            borderRadius: 8,
-                            backgroundColor: c.background.secondary,
-                        }}>
-                            <Feather name="info" size={16} color={c.primary} style={{ marginTop: 2 }} />
-                            <Text style={{
-                                flex: 1,
-                                fontSize: 12,
-                                color: c.text.secondary,
-                                lineHeight: 18,
+                            {/* Opciones de tipo de exportación */}
+                            <View style={{
+                                flexDirection: "row",
+                                gap: 12,
                             }}>
-                                {t("Puedes seleccionar ambos formatos para exportar simultáneamente")}
-                            </Text>
+                                {/* Opción Sencilla */}
+                                <TouchableOpacity
+                                    onPress={() => setExportType("simple")}
+                                    style={{
+                                        flex: 1,
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        padding: 14,
+                                        gap: 10,
+                                        borderRadius: 8,
+                                        borderWidth: 2,
+                                        borderColor: exportType === "simple" ? c.brand.primary : c.border.primary,
+                                        backgroundColor: exportType === "simple" ? c.brand.primary + "10" : "transparent",
+                                    }}
+                                >
+                                    {/* Radio button */}
+                                    <View style={{
+                                        width: 20,
+                                        height: 20,
+                                        borderRadius: 10,
+                                        borderWidth: 2,
+                                        borderColor: exportType === "simple" ? c.brand.primary : c.border.primary,
+                                        backgroundColor: "transparent",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                    }}>
+                                        {exportType === "simple" && (
+                                            <View style={{
+                                                width: 10,
+                                                height: 10,
+                                                borderRadius: 5,
+                                                backgroundColor: c.brand.primary,
+                                            }} />
+                                        )}
+                                    </View>
+
+                                    {/* Icono */}
+                                    <Feather name="list" size={18} color={exportType === "simple" ? c.brand.primary : c.text.secondary} />
+
+                                    {/* Texto */}
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={{
+                                            fontSize: 14,
+                                            fontWeight: "600",
+                                            color: c.text.primary,
+                                            marginBottom: 2,
+                                        }}>
+                                            {t("Exportación sencilla")}
+                                        </Text>
+                                        <Text style={{
+                                            fontSize: 12,
+                                            color: c.text.secondary,
+                                        }}>
+                                            {t("Tabla resumida con datos principales")}
+                                        </Text>
+                                    </View>
+                                </TouchableOpacity>
+
+                                {/* Opción Detallada */}
+                                <TouchableOpacity
+                                    onPress={() => setExportType("detailed")}
+                                    style={{
+                                        flex: 1,
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        padding: 14,
+                                        gap: 10,
+                                        borderRadius: 8,
+                                        borderWidth: 2,
+                                        borderColor: exportType === "detailed" ? c.brand.primary : c.border.primary,
+                                        backgroundColor: exportType === "detailed" ? c.brand.primary + "10" : "transparent",
+                                    }}
+                                >
+                                    {/* Radio button */}
+                                    <View style={{
+                                        width: 20,
+                                        height: 20,
+                                        borderRadius: 10,
+                                        borderWidth: 2,
+                                        borderColor: exportType === "detailed" ? c.brand.primary : c.border.primary,
+                                        backgroundColor: "transparent",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                    }}>
+                                        {exportType === "detailed" && (
+                                            <View style={{
+                                                width: 10,
+                                                height: 10,
+                                                borderRadius: 5,
+                                                backgroundColor: c.brand.primary,
+                                            }} />
+                                        )}
+                                    </View>
+
+                                    {/* Icono */}
+                                    <Feather name="clipboard" size={18} color={exportType === "detailed" ? c.brand.primary : c.text.secondary} />
+
+                                    {/* Texto */}
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={{
+                                            fontSize: 14,
+                                            fontWeight: "600",
+                                            color: c.text.primary,
+                                            marginBottom: 2,
+                                        }}>
+                                            {t("Exportación detallada")}
+                                        </Text>
+                                        <Text style={{
+                                            fontSize: 12,
+                                            color: c.text.secondary,
+                                        }}>
+                                            {t("Reporte completo con estadísticas")}
+                                        </Text>
+                                    </View>
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     </View>
 
@@ -281,7 +312,6 @@ export function ExportConfigModal({ visible, onClose, onExport, selectedCount })
                         <Button
                             variant="primary"
                             onPress={handleExport}
-                            disabled={!canExport}
                             style={{ flex: 1 }}
                             leftIcon={<Feather name="download" size={16} color="#fff" />}
                         >

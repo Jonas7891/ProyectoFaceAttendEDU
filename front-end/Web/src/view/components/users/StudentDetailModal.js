@@ -4,7 +4,7 @@
 //  Los botones de gestión se muestran según permisos.
 // ============================================================
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Badge, Avatar, Button, ProgressBar, useAttendanceColor } from "../common";
@@ -12,11 +12,12 @@ import { useTheme }       from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../../../context/AppDataContext";
 import { getAttendanceThresholds } from "../../../models/data/userDerivedData";
+import { onInstitutionConfigChange } from "../../../core/config/institutionConfig";
 import EditUserProfileModal from "./EditUserProfileModal";
 
 
 export default function StudentDetailModal({
-    student,
+    student: studentProp,
     onClose,
     canManage,
     canRegisterFace,
@@ -26,10 +27,40 @@ export default function StudentDetailModal({
     const { theme } = useTheme();
     const { t }     = useTranslation();
     const c         = theme.colors;
-    const { courses } = useAppData();
+    const { courses, students } = useAppData();
 
     // Estado para controlar la modal de edición
     const [showEditModal, setShowEditModal] = useState(false);
+    
+    // Estado para forzar re-render cuando cambia la configuración
+    const [configVersion, setConfigVersion] = useState(0);
+    
+    // Escuchar cambios en la configuración institucional
+    useEffect(() => {
+        const cleanup = onInstitutionConfigChange((newConfig) => {
+            console.log('[StudentDetailModal] Configuración cambió, forzando actualización');
+            setConfigVersion(prev => prev + 1);
+        });
+        return cleanup;
+    }, []);
+    
+    // IMPORTANTE: Obtener el estudiante actualizado del contexto en lugar de usar la prop directamente
+    // Esto asegura que el grade se actualice cuando cambie la configuración de período
+    const student = useMemo(() => {
+        if (!studentProp) return null;
+        // Buscar el estudiante en el contexto para obtener su grade actualizado
+        const updatedStudent = students.find(s => s.id === studentProp.id);
+        
+        console.log('[StudentDetailModal] Buscando estudiante actualizado:', {
+            propId: studentProp.id,
+            propGrade: studentProp.grade,
+            contextGrade: updatedStudent?.grade,
+            configVersion
+        });
+        
+        // Si lo encontramos, usarlo; sino, usar la prop original
+        return updatedStudent || studentProp;
+    }, [studentProp, students, configVersion]);
 
     const attColor = useAttendanceColor(student?.attendance ?? 0);
     const thresholds = getAttendanceThresholds();

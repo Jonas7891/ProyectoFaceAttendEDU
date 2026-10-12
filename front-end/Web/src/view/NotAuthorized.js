@@ -145,7 +145,7 @@ export function NotAuthorized({
         <View style={styles.container}>
             {/* Logo de fondo - MÁS GRANDE Y VISIBLE */}
             <Image
-                source={require("../assets/images/logoFaceAttend.png")}
+                source={require("../assets/images/logoFaceAttend.svg")}
                 style={styles.backgroundLogo}
                 resizeMode="contain"
             />

@@ -52,7 +52,7 @@ export default function AuthMobileLayout({ title, subtitle, children }) {
                             }}
                         >
                             <Image
-                                source={require("../../../assets/images/logoFaceAttend.png")}
+                                source={require("../../../assets/images/logoFaceAttend.svg")}
                                 style={{ width: 48, height: 48 }}
                                 resizeMode="contain"
                             />

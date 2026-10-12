@@ -256,7 +256,7 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLandi
             
             <View style={{ zIndex: 1, alignItems: "center", maxWidth: 440, paddingHorizontal: 32 }}>
                 <Image
-                    source={require("../assets/images/logoFaceAttend.png")}
+                    source={require("../assets/images/logoFaceAttend.svg")}
                     style={{ width: 250, height: 100, marginBottom: 32 }}
                     resizeMode="contain"
                 />
