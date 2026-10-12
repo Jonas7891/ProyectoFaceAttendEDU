@@ -13,6 +13,7 @@ import {
 import {useTheme} from '../components/common/ThemeContext';
 import {useTranslation} from 'react-i18next';
 import CustomAlert from '../components/common/CustomAlert';
+import BackButton from '../components/common/BackButton';
 import styles from './Styles/AttendanceReportScreen/Style';
 import {useAttendanceReportViewModel} from '../../viewmodels/useAttendanceReportViewModel';
 
@@ -215,13 +216,7 @@ export default function AttendanceReportScreen({ navigation }) {
 
             {/* ── HEADER ── */}
             <View style={[styles.headerReport, { backgroundColor: colors.background, borderBottomWidth: 1, borderBottomColor: colors.border }]}>
-                <TouchableOpacity
-                    style={[styles.headerBackButtonReport, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }]}
-                    onPress={() => navigation?.goBack()}
-                    activeOpacity={0.7}
-                >
-                    <Text style={[styles.headerBackTextReport, { color: colors.text }]}>‹</Text>
-                </TouchableOpacity>
+                <BackButton onPress={() => navigation?.goBack()} />
                 <Text style={[styles.headerTitleReport, {color: colors.text}]}>{t('attendanceReport.title')}</Text>
             </View>
 

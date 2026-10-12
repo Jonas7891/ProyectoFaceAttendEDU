@@ -19,6 +19,7 @@ import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import {useCustomAlert} from '../components/common/useCustomAlert';
 import CustomAlert from '../components/common/CustomAlert';
+import BackButton from '../components/common/BackButton';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import {useManageUsersViewModel} from '../../viewmodels/useManageUsersViewModel';
 import {validateEmail} from '../../utils/validators';
@@ -360,8 +361,9 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
             <SafeAreaView style={[styles.manageUsersContainer, {backgroundColor: colors.background}]}>
-                <View style={styles.manageUsersHeader}>
-                    <Text style={[styles.manageUsersTitle, {color: colors.text}]}>
+                <View style={[styles.manageUsersHeader, { flexDirection: 'row', alignItems: 'center', gap: 8 }]}>
+                    <BackButton onPress={handleBack} />
+                    <Text style={[styles.manageUsersTitle, {color: colors.text, flex: 1}]}>
                         {t('manageUsers.title')}
                     </Text>
                 </View>
@@ -420,10 +422,6 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                         </View>
                     )}
                 />
-
-                <View style={styles.manageUsersButtonContainer}>
-                    <PrimaryButton title={t('common.back')} onPress={handleBack}/>
-                </View>
 
                 {/* ===== MODAL ===== */}
                 <Modal
