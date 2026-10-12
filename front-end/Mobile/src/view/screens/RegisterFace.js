@@ -6,6 +6,7 @@ import {useTranslation} from 'react-i18next';
 import CustomLogo from '../components/common/logo';
 import CustomAlert from '../components/common/CustomAlert';
 import PrimaryButton from '../components/auth/PrimaryButton';
+import BackButton from '../components/common/BackButton';
 import styles from './Styles/RegisterFace/Style';
 import {useRegisterFaceScreenViewModel} from '../../viewmodels/useRegisterFaceScreenViewModel';
 
@@ -41,6 +42,7 @@ export default function RegisterFace() {
         <SafeAreaView style={styles.safeAreaRegisterFace}>
             <View style={styles.registerFaceContainer}>
                 <View style={styles.registerFaceHeader}>
+                    <BackButton onPress={handleBack} />
                     <Text style={styles.registerFaceTitle}>{t('registerFace.title')}</Text>
                     <CustomLogo size="small" rounded={true} backgroundColor="#000000" marginBottom={-2}/>
                 </View>
@@ -107,15 +109,6 @@ export default function RegisterFace() {
                         </TouchableOpacity>
                     )}
                 </View>
-
-                {!capturedPhoto && (
-                    <View style={styles.registerFaceFooter}>
-                        <PrimaryButton
-                            title={t('common.back')}
-                            onPress={handleBack}
-                        />
-                    </View>
-                )}
             </View>
 
             <CustomAlert

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import {useTranslation} from 'react-i18next';
 import PrimaryButton from '../components/auth/PrimaryButton';
+import BackButton from '../components/common/BackButton';
 import Separador from '../components/common/Separador';
 import styles from './Styles/AddJustifyScreen/Style';
 import {useTheme} from '../components/common/ThemeContext';
@@ -51,6 +52,7 @@ export default function AddJustification() {
               showsVerticalScrollIndicator={false}
           >
             <View style={styles.containerAddJustification}>
+              <BackButton onPress={handleBack} />
               <Text style={[styles.mainTitleAddJustification, { color: colors.text }]}>
                 {t('justify.title')}
               </Text>
@@ -182,12 +184,6 @@ export default function AddJustification() {
                     isLoading={isLoading}
                 />
               </View>
-
-              <TouchableOpacity onPress={handleBack} style={styles.secondaryButton}>
-                <Text style={[styles.secondaryButtonText, { color: colors.textSecondary }]}>
-                  {t('common.back')}
-                </Text>
-              </TouchableOpacity>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
