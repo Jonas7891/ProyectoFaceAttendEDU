@@ -533,7 +533,9 @@
     "faceRecognizedMsg": "Seu rosto foi reconhecido com sucesso hoje às 08:15",
     "attendanceReminderDesc": "Não se esqueça de registrar sua presença por reconhecimento facial.",
     "myCourses": "Meus cursos",
-    "myCoursesDesc": "Consulte sua turma e seus cursos"
+    "myCoursesDesc": "Consulte sua turma e seus cursos",
+    "myJustifications": "Justificativas",
+    "myJustificationsDesc": "Envie e consulte suas justificativas"
   },
   "courses": {
     "title": "Meus cursos",
@@ -545,6 +547,16 @@
     "empty": "Você não tem turmas atribuídas",
     "loadError": "Não foi possível carregar seus cursos",
     "retry": "Tentar novamente"
+  },
+  "schools": {
+    "title": "Escolas",
+    "subtitle": "Unidades da instituição",
+    "programs": "Programas",
+    "empty": "Nenhuma escola registrada",
+    "loadError": "Não foi possível carregar as escolas",
+    "retry": "Tentar novamente",
+    "active": "Ativa",
+    "inactive": "Inativa"
   },
   "subjects": {
     "math": "Matemática",

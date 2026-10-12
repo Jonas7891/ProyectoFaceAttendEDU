@@ -533,7 +533,9 @@
     "faceRecognizedMsg": "Your face was successfully recognized today at 08:15 AM",
     "attendanceReminderDesc": "Don't forget to register your attendance by facial recognition.",
     "myCourses": "My courses",
-    "myCoursesDesc": "View your cohort and courses"
+    "myCoursesDesc": "View your cohort and courses",
+    "myJustifications": "Justifications",
+    "myJustificationsDesc": "Submit and review your justifications"
   },
   "courses": {
     "title": "My courses",
@@ -545,6 +547,16 @@
     "empty": "You have no assigned cohorts",
     "loadError": "Could not load your courses",
     "retry": "Retry"
+  },
+  "schools": {
+    "title": "Schools",
+    "subtitle": "Institution sites",
+    "programs": "Programs",
+    "empty": "No schools registered",
+    "loadError": "Could not load schools",
+    "retry": "Retry",
+    "active": "Active",
+    "inactive": "Inactive"
   },
   "subjects": {
     "math": "Math",

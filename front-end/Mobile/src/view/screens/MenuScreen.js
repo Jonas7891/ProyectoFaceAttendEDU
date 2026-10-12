@@ -36,6 +36,7 @@ export default function MenuScreen({ onLogout }) {
     const {
         isLoading,
         isAdmin,
+        isSuperAdmin,
         updateKey,
         handleLogout: originalHandleLogout,
         navigateTo,
@@ -154,6 +155,13 @@ export default function MenuScreen({ onLogout }) {
                                     <MenuItem
                                         label={t('menu.facialRecognitionFail')}
                                         onPress={handleFacialFail}
+                                    />
+                                )}
+
+                                {isSuperAdmin && (
+                                    <MenuItem
+                                        label={t('schools.title')}
+                                        onPress={() => navigateTo("Schools")}
                                     />
                                 )}
 

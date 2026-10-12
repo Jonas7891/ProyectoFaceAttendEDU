@@ -27,6 +27,7 @@ import VerifyCodeScreen from "../view/screens/login/Verifycodescreen";
 import ForgotPasswordScreen from "../view/screens/login/Forgotpasswordscreen";
 import PendingJustificationScreen from "../view/screens/PendingJustificationScreen";
 import ManageEnviromentScreen from "../view/screens/ManageEnviromentScreen";
+import SchoolsScreen from "../view/screens/SchoolsScreen";
 import RegisterFace from "../view/screens/RegisterFace";
 import MyCoursesScreen from "../view/screens/MyCoursesScreen";
 import {SuccessScreen} from "../view/components/auth/SuccessScreen";
@@ -231,6 +232,7 @@ export default function App() {
                             )}
                         </Stack.Screen>
                         <Stack.Screen name="AttendanceReportScreen" component={AttendanceReportScreen}/>
+                        <Stack.Screen name="Schools" component={SchoolsScreen}/>
                         <Stack.Screen name="SchoolConfigurationScreen" component={SchoolConfigurationScreen}/>
                         <Stack.Screen name="PendingJustificationScreen" component={PendingJustificationScreen}/>
                         <Stack.Screen name="RegisterFace" component={RegisterFace} />

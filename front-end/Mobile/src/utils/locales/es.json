@@ -533,7 +533,9 @@
     "present": "Presente",
     "seeAll": "Ver historial",
     "myCourses": "Mis cursos",
-    "myCoursesDesc": "Consulta tu ficha y tus cursos"
+    "myCoursesDesc": "Consulta tu ficha y tus cursos",
+    "myJustifications": "Justificaciones",
+    "myJustificationsDesc": "Envía y consulta tus justificaciones"
   },
   "courses": {
     "title": "Mis cursos",
@@ -545,6 +547,16 @@
     "empty": "No tienes fichas asignadas",
     "loadError": "No se pudieron cargar tus cursos",
     "retry": "Reintentar"
+  },
+  "schools": {
+    "title": "Escuelas",
+    "subtitle": "Sedes de la institución",
+    "programs": "Programas",
+    "empty": "No hay sedes registradas",
+    "loadError": "No se pudieron cargar las sedes",
+    "retry": "Reintentar",
+    "active": "Activa",
+    "inactive": "Inactiva"
   },
   "subjects": {
     "math": "Matemáticas",

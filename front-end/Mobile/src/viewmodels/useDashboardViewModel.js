@@ -3,7 +3,7 @@ import {useTranslation} from 'react-i18next';
 import {useTheme} from '../view/components/common/ThemeContext';
 import {getHighestRole} from '../utils/getHighestRole';
 import {useFocusEffect} from '@react-navigation/native';
-import {getCurrentUserRole, getCurrentUser} from "../services/UserService";
+import {getCurrentUserRole, getCurrentUser, isSuperAdmin as checkIsSuperAdmin} from "../services/UserService";
 import {ActorService} from '../services/ActorService';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 import {backendGet} from '../api/backend';
@@ -121,6 +121,7 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
     const {colors, loadThemeForRole, toggleTheme, theme} = useTheme();
 
     const [userRole, setUserRole] = useState(propUserRole || null);
+    const [isSuperAdmin, setIsSuperAdmin] = useState(false);
     const updateKey = useLanguageRefresh();
     const [isLoading, setIsLoading] = useState(false);
 
@@ -168,6 +169,9 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
             if (role) {
                 await loadThemeForRole(role);
             }
+            try {
+                setIsSuperAdmin(await checkIsSuperAdmin());
+            } catch {}
         } catch (error) {
             console.error('Error cargando datos de usuario:', error);
         }
@@ -358,12 +362,16 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
         { id: 1, title: t('dashboard.manageUsers'), description: t('dashboard.manageUsersDesc'), color: '#E91E63', screen: 'ManageUsersScreen' },
         { id: 2, title: t('dashboard.environmentManagement'), description: t('dashboard.manageEnvironmentDesc'), color: '#1e58e9', screen: 'ManageEnviromentScreen' },
         { id: 3, title: t('dashboard.reports'), description: t('dashboard.reportsDesc'), color: '#FF9800', screen: 'AttendanceReportScreen' },
+        ...(isSuperAdmin
+            ? [{ id: 4, title: t('schools.title'), description: t('schools.subtitle'), color: '#673AB7', screen: 'Schools' }]
+            : []),
     ];
     const menuAccionesEstudiante = [
         { id: 1, title: t('student.registerFace'), description: t('student.registerFaceDesc'), color: '#4CAF50', screen: 'RegisterFace' },
         { id: 2, title: t('student.myAttendance'), description: t('student.myAttendanceDesc'), color: '#2196F3', screen: 'DisplayingAttendance' },
         { id: 3, title: t('student.myCourses'), description: t('student.myCoursesDesc'), color: '#9C27B0', screen: 'MyCourses' },
-        { id: 4, title: t('student.UpdateFace'), description: t('student.UpdateFaceDesc'), color: '#f32152', screen: 'UpdatePhoto' },
+        { id: 4, title: t('student.myJustifications'), description: t('student.myJustificationsDesc'), color: '#FF9800', screen: 'MenuJustify' },
+        { id: 5, title: t('student.UpdateFace'), description: t('student.UpdateFaceDesc'), color: '#f32152', screen: 'UpdatePhoto' },
     ];
     const menuAccionesDocente = [
         { id: 1, title: t('teacher.updateFace'), description: t('teacher.updateFaceDesc'), color: '#2196F3', screen: 'UpdatePhoto' },
@@ -385,7 +393,7 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
     };
 
     return {
-        userRole, isAdmin, isTeacher, updateKey, isLoading, formattedDate,
+        userRole, isAdmin, isTeacher, isSuperAdmin, updateKey, isLoading, formattedDate,
         menuAcciones, novedades, attendance, attendanceLabel,
         adminStats, studentStats, teacherStats,
         asistenciasRecientes, misRegistrosRecientes,

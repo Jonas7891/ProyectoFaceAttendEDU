@@ -533,7 +533,9 @@
     "faceRecognizedMsg": "Votre visage a été reconnu avec succès aujourd'hui à 08h15",
     "attendanceReminderDesc": "N'oubliez pas d'enregistrer votre présence par reconnaissance faciale.",
     "myCourses": "Mes cours",
-    "myCoursesDesc": "Consultez votre cohorte et vos cours"
+    "myCoursesDesc": "Consultez votre cohorte et vos cours",
+    "myJustifications": "Justifications",
+    "myJustificationsDesc": "Soumettez et consultez vos justifications"
   },
   "courses": {
     "title": "Mes cours",
@@ -545,6 +547,16 @@
     "empty": "Aucune cohorte assignée",
     "loadError": "Impossible de charger vos cours",
     "retry": "Réessayer"
+  },
+  "schools": {
+    "title": "Établissements",
+    "subtitle": "Sites de l'institution",
+    "programs": "Programmes",
+    "empty": "Aucun établissement enregistré",
+    "loadError": "Impossible de charger les établissements",
+    "retry": "Réessayer",
+    "active": "Actif",
+    "inactive": "Inactif"
   },
   "subjects": {
     "math": "Mathématiques",

@@ -99,6 +99,28 @@ export const getCurrentUserRole = async () => {
   }
 };
 
+// Roles crudos del perfil (nombres del backend, p. ej. "Super Administrador").
+// El rol canónico guardado en 'userRole' no distingue super admin de admin de
+// sede; para eso se miran los nombres originales, en espejo de
+// Web/src/core/utils/backendRoles.js (hasSuperAdminRole).
+const SUPER_ADMIN_KEYS = new Set(['SUPER_ADMINISTRADOR', 'SUPER_ADMIN']);
+
+export const getUserProfileRoles = async () => {
+  try {
+    const profile = await readStoredProfile();
+    return Array.isArray(profile?.roles) ? profile.roles : [];
+  } catch {
+    return [];
+  }
+};
+
+export const isSuperAdmin = async () => {
+  const roles = await getUserProfileRoles();
+  return roles.some((r) =>
+    SUPER_ADMIN_KEYS.has(String(r ?? '').trim().replace(/\s+/g, '_').toUpperCase())
+  );
+};
+
 export const getUserByEmail = async (email) => {
   const normalized = (email || '').toLowerCase().trim();
   if (!normalized) return null;
