@@ -497,6 +497,8 @@
     "attendanceLabel": "Presença dos meus grupos",
     "attendanceRecorded": "Presença registrada",
     "newJustification": "Nova justificativa",
+    "myCourses": "Meus cursos",
+    "myCoursesDesc": "Consulte suas turmas e cursos atribuídos",
     "justificationMathMsg": "Juan Pérez enviou uma justificativa para a aula de Matemática.",
     "attendanceGroupMsg": "A presença do grupo 10-A foi registrada com sucesso.",
     "late": "Atrasado",

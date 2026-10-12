@@ -501,7 +501,9 @@
     "newJustification": "Nouvelle justification",
     "late": "En retard",
     "present": "Présent",
-    "seeAll": "Voir tout"
+    "seeAll": "Voir tout",
+    "myCourses": "Mes cours",
+    "myCoursesDesc": "Consultez vos cohortes et cours assignés"
   },
   "student": {
     "greeting": "Bonjour étudiant",

@@ -81,6 +81,32 @@ async function fetchStudentFichas(actor) {
   return bundles.filter(Boolean);
 }
 
+async function fetchTeacherFichas(actor) {
+  const actorId = pick(actor, "academicActorId", "academic_actor_id");
+  if (!actorId) return [];
+  const blocks =
+    (await safe(backendGet(SCHED(), "api/v1/schedule-blocks", { instructorActorId: actorId }))) ?? [];
+  const cohortIds = [
+    ...new Set(
+      (Array.isArray(blocks) ? blocks : [])
+        .map((b) => b.cohort_id ?? b.cohortId)
+        .filter(Boolean)
+    ),
+  ];
+  const bundles = await Promise.all(
+    cohortIds.map(async (cohortId) => {
+      const bundle = await fetchCohortBundle(cohortId);
+      if (!bundle) return null;
+      const students = await safe(backendGet(ACAD(), `api/v1/cohorts/${cohortId}/enrollments`));
+      return {
+        ...bundle,
+        studentsCount: Array.isArray(students) ? students.length : 0,
+      };
+    })
+  );
+  return bundles.filter(Boolean);
+}
+
 function resolveRole(storedRole) {
   let canonical = storedRole;
   try {
@@ -105,7 +131,6 @@ export function useMyCoursesViewModel() {
     setError(null);
     try {
       const storedRole = await getCurrentUserRole();
-      setRole(resolveRole(storedRole));
 
       const user = await getCurrentUser();
       const actors = user?.personId ? await ActorService.getByPerson(user.personId) : [];
@@ -114,7 +139,13 @@ export function useMyCoursesViewModel() {
         setFichas([]);
         return;
       }
-      setFichas(await fetchStudentFichas(myActor));
+      const currentRole = resolveRole(storedRole);
+      setRole(currentRole);
+      setFichas(
+        currentRole === "teacher"
+          ? await fetchTeacherFichas(myActor)
+          : await fetchStudentFichas(myActor)
+      );
     } catch (e) {
       setError(t("courses.loadError"));
     } finally {

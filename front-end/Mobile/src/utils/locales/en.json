@@ -501,7 +501,9 @@
     "attendanceGroupMsg": "Attendance for group 10-A was successfully recorded.",
     "attendanceLabel": "Attendance for my groups",
     "attendanceRecorded": "Attendance Recorded",
-    "newJustification": "New Justification"
+    "newJustification": "New Justification",
+    "myCourses": "My courses",
+    "myCoursesDesc": "View your assigned cohorts and courses"
   },
   "student": {
     "greeting": "Hello student",

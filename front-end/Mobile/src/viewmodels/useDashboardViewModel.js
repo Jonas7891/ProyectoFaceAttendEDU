@@ -359,8 +359,9 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
     const menuAccionesDocente = [
         { id: 1, title: t('teacher.updateFace'), description: t('teacher.updateFaceDesc'), color: '#2196F3', screen: 'UpdatePhoto' },
         { id: 2, title: t('teacher.myAttendance'), description: t('teacher.myAttendanceDesc'), color: '#4CAF50', screen: 'DisplayingAttendance' },
-        { id: 3, title: t('teacher.pendingJustifications'), description: t('teacher.pendingJustificationsDesc'), color: '#FF9800', screen: 'PendingJustificationScreen' },
-        { id: 4, title: t('student.registerFace'), description: t('student.registerFaceDesc'), color: '#4CAF50', screen: 'RegisterFace' },
+        { id: 3, title: t('teacher.myCourses'), description: t('teacher.myCoursesDesc'), color: '#9C27B0', screen: 'MyCourses' },
+        { id: 4, title: t('teacher.pendingJustifications'), description: t('teacher.pendingJustificationsDesc'), color: '#FF9800', screen: 'PendingJustificationScreen' },
+        { id: 5, title: t('student.registerFace'), description: t('student.registerFaceDesc'), color: '#4CAF50', screen: 'RegisterFace' },
     ];
 
     const menuAcciones = isAdmin ? menuAccionesAdmin : isTeacher ? menuAccionesDocente : menuAccionesEstudiante;

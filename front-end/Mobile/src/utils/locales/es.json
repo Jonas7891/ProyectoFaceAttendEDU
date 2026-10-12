@@ -501,7 +501,9 @@
     "newJustification": "Nueva Justificación",
     "late": "Tarde",
     "present": "Presente",
-    "seeAll": "Ver todos"
+    "seeAll": "Ver todos",
+    "myCourses": "Mis cursos",
+    "myCoursesDesc": "Consulta tus fichas y cursos asignados"
   },
   "student": {
     "greeting": "Hola Estudiante",

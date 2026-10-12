@@ -165,10 +165,12 @@ export default function MenuScreen({ onLogout }) {
                                     />
                                 )}
 
-                                <MenuItem
-                                    label={t('menu.schoolConfiguration')}
-                                    onPress={handleSchool}
-                                />
+                                {isAdmin && (
+                                    <MenuItem
+                                        label={t('menu.schoolConfiguration')}
+                                        onPress={handleSchool}
+                                    />
+                                )}
 
                                 <DangerButton
                                     title={isLoading ? t('menu.loggingOut') : t('menu.logout')}
