@@ -94,14 +94,14 @@ export const usePendingJustificationViewModel = () => {
                     records = [];
                 }
             } else if (normalizedRole === USER_ROLE.TEACHER) {
-                // Para teachers: traer solo Pending + Approved, sin mezclarlas
-                const all = await JustificationService.getAll();
-                records = all.filter(j => {
-                    const jd = j?.justificationId !== undefined ? {
-                        reviewStatus: j.reviewStatus ?? j.review_status,
-                    } : j;
-                    return ['Pending', 'Approved'].includes(jd.reviewStatus);
-                });
+                // Para teachers: solo Pending + Approved, pedidas en paralelo.
+                // Antes se descargaba TODO (getAll) y se filtraba en el
+                // dispositivo, lo que colgaba la pantalla con volumen.
+                const [pending, approved] = await Promise.all([
+                    JustificationService.getByStatus('Pending'),
+                    JustificationService.getByStatus('Approved'),
+                ]);
+                records = [...pending, ...approved];
             } else {
                 // ADMIN: traer todas
                 records = await JustificationService.getAll();
