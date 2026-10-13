@@ -14,6 +14,8 @@ import pytest
 from fastapi import WebSocketDisconnect
 from fastapi.testclient import TestClient
 
+import infrastructure.config.dependencies as dependencies
+import infrastructure.web.routers.facial_router as facial_router
 from domain.value_objects.biometric_type import BiometricType
 from infrastructure.config.dependencies import (
     get_facial_repository,
@@ -36,6 +38,9 @@ PERSON = "550e8400-e29b-41d4-a716-446655440000"
 UNIT_VECTOR = [1.0, 0.0, 0.0, 0.0]
 
 WS_PATH = "/api/v1/biometric/ws"
+FACIAL_PREFIX = "/api/v1/biometric/facial"
+FAKE_IMAGE = "aGVsbG8="  # never decoded: decode_image is monkeypatched in these tests
+LIVENESS_SECRET = "test-liveness-secret"
 
 ADMIN = "11111111-1111-1111-1111-111111111111"
 STUDENT = "22222222-2222-2222-2222-222222222222"
@@ -79,6 +84,8 @@ def client(monkeypatch, stores):
     a test can prove both channels run the same business layer on the same
     data (`TestRestAndWebSocketCoexistence`)."""
     monkeypatch.setenv("BIOMETRIC_MONGO_ENABLED", "false")
+    monkeypatch.setenv("BIOMETRIC_LIVENESS_CHALLENGE_SECRET", LIVENESS_SECRET)
+    dependencies._rate_limiters.clear()
     get_settings.cache_clear()
 
     app.dependency_overrides[get_facial_repository] = lambda: stores["facial"]
@@ -381,3 +388,40 @@ class TestWebSocketAuthentication:
             _send(ws, ws_router.PING)
             pong = ws.receive_json()
         assert pong["type"] == "pong"
+
+
+class TestFacialImageOverWebSocket:
+    def _completed_liveness_token(self, client, monkeypatch) -> str:
+        monkeypatch.setattr(facial_router, "decode_image", lambda data, max_bytes, max_pixels: "decoded")
+        monkeypatch.setattr(facial_router, "validate_liveness", lambda images, action: True)
+        challenge = client.get(f"{FACIAL_PREFIX}/liveness-challenge", params={"actions": 2}).json()
+        token = challenge["challenge_token"]
+        for step in range(len(challenge["actions"])):
+            response = client.post(
+                f"{FACIAL_PREFIX}/liveness-step",
+                json={"challenge_token": token, "action_index": step, "images": [FAKE_IMAGE] * 6},
+            )
+            assert response.status_code == 200, response.json()
+            token = response.json()["challenge_token"]
+        return token
+
+    def test_identify_image_ack_matches_the_rest_response_shape(self, client, monkeypatch):
+        monkeypatch.setattr(facial_router, "face_encoding", lambda image: UNIT_VECTOR)
+        # Enrolling over the vector REST endpoint (no liveness) leaves an active
+        # template whose encoding is the same UNIT_VECTOR face_encoding returns.
+        client.post(f"{FACIAL_PREFIX}/enroll", json={"person_id": PERSON, "encoding": UNIT_VECTOR})
+        token = self._completed_liveness_token(client, monkeypatch)
+
+        with client.websocket_connect(WS_PATH) as ws:
+            _send(
+                ws,
+                "facial.identify_image",
+                {"image_base64": FAKE_IMAGE, "challenge_token": token},
+                client_message_id="c1",
+            )
+            ack = ws.receive_json()
+
+        assert ack["type"] == "facial.identify_image.ack"
+        assert ack["client_message_id"] == "c1"
+        assert ack["result"]["person_id"] == PERSON
+        assert ack["result"]["score"] == pytest.approx(1.0)
