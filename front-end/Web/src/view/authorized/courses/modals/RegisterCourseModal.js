@@ -13,8 +13,10 @@ import { useTheme } from "../../../components/hooks/useTheme";
 import { useResponsive } from "../../../components/hooks/useResponsive";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../../../../context/AppDataContext";
+import { useAuth } from "../../../../context/AuthContext";
 import { useDateFormat } from "../../../../core/utils/hooks/useDateFormat";
 import { getInstitutionConfig } from "../../../../core/config/institutionConfig";
+import { listSchoolPrograms } from "../../../../services/api/courseCreation";
 import {
     EMPTY_COURSE_FORM,
     validateCourseForm,
@@ -52,6 +54,31 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
     const [showErrors, setShowErrors] = useState(false);
     const [success, setSuccess] = useState(false);
     const { formatDate } = useDateFormat();
+    const { user } = useAuth();
+
+    // Programas de la sede (el backend exige program_id para crear el curso).
+    const [schoolPrograms, setSchoolPrograms] = useState([]);
+    const [programsError, setProgramsError] = useState(null);
+
+    useEffect(() => {
+        if (!visible) return;
+        let cancelled = false;
+        setProgramsError(null);
+        listSchoolPrograms(user?.schoolId ?? null).then(
+            (list) => {
+                if (!cancelled) setSchoolPrograms(list);
+            },
+            (e) => {
+                if (!cancelled) {
+                    setSchoolPrograms([]);
+                    setProgramsError(e?.message || "No se pudieron cargar los programas");
+                }
+            }
+        );
+        return () => {
+            cancelled = true;
+        };
+    }, [visible, user?.schoolId]);
 
     // Calcular placeholders dinámicos basados en HOY y el período configurado
     const [datePlaceholders, setDatePlaceholders] = useState({ start: "", end: "" });
@@ -78,10 +105,10 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
         setDatePlaceholders({ start: startPlaceholder, end: endPlaceholder });
     }, [formatDate]);
 
-    // Programas disponibles desde el contexto
-    const programItems = appData.programs.map((p) => ({
-        value: p.name,
-        label: p.name,
+    // Programas disponibles de la sede (fuente: backend, con ID canónico).
+    const programItems = schoolPrograms.map((p) => ({
+        value: String(p.programId),
+        label: p.code ? `${p.code} — ${p.name}` : p.name,
         icon: "book-open",
     }));
 
@@ -225,6 +252,34 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
                         style={{ paddingRight: 8 }}
                     />
                 </View>
+            </View>
+
+            {/* Programa (el backend lo exige para crear el curso) */}
+            <View style={{ marginBottom: 2 }}>
+                <Text style={{
+                    fontSize: 14,
+                    fontWeight: "600",
+                    color: (showErrors && !form.programId) || programsError ? c.status.error : c.text.secondary,
+                    marginBottom: 6,
+                }}>
+                    {t("Programa") + " *"}
+                </Text>
+                <AnimatedDropdown
+                    items={programItems}
+                    value={form.programId}
+                    onSelect={v => setField("programId", v)}
+                    placeholder={t("Seleccionar programa")}
+                    searchable={true}
+                    searchPlaceholder={t("Buscar...")}
+                    triggerIcon="book-open"
+                    error={showErrors && !form.programId}
+                    triggerHeight={48}
+                />
+                {programsError && (
+                    <Text style={{ fontSize: 12, color: c.status.error, marginTop: 4 }}>
+                        {programsError}
+                    </Text>
+                )}
             </View>
 
             {/* Fila 2 — Jornada y Aula */}

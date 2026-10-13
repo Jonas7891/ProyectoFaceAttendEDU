@@ -14,12 +14,14 @@
 import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { useAuth } from "../context/AuthContext";
+import { createCourse } from "../services/api/courseCreation";
 
 // ── Formulario vacío ───────────────────────────────────────
 
 export const EMPTY_COURSE_FORM = {
     code: "",
     name: "",
+    programId: "",
     schedule: "mañana",
     room: "",
     startDate: "",
@@ -31,7 +33,9 @@ export const EMPTY_COURSE_FORM = {
 export function validateCourseForm(form) {
     if (!form.code.trim()) return "El código es requerido";
     if (!form.name.trim()) return "El nombre es requerido";
-    
+    // El backend exige program_id (FK NOT NULL) para crear el curso.
+    if (!String(form.programId ?? "").trim()) return "El programa es requerido";
+
     return null;
 }
 
@@ -336,6 +340,18 @@ export function useCoursesViewModel() {
             const err = validateCourseForm(form);
             if (err) return err;
 
+            // Alta real en el backend (programa + código únicos por sede).
+            try {
+                await createCourse({
+                    programId: form.programId,
+                    code: form.code.trim(),
+                    name: form.name.trim(),
+                });
+            } catch (e) {
+                return e?.message || "No se pudo registrar el curso en el backend";
+            }
+
+            // Espejo local (jornada, salón y fechas son conceptos de la UI).
             await appData.addCourse({
                 code: form.code.trim(),
                 name: form.name.trim(),
@@ -345,7 +361,7 @@ export function useCoursesViewModel() {
                 endDate: form.endDate,
                 status: "active",
             });
-            
+
             return null;
         },
         [appData]
