@@ -195,6 +195,7 @@ export function useAttendanceViewModel() {
 
     const [userRole, setUserRole] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [searchText, setSearchText] = useState("");
     const [selectedDate, setSelectedDate] = useState(null);
     const [showPicker, setShowPicker] = useState(false);
@@ -208,6 +209,7 @@ export function useAttendanceViewModel() {
     const fetchAttendance = useCallback(async (role) => {
         try {
             setLoading(true);
+            setError(null);
             const locale = resolveLocale(i18n.language);
             const user = await getCurrentUser();
             const actors = user?.personId ? await ActorService.getByPerson(user.personId) : [];
@@ -254,10 +256,24 @@ export function useAttendanceViewModel() {
             setMyAttendance(enriched.slice(-10));
         } catch (error) {
             console.error('Error fetching attendance:', error);
+            setError(t('attendance.loadError'));
         } finally {
             setLoading(false);
         }
     }, [t, i18n.language]);
+
+    const retry = useCallback(async () => {
+        try {
+            const role = await getCurrentUserRole();
+            setUserRole(role);
+            if (role) await loadThemeForRole(role);
+            await fetchAttendance(role);
+        } catch (error) {
+            console.error("Error cargando datos del usuario:", error);
+            setError(t('attendance.loadError'));
+            setLoading(false);
+        }
+    }, [fetchAttendance, loadThemeForRole, t]);
 
     useEffect(() => {
         const init = async () => {
@@ -268,6 +284,7 @@ export function useAttendanceViewModel() {
                 await fetchAttendance(role);
             } catch (error) {
                 console.error("Error cargando datos del usuario:", error);
+                setError(t('attendance.loadError'));
                 setLoading(false);
             }
         };
@@ -304,7 +321,7 @@ export function useAttendanceViewModel() {
         t, locale: resolveLocale(i18n.language), isAdmin, isDark, colors, refreshKey, updateKey,
         searchText, setSearchText, selectedDate, setSelectedDate,
         showPicker, showIOSModal, setShowIOSModal, tempDate, setTempDate,
-        activeData, detailItem, showDetailModal, loading,
+        activeData, detailItem, showDetailModal, loading, error, retry,
         openDetail, closeDetail, handleOpenPicker, handleAndroidChange,
     };
 }
