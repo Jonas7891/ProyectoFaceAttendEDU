@@ -978,7 +978,9 @@
     "typeRequired": "Le type est obligatoire.",
     "capacityInvalid": "La capacité doit être un nombre supérieur à 0.",
     "confirm": "Confirmer",
-    "deleteQuestion": "Voulez-vous vraiment supprimer cet environnement ?"
+    "deleteQuestion": "Voulez-vous vraiment supprimer cet environnement ?",
+    "saveError": "Impossible d'enregistrer l'environnement.",
+    "deleteError": "Impossible de supprimer l'environnement."
   },
   "registerFace": {
     "title": "Enregistrement du visage",

@@ -954,7 +954,9 @@
     "typeRequired": "El tipo es obligatorio.",
     "capacityInvalid": "La capacidad debe ser un número mayor a 0.",
     "confirm": "Confirmar",
-    "deleteQuestion": "¿Seguro que quieres eliminar este ambiente?"
+    "deleteQuestion": "¿Seguro que quieres eliminar este ambiente?",
+    "saveError": "No se pudo guardar el ambiente.",
+    "deleteError": "No se pudo eliminar el ambiente."
   },
   "userRoles": {
     "administrator": "Administrador",

@@ -978,7 +978,9 @@
     "typeRequired": "Type is required.",
     "capacityInvalid": "Capacity must be a number greater than 0.",
     "confirm": "Confirm",
-    "deleteQuestion": "Are you sure you want to delete this environment?"
+    "deleteQuestion": "Are you sure you want to delete this environment?",
+    "saveError": "Could not save the environment.",
+    "deleteError": "Could not delete the environment."
   },
   "registerFace": {
     "title": "Face registration",

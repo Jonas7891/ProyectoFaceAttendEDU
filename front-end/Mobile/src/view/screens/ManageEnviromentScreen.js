@@ -34,6 +34,7 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
         addAmbiente,
         updateAmbiente,
         deleteAmbiente,
+        saving,
     } = useManageEnvironmentViewModel(userRole === 'Administrador');
 
     useEffect(() => {
@@ -87,7 +88,7 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
         }
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         Keyboard.dismiss();
 
         if (!form.nombre) {
@@ -107,21 +108,28 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
             return;
         }
 
-        if (modalMode === 'edit') {
-            updateAmbiente({...editing, ...form});
-        } else {
-            addAmbiente({...form});
+        try {
+            if (modalMode === 'edit') {
+                await updateAmbiente({...editing, ...form});
+            } else {
+                await addAmbiente({...form});
+            }
+            closeModal();
+        } catch (e) {
+            showError(t('manageAmbientes.validation'), e?.message || t('manageAmbientes.saveError'));
         }
-
-        closeModal();
     };
 
     const confirmDelete = (id) => {
         showConfirm(
             t('manageAmbientes.confirm'),
             t('manageAmbientes.deleteQuestion'),
-            () => {
-                deleteAmbiente(id);
+            async () => {
+                try {
+                    await deleteAmbiente(id);
+                } catch (e) {
+                    showError(t('manageAmbientes.validation'), e?.message || t('manageAmbientes.deleteError'));
+                }
             }
         );
     };
