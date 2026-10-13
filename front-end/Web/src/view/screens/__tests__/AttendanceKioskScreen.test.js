@@ -1,5 +1,6 @@
 import React from "react";
 import { create, act } from "react-test-renderer";
+import { Text } from "react-native";
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -65,6 +66,10 @@ function rerenderScreen(tree) {
 
 function findButton(tree, label) {
     return tree.root.findAllByType(Button).find((b) => b.props.children === label);
+}
+
+function hasText(tree, label) {
+    return tree.root.findAllByType(Text).some((n) => n.props.children === label);
 }
 
 beforeEach(() => {
@@ -215,5 +220,192 @@ describe("kiosk end-class button", () => {
 
         expect(kioskVm.endClass).toHaveBeenCalledTimes(1);
         expect(kioskVm.onCaptureError).toHaveBeenCalledWith("no se pudo cerrar la sesión");
+    });
+});
+
+describe("kiosk passive face loop (regression: locked up after one student — Critical #2)", () => {
+    let kioskVm;
+    let face;
+
+    beforeEach(() => {
+        jest.useFakeTimers();
+        useRolePermissions.mockReturnValue({ canRegisterFace: true });
+        kioskVm = {
+            view: "WAITING",
+            todaysBlocks: [],
+            startClass: jest.fn(),
+            endClass: jest.fn().mockResolvedValue(undefined),
+            session: { classSessionId: 1 },
+            statusMessage: "",
+            socket: null,
+            connectionStatus: "open",
+            registeredActorIds: new Set(),
+            onIdentified: jest.fn(),
+            onCaptureError: jest.fn(),
+        };
+        useAttendanceKioskViewModel.mockReturnValue(kioskVm);
+
+        face = {
+            startCamera: jest.fn(),
+            cameraReady: true,
+            loginFace: jest.fn().mockResolvedValue({}),
+            videoRef: { current: null },
+            livenessAction: "",
+        };
+        useFaceCapture.mockReturnValue(face);
+        useFingerprintReader.mockReturnValue({
+            deviceReady: false,
+            sampleReady: false,
+            startCapture: jest.fn(),
+            loginFingerprint: jest.fn(),
+        });
+    });
+
+    afterEach(() => {
+        jest.clearAllTimers();
+        jest.useRealTimers();
+    });
+
+    test("loginFace runs again after a WAITING -> SUCCESS -> WAITING cycle, with activeCapture reset to null in between", async () => {
+        const tree = renderScreen();
+
+        // Flush the loop's first attempt: starts, awaits loginFace (resolves
+        // instantly here), and resets activeCapture back to null before its
+        // inter-attempt pause (which never elapses — fake timers, not advanced).
+        await act(async () => {
+            await Promise.resolve();
+            await Promise.resolve();
+            await Promise.resolve();
+        });
+        expect(face.loginFace).toHaveBeenCalledTimes(1);
+        // The old bug: activeCapture stuck on "FACE" forever after the first
+        // attempt. It must be back to the idle WAITING banner here.
+        expect(hasText(tree, "Acércate al lector")).toBe(true);
+        expect(hasText(tree, "Verificando rostro...")).toBe(false);
+
+        // Mirrors what the real viewmodel does after a successful identify:
+        // leave WAITING for a couple of seconds, then come back to it.
+        kioskVm = { ...kioskVm, view: "SUCCESS" };
+        useAttendanceKioskViewModel.mockReturnValue(kioskVm);
+        rerenderScreen(tree);
+
+        kioskVm = { ...kioskVm, view: "WAITING" };
+        useAttendanceKioskViewModel.mockReturnValue(kioskVm);
+        rerenderScreen(tree);
+
+        await act(async () => {
+            await Promise.resolve();
+            await Promise.resolve();
+            await Promise.resolve();
+        });
+
+        // This is the exact regression: with the bug, loginFace would never
+        // be called a second time and the screen would stay stuck.
+        expect(face.loginFace).toHaveBeenCalledTimes(2);
+        expect(hasText(tree, "Acércate al lector")).toBe(true);
+    });
+});
+
+describe("kiosk fingerprint preemption and arm-timeout (Important #5)", () => {
+    let kioskVm;
+
+    beforeEach(() => {
+        jest.useFakeTimers();
+        useRolePermissions.mockReturnValue({ canRegisterFace: true });
+        kioskVm = {
+            view: "WAITING",
+            todaysBlocks: [],
+            startClass: jest.fn(),
+            endClass: jest.fn().mockResolvedValue(undefined),
+            session: { classSessionId: 1 },
+            statusMessage: "",
+            socket: null,
+            connectionStatus: "open",
+            registeredActorIds: new Set(),
+            onIdentified: jest.fn(),
+            onCaptureError: jest.fn(),
+        };
+        useAttendanceKioskViewModel.mockReturnValue(kioskVm);
+    });
+
+    afterEach(() => {
+        jest.clearAllTimers();
+        jest.useRealTimers();
+    });
+
+    test("pressing 'Usa tu huella' preempts an in-flight face attempt instead of waiting for it to settle", async () => {
+        let rejectLoginFace;
+        useFaceCapture.mockReturnValue({
+            startCamera: jest.fn(),
+            cameraReady: true,
+            loginFace: jest.fn(() => new Promise((_resolve, reject) => { rejectLoginFace = reject; })),
+            videoRef: { current: null },
+            livenessAction: "",
+        });
+        const fingerprint = {
+            deviceReady: true,
+            sampleReady: false,
+            startCapture: jest.fn(),
+            loginFingerprint: jest.fn(),
+        };
+        useFingerprintReader.mockReturnValue(fingerprint);
+
+        const tree = renderScreen();
+        await act(async () => {
+            await Promise.resolve();
+            await Promise.resolve();
+        });
+        expect(hasText(tree, "Verificando rostro...")).toBe(true); // face attempt in flight
+
+        act(() => {
+            findButton(tree, "Usa tu huella").props.onPress();
+        });
+        expect(fingerprint.startCapture).toHaveBeenCalledTimes(1);
+        expect(findButton(tree, "Usa tu huella").props.disabled).toBe(true); // now the active capture
+
+        // The preempted face attempt finally settles (with a rejection, e.g.
+        // "no match") — it must be ignored, not surfaced as an error, and
+        // must not clobber the fingerprint attempt that superseded it.
+        await act(async () => {
+            rejectLoginFace(new Error("sin coincidencia"));
+            await Promise.resolve();
+            await Promise.resolve();
+        });
+
+        expect(kioskVm.onCaptureError).not.toHaveBeenCalled();
+        expect(findButton(tree, "Usa tu huella").props.disabled).toBe(true); // still "FINGER", untouched
+        expect(fingerprint.loginFingerprint).not.toHaveBeenCalled();
+    });
+
+    test("the fingerprint arm-timeout releases the reader and resets activeCapture if no sample ever arrives", async () => {
+        useFaceCapture.mockReturnValue({
+            startCamera: jest.fn(),
+            cameraReady: false, // keep the passive face loop out of this test
+            loginFace: jest.fn().mockResolvedValue({}),
+        });
+        const fingerprint = {
+            deviceReady: true,
+            sampleReady: false,
+            startCapture: jest.fn(),
+            stopCapture: jest.fn(),
+            loginFingerprint: jest.fn(),
+        };
+        useFingerprintReader.mockReturnValue(fingerprint);
+
+        const tree = renderScreen();
+        act(() => {
+            findButton(tree, "Usa tu huella").props.onPress();
+        });
+        expect(fingerprint.startCapture).toHaveBeenCalledTimes(1);
+        expect(findButton(tree, "Usa tu huella").props.disabled).toBe(true);
+
+        act(() => {
+            jest.advanceTimersByTime(15000);
+        });
+
+        expect(fingerprint.stopCapture).toHaveBeenCalledTimes(1);
+        rerenderScreen(tree);
+        expect(findButton(tree, "Usa tu huella").props.disabled).toBe(false);
+        expect(kioskVm.onCaptureError).not.toHaveBeenCalled(); // a timeout is not an error, just a reset
     });
 });

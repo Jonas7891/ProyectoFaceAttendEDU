@@ -15,8 +15,8 @@
 //  kioskVm.view sigue en WAITING.
 // ============================================================
 
-import React, { useEffect, useMemo, useState } from "react";
-import { View, ScrollView, Text } from "react-native";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { View, ScrollView, Text, Platform } from "react-native";
 import { Feather } from "@expo/vector-icons";
 // Importados desde sus archivos concretos, no desde el barrel
 // `./components/common` — ese índice agrega `./navigation` y `./tabs`,
@@ -29,7 +29,7 @@ import { Button } from "./components/common/buttons/Button";
 import { useTheme } from "./components/hooks/useTheme";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useAttendanceKioskViewModel } from "../viewmodels/useAttendanceKioskViewModel";
-import { useFaceCapture } from "../viewmodels/useFaceCapture";
+import { useFaceCapture, CAMERA_SUPPORTED } from "../viewmodels/useFaceCapture";
 import { useFingerprintReader } from "../viewmodels/useFingerprintReader";
 
 const TONE_COLOR_KEY = {
@@ -39,6 +39,15 @@ const TONE_COLOR_KEY = {
     warning: "warning",
     danger: "danger",
 };
+
+// Cuánto se espera antes de reintentar arrancar un intento de rostro
+// cuando el "slot" de captura ya está ocupado por una huella en curso.
+const FACE_RETRY_WAIT_MS = 200;
+// Si se arma el lector de huella y nadie pone el dedo, no se puede quedar
+// esperando para siempre — ni tampoco bloqueado el ciclo pasivo de rostro.
+const FINGERPRINT_ARM_TIMEOUT_MS = 15000;
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function toneColor(colors, tone) {
     switch (TONE_COLOR_KEY[tone]) {
@@ -71,6 +80,11 @@ function SelectSessionPanel({ kioskVm }) {
                 showsVerticalScrollIndicator={false}
             >
                 <View style={{ width: "100%", maxWidth: 640, gap: 12 }}>
+                    {!!kioskVm.statusMessage && (
+                        <Card padding="md" style={{ borderColor: c.status.danger, borderWidth: 1 }}>
+                            <Text style={{ color: c.status.danger, fontSize: 13 }}>{kioskVm.statusMessage}</Text>
+                        </Card>
+                    )}
                     {kioskVm.todaysBlocks.length === 0 ? (
                         <Card padding="lg">
                             <View style={{ alignItems: "center", gap: 8, paddingVertical: 16 }}>
@@ -120,7 +134,33 @@ function CapturePanel({ kioskVm }) {
     // null | "FACE" | "FINGER" — qué captura está corriendo ahora mismo en
     // ESTA pantalla. kioskVm.view nunca distingue esto (ver cabecera del
     // archivo), así que el banner lo deriva combinando ambos más abajo.
-    const [activeCapture, setActiveCapture] = useState(null);
+    const [activeCapture, setActiveCaptureState] = useState(null);
+    // Espejo síncrono de activeCapture: los efectos/callbacks de abajo lo
+    // necesitan leer en el momento exacto en que una promesa se resuelve,
+    // sin esperar al siguiente render (el bug de Critical #2 era justamente
+    // depender de un closure stale en vez de este tipo de ref).
+    const activeCaptureRef = useRef(null);
+    // Generación del intento en curso: al presionar "Usa tu huella" se
+    // incrementa, invalidando cualquier callback de un loginFace() que
+    // siga en vuelo — así un resultado facial que llega tarde (ya
+    // reemplazado por una captura de huella) se ignora en vez de pisar el
+    // estado o registrar la asistencia de quien ya no es el actual.
+    const attemptIdRef = useRef(0);
+    const fingerprintArmTimeoutRef = useRef(null);
+
+    const setActiveCapture = useCallback((value) => {
+        activeCaptureRef.current = value;
+        setActiveCaptureState(value);
+    }, []);
+
+    const clearFingerprintArmTimeout = useCallback(() => {
+        if (fingerprintArmTimeoutRef.current) {
+            clearTimeout(fingerprintArmTimeoutRef.current);
+            fingerprintArmTimeoutRef.current = null;
+        }
+    }, []);
+
+    useEffect(() => clearFingerprintArmTimeout, [clearFingerprintArmTimeout]);
 
     // vm mínimo que esperan useFaceCapture/useFingerprintReader. No hay
     // persona preseleccionada (no es el flujo de Biometrics), así que
@@ -139,14 +179,20 @@ function CapturePanel({ kioskVm }) {
     const face = useFaceCapture({
         vm,
         socket: kioskVm.socket,
-        onIdentified: (data) =>
-            kioskVm.onIdentified(data.person_id, { biometricType: "FACIAL", score: data.score }),
+        onIdentified: (data) => {
+            // Un botón de huella puede haber reemplazado este intento de
+            // rostro mientras seguía en vuelo: ignorar el resultado tardío.
+            if (activeCaptureRef.current !== "FACE") return;
+            kioskVm.onIdentified(data.person_id, { biometricType: "FACIAL", score: data.score });
+        },
     });
     const fingerprint = useFingerprintReader({
         vm,
         socket: kioskVm.socket,
-        onIdentified: (data) =>
-            kioskVm.onIdentified(data.person_id, { biometricType: "FINGERPRINT", score: data.score }),
+        onIdentified: (data) => {
+            if (activeCaptureRef.current !== "FINGER") return;
+            kioskVm.onIdentified(data.person_id, { biometricType: "FINGERPRINT", score: data.score });
+        },
     });
 
     // Enciende la cámara una sola vez al entrar al kiosco: es un modo
@@ -157,55 +203,107 @@ function CapturePanel({ kioskVm }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Ciclo pasivo: mientras se espera (WAITING) y la cámara ya está
-    // lista, intenta reconocer el rostro de quien se acerque. Vuelve a
-    // dispararse solo cuando activeCapture regresa a null (la captura
-    // anterior terminó) y kioskVm.view vuelve a WAITING (tras el timer
-    // de SUCCESS/DUPLICATE/ERROR del viewmodel).
+    // Ciclo pasivo: mientras se espera (WAITING) y la cámara ya está lista,
+    // intenta reconocer el rostro de quien se acerque, una y otra vez,
+    // durante todo el tiempo que la pantalla siga en WAITING — no solo una
+    // vez. El efecto se dispara SOLO por kioskVm.view/cameraReady — NUNCA
+    // por activeCapture — porque ese era justamente el bug (Critical #2):
+    // al depender de activeCapture, el propio setActiveCapture("FACE") de
+    // abajo volvía a disparar el efecto, su cleanup marcaba `cancelled` en
+    // ese nuevo closure, y cuando el loginFace() del PRIMER intento por fin
+    // resolvía, el `.finally` leía esa bandera y nunca volvía a poner
+    // activeCapture en null — el kiosco quedaba trabado tras el primer
+    // estudiante. Con el bucle vivo dentro de un solo efecto (gateado solo
+    // por view/cameraReady) y activeCapture leído/escrito vía ref, el mismo
+    // efecto puede lanzar loginFace() tantas veces como haga falta.
     useEffect(() => {
         if (kioskVm.view !== "WAITING") return;
         if (!face.cameraReady) return;
-        if (activeCapture !== null) return;
 
         let cancelled = false;
-        setActiveCapture("FACE");
-        face
-            .loginFace()
-            .catch((e) => kioskVm.onCaptureError(e.message))
-            .finally(() => {
-                if (!cancelled) setActiveCapture(null);
-            });
+
+        async function loop() {
+            while (!cancelled) {
+                // El lector de huella (activado por el botón) tiene
+                // prioridad: esperar a que quede libre antes de lanzar
+                // otro intento facial, en vez de competir con él.
+                if (activeCaptureRef.current !== null) {
+                    await wait(FACE_RETRY_WAIT_MS);
+                    continue;
+                }
+
+                const attemptId = ++attemptIdRef.current;
+                setActiveCapture("FACE");
+                try {
+                    await face.loginFace();
+                } catch (e) {
+                    if (attemptIdRef.current === attemptId) kioskVm.onCaptureError(e.message);
+                }
+                if (cancelled) return;
+                // Si attemptId ya no es el vigente, un botón de huella tomó
+                // el control mientras este intento estaba en vuelo: no
+                // pisar ese estado.
+                if (attemptIdRef.current === attemptId) setActiveCapture(null);
+                // Pausa real (no solo de microtareas) entre intentos: sin
+                // esto, un loginFace() que resuelve muy rápido (p. ej. en un
+                // test con mocks) encadenaría awaits sin ceder nunca al
+                // event loop real, acaparándolo por completo.
+                await wait(FACE_RETRY_WAIT_MS);
+            }
+        }
+
+        loop();
 
         return () => {
             cancelled = true;
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [kioskVm.view, face.cameraReady, activeCapture]);
+    }, [kioskVm.view, face.cameraReady]);
 
-    // "Usa tu huella" solo ARMA el lector (startCapture) y marca
-    // activeCapture="FINGER" — no llama a loginFingerprint() todavía.
-    // loginFingerprint() exige una muestra ya capturada (lee
-    // stateRef.current.sample vía takeSample(), que lanza "Captura una
-    // huella primero." si está vacía) y esa muestra solo existe una vez
-    // que el callback onSamplesAcquired del SDK la puso ahí — lo mismo
-    // que hace FingerprintModule.js (startCapture → esperar sampleReady
-    // → identify). El envío a reconocimiento ocurre solo, en el efecto
-    // de abajo, cuando sampleReady pasa a true: el kiosco no tiene
+    // "Usa tu huella" ARMA el lector (startCapture) y marca
+    // activeCapture="FINGER" de inmediato — puede interrumpir un intento de
+    // rostro en curso (Important #5): no espera a que loginFace() termine,
+    // solo invalida su resultado (ver attemptIdRef arriba). No llama a
+    // loginFingerprint() todavía: esa llamada exige una muestra ya
+    // capturada (lee stateRef.current.sample vía takeSample(), que lanza
+    // "Captura una huella primero." si está vacía) y esa muestra solo
+    // existe una vez que el callback onSamplesAcquired del SDK la puso ahí
+    // — lo mismo que hace FingerprintModule.js (startCapture → esperar
+    // sampleReady → identify). El envío a reconocimiento ocurre solo, en el
+    // efecto de abajo, cuando sampleReady pasa a true: el kiosco no tiene
     // teclado/mouse, así que no puede pedir una segunda pulsación para
     // "confirmar" la captura.
+    //
+    // Timeout de armado: si nadie pone el dedo, no puede quedar el lector
+    // armado (y el ciclo de rostro bloqueado) para siempre.
     const handleFingerprintPress = () => {
+        attemptIdRef.current += 1; // invalida cualquier loginFace() en vuelo
         setActiveCapture("FINGER");
         fingerprint.startCapture();
+
+        clearFingerprintArmTimeout();
+        fingerprintArmTimeoutRef.current = setTimeout(() => {
+            fingerprintArmTimeoutRef.current = null;
+            if (activeCaptureRef.current !== "FINGER") return;
+            if (fingerprint.sampleReady) return; // ya hay muestra; el otro efecto la procesa
+            fingerprint.stopCapture?.();
+            setActiveCapture(null);
+        }, FINGERPRINT_ARM_TIMEOUT_MS);
     };
 
     useEffect(() => {
         if (activeCapture !== "FINGER") return;
         if (!fingerprint.sampleReady) return;
 
+        clearFingerprintArmTimeout();
         fingerprint
             .loginFingerprint()
-            .catch((e) => kioskVm.onCaptureError(e.message))
-            .finally(() => setActiveCapture(null));
+            .catch((e) => {
+                if (activeCaptureRef.current === "FINGER") kioskVm.onCaptureError(e.message);
+            })
+            .finally(() => {
+                if (activeCaptureRef.current === "FINGER") setActiveCapture(null);
+            });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeCapture, fingerprint.sampleReady]);
 
@@ -237,6 +335,19 @@ function CapturePanel({ kioskVm }) {
                 title={t("Kiosco de asistencia")}
                 subtitle={t("Cada estudiante se acerca y se identifica por rostro o huella")}
             />
+            {kioskVm.connectionStatus === "reconnecting" && (
+                <View
+                    style={{
+                        backgroundColor: c.status.warningLight || c.status.warning,
+                        paddingVertical: 8,
+                        alignItems: "center",
+                    }}
+                >
+                    <Text style={{ color: c.text.primary, fontSize: 13, fontWeight: "700" }}>
+                        {t("Reconectando…")}
+                    </Text>
+                </View>
+            )}
             <ScrollView
                 contentContainerStyle={{ padding: 24, gap: 20, alignItems: "center", flexGrow: 1 }}
                 showsVerticalScrollIndicator={false}
@@ -267,6 +378,50 @@ function CapturePanel({ kioskVm }) {
                                 {kioskVm.statusMessage}
                             </Text>
                         )}
+
+                        {CAMERA_SUPPORTED && Platform.OS === "web" ? (
+                            <View
+                                style={{
+                                    width: "100%",
+                                    maxWidth: 320,
+                                    aspectRatio: 4 / 3,
+                                    borderRadius: 12,
+                                    overflow: "hidden",
+                                    backgroundColor: "#000",
+                                }}
+                            >
+                                {/* Elemento DOM real: sin esto, face.startCamera() nunca
+                                    encuentra un videoRef.current y la cámara no arranca
+                                    (Critical #1). Espejado horizontal, como el resto de
+                                    los visores de cámara de la app. */}
+                                <video
+                                    ref={face.videoRef}
+                                    autoPlay
+                                    muted
+                                    playsInline
+                                    style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        objectFit: "cover",
+                                        transform: "scaleX(-1)",
+                                    }}
+                                />
+                            </View>
+                        ) : (
+                            <Text style={{ color: c.text.secondary, fontSize: 13, textAlign: "center" }}>
+                                {t("Cámara no disponible: usa tu huella")}
+                            </Text>
+                        )}
+
+                        {!!face.livenessAction && (
+                            <Text
+                                accessibilityRole="alert"
+                                style={{ color: c.brand.primary, fontSize: 16, fontWeight: "700", textAlign: "center" }}
+                            >
+                                {face.livenessAction}
+                            </Text>
+                        )}
+
                         <Text style={{ color: c.text.secondary, fontSize: 13 }}>
                             {t("Registrados")}: {kioskVm.registeredActorIds.size}
                         </Text>
@@ -277,7 +432,7 @@ function CapturePanel({ kioskVm }) {
                             <Button
                                 variant="outline"
                                 style={{ flex: 1 }}
-                                disabled={activeCapture !== null}
+                                disabled={activeCapture === "FINGER"}
                                 leftIcon={<Feather name="target" size={16} color={c.brand.primary} />}
                                 onPress={handleFingerprintPress}
                             >
