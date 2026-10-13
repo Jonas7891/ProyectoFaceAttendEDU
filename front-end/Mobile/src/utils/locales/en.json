@@ -35,7 +35,9 @@
     "previous": "Previous",
     "requiredField": "Required field",
     "send": "Send",
-    "retry": "Retry"
+    "retry": "Retry",
+    "activate": "Activate",
+    "deactivate": "Deactivate"
   },
   "login": {
     "title": "Login",
@@ -728,7 +730,10 @@
     "onlyAdmins": "Only administrators can access this screen.",
     "addTeacher": "Add teacher",
     "enterTeacherName": "Enter teacher name",
-    "searchTeacher": "Search teacher"
+    "searchTeacher": "Search teacher",
+    "activateQuestion": "Reactivate this user?",
+    "deactivateQuestion": "Deactivate this user? You can reactivate them later.",
+    "inactive": "Inactive"
   },
   "schoolConfig": {
     "title": "School Configuration",

@@ -35,7 +35,9 @@
     "previous": "Précédent",
     "requiredField": "Champ obligatoire",
     "send": "Envoyer",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "activate": "Activer",
+    "deactivate": "Désactiver"
   },
   "login": {
     "title": "Connexion",
@@ -728,7 +730,10 @@
     "onlyAdmins": "Seuls les administrateurs peuvent accéder à cet écran.",
     "addTeacher": "Ajouter un enseignant",
     "enterTeacherName": "Saisissez le nom de l'enseignant",
-    "searchTeacher": "Rechercher un enseignant"
+    "searchTeacher": "Rechercher un enseignant",
+    "activateQuestion": "Réactiver cet utilisateur ?",
+    "deactivateQuestion": "Désactiver cet utilisateur ? Vous pourrez le réactiver plus tard.",
+    "inactive": "Inactif"
   },
   "schoolConfig": {
     "title": "Configuration de l'école",

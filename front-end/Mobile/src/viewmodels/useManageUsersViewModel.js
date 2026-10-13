@@ -133,14 +133,24 @@ export function useManageUsersViewModel(enabled = true) {
     setStudents(prev => prev.map(s => (s.id === student.id ? updated : s)));
   }, [persistPerson]);
 
+  // El backend no tiene DELETE físico (modelo: borrado lógico vía status,
+  // AGENTS.md §2.2): desactivar cambia status=false en usuario y persona y
+  // la fila sigue visible como inactiva en vez de desaparecer.
+  const setActiveStatus = useCallback(async (item, status) => {
+    await UserService.setStatus(item.userId || item.id, status);
+    if (item.personId) {
+      await PersonService.setStatus(item.personId, status).catch(() => {});
+    }
+    return {...item, status};
+  }, []);
+
   const deleteStudent = useCallback(async (id) => {
     const student = students.find(item => item.id === id);
-    if (student) {
-      await UserService.delete(student.userId || id);
-      if (student.personId) await PersonService.delete(student.personId);
-    }
-    setStudents(prev => prev.filter(s => s.id !== id));
-  }, [students]);
+    if (!student) return;
+    const next = !(student.status !== false);
+    const updated = await setActiveStatus(student, next);
+    setStudents(prev => prev.map(s => (s.id === id ? updated : s)));
+  }, [students, setActiveStatus]);
 
   const addTeacher = useCallback((teacher) => {
     setTeachers(prev => prev.some(item => item.id === teacher.id) ? prev : [...prev, teacher]);
@@ -154,12 +164,11 @@ export function useManageUsersViewModel(enabled = true) {
 
   const deleteTeacher = useCallback(async (id) => {
     const teacher = teachers.find(item => item.id === id);
-    if (teacher) {
-      await UserService.delete(teacher.userId || id);
-      if (teacher.personId) await PersonService.delete(teacher.personId);
-    }
-    setTeachers(prev => prev.filter(t => t.id !== id));
-  }, [teachers]);
+    if (!teacher) return;
+    const next = !(teacher.status !== false);
+    const updated = await setActiveStatus(teacher, next);
+    setTeachers(prev => prev.map(t => (t.id === id ? updated : t)));
+  }, [teachers, setActiveStatus]);
 
   return {
     allStudents: students,

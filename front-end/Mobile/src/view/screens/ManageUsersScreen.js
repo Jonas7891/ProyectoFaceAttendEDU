@@ -118,10 +118,10 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
         closeModal();
     };
 
-    const confirmDelete = (id) => {
+    const confirmToggleStatus = (id, isActive) => {
         showConfirm(
             t('manageUsers.confirm'),
-            t('manageUsers.deleteQuestion'),
+            t(isActive ? 'manageUsers.deactivateQuestion' : 'manageUsers.activateQuestion'),
             () => {
                 tab === 'students' ? deleteStudent(id) : deleteTeacher(id);
             }
@@ -139,8 +139,10 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
 
     const handleBack = () => navigation.goBack();
 
-    const renderItem = ({item}) => (
-        <View style={[styles.manageUsersItem, {backgroundColor: colors.card}]}>
+    const renderItem = ({item}) => {
+        const inactive = item.status === false;
+        return (
+        <View style={[styles.manageUsersItem, {backgroundColor: colors.card}, inactive && {opacity: 0.55}]}>
             <View style={styles.manageUsersItemInfo}>
                 <Text style={[styles.manageUsersItemName, {color: colors.text}]} numberOfLines={1}>
                     {item.nombre}
@@ -149,6 +151,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                     {tab === 'students'
                         ? `${item.grado || ''} • ${item.email || ''}`
                         : `${item.materia || ''} • ${item.email || ''}`}
+                    {inactive ? ` • ${t('manageUsers.inactive')}` : ''}
                 </Text>
             </View>
             <View style={styles.manageUsersItemActions}>
@@ -161,16 +164,17 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    style={[styles.manageUsersActionButton, {borderColor: '#E53935'}]}
-                    onPress={() => confirmDelete(item.id)}
+                    style={[styles.manageUsersActionButton, {borderColor: inactive ? '#2E7D32' : '#E53935'}]}
+                    onPress={() => confirmToggleStatus(item.id, !inactive)}
                 >
-                    <Text style={[styles.manageUsersActionText, {color: '#E53935'}]}>
-                        {t('common.delete')}
+                    <Text style={[styles.manageUsersActionText, {color: inactive ? '#2E7D32' : '#E53935'}]}>
+                        {inactive ? t('common.activate') : t('common.deactivate')}
                     </Text>
                 </TouchableOpacity>
             </View>
         </View>
-    );
+        );
+    };
 
     const renderSearchAddContent = () => (
         <>

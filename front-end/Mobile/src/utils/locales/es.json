@@ -35,7 +35,9 @@
     "previous": "Anterior",
     "requiredField": "Campo obligatorio",
     "send": "Enviar",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "activate": "Activar",
+    "deactivate": "Desactivar"
   },
   "login": {
     "title": "Inicio de Sesión",
@@ -728,7 +730,10 @@
     "onlyAdmins": "Solo administradores pueden acceder a esta pantalla.",
     "addTeacher": "Agregar docente",
     "enterTeacherName": "Ingresa el nombre del docente",
-    "searchTeacher": "Buscar docente"
+    "searchTeacher": "Buscar docente",
+    "activateQuestion": "¿Reactivar este usuario?",
+    "deactivateQuestion": "¿Desactivar este usuario? Podrás reactivarlo después.",
+    "inactive": "Inactivo"
   },
   "schoolConfig": {
     "title": "Configuración del Colegio",
