@@ -3,7 +3,10 @@ import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 import {backendGet} from '../api/backend';
 import ENV from '../config/env';
 import {PersonService} from '../services/PersonService';
-import {UserService} from '../services/UserService';
+import {UserService, getCurrentUser} from '../services/UserService';
+import {ActorService} from '../services/ActorService';
+import {SchoolService} from '../services/SchoolService';
+import {StaffService} from '../services/StaffService';
 import Person from '../models/identity/Person';
 import AppUser from '../models/identity/AppUser';
 
@@ -157,6 +160,35 @@ export function useManageUsersViewModel(enabled = true) {
     return teacher;
   }, []);
 
+  // Alta real de personal (docente/administrador): persona + usuario +
+  // rol (+ actor si es docente). La sede sale del actor propio o de la
+  // sede única como respaldo; sin sede no hay alta de docentes.
+  const createStaff = useCallback(async ({nombre, documento, email, telefono, password, role}) => {
+    let schoolId = null;
+    try {
+      const me = await getCurrentUser();
+      if (me?.personId) {
+        const actors = await ActorService.getByPerson(me.personId);
+        schoolId = actors?.[0]?.schoolId ?? null;
+      }
+    } catch {}
+    if (schoolId == null && role === 'teacher') {
+      const schools = await SchoolService.getAll().catch(() => []);
+      if (schools.length === 1) schoolId = schools[0]?.schoolId ?? null;
+    }
+    await StaffService.createStaff({
+      name: nombre,
+      code: documento,
+      documentNumber: documento,
+      email,
+      phone: telefono || null,
+      password,
+      role,
+      schoolId,
+    });
+    await fetchUsers();
+  }, [fetchUsers]);
+
   const updateTeacher = useCallback(async (teacher) => {
     const updated = await persistPerson(teacher);
     setTeachers(prev => prev.map(t => (t.id === teacher.id ? updated : t)));
@@ -179,6 +211,7 @@ export function useManageUsersViewModel(enabled = true) {
     searchStudents,
     searchTeachers,
     addStudentById,
+    createStaff,
     updateStudent,
     deleteStudent,
     addTeacher,

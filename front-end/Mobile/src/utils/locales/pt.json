@@ -733,7 +733,14 @@
     "searchTeacher": "Buscar professor",
     "activateQuestion": "Reativar este usuário?",
     "deactivateQuestion": "Desativar este usuário? Você poderá reativá-lo depois.",
-    "inactive": "Inativo"
+    "inactive": "Inativo",
+    "newUser": "Novo usuário",
+    "document": "Documento",
+    "documentRequired": "O documento é obrigatório",
+    "password": "Senha",
+    "passwordMin": "Mínimo 8 caracteres",
+    "role": "Papel",
+    "createError": "Não foi possível criar o usuário"
   },
   "schoolConfig": {
     "title": "Configuração da escola",

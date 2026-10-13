@@ -733,7 +733,14 @@
     "searchTeacher": "Buscar docente",
     "activateQuestion": "¿Reactivar este usuario?",
     "deactivateQuestion": "¿Desactivar este usuario? Podrás reactivarlo después.",
-    "inactive": "Inactivo"
+    "inactive": "Inactivo",
+    "newUser": "Nuevo usuario",
+    "document": "Documento",
+    "documentRequired": "El documento es obligatorio",
+    "password": "Contraseña",
+    "passwordMin": "Mínimo 8 caracteres",
+    "role": "Rol",
+    "createError": "No se pudo crear el usuario"
   },
   "schoolConfig": {
     "title": "Configuración del Colegio",

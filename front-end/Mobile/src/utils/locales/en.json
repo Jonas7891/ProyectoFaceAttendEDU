@@ -733,7 +733,14 @@
     "searchTeacher": "Search teacher",
     "activateQuestion": "Reactivate this user?",
     "deactivateQuestion": "Deactivate this user? You can reactivate them later.",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "newUser": "New user",
+    "document": "Document",
+    "documentRequired": "Document is required",
+    "password": "Password",
+    "passwordMin": "Minimum 8 characters",
+    "role": "Role",
+    "createError": "Could not create the user"
   },
   "schoolConfig": {
     "title": "School Configuration",

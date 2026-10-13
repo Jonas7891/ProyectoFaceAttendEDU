@@ -37,6 +37,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
         searchStudents,
         searchTeachers,
         addStudentById,
+        createStaff,
         updateStudent,
         deleteStudent,
         addTeacher,
@@ -48,12 +49,16 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
     const [modalVisible, setModalVisible] = useState(false);
     const [modalMode, setModalMode] = useState(null);
     const [editing, setEditing] = useState(null);
+    const [saving, setSaving] = useState(false);
     const [form, setForm] = useState({
         nombre: '',
+        documento: '',
         email: '',
         grado: '',
         telefono: '',
         materia: '',
+        password: '',
+        role: 'teacher',
     });
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
@@ -70,10 +75,18 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
 
     const openAdd = () => {
         setEditing(null);
-        setForm({nombre: '', email: '', grado: '', telefono: '', materia: ''});
+        setForm({nombre: '', documento: '', email: '', grado: '', telefono: '', materia: '', password: '', role: 'teacher'});
         setSearchQuery('');
         setSearchResults([]);
         setModalMode('searchAdd');
+        setModalVisible(true);
+    };
+
+    // Alta de personal nuevo (docente/administrador) en el backend.
+    const openCreate = () => {
+        setEditing(null);
+        setForm({nombre: '', documento: '', email: '', grado: '', telefono: '', materia: '', password: '', role: 'teacher'});
+        setModalMode('create');
         setModalVisible(true);
     };
 
@@ -116,6 +129,42 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
             }
         }
         closeModal();
+    };
+
+    const handleCreate = async () => {
+        Keyboard.dismiss();
+        if (!form.nombre) {
+            showError(t('manageUsers.validation'), t('manageUsers.nameRequired'));
+            return;
+        }
+        if (!form.documento) {
+            showError(t('manageUsers.validation'), t('manageUsers.documentRequired'));
+            return;
+        }
+        if (!form.email || !validateEmail(form.email)) {
+            showError(t('manageUsers.validation'), t('manageUsers.invalidEmail'));
+            return;
+        }
+        if (!form.password || form.password.length < 8) {
+            showError(t('manageUsers.validation'), t('manageUsers.passwordMin'));
+            return;
+        }
+        setSaving(true);
+        try {
+            await createStaff({
+                nombre: form.nombre.trim(),
+                documento: form.documento.trim(),
+                email: form.email.trim(),
+                telefono: form.telefono.trim(),
+                password: form.password,
+                role: form.role,
+            });
+            closeModal();
+        } catch (e) {
+            showError(t('manageUsers.validation'), e?.message || t('manageUsers.createError'));
+        } finally {
+            setSaving(false);
+        }
     };
 
     const confirmToggleStatus = (id, isActive) => {
@@ -256,6 +305,135 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
             </View>
         </>
     );
+
+    const renderCreateContent = () => {
+        const inputStyle = {
+            color: colors.text,
+            backgroundColor: colors.modalInputBackground,
+            borderColor: colors.modalBorder,
+        };
+        const setField = (key) => (text) => setForm((f) => ({...f, [key]: text}));
+        return (
+        <>
+            <View style={[styles.manageUsersSheetHandle, {backgroundColor: colors.border}]}/>
+
+            <Text style={[styles.manageUsersModalTitle, {color: colors.text}]}>
+                {t('manageUsers.newUser')}
+            </Text>
+            <View style={[styles.manageUsersDivider, {backgroundColor: colors.border}]}/>
+
+            <Text style={[styles.manageUsersFieldLabel, {color: colors.text}]}>
+                {t('common.name')}
+            </Text>
+            <TextInput
+                placeholder={t('common.name')}
+                placeholderTextColor={colors.modalInputPlaceholder}
+                style={[styles.manageUsersInput, inputStyle]}
+                value={form.nombre}
+                onChangeText={setField('nombre')}
+            />
+
+            <Text style={[styles.manageUsersFieldLabel, {color: colors.text}]}>
+                {t('manageUsers.document')}
+            </Text>
+            <TextInput
+                placeholder={t('manageUsers.document')}
+                placeholderTextColor={colors.modalInputPlaceholder}
+                style={[styles.manageUsersInput, inputStyle]}
+                value={form.documento}
+                onChangeText={setField('documento')}
+                keyboardType="numeric"
+            />
+
+            <Text style={[styles.manageUsersFieldLabel, {color: colors.text}]}>
+                {t('common.email')}
+            </Text>
+            <TextInput
+                placeholder={t('common.email')}
+                placeholderTextColor={colors.modalInputPlaceholder}
+                style={[styles.manageUsersInput, inputStyle]}
+                value={form.email}
+                onChangeText={setField('email')}
+                keyboardType="email-address"
+                autoCapitalize="none"
+            />
+
+            <Text style={[styles.manageUsersFieldLabel, {color: colors.text}]}>
+                {t('common.phone')}
+            </Text>
+            <TextInput
+                placeholder={t('common.phone')}
+                placeholderTextColor={colors.modalInputPlaceholder}
+                style={[styles.manageUsersInput, inputStyle]}
+                value={form.telefono}
+                onChangeText={setField('telefono')}
+                keyboardType="phone-pad"
+            />
+
+            <Text style={[styles.manageUsersFieldLabel, {color: colors.text}]}>
+                {t('manageUsers.password')}
+            </Text>
+            <TextInput
+                placeholder={t('manageUsers.passwordMin')}
+                placeholderTextColor={colors.modalInputPlaceholder}
+                style={[styles.manageUsersInput, inputStyle]}
+                value={form.password}
+                onChangeText={setField('password')}
+                secureTextEntry
+            />
+
+            <Text style={[styles.manageUsersFieldLabel, {color: colors.text}]}>
+                {t('manageUsers.role')}
+            </Text>
+            <View style={{flexDirection: 'row', gap: 8, marginBottom: 12}}>
+                {[
+                    {value: 'teacher', label: t('userRoles.teacher')},
+                    {value: 'admin', label: t('userRoles.administrator')},
+                ].map((opt) => (
+                    <TouchableOpacity
+                        key={opt.value}
+                        onPress={() => setForm((f) => ({...f, role: opt.value}))}
+                        style={[styles.manageUsersActionButton, {
+                            borderColor: colors.primary,
+                            backgroundColor: form.role === opt.value ? colors.primary : 'transparent',
+                            flex: 1,
+                            alignItems: 'center',
+                        }]}
+                    >
+                        <Text style={[styles.manageUsersActionText, {
+                            color: form.role === opt.value ? '#fff' : colors.primary,
+                        }]}>
+                            {opt.label}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
+
+            <View style={styles.manageUsersModalActions}>
+                <TouchableOpacity
+                    style={styles.secondaryButton}
+                    onPress={handleCreate}
+                    disabled={saving}
+                >
+                    <Text style={[styles.secondaryButtonText, {color: colors.textSecondary}]}>
+                        {saving ? t('common.saving') : t('common.save')}
+                    </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.manageUsersCancelButton, {
+                        backgroundColor: colors.primary,
+                        borderColor: colors.primary,
+                    }]}
+                    onPress={closeModal}
+                >
+                    <Text style={styles.manageUsersCancelButtonText}>
+                        {t('common.cancel')}
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        </>
+        );
+    };
 
     const renderEditContent = () => (
         <>
@@ -411,6 +589,14 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                         }
                         onPress={openAdd}
                     />
+                    <TouchableOpacity
+                        style={[styles.secondaryButton, {flex: 1, alignItems: 'center', marginTop: 8}]}
+                        onPress={openCreate}
+                    >
+                        <Text style={[styles.secondaryButtonText, {color: colors.primary}]}>
+                            {t('manageUsers.newUser')}
+                        </Text>
+                    </TouchableOpacity>
                 </View>
 
                 <FlatList
@@ -448,7 +634,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                                 showsVerticalScrollIndicator={true}
                                 bounces={false}
                             >
-                                {modalMode === 'searchAdd' ? renderSearchAddContent() : renderEditContent()}
+                                {modalMode === 'searchAdd' ? renderSearchAddContent() : modalMode === 'create' ? renderCreateContent() : renderEditContent()}
                             </ScrollView>
                         </View>
                     </KeyboardAvoidingView>
