@@ -182,13 +182,32 @@ function CapturePanel({ kioskVm }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [kioskVm.view, face.cameraReady, activeCapture]);
 
+    // "Usa tu huella" solo ARMA el lector (startCapture) y marca
+    // activeCapture="FINGER" — no llama a loginFingerprint() todavía.
+    // loginFingerprint() exige una muestra ya capturada (lee
+    // stateRef.current.sample vía takeSample(), que lanza "Captura una
+    // huella primero." si está vacía) y esa muestra solo existe una vez
+    // que el callback onSamplesAcquired del SDK la puso ahí — lo mismo
+    // que hace FingerprintModule.js (startCapture → esperar sampleReady
+    // → identify). El envío a reconocimiento ocurre solo, en el efecto
+    // de abajo, cuando sampleReady pasa a true: el kiosco no tiene
+    // teclado/mouse, así que no puede pedir una segunda pulsación para
+    // "confirmar" la captura.
     const handleFingerprintPress = () => {
         setActiveCapture("FINGER");
+        fingerprint.startCapture();
+    };
+
+    useEffect(() => {
+        if (activeCapture !== "FINGER") return;
+        if (!fingerprint.sampleReady) return;
+
         fingerprint
             .loginFingerprint()
             .catch((e) => kioskVm.onCaptureError(e.message))
             .finally(() => setActiveCapture(null));
-    };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeCapture, fingerprint.sampleReady]);
 
     // El viewmodel central solo conoce SELECT_SESSION/WAITING/SUCCESS/
     // DUPLICATE/ERROR. CAPTURING_FACE/CAPTURING_FINGER son una derivación
@@ -269,7 +288,12 @@ function CapturePanel({ kioskVm }) {
                             variant="danger"
                             style={{ flex: 1 }}
                             leftIcon={<Feather name="stop-circle" size={16} color={c.brand.textOnPrimary} />}
-                            onPress={kioskVm.endClass}
+                            onPress={() => {
+                                // endClass() es async (cierra la sesión vía API); sin este
+                                // .catch, un rechazo quedaría como unhandled rejection y la
+                                // pantalla se quedaría atascada sin ninguna señal visible.
+                                kioskVm.endClass().catch((e) => kioskVm.onCaptureError(e.message));
+                            }}
                         >
                             {t("Finalizar clase")}
                         </Button>
