@@ -225,6 +225,7 @@ export default function EnvironmentsView() {
                 onSave={vm.saveSchedule}
                 getCurrentEnvironment={vm.getCurrentEnvironment}
                 getCourseByCode={vm.getCourseByCode}
+                getCohortsForCourse={vm.cohortsForCourse}
             />
         </View>
     );

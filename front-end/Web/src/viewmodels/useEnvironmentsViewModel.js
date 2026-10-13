@@ -8,6 +8,17 @@ import {
     deleteEnvironment,
     updateEnvironment,
 } from "../services/api/environmentManagement";
+import {
+    backendScheduleId,
+    cohortsForCourse,
+    createBlocks,
+    createdBlockId,
+    dayLabelToIso,
+    deleteBlock,
+    instructorActorForUser,
+    isoToDayLabel,
+    replaceBlock,
+} from "../services/api/scheduleBlockManagement";
 
 // ── Formulario de ambiente ────────────────────────────────
 
@@ -22,6 +33,7 @@ export const EMPTY_ENV_FORM = {
 export const EMPTY_SCHEDULE_FORM = {
     courseCode: "",
     courseName: "",
+    cohortId: "",
     instructorQuery: "",
     instructorId: "",
     instructorName: "",
@@ -38,6 +50,20 @@ export function validateEnvironmentForm(form) {
     // Solo el número del ambiente es requerido
     if (!form.number.trim()) return "El número del ambiente es requerido";
     return null;
+}
+
+// ID numérico del backend o null si el curso es un alta local.
+function backendCourseId(id) {
+    if (id == null || String(id).trim() === "") return null;
+    if (String(id).startsWith("course_")) return null;
+    const parsed = Number(id);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function numericOrNull(value) {
+    if (value == null || String(value).trim() === "") return null;
+    const parsed = Number(value);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
 /**
@@ -419,16 +445,22 @@ export function useEnvironmentsViewModel() {
 
     // ── Acciones de horario ───────────────────────────────
 
+    // Fichas vigentes del programa de un curso (selector del modal).
+    const cohortsForCourseOption = useCallback(
+        (courseCode) => cohortsForCourse(courseCode),
+        []
+    );
+
     const saveSchedule = useCallback(
         async (form) => {
             if (!scheduleTargetEnvId) return "Error interno";
-            
+
             // Obtener ambiente y curso seleccionado
             const environment = appData.environments.find(e => e.id === scheduleTargetEnvId);
             if (!environment) return "Ambiente no encontrado";
-            
+
             const selectedCourse = appData.courses.find(c => c.code === form.courseCode);
-            
+
             // Validación completa con solapamiento y capacidad
             const err = validateScheduleForm(
                 form,
@@ -439,47 +471,91 @@ export function useEnvironmentsViewModel() {
             );
             if (err) return err;
 
-            // Función de conversión 12h → 24h (inline)
-            const convertTo24Hour = (time12h) => {
-                if (!time12h.includes('AM') && !time12h.includes('PM')) {
-                    return time12h;
-                }
-                
-                const timeUpper = time12h.toUpperCase().trim();
-                const isPM = timeUpper.includes('PM');
-                const isAM = timeUpper.includes('AM');
-                
-                const timePart = timeUpper.replace(/\s*(AM|PM)\s*$/i, '').trim();
-                const [hoursStr, minutesStr] = timePart.split(':');
-                let hours = parseInt(hoursStr, 10);
-                const minutes = minutesStr || '00';
-                
-                if (isAM) {
-                    if (hours === 12) hours = 0;
-                } else if (isPM) {
-                    if (hours !== 12) hours += 12;
-                }
-                
-                return `${String(hours).padStart(2, '0')}:${minutes}`;
-            };
-
-            // Convertir horarios a formato 24h antes de guardar
+            // Convertir horarios a formato 24h
+            const startTime = convertTo24Hour(form.startTime);
+            const endTime = convertTo24Hour(form.endTime);
             const draft = {
                 courseCode: form.courseCode.trim(),
                 courseName: form.courseName.trim(),
                 instructor: form.instructorId,
                 instructorName: form.instructorName,
-                startTime: convertTo24Hour(form.startTime),
-                endTime: convertTo24Hour(form.endTime),
+                startTime,
+                endTime,
                 days: form.days,
             };
 
-            if (scheduleModalMode === "add") {
-                await appData.addSchedule(scheduleTargetEnvId, draft);
-            } else if (editingSchedule) {
-                await appData.updateSchedule(scheduleTargetEnvId, editingSchedule.id, draft);
-            } else {
-                return "Error interno";
+            const envBackendId = backendEnvId(scheduleTargetEnvId);
+            const courseBackendId = backendCourseId(selectedCourse?.id);
+            // Filas locales (altas sin sincronizar): siguen en AsyncStorage.
+            if (envBackendId == null || courseBackendId == null) {
+                if (scheduleModalMode === "add") {
+                    await appData.addSchedule(scheduleTargetEnvId, draft);
+                } else if (editingSchedule) {
+                    await appData.updateSchedule(scheduleTargetEnvId, editingSchedule.id, draft);
+                } else {
+                    return "Error interno";
+                }
+                const updatedEnv = appData.environments.find((e) => e.id === scheduleTargetEnvId);
+                if (updatedEnv) setSelected(updatedEnv);
+                return null;
+            }
+
+            // Filas del backend: bloques reales en ms-scheduling.
+            try {
+                const cohorts = await cohortsForCourse(form.courseCode);
+                if (cohorts.length === 0) {
+                    return "El curso no tiene fichas activas en el backend";
+                }
+                let cohortId = numericOrNull(form.cohortId);
+                if (cohorts.length === 1) cohortId = cohorts[0].cohortId;
+                if (cohortId == null) return "Selecciona la ficha del horario";
+
+                const instructorActorId = await instructorActorForUser(
+                    appData.users,
+                    form.instructorId
+                );
+                if (instructorActorId == null) {
+                    return "El instructor no tiene actor docente en la sede";
+                }
+
+                const daysOfWeek = form.days.map(dayLabelToIso);
+                if (daysOfWeek.some((d) => d == null)) return "Día inválido";
+
+                const payload = {
+                    environmentId: envBackendId,
+                    courseId: courseBackendId,
+                    cohortId,
+                    instructorActorId,
+                    daysOfWeek,
+                    startsAt: startTime,
+                    endsAt: endTime,
+                };
+
+                if (scheduleModalMode === "add" || !editingSchedule) {
+                    const created = await createBlocks(payload);
+                    for (const block of created) {
+                        await appData.addSchedule(scheduleTargetEnvId, {
+                            ...draft,
+                            id: createdBlockId(block),
+                            days: [isoToDayLabel(block?.dayOfWeek ?? block?.day_of_week) ?? draft.days[0]],
+                        });
+                    }
+                } else if (backendScheduleId(editingSchedule.id) != null) {
+                    // Reemplazo: los nuevos primero, el anterior después.
+                    const created = await replaceBlock(editingSchedule.id, payload);
+                    await appData.removeSchedule(scheduleTargetEnvId, editingSchedule.id);
+                    for (const block of created) {
+                        await appData.addSchedule(scheduleTargetEnvId, {
+                            ...draft,
+                            id: createdBlockId(block),
+                            days: [isoToDayLabel(block?.dayOfWeek ?? block?.day_of_week) ?? draft.days[0]],
+                        });
+                    }
+                } else {
+                    await appData.updateSchedule(scheduleTargetEnvId, editingSchedule.id, draft);
+                }
+            } catch (e) {
+                return e?.message || "No se pudo guardar el horario en el backend";
             }
 
             // Sincroniza el selected con el nuevo estado global
@@ -492,9 +568,17 @@ export function useEnvironmentsViewModel() {
 
     const removeSchedule = useCallback(
         async (envId, scheduleId) => {
+            if (backendScheduleId(scheduleId) != null) {
+                try {
+                    await deleteBlock(scheduleId);
+                } catch (e) {
+                    return e?.message || "No se pudo eliminar el horario en el backend";
+                }
+            }
             await appData.removeSchedule(envId, scheduleId);
             const updatedEnv = appData.environments.find((e) => e.id === envId);
             if (updatedEnv) setSelected(updatedEnv);
+            return null;
         },
         [appData]
     );
@@ -561,5 +645,6 @@ export function useEnvironmentsViewModel() {
         // Exponer datos para el modal
         getCurrentEnvironment: () => appData.environments.find(e => e.id === scheduleTargetEnvId),
         getCourseByCode: (code) => appData.courses.find(c => c.code === code),
+        cohortsForCourse: cohortsForCourseOption,
     };
 }
