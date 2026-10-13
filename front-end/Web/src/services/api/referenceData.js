@@ -269,6 +269,22 @@ export const instructorCourseNamesByPerson = () =>
         return names;
     });
 
+/**
+ * personId -> academicActorId de los estudiantes matriculados en un cohorte.
+ * Une enrollments (cohorte) con actores (persona); ignora matrículas de otros cohortes.
+ */
+export const cohortActorByPerson = (cohortId) =>
+    memo(`cohortActorByPerson:${cohortId}`, async () => {
+        const [enrollments, actors] = await Promise.all([listEnrollments(), actorMap()]);
+        const map = new Map();
+        for (const enrollment of enrollments) {
+            if (enrollment.cohortId !== cohortId) continue;
+            const actor = actors.get(enrollment.academicActorId);
+            if (actor?.personId) map.set(actor.personId, enrollment.academicActorId);
+        }
+        return map;
+    });
+
 // ── Utilidades de formato ─────────────────────────────────
 
 /** Nombre completo de una persona del backend ("Nombre Apellido"). */

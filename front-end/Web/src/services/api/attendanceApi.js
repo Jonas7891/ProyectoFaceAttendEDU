@@ -4,6 +4,7 @@ import { endpoints } from "../../api/endpoints";
 
 export const attendanceApi = {
     listRecords: (p) => request(endpoints.attendance.records, { method: "GET", query: p }),
+    createRecord: (b) => request(endpoints.attendance.records, { method: "POST", body: b }),
     getRecord: (id) => request(endpoints.attendance.recordById(id), { method: "GET" }),
     recordsByActor: (actorId) => request(endpoints.attendance.actorAttendance(actorId), { method: "GET" }),
     recordsBySession: (sessionId) => request(endpoints.attendance.sessionAttendance(sessionId), { method: "GET" }),
