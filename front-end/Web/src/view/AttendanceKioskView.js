@@ -237,13 +237,26 @@ function CapturePanel({ kioskVm }) {
                 try {
                     await face.loginFace();
                 } catch (e) {
-                    if (attemptIdRef.current === attemptId) kioskVm.onCaptureError(e.message);
+                    // `cancelled` también se vuelve true cuando la clase ya
+                    // terminó (endClass cambia kioskVm.view a SELECT_SESSION,
+                    // lo que dispara el cleanup de este efecto) — un rechazo
+                    // tardío de ese momento (p. ej. el socket se cerró a mitad
+                    // de este loginFace()) no debe reportarse como un error de
+                    // captura: la clase ya no existe.
+                    if (!cancelled && attemptIdRef.current === attemptId) kioskVm.onCaptureError(e.message);
+                } finally {
+                    // Este reset SIEMPRE debe correr si el intento sigue
+                    // vigente (attemptId coincide), sin importar `cancelled`:
+                    // el bug de Critical #2 era justamente saltarse este
+                    // reset cuando el efecto ya se había cancelado (p. ej.
+                    // porque este mismo intento tuvo éxito y kioskVm.view
+                    // cambió a SUCCESS/DUPLICATE/ERROR antes de que
+                    // loginFace() terminara de resolver) — sin él,
+                    // activeCaptureRef se quedaba en "FACE" para siempre y
+                    // ningún loop futuro volvía a intentarlo.
+                    if (attemptIdRef.current === attemptId) setActiveCapture(null);
                 }
                 if (cancelled) return;
-                // Si attemptId ya no es el vigente, un botón de huella tomó
-                // el control mientras este intento estaba en vuelo: no
-                // pisar ese estado.
-                if (attemptIdRef.current === attemptId) setActiveCapture(null);
                 // Pausa real (no solo de microtareas) entre intentos: sin
                 // esto, un loginFace() que resuelve muy rápido (p. ej. en un
                 // test con mocks) encadenaría awaits sin ceder nunca al

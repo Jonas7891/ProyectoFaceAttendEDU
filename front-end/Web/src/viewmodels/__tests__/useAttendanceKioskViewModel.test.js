@@ -194,6 +194,26 @@ test("onCaptureError shows ERROR with that message (e.g. no biometric match)", a
     expect(getVm().statusMessage).toBe("no match found");
 });
 
+test("regression: a capture that was in flight when the class ended does not revive the ERROR banner over SELECT_SESSION (\"Finalizar clase\" bug)", async () => {
+    schedulingApi.closeSession.mockResolvedValue({ classSessionId: 55, sessionStatus: "Closed" });
+    const getVm = await startedVm();
+
+    await act(async () => { await getVm().endClass(); });
+    expect(getVm().view).toBe("SELECT_SESSION");
+
+    // Simula un loginFace()/loginFingerprint() que seguía en vuelo cuando se
+    // cerró la clase y recién ahora rechaza/resuelve — ninguno de los dos
+    // debe poder revivir un banner de la sesión que ya terminó.
+    act(() => { getVm().onCaptureError("socket closed mid-flight"); });
+    expect(getVm().view).toBe("SELECT_SESSION");
+
+    await act(async () => {
+        await getVm().onIdentified("person-a", { biometricType: "FACIAL", score: 0.95 });
+    });
+    expect(getVm().view).toBe("SELECT_SESSION");
+    expect(attendanceApi.createRecord).not.toHaveBeenCalled();
+});
+
 test("a flat attendance.event frame from another kiosk (snake_case person_id, no payload wrapper) adds the resolved academicActorId to registeredActorIds", async () => {
     // No usa startedVm(): necesita capturar el listener pasado a
     // onAttendanceEvent, y startedVm() sobrescribiría este mock con uno

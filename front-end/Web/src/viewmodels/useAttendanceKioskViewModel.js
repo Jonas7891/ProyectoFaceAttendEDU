@@ -66,6 +66,13 @@ export function useAttendanceKioskViewModel() {
     const unsubscribeAttendanceRef = useRef(null);
     const unsubscribeStatusRef = useRef(null);
     const resetTimerRef = useRef(null);
+    // Espejo síncrono de `session`, leído por onCaptureError: una captura en
+    // vuelo puede rechazar justo después de que endClass() ya puso session en
+    // null (p. ej. el socket se cerró a mitad de un loginFace()/loginFingerprint()).
+    // Sin este guard, ese error tardío volvía a poner view en "ERROR" encima de
+    // "SELECT_SESSION" con session/socket ya en null — el siguiente intento de
+    // "Finalizar clase" fallaba porque session era null.
+    const sessionRef = useRef(null);
     // Evita que un doble click (o un reintento tras un fallo) en "Iniciar
     // clase" dispare dos startClass() en paralelo: el segundo abriría un
     // socket nuevo que pisaría la ref del primero sin cerrarlo nunca.
@@ -195,6 +202,7 @@ export function useAttendanceKioskViewModel() {
                 setRegisteredActorIds(new Set(registeredActorIdsRef.current));
 
                 setStatusMessage("");
+                sessionRef.current = nextSession;
                 setSession(nextSession);
                 setBlock(nextBlock);
                 setView("WAITING");
@@ -233,6 +241,7 @@ export function useAttendanceKioskViewModel() {
         actorByPersonRef.current = new Map();
         registeredActorIdsRef.current = new Set();
         setRegisteredActorIds(new Set());
+        sessionRef.current = null;
         setSession(null);
         setBlock(null);
         setView("SELECT_SESSION");
@@ -240,7 +249,12 @@ export function useAttendanceKioskViewModel() {
 
     const onIdentified = useCallback(
         async (personId, { biometricType, score }) => {
-            if (!session) return;
+            // Lee sessionRef, no el `session` cerrado en este closure: un
+            // identify que estaba en vuelo cuando la clase ya terminó
+            // (endClass puso sessionRef en null) no debe registrar nada ni
+            // revivir ningún banner — igual que onCaptureError arriba.
+            const currentSession = sessionRef.current;
+            if (!currentSession) return;
 
             const academicActorId = actorByPersonRef.current.get(personId);
             if (academicActorId == null) {
@@ -259,7 +273,7 @@ export function useAttendanceKioskViewModel() {
 
             try {
                 await attendanceApi.createRecord({
-                    classSessionId: session.classSessionId,
+                    classSessionId: currentSession.classSessionId,
                     academicActorId,
                     attendanceStatus: "Present",
                     // 05-ms-attendance's AttendanceRecord.ALLOWED_METHOD solo
@@ -293,10 +307,14 @@ export function useAttendanceKioskViewModel() {
 
             scheduleReturnToWaiting();
         },
-        [session]
+        []
     );
 
     const onCaptureError = useCallback((message) => {
+        // Una captura que estaba en vuelo cuando la clase ya terminó (endClass
+        // puso session en null) no debe revivir el banner ERROR encima de
+        // SELECT_SESSION — ver sessionRef arriba.
+        if (!sessionRef.current) return;
         setStatusMessage(message);
         setView("ERROR");
         scheduleReturnToWaiting();
