@@ -65,11 +65,13 @@ export default function SettingsView({ section = "appearance" }) {
     // Combinar todos los tipos de cambios
     const anyUnsavedChanges = hasUnsavedAccent || hasConfigChanges || hasColorChanges;
 
-    function handleSave() {
+    async function handleSave() {
         // Ejecutar la función de guardado del componente hijo
         if (saveConfigRef.current) {
-            const success = saveConfigRef.current();
-            
+            // El guardado puede ser asíncrono (réplica en el backend):
+            // se espera el resultado real en vez de asumir éxito.
+            const success = await saveConfigRef.current();
+
             if (success) {
                 // Actualizar color de acento si cambió
                 if (hasUnsavedAccent) {

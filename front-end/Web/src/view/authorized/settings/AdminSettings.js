@@ -10,6 +10,8 @@
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Card } from "../../components/common";
+import { useAuth } from "../../../context/AuthContext";
+import { pushInstitutionConfig } from "../../../services/api/settingsPersistence";
 import { useResponsive } from "../../components/hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useEditableConfig } from "../../components/hooks/useEditableConfig";
@@ -51,6 +53,7 @@ import {
 export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onSaveSuccessColors, previewAccent, onPreviewChange, previewTheme, onHasChanges, onColorChanges }) {
     const { isSmall } = useResponsive();
     const { currentLanguage, t } = useTranslation();
+    const { user } = useAuth();
 
     // ── Estado no editable (UI temporal) ──────────────────────
     const [showExpirationAlert, setShowExpirationAlert] = useState(true);
@@ -91,14 +94,23 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
         save,
         discard,
     } = useEditableConfig(initialConfig, {
-        onSave: (cfg) => {
+        onSave: async (cfg) => {
             // Transformar sessionTime a número antes de guardar
-            const success = updateInstitutionConfig({
+            const merged = {
                 ...cfg,
                 confidenceThreshold: cfg.confidence,
                 sessionTime: parseInt(cfg.sessionTime),
-            });
-            return success;
+            };
+            const success = updateInstitutionConfig(merged);
+            if (!success) return false;
+            // Réplica en el backend (upsert por clave); si falla, el
+            // guardado se reporta como fallido para no mostrar éxito falso.
+            try {
+                await pushInstitutionConfig(user?.schoolId ?? null, merged);
+                return true;
+            } catch {
+                return false;
+            }
         },
         onHasChanges,
     });
