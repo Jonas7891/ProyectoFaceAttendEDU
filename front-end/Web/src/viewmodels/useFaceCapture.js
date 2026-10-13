@@ -35,7 +35,7 @@ export const CAMERA_SUPPORTED =
     typeof navigator !== "undefined" &&
     !!navigator.mediaDevices?.getUserMedia;
 
-export function useFaceCapture({ vm }) {
+export function useFaceCapture({ vm, socket, onIdentified } = {}) {
     const { t } = useTranslation();
     const { run, setStatus, requirePersonId, refreshSummary } = vm;
 
@@ -189,15 +189,21 @@ export function useFaceCapture({ vm }) {
                 setStatus(t("Te pediremos 2 gestos para reconocer el rostro."));
                 const liveness = await captureLiveness(2);
                 setStatus(t("Verificando rostro..."));
-                const data = await biometricCaptureApi.identifyFace({
-                    imageBase64: liveness.image,
-                    challengeToken: liveness.challengeToken,
-                });
+                const data = socket
+                    ? await socket.send("facial.identify_image", {
+                          image_base64: liveness.image,
+                          challenge_token: liveness.challengeToken,
+                      })
+                    : await biometricCaptureApi.identifyFace({
+                          imageBase64: liveness.image,
+                          challengeToken: liveness.challengeToken,
+                      });
+                onIdentified?.(data);
                 const persons = await personMap();
                 const name = fullName(persons.get(data.person_id)) || data.person_id;
                 setStatus(`${t("Persona reconocida")}: ${name}`, "ok");
             }),
-        [withLiveness, setStatus, captureLiveness, t]
+        [withLiveness, setStatus, captureLiveness, socket, onIdentified, t]
     );
 
     return {
