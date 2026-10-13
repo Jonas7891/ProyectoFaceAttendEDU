@@ -370,6 +370,33 @@ class TestConnectionRegistry:
         assert manager.connection_count() == 0
 
 
+class TestFrameHandlerResilience:
+    def test_an_unexpected_exception_during_dispatch_returns_an_error_frame_not_a_dropped_connection(
+        self, client, monkeypatch
+    ):
+        """A non-HTTPException/ValidationError failure inside `_dispatch` (a dlib
+        RuntimeError, a Mongo error, ...) must degrade to an error frame, not
+        propagate and kill the connection — otherwise the frontend's
+        reconnect-and-resend logic would resend the same poison message forever."""
+
+        async def _boom(*args, **kwargs):
+            raise RuntimeError("dlib exploded")
+
+        monkeypatch.setattr(ws_router, "identify_facial", _boom)
+
+        with client.websocket_connect(WS_PATH) as ws:
+            _send(ws, ws_router.FACIAL_IDENTIFY, {"encoding": UNIT_VECTOR}, client_message_id="boom-1")
+            error = ws.receive_json()
+            assert error["type"] == "error"
+            assert error["error"] == "InternalError"
+            assert error["client_message_id"] == "boom-1"
+
+            # the connection must still be usable afterwards
+            _send(ws, ws_router.PING)
+            pong = ws.receive_json()
+            assert pong["type"] == "pong"
+
+
 class TestWebSocketAuthentication:
     def test_missing_token_closes_the_handshake(self, auth_client):
         with pytest.raises(WebSocketDisconnect) as exc_info:

@@ -353,6 +353,19 @@ async def _handle_frame(
             idempotency.set(envelope.client_message_id, response)
         await websocket.send_json(response)
         return
+    except Exception:  # noqa: BLE001 - last-resort guard, see module docstring.
+        # Anything else (a dlib RuntimeError, a Mongo connection error, ...)
+        # would otherwise propagate out of this coroutine and, per FastAPI's
+        # WebSocket handling, drop the connection entirely. The frontend's
+        # reconnect-and-resend logic would then reconnect and resend the exact
+        # same poison message forever. Degrade to an error frame instead, same
+        # as the HTTPException branch above, and keep the connection open.
+        logger.exception("unexpected error handling ws frame type=%s", envelope.type)
+        response = _error_frame(envelope.client_message_id, "InternalError", "internal error")
+        if envelope.client_message_id:
+            idempotency.set(envelope.client_message_id, response)
+        await websocket.send_json(response)
+        return
 
     response = _ack_frame(envelope.type, envelope.client_message_id, result)
     if envelope.client_message_id:
