@@ -13,6 +13,8 @@ export const academicApi = {
         request(endpoints.academic.schoolStatus(id), { method: "PATCH", body: { status } }),
     deleteSchool: (id) => request(endpoints.academic.schoolById(id), { method: "DELETE" }),
     listPrograms: (p) => request(endpoints.academic.programs, { method: "GET", query: p }),
+    listSchoolPrograms: (schoolId) =>
+        request(endpoints.academic.schoolPrograms(schoolId), { method: "GET" }),
     createProgram: (b) => request(endpoints.academic.programs, { method: "POST", body: b }),
     listPeriods: (p) => request(endpoints.academic.periods, { method: "GET", query: p }),
     listSchoolPeriods: (schoolId) =>
