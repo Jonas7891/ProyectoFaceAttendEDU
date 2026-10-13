@@ -103,6 +103,8 @@ describe("kiosk fingerprint capture (regression: Usa tu huella used to call logi
             statusMessage: "",
             socket: null,
             registeredActorIds: new Set(),
+            registeredMethods: new Map(),
+            roster: [],
             onIdentified: jest.fn(),
             onCaptureError: jest.fn(),
         };
@@ -202,6 +204,8 @@ describe("kiosk end-class button", () => {
             statusMessage: "",
             socket: null,
             registeredActorIds: new Set(),
+            registeredMethods: new Map(),
+            roster: [],
             onIdentified: jest.fn(),
             onCaptureError: jest.fn(),
         };
@@ -240,6 +244,8 @@ describe("kiosk passive face loop (regression: locked up after one student — C
             socket: null,
             connectionStatus: "open",
             registeredActorIds: new Set(),
+            registeredMethods: new Map(),
+            roster: [],
             onIdentified: jest.fn(),
             onCaptureError: jest.fn(),
         };
@@ -306,6 +312,42 @@ describe("kiosk passive face loop (regression: locked up after one student — C
     });
 });
 
+describe("kiosk roster panel", () => {
+    test("shows each enrolled student, marking the registered ones with their method", () => {
+        useRolePermissions.mockReturnValue({ canRegisterFace: true });
+        useAttendanceKioskViewModel.mockReturnValue({
+            view: "WAITING",
+            todaysBlocks: [],
+            startClass: jest.fn(),
+            endClass: jest.fn().mockResolvedValue(undefined),
+            session: { classSessionId: 1 },
+            statusMessage: "",
+            socket: null,
+            connectionStatus: "open",
+            registeredActorIds: new Set([1]),
+            registeredMethods: new Map([[1, "FACIAL"]]),
+            roster: [
+                { academicActorId: 1, personId: "person-a", name: "Ana Gómez" },
+                { academicActorId: 2, personId: "person-b", name: "Beto Ruiz" },
+            ],
+            onIdentified: jest.fn(),
+            onCaptureError: jest.fn(),
+        });
+        useFingerprintReader.mockReturnValue({
+            deviceReady: false,
+            sampleReady: false,
+            startCapture: jest.fn(),
+            loginFingerprint: jest.fn(),
+        });
+
+        const tree = renderScreen();
+
+        expect(hasText(tree, "Ana Gómez")).toBe(true);
+        expect(hasText(tree, "Beto Ruiz")).toBe(true);
+        expect(hasText(tree, "Rostro")).toBe(true); // el método de la ya registrada
+    });
+});
+
 describe("kiosk fingerprint preemption and arm-timeout (Important #5)", () => {
     let kioskVm;
 
@@ -322,6 +364,8 @@ describe("kiosk fingerprint preemption and arm-timeout (Important #5)", () => {
             socket: null,
             connectionStatus: "open",
             registeredActorIds: new Set(),
+            registeredMethods: new Map(),
+            roster: [],
             onIdentified: jest.fn(),
             onCaptureError: jest.fn(),
         };

@@ -285,6 +285,35 @@ export const cohortActorByPerson = (cohortId) =>
         return map;
     });
 
+/**
+ * Lista (ordenada por nombre) de los estudiantes matriculados en un cohorte,
+ * para el panel de asistencia del kiosco: { academicActorId, personId, name }.
+ * Reutiliza las mismas fuentes que cohortActorByPerson, sin duplicar la
+ * lógica de filtrado por cohorte.
+ */
+export const cohortRoster = (cohortId) =>
+    memo(`cohortRoster:${cohortId}`, async () => {
+        const [enrollments, actors, persons] = await Promise.all([
+            listEnrollments(),
+            actorMap(),
+            personMap(),
+        ]);
+        const roster = [];
+        for (const enrollment of enrollments) {
+            if (enrollment.cohortId !== cohortId) continue;
+            const actor = actors.get(enrollment.academicActorId);
+            if (!actor?.personId) continue;
+            const person = persons.get(actor.personId);
+            roster.push({
+                academicActorId: enrollment.academicActorId,
+                personId: actor.personId,
+                name: fullName(person) || actor.personId,
+            });
+        }
+        roster.sort((a, b) => a.name.localeCompare(b.name));
+        return roster;
+    });
+
 // ── Utilidades de formato ─────────────────────────────────
 
 /** Nombre completo de una persona del backend ("Nombre Apellido"). */

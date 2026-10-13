@@ -21,7 +21,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { attendanceApi } from "../services/api/attendanceApi";
-import { cohortActorByPerson, listBlocks } from "../services/api/referenceData";
+import { cohortActorByPerson, cohortRoster, listBlocks } from "../services/api/referenceData";
 import { schedulingApi } from "../services/api/schedulingApi";
 import { connectBiometricSocket } from "../services/ws/biometricSocket";
 
@@ -57,12 +57,21 @@ export function useAttendanceKioskViewModel() {
     const [socket, setSocket] = useState(null);
     const [connectionStatus, setConnectionStatus] = useState("closed");
     const [registeredActorIds, setRegisteredActorIds] = useState(new Set());
+    // academicActorId -> "FACIAL"|"FINGERPRINT" (el modo con el que registró
+    // asistencia), para el panel de lista de estudiantes del kiosco. Nunca
+    // "IOT": ese es solo el valor que viaja al backend (ver onIdentified),
+    // aquí se guarda el modo real para mostrarlo al profesor.
+    const [registeredMethods, setRegisteredMethods] = useState(new Map());
+    // Roster del cohorte de la clase activa: [{academicActorId, personId,
+    // name}], para el panel de lista de estudiantes junto a la cámara.
+    const [roster, setRoster] = useState([]);
 
     // Refs: leídos por onIdentified/el listener del socket, que deben ver
     // siempre el valor más reciente sin forzar su propia recreación.
     const socketRef = useRef(null);
     const actorByPersonRef = useRef(new Map());
     const registeredActorIdsRef = useRef(new Set());
+    const registeredMethodsRef = useRef(new Map());
     const unsubscribeAttendanceRef = useRef(null);
     const unsubscribeStatusRef = useRef(null);
     const resetTimerRef = useRef(null);
@@ -103,6 +112,10 @@ export function useAttendanceKioskViewModel() {
         setRegisteredActorIds(new Set(registeredActorIdsRef.current));
     }
 
+    function syncRegisteredMethods() {
+        setRegisteredMethods(new Map(registeredMethodsRef.current));
+    }
+
     // Otro kiosco en la misma sesión ya registró a este actor: reflejarlo
     // localmente sin round-trip propio a attendanceApi. El frame es plano
     // (sin wrapper payload) y usa snake_case, p. ej.
@@ -116,6 +129,10 @@ export function useAttendanceKioskViewModel() {
         if (academicActorId == null) return;
         registeredActorIdsRef.current.add(academicActorId);
         syncRegisteredActorIds();
+        if (frame?.biometric_type) {
+            registeredMethodsRef.current.set(academicActorId, frame.biometric_type);
+            syncRegisteredMethods();
+        }
     }
 
     function scheduleReturnToWaiting() {
@@ -193,13 +210,22 @@ export function useAttendanceKioskViewModel() {
                 unsubscribeAttendanceRef.current = nextSocket.onAttendanceEvent(handleAttendanceEvent);
                 unsubscribeStatusRef.current = nextSocket.onStatusChange(setConnectionStatus);
 
-                const [records, actorByPerson] = await Promise.all([
+                const [records, actorByPerson, nextRoster] = await Promise.all([
                     attendanceApi.recordsBySession(nextSession.classSessionId),
                     cohortActorByPerson(nextBlock.cohortId),
+                    cohortRoster(nextBlock.cohortId),
                 ]);
                 actorByPersonRef.current = actorByPerson;
                 registeredActorIdsRef.current = new Set(records.map((r) => r.academicActorId));
                 setRegisteredActorIds(new Set(registeredActorIdsRef.current));
+                // "IOT" es el valor que el kiosco manda al backend para huella
+                // (ver onIdentified) — al releer un registro existente, se
+                // muestra de vuelta como "FINGERPRINT" para el profesor.
+                registeredMethodsRef.current = new Map(
+                    records.map((r) => [r.academicActorId, r.captureMethod === "IOT" ? "FINGERPRINT" : r.captureMethod])
+                );
+                setRegisteredMethods(new Map(registeredMethodsRef.current));
+                setRoster(nextRoster);
 
                 setStatusMessage("");
                 sessionRef.current = nextSession;
@@ -241,6 +267,9 @@ export function useAttendanceKioskViewModel() {
         actorByPersonRef.current = new Map();
         registeredActorIdsRef.current = new Set();
         setRegisteredActorIds(new Set());
+        registeredMethodsRef.current = new Map();
+        setRegisteredMethods(new Map());
+        setRoster([]);
         sessionRef.current = null;
         setSession(null);
         setBlock(null);
@@ -290,6 +319,8 @@ export function useAttendanceKioskViewModel() {
                 });
                 registeredActorIdsRef.current.add(academicActorId);
                 syncRegisteredActorIds();
+                registeredMethodsRef.current.set(academicActorId, biometricType);
+                syncRegisteredMethods();
                 setStatusMessage("");
                 setView("SUCCESS");
             } catch (e) {
@@ -297,6 +328,8 @@ export function useAttendanceKioskViewModel() {
                     // Otro kiosco ganó la carrera: mismo resultado que un duplicado local.
                     registeredActorIdsRef.current.add(academicActorId);
                     syncRegisteredActorIds();
+                    registeredMethodsRef.current.set(academicActorId, biometricType);
+                    syncRegisteredMethods();
                     setStatusMessage("");
                     setView("DUPLICATE");
                 } else {
@@ -330,6 +363,8 @@ export function useAttendanceKioskViewModel() {
         socket,
         connectionStatus,
         registeredActorIds,
+        registeredMethods,
+        roster,
         onIdentified,
         onCaptureError,
     };

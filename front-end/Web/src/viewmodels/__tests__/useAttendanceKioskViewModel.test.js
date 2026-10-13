@@ -9,6 +9,7 @@ jest.mock("../../context/AuthContext", () => ({
 jest.mock("../../services/api/referenceData", () => ({
     listBlocks: jest.fn(),
     cohortActorByPerson: jest.fn().mockResolvedValue(new Map()),
+    cohortRoster: jest.fn().mockResolvedValue([]),
 }));
 jest.mock("../../services/api/schedulingApi", () => ({
     schedulingApi: {
@@ -23,7 +24,7 @@ jest.mock("../../services/api/attendanceApi", () => ({
 }));
 jest.mock("../../services/ws/biometricSocket", () => ({ connectBiometricSocket: jest.fn() }));
 
-import { listBlocks, cohortActorByPerson } from "../../services/api/referenceData";
+import { listBlocks, cohortActorByPerson, cohortRoster } from "../../services/api/referenceData";
 import { schedulingApi } from "../../services/api/schedulingApi";
 import { attendanceApi } from "../../services/api/attendanceApi";
 import { connectBiometricSocket } from "../../services/ws/biometricSocket";
@@ -123,12 +124,12 @@ test("endClass closes the session and returns to SELECT_SESSION", async () => {
     expect(getVm().view).toBe("SELECT_SESSION");
 });
 
-async function startedVm({ enrolledPersonId = "person-a", academicActorId = 1 } = {}) {
+async function startedVm({ enrolledPersonId = "person-a", academicActorId = 1, existingRecords = [] } = {}) {
     listBlocks.mockResolvedValue([{ scheduleBlockId: 1, instructorActorId: 7, dayOfWeek: ((new Date().getDay() + 6) % 7) + 1, cohortId: 10 }]);
     schedulingApi.listSessions.mockResolvedValue([{ classSessionId: 55, scheduleBlockId: 1, sessionStatus: "Open" }]);
     schedulingApi.openSession.mockResolvedValue({ classSessionId: 55, sessionStatus: "Open" });
     cohortActorByPerson.mockResolvedValue(new Map([[enrolledPersonId, academicActorId]]));
-    attendanceApi.recordsBySession.mockResolvedValue([]);
+    attendanceApi.recordsBySession.mockResolvedValue(existingRecords);
     connectBiometricSocket.mockReturnValue({ send: jest.fn(), onAttendanceEvent: jest.fn(() => () => {}), onStatusChange: jest.fn(() => () => {}), close: jest.fn() });
 
     const getVm = renderHook();
@@ -212,6 +213,34 @@ test("regression: a capture that was in flight when the class ended does not rev
     });
     expect(getVm().view).toBe("SELECT_SESSION");
     expect(attendanceApi.createRecord).not.toHaveBeenCalled();
+});
+
+test("startClass loads the cohort roster and seeds registeredMethods from existing records' captureMethod", async () => {
+    cohortRoster.mockResolvedValue([
+        { academicActorId: 1, personId: "person-a", name: "Ana Gómez" },
+        { academicActorId: 2, personId: "person-b", name: "Beto Ruiz" },
+    ]);
+    const getVm = await startedVm({ existingRecords: [{ academicActorId: 1, captureMethod: "IOT" }] });
+
+    expect(cohortRoster).toHaveBeenCalledWith(10);
+    expect(getVm().roster).toEqual([
+        { academicActorId: 1, personId: "person-a", name: "Ana Gómez" },
+        { academicActorId: 2, personId: "person-b", name: "Beto Ruiz" },
+    ]);
+    // "IOT" es lo que viaja al backend para huella (ver onIdentified); al
+    // releer un registro existente se muestra de vuelta como "FINGERPRINT".
+    expect(getVm().registeredMethods.get(1)).toBe("FINGERPRINT");
+});
+
+test("onIdentified records which biometric method was used, for the roster panel", async () => {
+    attendanceApi.createRecord.mockResolvedValue({ attendanceRecordId: 1 });
+    const getVm = await startedVm();
+
+    await act(async () => {
+        await getVm().onIdentified("person-a", { biometricType: "FACIAL", score: 0.95 });
+    });
+
+    expect(getVm().registeredMethods.get(1)).toBe("FACIAL");
 });
 
 test("a flat attendance.event frame from another kiosk (snake_case person_id, no payload wrapper) adds the resolved academicActorId to registeredActorIds", async () => {

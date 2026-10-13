@@ -126,6 +126,64 @@ function SelectSessionPanel({ kioskVm }) {
     );
 }
 
+// Panel lateral junto a la cámara: lista de estudiantes matriculados en la
+// cohorte de esta clase y quiénes ya registraron asistencia (y con qué
+// método). Puramente de lectura — no dispara ninguna captura por sí mismo.
+function RosterPanel({ kioskVm }) {
+    const { theme } = useTheme();
+    const { t } = useTranslation();
+    const c = theme.colors;
+
+    const methodLabel = { FACIAL: t("Rostro"), FINGERPRINT: t("Huella") };
+
+    return (
+        <Card padding="lg" style={{ width: "100%", maxWidth: 320 }} contentStyle={{ gap: 4 }}>
+            <Text style={{ color: c.text.primary, fontSize: 16, fontWeight: "700", marginBottom: 8 }}>
+                {t("Estudiantes")} ({kioskVm.registeredActorIds.size}/{kioskVm.roster.length})
+            </Text>
+            <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
+                {kioskVm.roster.length === 0 ? (
+                    <Text style={{ color: c.text.secondary, fontSize: 13 }}>
+                        {t("Sin estudiantes matriculados en esta ficha")}
+                    </Text>
+                ) : (
+                    kioskVm.roster.map((student) => {
+                        const method = kioskVm.registeredMethods.get(student.academicActorId);
+                        const present = kioskVm.registeredActorIds.has(student.academicActorId);
+                        return (
+                            <View
+                                key={student.academicActorId}
+                                style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    paddingVertical: 8,
+                                    borderBottomWidth: 1,
+                                    borderBottomColor: c.border.primary,
+                                }}
+                            >
+                                <Feather
+                                    name={present ? "check-circle" : "circle"}
+                                    size={16}
+                                    color={present ? c.status.success : c.text.secondary}
+                                />
+                                <Text style={{ color: c.text.primary, fontSize: 14, flex: 1 }} numberOfLines={1}>
+                                    {student.name}
+                                </Text>
+                                {present && (
+                                    <Text style={{ color: c.text.secondary, fontSize: 12 }}>
+                                        {methodLabel[method] || method || ""}
+                                    </Text>
+                                )}
+                            </View>
+                        );
+                    })
+                )}
+            </ScrollView>
+        </Card>
+    );
+}
+
 function CapturePanel({ kioskVm }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
@@ -365,6 +423,17 @@ function CapturePanel({ kioskVm }) {
                 contentContainerStyle={{ padding: 24, gap: 20, alignItems: "center", flexGrow: 1 }}
                 showsVerticalScrollIndicator={false}
             >
+                <View
+                    style={{
+                        width: "100%",
+                        maxWidth: 900,
+                        flexDirection: "row",
+                        flexWrap: "wrap",
+                        gap: 20,
+                        justifyContent: "center",
+                        alignItems: "flex-start",
+                    }}
+                >
                 <View style={{ width: "100%", maxWidth: 560, gap: 20, alignItems: "center" }}>
                     <Card
                         padding="lg"
@@ -466,6 +535,9 @@ function CapturePanel({ kioskVm }) {
                             {t("Finalizar clase")}
                         </Button>
                     </View>
+                </View>
+
+                <RosterPanel kioskVm={kioskVm} />
                 </View>
             </ScrollView>
         </View>
