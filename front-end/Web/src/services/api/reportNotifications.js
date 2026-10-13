@@ -56,8 +56,11 @@ export async function resolveAttendanceAlertType() {
  * @param {string|number} actorId - academic_actor_id (el `id` del estudiante en Reportes).
  */
 export async function notifyStudentByActorId(actorId, alertTypeId = null) {
+    if (actorId == null || String(actorId).trim() === "") {
+        throw new Error("Student is not synced with the backend yet");
+    }
     const id = Number(actorId);
-    if (!Number.isInteger(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
         throw new Error("Student is not synced with the backend yet");
     }
     const typeId = alertTypeId ?? (await resolveAttendanceAlertType());
@@ -69,7 +72,14 @@ export async function notifyStudentByActorId(actorId, alertTypeId = null) {
  * @returns {{ sent: number }} — lanza si alguna falla.
  */
 export async function notifyActors(actorIds) {
-    const ids = [...new Set((actorIds ?? []).map(Number).filter(Number.isInteger))];
+    const ids = [
+        ...new Set(
+            (actorIds ?? [])
+                .filter((v) => v != null && String(v).trim() !== "")
+                .map(Number)
+                .filter((n) => Number.isInteger(n) && n > 0)
+        ),
+    ];
     if (ids.length === 0) throw new Error("There are no synced students to notify");
     const typeId = await resolveAttendanceAlertType();
     const results = await Promise.allSettled(
