@@ -10,7 +10,7 @@
 // ============================================================
 
 import React, { useState } from "react";
-import { View, Text, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, ActivityIndicator, Platform } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Button, BaseModal, Badge } from "../../../components/common";
 import { useTheme } from "../../../components/hooks/useTheme";
@@ -26,6 +26,93 @@ const IMPORT_STATES = {
     COMPLETE: "complete",
 };
 
+// ── Parseo de CSV (sin dependencias externas) ─────────────
+// Columnas esperadas (cualquier orden, case-insensitive):
+//   code | name | program (+ opcionales: schedule, room, instructor)
+
+const ALIAS = {
+    code: "code",
+    codigo: "code",
+    "código": "code",
+    id: "code",
+    name: "name",
+    nombre: "name",
+    curso: "name",
+    program: "program",
+    programa: "program",
+    carrera: "program",
+    schedule: "schedule",
+    horario: "schedule",
+    jornada: "schedule",
+    room: "room",
+    salon: "room",
+    "salón": "room",
+    aula: "room",
+    ambiente: "room",
+    instructor: "instructor",
+    docente: "instructor",
+    profesor: "instructor",
+};
+
+function parseCSV(text) {
+    const lines = text.replace(/\r/g, "").split("\n").filter((l) => l.trim());
+    if (lines.length < 2) return { headers: [], rows: [] };
+    const split = (line) =>
+        line.split(",").map((c) => c.trim().replace(/^"|"$/g, ""));
+    return { headers: split(lines[0]), rows: lines.slice(1).map(split) };
+}
+
+function rowToCourse(headers, cells) {
+    const obj = {};
+    headers.forEach((h, i) => {
+        const key = ALIAS[h.trim().toLowerCase()];
+        if (!key) return;
+        obj[key] = (cells[i] ?? "").trim();
+    });
+    if (!obj.code || !obj.name || !obj.program) return null;
+    return obj;
+}
+
+const CSV_TEMPLATE =
+    "code,name,program,schedule,room\n" +
+    "2240083,Bases de Datos I,ADSI,mañana,B-201\n" +
+    "2240084,Redes de Datos,ADSI,tarde,B-202\n";
+
+function downloadTemplate() {
+    if (Platform.OS !== "web") return;
+    const blob = new Blob([CSV_TEMPLATE], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "plantilla_cursos.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function pickFile() {
+    return new Promise((resolve) => {
+        if (Platform.OS !== "web") {
+            resolve(null);
+            return;
+        }
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".csv,.tsv,.txt";
+        input.onchange = (e) => {
+            const file = e.target?.files?.[0];
+            if (!file) {
+                resolve(null);
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (evt) => resolve(String(evt.target?.result ?? ""));
+            reader.onerror = () => resolve(null);
+            reader.readAsText(file);
+        };
+        input.click();
+    });
+}
+
 // ── Componente principal ─────────────────────────────────
 
 export default function ImportCoursesModal({ visible, onClose, onImport }) {
@@ -37,48 +124,23 @@ export default function ImportCoursesModal({ visible, onClose, onImport }) {
     const [state, setState] = useState(IMPORT_STATES.IDLE);
     const [drafts, setDrafts] = useState([]);
     const [results, setResults] = useState(null);
+    const [fileError, setFileError] = useState(null);
 
-    const handleFileSelect = () => {
-        // Simulación de carga de archivo
-        // TODO: Implementar lógica real de carga y parseo de CSV/Excel
-        
-        const mockDrafts = [
-            {
-                code: "2240081",
-                name: "Tecnología en Análisis y Desarrollo de Software",
-                program: "Análisis y Desarrollo de Software",
-                instructor: "Dr. Pedro Torres",
-                semester: "2024-2",
-                schedule: "Lun-Vie 8:00-12:00",
-                room: "B-201",
-                maxStudents: 30,
-                status: "active",
-            },
-            {
-                code: "2240082",
-                name: "Tecnología en Gestión de Redes",
-                program: "Gestión de Redes de Datos",
-                instructor: "Dra. Patricia Soto",
-                semester: "2024-2",
-                schedule: "Lun-Vie 14:00-18:00",
-                room: "B-202",
-                maxStudents: 25,
-                status: "active",
-            },
-            {
-                code: "2240083",
-                name: "Tecnología en Electrónica",
-                program: "Electrónica",
-                instructor: "Dr. Mauricio Reyes",
-                semester: "2024-2",
-                schedule: "Lun-Vie 8:00-12:00",
-                room: "C-101",
-                maxStudents: 28,
-                status: "active",
-            },
-        ];
-
-        setDrafts(mockDrafts);
+    const handleFileSelect = async () => {
+        setFileError(null);
+        const text = await pickFile();
+        if (!text) return;
+        const { headers, rows } = parseCSV(text);
+        const parsed = [];
+        for (const cells of rows) {
+            const draft = rowToCourse(headers, cells);
+            if (draft) parsed.push(draft);
+        }
+        if (parsed.length === 0) {
+            setFileError(t("El archivo no contiene cursos válidos (columnas: código, nombre, programa)"));
+            return;
+        }
+        setDrafts(parsed);
         setState(IMPORT_STATES.PREVIEW);
     };
 
@@ -95,6 +157,7 @@ export default function ImportCoursesModal({ visible, onClose, onImport }) {
         setState(IMPORT_STATES.IDLE);
         setDrafts([]);
         setResults(null);
+        setFileError(null);
         onClose();
     };
 
@@ -158,6 +221,22 @@ export default function ImportCoursesModal({ visible, onClose, onImport }) {
                             "El archivo debe contener las columnas: código, nombre, programa, instructor, semestre"
                         )}
                     </Text>
+                    <Button variant="ghost" onPress={downloadTemplate}>
+                        <Feather name="download" size={14} color={c.brand.primary} />{" "}
+                        {t("Descargar plantilla")}
+                    </Button>
+                    {fileError && (
+                        <Text
+                            style={{
+                                fontSize: 13,
+                                color: c.status.error,
+                                textAlign: "center",
+                                marginTop: 8,
+                            }}
+                        >
+                            {fileError}
+                        </Text>
+                    )}
                 </View>
             </BaseModal>
         );
@@ -245,7 +324,9 @@ export default function ImportCoursesModal({ visible, onClose, onImport }) {
                                             marginTop: 2,
                                         }}
                                     >
-                                        {draft.instructor} • {draft.room}
+                                        {draft.instructor || draft.room
+                                            ? `${draft.instructor || "—"} • ${draft.room || "—"}`
+                                            : draft.program}
                                     </Text>
                                 </View>
                             </View>

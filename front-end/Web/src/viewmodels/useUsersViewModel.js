@@ -491,8 +491,9 @@ export function useUsersViewModel(
             if (userType === USER_TYPES.STUDENT) {
                 return appData.importStudents(drafts);
             }
-            // TODO: Agregar importación para otros tipos
-            return { success: 0, errors: [] };
+            // Sin CSV con documento/contraseña no hay alta masiva de
+            // docentes/administradores: error explícito, nunca éxito falso.
+            throw new Error("Bulk import is only available for students");
         },
         [appData]
     );

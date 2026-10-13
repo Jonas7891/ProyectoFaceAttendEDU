@@ -14,7 +14,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { useAuth } from "../context/AuthContext";
-import { createCourse } from "../services/api/courseCreation";
+import { createCourse, importCourses as bulkImportCourses } from "../services/api/courseCreation";
 
 // ── Formulario vacío ───────────────────────────────────────
 
@@ -369,12 +369,18 @@ export function useCoursesViewModel() {
 
     const importCourses = useCallback(
         async (drafts) => {
-            // TODO: Implementar importCourses en AppDataContext
-            // return appData.importCourses(drafts);
-            console.log("Importar cursos:", drafts);
-            return { success: 0, errors: [] };
+            // Importación real: un curso por fila, con el programa
+            // resuelto por código o nombre dentro de la sede.
+            try {
+                return await bulkImportCourses(user?.schoolId ?? null, drafts);
+            } catch (e) {
+                return {
+                    success: 0,
+                    errors: [{ course: "", reason: e?.message || "No se pudo importar" }],
+                };
+            }
         },
-        [appData]
+        [user]
     );
 
     function selectCourse(course) {
