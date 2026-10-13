@@ -19,6 +19,7 @@ import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
+import { provisionStaff } from "../services/api/staffProvisioning";
 
 // Usuarios pintados por página (la vista de Usuarios pagina en el cliente
 // para no cargar miles de filas de golpe en el DOM).
@@ -48,6 +49,8 @@ export const EMPTY_USER_FORM = {
     email: "",
     course: "",
     role: USER_TYPES.STUDENT,
+    documentNumber: "",
+    password: "",
     attendance: 0,
     hasFacial: false,      // Registro facial
     hasFingerprint: false, // Registro de huella dactilar
@@ -130,6 +133,13 @@ export function validateUserForm(form) {
     // Validación adicional para estudiantes
     if (form.role === USER_TYPES.STUDENT && !form.course.trim()) {
         return "El programa es requerido para estudiantes";
+    }
+
+    // Docentes y administradores se crean en el backend (POST /persons
+    // exige documentNumber, POST /users exige password de 8-100 chars).
+    if (form.role === USER_TYPES.TEACHER || form.role === USER_TYPES.ADMIN) {
+        if (!String(form.documentNumber ?? "").trim()) return "El documento es requerido";
+        if (String(form.password ?? "").length < 8) return "La contraseña debe tener al menos 8 caracteres";
     }
     
     return null;
@@ -442,18 +452,37 @@ export function useUsersViewModel(
                     hasFingerprint: form.hasFingerprint || false,
                     status: form.status,
                 });
+                return null;
             }
-            // TODO: Agregar métodos para profesores y administradores
-            // else if (form.role === USER_TYPES.TEACHER) {
-            //     await appData.addTeacher({ ... });
-            // }
-            // else if (form.role === USER_TYPES.ADMIN) {
-            //     await appData.addAdmin({ ... });
-            // }
-            
+
+            // Docentes y administradores: alta real en el backend
+            // (persona + usuario + rol, más academic_actor en docentes).
+            try {
+                await provisionStaff({
+                    name: form.name.trim(),
+                    code: form.code.trim(),
+                    email: form.email.trim(),
+                    documentNumber: String(form.documentNumber ?? "").trim(),
+                    password: String(form.password ?? ""),
+                    role: form.role === USER_TYPES.TEACHER ? "teacher" : "admin",
+                    schoolId: user?.schoolId ?? null,
+                });
+            } catch (e) {
+                return e?.message || "No se pudo registrar el usuario en el backend";
+            }
+
+            // Espejo local para que la fila aparezca sin recargar.
+            await appData.addUser({
+                name: form.name.trim(),
+                code: form.code.trim(),
+                email: form.email.trim(),
+                role: form.role,
+                status: form.status,
+            });
+
             return null;
         },
-        [appData]
+        [appData, user]
     );
 
     const importUsers = useCallback(

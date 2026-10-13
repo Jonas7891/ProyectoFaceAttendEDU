@@ -344,6 +344,35 @@ export default function RegisterStudentModal({
                     errorMessage={isEmpty(form.email) ? t("Campo requerido") : ""}
                 />
 
+                {/* Documento y contraseña: el backend los exige para
+                    docentes/administradores (POST /persons y POST /users) */}
+                {form.role && form.role !== "student" && (
+                    <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
+                        <View style={{ flex: 1 }}>
+                            <TextInput
+                                label={t("Número de documento") + " *"}
+                                value={form.documentNumber}
+                                onChangeText={v => setField("documentNumber", v)}
+                                placeholder={t("Ej: 1234567890")}
+                                error={isEmpty(form.documentNumber)}
+                                errorMessage={isEmpty(form.documentNumber) ? t("Campo requerido") : ""}
+                            />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            <TextInput
+                                label={t("Contraseña temporal") + " *"}
+                                value={form.password}
+                                onChangeText={v => setField("password", v)}
+                                placeholder={t("Mínimo 8 caracteres")}
+                                type="password"
+                                error={showErrors && String(form.password ?? "").length < 8}
+                                errorMessage={showErrors && String(form.password ?? "").length < 8 ? t("Mínimo 8 caracteres") : ""}
+                                helperText={t("El usuario deberá cambiarla al ingresar")}
+                            />
+                        </View>
+                    </View>
+                )}
+
                 {/* Fila 2 — Programa/Departamento y Rol */}
                 <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
                     {config.showProgram && (

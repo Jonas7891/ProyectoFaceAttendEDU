@@ -9,6 +9,8 @@ export const EMPTY_FORM = {
     email: "",
     course: "",
     role: "student",
+    documentNumber: "",
+    password: "",
     attendance: 0,
     hasFacial: false,      // Registro facial
     hasFingerprint: false, // Registro de huella dactilar
@@ -21,6 +23,12 @@ export function validateStudentForm(form) {
     if (!form.email.trim()) return "Completa todos los campos";
     if (!form.course.trim()) return "Completa todos los campos";
     if (!form.role) return "Completa todos los campos";
+    // Docentes y administradores se crean en el backend (POST /persons
+    // exige documentNumber, POST /users exige password de 8-100 chars).
+    if (form.role === "teacher" || form.role === "admin") {
+        if (!String(form.documentNumber ?? "").trim()) return "Completa todos los campos";
+        if (String(form.password ?? "").length < 8) return "La contraseña debe tener al menos 8 caracteres";
+    }
     return null;
 }
 
