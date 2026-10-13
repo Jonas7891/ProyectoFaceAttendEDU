@@ -21,9 +21,12 @@ jest.mock("../../services/api/schedulingApi", () => ({
 jest.mock("../../services/api/attendanceApi", () => ({
     attendanceApi: { recordsBySession: jest.fn().mockResolvedValue([]), createRecord: jest.fn() },
 }));
+jest.mock("../../services/ws/biometricSocket", () => ({ connectBiometricSocket: jest.fn() }));
 
-import { listBlocks } from "../../services/api/referenceData";
+import { listBlocks, cohortActorByPerson } from "../../services/api/referenceData";
 import { schedulingApi } from "../../services/api/schedulingApi";
+import { attendanceApi } from "../../services/api/attendanceApi";
+import { connectBiometricSocket } from "../../services/ws/biometricSocket";
 import { useAttendanceKioskViewModel } from "../useAttendanceKioskViewModel";
 
 function renderHook() {
@@ -36,7 +39,17 @@ function renderHook() {
     return () => vm;
 }
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+    jest.clearAllMocks();
+    cohortActorByPerson.mockResolvedValue(new Map());
+    attendanceApi.recordsBySession.mockResolvedValue([]);
+    connectBiometricSocket.mockReturnValue({
+        send: jest.fn(),
+        onAttendanceEvent: jest.fn(() => () => {}),
+        onStatusChange: jest.fn(() => () => {}),
+        close: jest.fn(),
+    });
+});
 
 test("todaysBlocks only includes blocks for this instructor on today's ISO weekday", async () => {
     const isoToday = ((new Date().getDay() + 6) % 7) + 1; // getDay(): 0=domingo..6=sábado -> ISO 1..7
@@ -106,4 +119,75 @@ test("endClass closes the session and returns to SELECT_SESSION", async () => {
 
     expect(schedulingApi.closeSession).toHaveBeenCalledWith(55);
     expect(getVm().view).toBe("SELECT_SESSION");
+});
+
+async function startedVm({ enrolledPersonId = "person-a", academicActorId = 1 } = {}) {
+    listBlocks.mockResolvedValue([{ scheduleBlockId: 1, instructorActorId: 7, dayOfWeek: 1, cohortId: 10 }]);
+    schedulingApi.listSessions.mockResolvedValue([{ classSessionId: 55, scheduleBlockId: 1, sessionStatus: "Open" }]);
+    schedulingApi.openSession.mockResolvedValue({ classSessionId: 55, sessionStatus: "Open" });
+    cohortActorByPerson.mockResolvedValue(new Map([[enrolledPersonId, academicActorId]]));
+    attendanceApi.recordsBySession.mockResolvedValue([]);
+    connectBiometricSocket.mockReturnValue({ send: jest.fn(), onAttendanceEvent: jest.fn(() => () => {}), onStatusChange: jest.fn(() => () => {}), close: jest.fn() });
+
+    const getVm = renderHook();
+    await act(async () => {});
+    await act(async () => { await getVm().startClass(getVm().todaysBlocks[0]); });
+    return getVm;
+}
+
+test("a successful identify for an enrolled person creates the attendance record and shows SUCCESS", async () => {
+    attendanceApi.createRecord.mockResolvedValue({ attendanceRecordId: 1 });
+    const getVm = await startedVm();
+
+    await act(async () => {
+        await getVm().onIdentified("person-a", { biometricType: "FACIAL", score: 0.95 });
+    });
+
+    expect(attendanceApi.createRecord).toHaveBeenCalledWith({
+        classSessionId: 55,
+        academicActorId: 1,
+        attendanceStatus: "Present",
+        captureMethod: "FACIAL",
+        matchScore: 0.95,
+    });
+    expect(getVm().view).toBe("SUCCESS");
+});
+
+test("identifying the same person twice in one session shows DUPLICATE without a second HTTP call", async () => {
+    attendanceApi.createRecord.mockResolvedValue({ attendanceRecordId: 1 });
+    const getVm = await startedVm();
+    await act(async () => { await getVm().onIdentified("person-a", { biometricType: "FACIAL", score: 0.95 }); });
+
+    await act(async () => { await getVm().onIdentified("person-a", { biometricType: "FACIAL", score: 0.95 }); });
+
+    expect(attendanceApi.createRecord).toHaveBeenCalledTimes(1);
+    expect(getVm().view).toBe("DUPLICATE");
+});
+
+test("a 409 from createRecord (race with another kiosk) is treated as DUPLICATE, not ERROR", async () => {
+    attendanceApi.createRecord.mockRejectedValue({ status: 409, message: "duplicate" });
+    const getVm = await startedVm();
+
+    await act(async () => { await getVm().onIdentified("person-a", { biometricType: "FACIAL", score: 0.95 }); });
+
+    expect(getVm().view).toBe("DUPLICATE");
+});
+
+test("a recognized person outside this cohort shows ERROR without creating a record", async () => {
+    attendanceApi.createRecord.mockResolvedValue({});
+    const getVm = await startedVm({ enrolledPersonId: "person-a" });
+
+    await act(async () => { await getVm().onIdentified("person-outsider", { biometricType: "FACIAL", score: 0.95 }); });
+
+    expect(attendanceApi.createRecord).not.toHaveBeenCalled();
+    expect(getVm().view).toBe("ERROR");
+});
+
+test("onCaptureError shows ERROR with that message (e.g. no biometric match)", async () => {
+    const getVm = await startedVm();
+
+    act(() => { getVm().onCaptureError("no match found"); });
+
+    expect(getVm().view).toBe("ERROR");
+    expect(getVm().statusMessage).toBe("no match found");
 });
