@@ -425,3 +425,59 @@ class TestFacialImageOverWebSocket:
         assert ack["client_message_id"] == "c1"
         assert ack["result"]["person_id"] == PERSON
         assert ack["result"]["score"] == pytest.approx(1.0)
+
+
+class TestFingerprintSampleOverWebSocket:
+    def test_identify_sample_ack_matches_the_rest_response_shape(self, client, monkeypatch):
+        import infrastructure.web.routers.fingerprint_router as fingerprint_router
+        monkeypatch.setattr(fingerprint_router, "decode_fingerprint", lambda data, max_bytes, max_pixels: "decoded")
+        monkeypatch.setattr(fingerprint_router, "fingerprint_keypoint_score", lambda a, b: 999)
+
+        # Enrolar por /enroll-sample deja un template con raw_sample_b64 activo
+        # para PERSON, dedo 1 — la única clase de template que identify-sample
+        # considera candidato (ver `_raw_sample_candidates`).
+        client.post(
+            "/api/v1/biometric/fingerprint/enroll-sample",
+            json={"person_id": PERSON, "finger_number": 1, "data_base64": "seed", "quality": 80},
+        )
+
+        with client.websocket_connect(WS_PATH) as ws:
+            _send(
+                ws,
+                "fingerprint.identify_sample",
+                {"sample_format": 1, "data_base64": "x", "quality": 80},
+                client_message_id="f1",
+            )
+            ack = ws.receive_json()
+
+        assert ack["type"] == "fingerprint.identify_sample.ack"
+        assert ack["result"]["person_id"] == PERSON
+        assert ack["result"]["finger_number"] == 1
+
+    def test_identify_sample_broadcasts_an_attendance_event_to_other_clients(self, client, monkeypatch):
+        import infrastructure.web.routers.fingerprint_router as fingerprint_router
+        monkeypatch.setattr(fingerprint_router, "decode_fingerprint", lambda data, max_bytes, max_pixels: "decoded")
+        monkeypatch.setattr(fingerprint_router, "fingerprint_keypoint_score", lambda a, b: 999)
+
+        client.post(
+            "/api/v1/biometric/fingerprint/enroll-sample",
+            json={"person_id": PERSON, "finger_number": 1, "data_base64": "seed", "quality": 80},
+        )
+
+        with client.websocket_connect(WS_PATH) as observer:
+            with client.websocket_connect(WS_PATH) as kiosk:
+                _send(
+                    kiosk,
+                    "fingerprint.identify_sample",
+                    {"sample_format": 1, "data_base64": "x", "quality": 80},
+                    direction="CHECK_IN",
+                )
+                kiosk.receive_json()
+                event = observer.receive_json()
+
+        assert event["type"] == "attendance.event"
+        assert event["event_type"] == "CHECK_IN"
+        assert event["person_id"] == PERSON
+        assert event["biometric_type"] == "FINGERPRINT"
+        assert event["finger_number"] == 1
+        assert event["score"] == 999
