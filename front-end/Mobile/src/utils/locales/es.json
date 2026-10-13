@@ -682,7 +682,14 @@
       "saving": "Guardando...",
       "successMessage": "Contraseña actualizada correctamente",
       "successTitle": "Contraseña actualizada",
-      "title": "Cambiar contraseña"
+      "title": "Cambiar contraseña",
+      "sendCode": "Enviar código",
+      "sendingCode": "Enviando...",
+      "codeSentTo": "Enviamos un código de 6 dígitos a",
+      "codeLabel": "Código de verificación",
+      "verifyButton": "Verificar código",
+      "verifying": "Verificando...",
+      "resendCode": "Reenviar código"
     },
     "pendingJustifications": "Justificaciones",
     "phone": "Teléfono",

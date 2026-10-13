@@ -16,64 +16,87 @@ import {useTranslation} from 'react-i18next';
 import {useTheme} from './ThemeContext';
 import PrimaryButton from '../auth/PrimaryButton';
 import stylesCommon from './style/Style';
+import {VerificationService} from '../../services/verificationService';
+import {getCurrentUser} from '../../services/UserService';
+import {useCodeVerification} from '../../hooks/useCodeVerification';
+import {usePasswordUpdate} from '../../hooks/usePasswordUpdate';
+
+// Cambio de contraseña con los endpoints existentes de recuperación:
+// forgot-password -> verify-code -> reset-password (ms-identity).
+// Sin endpoint dedicado de change-password en el backend, el código al
+// correo es la verificación de identidad.
+const STEPS = {SEND: 'send', CODE: 'code', PASSWORD: 'password'};
 
 export default function PasswordUpdateModal() {
     const { t } = useTranslation();
     const { colors } = useTheme();
 
     const [isPasswordModalVisible, setPasswordModalVisible] = useState(false);
-    const [currentPassword, setCurrentPassword] = useState('');
-    const [newPassword, setNewPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [passwordError, setPasswordError] = useState('');
-    const [passwordLoading, setPasswordLoading] = useState(false);
+    const [step, setStep] = useState(STEPS.SEND);
+    const [email, setEmail] = useState('');
+    const [sendLoading, setSendLoading] = useState(false);
+    const [sendError, setSendError] = useState('');
 
-    const resetPasswordForm = () => {
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
-        setPasswordError('');
-        setPasswordLoading(false);
-    };
-
-    const openPasswordModal = () => {
-        resetPasswordForm();
-        setPasswordModalVisible(true);
-    };
-
-    const closePasswordModal = () => {
-        setPasswordModalVisible(false);
-        resetPasswordForm();
-    };
-
-    const handlePasswordUpdate = async () => {
-        setPasswordError('');
-        if (!currentPassword || !newPassword || !confirmPassword) {
-            setPasswordError(t('profile.passwordModal.errorRequired', 'Completa todos los campos'));
-            return;
-        }
-        if (newPassword !== confirmPassword) {
-            setPasswordError(t('profile.passwordModal.errorMatch', 'Las contraseñas no coinciden'));
-            return;
-        }
-        if (newPassword.length < 6) {
-            setPasswordError(t('profile.passwordModal.errorLength', 'Mínimo 6 caracteres'));
-            return;
-        }
-        try {
-            setPasswordLoading(true);
-            await new Promise((resolve) => setTimeout(resolve, 600));
-            setPasswordLoading(false);
+    const codeVerification = useCodeVerification({
+        email,
+        onSuccess: () => setStep(STEPS.PASSWORD),
+    });
+    const passwordUpdate = usePasswordUpdate({
+        email,
+        onSuccess: () => {
             Alert.alert(
                 t('profile.passwordModal.successTitle', 'Contraseña actualizada'),
                 t('profile.passwordModal.successMessage', 'Tu contraseña ha sido actualizada correctamente')
             );
             closePasswordModal();
-        } catch (error) {
-            setPasswordLoading(false);
-            setPasswordError(t('profile.passwordModal.errorGeneric', 'No se pudo actualizar. Intenta de nuevo.'));
+        },
+    });
+
+    const resetFlow = () => {
+        setStep(STEPS.SEND);
+        setEmail('');
+        setSendLoading(false);
+        setSendError('');
+        codeVerification.resetAttempts();
+        passwordUpdate.resetForm();
+    };
+
+    const openPasswordModal = async () => {
+        resetFlow();
+        setPasswordModalVisible(true);
+        try {
+            const me = await getCurrentUser();
+            if (me?.email) setEmail(me.email);
+            else setSendError(t('profile.passwordModal.errorGeneric', 'No se pudo actualizar. Intenta de nuevo.'));
+        } catch {
+            setSendError(t('profile.passwordModal.errorGeneric', 'No se pudo actualizar. Intenta de nuevo.'));
         }
     };
+
+    const closePasswordModal = () => {
+        setPasswordModalVisible(false);
+        resetFlow();
+    };
+
+    const handleSendCode = async () => {
+        if (!email) return;
+        setSendError('');
+        setSendLoading(true);
+        try {
+            await VerificationService.sendRecoveryCode(email);
+            codeVerification.resetAttempts();
+            setStep(STEPS.CODE);
+        } catch (error) {
+            setSendError(error?.message || t('profile.passwordModal.errorGeneric', 'No se pudo actualizar. Intenta de nuevo.'));
+        } finally {
+            setSendLoading(false);
+        }
+    };
+
+    const combinedError =
+        sendError ||
+        (codeVerification.error?.message ?? '') ||
+        (passwordUpdate.error?.message ?? '');
 
     return (
         <>
@@ -128,47 +151,108 @@ export default function PasswordUpdateModal() {
                                         { backgroundColor: colors.border ?? colors.textSecondary + '30' },
                                     ]} />
 
-                                    {/* Inputs — sin labels uppercase, solo placeholder */}
-                                    <TextInput
-                                        style={[stylesCommon.passwordModalInput, {
-                                            borderColor: colors.border ?? colors.textSecondary + '50',
-                                            color: colors.text,
-                                            backgroundColor: colors.background,
-                                        }]}
-                                        placeholder={t('profile.passwordModal.currentPassword', 'Contraseña actual')}
-                                        placeholderTextColor={colors.textSecondary}
-                                        secureTextEntry
-                                        onChangeText={setCurrentPassword}
-                                    />
-                                    <Text style={{marginBottom: 10, color: colors.text, marginTop: 20}}>Ingrese su nueva
-                                        contraseña</Text>
-                                    <TextInput
-                                        style={[stylesCommon.passwordModalInput, {
-                                            borderColor: colors.border ?? colors.textSecondary + '50',
-                                            color: colors.text,
-                                            backgroundColor: colors.background,
-                                        }]}
-                                        placeholder={t('profile.passwordModal.newPassword', 'Nueva contraseña (mín. 6 caracteres)')}
-                                        placeholderTextColor={colors.textSecondary}
-                                        secureTextEntry
-                                        onChangeText={setNewPassword}
-                                    />
-                                    <Text style={{marginBottom: 10, color: colors.text, marginTop: 20}}>Confirme la
-                                        contraseña ingresada</Text>
-                                    <TextInput
-                                        style={[stylesCommon.passwordModalInput, {
-                                            borderColor: colors.border ?? colors.textSecondary + '50',
-                                            color: colors.text,
-                                            backgroundColor: colors.background,
-                                        }]}
-                                        placeholder={t('profile.passwordModal.confirmPassword', 'Confirmar nueva contraseña')}
-                                        placeholderTextColor={colors.textSecondary}
-                                        secureTextEntry
-                                        onChangeText={setConfirmPassword}
-                                    />
+                                    {/* Paso 1: enviar código */}
+                                    {step === STEPS.SEND && (
+                                        <>
+                                            <Text style={{ marginBottom: 14, color: colors.text }}>
+                                                {t('profile.passwordModal.codeSentTo', 'Enviamos un código de 6 dígitos a')}{'\n'}
+                                                <Text style={{ fontWeight: '700' }}>{email}</Text>
+                                            </Text>
+                                            <PrimaryButton
+                                                title={
+                                                    sendLoading
+                                                        ? t('profile.passwordModal.sendingCode', 'Enviando...')
+                                                        : t('profile.passwordModal.sendCode', 'Enviar código')
+                                                }
+                                                onPress={handleSendCode}
+                                                disabled={sendLoading || !email}
+                                            />
+                                        </>
+                                    )}
+
+                                    {/* Paso 2: verificar código */}
+                                    {step === STEPS.CODE && (
+                                        <>
+                                            <TextInput
+                                                style={[stylesCommon.passwordModalInput, {
+                                                    borderColor: colors.border ?? colors.textSecondary + '50',
+                                                    color: colors.text,
+                                                    backgroundColor: colors.background,
+                                                }]}
+                                                placeholder={t('profile.passwordModal.codeLabel', 'Código de verificación')}
+                                                placeholderTextColor={colors.textSecondary}
+                                                keyboardType="number-pad"
+                                                maxLength={6}
+                                                value={codeVerification.code}
+                                                onChangeText={codeVerification.setCode}
+                                            />
+                                            <View style={{ width: '100%', marginTop: 12 }}>
+                                                <PrimaryButton
+                                                    title={
+                                                        codeVerification.isLoading
+                                                            ? t('profile.passwordModal.verifying', 'Verificando...')
+                                                            : t('profile.passwordModal.verifyButton', 'Verificar código')
+                                                    }
+                                                    onPress={codeVerification.verifyCode}
+                                                    disabled={!codeVerification.canSubmit}
+                                                />
+                                            </View>
+                                            <TouchableOpacity
+                                                onPress={handleSendCode}
+                                                disabled={sendLoading}
+                                                style={stylesCommon.passwordModalCancelButton}
+                                            >
+                                                <Text style={[stylesCommon.passwordModalCancelText, { color: colors.primary }]}>
+                                                    {t('profile.passwordModal.resendCode', 'Reenviar código')}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        </>
+                                    )}
+
+                                    {/* Paso 3: nueva contraseña */}
+                                    {step === STEPS.PASSWORD && (
+                                        <>
+                                            <TextInput
+                                                style={[stylesCommon.passwordModalInput, {
+                                                    borderColor: colors.border ?? colors.textSecondary + '50',
+                                                    color: colors.text,
+                                                    backgroundColor: colors.background,
+                                                }]}
+                                                placeholder={t('profile.passwordModal.newPassword', 'Nueva contraseña (mín. 6 caracteres)')}
+                                                placeholderTextColor={colors.textSecondary}
+                                                secureTextEntry
+                                                value={passwordUpdate.newPassword}
+                                                onChangeText={passwordUpdate.setNewPassword}
+                                            />
+                                            <TextInput
+                                                style={[stylesCommon.passwordModalInput, {
+                                                    borderColor: colors.border ?? colors.textSecondary + '50',
+                                                    color: colors.text,
+                                                    backgroundColor: colors.background,
+                                                    marginTop: 10,
+                                                }]}
+                                                placeholder={t('profile.passwordModal.confirmPassword', 'Confirmar nueva contraseña')}
+                                                placeholderTextColor={colors.textSecondary}
+                                                secureTextEntry
+                                                value={passwordUpdate.confirmPassword}
+                                                onChangeText={passwordUpdate.setConfirmPassword}
+                                            />
+                                            <View style={{ width: '100%', marginTop: 12 }}>
+                                                <PrimaryButton
+                                                    title={
+                                                        passwordUpdate.isLoading
+                                                            ? t('profile.passwordModal.saving', 'Guardando...')
+                                                            : t('profile.passwordModal.saveButton', 'Guardar')
+                                                    }
+                                                    onPress={passwordUpdate.updatePassword}
+                                                    disabled={!passwordUpdate.canSubmit}
+                                                />
+                                            </View>
+                                        </>
+                                    )}
 
                                     {/* Error */}
-                                    {passwordError ? (
+                                    {combinedError ? (
                                         <View style={[
                                             stylesCommon.passwordModalErrorRow,
                                             {
@@ -177,24 +261,13 @@ export default function PasswordUpdateModal() {
                                             },
                                         ]}>
                                             <Text style={[stylesCommon.passwordModalError, { color: colors.danger || '#ff0000' }]}>
-                                                {passwordError}
+                                                {combinedError}
                                             </Text>
                                         </View>
                                     ) : null}
 
                                     {/* Botones */}
                                     <View style={stylesCommon.passwordModalButtons}>
-                                        <View style={{ width: '100%' }}>
-                                            <PrimaryButton
-                                                title={
-                                                    passwordLoading
-                                                        ? t('profile.passwordModal.saving', 'Guardando...')
-                                                        : t('profile.passwordModal.saveButton', 'Guardar')
-                                                }
-                                                onPress={handlePasswordUpdate}
-                                                disabled={passwordLoading}
-                                            />
-                                        </View>
                                         <TouchableOpacity
                                             onPress={closePasswordModal}
                                             style={stylesCommon.passwordModalCancelButton}
