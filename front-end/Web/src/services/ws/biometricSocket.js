@@ -11,6 +11,9 @@ import { getToken, resolveBaseUrl } from "../../api/apiClient";
 
 const HEARTBEAT_MS = 20000;
 const RECONNECT_DELAYS_MS = [1000, 2000, 4000, 8000];
+// Mirrored locally (rather than read off global.WebSocket) so a test double
+// that doesn't define the static WebSocket.OPEN constant still works.
+const WS_OPEN = 1;
 
 function toWsUrl(httpBaseUrl) {
     return httpBaseUrl.replace(/^http/i, "ws");
@@ -45,20 +48,29 @@ export function connectBiometricSocket({ token, baseUrl } = {}) {
     function startHeartbeat() {
         stopHeartbeat();
         heartbeatTimer = setInterval(() => {
-            ws?.send(JSON.stringify({ type: "ping" }));
+            if (ws && ws.readyState === WS_OPEN) ws.send(JSON.stringify({ type: "ping" }));
         }, HEARTBEAT_MS);
     }
 
-    function resendPending() {
+    function transmit(clientMessageId, entry) {
+        ws.send(
+            JSON.stringify({
+                type: entry.type,
+                client_message_id: clientMessageId,
+                direction: entry.direction,
+                payload: entry.payload,
+            })
+        );
+    }
+
+    // Runs on every `onopen` — the initial connect included, not just a reconnect.
+    // A send() issued while the socket was still connecting is queued in `pending`
+    // without having been transmitted; this flushes it the moment the socket opens.
+    // A send() already in flight across a reconnect is flushed here too, under the
+    // SAME client_message_id it was first assigned.
+    function flushPending() {
         for (const [clientMessageId, entry] of pending) {
-            ws.send(
-                JSON.stringify({
-                    type: entry.type,
-                    client_message_id: clientMessageId,
-                    direction: entry.direction,
-                    payload: entry.payload,
-                })
-            );
+            transmit(clientMessageId, entry);
         }
     }
 
@@ -86,7 +98,7 @@ export function connectBiometricSocket({ token, baseUrl } = {}) {
         if (isAck) {
             entry.resolve(frame.result);
         } else {
-            entry.reject(new Error(frame.message));
+            entry.reject(new Error(frame.message || "Biometric socket returned an error frame"));
         }
     }
 
@@ -98,17 +110,21 @@ export function connectBiometricSocket({ token, baseUrl } = {}) {
         }, delay);
     }
 
-    function handleClose(event) {
+    function enterReconnecting() {
+        notifyStatus("reconnecting");
+        scheduleReconnect();
+    }
+
+    function handleClose() {
         stopHeartbeat();
         if (intentionalClose) {
             notifyStatus("closed");
             return;
         }
-        notifyStatus("reconnecting");
-        scheduleReconnect();
+        enterReconnecting();
     }
 
-    async function openSocket() {
+    async function connectOnce() {
         const resolvedToken = token ?? (await getToken());
         const url = `${toWsUrl(resolveBaseUrl(baseUrl))}/api/v1/biometric/ws?token=${resolvedToken}`;
         ws = new WebSocket(url);
@@ -116,20 +132,44 @@ export function connectBiometricSocket({ token, baseUrl } = {}) {
             reconnectAttempt = 0;
             notifyStatus("open");
             startHeartbeat();
-            resendPending();
+            flushPending();
         };
         ws.onmessage = handleMessage;
         ws.onclose = handleClose;
+        ws.onerror = () => {
+            /* diagnostic only — the browser always follows with onclose, which
+               drives the reconnect/backoff, so there is nothing to act on here. */
+        };
     }
 
-    notifyStatus("connecting");
+    function openSocket() {
+        // connectOnce() can reject before any socket exists to fire onclose (e.g.
+        // getToken() rejecting while resolving the token to connect with). Without
+        // this catch, that failure would silently and permanently stall the
+        // reconnect loop instead of being retried like any other disconnect.
+        connectOnce().catch(() => {
+            enterReconnecting();
+        });
+    }
+
     openSocket();
+    // Deferred by one microtask so a caller that calls onStatusChange(...) right
+    // after connectBiometricSocket(...) returns can still observe this initial
+    // status (synchronous delivery would fire before any listener exists).
+    Promise.resolve().then(() => notifyStatus("connecting"));
 
     function send(type, payload, direction) {
         const clientMessageId = generateClientMessageId();
         return new Promise((resolve, reject) => {
-            pending.set(clientMessageId, { type, payload, direction, resolve, reject });
-            ws.send(JSON.stringify({ type, client_message_id: clientMessageId, direction, payload }));
+            const entry = { type, payload, direction, resolve, reject };
+            pending.set(clientMessageId, entry);
+            // Only transmit if there's actually an open socket to send on. Otherwise
+            // the entry stays queued in `pending` — flushPending() sends it the
+            // moment the socket (re)opens — instead of throwing on a null/half-open
+            // `ws`, or being silently dropped.
+            if (ws && ws.readyState === WS_OPEN) {
+                transmit(clientMessageId, entry);
+            }
         });
     }
 
@@ -150,6 +190,12 @@ export function connectBiometricSocket({ token, baseUrl } = {}) {
             clearTimeout(reconnectTimer);
             reconnectTimer = null;
         }
+        // A send() still awaiting an ack would otherwise hang forever once the
+        // socket this task created is gone for good.
+        for (const entry of pending.values()) {
+            entry.reject(new Error("Biometric socket closed"));
+        }
+        pending.clear();
         if (ws) {
             ws.close(); // triggers onclose -> handleClose -> notifies "closed"
         } else {

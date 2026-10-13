@@ -1,22 +1,39 @@
+jest.mock("../../../api/apiClient", () => ({
+    getToken: jest.fn(),
+    resolveBaseUrl: jest.fn(() => "http://localhost:8080"),
+}));
+
 import { connectBiometricSocket } from "../biometricSocket";
+import { getToken } from "../../../api/apiClient";
 
 class FakeWebSocket {
     constructor(url) {
         this.url = url;
         this.sent = [];
+        this.readyState = 0; // CONNECTING
         FakeWebSocket.instances.push(this);
     }
     send(data) { this.sent.push(data); }
-    close() { this.onclose?.({ code: 1000 }); }
-    triggerOpen() { this.onopen?.(); }
+    close() {
+        this.readyState = 3; // CLOSED
+        this.onclose?.({ code: 1000 });
+    }
+    triggerOpen() {
+        this.readyState = 1; // OPEN
+        this.onopen?.();
+    }
     triggerMessage(obj) { this.onmessage?.({ data: JSON.stringify(obj) }); }
-    triggerClose(code = 1006) { this.onclose?.({ code }); }
+    triggerClose(code = 1006) {
+        this.readyState = 3; // CLOSED
+        this.onclose?.({ code });
+    }
 }
 FakeWebSocket.instances = [];
 
 beforeEach(() => {
     FakeWebSocket.instances = [];
     global.WebSocket = FakeWebSocket;
+    getToken.mockReset();
     jest.useFakeTimers();
 });
 
@@ -131,4 +148,69 @@ test("onStatusChange reports connecting/open/reconnecting/closed transitions", (
     socket.close();
 
     expect(statuses).toEqual(["open", "reconnecting", "open", "closed"]);
+});
+
+// ── Fix coverage: reviewer findings on commit d3f8f20 ──────────────────────
+
+test("a listener registered immediately after construction observes the initial connecting status", async () => {
+    const statuses = [];
+    // onStatusChange is wired up right after connectBiometricSocket returns —
+    // this is the exact timing a real caller uses.
+    const socket = connectBiometricSocket({ token: "t" });
+    socket.onStatusChange((status) => statuses.push(status));
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(statuses).toEqual(["connecting"]);
+});
+
+test("send() queues the message until the socket reaches open instead of throwing or dropping it", async () => {
+    const socket = connectBiometricSocket({ token: "t" });
+    const ws = FakeWebSocket.instances[0];
+    // Socket is still CONNECTING (readyState 0) — no triggerOpen() yet.
+
+    const pending = socket.send("facial.identify_image", { image_base64: "x" });
+    expect(ws.sent.length).toBe(0); // not transmitted yet, and nothing threw
+
+    ws.triggerOpen();
+    expect(ws.sent.length).toBe(1); // flushed exactly once the socket opened
+
+    const sentBody = JSON.parse(ws.sent[0]);
+    ws.triggerMessage({
+        type: "facial.identify_image.ack",
+        client_message_id: sentBody.client_message_id,
+        result: { person_id: "p1", score: 0.99 },
+    });
+
+    await expect(pending).resolves.toEqual({ person_id: "p1", score: 0.99 });
+});
+
+test("still schedules a reconnect attempt when the token lookup rejects during connect", async () => {
+    getToken.mockRejectedValueOnce(new Error("token unavailable"));
+
+    connectBiometricSocket({}); // no token given -> must resolve it via getToken()
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(FakeWebSocket.instances.length).toBe(0); // connect failed before any socket existed
+
+    jest.advanceTimersByTime(1000); // first reconnect backoff
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(FakeWebSocket.instances.length).toBe(1); // reconnection was still attempted
+});
+
+test("close() rejects any send() still awaiting an ack instead of leaving it hanging", async () => {
+    const socket = connectBiometricSocket({ token: "t" });
+    const ws = FakeWebSocket.instances[0];
+    ws.triggerOpen();
+
+    const pending = socket.send("facial.identify_image", { image_base64: "x" });
+    socket.close();
+
+    await expect(pending).rejects.toMatchObject({ message: "Biometric socket closed" });
 });
