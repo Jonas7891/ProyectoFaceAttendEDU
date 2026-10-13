@@ -11,6 +11,7 @@ import {
     View,
 } from 'react-native';
 import {useTranslation} from 'react-i18next';
+import PrimaryButton from '../components/auth/PrimaryButton';
 import Separador from '../components/common/Separador';
 import styles from './Styles/ConsultJustifyScreen/Style';
 import {useTheme} from '../components/common/ThemeContext';
@@ -27,6 +28,9 @@ export default function ValidJustificationsScreen() {
         inasistenciasData,
         retardosData,
         currentData,
+        isLoading,
+        error,
+        retry,
         handleBack,
         getEstadoColor,
     } = useValidJustificationsViewModel();
@@ -175,7 +179,28 @@ export default function ValidJustificationsScreen() {
                             </TouchableOpacity>
                         </View>
 
-                        {activeSection === 'inasistencias' && (
+                        {error ? (
+                            <View
+                                style={[
+                                    styles.emptyContainer,
+                                    {
+                                        backgroundColor: colors.card,
+                                        borderWidth: 1,
+                                        borderColor: colors.border,
+                                        borderStyle: 'dashed',
+                                    },
+                                ]}
+                            >
+                                <Text style={[styles.emptyText, { color: colors.text }]}>
+                                    {error}
+                                </Text>
+                                <View style={{ marginTop: 12, alignSelf: 'stretch' }}>
+                                    <PrimaryButton title={t('common.retry')} onPress={retry} />
+                                </View>
+                            </View>
+                        ) : null}
+
+                        {!error && activeSection === 'inasistencias' && (
                             <View style={styles.listContainer}>
                                 <Text style={[styles.sectionTitle, { color: colors.text }]}>
                                     {t('consultJustify.justifiedAbsences')}
@@ -207,7 +232,7 @@ export default function ValidJustificationsScreen() {
                             </View>
                         )}
 
-                        {activeSection === 'retardos' && (
+                        {!error && activeSection === 'retardos' && (
                             <View style={styles.listContainer}>
                                 <Text style={[styles.sectionTitle, { color: colors.text }]}>
                                     {t('consultJustify.justifiedDelays')}
