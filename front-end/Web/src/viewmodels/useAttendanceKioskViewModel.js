@@ -9,6 +9,8 @@
 //  Parte B: captura biométrica/dedup/registro de asistencia sobre esa
 //  misma sesión.
 //    - socket: canal biométrico abierto mientras hay una sesión activa.
+//    - connectionStatus: "connecting"|"open"|"reconnecting"|"closed" del
+//      socket, para que la vista muestre un banner no bloqueante.
 //    - onIdentified(personId, {biometricType, score}): resuelve la
 //      persona a academicActorId vía el cohorte, aplica dedup local y
 //      crea el attendance_record.
@@ -28,6 +30,18 @@ export function isoWeekday(date = new Date()) {
     return ((date.getDay() + 6) % 7) + 1;
 }
 
+/** Fecha local YYYY-MM-DD. `toISOString()` da la fecha en UTC, que en
+ * UTC-5 (Colombia) ya es "mañana" desde las 7pm hora local — una clase
+ * nocturna que recarga la pantalla después de esa hora buscaría la
+ * sesión de hoy con una fecha distinta a la que usó isoWeekday() (que sí
+ * es local), creando una segunda sesión duplicada para el mismo bloque. */
+export function todayLocalDate(date = new Date()) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
 // Cuánto se queda la pantalla en SUCCESS/DUPLICATE/ERROR antes de volver
 // a WAITING para la siguiente captura.
 const TERMINAL_VIEW_RESET_MS = 2000;
@@ -41,6 +55,7 @@ export function useAttendanceKioskViewModel() {
     const [block, setBlock] = useState(null);
     const [statusMessage, setStatusMessage] = useState("");
     const [socket, setSocket] = useState(null);
+    const [connectionStatus, setConnectionStatus] = useState("closed");
     const [registeredActorIds, setRegisteredActorIds] = useState(new Set());
 
     // Refs: leídos por onIdentified/el listener del socket, que deben ver
@@ -49,7 +64,12 @@ export function useAttendanceKioskViewModel() {
     const actorByPersonRef = useRef(new Map());
     const registeredActorIdsRef = useRef(new Set());
     const unsubscribeAttendanceRef = useRef(null);
+    const unsubscribeStatusRef = useRef(null);
     const resetTimerRef = useRef(null);
+    // Evita que un doble click (o un reintento tras un fallo) en "Iniciar
+    // clase" dispare dos startClass() en paralelo: el segundo abriría un
+    // socket nuevo que pisaría la ref del primero sin cerrarlo nunca.
+    const startingRef = useRef(false);
 
     useEffect(() => {
         listBlocks()
@@ -63,6 +83,7 @@ export function useAttendanceKioskViewModel() {
         return () => {
             if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
             if (unsubscribeAttendanceRef.current) unsubscribeAttendanceRef.current();
+            if (unsubscribeStatusRef.current) unsubscribeStatusRef.current();
             if (socketRef.current) socketRef.current.close();
         };
     }, []);
@@ -98,45 +119,94 @@ export function useAttendanceKioskViewModel() {
         }, TERMINAL_VIEW_RESET_MS);
     }
 
-    const startClass = useCallback(async (nextBlock) => {
-        const today = new Date().toISOString().slice(0, 10);
-        const sessions = await schedulingApi.listSessions();
-        let nextSession = sessions.find(
-            (s) => s.scheduleBlockId === nextBlock.scheduleBlockId && s.sessionDate === today
-        );
-
-        if (!nextSession) {
-            nextSession = await schedulingApi.createSession({
-                scheduleBlockId: nextBlock.scheduleBlockId,
-                sessionDate: today,
-            });
+    // Cierra (si existe) el socket recién abierto en este intento de
+    // startClass y limpia sus suscripciones — usado solo cuando startClass
+    // falla a mitad de camino, para no dejarlo huérfano (nadie más tiene
+    // su referencia todavía si socketRef/setSocket no llegaron a correr).
+    function closeAbandonedSocket(abandonedSocket) {
+        if (!abandonedSocket) return;
+        abandonedSocket.close();
+        if (socketRef.current === abandonedSocket) {
+            socketRef.current = null;
+            setSocket(null);
         }
-
-        try {
-            nextSession = await schedulingApi.openSession(nextSession.classSessionId);
-        } catch (e) {
-            if (e?.status !== 400) throw e;
-            // Ya estaba Open: seguir con la sesión ya conocida.
+        if (unsubscribeAttendanceRef.current) {
+            unsubscribeAttendanceRef.current();
+            unsubscribeAttendanceRef.current = null;
         }
+        if (unsubscribeStatusRef.current) {
+            unsubscribeStatusRef.current();
+            unsubscribeStatusRef.current = null;
+        }
+        setConnectionStatus("closed");
+    }
 
-        // Canal biométrico + estado local de dedup para esta sesión.
-        const nextSocket = connectBiometricSocket({});
-        socketRef.current = nextSocket;
-        setSocket(nextSocket);
-        unsubscribeAttendanceRef.current = nextSocket.onAttendanceEvent(handleAttendanceEvent);
+    const startClass = useCallback(
+        async (nextBlock) => {
+            if (startingRef.current) return; // startClass ya en curso: no-op.
+            startingRef.current = true;
+            let openedSocket = null;
 
-        const [records, actorByPerson] = await Promise.all([
-            attendanceApi.recordsBySession(nextSession.classSessionId),
-            cohortActorByPerson(nextBlock.cohortId),
-        ]);
-        actorByPersonRef.current = actorByPerson;
-        registeredActorIdsRef.current = new Set(records.map((r) => r.academicActorId));
-        setRegisteredActorIds(new Set(registeredActorIdsRef.current));
+            try {
+                const today = todayLocalDate();
+                const sessions = await schedulingApi.listSessions();
+                let nextSession = sessions.find(
+                    (s) => s.scheduleBlockId === nextBlock.scheduleBlockId && s.sessionDate === today
+                );
 
-        setSession(nextSession);
-        setBlock(nextBlock);
-        setView("WAITING");
-    }, []);
+                if (!nextSession) {
+                    nextSession = await schedulingApi.createSession({
+                        scheduleBlockId: nextBlock.scheduleBlockId,
+                        sessionDate: today,
+                    });
+                }
+
+                try {
+                    nextSession = await schedulingApi.openSession(nextSession.classSessionId, user?.academicActorId);
+                } catch (e) {
+                    if (e?.status !== 400) throw e;
+                    // El 400 de "ya estaba Open" y el de "no se puede abrir una
+                    // sesión Closed/Cancelled" llegan con el MISMO status, solo
+                    // el mensaje cambia — hay que comprobar el estado real antes
+                    // de seguir, o un reclick sobre una sesión ya cerrada
+                    // empezaría a grabar asistencia en una sesión muerta.
+                    const refreshed = await schedulingApi.listSessions();
+                    const current = refreshed.find((s) => s.classSessionId === nextSession.classSessionId);
+                    if (!current || current.sessionStatus !== "Open") {
+                        throw new Error("Esta clase ya no está abierta; no se puede tomar asistencia.");
+                    }
+                    nextSession = current;
+                }
+
+                // Canal biométrico + estado local de dedup para esta sesión.
+                const nextSocket = connectBiometricSocket({});
+                openedSocket = nextSocket;
+                socketRef.current = nextSocket;
+                setSocket(nextSocket);
+                unsubscribeAttendanceRef.current = nextSocket.onAttendanceEvent(handleAttendanceEvent);
+                unsubscribeStatusRef.current = nextSocket.onStatusChange(setConnectionStatus);
+
+                const [records, actorByPerson] = await Promise.all([
+                    attendanceApi.recordsBySession(nextSession.classSessionId),
+                    cohortActorByPerson(nextBlock.cohortId),
+                ]);
+                actorByPersonRef.current = actorByPerson;
+                registeredActorIdsRef.current = new Set(records.map((r) => r.academicActorId));
+                setRegisteredActorIds(new Set(registeredActorIdsRef.current));
+
+                setStatusMessage("");
+                setSession(nextSession);
+                setBlock(nextBlock);
+                setView("WAITING");
+            } catch (e) {
+                closeAbandonedSocket(openedSocket);
+                setStatusMessage(e?.message || "No se pudo iniciar la clase");
+            } finally {
+                startingRef.current = false;
+            }
+        },
+        [user]
+    );
 
     const endClass = useCallback(async () => {
         if (resetTimerRef.current) {
@@ -147,13 +217,18 @@ export function useAttendanceKioskViewModel() {
             unsubscribeAttendanceRef.current();
             unsubscribeAttendanceRef.current = null;
         }
+        if (unsubscribeStatusRef.current) {
+            unsubscribeStatusRef.current();
+            unsubscribeStatusRef.current = null;
+        }
         if (socketRef.current) {
             socketRef.current.close();
             socketRef.current = null;
         }
         setSocket(null);
+        setConnectionStatus("closed");
 
-        await schedulingApi.closeSession(session.classSessionId);
+        await schedulingApi.closeSession(session.classSessionId, user?.academicActorId);
 
         actorByPersonRef.current = new Map();
         registeredActorIdsRef.current = new Set();
@@ -161,7 +236,7 @@ export function useAttendanceKioskViewModel() {
         setSession(null);
         setBlock(null);
         setView("SELECT_SESSION");
-    }, [session]);
+    }, [session, user]);
 
     const onIdentified = useCallback(
         async (personId, { biometricType, score }) => {
@@ -187,8 +262,17 @@ export function useAttendanceKioskViewModel() {
                     classSessionId: session.classSessionId,
                     academicActorId,
                     attendanceStatus: "Present",
-                    captureMethod: biometricType,
-                    matchScore: score,
+                    // 05-ms-attendance's AttendanceRecord.ALLOWED_METHOD solo
+                    // admite FACIAL/MANUAL/IOT/IMPORT — nunca FINGERPRINT.
+                    // Decisión de producto (ver ledger): un identify por huella
+                    // se manda como "IOT" (lector USB biométrico), nunca
+                    // "MANUAL" (implicaría que un humano lo tecleó).
+                    captureMethod: biometricType === "FINGERPRINT" ? "IOT" : biometricType,
+                    // El score de huella es un conteo crudo de keypoints SIFT
+                    // (puede ser >1), no una similitud coseno 0..1 como el
+                    // facial — enviarlo violaría el CHECK/DECIMAL(5,4) de
+                    // match_score. Solo el score facial (ya 0..1) se envía.
+                    matchScore: biometricType === "FINGERPRINT" ? null : score,
                 });
                 registeredActorIdsRef.current.add(academicActorId);
                 syncRegisteredActorIds();
@@ -226,6 +310,7 @@ export function useAttendanceKioskViewModel() {
         session,
         statusMessage,
         socket,
+        connectionStatus,
         registeredActorIds,
         onIdentified,
         onCaptureError,

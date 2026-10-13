@@ -27,7 +27,7 @@ import { listBlocks, cohortActorByPerson } from "../../services/api/referenceDat
 import { schedulingApi } from "../../services/api/schedulingApi";
 import { attendanceApi } from "../../services/api/attendanceApi";
 import { connectBiometricSocket } from "../../services/ws/biometricSocket";
-import { useAttendanceKioskViewModel } from "../useAttendanceKioskViewModel";
+import { useAttendanceKioskViewModel, todayLocalDate } from "../useAttendanceKioskViewModel";
 
 function renderHook() {
     let vm;
@@ -80,12 +80,14 @@ test("startClass creates today's session when none exists yet, then opens it", a
     expect(schedulingApi.createSession).toHaveBeenCalledWith(
         expect.objectContaining({ scheduleBlockId: 1 })
     );
-    expect(schedulingApi.openSession).toHaveBeenCalledWith(55);
+    // user.academicActorId (7, mocked useAuth above) is sent as openedBy —
+    // AGENTS.md §6 regla 8 requires recording who opened/closed a session.
+    expect(schedulingApi.openSession).toHaveBeenCalledWith(55, 7);
     expect(getVm().view).toBe("WAITING");
 });
 
 test("startClass reuses today's session and tolerates it already being Open", async () => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayLocalDate();
     listBlocks.mockResolvedValue([{ scheduleBlockId: 1, instructorActorId: 7, dayOfWeek: ((new Date().getDay() + 6) % 7) + 1, cohortId: 10 }]);
     schedulingApi.listSessions.mockResolvedValue([
         { classSessionId: 55, scheduleBlockId: 1, sessionDate: today, sessionStatus: "Open" },
@@ -104,7 +106,7 @@ test("startClass reuses today's session and tolerates it already being Open", as
 });
 
 test("endClass closes the session and returns to SELECT_SESSION", async () => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayLocalDate();
     listBlocks.mockResolvedValue([{ scheduleBlockId: 1, instructorActorId: 7, dayOfWeek: ((new Date().getDay() + 6) % 7) + 1, cohortId: 10 }]);
     schedulingApi.listSessions.mockResolvedValue([
         { classSessionId: 55, scheduleBlockId: 1, sessionDate: today, sessionStatus: "Open" },
@@ -117,7 +119,7 @@ test("endClass closes the session and returns to SELECT_SESSION", async () => {
 
     await act(async () => { await getVm().endClass(); });
 
-    expect(schedulingApi.closeSession).toHaveBeenCalledWith(55);
+    expect(schedulingApi.closeSession).toHaveBeenCalledWith(55, 7);
     expect(getVm().view).toBe("SELECT_SESSION");
 });
 
@@ -206,7 +208,7 @@ test("a flat attendance.event frame from another kiosk (snake_case person_id, no
         onStatusChange: jest.fn(() => () => {}),
         close: jest.fn(),
     });
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayLocalDate();
     listBlocks.mockResolvedValue([
         { scheduleBlockId: 1, instructorActorId: 7, dayOfWeek: ((new Date().getDay() + 6) % 7) + 1, cohortId: 10 },
     ]);
@@ -235,3 +237,132 @@ test("a flat attendance.event frame from another kiosk (snake_case person_id, no
     expect(getVm().registeredActorIds.has(1)).toBe(true);
     expect(attendanceApi.createRecord).not.toHaveBeenCalled();
 });
+
+// ── Fix coverage: final whole-branch review ─────────────────────────────
+
+test("Critical #3: a fingerprint identify maps to captureMethod IOT with matchScore null, regardless of the raw SIFT score", async () => {
+    // 05-ms-attendance's AttendanceRecord.ALLOWED_METHOD never includes
+    // FINGERPRINT, and matchScore is a DECIMAL(5,4) checked to 0..1 — the raw
+    // SIFT keypoint count (e.g. 42) the socket ack returns would violate both.
+    attendanceApi.createRecord.mockResolvedValue({ attendanceRecordId: 1 });
+    const getVm = await startedVm();
+
+    await act(async () => {
+        await getVm().onIdentified("person-a", { biometricType: "FINGERPRINT", score: 42 });
+    });
+
+    expect(attendanceApi.createRecord).toHaveBeenCalledWith({
+        classSessionId: 55,
+        academicActorId: 1,
+        attendanceStatus: "Present",
+        captureMethod: "IOT",
+        matchScore: null,
+    });
+    expect(getVm().view).toBe("SUCCESS");
+});
+
+test("Important #6: connectionStatus reflects the socket's onStatusChange notifications", async () => {
+    let statusListener;
+    connectBiometricSocket.mockReturnValue({
+        send: jest.fn(),
+        onAttendanceEvent: jest.fn(() => () => {}),
+        onStatusChange: jest.fn((listener) => {
+            statusListener = listener;
+            return () => {};
+        }),
+        close: jest.fn(),
+    });
+    listBlocks.mockResolvedValue([{ scheduleBlockId: 1, instructorActorId: 7, dayOfWeek: isoWeekdayNow(), cohortId: 10 }]);
+    schedulingApi.listSessions.mockResolvedValue([]);
+    schedulingApi.createSession.mockResolvedValue({ classSessionId: 55, sessionStatus: "Created" });
+    schedulingApi.openSession.mockResolvedValue({ classSessionId: 55, sessionStatus: "Open" });
+    const getVm = renderHook();
+    await act(async () => {});
+
+    await act(async () => {
+        await getVm().startClass(getVm().todaysBlocks[0]);
+    });
+    expect(getVm().connectionStatus).toBe("closed"); // initial value before any notification
+
+    act(() => { statusListener("connecting"); });
+    expect(getVm().connectionStatus).toBe("connecting");
+
+    act(() => { statusListener("reconnecting"); });
+    expect(getVm().connectionStatus).toBe("reconnecting");
+
+    act(() => { statusListener("open"); });
+    expect(getVm().connectionStatus).toBe("open");
+});
+
+test("Important #8: a 400 from openSession on a Closed session is NOT silently tolerated like 'already Open'", async () => {
+    const today = todayLocalDate();
+    listBlocks.mockResolvedValue([{ scheduleBlockId: 1, instructorActorId: 7, dayOfWeek: isoWeekdayNow(), cohortId: 10 }]);
+    schedulingApi.listSessions
+        .mockResolvedValueOnce([{ classSessionId: 55, scheduleBlockId: 1, sessionDate: today, sessionStatus: "Closed" }])
+        // Re-fetched inside the 400-handling branch to check the real status.
+        .mockResolvedValueOnce([{ classSessionId: 55, scheduleBlockId: 1, sessionDate: today, sessionStatus: "Closed" }]);
+    schedulingApi.openSession.mockRejectedValue({ status: 400, message: "Cannot open a session that is Closed" });
+    const getVm = renderHook();
+    await act(async () => {});
+
+    await act(async () => {
+        await getVm().startClass(getVm().todaysBlocks[0]);
+    });
+
+    // Must NOT silently proceed into WAITING with a dead session.
+    expect(getVm().view).toBe("SELECT_SESSION");
+    expect(getVm().session).toBeNull();
+    expect(getVm().statusMessage).toBeTruthy();
+    expect(connectBiometricSocket).not.toHaveBeenCalled();
+});
+
+test("Important #9: a failure partway through startClass surfaces via statusMessage, closes the socket it opened, and allows a retry", async () => {
+    listBlocks.mockResolvedValue([{ scheduleBlockId: 1, instructorActorId: 7, dayOfWeek: isoWeekdayNow(), cohortId: 10 }]);
+    schedulingApi.listSessions.mockResolvedValue([]);
+    schedulingApi.createSession.mockResolvedValue({ classSessionId: 55, sessionStatus: "Created" });
+    schedulingApi.openSession.mockResolvedValue({ classSessionId: 55, sessionStatus: "Open" });
+    const fakeSocket = { send: jest.fn(), onAttendanceEvent: jest.fn(() => () => {}), onStatusChange: jest.fn(() => () => {}), close: jest.fn() };
+    connectBiometricSocket.mockReturnValue(fakeSocket);
+    cohortActorByPerson.mockRejectedValueOnce(new Error("referenceData unavailable"));
+    const getVm = renderHook();
+    await act(async () => {});
+
+    await act(async () => {
+        await getVm().startClass(getVm().todaysBlocks[0]);
+    });
+
+    // No unhandled rejection: the failure is surfaced, not swallowed.
+    expect(getVm().view).toBe("SELECT_SESSION");
+    expect(getVm().statusMessage).toBeTruthy();
+    // The socket opened before the failure must be closed, not leaked.
+    expect(fakeSocket.close).toHaveBeenCalledTimes(1);
+    expect(getVm().socket).toBeNull();
+});
+
+test("Important #9: a second startClass() call while one is already in flight is a no-op", async () => {
+    listBlocks.mockResolvedValue([{ scheduleBlockId: 1, instructorActorId: 7, dayOfWeek: isoWeekdayNow(), cohortId: 10 }]);
+    schedulingApi.listSessions.mockResolvedValue([]);
+    let resolveCreateSession;
+    schedulingApi.createSession.mockReturnValue(
+        new Promise((resolve) => { resolveCreateSession = resolve; })
+    );
+    schedulingApi.openSession.mockResolvedValue({ classSessionId: 55, sessionStatus: "Open" });
+    const getVm = renderHook();
+    await act(async () => {});
+
+    let firstCall;
+    let secondCall;
+    await act(async () => {
+        firstCall = getVm().startClass(getVm().todaysBlocks[0]);
+        secondCall = getVm().startClass(getVm().todaysBlocks[0]); // should be a no-op
+        resolveCreateSession({ classSessionId: 55, sessionStatus: "Created" });
+        await Promise.all([firstCall, secondCall]);
+    });
+
+    expect(schedulingApi.createSession).toHaveBeenCalledTimes(1);
+    expect(connectBiometricSocket).toHaveBeenCalledTimes(1);
+});
+
+function isoWeekdayNow() {
+    return ((new Date().getDay() + 6) % 7) + 1;
+}

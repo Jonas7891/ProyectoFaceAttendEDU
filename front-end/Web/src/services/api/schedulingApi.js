@@ -13,7 +13,19 @@ export const schedulingApi = {
     createBlock: (b) => request(endpoints.scheduling.blocks, { method: "POST", body: b }),
     listSessions: () => request(endpoints.scheduling.sessions, { method: "GET" }),
     createSession: (b) => request(endpoints.scheduling.sessions, { method: "POST", body: b }),
-    openSession: (id) => request(endpoints.scheduling.sessionOpen(id), { method: "POST" }),
-    closeSession: (id) => request(endpoints.scheduling.sessionClose(id), { method: "POST" }),
+    // openedBy/closedBy: academic_actor_id del instructor que abre/cierra la
+    // sesión (AGENTS.md §6 regla 8 — debe quedar registrado quién cerró la
+    // clase). El endpoint Java los acepta en el cuerpo pero son opcionales,
+    // así que si no se conoce el actor no se envía cuerpo alguno.
+    openSession: (id, openedBy) =>
+        request(endpoints.scheduling.sessionOpen(id), {
+            method: "POST",
+            body: openedBy != null ? { openedBy } : undefined,
+        }),
+    closeSession: (id, closedBy) =>
+        request(endpoints.scheduling.sessionClose(id), {
+            method: "POST",
+            body: closedBy != null ? { closedBy } : undefined,
+        }),
     cancelSession: (id) => request(endpoints.scheduling.sessionCancel(id), { method: "POST" }),
 };
