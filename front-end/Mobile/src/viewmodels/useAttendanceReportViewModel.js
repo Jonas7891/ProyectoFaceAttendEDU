@@ -24,15 +24,16 @@ export function useAttendanceReportViewModel() {
     const [activeFilter, setActiveFilter] = useState('all');
     const [searchText, setSearchText] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedPerson, setSelectedPerson] = useState(null);
     const [students, setStudents] = useState([]);
     const [teachers, setTeachers] = useState([]);
 
-    useEffect(() => {
-        const fetchData = async () => {
+    const fetchData = useCallback(async () => {
             try {
                 setIsLoading(true);
+                setError(null);
                 // Conteos agregados en SQL vía /summary: descargar la tabla
                 // entera y enriquecer actor por actor no terminaba nunca en el
                 // dispositivo con volumen real.
@@ -95,12 +96,15 @@ export function useAttendanceReportViewModel() {
                 setTeachers(withNames.filter(e => e.type === 'teacher'));
             } catch (error) {
                 console.error('Error fetching report data:', error);
+                setError(t('attendance.loadError'));
             } finally {
                 setIsLoading(false);
             }
-        };
+    }, [t]);
+
+    useEffect(() => {
         fetchData();
-    }, []);
+    }, [fetchData]);
 
     const rawData = activeRole === 'student' ? students : teachers;
 
@@ -172,7 +176,7 @@ export function useAttendanceReportViewModel() {
     return {
         ABSENCE_LIMIT, LATENESS_LIMIT, alertConfig, hideAlert,
         activeRole, activeType, setActiveType, activeFilter, setActiveFilter,
-        searchText, setSearchText, isLoading, selectedPerson, modalVisible,
+        searchText, setSearchText, isLoading, error, retry: fetchData, selectedPerson, modalVisible,
         closeModal, summary, filteredData,
         handleGenerateIndividual, handleConfirmReport, handleGenerateAll, handleRoleChange,
     };

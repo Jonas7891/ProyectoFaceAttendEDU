@@ -199,6 +199,8 @@ export default function AttendanceReportScreen({ navigation }) {
         searchText,
         setSearchText,
         isLoading,
+        error,
+        retry,
         selectedPerson,
         modalVisible,
         closeModal, // ⚠️ AJUSTA este nombre al que realmente exponga tu useAttendanceReportViewModel
@@ -382,6 +384,17 @@ export default function AttendanceReportScreen({ navigation }) {
                             <Text style={[styles.loadingTextReport, { color: colors.textSecondary }]}>
                                 {t('common.loading')}
                             </Text>
+                        </View>
+                    ) : error ? (
+                        <View style={[styles.emptyStateReport, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }]}>
+                            <Text style={[styles.emptyStateTitleReport, {color: colors.text}]}>
+                                {error}
+                            </Text>
+                            <TouchableOpacity style={styles.mainGenerateButtonReport} onPress={retry} activeOpacity={0.85}>
+                                <Text style={styles.mainGenerateButtonTextReport}>
+                                    {t('common.retry')}
+                                </Text>
+                            </TouchableOpacity>
                         </View>
                     ) : filteredData.length === 0 ? (
                         <View style={[styles.emptyStateReport, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }]}>
