@@ -10,7 +10,7 @@ export function useUpdatePhotoViewModel() {
     const { t, i18n } = useTranslation();
     const { loadThemeForRole } = useTheme();
 
-    const [attendanceRegistered, setAttendanceRegistered] = useState(false);
+    const [photoSaved, setPhotoSaved] = useState(false);
     const updateKey = useLanguageRefresh();
     const [formData, setFormData] = useState({
         nombreCompleto: '',
@@ -41,7 +41,9 @@ export function useUpdatePhotoViewModel() {
         setFormData(prev => ({ ...prev, [field]: value }));
     }, []);
 
-    const handleRegisterAttendance = useCallback(() => {
+    // La foto queda guardada en el dispositivo (sin endpoint de subida en
+    // el backend): solo confirma la actualización local de parámetros.
+    const handlePhotoSaved = useCallback(() => {
         if (!formData.nombreCompleto || !formData.documento || !formData.telefono) {
             setAlertData({
                 message: t('updatePhoto.completeFields'),
@@ -50,17 +52,17 @@ export function useUpdatePhotoViewModel() {
             });
             return;
         }
-        setAttendanceRegistered(true);
+        setPhotoSaved(true);
     }, [formData, t]);
 
     const handleBack = useCallback(() => navigation.goBack(), [navigation]);
 
     return {
-        attendanceRegistered,
+        photoSaved,
         updateKey,
         formData,
         handleInputChange,
-        handleRegisterAttendance,
+        handlePhotoSaved,
         handleBack,
         // Alertas
         alertData,

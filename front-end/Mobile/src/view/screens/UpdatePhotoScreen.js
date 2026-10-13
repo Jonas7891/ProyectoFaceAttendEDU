@@ -24,9 +24,9 @@ import BackButton from '../components/common/BackButton';
 import styles from './Styles/UpdatePhotoScreen/Style';
 import {useUpdatePhotoViewModel} from '../../viewmodels/useUpdatePhotoViewModel';
 
-// No hay endpoint de subida de fotos en el backend (biometric enroll recibe
-// embeddings, no multipart): la foto se guarda solo en el dispositivo y el
-// flujo continúa con el registro local de asistencia.
+// La foto actualiza parámetros faciales en el dispositivo: no hay endpoint
+// de subida en el backend (biometric enroll recibe embeddings vía liveness,
+// no multipart) y esta pantalla no registra asistencia.
 
 function FaceGuideOval({status, colors}) {
     const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -65,11 +65,11 @@ export default function UpdatePhoto() {
     const {colors, theme} = useTheme();
 
     const {
-        attendanceRegistered,
+        photoSaved,
         updateKey,
         formData,
         handleInputChange,
-        handleRegisterAttendance,
+        handlePhotoSaved,
         handleBack,
     } = useUpdatePhotoViewModel();
 
@@ -224,7 +224,7 @@ export default function UpdatePhoto() {
             setTimeout(() => {
                 setIsCameraOpen(false);
                 setCapturedPhoto(null);
-                handleRegisterAttendance();
+                handlePhotoSaved();
             }, 1500);
 
         } catch (err) {
@@ -326,7 +326,7 @@ export default function UpdatePhoto() {
                                 />
                             </View>
 
-                            {attendanceRegistered && (
+                            {photoSaved && (
                                 <View style={styles.alreadyRegisteredBox}>
                                     <Text
                                         style={[styles.alreadyRegisteredText, {color: colors.success ?? '#10B981'}]}>
@@ -339,18 +339,18 @@ export default function UpdatePhoto() {
                                 style={[
                                     styles.registerButtonUpdatePhoto,
                                     dynamicStyles.registerButtonUpdatePhoto,
-                                    attendanceRegistered && styles.registerButtonSuccessUpdatePhoto,
+                                    photoSaved && styles.registerButtonSuccessUpdatePhoto,
                                     !isFormValid && {opacity: 0.5},
                                 ]}
                                 onPress={openCamera}
-                                disabled={!isFormValid || attendanceRegistered}
+                                disabled={!isFormValid || photoSaved}
                                 accessibilityLabel="Abrir cámara para registro facial"
                                 accessibilityRole="button"
                             >
                                 <Image source={require('../../assets/images/fotografia.png')}
                                        style={styles.registerButtonIconUpdatePhoto}/>
                                 <Text style={styles.registerButtonTextUpdatePhoto}>
-                                    {attendanceRegistered ? t('updatePhoto.attendanceRegistered') : t('updatePhoto.registerAttendance')}
+                                    {photoSaved ? t('updatePhoto.attendanceRegistered') : t('updatePhoto.registerAttendance')}
                                 </Text>
                             </TouchableOpacity>
                         </View>
