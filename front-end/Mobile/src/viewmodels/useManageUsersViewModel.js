@@ -57,6 +57,9 @@ export function useManageUsersViewModel(enabled = true) {
           id: uid,
           userId: uid,
           personId: pid,
+          // Requerido por el PUT (documentNumber @NotBlank): sin esto el
+          // guardado de edición respondía 400 siempre.
+          documentNumber: person.document_number || person.documentNumber || null,
           nombre: `${person.name || ''} ${person.last_name || person.lastName || ''}`.trim(),
           email: person.email || '',
           telefono: person.phone || '',
@@ -111,6 +114,7 @@ export function useManageUsersViewModel(enabled = true) {
     const nameParts = String(item.nombre || '').trim().split(/\s+/);
     const person = await PersonService.update(item.personId, new Person({
       person_id: item.personId,
+      document_number: item.documentNumber,
       name: nameParts.shift() || '',
       last_name: nameParts.join(' '),
       email: item.email || null,
