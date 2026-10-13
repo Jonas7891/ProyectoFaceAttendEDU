@@ -1,15 +1,10 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTheme } from "../view/components/hooks/useTheme";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useAuth } from "../context/AuthContext";
 import { useAppData } from "../context/AppDataContext";
 import { useDateFormat } from "../core/utils/hooks/useDateFormat";
-import {
-    mockAttendanceByDay,
-    mockAttendanceByWeek,
-    mockCourseAttendance,
-    mockRecentActivity,
-} from "../models/data/mockData";
+import { dashboardSeries, recentActivity } from "../services/api/dashboardSeries";
 import {
     getAtRiskStudents,
     getPerfectAttendanceStudents,
@@ -45,6 +40,63 @@ export function useDashboardViewModel() {
 
     const userRole = user?.role || "student";
 
+    // Registro propio del estudiante (para acotar sus series y tarjetas).
+    const ownStudent = useMemo(
+        () =>
+            (students || []).find((s) => s.personId && s.personId === user?.personId) || null,
+        [students, user]
+    );
+
+    // Series del backend (sesiones + registros reales). Sin datos, las
+    // gráficas pintan su estado vacío: nunca se inventan cifras.
+    const [series, setSeries] = useState({
+        daily: [],
+        weekly: [],
+        meta: { sessionsToday: 0, sessionsClosedToday: 0 },
+    });
+    const [activity, setActivity] = useState([]);
+
+    useEffect(() => {
+        let cancelled = false;
+        const instructorActorId =
+            userRole === "teacher" && user?.academicActorId != null
+                ? Number(user.academicActorId)
+                : null;
+        const ownActorId = Number(ownStudent?.id);
+        const academicActorId =
+            userRole === "student" && Number.isInteger(ownActorId) ? ownActorId : null;
+        dashboardSeries({
+            role: userRole,
+            instructorActorId,
+            academicActorId,
+            cohortId: userRole === "student" ? ownStudent?.cohortId ?? null : null,
+        }).then(
+            (result) => {
+                if (!cancelled) setSeries(result);
+            },
+            () => {
+                if (!cancelled) {
+                    setSeries({ daily: [], weekly: [], meta: { sessionsToday: 0, sessionsClosedToday: 0 } });
+                }
+            }
+        );
+        if (userRole !== "student") {
+            recentActivity({ limit: 5 }).then(
+                (items) => {
+                    if (!cancelled) setActivity(items);
+                },
+                () => {
+                    if (!cancelled) setActivity([]);
+                }
+            );
+        } else {
+            setActivity([]);
+        }
+        return () => {
+            cancelled = true;
+        };
+    }, [userRole, user, ownStudent]);
+
     const todayLabel = useMemo(() => {
         const d = formatDate(new Date());
         const today = new Date();
@@ -66,7 +118,6 @@ export function useDashboardViewModel() {
         // Validaciones defensivas
         if (!instructorAttendance || instructorAttendance.length === 0) return [];
         if (!fichas || fichas.length === 0) return [];
-        if (!mockAttendanceByDay || mockAttendanceByDay.length === 0) return [];
 
         const totalInstructors = instructorAttendance.length;
         const totalFichas = fichas.length;
@@ -77,27 +128,33 @@ export function useDashboardViewModel() {
 
         // Calcular asistencia promedio global
         const globalAvgAttendance = fichas.reduce((sum, f) => sum + (f.avgAttendance || 0), 0) / (fichas.length || 1);
-        
-        // Asistencia del día (suma de presentes + tardanzas en todos los días)
-        const todayTotalStudents = mockAttendanceByDay.reduce((sum, day) => 
-            sum + (day.present || 0) + (day.late || 0) + (day.absent || 0), 0
-        ) / (mockAttendanceByDay.length || 1);
-        const todayPresent = mockAttendanceByDay.reduce((sum, day) => 
-            sum + (day.present || 0) + (day.late || 0), 0
-        ) / (mockAttendanceByDay.length || 1);
-        const todayAttendanceRate = todayTotalStudents > 0 
-            ? ((todayPresent / todayTotalStudents) * 100).toFixed(1) 
+
+        // Asistencia de hoy desde la serie real (último día con sesión).
+        const lastDay = series.daily.length > 0 ? series.daily[series.daily.length - 1] : null;
+        const todayTotalStudents = lastDay
+            ? (lastDay.present || 0) + (lastDay.late || 0) + (lastDay.absent || 0)
+            : 0;
+        const todayPresent = lastDay ? (lastDay.present || 0) + (lastDay.late || 0) : 0;
+        const todayAttendanceRate = todayTotalStudents > 0
+            ? ((todayPresent / todayTotalStudents) * 100).toFixed(1)
             : "0";
-        
-        // Instructores presentes hoy (mock: 85% de instructores)
-        const instructorsToday = Math.round(totalInstructors * 0.85);
-        
+
+        // Puntualidad real: tardanzas sobre registros con sesión.
+        const lateTotal = series.daily.reduce((sum, d) => sum + (d.late || 0), 0);
+        const recordedTotal = series.daily.reduce(
+            (sum, d) => sum + (d.present || 0) + (d.late || 0) + (d.absent || 0),
+            0
+        );
+        const punctualityRate = recordedTotal > 0
+            ? (((recordedTotal - lateTotal) / recordedTotal) * 100).toFixed(1)
+            : "0";
+
         // Fichas con problemas (asistencia < 75%)
         const problematicFichas = fichas.filter(f => (f.avgAttendance || 0) < 75).length;
-        
+
         // Tasa de retención (estudiantes activos / total)
-        const retentionRate = totalStudents > 0 
-            ? ((activeStudents / totalStudents) * 100).toFixed(1) 
+        const retentionRate = totalStudents > 0
+            ? ((activeStudents / totalStudents) * 100).toFixed(1)
             : "0";
 
         return [
@@ -134,7 +191,7 @@ export function useDashboardViewModel() {
             {
                 label: t("Instructores"),
                 value: totalInstructors,
-                subtitle: `${instructorsToday} ${t("presentes hoy")}`,
+                subtitle: `${totalInstructors} ${t("registrados")}`,
                 color: c.brand.primary,
                 icon: "briefcase",
             },
@@ -154,14 +211,14 @@ export function useDashboardViewModel() {
             },
             {
                 label: t("Tasa de puntualidad"),
-                value: "91.5%",
-                subtitle: t("Estudiantes a tiempo"),
+                value: `${punctualityRate}%`,
+                subtitle: t("Registros a tiempo"),
                 change: 0.8,
                 color: c.brand.primary,
                 icon: "clock",
             },
         ];
-    }, [c, t, userRole, fichas, students, teachers]);
+    }, [c, t, userRole, fichas, students, teachers, series]);
 
     // ── TEACHER: Métricas de sus cursos/fichas asignadas ──────
 
@@ -175,25 +232,32 @@ export function useDashboardViewModel() {
         if (!fichas || fichas.length === 0) return [];
         if (!atRiskStudents) return [];
 
-        // Mock: Filtrar solo las fichas asignadas al instructor
-        // TODO: En producción, filtrar por user.assignedFichas o similar
-        const teacherFichas = fichas.slice(0, 2);
+        // Fichas a cargo del docente (por su cuenta de usuario).
+        const teacherFichas = (fichas || []).filter(
+            (f) => f.instructorId && user?.id && String(f.instructorId) === String(user.id)
+        );
+        if (teacherFichas.length === 0) return [];
         const totalStudents = teacherFichas.reduce((sum, f) => sum + (f.totalStudents || 0), 0);
         const activeStudents = teacherFichas.reduce((sum, f) => sum + (f.activeStudents || 0), 0);
         const avgAttendance = teacherFichas.reduce((sum, f) => sum + (f.avgAttendance || 0), 0) / (teacherFichas.length || 1);
-        
+
         // Estudiantes en riesgo de mis fichas
         const myAtRiskStudents = atRiskStudents.filter(s =>
             teacherFichas.some(f => f.code === s.ficha)
         );
-        
-        // Asistencia hoy de mis fichas (promedio de las últimas entradas)
-        const todayAttendanceData = teacherFichas.map(f => f.avgAttendance || 0);
-        const todayAvg = todayAttendanceData.reduce((a, b) => a + b, 0) / (todayAttendanceData.length || 1);
-        
-        // Próximas clases hoy (mock)
-        const classesToday = 3;
-        const completedClasses = 1;
+
+        // Asistencia hoy de mis fichas (último día con sesión real).
+        const lastDay = series.daily.length > 0 ? series.daily[series.daily.length - 1] : null;
+        const lastTotal = lastDay
+            ? (lastDay.present || 0) + (lastDay.late || 0) + (lastDay.absent || 0)
+            : 0;
+        const todayAvg = lastTotal > 0
+            ? (((lastDay.present || 0) + (lastDay.late || 0)) / lastTotal) * 100
+            : 0;
+
+        // Clases de hoy (sesiones reales de sus bloques).
+        const classesToday = series.meta.sessionsToday || 0;
+        const completedClasses = series.meta.sessionsClosedToday || 0;
 
         return [
             {
@@ -240,41 +304,43 @@ export function useDashboardViewModel() {
                 icon: "alert-circle",
             },
         ];
-    }, [c, t, userRole, fichas, students]);
+    }, [c, t, userRole, user, fichas, students, series]);
 
     // ── STUDENT: Métricas personales del día ──────────────────
 
     const studentStats = useMemo(() => {
         if (userRole !== "student") return [];
 
-        // Calcular datos derivados dinámicamente
-        const instructorAttendance = getInstructorAttendance(teachers);
-
-        // Validaciones defensivas
-        if (!students || students.length === 0) return [];
+        // Registro propio (no el primero de la lista).
+        const studentData = ownStudent;
+        if (!studentData) return [];
         if (!courses || courses.length === 0) return [];
-        if (!instructorAttendance || instructorAttendance.length === 0) return [];
 
-        // Mock: datos del estudiante actual
-        const studentData = students[0];
-        
-        // Mock: Datos del día actual (usando formato configurado)
-        const today = new Date();
-        const todayDate = `${today.toLocaleDateString("es-CO", { weekday: "long" })}, ${formatDate(today)}`;
-        
-        // Mock: Información de la clase/ambiente actual
-        const currentClass = courses[0]; // Primera clase del día
-        const currentInstructor = instructorAttendance[0]; // Primer instructor
-        
-        // Estado de asistencia hoy
-        const todayStatus = "present"; // mock: puede ser "present", "late", "absent", "pending"
+        // Cursos propios por matrícula.
+        const ownCourseIds = new Set((studentData.courseIds || []).map(String));
+        const ownCourses = (courses || []).filter((course) =>
+            ownCourseIds.size === 0
+                ? course.code === studentData.course || String(course.id) === String(studentData.courseId)
+                : ownCourseIds.has(String(course.id))
+        );
+
+        // Estado de hoy desde su serie real (último día con registro).
+        const lastDay = series.daily.length > 0 ? series.daily[series.daily.length - 1] : null;
+        const todayStatus =
+            !lastDay || (lastDay.present === 0 && lastDay.late === 0 && lastDay.absent === 0)
+                ? "pending"
+                : lastDay.absent > 0 && lastDay.present === 0 && lastDay.late === 0
+                    ? "absent"
+                    : lastDay.late > 0
+                        ? "late"
+                        : "present";
         const todayStatusLabel = {
             present: t("Presente"),
             late: t("Tardanza"),
             absent: t("Ausente"),
             pending: t("Pendiente"),
         }[todayStatus] || t("Pendiente");
-        
+
         const todayStatusColor = {
             present: c.status.success,
             late: c.status.warning,
@@ -284,17 +350,21 @@ export function useDashboardViewModel() {
 
         // Asistencia del mes actual
         const monthAttendance = studentData?.attendance || 0;
-        
-        // Clases del día (mock)
-        const classesToday = 4;
-        const attendedToday = 2;
-        const pendingToday = classesToday - attendedToday;
+
+        // Clases de hoy de su ficha (sesiones reales) y sus registros.
+        const classesToday = series.meta.sessionsToday || 0;
+        const attendedToday = lastDay
+            ? (lastDay.present || 0) + (lastDay.late || 0) + (lastDay.absent || 0)
+            : 0;
+        const pendingToday = Math.max(0, classesToday - attendedToday);
+
+        const currentClass = ownCourses[0] || null;
 
         return [
             {
                 label: t("Estado hoy"),
                 value: todayStatusLabel,
-                subtitle: todayDate,
+                subtitle: todayLabel,
                 color: todayStatusColor,
                 icon: todayStatus === "present" ? "check-circle" : 
                       todayStatus === "late" ? "clock" : 
@@ -318,8 +388,8 @@ export function useDashboardViewModel() {
             },
             {
                 label: t("Instructor"),
-                value: currentInstructor?.name?.split(" ")[0] || t("Sin asignar"), // Primer nombre
-                subtitle: currentInstructor?.name || t("Sin instructor"),
+                value: currentClass?.professor?.split(",")[0]?.trim() || t("Sin asignar"),
+                subtitle: currentClass?.professor || t("Sin instructor"),
                 color: c.brand.primary,
                 icon: "user",
             },
@@ -332,13 +402,13 @@ export function useDashboardViewModel() {
             },
             {
                 label: t("Mis cursos"),
-                value: courses?.length || 0,
+                value: ownCourses.length || 0,
                 subtitle: t("Inscritos"),
                 color: c.status.success,
                 icon: "book-open",
             },
         ];
-    }, [c, t, userRole, students, teachers, courses]);
+    }, [c, t, userRole, ownStudent, courses, series]);
 
     // Seleccionar stats según rol
     const stats = useMemo(() => {
@@ -354,130 +424,45 @@ export function useDashboardViewModel() {
         }
     }, [userRole, adminStats, teacherStats, studentStats]);
 
-    // ── Asistencia por día (filtrado por rol) ─────────────────
+    // ── Asistencia por día (serie real del backend) ───────────
 
-    const attendanceByDay = useMemo(() => {
-        // Validación defensiva
-        if (!mockAttendanceByDay || mockAttendanceByDay.length === 0) {
-            return [];
-        }
+    const attendanceByDay = useMemo(
+        () =>
+            (series.daily || []).map(({ day, present, late, absent }) => ({
+                day,
+                present: present || 0,
+                late: late || 0,
+                absent: absent || 0,
+            })),
+        [series]
+    );
 
-        // Admin: datos globales
-        if (userRole === "admin") {
-            return mockAttendanceByDay;
-        }
+    // ── Asistencia por semana (serie real del backend) ────────
 
-        // Teacher: solo datos de sus fichas
-        if (userRole === "teacher") {
-            // Mock: simular datos filtrados de sus fichas
-            // En producción, filtrar por las fichas asignadas al teacher
-            return mockAttendanceByDay.map(day => ({
-                ...day,
-                // Reducir valores para simular datos específicos del teacher
-                present: Math.round((day.present || 0) * 0.4),
-                late: Math.round((day.late || 0) * 0.4),
-                absent: Math.round((day.absent || 0) * 0.4),
-            }));
-        }
+    const attendanceByWeek = useMemo(() => series.weekly || [], [series]);
 
-        // Student: solo sus datos personales
-        if (userRole === "student") {
-            // Mock: convertir a formato personal (presente/ausente por día)
-            return mockAttendanceByDay.map(day => ({
-                day: day.day,
-                present: Math.random() > 0.2 ? 1 : 0, // 80% presente
-                late: Math.random() > 0.9 ? 1 : 0,    // 10% tarde
-                absent: Math.random() > 0.9 ? 1 : 0,  // 10% ausente
-            }));
-        }
-
-        return mockAttendanceByDay;
-    }, [userRole]);
-
-    // ── Asistencia por semana (filtrado por rol) ──────────────
-
-    const attendanceByWeek = useMemo(() => {
-        // Validación defensiva
-        if (!mockAttendanceByWeek || mockAttendanceByWeek.length === 0) {
-            return [];
-        }
-
-        // Admin: datos globales
-        if (userRole === "admin") {
-            return mockAttendanceByWeek;
-        }
-
-        // Teacher: solo datos de sus fichas
-        if (userRole === "teacher") {
-            // Mock: simular datos de sus fichas (ajustar valores)
-            return mockAttendanceByWeek.map(week => ({
-                ...week,
-                rate: Math.max(70, Math.min(95, (week.rate || 0) + (Math.random() * 10 - 5))),
-            }));
-        }
-
-        // Student: sus datos personales
-        if (userRole === "student") {
-            // Mock: datos personales del estudiante
-            const baseAttendance = students?.[0]?.attendance || 85;
-            return mockAttendanceByWeek.map((week, index) => ({
-                week: week.week,
-                rate: Math.max(60, Math.min(100, baseAttendance + (Math.random() * 20 - 10))),
-            }));
-        }
-
-        return mockAttendanceByWeek;
-    }, [userRole, students]);
-
-    // ── Asistencia por curso/ficha (filtrado por rol) ─────────
+    // ── Asistencia por curso/ficha (tasas reales por curso) ────
 
     const courseAttendance = useMemo(() => {
-        // Validación defensiva
-        if (!mockCourseAttendance || mockCourseAttendance.length === 0) {
-            return [];
-        }
-
-        let courses = mockCourseAttendance;
-
-        // Admin: todos los cursos/fichas
-        if (userRole === "admin") {
-            courses = mockCourseAttendance;
-        }
-
-        // Teacher: solo sus fichas asignadas
-        if (userRole === "teacher") {
-            // Mock: filtrar solo las fichas del teacher
-            // En producción, usar user.assignedFichas
-            if (!fichas || fichas.length === 0) return [];
-            const teacherFichas = fichas.slice(0, 2);
-            courses = mockCourseAttendance
-                .filter(item => teacherFichas.some(f => f.code === item.course))
-                .slice(0, 3);
-        }
-
-        // Student: solo sus cursos inscritos
-        if (userRole === "student") {
-            courses = mockCourseAttendance.slice(0, 4);
-        }
-
-        return courses.map((item) => {
-            const course = courses?.find((x) => x.code === item.course);
+        const source = (courses || [])
+            .filter((course) => course && (course.avgAttendance || 0) > 0)
+            .slice(0, 8);
+        return source.map((course) => {
+            const rate = course.avgAttendance || 0;
             const barColor =
-                (item.rate || 0) >= 85
+                rate >= 85
                     ? c.status.success
-                    : (item.rate || 0) >= 75
+                    : rate >= 75
                     ? c.status.warning
                     : c.status.danger;
-            return { 
-                ...item, 
-                courseName: course?.name ?? item.course, 
-                barColor 
+            return {
+                course: course.code,
+                courseName: course.name ?? course.code,
+                rate,
+                barColor,
             };
         });
-        // fichas debe estar en deps: el branch del teacher lee fichas, que llega
-        // asíncrona; sin ella el memo quedaba pegado en [] y nunca se recomputaba.
-        // (el "courses" local sombrea al del contexto, por eso no va en deps)
-    }, [c, userRole, fichas]);
+    }, [c, courses]);
 
     // ── Datos específicos de ADMIN ────────────────────────────
 
@@ -514,16 +499,18 @@ export function useDashboardViewModel() {
 
     const teacherData = useMemo(() => {
         if (userRole !== "teacher") return null;
-        
+
         // Calcular datos derivados dinámicamente
         const atRiskStudents = getAtRiskStudents(students);
-        
+
         // Validaciones defensivas
         if (!fichas || fichas.length === 0) return null;
 
-        // Mock: fichas del teacher
-        const teacherFichas = fichas.slice(0, 2);
-        
+        // Fichas a cargo del docente (por su cuenta de usuario).
+        const teacherFichas = (fichas || []).filter(
+            (f) => f.instructorId && user?.id && String(f.instructorId) === String(user.id)
+        );
+
         // Estudiantes en riesgo de las fichas del teacher
         const teacherAtRiskStudents = (atRiskStudents || []).filter(s =>
             teacherFichas.some(f => f.code === s.ficha)
@@ -533,24 +520,29 @@ export function useDashboardViewModel() {
             myFichas: teacherFichas,
             myAtRiskStudents: teacherAtRiskStudents,
         };
-    }, [userRole, fichas, students]);
+    }, [userRole, user, fichas, students]);
 
     // ── Datos específicos de STUDENT ──────────────────────────
 
     const studentData = useMemo(() => {
         if (userRole !== "student") return null;
-        
+
         // Validaciones defensivas
-        if (!students || students.length === 0) return null;
+        if (!ownStudent) return null;
         if (!courses || courses.length === 0) return null;
 
-        const studentInfo = students[0];
+        const ownCourseIds = new Set((ownStudent.courseIds || []).map(String));
+        const ownCourses = (courses || []).filter((course) =>
+            ownCourseIds.size === 0
+                ? course.code === ownStudent.course || String(course.id) === String(ownStudent.courseId)
+                : ownCourseIds.has(String(course.id))
+        );
 
         return {
-            personalInfo: studentInfo,
-            upcomingClasses: courses.slice(0, 3),
+            personalInfo: ownStudent,
+            upcomingClasses: ownCourses.slice(0, 3),
         };
-    }, [userRole, students, courses]);
+    }, [userRole, ownStudent, courses]);
 
     return {
         // Datos comunes
@@ -558,10 +550,10 @@ export function useDashboardViewModel() {
         isLoading, // AppDataContext todavía cargando el padrón de la sede
         todayLabel,
         stats: stats || [],
-        attendanceByDay: attendanceByDay || [],      // Datos filtrados por rol
-        attendanceByWeek: attendanceByWeek || [],     // Datos filtrados por rol
-        courseAttendance: courseAttendance || [],     // Datos filtrados por rol
-        recentActivity: mockRecentActivity || [],
+        attendanceByDay: attendanceByDay || [],      // Serie real del backend
+        attendanceByWeek: attendanceByWeek || [],    // Serie real del backend
+        courseAttendance: courseAttendance || [],    // Tasas reales por curso
+        recentActivity: activity || [],              // Actividad real del backend
 
         // Datos por rol
         adminData: adminData || null,
