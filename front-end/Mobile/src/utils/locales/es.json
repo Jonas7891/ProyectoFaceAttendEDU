@@ -34,7 +34,8 @@
     "next": "Siguiente",
     "previous": "Anterior",
     "requiredField": "Campo obligatorio",
-    "send": "Enviar"
+    "send": "Enviar",
+    "retry": "Reintentar"
   },
   "login": {
     "title": "Inicio de Sesión",
@@ -97,7 +98,8 @@
     "justifiedStatus": "Justificado",
     "sectionJustification": "Justificación",
     "unknownRecord": "Registro #{{id}}",
-    "unknownPerson": "Actor #{{id}}"
+    "unknownPerson": "Actor #{{id}}",
+    "loadError": "No se pudieron cargar las asistencias"
   },
   "settings": {
     "language": "Idioma",
@@ -637,7 +639,8 @@
     "delays": "Retardos",
     "items": "justificaciones",
     "noJustifications": "No hay justificaciones registradas",
-    "noJustificationsDesc": "Las justificaciones válidas aparecerán aquí cuando sean agregadas por el administrador"
+    "noJustificationsDesc": "Las justificaciones válidas aparecerán aquí cuando sean agregadas por el administrador",
+    "loadError": "No se pudieron cargar las justificaciones"
   },
   "profile": {
     "personalInfo": "Información Personal",

@@ -34,7 +34,8 @@
     "next": "Next",
     "previous": "Previous",
     "requiredField": "Required field",
-    "send": "Send"
+    "send": "Send",
+    "retry": "Retry"
   },
   "login": {
     "title": "Login",
@@ -97,7 +98,8 @@
     "justifiedStatus": "Justified",
     "sectionJustification": "Justification",
     "unknownRecord": "Record #{{id}}",
-    "unknownPerson": "Actor #{{id}}"
+    "unknownPerson": "Actor #{{id}}",
+    "loadError": "Could not load attendance records"
   },
   "settings": {
     "languageChanged": "Language changed successfully",
@@ -637,7 +639,8 @@
     "delays": "Delays",
     "items": "justifications",
     "noJustifications": "No justifications registered",
-    "noJustificationsDesc": "Valid justifications will appear here when added by the administrator"
+    "noJustificationsDesc": "Valid justifications will appear here when added by the administrator",
+    "loadError": "Could not load justifications"
   },
   "profile": {
     "personalInfo": "Personal Information",

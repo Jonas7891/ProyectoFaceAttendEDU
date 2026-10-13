@@ -34,7 +34,8 @@
     "next": "Suivant",
     "previous": "Précédent",
     "requiredField": "Champ obligatoire",
-    "send": "Envoyer"
+    "send": "Envoyer",
+    "retry": "Réessayer"
   },
   "login": {
     "title": "Connexion",
@@ -97,7 +98,8 @@
     "justifiedStatus": "Justifié",
     "sectionJustification": "Justification",
     "unknownRecord": "Enregistrement n°{{id}}",
-    "unknownPerson": "Acteur n°{{id}}"
+    "unknownPerson": "Acteur n°{{id}}",
+    "loadError": "Impossible de charger les présences"
   },
   "settings": {
     "language": "Langue",
@@ -637,7 +639,8 @@
     "delays": "Retards",
     "items": "justifications",
     "noJustifications": "Aucune justification enregistrée",
-    "noJustificationsDesc": "Les justifications valides apparaîtront ici lorsqu'elles seront ajoutées par l'administrateur"
+    "noJustificationsDesc": "Les justifications valides apparaîtront ici lorsqu'elles seront ajoutées par l'administrateur",
+    "loadError": "Impossible de charger les justifications"
   },
   "profile": {
     "personalInfo": "Informations Personnelles",
