@@ -25,7 +25,7 @@ import { CourseDetailModal, RegisterCourseModal } from "./modals";
 
 // ── CourseCard (diseño original con datos dinámicos) ──────────────────────────
 
-function CourseCard({ course, onPress, onStudentsPress }) {
+function CourseCard({ course, onPress, onStudentsPress, onReportsPress }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
     const c = theme.colors;
@@ -124,6 +124,10 @@ function CourseCard({ course, onPress, onStudentsPress }) {
                     }}
                 >
                     <TouchableOpacity
+                        onPress={(e) => {
+                            e.stopPropagation(); // Evitar que se dispare el onPress del Card
+                            onReportsPress(course);
+                        }}
                         style={{
                             flex: 1,
                             flexDirection: "row",
@@ -133,8 +137,8 @@ function CourseCard({ course, onPress, onStudentsPress }) {
                             padding: 12,
                         }}
                     >
-                        <Feather name="bar-chart-2" size={14} color={c.text.secondary} />
-                        <Text style={{ fontSize: 13, color: c.text.secondary }}>
+                        <Feather name="bar-chart-2" size={14} color={c.status.danger} />
+                        <Text style={{ fontSize: 13, color: c.status.danger, fontWeight: "500" }}>
                             {t("Reportes")}
                         </Text>
                     </TouchableOpacity>
@@ -200,6 +204,15 @@ export function AdminCourses({ vm: vmProp }) {
             sortBy: 'name',
             sortOrder: 'asc',
             filterColumn: 'name'
+        });
+    }, [navigation]);
+
+    // Handler para navegar a reportes históricos filtrados por curso
+    const handleNavigateToReports = React.useCallback((course) => {
+        // Navegar a la vista de Reportes con el subtab de Históricos y filtro de curso preseleccionado
+        navigation.navigate('Reports', { 
+            section: 'historicos',
+            courseFilter: course.code, // Filtro de curso preseleccionado
         });
     }, [navigation]);
 
@@ -385,6 +398,7 @@ export function AdminCourses({ vm: vmProp }) {
                                 course={course}
                                 onPress={() => vm.selectCourse(course)}
                                 onStudentsPress={handleNavigateToStudents}
+                                onReportsPress={handleNavigateToReports}
                             />
                         </View>
                     ))}

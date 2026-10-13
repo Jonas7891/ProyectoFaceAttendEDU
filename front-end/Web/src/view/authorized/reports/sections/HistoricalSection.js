@@ -231,7 +231,7 @@ function UserRow({ user, index, isLast, onPress, isExportMode, isSelected, onTog
     );
 }
 
-export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onStatsChange }, ref) => {
+export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onStatsChange, initialCourseFilter }, ref) => {
     const { theme } = useTheme();
     const { t } = useTranslation();
     const appData = useAppData();
@@ -240,7 +240,7 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
     const c = theme.colors;
 
     const [searchValue, setSearchValue] = useState({ searchType: "student", searchText: "" });
-    const [selectedFicha, setSelectedFicha] = useState("");
+    const [selectedFicha, setSelectedFicha] = useState(initialCourseFilter || "");
     const [dateRange, setDateRange] = useState({ start: null, end: null });
     const [selectedUser, setSelectedUser] = useState(null);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -249,6 +249,13 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
     const [isExportMode, setIsExportMode] = useState(false);
     const [selectedUsers, setSelectedUsers] = useState(new Set());
     const [showExportModal, setShowExportModal] = useState(false);
+    
+    // Aplicar filtro de curso inicial cuando cambie
+    useEffect(() => {
+        if (initialCourseFilter) {
+            setSelectedFicha(initialCourseFilter);
+        }
+    }, [initialCourseFilter]);
 
     /**
      * Handler para cambio de rango de fechas (aplicado directamente)

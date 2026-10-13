@@ -319,7 +319,7 @@ function StudentRow({ student, index, isLast, onPress, onNotify }) {
 
 // ── AdminReports Component ────────────────────────────────
 
-export function AdminReports({ section }) {
+export function AdminReports({ section, courseFilter }) {
     const { isSmall } = useResponsive();
     const { theme } = useTheme();
     const { t } = useTranslation();
@@ -590,6 +590,7 @@ export function AdminReports({ section }) {
                         onStatsChange={setHistoricosStats}
                         showFilters={showHistoricosFilters}
                         onToggleFilters={setShowHistoricosFilters}
+                        initialCourseFilter={courseFilter}
                     />
                 </ScrollView>
             </>
