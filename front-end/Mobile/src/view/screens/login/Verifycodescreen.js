@@ -163,11 +163,13 @@ export default function VerifyCodeScreen({ route, navigation }) {
     /**
      * Reenvía el código de verificación
      */
-    const handleResendCode = useCallback(() => {
+    const handleResendCode = useCallback(async () => {
         if (resendCooldown.isActive) return;
 
         try {
-            VerificationService.sendRecoveryCode(email); // ← mismo almacén
+            // Se espera el envío real: sin await, el aviso de éxito salía
+            // aunque la petición fallara y el error quedaba sin manejar.
+            await VerificationService.sendRecoveryCode(email);
             resendCooldown.start(Math.ceil(RESEND_COOLDOWN_MS / 1000));
             codeVerification.resetAttempts();
 
