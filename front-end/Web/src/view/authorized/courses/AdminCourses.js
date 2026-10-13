@@ -25,7 +25,7 @@ import { CourseDetailModal, RegisterCourseModal, ImportCoursesModal } from "./mo
 
 // ── CourseCard (diseño original con datos dinámicos) ──────────────────────────
 
-function CourseCard({ course, onPress, onStudentsPress }) {
+export function CourseCard({ course, onPress, onStudentsPress }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
     const c = theme.colors;
@@ -138,32 +138,38 @@ function CourseCard({ course, onPress, onStudentsPress }) {
                             {t("Reportes")}
                         </Text>
                     </TouchableOpacity>
-                    <View style={{ width: 1, backgroundColor: c.border.primary }} />
-                    <TouchableOpacity
-                        onPress={(e) => {
-                            e.stopPropagation(); // Evitar que se dispare el onPress del Card
-                            onStudentsPress(course);
-                        }}
-                        style={{
-                            flex: 1,
-                            flexDirection: "row",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 6,
-                            padding: 12,
-                        }}
-                    >
-                        <Feather name="users" size={14} color={c.brand.primary} />
-                        <Text
-                            style={{
-                                fontSize: 13,
-                                color: c.brand.primary,
-                                fontWeight: "600",
-                            }}
-                        >
-                            {t("Estudiantes")}
-                        </Text>
-                    </TouchableOpacity>
+                    {/* Solo cuando el padre define la acción (el estudiante ya no
+                        consulta a sus compañeros, así que no la pasa) */}
+                    {onStudentsPress && (
+                        <>
+                            <View style={{ width: 1, backgroundColor: c.border.primary }} />
+                            <TouchableOpacity
+                                onPress={(e) => {
+                                    e.stopPropagation(); // Evitar que se dispare el onPress del Card
+                                    onStudentsPress(course);
+                                }}
+                                style={{
+                                    flex: 1,
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: 6,
+                                    padding: 12,
+                                }}
+                            >
+                                <Feather name="users" size={14} color={c.brand.primary} />
+                                <Text
+                                    style={{
+                                        fontSize: 13,
+                                        color: c.brand.primary,
+                                        fontWeight: "600",
+                                    }}
+                                >
+                                    {t("Estudiantes")}
+                                </Text>
+                            </TouchableOpacity>
+                        </>
+                    )}
                 </View>
             </Card>
         </TouchableOpacity>

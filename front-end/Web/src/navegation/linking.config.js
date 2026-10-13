@@ -60,6 +60,11 @@ export const linkingConfig = {
                     Courses: 'courses',  // /app/courses
                     Environments: 'environments',  // /app/environments
                     Reports: 'reports',  // /app/reports
+                    History: 'history',  // /app/history
+                    Justifications: 'justifications',  // /app/justifications
+                    SchoolInfo: 'school-info',  // /app/school-info
+                    Academic: 'academic',  // /app/academic
+                    Contacts: 'contacts',  // /app/contacts
                     Biometrics: {
                         // /app/biometrics, /app/biometrics/face-login, /app/biometrics/fingerprint
                         path: 'biometrics/:section?',
@@ -143,6 +148,11 @@ export function buildUrl(screen, params = {}) {
         'Courses': '/app/courses',
         'Environments': '/app/environments',
         'Reports': '/app/reports',
+        'History': '/app/history',
+        'Justifications': '/app/justifications',
+        'SchoolInfo': '/app/school-info',
+        'Academic': '/app/academic',
+        'Contacts': '/app/contacts',
         'Biometrics': params.section ? `/app/biometrics/${params.section}` : '/app/biometrics',
         'Settings': params.section ? `/app/settings/${params.section}` : '/app/settings',
     };

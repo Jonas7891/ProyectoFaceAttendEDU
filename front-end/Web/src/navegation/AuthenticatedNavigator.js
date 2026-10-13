@@ -11,19 +11,25 @@
 // ============================================================
 
 import React from "react";
-import { View , Text, TouchableOpacity } from "react-native";
+import { View , Text, TouchableOpacity, ScrollView } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 
 // ── Importación de Screens ────────────────────────────────────
 import DashboardScreen from "../view/screens/DashboardScreen";
+import SchoolsScreen from "../view/screens/SchoolsScreen";
 import UsersScreen from "../view/screens/UsersScreen";
 import CoursesScreen from "../view/screens/CoursesScreen";
 import EnvironmentsScreen from "../view/screens/EnvironmentsScreen";
 import ReportsScreen from "../view/screens/ReportsScreen";
 import BiometricsScreen from "../view/screens/BiometricsScreen";
 import SettingsScreen from "../view/screens/SettingsScreen";
+import HistoryScreen from "../view/screens/HistoryScreen";
+import JustificationsScreen from "../view/screens/JustificationsScreen";
+import SchoolInfoScreen from "../view/screens/SchoolInfoScreen";
+import AcademicScreen from "../view/screens/AcademicScreen";
+import ContactsScreen from "../view/screens/ContactsScreen";
 
 // ── Importación de Layout Components ──────────────────────────
 import { 
@@ -45,6 +51,7 @@ import { useAuth } from "../context/AuthContext";
 import { useRolePermissions } from "../viewmodels/useRolePermissions";
 import { useDashboardScreenViewModel } from "../viewmodels/useDashboardScreenViewModel";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
+import { roleDisplayLabel } from "../core/utils/backendRoles";
 import { Feather } from "@expo/vector-icons";
 
 const Stack = createNativeStackNavigator();
@@ -60,19 +67,31 @@ const SidebarStateContext = React.createContext({
 // ── Constantes de mapeo de rutas ────────────────────────────
 const ROUTE_MAP = {
     "dashboard": "Dashboard",
+    "schools": "Schools",
     "users": "Users",
     "courses": "Courses",
     "environments": "Environments",
     "reports": "Reports",
+    "history": "History",
+    "justifications": "Justifications",
+    "schoolInfo": "SchoolInfo",
+    "academic": "Academic",
+    "contacts": "Contacts",
     "settings": "Settings",
 };
 
 const ROUTE_TO_KEY_MAP = {
     "Dashboard": "dashboard",
+    "Schools": "schools",
     "Users": "users",
     "Courses": "courses",
     "Environments": "environments",
     "Reports": "reports",
+    "History": "history",
+    "Justifications": "justifications",
+    "SchoolInfo": "schoolInfo",
+    "Academic": "academic",
+    "Contacts": "contacts",
     "Settings": "settings",
 };
 
@@ -170,11 +189,16 @@ function PersistentSidebar() {
                     }}>
                         {user.name}
                     </Text>
-                    <Text style={{
-                        fontSize: 12,
-                        color: c.text.secondary,
-                    }}>
-                        {user.role}
+                    <Text
+                        style={{
+                            fontSize: 12,
+                            color: c.text.secondary,
+                        }}
+                    >
+                        {/* Rol "Super Administrador" explícito (007) =
+                            Super Admin; "Administrador" = Admin de sede
+                            (ver backendRoles). */}
+                        {t(roleDisplayLabel(user))}
                     </Text>
                 </SidebarHeader>
             )}
@@ -313,20 +337,28 @@ function BottomTabs() {
     }, [navigation, setSidebarSelectedTab, setSidebarSelectedSubTab]);
     
     // NO usar early return - el padre decide si renderizar este componente
+    // Con más tabs que pantallas fijas (Historial, Justificaciones y Sede)
+    // la barra se desplaza horizontalmente.
     return (
-        <View style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            backgroundColor: c.background.surface,
-            borderTopWidth: 1,
-            borderTopColor: c.border.primary,
-            flexDirection: "row",
-            paddingTop: 8,
-            paddingBottom: Math.max(8, insets.bottom),
-            minHeight: 52 + insets.bottom,
-        }}>
+        <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                backgroundColor: c.background.surface,
+                borderTopWidth: 1,
+                borderTopColor: c.border.primary,
+            }}
+            contentContainerStyle={{
+                flexDirection: "row",
+                paddingTop: 8,
+                paddingBottom: Math.max(8, insets.bottom),
+                minHeight: 52 + insets.bottom,
+            }}
+        >
             {vm.bottomTabs.map((item) => {
                 const active = currentTabKey === item.key;
                 
@@ -344,7 +376,8 @@ function BottomTabs() {
                         key={item.key}
                         onPress={handleBottomTabPress}
                         style={{
-                            flex: 1,
+                            minWidth: 72,
+                            paddingHorizontal: 6,
                             alignItems: "center",
                             paddingTop: 4,
                             borderTopWidth: active ? 2 : 0,
@@ -367,7 +400,7 @@ function BottomTabs() {
                     </TouchableOpacity>
                 );
             })}
-        </View>
+        </ScrollView>
     );
 }
 
@@ -442,6 +475,9 @@ export default function AuthenticatedNavigator() {
                             <Stack.Screen name="Dashboard">
                                 {(props) => <ScreenWithSidebar><DashboardScreen {...props} /></ScreenWithSidebar>}
                             </Stack.Screen>
+                            <Stack.Screen name="Schools">
+                                {(props) => <ScreenWithSidebar><SchoolsScreen {...props} /></ScreenWithSidebar>}
+                            </Stack.Screen>
                             <Stack.Screen name="Users">
                                 {(props) => <ScreenWithSidebar><UsersScreen {...props} /></ScreenWithSidebar>}
                             </Stack.Screen>
@@ -453,6 +489,21 @@ export default function AuthenticatedNavigator() {
                             </Stack.Screen>
                             <Stack.Screen name="Reports">
                                 {(props) => <ScreenWithSidebar><ReportsScreen {...props} /></ScreenWithSidebar>}
+                            </Stack.Screen>
+                            <Stack.Screen name="History">
+                                {(props) => <ScreenWithSidebar><HistoryScreen {...props} /></ScreenWithSidebar>}
+                            </Stack.Screen>
+                            <Stack.Screen name="Justifications">
+                                {(props) => <ScreenWithSidebar><JustificationsScreen {...props} /></ScreenWithSidebar>}
+                            </Stack.Screen>
+                            <Stack.Screen name="SchoolInfo">
+                                {(props) => <ScreenWithSidebar><SchoolInfoScreen {...props} /></ScreenWithSidebar>}
+                            </Stack.Screen>
+                            <Stack.Screen name="Academic">
+                                {(props) => <ScreenWithSidebar><AcademicScreen {...props} /></ScreenWithSidebar>}
+                            </Stack.Screen>
+                            <Stack.Screen name="Contacts">
+                                {(props) => <ScreenWithSidebar><ContactsScreen {...props} /></ScreenWithSidebar>}
                             </Stack.Screen>
                             {/* Sin item en la sidebar: se abre desde «Tomar asistencia» en Inicio. */}
                             <Stack.Screen name="Biometrics">

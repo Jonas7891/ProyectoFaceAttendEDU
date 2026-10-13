@@ -144,11 +144,12 @@ User ──N:N──> Role ──N:N──> Permission
           (assignment_date)
 ```
 
-### Roles predefinidos (seeds, unificados para Mobile en `004-unify-mobile-roles.yaml`)
+### Roles predefinidos (seeds, unificados para Mobile en `004-unify-mobile-roles.yaml` y diferenciados en `007-split-super-admin-role.yaml`)
 
 | Rol | Descripcion |
 |-----|-------------|
-| Administrador | Rol Mobile: acceso total (fusiona `SUPER_ADMIN` + `SCHOOL_ADMIN` legados) |
+| Super Administrador | Rol Web: administrador global sin sede (permisos totales; solo el admin bootstrap) |
+| Administrador | Rol Mobile: acceso total en su sede (fusiona `SUPER_ADMIN` + `SCHOOL_ADMIN` legados) |
 | Instructor | Rol Mobile: docencia y asistencia (antes `INSTRUCTOR`) |
 | Aprendiz | Rol Mobile: consulta propia (antes `STUDENT`) |
 

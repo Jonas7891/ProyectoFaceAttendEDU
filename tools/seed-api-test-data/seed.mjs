@@ -509,7 +509,8 @@ async function seedIdentity() {
   done();
 }
 
-// Authorization: canonical Mobile roles (Administrador, Instructor, Aprendiz).
+// Authorization: canonical Mobile roles (Administrador, Instructor, Aprendiz)
+// plus the explicit global Super Administrador (007-split-super-admin-role).
 // Each demo login gets its role so role-guarded logins resolve correctly.
 // Every seeded teacher also gets Instructor so the role holds at volume.
 async function seedAuthorization() {
@@ -521,13 +522,14 @@ async function seedAuthorization() {
     { roleName, description },
     { idKeys: ["roleId", "id"], map: M.roles, mapKey: roleName, matchKey: "roleName", matchValue: roleName, fetchList: () => get("authorization", "/api/v1/roles") });
   const adminRoleId = await roleFor("Administrador", "Rol Mobile: acceso total");
+  const superAdminRoleId = await roleFor("Super Administrador", "Rol Web: administrador global sin sede");
   const instructorRoleId = await roleFor("Instructor", "Rol Mobile: docencia y asistencia");
   const aprendizRoleId = await roleFor("Aprendiz", "Rol Mobile: consulta propia");
   ids.roleId = adminRoleId;
   await post("authorization", "/api/v1/permissions", { permissionName: "seed.attendance.read", description: "Read attendance" });
   await post("authorization", "/api/v1/permissions", { permissionName: "seed.attendance.write", description: "Write attendance" });
   const assignments = [
-    { userId: ids.userId, roleId: adminRoleId },
+    { userId: ids.userId, roleId: superAdminRoleId },
     { userId: ids.instructorUserId, roleId: instructorRoleId },
     { userId: ids.studentUserId, roleId: aprendizRoleId },
     ...SCHOOL_ADMINS.map((a) => ({ userId: M.users.get(a.username), roleId: adminRoleId, label: a.username })),

@@ -174,7 +174,57 @@ export default function ReportsView({
                     </Card>
                 )}
 
-                {/* Lista de estudiantes a reportar */}
+                {/* Reportes por sede (solo super admin): sus consultas son las
+                    escuelas, no los registros de personas concretas. */}
+                {permissions.isSuperAdmin && vm.schoolSummaries.length > 0 && (
+                    <View style={{ gap: 12 }}>
+                        <Text style={{ fontSize: 16, fontWeight: "700", color: c.text.primary }}>
+                            {t("Reportes por sede")}
+                        </Text>
+                        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+                            {vm.schoolSummaries.map((school) => (
+                                <Card
+                                    key={school.schoolId ?? "sin-sede"}
+                                    variant="outlined"
+                                    style={{ flexBasis: 240, flexGrow: 1 }}
+                                >
+                                    <View style={{ gap: 6 }}>
+                                        <Text
+                                            style={{ fontSize: 14, fontWeight: "700", color: c.text.primary }}
+                                            numberOfLines={1}
+                                        >
+                                            {school.name}
+                                        </Text>
+                                        <Text style={{ fontSize: 12, color: c.text.secondary }}>
+                                            {`${school.total} ${t("estudiantes")} · ${school.active} ${t("activos")}`}
+                                        </Text>
+                                        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                                            <Badge
+                                                variant={
+                                                    school.avgAttendance >= 85
+                                                        ? "success"
+                                                        : school.avgAttendance >= attendanceThreshold
+                                                        ? "warning"
+                                                        : "danger"
+                                                }
+                                                size="sm"
+                                            >
+                                                {`${school.avgAttendance}%`}
+                                            </Badge>
+                                            {school.atRisk > 0 && (
+                                                <Badge variant="danger" size="sm">
+                                                    {`${school.atRisk} ${t("en riesgo")}`}
+                                                </Badge>
+                                            )}
+                                        </View>
+                                    </View>
+                                </Card>
+                            ))}
+                        </View>
+                    </View>
+                )}
+
+                {/* Lista de estudiantes a reportar (una página por render) */}
                 <Card padding={0}>
                     {vm.filteredStudents.length === 0 ? (
                         <EmptyState
@@ -195,8 +245,8 @@ export default function ReportsView({
                             }
                         />
                     ) : (
-                        vm.filteredStudents.map((student, index) => {
-                            const isLast = index === vm.filteredStudents.length - 1;
+                        vm.pageStudents.map((student, index) => {
+                            const isLast = index === vm.pageStudents.length - 1;
                             const isAtRisk = student.attendance < attendanceThreshold;
                             
                             // Determinar variante del badge según asistencia
@@ -390,6 +440,50 @@ export default function ReportsView({
                         })
                     )}
                 </Card>
+
+                {/* Paginación: la vista solo pinta una página de reportes */}
+                {(vm.totalPages ?? 1) > 1 && (
+                    <View
+                        style={{
+                            flexDirection: isSmall ? "column" : "row",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: 12,
+                        }}
+                    >
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={vm.page <= 0}
+                            onPress={() => vm.setPage(Math.max(0, vm.page - 1))}
+                            leftIcon={<Feather name="chevron-left" size={16} color={c.text.primary} />}
+                        >
+                            {t("Anterior")}
+                        </Button>
+
+                        <Text
+                            style={{
+                                fontSize: 13,
+                                color: c.text.secondary,
+                                textAlign: "center",
+                            }}
+                        >
+                            {`${t("Página")} ${vm.page + 1} ${t("de")} ${vm.totalPages} · ${vm.totalStudents} ${t(
+                                "estudiantes"
+                            )}`}
+                        </Text>
+
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={vm.page >= vm.totalPages - 1}
+                            onPress={() => vm.setPage(vm.page + 1)}
+                            leftIcon={<Feather name="chevron-right" size={16} color={c.text.primary} />}
+                        >
+                            {t("Siguiente")}
+                        </Button>
+                    </View>
+                )}
 
                 {/* Acciones rápidas */}
                 {vm.filteredStudents.length > 0 && (

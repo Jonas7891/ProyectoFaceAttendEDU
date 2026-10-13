@@ -22,6 +22,8 @@ import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useRolePermissions } from "../viewmodels/useRolePermissions";
 import { useAutomaticPeriodAdvance } from "./components/hooks/useAutomaticPeriodAdvance";
 import { AdminSettings, TeacherSettings, StudentSettings } from "./authorized/settings";
+import SchoolInfoView from "./SchoolInfoView";
+import ContactsView from "./ContactsView";
 
 export default function SettingsView({ section = "appearance" }) {
     const { isSmall } = useResponsive();
@@ -165,12 +167,31 @@ export default function SettingsView({ section = "appearance" }) {
         SettingsComponent = <StudentSettings {...sharedProps} />;
     }
 
+    // Sede y Contactos dejaron de ser pantallas propias y se unificaron en
+    // UNA sola sección dentro de Configuración: "Sede" reúne los datos de la
+    // institución y el directorio de instructores (sus Views se embeben sin
+    // PageHeader/ScrollView). "contacts" se mapea aquí por compatibilidad con
+    // los deep links antiguos.
+    const isSchoolSection = section === "schoolInfo" || section === "contacts";
+    const infoSection = isSchoolSection ? (
+        <>
+            <SchoolInfoView embedded />
+            <ContactsView embedded hideSchoolSection />
+        </>
+    ) : (
+        SettingsComponent
+    );
+
+    const headerSubtitle = isSchoolSection
+        ? t("Datos de la institución y directorio de instructores")
+        : t("Personaliza FaceAttend EDU a tu institución");
+
     // Renderizar UI completa para usuarios autorizados
     return (
         <View style={{ flex: 1, backgroundColor: c.background.app }}>
             <PageHeader
                 title={t("Configuración")}
-                subtitle={t("Personaliza FaceAttend EDU a tu institución")}
+                subtitle={headerSubtitle}
                 actions={
                     <>
                         {anyUnsavedChanges && (
@@ -213,7 +234,7 @@ export default function SettingsView({ section = "appearance" }) {
                 contentContainerStyle={{ padding: isSmall ? 16 : 24, gap: 16 }}
                 showsVerticalScrollIndicator={false}
             >
-                {SettingsComponent}
+                {infoSection}
             </ScrollView>
         </View>
     );

@@ -3,6 +3,9 @@ import { NavigationContainer } from "@react-navigation/native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { enableScreens } from "react-native-screens";
 
+// Barras de scroll visibles en web (RN-web las oculta por defecto)
+import "./src/core/utils/webScrollbars";
+
 // Habilitar react-native-screens para mejor performance
 enableScreens();
 
@@ -57,6 +60,11 @@ function AppContent() {
                                 'Courses': 'Cursos | FaceAttend EDU',
                                 'Environments': 'Ambientes | FaceAttend EDU',
                                 'Reports': 'Reportes | FaceAttend EDU',
+                                'History': 'Historial | FaceAttend EDU',
+                                'Justifications': 'Justificaciones | FaceAttend EDU',
+                                'SchoolInfo': 'Información de la sede | FaceAttend EDU',
+                                'Academic': 'Sección académica | FaceAttend EDU',
+                                'Contacts': 'Contactos | FaceAttend EDU',
                                 'Biometrics': 'Biometría | FaceAttend EDU',
                                 'Settings': 'Configuración | FaceAttend EDU',
                             };

@@ -37,7 +37,10 @@ function memo(key, load) {
 export async function optional(promise, fallback) {
     try {
         return await promise;
-    } catch {
+    } catch (error) {
+        // El fallback evita romper la pantalla, pero el fallo queda registrado:
+        // "sin datos" y "petición rechazada" no deben parecer lo mismo en consola.
+        console.warn("[FaceAttend] optional(): carga secundaria fallida —", error?.message);
         return fallback;
     }
 }
