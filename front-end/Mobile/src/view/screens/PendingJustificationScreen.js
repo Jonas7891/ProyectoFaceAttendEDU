@@ -16,6 +16,7 @@ import {
 import {useTranslation} from 'react-i18next';
 import styles from './Styles/PendingJustificationScreen/Style';
 import {useTheme} from '../components/common/ThemeContext';
+import PrimaryButton from '../components/auth/PrimaryButton';
 import {usePendingJustificationViewModel} from '../../viewmodels/usePendingJustificationViewModel';
 
 /** Helper: Mapea el idioma activo a un locale válido para toLocaleString */
@@ -465,6 +466,8 @@ export default function PendingJustificationScreen({ navigation }) {
         isModalVisible,
         userRole,
         loadingRole,
+        error,
+        reload,
         openDetail,
         closeDetail,
         approveJustification,
@@ -532,8 +535,9 @@ export default function PendingJustificationScreen({ navigation }) {
         </View>
     );
 
-    // Puerta de carga: no mostrar datos hasta conocer el rol (privacidad)
-    if (loadingRole) {
+    // Puerta de carga: no mostrar datos hasta conocer el rol (privacidad).
+    // Si ya hay error (p. ej. sin rol), mostrarlo en vez de girar infinito.
+    if (loadingRole && !error) {
         return (
             <SafeAreaView style={[styles.safeAreaPending, {backgroundColor: colors.background}]}>
                 <View style={[
@@ -604,6 +608,17 @@ export default function PendingJustificationScreen({ navigation }) {
                 </View>
 
                 {/* Lista */}
+                {error ? (
+                    <View style={styles.emptyContainerPending}>
+                        <Text style={styles.emptyIconPending}>⚠️</Text>
+                        <Text style={[styles.emptyTitlePending, { color: colors.text }]}>
+                            {error}
+                        </Text>
+                        <View style={{ marginTop: 16, alignSelf: 'stretch' }}>
+                            <PrimaryButton title={t('common.retry')} onPress={reload} />
+                        </View>
+                    </View>
+                ) : (
                 <FlatList
                     style={{ flex: 1 }}
                     data={filtered}
@@ -613,6 +628,7 @@ export default function PendingJustificationScreen({ navigation }) {
                     ListEmptyComponent={ListEmpty}
                     showsVerticalScrollIndicator={false}
                 />
+                )}
 
             </View>
 

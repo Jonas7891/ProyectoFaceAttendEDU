@@ -65,6 +65,7 @@ export const usePendingJustificationViewModel = () => {
 
     const [justifications, setJustifications] = useState([]);
     const [userRole, setUserRole] = useState(null);
+    const [error, setError] = useState(null);
     const [activeFilter, setActiveFilter] = useState('all');
     const [selectedItem, setSelectedItem] = useState(null);
     const [isModalVisible, setModalVisible] = useState(false);
@@ -73,6 +74,7 @@ export const usePendingJustificationViewModel = () => {
     const fetchJustifications = useCallback(async (role) => {
         try {
             setLoading(true);
+            setError(null);
 
             const normalizedRole = normalizeRole(role);
             if (!normalizedRole) {
@@ -146,33 +148,38 @@ export const usePendingJustificationViewModel = () => {
             setJustifications(enriched);
         } catch (error) {
             console.error('Error fetching justifications:', error);
+            setJustifications([]);
+            setError(t('justifications.loadError'));
         } finally {
             setLoading(false);
         }
     }, []);
 
-    useEffect(() => {
-        const init = async () => {
-            try {
-                const role = await getCurrentUserRole();
-                if (!role) {
-                    console.error('usePendingJustification: sin rol verificado');
-                    setUserRole(null);
-                    setJustifications([]);
-                    setLoading(false);
-                    return;
-                }
-                setUserRole(normalizeRole(role));
-                await fetchJustifications(role);
-            } catch (error) {
-                console.error('Error cargando rol:', error);
+    const reload = useCallback(async () => {
+        try {
+            const role = await getCurrentUserRole();
+            if (!role) {
+                console.error('usePendingJustification: sin rol verificado');
                 setUserRole(null);
                 setJustifications([]);
+                setError(t('justifications.loadError'));
                 setLoading(false);
+                return;
             }
-        };
-        init();
-    }, []);
+            setUserRole(normalizeRole(role));
+            await fetchJustifications(role);
+        } catch (error) {
+            console.error('Error cargando rol:', error);
+            setUserRole(null);
+            setJustifications([]);
+            setError(t('justifications.loadError'));
+            setLoading(false);
+        }
+    }, [fetchJustifications]);
+
+    useEffect(() => {
+        reload();
+    }, [reload]);
 
     const baseJustifications = useMemo(() => {
         if (!userRole) return [];
@@ -253,7 +260,7 @@ export const usePendingJustificationViewModel = () => {
         role === USER_ROLE.STUDENT ? {bg: '#F3E8FF', text: '#6B21A8'} : {bg: '#DCFCE7', text: '#14532D'}, []);
 
     return {
-        filtered, selectedItem, counts, activeFilter, userRole, loading,
+        filtered, selectedItem, counts, activeFilter, userRole, loading, error, reload,
         loadingRole: !userRole,
         isModalVisible, openDetail, closeDetail,
         approveJustification, rejectJustification, setActiveFilter,
