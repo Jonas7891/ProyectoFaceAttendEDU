@@ -24,6 +24,7 @@ import CoursesScreen from "../view/screens/CoursesScreen";
 import EnvironmentsScreen from "../view/screens/EnvironmentsScreen";
 import ReportsScreen from "../view/screens/ReportsScreen";
 import BiometricsScreen from "../view/screens/BiometricsScreen";
+import AttendanceKioskScreen from "../view/screens/AttendanceKioskScreen";
 import SettingsScreen from "../view/screens/SettingsScreen";
 import HistoryScreen from "../view/screens/HistoryScreen";
 import JustificationsScreen from "../view/screens/JustificationsScreen";
@@ -508,6 +509,9 @@ export default function AuthenticatedNavigator() {
                             {/* Sin item en la sidebar: se abre desde «Tomar asistencia» en Inicio. */}
                             <Stack.Screen name="Biometrics">
                                 {(props) => <ScreenWithSidebar><BiometricsScreen {...props} /></ScreenWithSidebar>}
+                            </Stack.Screen>
+                            <Stack.Screen name="AttendanceKiosk">
+                                {(props) => <ScreenWithSidebar><AttendanceKioskScreen {...props} /></ScreenWithSidebar>}
                             </Stack.Screen>
                             <Stack.Screen name="Settings">
                                 {(props) => <ScreenWithSidebar><SettingsScreen {...props} /></ScreenWithSidebar>}
