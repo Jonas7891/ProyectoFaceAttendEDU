@@ -1,6 +1,7 @@
 // DisplayingAttendance.js (simplificado)
 import React from "react";
 import {
+    ActivityIndicator,
     FlatList,
     Image,
     Modal,
@@ -416,6 +417,9 @@ export default function DisplayingAttendance() {
         activeData,
         detailItem,
         showDetailModal,
+        loading,
+        error,
+        retry,
         openDetail,
         closeDetail,
         handleOpenPicker,
@@ -514,6 +518,28 @@ export default function DisplayingAttendance() {
                 </Modal>
 
                 {/* Lista */}
+                {loading ? (
+                    <View style={[styles.emptyWrap, { paddingVertical: 60 }]}>
+                        <ActivityIndicator size="large" color={colors.primary} />
+                    </View>
+                ) : error ? (
+                    <View style={styles.emptyWrap}>
+                        <Text style={[styles.emptyText, {color: colors.text}]}>
+                            {error}
+                        </Text>
+                        <TouchableOpacity
+                            onPress={retry}
+                            activeOpacity={0.7}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('common.retry')}
+                            style={{ marginTop: 12, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12, backgroundColor: colors.primary }}
+                        >
+                            <Text style={{ fontSize: 15, fontWeight: '700', color: '#FFFFFF' }}>
+                                {t('common.retry')}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : (
                 <FlatList
                     data={activeData}
                     keyExtractor={item => item.id.toString()}
@@ -533,6 +559,7 @@ export default function DisplayingAttendance() {
                     }
                     ListFooterComponent={<View style={{paddingBottom: Platform.OS === "ios" ? 50 : 70}}/>}
                 />
+                )}
             </View>
 
             <BottomBar/>

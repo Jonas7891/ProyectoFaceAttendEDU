@@ -3,7 +3,7 @@ import {useTranslation} from 'react-i18next';
 import {useTheme} from '../view/components/common/ThemeContext';
 import {getHighestRole} from '../utils/getHighestRole';
 import {useFocusEffect} from '@react-navigation/native';
-import {getCurrentUserRole, getCurrentUser} from "../services/UserService";
+import {getCurrentUserRole, getCurrentUser, isSuperAdmin as checkIsSuperAdmin} from "../services/UserService";
 import {ActorService} from '../services/ActorService';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 import {backendGet} from '../api/backend';
@@ -20,6 +20,17 @@ function unwrap(data) {
   if (Array.isArray(data)) return data;
   if (data && typeof data === 'object') return [data];
   return [];
+}
+
+// Una lista que falla devuelve [] en vez de tumbar la sección: el dashboard
+// pinta ceros parciales en lugar de quedarse sin datos por un timeout.
+async function safeList(promise) {
+  try {
+    const list = await promise;
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
 }
 
 function formatDateKey(date) {
@@ -77,24 +88,26 @@ async function fetchRecentNovedades(t) {
     const items = [];
     let actorById = {};
     try {
-      const actors = await backendGet(ACAD(), 'api/v1/academic-actors', { limit: 2000 });
+      const actors = await backendGet(ACAD(), 'api/v1/academic-actors', { limit: 2000 }, { useCache: true });
       actors.forEach((x) => { actorById[String(x.academic_actor_id)] = x; });
     } catch {}
-    for (let i = 0; i < alerts.length; i++) {
-      const a = alerts[i];
-      let personName = '';
+    // Personas en paralelo: en serie cada aviso sumaba un viaje.
+    const names = await Promise.all(alerts.map(async (a) => {
       try {
         const actor = actorById[String(a.academic_actor_id)];
         if (actor?.person_id) {
           const person = unwrap(await backendGet(API(), `api/v1/persons/${actor.person_id}`))[0];
-          if (person) personName = `${person.name || ''} ${person.last_name || person.lastName || ''}`.trim();
+          if (person) return `${person.name || ''} ${person.last_name || person.lastName || ''}`.trim();
         }
       } catch {}
-
+      return '';
+    }));
+    for (let i = 0; i < alerts.length; i++) {
+      const a = alerts[i];
       items.push({
         id: a.alert_id ?? i + 1,
         titulo: typeMap[a.alert_type_id] || '',
-        descripcion: personName,
+        descripcion: names[i],
         tiempo: formatRelativeTime(a.raised_at, t),
         tipo: a.resolved_at ? 'success' : 'warning',
       });
@@ -110,6 +123,7 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
     const {colors, loadThemeForRole, toggleTheme, theme} = useTheme();
 
     const [userRole, setUserRole] = useState(propUserRole || null);
+    const [isSuperAdmin, setIsSuperAdmin] = useState(false);
     const updateKey = useLanguageRefresh();
     const [isLoading, setIsLoading] = useState(false);
 
@@ -157,6 +171,9 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
             if (role) {
                 await loadThemeForRole(role);
             }
+            try {
+                setIsSuperAdmin(await checkIsSuperAdmin());
+            } catch {}
         } catch (error) {
             console.error('Error cargando datos de usuario:', error);
         }
@@ -193,17 +210,22 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                     // filas y tumba la petición en el dispositivo (timeout).
                     try {
                         const records = await backendGet(ATT(), 'api/v1/attendance-records', {page: 1, limit: 200}, { useCache: true });
-                    const present = records.filter(r => r.attendance_status === 'Present').length;
-                    const absent = records.filter(r => r.attendance_status === 'Absent').length;
-                    const late = records.filter(r => r.attendance_status === 'Late').length;
-                    const total = records.length || 1;
+                    // "Hoy" es hoy: antes se mezclaban registros de cualquier fecha
+                    // en los contadores y el porcentaje (el backend no pagina ni
+                    // filtra por fecha). Sin registros de hoy se usa el global.
+                    const todayKeyAdmin = formatDateKey(new Date());
+                    const dayRecords = records.filter((r) => (r.captured_at || '').slice(0, 10) === todayKeyAdmin);
+                    const base = dayRecords.length > 0 ? dayRecords : records;
+                    const present = base.filter(r => r.attendance_status === 'Present').length;
+                    const absent = base.filter(r => r.attendance_status === 'Absent').length;
+                    const late = base.filter(r => r.attendance_status === 'Late').length;
+                    const total = base.length || 1;
 
                     // "Profesores presentes": instructores (actor_type_id 2) que
                     // abrieron al menos una sesión de clase hoy, sobre el total
                     // de instructores — antes se mezclaban estudiantes y
                     // registros de cualquier fecha (attendance-records sin filtro
                     // de fecha ni de tipo de actor).
-                    const todayKeyAdmin = formatDateKey(new Date());
                     const [instructorsRaw, sessionsToday] = await Promise.all([
                         backendGet(ACAD(), 'api/v1/academic-actors', { limit: 2000 }, { useCache: true }),
                         backendGet(SCHED(), 'api/v1/class-sessions', {}, { useCache: true }),
@@ -216,7 +238,7 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                     ).size;
 
                     setAdminStats({
-                        totalEmpleados: totalInstructors || total,
+                        totalEmpleados: totalInstructors,
                         presentesHoy: instructorsPresentToday,
                         ausentesHoy: absent,
                         tardanzasHoy: late,
@@ -243,18 +265,24 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                     let sessionsTodayCount = 0;
                     const todayKey = formatDateKey(new Date());
                     if (myActor) {
-                        const blocks = await backendGet(SCHED(), 'api/v1/schedule-blocks', { instructorActorId: myActor.academicActorId });
-                        for (const block of blocks) {
-                            const sessions = await backendGet(SCHED(), 'api/v1/class-sessions', { scheduleBlockId: block.schedule_block_id });
-                            sessionsTodayCount += sessions.filter((s) => s.session_date === todayKey).length;
-                            for (const session of sessions) {
-                                teacherRecords.push(...await backendGet(ATT(), 'api/v1/attendance-records', { classSessionId: session.class_session_id }));
-                            }
-                        }
+                        const blocks = await safeList(backendGet(SCHED(), 'api/v1/schedule-blocks', { instructorActorId: myActor.academicActorId }));
+                        const sessionsNested = await Promise.all(
+                            blocks.map((block) => safeList(backendGet(SCHED(), 'api/v1/class-sessions', { scheduleBlockId: block.schedule_block_id })))
+                        );
+                        const sessions = sessionsNested.flat();
+                        sessionsTodayCount = sessions.filter((s) => s.session_date === todayKey).length;
+                        const recordsNested = await Promise.all(
+                            sessions.map((session) => safeList(backendGet(ATT(), 'api/v1/attendance-records', { classSessionId: session.class_session_id })))
+                        );
+                        teacherRecords = recordsNested.flat();
                     }
 
-                    const present = teacherRecords.filter(r => r.attendance_status === 'Present').length;
-                    const total = teacherRecords.length || 1;
+                    // Igual que admin: el porcentaje es de hoy (con fallback al
+                    // global si aún no hay registros hoy).
+                    const teacherDayRecords = teacherRecords.filter((r) => (r.captured_at || '').slice(0, 10) === todayKey);
+                    const teacherBase = teacherDayRecords.length > 0 ? teacherDayRecords : teacherRecords;
+                    const present = teacherBase.filter(r => r.attendance_status === 'Present').length;
+                    const total = teacherBase.length || 1;
 
                     let pendingJustifications = 0;
                     try {
@@ -295,18 +323,17 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                     });
 
                     const recentSlice = records.slice(-4).reverse();
-                    const myRecords = [];
-                    for (let i = 0; i < recentSlice.length; i++) {
-                        const r = recentSlice[i];
-                        const courseName = await getCourseNameForRecord(r);
-                        myRecords.push({
+                    const courseNames = await Promise.all(recentSlice.map((r) => getCourseNameForRecord(r)));
+                    const myRecords = recentSlice.map((r, i) => {
+                        const courseName = courseNames[i];
+                        return {
                             id: r.attendance_record_id ?? i + 1,
                             materia: courseName || '—',
                             hora: r.captured_at ? new Date(r.captured_at).toLocaleTimeString(timeLocale, {hour: '2-digit', minute: '2-digit'}) : '—',
                             estado: r.attendance_status === 'Present' ? 'presente' : 'ausente',
                             fecha: r.captured_at ? r.captured_at.split('T')[0] : '—',
-                        });
-                    }
+                        };
+                    });
                     setMisRegistrosRecientes(myRecords);
                     } catch (sectionError) {
                         console.error('Error fetching student dashboard section:', sectionError);
@@ -337,17 +364,28 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
         { id: 1, title: t('dashboard.manageUsers'), description: t('dashboard.manageUsersDesc'), color: '#E91E63', screen: 'ManageUsersScreen' },
         { id: 2, title: t('dashboard.environmentManagement'), description: t('dashboard.manageEnvironmentDesc'), color: '#1e58e9', screen: 'ManageEnviromentScreen' },
         { id: 3, title: t('dashboard.reports'), description: t('dashboard.reportsDesc'), color: '#FF9800', screen: 'AttendanceReportScreen' },
+        ...(isSuperAdmin
+            ? [{ id: 4, title: t('schools.title'), description: t('schools.subtitle'), color: '#673AB7', screen: 'Schools' }]
+            : []),
+        { id: 5, title: t('dashboard.news'), description: t('dashboard.newsDesc'), color: '#00ACC1', screen: 'Novedades' },
+        { id: 6, title: t('dashboard.schoolConfig'), description: t('dashboard.schoolConfigDesc'), color: '#6D4C41', screen: 'SchoolConfigurationScreen' },
     ];
     const menuAccionesEstudiante = [
         { id: 1, title: t('student.registerFace'), description: t('student.registerFaceDesc'), color: '#4CAF50', screen: 'RegisterFace' },
         { id: 2, title: t('student.myAttendance'), description: t('student.myAttendanceDesc'), color: '#2196F3', screen: 'DisplayingAttendance' },
-        { id: 3, title: t('student.UpdateFace'), description: t('student.UpdateFaceDesc'), color: '#f32152', screen: 'UpdatePhoto' },
+        { id: 3, title: t('student.myCourses'), description: t('student.myCoursesDesc'), color: '#9C27B0', screen: 'MyCourses' },
+        { id: 4, title: t('student.myJustifications'), description: t('student.myJustificationsDesc'), color: '#FF9800', screen: 'MenuJustify' },
+        { id: 5, title: t('student.UpdateFace'), description: t('student.UpdateFaceDesc'), color: '#f32152', screen: 'UpdatePhoto' },
+        { id: 6, title: t('dashboard.news'), description: t('dashboard.newsDesc'), color: '#00ACC1', screen: 'Novedades' },
     ];
     const menuAccionesDocente = [
         { id: 1, title: t('teacher.updateFace'), description: t('teacher.updateFaceDesc'), color: '#2196F3', screen: 'UpdatePhoto' },
         { id: 2, title: t('teacher.myAttendance'), description: t('teacher.myAttendanceDesc'), color: '#4CAF50', screen: 'DisplayingAttendance' },
-        { id: 3, title: t('teacher.pendingJustifications'), description: t('teacher.pendingJustificationsDesc'), color: '#FF9800', screen: 'PendingJustificationScreen' },
-        { id: 4, title: t('student.registerFace'), description: t('student.registerFaceDesc'), color: '#4CAF50', screen: 'RegisterFace' },
+        { id: 3, title: t('teacher.myCourses'), description: t('teacher.myCoursesDesc'), color: '#9C27B0', screen: 'MyCourses' },
+        { id: 4, title: t('teacher.pendingJustifications'), description: t('teacher.pendingJustificationsDesc'), color: '#FF9800', screen: 'PendingJustificationScreen' },
+        { id: 5, title: t('student.registerFace'), description: t('student.registerFaceDesc'), color: '#4CAF50', screen: 'RegisterFace' },
+        { id: 6, title: t('dashboard.reports'), description: t('teacher.reportsDesc'), color: '#F4511E', screen: 'AttendanceReportScreen' },
+        { id: 7, title: t('dashboard.news'), description: t('dashboard.newsDesc'), color: '#00ACC1', screen: 'Novedades' },
     ];
 
     const menuAcciones = isAdmin ? menuAccionesAdmin : isTeacher ? menuAccionesDocente : menuAccionesEstudiante;
@@ -362,7 +400,7 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
     };
 
     return {
-        userRole, isAdmin, isTeacher, updateKey, isLoading, formattedDate,
+        userRole, isAdmin, isTeacher, isSuperAdmin, updateKey, isLoading, formattedDate,
         menuAcciones, novedades, attendance, attendanceLabel,
         adminStats, studentStats, teacherStats,
         asistenciasRecientes, misRegistrosRecientes,

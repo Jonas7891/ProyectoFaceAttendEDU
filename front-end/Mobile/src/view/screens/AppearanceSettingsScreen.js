@@ -19,6 +19,7 @@ import {
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import ScrollViewWrapper from '../components/common/ScrollView';
+import BackButton from '../components/common/BackButton';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import {useAppearanceSettingsViewModel} from '../../viewmodels/useAppearanceSettingsViewModel';
 import styles from './Styles/LanguageSettingsScreen/Style';
@@ -242,6 +243,7 @@ export default function AppearanceSettingsScreen() {
             >
                 <ScrollViewWrapper>
                     <View style={{marginHorizontal: 20}}>
+                        <BackButton onPress={handleBack} />
 
                         {/* ══════════════════════════════════════════ */}
                         {/* SECCIÓN 1 — MODO DE VISUALIZACIÓN          */}
@@ -493,14 +495,6 @@ export default function AppearanceSettingsScreen() {
                                 onPress={handleSave}
                                 isLoading={isLoading}
                             />
-                            <TouchableOpacity
-                                onPress={handleBack}
-                                style={styles.secondaryButton}
-                            >
-                                <Text style={[styles.secondaryButtonText, {color: colors.textSecondary}]}>
-                                    {t('common.back')}
-                                </Text>
-                            </TouchableOpacity>
                         </View>
 
                     </View>

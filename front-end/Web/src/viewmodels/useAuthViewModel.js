@@ -171,13 +171,16 @@ export function useLoginViewModel(onSuccess) {
         const err = await login({
             email: emailRef.current,
             password: passwordRef.current,
-        });
+        }).catch((e) => (typeof e === "string" ? e : e?.message || "No se pudo iniciar sesión"));
 
-        // Detener animación de progreso
+        // Detener animación de progreso y desbloquear el botón SIEMPRE,
+        // incluso si login() lanzó en vez de devolver un string: sin esto
+        // un throw inesperado dejaba el spinner colgado y la promesa sin
+        // manejar, sin ningún mensaje para el usuario.
         clearInterval(progressInterval);
         setLoading(false);
 
-        if (err) {
+        if (typeof err === "string" && err) {
             // Resetear progreso
             setEmailProgress(0);
             setPasswordProgress(0);

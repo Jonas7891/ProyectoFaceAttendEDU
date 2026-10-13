@@ -34,7 +34,10 @@
     "next": "Próximo",
     "previous": "Anterior",
     "requiredField": "Campo obrigatório",
-    "send": "Enviar"
+    "send": "Enviar",
+    "retry": "Tentar novamente",
+    "activate": "Ativar",
+    "deactivate": "Desativar"
   },
   "login": {
     "title": "Login",
@@ -51,7 +54,9 @@
     "connectionError": "Não foi possível conectar ao servidor. Verifique sua conexão com a internet e tente novamente.",
     "loginError": "Ocorreu um erro ao fazer login",
     "acceptTerms": "Aceite os termos e condições",
-    "forgotPassword": "Esqueceu sua senha?"
+    "forgotPassword": "Esqueceu sua senha?",
+    "showPassword": "Mostrar senha",
+    "hidePassword": "Ocultar senha"
   },
   "tabs": {
     "home": "Início",
@@ -95,7 +100,8 @@
     "justifiedStatus": "Justificado",
     "sectionJustification": "Justificativa",
     "unknownRecord": "Registro #{{id}}",
-    "unknownPerson": "Ator #{{id}}"
+    "unknownPerson": "Ator #{{id}}",
+    "loadError": "Não foi possível carregar as presenças"
   },
   "settings": {
     "language": "Idioma",
@@ -269,7 +275,11 @@
     "statusPresent": "Presente",
     "statusLate": "Atrasado",
     "manageUsers": "Gestão de Usuários",
-    "manageUsersDesc": "Adicione ou remova usuários da sua escola."
+    "manageUsersDesc": "Adicione ou remova usuários da sua escola.",
+    "news": "Novidades",
+    "newsDesc": "Acompanhe os avisos recentes",
+    "schoolConfig": "Unidade",
+    "schoolConfigDesc": "Dados e configuração da sua unidade"
   },
   "consultJustify": {
     "mainTitle": "Justificativas Aceitas",
@@ -495,6 +505,9 @@
     "attendanceLabel": "Presença dos meus grupos",
     "attendanceRecorded": "Presença registrada",
     "newJustification": "Nova justificativa",
+    "myCourses": "Meus cursos",
+    "myCoursesDesc": "Consulte suas turmas e cursos atribuídos",
+    "reportsDesc": "Estudantes em risco das suas turmas",
     "justificationMathMsg": "Juan Pérez enviou uma justificativa para a aula de Matemática.",
     "attendanceGroupMsg": "A presença do grupo 10-A foi registrada com sucesso.",
     "late": "Atrasado",
@@ -527,7 +540,32 @@
     "UpdateFace": "Atualização de Rosto",
     "UpdateFaceDesc": "Atualização dos seus dados biométricos",
     "faceRecognizedMsg": "Seu rosto foi reconhecido com sucesso hoje às 08:15",
-    "attendanceReminderDesc": "Não se esqueça de registrar sua presença por reconhecimento facial."
+    "attendanceReminderDesc": "Não se esqueça de registrar sua presença por reconhecimento facial.",
+    "myCourses": "Meus cursos",
+    "myCoursesDesc": "Consulte sua turma e seus cursos",
+    "myJustifications": "Justificativas",
+    "myJustificationsDesc": "Envie e consulte suas justificativas"
+  },
+  "courses": {
+    "title": "Meus cursos",
+    "program": "Programa",
+    "enrolledOn": "Matriculado",
+    "students": "Estudantes",
+    "courses": "Cursos",
+    "noCourses": "Nenhum curso registrado",
+    "empty": "Você não tem turmas atribuídas",
+    "loadError": "Não foi possível carregar seus cursos",
+    "retry": "Tentar novamente"
+  },
+  "schools": {
+    "title": "Escolas",
+    "subtitle": "Unidades da instituição",
+    "programs": "Programas",
+    "empty": "Nenhuma escola registrada",
+    "loadError": "Não foi possível carregar as escolas",
+    "retry": "Tentar novamente",
+    "active": "Ativa",
+    "inactive": "Inativa"
   },
   "subjects": {
     "math": "Matemática",
@@ -603,7 +641,8 @@
     "delays": "Atrasos",
     "items": "justificativas",
     "noJustifications": "Nenhuma justificativa registrada",
-    "noJustificationsDesc": "Justificativas válidas aparecerão aqui quando adicionadas pelo administrador"
+    "noJustificationsDesc": "Justificativas válidas aparecerão aqui quando adicionadas pelo administrador",
+    "loadError": "Não foi possível carregar as justificativas"
   },
   "profile": {
     "personalInfo": "Informações Pessoais",
@@ -691,7 +730,10 @@
     "onlyAdmins": "Somente administradores podem acessar esta tela.",
     "addTeacher": "Adicionar professor",
     "enterTeacherName": "Digite o nome do professor",
-    "searchTeacher": "Buscar professor"
+    "searchTeacher": "Buscar professor",
+    "activateQuestion": "Reativar este usuário?",
+    "deactivateQuestion": "Desativar este usuário? Você poderá reativá-lo depois.",
+    "inactive": "Inativo"
   },
   "schoolConfig": {
     "title": "Configuração da escola",

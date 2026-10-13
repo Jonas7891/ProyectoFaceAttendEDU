@@ -2,6 +2,7 @@ import React from 'react';
 import {
     ActivityIndicator,
     FlatList,
+    Image,
     Modal,
     Platform,
     Pressable,
@@ -465,6 +466,8 @@ export default function PendingJustificationScreen({ navigation }) {
         isModalVisible,
         userRole,
         loadingRole,
+        error,
+        reload,
         openDetail,
         closeDetail,
         approveJustification,
@@ -532,13 +535,13 @@ export default function PendingJustificationScreen({ navigation }) {
         </View>
     );
 
-    // Puerta de carga: no mostrar datos hasta conocer el rol (privacidad)
-    if (loadingRole) {
+    // Puerta de carga: no mostrar datos hasta conocer el rol (privacidad).
+    // Si ya hay error (p. ej. sin rol), mostrarlo en vez de girar infinito.
+    if (loadingRole && !error) {
         return (
             <SafeAreaView style={[styles.safeAreaPending, {backgroundColor: colors.background}]}>
                 <View style={[
                     styles.containerPending,
-                    Platform.OS === 'android' && {margin: 20},
                 ]}>
                     <ActivityIndicator color={colors.primary} size="large"/>
                 </View>
@@ -551,12 +554,28 @@ export default function PendingJustificationScreen({ navigation }) {
             <View style={styles.containerPending}>
                 {/* Header */}
                 <View style={[styles.headerPending, { backgroundColor: colors.background }]}>
-                    <Text style={[styles.headerTitlePending, {color: colors.text}]}>
-                        {t('consultJustify.headerTitle')}
-                    </Text>
-                    <Text style={[styles.headerSubtitlePending, { color: colors.textSecondary }]}>
-                        {headerSubtitle}
-                    </Text>
+                    <View style={styles.headerTopRowPending}>
+                        <TouchableOpacity
+                            onPress={handleBack}
+                            activeOpacity={0.7}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('common.back')}
+                            style={{ padding: 6 }}
+                        >
+                            <Image
+                                source={require('../../assets/images/flecha-volver.png')}
+                                style={[styles.headerBackImagePending, { tintColor: colors.text }]}
+                            />
+                        </TouchableOpacity>
+                        <View style={{ flex: 1 }}>
+                            <Text style={[styles.headerTitlePending, {color: colors.text}]}>
+                                {t('consultJustify.headerTitle')}
+                            </Text>
+                            <Text style={[styles.headerSubtitlePending, { color: colors.textSecondary }]}>
+                                {headerSubtitle}
+                            </Text>
+                        </View>
+                    </View>
                 </View>
 
                 {/* Filtros — ocultos para estudiantes */}
@@ -589,6 +608,17 @@ export default function PendingJustificationScreen({ navigation }) {
                 </View>
 
                 {/* Lista */}
+                {error ? (
+                    <View style={styles.emptyContainerPending}>
+                        <Text style={styles.emptyIconPending}>⚠️</Text>
+                        <Text style={[styles.emptyTitlePending, { color: colors.text }]}>
+                            {error}
+                        </Text>
+                        <View style={{ marginTop: 16, alignSelf: 'stretch' }}>
+                            <PrimaryButton title={t('common.retry')} onPress={reload} />
+                        </View>
+                    </View>
+                ) : (
                 <FlatList
                     style={{ flex: 1 }}
                     data={filtered}
@@ -598,10 +628,8 @@ export default function PendingJustificationScreen({ navigation }) {
                     ListEmptyComponent={ListEmpty}
                     showsVerticalScrollIndicator={false}
                 />
+                )}
 
-                <View style={[styles.buttonContainer, {marginTop: 1, marginBottom: 1}]}>
-                    <PrimaryButton title={t('common.back')} onPress={handleBack}/>
-                </View>
             </View>
 
             {/* Modal de detalle */}

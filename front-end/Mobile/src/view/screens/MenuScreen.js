@@ -36,6 +36,7 @@ export default function MenuScreen({ onLogout }) {
     const {
         isLoading,
         isAdmin,
+        isSuperAdmin,
         updateKey,
         handleLogout: originalHandleLogout,
         navigateTo,
@@ -157,10 +158,19 @@ export default function MenuScreen({ onLogout }) {
                                     />
                                 )}
 
-                                <MenuItem
-                                    label={t('menu.schoolConfiguration')}
-                                    onPress={handleSchool}
-                                />
+                                {isSuperAdmin && (
+                                    <MenuItem
+                                        label={t('schools.title')}
+                                        onPress={() => navigateTo("Schools")}
+                                    />
+                                )}
+
+                                {isAdmin && (
+                                    <MenuItem
+                                        label={t('menu.schoolConfiguration')}
+                                        onPress={handleSchool}
+                                    />
+                                )}
 
                                 <DangerButton
                                     title={isLoading ? t('menu.loggingOut') : t('menu.logout')}

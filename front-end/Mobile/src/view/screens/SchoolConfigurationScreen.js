@@ -17,6 +17,7 @@ import {
     View,
 } from 'react-native';
 import styles from './Styles/SchoolConfigurationScreen/Style';
+import BackButton from '../components/common/BackButton';
 import {useSchoolConfigurationViewModel} from "../../viewmodels/useSchoolConfigurationViewModel";
 import {useTheme} from '../../view/components/common/ThemeContext';
 import {useUser} from '../../utils/UserContext';
@@ -188,13 +189,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
             >
                 {/* ── Header ── */}
                 <View style={[styles.headerSchoolConfig, { backgroundColor: colors.navBar, borderBottomColor: colors.border }]}>
-                    <TouchableOpacity
-                        style={[styles.headerBackButtonReport, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }]}
-                        onPress={() => navigation?.goBack()}
-                        activeOpacity={0.7}
-                    >
-                        <Text style={[styles.headerBackTextReport, { color: colors.text }]}>‹</Text>
-                    </TouchableOpacity>
+                    <BackButton onPress={() => navigation?.goBack()} />
                     <Text style={[styles.headerTitleSchoolConfig, { color: colors.text }]}>
                         {t('schoolConfig.title')}
                     </Text>

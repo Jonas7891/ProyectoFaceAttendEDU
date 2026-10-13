@@ -2,7 +2,7 @@
 import {Platform, SafeAreaView, ScrollView, Text, TouchableOpacity, View,} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
-import PrimaryButton from '../components/auth/PrimaryButton';
+import BackButton from '../components/common/BackButton';
 import PasswordUpdateModal from '../components/common/PasswordUpdateModal';
 import ProfileUpdateModal from '../components/common/ProfileUpdateModal';
 import styles from './Styles/ProfileScreen/Style';
@@ -262,6 +262,7 @@ export default function ProfileScreen({ onLogout }) {
                 showsVerticalScrollIndicator={false}
             >
                 <View style={[styles.container, { paddingHorizontal: 16 }]}>
+                    <BackButton onPress={handleBack} />
 
                     {/* ══ HEADER / AVATAR ══ */}
                     <View style={[
@@ -488,13 +489,6 @@ export default function ProfileScreen({ onLogout }) {
                         >
                             <PasswordUpdateModal />
                         </TouchableOpacity>
-                    </View>
-
-                    {/* ══ BOTÓN VOLVER ══ */}
-                    <View style={{ marginTop: Platform.OS === 'ios' ? 5 : 0 }}>
-                        <View style={styles.buttonContainer}>
-                            <PrimaryButton title={t('common.back')} onPress={handleBack}/>
-                        </View>
                     </View>
 
                 </View>

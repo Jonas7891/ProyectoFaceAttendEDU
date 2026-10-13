@@ -3,6 +3,7 @@ package com.faceattend_edu.attendance_service.infrastructure.web.controller;
 import com.faceattend_edu.attendance_service.domain.model.Justification;
 import com.faceattend_edu.attendance_service.domain.port.in.*;
 import com.faceattend_edu.attendance_service.infrastructure.web.dto.*;
+import com.faceattend_edu.attendance_service.infrastructure.web.Paging;
 import com.faceattend_edu.attendance_service.infrastructure.web.mapper.JustificationWebMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,12 +27,14 @@ public class JustificationController {
     @GetMapping
     public ResponseEntity<List<JustificationResponse>> list(
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) Long attendanceRecordId){
+            @RequestParam(required = false) Long attendanceRecordId,
+            @RequestParam(required = false) Integer limit,
+            @RequestParam(required = false) Integer offset){
         List<JustificationResponse> list = listUseCase.list().stream()
                 .filter(j -> status == null || status.equals(j.getReviewStatus()))
                 .filter(j -> attendanceRecordId == null || attendanceRecordId.equals(j.getAttendanceRecordId()))
                 .map(mapper::toResponse).collect(Collectors.toList());
-        return ResponseEntity.ok(list);
+        return Paging.slice(list, limit, offset);
     }
 
     @PostMapping

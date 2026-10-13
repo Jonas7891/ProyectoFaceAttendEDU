@@ -1,4 +1,4 @@
-import { request, GET, POST, PUT, DELETE } from '../api/apiClient';
+import { request, GET, POST, PUT, PATCH, DELETE } from '../api/apiClient';
 import { toSnakeDeep } from '../api/backend';
 import Person from '../models/identity/Person';
 
@@ -38,7 +38,19 @@ export const PersonService = {
   },
 
   update: async (id, personData) => {
-    const data = await request({ method: PUT, url: `${ENDPOINT}/${id}`, data: personData.toApi(), requiresAuth: false });
+    // ms-identity (PersonDto + validate()) habla camelCase y exige
+    // documentNumber/name/lastName: el toApi en snake respondía 400.
+    const p = personData ?? {};
+    const body = {
+      documentNumber: p.documentNumber ?? p.document_number,
+      name: p.name,
+      lastName: p.lastName ?? p.last_name,
+      email: p.email,
+      phone: p.phone,
+      status: p.status,
+    };
+    Object.keys(body).forEach((k) => (body[k] === null || body[k] === undefined) && delete body[k]);
+    const data = await request({ method: PUT, url: `${ENDPOINT}/${id}`, data: body, requiresAuth: true });
     return Person.fromApi(toSnakeDeep(data));
   },
 
@@ -47,6 +59,10 @@ export const PersonService = {
   updateFields: async (id, fields) => {
     const data = await request({ method: PUT, url: `${ENDPOINT}/${id}`, data: fields, requiresAuth: true });
     return Person.fromApi(toSnakeDeep(data));
+  },
+
+  setStatus: async (id, status) => {
+    return request({ method: PATCH, url: `${ENDPOINT}/${id}/status`, params: { status }, requiresAuth: true });
   },
 
   delete: async (id) => {

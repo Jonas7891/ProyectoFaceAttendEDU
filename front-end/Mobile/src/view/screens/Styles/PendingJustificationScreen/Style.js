@@ -95,11 +95,6 @@ badgeRowPending: {
         marginBottom: 8,
     },
 
-buttonContainer: {
-        marginBottom: Platform.OS === 'ios' ? 60 : 130,
-        marginHorizontal: 20
-    },
-
 cardDatePending: {
         fontSize: 12,
         color: '#9CA3AF',
@@ -298,9 +293,22 @@ filterChipTextPending: {
 
 filterRowPending: {
         flexDirection: 'row',
+        flexWrap: 'wrap',
         paddingHorizontal: 20,
         paddingBottom: 12,
         gap: 8,
+    },
+
+headerTopRowPending: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginBottom: 4,
+    },
+
+headerBackImagePending: {
+        width: 26,
+        height: 26,
     },
 
 headerPending: {
@@ -369,7 +377,6 @@ modalOverlayPending: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.45)',
         justifyContent: 'flex-end',
-        margin: Platform.OS === 'ios' ? 0 : 30,
     },
 
 modalScrollPending: {
@@ -449,7 +456,6 @@ roleBadgeTextPending: {
 safeAreaPending: {
         flex: 1,
         backgroundColor: '#F4F6FB',
-        margin: Platform.OS === 'ios' ? 0 : 30,
     },
 
 sectionLabelPending: {

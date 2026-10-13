@@ -20,7 +20,7 @@ import * as SecureStore from 'expo-secure-store';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import {QuestionInput} from '../components/common/QuestionInput';
-import PrimaryButton from '../components/auth/PrimaryButton';
+import BackButton from '../components/common/BackButton';
 import styles from './Styles/UpdatePhotoScreen/Style';
 import {useUpdatePhotoViewModel} from '../../viewmodels/useUpdatePhotoViewModel';
 
@@ -262,6 +262,7 @@ export default function UpdatePhoto() {
                             contentContainerStyle={styles.scrollViewContentUpdatePhoto}
                             keyboardShouldPersistTaps="handled">
                     <View style={[styles.mainContainerUpdatePhoto, {marginTop: Platform.OS === 'ios' ? 0 : 50}]}>
+                        <BackButton onPress={handleBack} />
                         <View style={styles.imageContainerUpdatePhoto}>
                             <Image
                                 source={require('../../assets/images/perfil-del-usuario.png')}
@@ -352,10 +353,6 @@ export default function UpdatePhoto() {
                                     {attendanceRegistered ? t('updatePhoto.attendanceRegistered') : t('updatePhoto.registerAttendance')}
                                 </Text>
                             </TouchableOpacity>
-                        </View>
-
-                        <View style={styles.backButtonContainerUpdatePhoto}>
-                            <PrimaryButton title={t('common.back')} onPress={handleBack}/>
                         </View>
                     </View>
                 </ScrollView>

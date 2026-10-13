@@ -28,7 +28,13 @@ export function useManageUsersViewModel(enabled = true) {
       const usersData = await backendGet(ENV.API_BASE_URL, 'api/v1/users', {page: 1, limit: 50});
       const users = unwrap(usersData);
 
-      const entries = await Promise.all(users.map(async (u) => {
+      // Enriquecer por lotes acotados: 50 usuarios x 2 peticiones en un solo
+      // Promise.all saturaban el gateway (rate-limit) y dejaban roles y
+      // personas en blanco, desclasificando usuarios de ambas listas.
+      const ENRICH_CHUNK_SIZE = 10;
+      const entries = [];
+      for (let i = 0; i < users.length; i += ENRICH_CHUNK_SIZE) {
+        const chunk = await Promise.all(users.slice(i, i + ENRICH_CHUNK_SIZE).map(async (u) => {
         const uid = u.user_id || u.userId;
         const pid = u.person_id || u.personId;
         let roleNames = [];
@@ -51,6 +57,9 @@ export function useManageUsersViewModel(enabled = true) {
           id: uid,
           userId: uid,
           personId: pid,
+          // Requerido por el PUT (documentNumber @NotBlank): sin esto el
+          // guardado de edición respondía 400 siempre.
+          documentNumber: person.document_number || person.documentNumber || null,
           nombre: `${person.name || ''} ${person.last_name || person.lastName || ''}`.trim(),
           email: person.email || '',
           telefono: person.phone || '',
@@ -58,7 +67,9 @@ export function useManageUsersViewModel(enabled = true) {
           status: u.status,
           roleNames,
         };
-      }));
+        }));
+        entries.push(...chunk);
+      }
 
       const isStudent = (e) => e.roleNames.some(n => String(n).toLowerCase() === 'aprendiz');
       const isTeacher = (e) => e.roleNames.some(n => ['instructor', 'administrador'].includes(String(n).toLowerCase()));
@@ -103,6 +114,7 @@ export function useManageUsersViewModel(enabled = true) {
     const nameParts = String(item.nombre || '').trim().split(/\s+/);
     const person = await PersonService.update(item.personId, new Person({
       person_id: item.personId,
+      document_number: item.documentNumber,
       name: nameParts.shift() || '',
       last_name: nameParts.join(' '),
       email: item.email || null,
@@ -121,14 +133,24 @@ export function useManageUsersViewModel(enabled = true) {
     setStudents(prev => prev.map(s => (s.id === student.id ? updated : s)));
   }, [persistPerson]);
 
+  // El backend no tiene DELETE físico (modelo: borrado lógico vía status,
+  // AGENTS.md §2.2): desactivar cambia status=false en usuario y persona y
+  // la fila sigue visible como inactiva en vez de desaparecer.
+  const setActiveStatus = useCallback(async (item, status) => {
+    await UserService.setStatus(item.userId || item.id, status);
+    if (item.personId) {
+      await PersonService.setStatus(item.personId, status).catch(() => {});
+    }
+    return {...item, status};
+  }, []);
+
   const deleteStudent = useCallback(async (id) => {
     const student = students.find(item => item.id === id);
-    if (student) {
-      await UserService.delete(student.userId || id);
-      if (student.personId) await PersonService.delete(student.personId);
-    }
-    setStudents(prev => prev.filter(s => s.id !== id));
-  }, [students]);
+    if (!student) return;
+    const next = !(student.status !== false);
+    const updated = await setActiveStatus(student, next);
+    setStudents(prev => prev.map(s => (s.id === id ? updated : s)));
+  }, [students, setActiveStatus]);
 
   const addTeacher = useCallback((teacher) => {
     setTeachers(prev => prev.some(item => item.id === teacher.id) ? prev : [...prev, teacher]);
@@ -142,12 +164,11 @@ export function useManageUsersViewModel(enabled = true) {
 
   const deleteTeacher = useCallback(async (id) => {
     const teacher = teachers.find(item => item.id === id);
-    if (teacher) {
-      await UserService.delete(teacher.userId || id);
-      if (teacher.personId) await PersonService.delete(teacher.personId);
-    }
-    setTeachers(prev => prev.filter(t => t.id !== id));
-  }, [teachers]);
+    if (!teacher) return;
+    const next = !(teacher.status !== false);
+    const updated = await setActiveStatus(teacher, next);
+    setTeachers(prev => prev.map(t => (t.id === id ? updated : t)));
+  }, [teachers, setActiveStatus]);
 
   return {
     allStudents: students,

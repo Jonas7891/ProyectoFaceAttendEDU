@@ -143,7 +143,7 @@ export function useAddJustificationViewModel() {
                 return justificationType === 'retardo' ? name.includes('ret') || name.includes('late') : name.includes('inas') || name.includes('absen');
             }) || types[0];
 
-            await JustificationService.create({
+            const created = await JustificationService.create({
                 attendanceRecordId: attendanceRecord?.attendance_record_id || null,
                 justificationTypeId: type?.justification_type_id || null,
                 reason: description.trim(),
@@ -151,6 +151,21 @@ export function useAddJustificationViewModel() {
                 reviewStatus: 'Pending',
                 attachment: selectedFile ? {name: selectedFile.name, uri: selectedFile.uri, mime_type: selectedFile.mimeType} : null,
             });
+            // El soporte es obligatorio para aprobar (RN-33): se registra como
+            // documento de la justificación recién creada, igual que en web.
+            const justificationId = created?.justificationId;
+            if (justificationId && selectedFile) {
+                const ext = String(selectedFile.name?.split('.').pop() || 'bin').toLowerCase();
+                const now = new Date();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                await JustificationService.createDocument({
+                    justificationId,
+                    fileName: selectedFile.name,
+                    storageUri: `justification-documents/${now.getFullYear()}/${month}/${Date.now()}.${ext}`,
+                    mimeType: selectedFile.mimeType || 'application/octet-stream',
+                    sizeBytes: selectedFile.size || 1,
+                });
+            }
             setAlertData({
                 message: t('justify.successMessage'),
                 type: 'success',

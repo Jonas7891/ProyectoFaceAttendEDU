@@ -41,7 +41,10 @@ export const ActorService = {
 
   getByPerson: async (personId) => {
     if (!personId) return [];
-    const actors = await backendGet(BASE(), ENDPOINT, { limit: 2000 });
+    // Caché de 5 min (backendGet): esta lista se pedía completa en cada
+    // pantalla (dashboard, asistencias, justificaciones, cursos) y cada
+    // montaje re-descargaba hasta 100 actores.
+    const actors = await backendGet(BASE(), ENDPOINT, { limit: 2000 }, { useCache: true });
     return actors
       .filter((a) => String(a.person_id ?? a.personId) === String(personId))
       .map(AcademicActor.fromApi);

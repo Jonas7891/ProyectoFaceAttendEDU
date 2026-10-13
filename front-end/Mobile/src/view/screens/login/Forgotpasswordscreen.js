@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../../components/common/ThemeContext';
+import BackButton from '../../components/common/BackButton';
 import {VerificationService, VerificationError} from '../../../services/verificationService';
 import {VerificationErrorType} from '../../../services/constants/auths';
 import styles from '../Styles/Forgotpasswordscreen/Style';
@@ -435,18 +436,10 @@ export default function ForgotPasswordScreen({ navigation }) {
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
                         <View style={[styles.container, { backgroundColor: colors.backgroundWhite }]}>
 
-                            <TouchableOpacity
-                                onPress={handleBack}
-                                style={[styles.backButton, recovery.isLoading && { opacity: 0.5 }]}
-                                disabled={recovery.isLoading}
-                                activeOpacity={0.7}
-                                accessibilityLabel="Volver a la pantalla anterior"
-                                accessibilityRole="button"
-                            >
-                                <Text style={[styles.backButtonText, { color: colors.primary }]}>
-                                    ‹ {t('common.back')}
-                                </Text>
-                            </TouchableOpacity>
+                            <BackButton
+                                onPress={recovery.isLoading ? undefined : handleBack}
+                                style={recovery.isLoading && { opacity: 0.5 }}
+                            />
 
                             <View style={styles.contentContainer}>
 

@@ -34,7 +34,10 @@
     "next": "Siguiente",
     "previous": "Anterior",
     "requiredField": "Campo obligatorio",
-    "send": "Enviar"
+    "send": "Enviar",
+    "retry": "Reintentar",
+    "activate": "Activar",
+    "deactivate": "Desactivar"
   },
   "login": {
     "title": "Inicio de Sesión",
@@ -51,7 +54,9 @@
     "connectionError": "No se pudo conectar con el servidor. Verifica tu conexión a internet e inténtalo de nuevo.",
     "loginError": "Ocurrió un error al iniciar sesión",
     "acceptTerms": "Acepta los términos y condiciones",
-    "forgotPassword": "¿Olvidaste tu contraseña?"
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña"
   },
   "tabs": {
     "home": "Inicio",
@@ -95,7 +100,8 @@
     "justifiedStatus": "Justificado",
     "sectionJustification": "Justificación",
     "unknownRecord": "Registro #{{id}}",
-    "unknownPerson": "Actor #{{id}}"
+    "unknownPerson": "Actor #{{id}}",
+    "loadError": "No se pudieron cargar las asistencias"
   },
   "settings": {
     "language": "Idioma",
@@ -265,6 +271,10 @@
     "viewAttendance": "Ver Asistencia Detallada",
     "manageUsers": "Gestión de Usuarios",
     "manageUsersDesc": "Ingresa o Elimina usuarios de tu colegio.",
+    "news": "Novedades",
+    "newsDesc": "Ponte al día con los avisos recientes",
+    "schoolConfig": "Sede",
+    "schoolConfigDesc": "Datos y configuración de tu sede",
     "admin": "Administrador",
     "registerAttendance": "Actualizar Parámetros",
     "seeAll": "Ver todos",
@@ -499,7 +509,10 @@
     "newJustification": "Nueva Justificación",
     "late": "Tarde",
     "present": "Presente",
-    "seeAll": "Ver todos"
+    "seeAll": "Ver todos",
+    "myCourses": "Mis cursos",
+    "myCoursesDesc": "Consulta tus fichas y cursos asignados",
+    "reportsDesc": "Estudiantes en riesgo de tus grupos"
   },
   "student": {
     "greeting": "Hola Estudiante",
@@ -527,7 +540,32 @@
     "attendanceReminderDesc": "No olvides registrar tu asistencia por reconocimiento facial.",
     "late": "Tarde",
     "present": "Presente",
-    "seeAll": "Ver historial"
+    "seeAll": "Ver historial",
+    "myCourses": "Mis cursos",
+    "myCoursesDesc": "Consulta tu ficha y tus cursos",
+    "myJustifications": "Justificaciones",
+    "myJustificationsDesc": "Envía y consulta tus justificaciones"
+  },
+  "courses": {
+    "title": "Mis cursos",
+    "program": "Programa",
+    "enrolledOn": "Matriculado",
+    "students": "Estudiantes",
+    "courses": "Cursos",
+    "noCourses": "Sin cursos registrados",
+    "empty": "No tienes fichas asignadas",
+    "loadError": "No se pudieron cargar tus cursos",
+    "retry": "Reintentar"
+  },
+  "schools": {
+    "title": "Escuelas",
+    "subtitle": "Sedes de la institución",
+    "programs": "Programas",
+    "empty": "No hay sedes registradas",
+    "loadError": "No se pudieron cargar las sedes",
+    "retry": "Reintentar",
+    "active": "Activa",
+    "inactive": "Inactiva"
   },
   "subjects": {
     "math": "Matemáticas",
@@ -603,7 +641,8 @@
     "delays": "Retardos",
     "items": "justificaciones",
     "noJustifications": "No hay justificaciones registradas",
-    "noJustificationsDesc": "Las justificaciones válidas aparecerán aquí cuando sean agregadas por el administrador"
+    "noJustificationsDesc": "Las justificaciones válidas aparecerán aquí cuando sean agregadas por el administrador",
+    "loadError": "No se pudieron cargar las justificaciones"
   },
   "profile": {
     "personalInfo": "Información Personal",
@@ -691,7 +730,10 @@
     "onlyAdmins": "Solo administradores pueden acceder a esta pantalla.",
     "addTeacher": "Agregar docente",
     "enterTeacherName": "Ingresa el nombre del docente",
-    "searchTeacher": "Buscar docente"
+    "searchTeacher": "Buscar docente",
+    "activateQuestion": "¿Reactivar este usuario?",
+    "deactivateQuestion": "¿Desactivar este usuario? Podrás reactivarlo después.",
+    "inactive": "Inactivo"
   },
   "schoolConfig": {
     "title": "Configuración del Colegio",

@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../../components/common/ThemeContext';
+import BackButton from '../../components/common/BackButton';
 import styles from '../Styles/Verifycodescreen/Style';
 
 // Componentes
@@ -233,18 +234,10 @@ export default function VerifyCodeScreen({ route, navigation }) {
                         <View style={[styles.container, { backgroundColor: colors.backgroundWhite }]}>
 
                             {/* Botón volver */}
-                            <TouchableOpacity
-                                onPress={() => navigation.goBack()}
-                                style={[styles.backButton, codeVerification.isLoading && { opacity: 0.5 }]}
-                                disabled={codeVerification.isLoading}
-                                activeOpacity={0.7}
-                                accessibilityLabel="Volver a la pantalla anterior"
-                                accessibilityRole="button"
-                            >
-                                <Text style={[styles.backButtonText, { color: colors.primary }]}>
-                                    ‹ {t('common.back')}
-                                </Text>
-                            </TouchableOpacity>
+                            <BackButton
+                                onPress={codeVerification.isLoading ? undefined : () => navigation.goBack()}
+                                style={codeVerification.isLoading && { opacity: 0.5 }}
+                            />
 
                             <View style={styles.contentContainer}>
                                 <View style={styles.recoveryIconContainer}>

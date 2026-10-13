@@ -1,4 +1,4 @@
-import { request, GET, POST, PUT, DELETE } from '../api/apiClient';
+import { request, GET, POST, PUT, PATCH, DELETE } from '../api/apiClient';
 import AppUser from '../models/identity/AppUser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -38,8 +38,22 @@ export const UserService = {
   },
 
   update: async (id, userData) => {
-    const data = await request({ method: PUT, url: `${ENDPOINT}/${id}`, data: userData.toApi(), requiresAuth: false });
+    // ms-identity (UserDto, merge parcial) habla camelCase: el toApi en snake
+    // respondía 400 por propiedades desconocidas.
+    const u = userData ?? {};
+    const body = {
+      personId: u.personId ?? u.person_id,
+      username: u.username,
+      authenticationType: u.authenticationType ?? u.authentication_type,
+      status: u.status,
+    };
+    Object.keys(body).forEach((k) => (body[k] === null || body[k] === undefined) && delete body[k]);
+    const data = await request({ method: PUT, url: `${ENDPOINT}/${id}`, data: body, requiresAuth: true });
     return AppUser.fromApi(data);
+  },
+
+  setStatus: async (id, status) => {
+    return request({ method: PATCH, url: `${ENDPOINT}/${id}/status`, params: { status }, requiresAuth: true });
   },
 
   delete: async (id) => {
@@ -97,6 +111,28 @@ export const getCurrentUserRole = async () => {
   } catch {
     return null;
   }
+};
+
+// Roles crudos del perfil (nombres del backend, p. ej. "Super Administrador").
+// El rol canónico guardado en 'userRole' no distingue super admin de admin de
+// sede; para eso se miran los nombres originales, en espejo de
+// Web/src/core/utils/backendRoles.js (hasSuperAdminRole).
+const SUPER_ADMIN_KEYS = new Set(['SUPER_ADMINISTRADOR', 'SUPER_ADMIN']);
+
+export const getUserProfileRoles = async () => {
+  try {
+    const profile = await readStoredProfile();
+    return Array.isArray(profile?.roles) ? profile.roles : [];
+  } catch {
+    return [];
+  }
+};
+
+export const isSuperAdmin = async () => {
+  const roles = await getUserProfileRoles();
+  return roles.some((r) =>
+    SUPER_ADMIN_KEYS.has(String(r ?? '').trim().replace(/\s+/g, '_').toUpperCase())
+  );
 };
 
 export const getUserByEmail = async (email) => {

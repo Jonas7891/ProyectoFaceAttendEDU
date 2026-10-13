@@ -14,6 +14,7 @@ import {
 import {useTranslation} from "react-i18next";
 import {useNavigation} from "@react-navigation/native";
 import PrimaryButton from "../components/auth/PrimaryButton";
+import BackButton from "../components/common/BackButton";
 import {useTheme} from "../components/common/ThemeContext";
 import styles from "./Styles/AddValidJustificationScreen/Style";
 import {useAddValidJustificationViewModel} from "../../viewmodels/useAddValidJustificationViewModel";
@@ -309,6 +310,7 @@ export default function AddValidJustificationScreen() {
                     >
                         <View style={styles.containerAddValidJustification}>
                             {/* ── Encabezado ───────────────────────────────────────── */}
+                            <BackButton onPress={handleBack} />
                             <Text style={[styles.mainTitle, { color: colors.text, marginTop: Platform.OS === "ios" ? 0 : 15 }]}>
                                 {t("justify.title")}
                             </Text>
@@ -520,19 +522,6 @@ export default function AddValidJustificationScreen() {
                                     onPress={handleSaveWithValidation}
                                     disabled={isSaving}
                                 />
-                                <TouchableOpacity
-                                    onPress={handleBack}
-                                    style={styles.secondaryButton}
-                                >
-                                    <Text
-                                        style={[
-                                            styles.secondaryButtonText,
-                                            { color: colors.textSecondary },
-                                        ]}
-                                    >
-                                        {t("common.back")}
-                                    </Text>
-                                </TouchableOpacity>
                             </View>
                         </View>
                     </ScrollView>

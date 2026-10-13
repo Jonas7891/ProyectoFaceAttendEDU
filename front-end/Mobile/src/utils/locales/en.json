@@ -34,7 +34,10 @@
     "next": "Next",
     "previous": "Previous",
     "requiredField": "Required field",
-    "send": "Send"
+    "send": "Send",
+    "retry": "Retry",
+    "activate": "Activate",
+    "deactivate": "Deactivate"
   },
   "login": {
     "title": "Login",
@@ -51,7 +54,9 @@
     "connectionError": "Could not connect to the server. Check your internet connection and try again.",
     "loginError": "An error occurred while logging in",
     "acceptTerms": "Accept the terms and conditions",
-    "forgotPassword": "Forgot password?"
+    "forgotPassword": "Forgot password?",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "tabs": {
     "home": "Home",
@@ -95,7 +100,8 @@
     "justifiedStatus": "Justified",
     "sectionJustification": "Justification",
     "unknownRecord": "Record #{{id}}",
-    "unknownPerson": "Actor #{{id}}"
+    "unknownPerson": "Actor #{{id}}",
+    "loadError": "Could not load attendance records"
   },
   "settings": {
     "languageChanged": "Language changed successfully",
@@ -269,7 +275,11 @@
     "statusPresent": "Present",
     "statusLate": "Late",
     "manageUsers": "User Management",
-    "manageUsersDesc": "Add or remove users from your school."
+    "manageUsersDesc": "Add or remove users from your school.",
+    "news": "News",
+    "newsDesc": "Catch up on recent notices",
+    "schoolConfig": "School site",
+    "schoolConfigDesc": "Your site data and configuration"
   },
   "consultJustify": {
     "mainTitle": "Approved Justifications",
@@ -499,7 +509,10 @@
     "attendanceGroupMsg": "Attendance for group 10-A was successfully recorded.",
     "attendanceLabel": "Attendance for my groups",
     "attendanceRecorded": "Attendance Recorded",
-    "newJustification": "New Justification"
+    "newJustification": "New Justification",
+    "myCourses": "My courses",
+    "myCoursesDesc": "View your assigned cohorts and courses",
+    "reportsDesc": "At-risk students in your groups"
   },
   "student": {
     "greeting": "Hello student",
@@ -527,7 +540,32 @@
     "UpdateFace": "Face Update",
     "UpdateFaceDesc": "Update your biometric data",
     "faceRecognizedMsg": "Your face was successfully recognized today at 08:15 AM",
-    "attendanceReminderDesc": "Don't forget to register your attendance by facial recognition."
+    "attendanceReminderDesc": "Don't forget to register your attendance by facial recognition.",
+    "myCourses": "My courses",
+    "myCoursesDesc": "View your cohort and courses",
+    "myJustifications": "Justifications",
+    "myJustificationsDesc": "Submit and review your justifications"
+  },
+  "courses": {
+    "title": "My courses",
+    "program": "Program",
+    "enrolledOn": "Enrolled",
+    "students": "Students",
+    "courses": "Courses",
+    "noCourses": "No courses registered",
+    "empty": "You have no assigned cohorts",
+    "loadError": "Could not load your courses",
+    "retry": "Retry"
+  },
+  "schools": {
+    "title": "Schools",
+    "subtitle": "Institution sites",
+    "programs": "Programs",
+    "empty": "No schools registered",
+    "loadError": "Could not load schools",
+    "retry": "Retry",
+    "active": "Active",
+    "inactive": "Inactive"
   },
   "subjects": {
     "math": "Math",
@@ -603,7 +641,8 @@
     "delays": "Delays",
     "items": "justifications",
     "noJustifications": "No justifications registered",
-    "noJustificationsDesc": "Valid justifications will appear here when added by the administrator"
+    "noJustificationsDesc": "Valid justifications will appear here when added by the administrator",
+    "loadError": "Could not load justifications"
   },
   "profile": {
     "personalInfo": "Personal Information",
@@ -691,7 +730,10 @@
     "onlyAdmins": "Only administrators can access this screen.",
     "addTeacher": "Add teacher",
     "enterTeacherName": "Enter teacher name",
-    "searchTeacher": "Search teacher"
+    "searchTeacher": "Search teacher",
+    "activateQuestion": "Reactivate this user?",
+    "deactivateQuestion": "Deactivate this user? You can reactivate them later.",
+    "inactive": "Inactive"
   },
   "schoolConfig": {
     "title": "School Configuration",

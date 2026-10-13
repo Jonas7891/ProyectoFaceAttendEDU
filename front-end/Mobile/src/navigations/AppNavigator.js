@@ -27,7 +27,9 @@ import VerifyCodeScreen from "../view/screens/login/Verifycodescreen";
 import ForgotPasswordScreen from "../view/screens/login/Forgotpasswordscreen";
 import PendingJustificationScreen from "../view/screens/PendingJustificationScreen";
 import ManageEnviromentScreen from "../view/screens/ManageEnviromentScreen";
+import SchoolsScreen from "../view/screens/SchoolsScreen";
 import RegisterFace from "../view/screens/RegisterFace";
+import MyCoursesScreen from "../view/screens/MyCoursesScreen";
 import {SuccessScreen} from "../view/components/auth/SuccessScreen";
 
 const Stack = createStackNavigator();
@@ -199,6 +201,7 @@ export default function App() {
                         <Stack.Screen name="LanguageSettingsScreen" component={LanguageSettingsScreen}/>
                         <Stack.Screen name="AppearanceSettingsScreen" component={AppearanceSettingsScreen}/>
                         <Stack.Screen name="DisplayingAttendance" component={DisplayingAttendance}/>
+                        <Stack.Screen name="MyCourses" component={MyCoursesScreen}/>
                         <Stack.Screen name="MenuJustify" component={MenuJustify}/>
                         <Stack.Screen name="AddJustification" component={AddJustification}/>
                         <Stack.Screen name="AddValidJustification" component={AddValidJustificationScreen}/>
@@ -229,6 +232,7 @@ export default function App() {
                             )}
                         </Stack.Screen>
                         <Stack.Screen name="AttendanceReportScreen" component={AttendanceReportScreen}/>
+                        <Stack.Screen name="Schools" component={SchoolsScreen}/>
                         <Stack.Screen name="SchoolConfigurationScreen" component={SchoolConfigurationScreen}/>
                         <Stack.Screen name="PendingJustificationScreen" component={PendingJustificationScreen}/>
                         <Stack.Screen name="RegisterFace" component={RegisterFace} />
