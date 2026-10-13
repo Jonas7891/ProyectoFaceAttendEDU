@@ -2,7 +2,8 @@ import {useCallback, useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../view/components/common/ThemeContext';
 import {useNavigation} from '@react-navigation/native';
-import {getCurrentUserRole} from "../services/UserService";
+import {getCurrentUserRole, getCurrentUser} from "../services/UserService";
+import {BiometricCaseService} from '../services/BiometricCaseService';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 import {useCustomAlert} from '../view/components/common/useCustomAlert';
 
@@ -10,7 +11,7 @@ export function useFacialFailViewModel() {
     const navigation = useNavigation();
     const {i18n, t} = useTranslation();
     const {loadThemeForRole} = useTheme();
-    const {alertConfig, hideAlert, showSuccess} = useCustomAlert();
+    const {alertConfig, hideAlert, showSuccess, showError} = useCustomAlert();
 
     const [userRole, setUserRole] = useState(null);
     const [showQuestionnaire, setShowQuestionnaire] = useState(false);
@@ -59,23 +60,30 @@ export function useFacialFailViewModel() {
         );
     }, [showSuccess, t]);
 
-    // Modal de actualización facial
+    // Modal de actualización facial: radica un caso de actualización
+    // biométrica (POST /biometric-update-cases) para revisión.
     const openFacialUpdate = useCallback(() => setShowFacialUpdate(true), []);
     const closeFacialUpdate = useCallback(() => setShowFacialUpdate(false), []);
-    const handleFacialUpdateSuccess = useCallback((data) => {
-        // Guardar datos y mostrar alerta con la información
+    const handleFacialUpdateSuccess = useCallback(async (data) => {
         setFormData(data);
-        const message =
-            `${t('facialUpdate.changeType')}: ${data.changeLabel}`;
-
-        showSuccess(
-            t('facialFail.success'),
-            message,
-            () => {
-                console.log('Parámetros actualizados');
-            }
-        );
-    }, [showSuccess, t]);
+        const message = `${t('facialUpdate.changeType')}: ${data.changeLabel}`;
+        try {
+            const me = await getCurrentUser();
+            if (!me?.personId) throw new Error('no person');
+            await BiometricCaseService.create({
+                personId: me.personId,
+                biometricType: 'FACIAL',
+                reason: `Cambio facial: ${data.changeLabel}`,
+                requestedBy: me.userId ?? null,
+            });
+            showSuccess(t('facialFail.success'), message);
+        } catch (e) {
+            showError(
+                t('facialFail.success'),
+                e?.message || message
+            );
+        }
+    }, [showSuccess, showError, t]);
 
     return {
         userRole,

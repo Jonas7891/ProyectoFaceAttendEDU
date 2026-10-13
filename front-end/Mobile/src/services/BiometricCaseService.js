@@ -43,8 +43,21 @@ export const BiometricCaseService = {
   },
 
   create: async (caseData) => {
-    const data = await request({ method: POST, url: ENDPOINT, data: caseData.toApi(), requiresAuth: false });
-    return BiometricUpdateCase.fromApi(data);
+    // ms-configuration (zod) habla camelCase y exige personId (uuid),
+    // biometricType (FACIAL|FINGERPRINT) y reason: el toApi en snake
+    // respondía 400. Los null se omiten.
+    const c = caseData ?? {};
+    const body = {
+      personId: c.personId ?? c.person_id,
+      biometricType: c.biometricType ?? c.biometric_type,
+      fingerNumber: c.fingerNumber ?? c.finger_number,
+      currentEmbeddingRef: c.currentEmbeddingRef ?? c.current_embedding_ref,
+      reason: c.reason,
+      requestedBy: c.requestedBy ?? c.requested_by,
+    };
+    Object.keys(body).forEach((k) => (body[k] === null || body[k] === undefined) && delete body[k]);
+    const data = await request({ method: POST, url: ENDPOINT, data: body, requiresAuth: false });
+    return BiometricUpdateCase.fromApi(toSnakeDeep(data));
   },
 
   update: async (id, caseData) => {
