@@ -22,6 +22,7 @@ import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../context/AppDataContext";
 import { useRolePermissions } from "./useRolePermissions";
 import { academicApi } from "../services/api";
+import { notifyActors, notifyStudentByActorId } from "../services/api/reportNotifications";
 import { optional } from "../services/api/referenceData";
 import { mockAttendanceByDay, mockAttendanceByWeek } from "../models/data/mockData";
 import { exportToExcel, exportToPDF, buildReportHTML, buildHTMLTable, formatPercentageWithColor, formatStatusBadge } from "../core/utils/exportHelpers";
@@ -166,6 +167,7 @@ export function useReportsViewModel(
     const [fichaFilter, setFichaFilter] = useState(fichaId || "");
     const [statusFilter, setStatusFilter] = useState("active");
     const [sortBy, setSortBy] = useState("none");
+    const [notifyState, setNotifyState] = useState({ sending: false, error: null, sent: 0 });
 
     // ── Hooks de contexto ─────────────────────────────────────
     const { theme } = useTheme();
@@ -503,19 +505,37 @@ export function useReportsViewModel(
     }, []);
 
     /**
-     * Notificar a un estudiante individual
+     * Notificar a un estudiante individual (POST /api/v1/alerts).
      */
-    const notifyStudent = useCallback((studentId) => {
-        console.log("Notificar estudiante:", studentId);
-        // TODO: Implementar lógica de notificación
+    const notifyStudent = useCallback(async (studentId) => {
+        setNotifyState({ sending: true, error: null, sent: 0 });
+        try {
+            await notifyStudentByActorId(studentId);
+            setNotifyState({ sending: false, error: null, sent: 1 });
+        } catch (e) {
+            setNotifyState({
+                sending: false,
+                error: e?.message || "No se pudo enviar la notificación",
+                sent: 0,
+            });
+        }
     }, []);
 
     /**
-     * Notificar a todos los estudiantes filtrados
+     * Notificar a todos los estudiantes filtrados (una alerta por actor).
      */
-    const notifyAll = useCallback(() => {
-        console.log("Notificar a todos:", filteredStudents.length, "estudiantes");
-        // TODO: Implementar lógica de notificación masiva
+    const notifyAll = useCallback(async () => {
+        setNotifyState({ sending: true, error: null, sent: 0 });
+        try {
+            const { sent } = await notifyActors(filteredStudents.map((s) => s.id));
+            setNotifyState({ sending: false, error: null, sent });
+        } catch (e) {
+            setNotifyState({
+                sending: false,
+                error: e?.message || "No se pudieron enviar las notificaciones",
+                sent: 0,
+            });
+        }
     }, [filteredStudents]);
 
     /**
@@ -702,6 +722,7 @@ export function useReportsViewModel(
         exportPDF,
         notifyStudent,
         notifyAll,
+        notifyState,
         viewStudentDetails,
         exportSelection,
         viewFullHistory,

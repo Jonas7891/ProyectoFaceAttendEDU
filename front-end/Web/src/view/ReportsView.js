@@ -110,6 +110,7 @@ export default function ReportsView({
                     variant="danger"
                     size="sm"
                     onPress={vm.notifyAll}
+                    disabled={vm.notifyState.sending}
                     leftIcon={<Feather name="bell" size={16} color="#fff" />}
                 >
                     {t("Notificar Todos")}
@@ -423,10 +424,12 @@ export default function ReportsView({
                                                     e.stopPropagation();
                                                     vm.notifyStudent(student.id);
                                                 }}
+                                                disabled={vm.notifyState.sending}
                                                 style={{
                                                     padding: 8,
                                                     borderRadius: 8,
                                                     backgroundColor: c.status.dangerLight,
+                                                    opacity: vm.notifyState.sending ? 0.5 : 1,
                                                 }}
                                             >
                                                 <Feather name="bell" size={16} color={c.status.danger} />
@@ -501,6 +504,7 @@ export default function ReportsView({
                                     variant="outline"
                                     style={{ flex: 1 }}
                                     onPress={vm.notifyAll}
+                                    disabled={vm.notifyState.sending}
                                     leftIcon={<Feather name="bell" size={16} color={c.brand.primary} />}
                                 >
                                     {t("Notificar a Todos")} ({vm.filteredStudents.length})
@@ -529,6 +533,21 @@ export default function ReportsView({
                                 {t("Ver Historial Completo")}
                             </Button>
                         </View>
+                        {/* Resultado del último envío de notificaciones */}
+                        {(vm.notifyState.error || vm.notifyState.sent > 0) && (
+                            <Text
+                                style={{
+                                    fontSize: 12,
+                                    marginTop: 8,
+                                    color: vm.notifyState.error
+                                        ? c.status.danger
+                                        : c.status.success,
+                                }}
+                            >
+                                {vm.notifyState.error ??
+                                    `${t("Notificaciones enviadas")}: ${vm.notifyState.sent}`}
+                            </Text>
+                        )}
                     </Card>
                 )}
             </ScrollView>
