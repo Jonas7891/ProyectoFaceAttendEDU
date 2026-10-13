@@ -66,7 +66,7 @@ test("todaysBlocks only includes blocks for this instructor on today's ISO weekd
 });
 
 test("startClass creates today's session when none exists yet, then opens it", async () => {
-    listBlocks.mockResolvedValue([{ scheduleBlockId: 1, instructorActorId: 7, dayOfWeek: 1, cohortId: 10 }]);
+    listBlocks.mockResolvedValue([{ scheduleBlockId: 1, instructorActorId: 7, dayOfWeek: ((new Date().getDay() + 6) % 7) + 1, cohortId: 10 }]);
     schedulingApi.listSessions.mockResolvedValue([]); // no hay sesión de hoy todavía
     schedulingApi.createSession.mockResolvedValue({ classSessionId: 55, sessionStatus: "Created" });
     schedulingApi.openSession.mockResolvedValue({ classSessionId: 55, sessionStatus: "Open" });
@@ -86,7 +86,7 @@ test("startClass creates today's session when none exists yet, then opens it", a
 
 test("startClass reuses today's session and tolerates it already being Open", async () => {
     const today = new Date().toISOString().slice(0, 10);
-    listBlocks.mockResolvedValue([{ scheduleBlockId: 1, instructorActorId: 7, dayOfWeek: 1, cohortId: 10 }]);
+    listBlocks.mockResolvedValue([{ scheduleBlockId: 1, instructorActorId: 7, dayOfWeek: ((new Date().getDay() + 6) % 7) + 1, cohortId: 10 }]);
     schedulingApi.listSessions.mockResolvedValue([
         { classSessionId: 55, scheduleBlockId: 1, sessionDate: today, sessionStatus: "Open" },
     ]);
@@ -105,7 +105,7 @@ test("startClass reuses today's session and tolerates it already being Open", as
 
 test("endClass closes the session and returns to SELECT_SESSION", async () => {
     const today = new Date().toISOString().slice(0, 10);
-    listBlocks.mockResolvedValue([{ scheduleBlockId: 1, instructorActorId: 7, dayOfWeek: 1, cohortId: 10 }]);
+    listBlocks.mockResolvedValue([{ scheduleBlockId: 1, instructorActorId: 7, dayOfWeek: ((new Date().getDay() + 6) % 7) + 1, cohortId: 10 }]);
     schedulingApi.listSessions.mockResolvedValue([
         { classSessionId: 55, scheduleBlockId: 1, sessionDate: today, sessionStatus: "Open" },
     ]);
@@ -122,7 +122,7 @@ test("endClass closes the session and returns to SELECT_SESSION", async () => {
 });
 
 async function startedVm({ enrolledPersonId = "person-a", academicActorId = 1 } = {}) {
-    listBlocks.mockResolvedValue([{ scheduleBlockId: 1, instructorActorId: 7, dayOfWeek: 1, cohortId: 10 }]);
+    listBlocks.mockResolvedValue([{ scheduleBlockId: 1, instructorActorId: 7, dayOfWeek: ((new Date().getDay() + 6) % 7) + 1, cohortId: 10 }]);
     schedulingApi.listSessions.mockResolvedValue([{ classSessionId: 55, scheduleBlockId: 1, sessionStatus: "Open" }]);
     schedulingApi.openSession.mockResolvedValue({ classSessionId: 55, sessionStatus: "Open" });
     cohortActorByPerson.mockResolvedValue(new Map([[enrolledPersonId, academicActorId]]));
@@ -190,4 +190,48 @@ test("onCaptureError shows ERROR with that message (e.g. no biometric match)", a
 
     expect(getVm().view).toBe("ERROR");
     expect(getVm().statusMessage).toBe("no match found");
+});
+
+test("a flat attendance.event frame from another kiosk (snake_case person_id, no payload wrapper) adds the resolved academicActorId to registeredActorIds", async () => {
+    // No usa startedVm(): necesita capturar el listener pasado a
+    // onAttendanceEvent, y startedVm() sobrescribiría este mock con uno
+    // genérico al llamar startClass() internamente.
+    let attendanceListener;
+    connectBiometricSocket.mockReturnValue({
+        send: jest.fn(),
+        onAttendanceEvent: jest.fn((listener) => {
+            attendanceListener = listener;
+            return () => {};
+        }),
+        onStatusChange: jest.fn(() => () => {}),
+        close: jest.fn(),
+    });
+    const today = new Date().toISOString().slice(0, 10);
+    listBlocks.mockResolvedValue([
+        { scheduleBlockId: 1, instructorActorId: 7, dayOfWeek: ((new Date().getDay() + 6) % 7) + 1, cohortId: 10 },
+    ]);
+    schedulingApi.listSessions.mockResolvedValue([
+        { classSessionId: 55, scheduleBlockId: 1, sessionDate: today, sessionStatus: "Open" },
+    ]);
+    schedulingApi.openSession.mockResolvedValue({ classSessionId: 55, sessionStatus: "Open" });
+    cohortActorByPerson.mockResolvedValue(new Map([["person-a", 1]]));
+    attendanceApi.recordsBySession.mockResolvedValue([]);
+
+    const getVm = renderHook();
+    await act(async () => {});
+    await act(async () => { await getVm().startClass(getVm().todaysBlocks[0]); });
+
+    act(() => {
+        attendanceListener({
+            type: "attendance.event",
+            person_id: "person-a",
+            biometric_type: "FACIAL",
+            score: 0.93,
+            timestamp: "2026-10-13T00:00:00Z",
+            correlation_id: "corr-1",
+        });
+    });
+
+    expect(getVm().registeredActorIds.has(1)).toBe(true);
+    expect(attendanceApi.createRecord).not.toHaveBeenCalled();
 });

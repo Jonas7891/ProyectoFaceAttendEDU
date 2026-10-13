@@ -76,12 +76,15 @@ export function useAttendanceKioskViewModel() {
     }
 
     // Otro kiosco en la misma sesión ya registró a este actor: reflejarlo
-    // localmente sin round-trip propio a attendanceApi.
+    // localmente sin round-trip propio a attendanceApi. El frame es plano
+    // (sin wrapper payload) y usa snake_case, p. ej.
+    // { type: "attendance.event", person_id, biometric_type, score, ... } —
+    // ws_router.py del ms-biometric nunca manda un academic_actor_id, así
+    // que siempre hay que resolverlo vía actorByPerson.
     function handleAttendanceEvent(frame) {
-        const payload = frame?.payload ?? frame ?? {};
-        const personId = payload.personId;
-        const academicActorId =
-            payload.academicActorId ?? (personId != null ? actorByPersonRef.current.get(personId) : null);
+        const personId = frame?.person_id;
+        if (personId == null) return;
+        const academicActorId = actorByPersonRef.current.get(personId);
         if (academicActorId == null) return;
         registeredActorIdsRef.current.add(academicActorId);
         syncRegisteredActorIds();
