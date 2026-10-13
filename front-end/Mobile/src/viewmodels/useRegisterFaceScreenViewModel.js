@@ -2,12 +2,18 @@ import {useCallback, useRef, useState} from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
 import {useCameraPermissions} from 'expo-camera';
-import * as FileSystem from 'expo-file-system';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useCustomAlert} from '../view/components/common/useCustomAlert';
+import {getCurrentUser} from '../services/UserService';
+import {enrollFaceWithLiveness} from '../services/faceLivenessEnrollment';
 
-const STORAGE_KEY = '@faceattend_edu:rostro_registrado';
-const FACE_FILE = 'rostro_faceattend.jpg';
+// Debe coincidir con los `action` que el backend puede devolver en el reto
+// de vida (ver back-end/06-ms-biometric/infrastructure/web/liveness.py) —
+// los mismos tres gestos que ya usa Web (useFaceCapture.js).
+const ACTION_LABEL_KEYS = {
+    blink: 'registerFace.gestureBlink',
+    turn: 'registerFace.gestureTurn',
+    open_mouth: 'registerFace.gestureOpenMouth',
+};
 
 export function useRegisterFaceScreenViewModel() {
     const navigation = useNavigation();
@@ -18,8 +24,9 @@ export function useRegisterFaceScreenViewModel() {
 
     const [permission, requestPermission] = useCameraPermissions();
     const [cameraReady, setCameraReady] = useState(false);
-    const [capturedPhoto, setCapturedPhoto] = useState(null);
-    const [saving, setSaving] = useState(false);
+    const [enrolling, setEnrolling] = useState(false);
+    const [livenessAction, setLivenessAction] = useState('');
+    const [livenessProgress, setLivenessProgress] = useState(null); // {done, total}
 
     const handleCameraReady = useCallback(() => setCameraReady(true), []);
 
@@ -28,48 +35,63 @@ export function useRegisterFaceScreenViewModel() {
         showError(t('registerFace.cameraErrorTitle'), t('registerFace.cameraErrorMsg'));
     }, [showError, t]);
 
-    const handleCapture = useCallback(async () => {
+    const translateActionLabel = useCallback(
+        (action, isRetry) => {
+            const label = t(ACTION_LABEL_KEYS[action] || 'registerFace.gestureDefault');
+            return isRetry ? `${label} ${t('registerFace.retrySameGesture')}` : label;
+        },
+        [t]
+    );
+
+    const captureFrame = useCallback(async () => {
         const camera = cameraRef.current;
-        if (!camera || !cameraReady) return;
-
-        try {
-            const takePicture = camera.takePictureAsync || camera.takePhotoAsync;
-            const photo = await takePicture.call(camera, {base64: true, quality: 0.9});
-            setCapturedPhoto(photo);
-        } catch (error) {
-            console.error('Error de captura:', error);
-            showError(t('registerFace.captureErrorTitle'), t('registerFace.captureErrorMsg'));
-        }
-    }, [cameraReady, showError, t]);
-
-    const handleRetake = useCallback(() => {
-        setCapturedPhoto(null);
-        setCameraReady(false);
+        if (!camera) throw new Error('camera not ready');
+        const takePicture = camera.takePictureAsync || camera.takePhotoAsync;
+        // Calidad baja a propósito: son fotogramas de prueba de vida (y, el del
+        // medio, la imagen enrolada), no una foto para mostrar al usuario —
+        // igual que Web limita el ancho del fotograma en captureFrame().
+        const photo = await takePicture.call(camera, {base64: true, quality: 0.5, skipProcessing: true});
+        return photo.base64;
     }, []);
 
-    const handleSave = useCallback(async () => {
-        if (!capturedPhoto || saving) return;
-        setSaving(true);
+    const resetLiveness = useCallback(() => {
+        setLivenessAction('');
+        setLivenessProgress(null);
+    }, []);
+
+    const handleStart = useCallback(async () => {
+        const camera = cameraRef.current;
+        if (!camera || !cameraReady || enrolling) return;
+
+        setEnrolling(true);
         try {
-            const destination = `${FileSystem.documentDirectory}${FACE_FILE}`;
-            const info = await FileSystem.getInfoAsync(destination);
-            if (info.exists) await FileSystem.deleteAsync(destination);
+            const user = await getCurrentUser();
+            if (!user?.personId) {
+                throw new Error('No se encontró tu identidad de persona en la sesión actual.');
+            }
 
-            await FileSystem.moveAsync({from: capturedPhoto.uri, to: destination});
-            await AsyncStorage.setItem(
-                STORAGE_KEY,
-                JSON.stringify({uri: destination, registradoEl: new Date().toISOString()})
-            );
+            await enrollFaceWithLiveness({
+                personId: user.personId,
+                captureFrame,
+                translateActionLabel,
+                onGestureStart: (label, progress) => {
+                    setLivenessAction(label);
+                    setLivenessProgress(progress);
+                },
+                onGestureRetry: (message) => {
+                    console.warn('Gesto no detectado, reintentando:', message);
+                },
+            });
 
-            setCapturedPhoto(null);
             showSuccess(t('registerFace.saveSuccessTitle'), t('registerFace.saveSuccessMsg'));
         } catch (error) {
-            console.error('Error al guardar:', error);
-            showError(t('registerFace.saveErrorTitle'), t('registerFace.saveErrorMsg'));
+            console.error('Error al registrar rostro:', error);
+            showError(t('registerFace.saveErrorTitle'), error?.message || t('registerFace.saveErrorMsg'));
         } finally {
-            setSaving(false);
+            resetLiveness();
+            setEnrolling(false);
         }
-    }, [capturedPhoto, saving, showSuccess, showError, t]);
+    }, [cameraReady, enrolling, captureFrame, translateActionLabel, showSuccess, showError, resetLiveness, t]);
 
     const handleBack = useCallback(() => navigation.goBack(), [navigation]);
 
@@ -81,11 +103,10 @@ export function useRegisterFaceScreenViewModel() {
         cameraReady,
         handleCameraReady,
         handleMountError,
-        capturedPhoto,
-        saving,
-        handleCapture,
-        handleRetake,
-        handleSave,
+        enrolling,
+        livenessAction,
+        livenessProgress,
+        handleStart,
         handleBack,
         alertConfig,
         hideAlert,

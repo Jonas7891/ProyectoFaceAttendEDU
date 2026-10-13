@@ -32,6 +32,31 @@ captureButtonText: {
         fontWeight: '600',
     },
 
+livenessBanner: {
+        position: 'absolute',
+        bottom: 16,
+        left: 16,
+        right: 16,
+        backgroundColor: 'rgba(15, 23, 42, 0.75)',
+        borderRadius: 12,
+        paddingVertical: 10,
+        paddingHorizontal: 14,
+        alignItems: 'center',
+    },
+
+livenessBannerText: {
+        color: '#FFFFFF',
+        fontSize: 15,
+        fontWeight: '700',
+        textAlign: 'center',
+    },
+
+livenessProgressText: {
+        color: '#E2E8F0',
+        fontSize: 12,
+        marginTop: 4,
+    },
+
 faceOval: {
         position: 'absolute',
         left: '16%',
@@ -99,19 +124,6 @@ registerFaceTitle: {
 safeAreaRegisterFace: {
         flex: 1,
         backgroundColor: '#FFFFFF',
-    },
-
-secondaryButtonRegister: {
-        paddingVertical: 12,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: '#2563EB',
-        alignItems: 'center',
-    },
-
-secondaryButtonText: {
-        color: '#2563EB',
-        fontWeight: '600',
     },
 }));
 

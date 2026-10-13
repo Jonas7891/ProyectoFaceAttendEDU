@@ -1,11 +1,10 @@
 import React from 'react';
-import {ActivityIndicator, Image, SafeAreaView, Text, TouchableOpacity, View,} from 'react-native';
+import {ActivityIndicator, SafeAreaView, Text, TouchableOpacity, View,} from 'react-native';
 import {CameraView} from 'expo-camera';
 import {useIsFocused} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
 import CustomLogo from '../components/common/logo';
 import CustomAlert from '../components/common/CustomAlert';
-import PrimaryButton from '../components/auth/PrimaryButton';
 import BackButton from '../components/common/BackButton';
 import styles from './Styles/RegisterFace/Style';
 import {useRegisterFaceScreenViewModel} from '../../viewmodels/useRegisterFaceScreenViewModel';
@@ -22,18 +21,17 @@ export default function RegisterFace() {
         cameraReady,
         handleCameraReady,
         handleMountError,
-        capturedPhoto,
-        saving,
-        handleCapture,
-        handleRetake,
-        handleSave,
+        enrolling,
+        livenessAction,
+        livenessProgress,
+        handleStart,
         handleBack,
         alertConfig,
         hideAlert,
     } = useRegisterFaceScreenViewModel();
 
-    const subtitle = capturedPhoto
-        ? t('registerFace.subtitleReview')
+    const subtitle = enrolling
+        ? t('registerFace.subtitleCapturing')
         : cameraReady
             ? t('registerFace.subtitleReady')
             : t('registerFace.subtitleStarting');
@@ -49,11 +47,7 @@ export default function RegisterFace() {
 
                 <Text style={styles.registerFaceSubtitle}>{subtitle}</Text>
 
-                {capturedPhoto ? (
-                    <View style={styles.cameraWrapper}>
-                        <Image source={{uri: capturedPhoto.uri}} style={styles.cameraPreview}/>
-                    </View>
-                ) : permissionLoading ? (
+                {permissionLoading ? (
                     <View style={styles.cameraWrapper}>
                         <ActivityIndicator color="#2563EB"/>
                     </View>
@@ -79,35 +73,36 @@ export default function RegisterFace() {
                             onMountError={handleMountError}
                         />
                         <View pointerEvents="none" style={styles.faceOval}/>
+                        {!!livenessAction && (
+                            <View pointerEvents="none" style={styles.livenessBanner}>
+                                <Text style={styles.livenessBannerText}>{livenessAction}</Text>
+                                {!!livenessProgress && (
+                                    <Text style={styles.livenessProgressText}>
+                                        {t('registerFace.gestureProgress', {
+                                            done: livenessProgress.done,
+                                            total: livenessProgress.total,
+                                        })}
+                                    </Text>
+                                )}
+                            </View>
+                        )}
                     </View>
                 ) : null}
 
                 <View style={styles.registerFaceActions}>
-                    {capturedPhoto ? (
-                        <>
-                            <PrimaryButton
-                                title={saving ? t('registerFace.saving') : t('registerFace.saveFace')}
-                                onPress={handleSave}
-                            />
-                            <TouchableOpacity
-                                style={styles.secondaryButtonRegister}
-                                onPress={handleRetake}
-                                disabled={saving}
-                            >
-                                <Text style={styles.secondaryButtonText}>{t('registerFace.retake')}</Text>
-                            </TouchableOpacity>
-                        </>
-                    ) : (
-                        <TouchableOpacity
-                            style={[styles.captureButtonRegister, !cameraReady && {opacity: 0.6}]}
-                            onPress={handleCapture}
-                            disabled={!cameraReady}
-                        >
-                            <Text style={styles.captureButtonText}>
-                                {cameraReady ? t('registerFace.captureFace') : t('registerFace.startingCamera')}
-                            </Text>
-                        </TouchableOpacity>
-                    )}
+                    <TouchableOpacity
+                        style={[styles.captureButtonRegister, (!cameraReady || enrolling) && {opacity: 0.6}]}
+                        onPress={handleStart}
+                        disabled={!cameraReady || enrolling}
+                    >
+                        <Text style={styles.captureButtonText}>
+                            {!cameraReady
+                                ? t('registerFace.startingCamera')
+                                : enrolling
+                                    ? t('registerFace.registering')
+                                    : t('registerFace.startRegistration')}
+                        </Text>
+                    </TouchableOpacity>
                 </View>
             </View>
 
