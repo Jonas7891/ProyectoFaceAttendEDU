@@ -11,6 +11,10 @@ export const schedulingApi = {
         request(endpoints.scheduling.environmentById(id), { method: "DELETE" }),
     listBlocks: () => request(endpoints.scheduling.blocks, { method: "GET" }),
     createBlock: (b) => request(endpoints.scheduling.blocks, { method: "POST", body: b }),
+    updateBlock: (id, b) =>
+        request(endpoints.scheduling.blockById(id), { method: "PUT", body: b }),
+    deleteBlock: (id) =>
+        request(endpoints.scheduling.blockById(id), { method: "DELETE" }),
     listSessions: () => request(endpoints.scheduling.sessions, { method: "GET" }),
     createSession: (b) => request(endpoints.scheduling.sessions, { method: "POST", body: b }),
     // openedBy/closedBy: academic_actor_id del instructor que abre/cierra la
