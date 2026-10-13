@@ -28,7 +28,13 @@ export function useManageUsersViewModel(enabled = true) {
       const usersData = await backendGet(ENV.API_BASE_URL, 'api/v1/users', {page: 1, limit: 50});
       const users = unwrap(usersData);
 
-      const entries = await Promise.all(users.map(async (u) => {
+      // Enriquecer por lotes acotados: 50 usuarios x 2 peticiones en un solo
+      // Promise.all saturaban el gateway (rate-limit) y dejaban roles y
+      // personas en blanco, desclasificando usuarios de ambas listas.
+      const ENRICH_CHUNK_SIZE = 10;
+      const entries = [];
+      for (let i = 0; i < users.length; i += ENRICH_CHUNK_SIZE) {
+        const chunk = await Promise.all(users.slice(i, i + ENRICH_CHUNK_SIZE).map(async (u) => {
         const uid = u.user_id || u.userId;
         const pid = u.person_id || u.personId;
         let roleNames = [];
@@ -58,7 +64,9 @@ export function useManageUsersViewModel(enabled = true) {
           status: u.status,
           roleNames,
         };
-      }));
+        }));
+        entries.push(...chunk);
+      }
 
       const isStudent = (e) => e.roleNames.some(n => String(n).toLowerCase() === 'aprendiz');
       const isTeacher = (e) => e.roleNames.some(n => ['instructor', 'administrador'].includes(String(n).toLowerCase()));
