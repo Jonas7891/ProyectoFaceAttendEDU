@@ -11,6 +11,13 @@ import { getToken, resolveBaseUrl } from "../../api/apiClient";
 
 const HEARTBEAT_MS = 20000;
 const RECONNECT_DELAYS_MS = [1000, 2000, 4000, 8000];
+// A send() with no ack ever waits forever by default; bound it so a caller
+// doesn't hang if the message keeps getting lost (e.g. into a poison-message
+// loop server-side). Also cap how many times a given client_message_id is
+// resent across reconnects — without this, a message the server can never
+// ack (or that keeps dropping the connection) gets resent forever.
+const SEND_TIMEOUT_MS = 15000;
+const MAX_SEND_ATTEMPTS = 3;
 // Mirrored locally (rather than read off global.WebSocket) so a test double
 // that doesn't define the static WebSocket.OPEN constant still works.
 const WS_OPEN = 1;
@@ -53,6 +60,7 @@ export function connectBiometricSocket({ token, baseUrl } = {}) {
     }
 
     function transmit(clientMessageId, entry) {
+        entry.attempts += 1;
         ws.send(
             JSON.stringify({
                 type: entry.type,
@@ -63,13 +71,26 @@ export function connectBiometricSocket({ token, baseUrl } = {}) {
         );
     }
 
+    function settlePending(clientMessageId, entry) {
+        pending.delete(clientMessageId);
+        if (entry.timeoutId) clearTimeout(entry.timeoutId);
+    }
+
     // Runs on every `onopen` — the initial connect included, not just a reconnect.
     // A send() issued while the socket was still connecting is queued in `pending`
     // without having been transmitted; this flushes it the moment the socket opens.
     // A send() already in flight across a reconnect is flushed here too, under the
-    // SAME client_message_id it was first assigned.
+    // SAME client_message_id it was first assigned — unless it's already been
+    // (re)sent MAX_SEND_ATTEMPTS times, in which case this message is never
+    // going to get an ack (e.g. a poison message that keeps dropping the
+    // connection) and the caller is rejected instead of resending forever.
     function flushPending() {
         for (const [clientMessageId, entry] of pending) {
+            if (entry.attempts >= MAX_SEND_ATTEMPTS) {
+                settlePending(clientMessageId, entry);
+                entry.reject(new Error("Biometric socket gave up resending this message after too many attempts"));
+                continue;
+            }
             transmit(clientMessageId, entry);
         }
     }
@@ -93,7 +114,7 @@ export function connectBiometricSocket({ token, baseUrl } = {}) {
 
         const entry = pending.get(frame.client_message_id);
         if (!entry) return;
-        pending.delete(frame.client_message_id);
+        settlePending(frame.client_message_id, entry);
 
         if (isAck) {
             entry.resolve(frame.result);
@@ -161,7 +182,17 @@ export function connectBiometricSocket({ token, baseUrl } = {}) {
     function send(type, payload, direction) {
         const clientMessageId = generateClientMessageId();
         return new Promise((resolve, reject) => {
-            const entry = { type, payload, direction, resolve, reject };
+            const entry = { type, payload, direction, resolve, reject, attempts: 0, timeoutId: null };
+            // An ack that never comes (e.g. the server keeps dropping the
+            // connection on this exact message) would otherwise hang the
+            // caller forever. Settling here is a no-op if the entry already
+            // settled through handleMessage/flushPending/close — pending.get
+            // guards against a stale timeout firing after that.
+            entry.timeoutId = setTimeout(() => {
+                if (pending.get(clientMessageId) !== entry) return;
+                settlePending(clientMessageId, entry);
+                reject(new Error("Biometric socket send timed out waiting for an ack"));
+            }, SEND_TIMEOUT_MS);
             pending.set(clientMessageId, entry);
             // Only transmit if there's actually an open socket to send on. Otherwise
             // the entry stays queued in `pending` — flushPending() sends it the
@@ -193,6 +224,7 @@ export function connectBiometricSocket({ token, baseUrl } = {}) {
         // A send() still awaiting an ack would otherwise hang forever once the
         // socket this task created is gone for good.
         for (const entry of pending.values()) {
+            if (entry.timeoutId) clearTimeout(entry.timeoutId);
             entry.reject(new Error("Biometric socket closed"));
         }
         pending.clear();

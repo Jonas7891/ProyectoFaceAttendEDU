@@ -214,3 +214,61 @@ test("close() rejects any send() still awaiting an ack instead of leaving it han
 
     await expect(pending).rejects.toMatchObject({ message: "Biometric socket closed" });
 });
+
+// ── Fix coverage: final whole-branch review, Important #10 (frontend half) ──
+
+test("send() rejects on its own after a timeout if no ack ever arrives", async () => {
+    const socket = connectBiometricSocket({ token: "t" });
+    const ws = FakeWebSocket.instances[0];
+    ws.triggerOpen();
+
+    const pending = socket.send("facial.identify_image", { image_base64: "x" });
+    jest.advanceTimersByTime(20000); // past SEND_TIMEOUT_MS, no ack ever sent
+
+    await expect(pending).rejects.toMatchObject({ message: expect.stringContaining("timed out") });
+});
+
+test("a send() that does get its ack before the timeout is unaffected by it", async () => {
+    const socket = connectBiometricSocket({ token: "t" });
+    const ws = FakeWebSocket.instances[0];
+    ws.triggerOpen();
+
+    const pending = socket.send("facial.identify_image", { image_base64: "x" });
+    const sentBody = JSON.parse(ws.sent[0]);
+    ws.triggerMessage({
+        type: "facial.identify_image.ack",
+        client_message_id: sentBody.client_message_id,
+        result: { person_id: "p1", score: 0.99 },
+    });
+
+    jest.advanceTimersByTime(20000); // the send-timeout firing late must not reject it
+
+    await expect(pending).resolves.toEqual({ person_id: "p1", score: 0.99 });
+});
+
+test("gives up resending a message after a fixed number of reconnect attempts and rejects it", async () => {
+    const socket = connectBiometricSocket({ token: "t" });
+    let ws = FakeWebSocket.instances[0];
+    ws.triggerOpen();
+
+    const pending = socket.send("facial.identify_image", { image_base64: "x" }); // attempt 1
+    const firstId = JSON.parse(ws.sent[0]).client_message_id;
+
+    // Two reconnects, each one resending the same message (attempts 2 and 3).
+    for (let i = 0; i < 2; i += 1) {
+        ws.triggerClose();
+        jest.advanceTimersByTime(1000);
+        ws = FakeWebSocket.instances[FakeWebSocket.instances.length - 1];
+        ws.triggerOpen();
+        expect(JSON.parse(ws.sent.at(-1)).client_message_id).toBe(firstId);
+    }
+
+    // A 4th attempt would exceed MAX_SEND_ATTEMPTS -> give up instead of resending.
+    ws.triggerClose();
+    jest.advanceTimersByTime(1000);
+    ws = FakeWebSocket.instances[FakeWebSocket.instances.length - 1];
+    ws.triggerOpen();
+
+    await expect(pending).rejects.toMatchObject({ message: expect.stringContaining("gave up") });
+    expect(ws.sent.length).toBe(0); // nothing was transmitted for this message this time
+});
