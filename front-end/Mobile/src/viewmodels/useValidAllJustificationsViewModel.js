@@ -44,35 +44,39 @@ export function useJustificationsViewModel() {
     }, [loadThemeForRole]);
 
     const loadJustifications = useCallback(async () => {
+        // Backend primero: la caché solo respalda sin conexión; los
+        // valores por defecto son último recurso, no la fuente.
+        const mapTypes = (types) => (types ?? []).map(t => {
+            const name = t.name ?? '';
+            return {
+                id: String(t.justificationTypeId ?? t.justification_type_id ?? t.id ?? ''),
+                type: name,
+                description: t.description || '',
+                requiresDocument: t.requiresAttachment ?? t.requires_attachment ?? false,
+                category: /m[eé]d/i.test(name) ? 'Salud' :
+                          /familiar|calamidad/i.test(name) ? 'Familiar' :
+                          /representaci[oó]n|institucional|academic/i.test(name) ? 'Académica' : 'General',
+            };
+        });
+        try {
+            const types = await JustificationService.getTypes();
+            if (types.length > 0) {
+                const mapped = mapTypes(types);
+                setJustifications(mapped);
+                await AsyncStorage.setItem('validJustifications', JSON.stringify(mapped));
+                return;
+            }
+        } catch (error) {
+            console.error('Error al cargar justificaciones del backend:', error);
+        }
         try {
             const stored = await AsyncStorage.getItem('validJustifications');
             if (stored) {
                 setJustifications(JSON.parse(stored));
                 return;
             }
-
-            const types = await JustificationService.getTypes();
-
-            if (types.length > 0) {
-                const mapped = types.map(t => ({
-                    id: String(t.justification_type_id),
-                    type: t.name,
-                    description: t.description || '',
-                    requiresDocument: t.requires_attachment || false,
-                    category: /m[eé]d/i.test(t.name) ? 'Salud' :
-                              /familiar|calamidad/i.test(t.name) ? 'Familiar' :
-                              /representaci[oó]n|institucional|academic/i.test(t.name) ? 'Académica' : 'General',
-                }));
-                setJustifications(mapped);
-                await AsyncStorage.setItem('validJustifications', JSON.stringify(mapped));
-            } else {
-                setJustifications(DEFAULT_JUSTIFICATIONS);
-                await AsyncStorage.setItem('validJustifications', JSON.stringify(DEFAULT_JUSTIFICATIONS));
-            }
-        } catch (error) {
-            console.error('Error al cargar justificaciones:', error);
-            setJustifications(DEFAULT_JUSTIFICATIONS);
-        }
+        } catch {}
+        setJustifications(DEFAULT_JUSTIFICATIONS);
     }, []);
 
     useEffect(() => {
