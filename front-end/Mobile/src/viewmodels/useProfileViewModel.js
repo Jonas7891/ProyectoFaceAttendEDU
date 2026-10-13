@@ -8,6 +8,14 @@ import {getCurrentUserRole, getCurrentUser} from "../services/UserService";
 import {ActorService} from '../services/ActorService';
 import {SchoolService} from '../services/SchoolService';
 import {PeriodService} from '../services/PeriodService';
+import {EnrollmentService} from '../services/EnrollmentService';
+import {CohortService} from '../services/CohortService';
+import {ProgramService} from '../services/ProgramService';
+import {CourseService} from '../services/CourseService';
+import {AttendanceService} from '../services/AttendanceService';
+import {JustificationService} from '../services/JustificationService';
+import {ScheduleBlockService} from '../services/ScheduleBlockService';
+import {EnvironmentService} from '../services/EnvironmentService';
 import {backendGet} from '../api/backend';
 import ENV from '../config/env';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
@@ -22,6 +30,12 @@ export function useProfileViewModel({ onLogout } = {}) {
     const updateKey = useLanguageRefresh();
     const [isLoading, setIsLoading] = useState(false);
     const [schoolInfo, setSchoolInfo] = useState(null);
+    // Secciones por rol (antes vacías): se cargan del backend en loadUserData.
+    const [courses, setCourses] = useState([]);
+    const [attendanceStats, setAttendanceStats] = useState(null);
+    const [justifications, setJustifications] = useState([]);
+    const [teacherSchedules, setTeacherSchedules] = useState([]);
+    const [teacherCourseStats, setTeacherCourseStats] = useState([]);
     const [userInfo, setUserInfo] = useState({
         personId: null,
         name: '',
@@ -34,6 +48,139 @@ export function useProfileViewModel({ onLogout } = {}) {
         actorCode: '',
     });
 
+    // Secciones del perfil por rol, con datos del backend.
+    // Estudiante: cursos (matrículas), estadísticas y justificaciones.
+    // Docente: horario (bloques) y asistencia por curso.
+    const loadSections = useCallback(async (role, actor) => {
+        const kind = String(role || '').toLowerCase();
+        const isStudent = kind.includes('estudiante') || kind.includes('student') || kind.includes('aprendiz');
+        const isTeacher = kind.includes('docente') || kind.includes('teacher') || kind.includes('instructor');
+        const actorId = actor?.academicActorId ?? null;
+        if (actorId == null) return;
+
+        if (isStudent) {
+            try {
+                const enrollments = await EnrollmentService.listByActor(actorId).catch(() => []);
+                const active = enrollments.filter((e) => (e.enrollmentStatus || 'Active') === 'Active');
+                const courseCards = [];
+                for (const enrollment of active) {
+                    try {
+                        const cohort = await CohortService.getById(enrollment.cohortId);
+                        if (!cohort) continue;
+                        let programName = cohort.code || '';
+                        try {
+                            const program = cohort.programId ? await ProgramService.getById(cohort.programId) : null;
+                            if (program?.name) programName = program.name;
+                        } catch {}
+                        courseCards.push({
+                            id_enrollment: enrollment.enrollmentId,
+                            course_code: cohort.code || '',
+                            course_name: programName,
+                        });
+                    } catch {}
+                }
+                setCourses(courseCards);
+            } catch {
+                setCourses([]);
+            }
+            try {
+                const summary = await AttendanceService.getSummary([actorId]);
+                const counts = summary.get?.(Number(actorId)) || summary.get?.(String(actorId)) || {};
+                const present = Number(counts.present ?? 0) + Number(counts.late ?? 0);
+                setAttendanceStats({
+                    present,
+                    absent: Number(counts.absent ?? 0),
+                    justified: Number(counts.justified ?? 0),
+                });
+            } catch {
+                setAttendanceStats(null);
+            }
+            try {
+                const list = await JustificationService.getByActor(actorId).catch(() => []);
+                setJustifications(
+                    (list ?? []).map((j) => ({
+                        id: j.justificationId,
+                        date: String(j.submittedAt || '').slice(0, 10) || '—',
+                        reason: j.reason || '',
+                        approval: j.reviewStatus || 'Pending',
+                    }))
+                );
+            } catch {
+                setJustifications([]);
+            }
+        }
+
+        if (isTeacher) {
+            let blocks = [];
+            try {
+                blocks = await ScheduleBlockService.getByInstructor(actorId).catch(() => []);
+            } catch {
+                blocks = [];
+            }
+            const dayName = (d) => {
+                const days = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+                return days[Number(d)] || '';
+            };
+            const schedules = [];
+            const courseIds = [];
+            for (const block of blocks ?? []) {
+                try {
+                    const course = block?.courseId ? await CourseService.getById(block.courseId).catch(() => null) : null;
+                    const env = block?.environmentId ? await EnvironmentService.getById(block.environmentId).catch(() => null) : null;
+                    schedules.push({
+                        id_schedule: block.scheduleBlockId,
+                        day: block.dayName || dayName(block.dayOfWeek),
+                        start_time: String(block.startsAt || '').slice(0, 5),
+                        end_time: String(block.endsAt || '').slice(0, 5),
+                        course_name: course?.name || course?.code || '',
+                        classroom: env?.code || env?.name || '',
+                    });
+                    if (block?.courseId && !courseIds.includes(block.courseId)) courseIds.push(block.courseId);
+                } catch {}
+            }
+            setTeacherSchedules(schedules);
+            // Asistencia por curso: actores matriculados en los cohortes de
+            // sus bloques, con conteos agregados en SQL.
+            const stats = [];
+            try {
+                const cohortIds = [...new Set((blocks ?? []).map((b) => b?.cohortId).filter((c) => c != null))];
+                const actorIds = new Set();
+                for (const cohortId of cohortIds) {
+                    try {
+                        const enrollments = await EnrollmentService.listByCohort(cohortId).catch(() => []);
+                        for (const e of enrollments ?? []) {
+                            if ((e.enrollmentStatus || 'Active') === 'Active' && e.academicActorId != null) {
+                                actorIds.add(e.academicActorId);
+                            }
+                        }
+                    } catch {}
+                }
+                const summary = actorIds.size
+                    ? await AttendanceService.getSummary([...actorIds]).catch(() => new Map())
+                    : new Map();
+                for (const courseId of courseIds) {
+                    try {
+                        const course = await CourseService.getById(courseId).catch(() => null);
+                        let present = 0, absent = 0, total = 0;
+                        for (const counts of summary.values?.() ?? []) {
+                            present += Number(counts.present ?? 0) + Number(counts.late ?? 0);
+                            absent += Number(counts.absent ?? 0);
+                            total += Number(counts.total ?? 0);
+                        }
+                        stats.push({
+                            id_course: courseId,
+                            course_code: course?.code || '',
+                            course_name: course?.name || course?.code || '',
+                            present,
+                            absent,
+                            total,
+                        });
+                    } catch {}
+                }
+            } catch {}
+            setTeacherCourseStats(stats);
+        }
+    }, []);
     const formatJoinDate = (raw) => {
         if (!raw) return '';
         const date = raw instanceof Date ? raw : new Date(raw);
@@ -78,10 +225,19 @@ export function useProfileViewModel({ onLogout } = {}) {
             let actorCode = '';
             let joinDate = '';
             let loadedSchoolInfo = null;
+            let sectionActor = null;
             if (person?.person_id) {
                 try {
                     const actors = await ActorService.getByPerson(person.person_id);
-                    const actor = actors?.[0] || null;
+                    // Actor acorde al rol (un usuario puede tener varios).
+                    const kind = String(role || '').toLowerCase();
+                    const wantType = kind.includes('docente') || kind.includes('teacher') || kind.includes('instructor') ? 2
+                        : kind.includes('estudiante') || kind.includes('student') || kind.includes('aprendiz') ? 1
+                        : null;
+                    const actor = (wantType != null
+                        ? actors?.find((a) => a?.actorTypeId === wantType)
+                        : null) || actors?.[0] || null;
+                    sectionActor = actor;
                     actorCode = actor?.actorCode || '';
                     joinDate = formatJoinDate(actor?.startedOn || userCreatedAt);
                     const schoolId = actor?.schoolId || null;
@@ -134,10 +290,15 @@ export function useProfileViewModel({ onLogout } = {}) {
                 employeeId: person?.document_number || '',
                 actorCode,
             });
+
+            // Secciones por rol (cursos, estadísticas, justificaciones, horario).
+            if (sectionActor) {
+                await loadSections(role, sectionActor).catch(() => {});
+            }
         } catch (error) {
             console.error('Error cargando datos de usuario:', error);
         }
-    }, [loadThemeForRole, i18n.language]);
+    }, [loadThemeForRole, i18n.language, loadSections]);
 
     useFocusEffect(
         useCallback(() => {
@@ -178,12 +339,12 @@ export function useProfileViewModel({ onLogout } = {}) {
         performLogout,
         toggleTheme,
         reload: loadUserData,
-        courses: [],
-        attendanceStats: null,
-        justifications: [],
+        courses,
+        attendanceStats,
+        justifications,
         iotDevices: [],
-        teacherSchedules: [],
-        teacherCourseStats: [],
+        teacherSchedules,
+        teacherCourseStats,
         schoolInfo,
     };
 }
