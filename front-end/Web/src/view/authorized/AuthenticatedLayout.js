@@ -129,7 +129,17 @@ function PersistentSidebar() {
         setSidebarSelectedTab(tabKey);
         setSidebarSelectedSubTab(subTabKey || null);
         
-        const params = subTabKey ? { section: subTabKey } : undefined;
+        // Construir params: si hay subTabKey, usarlo; si no, y es "users", usar "all"
+        let params;
+        if (subTabKey) {
+            params = { section: subTabKey };
+        } else if (tabKey === "users") {
+            // Click en el item padre "Usuarios" → mostrar todos
+            params = { section: "all" };
+        } else {
+            params = undefined;
+        }
+        
         navigation.navigate(routeName, params);
     }, [navigation, setSidebarSelectedTab, setSidebarSelectedSubTab]);
     
@@ -305,9 +315,14 @@ function BottomTabs() {
                 
                 const handleBottomTabPress = () => {
                     if (item.optionalNavigation && item.children && item.children.length > 0) {
+                        // Navegar al primer hijo si tiene optionalNavigation
                         const firstChild = item.children[0];
                         handleNavigate(item.key, firstChild.key);
+                    } else if (!item.optionalNavigation && item.children && item.children.length > 0 && item.key === "users") {
+                        // Para "users", navegar al padre con section: "all"
+                        handleNavigate(item.key, "all");
                     } else {
+                        // Navegar normalmente sin subTabKey
                         handleNavigate(item.key);
                     }
                 };

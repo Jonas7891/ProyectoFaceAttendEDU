@@ -6,6 +6,7 @@ import React, { useState, useMemo, useRef, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
+import { useDateFormat } from "../../hooks/useDateFormat";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 
 const MONTHS = [
@@ -92,18 +93,26 @@ export function DateRangeCalendar({
     style,
 }) {
     const { theme } = useTheme();
+    const { formatDate } = useDateFormat();
     const c = theme.colors;
     
     const [isOpen, setIsOpen] = useState(false);
     const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
     const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-    const [tempStart, setTempStart] = useState(null);
-    const [tempEnd, setTempEnd] = useState(null);
-    const [isSelectingRange, setIsSelectingRange] = useState(false);
+    const [tempStart, setTempStart] = useState(() => startDate || null);
+    const [tempEnd, setTempEnd] = useState(() => endDate || null);
 
     // Parsear fechas de entrada
     const parsedStart = useMemo(() => parseDate(startDate), [startDate]);
     const parsedEnd = useMemo(() => parseDate(endDate), [endDate]);
+    
+    // Sincronizar estado temporal cuando los props cambien Y el dropdown esté cerrado
+    useEffect(() => {
+        if (!isOpen) {
+            setTempStart(startDate || null);
+            setTempEnd(endDate || null);
+        }
+    }, [startDate, endDate, isOpen]);
 
     const monthDays = useMemo(() => 
         getMonthDays(currentYear, currentMonth),
@@ -133,66 +142,109 @@ export function DateRangeCalendar({
         setCurrentMonth(today.getMonth());
         setCurrentYear(today.getFullYear());
         
-        // Seleccionar el día de hoy como fecha única (inicio = fin = hoy)
-        // PERO NO aplicar automáticamente, esperar a que presionen "Aplicar"
+        // Seleccionar el día de hoy como rango de un solo día (inicio = fin = hoy)
         const todayStr = formatDateString(today);
         setTempStart(todayStr);
         setTempEnd(todayStr);
-        setIsSelectingRange(false);
     };
 
     const handleDayPress = (day) => {
         const dateStr = formatDateString(day.fullDate);
         const clickedTime = day.fullDate.getTime();
         
-        // Caso 1: Sin selección previa -> establecer como inicio
-        if (!tempStart && !tempEnd) {
+        // CASO 1: No hay nada seleccionado
+        // Acción: Establecer como fecha de inicio
+        if (tempStart === null && tempEnd === null) {
             setTempStart(dateStr);
             setTempEnd(null);
-            setIsSelectingRange(true);
-            return; // Importante: salir para evitar más lógica
+            return;
         }
         
-        // Caso 2: Solo hay fecha de inicio -> establecer como fin
-        if (tempStart && !tempEnd) {
+        // CASO 2: Solo hay fecha de inicio (tempStart existe, tempEnd es null)
+        // Acción: Establecer como fecha de fin O ajustar inicio
+        if (tempStart !== null && tempEnd === null) {
             const startTime = parseDate(tempStart).getTime();
             
+            // Si es la misma fecha o posterior, establecer como fin
             if (clickedTime >= startTime) {
-                // Fecha válida como fin (posterior o igual a inicio)
                 setTempEnd(dateStr);
-                setIsSelectingRange(false);
             } else {
-                // Si es anterior, se convierte en el nuevo inicio
+                // Si es anterior, la nueva fecha se convierte en inicio
+                // y la antigua fecha de inicio se convierte en fin (intercambio inteligente)
                 setTempStart(dateStr);
-                setTempEnd(null);
-                setIsSelectingRange(true);
+                setTempEnd(tempStart);
             }
             return;
         }
         
-        // Caso 3: Ya hay un rango completo -> reiniciar con nuevo inicio
-        if (tempStart && tempEnd) {
-            // Comportamiento simplificado: siempre reiniciar la selección
-            setTempStart(dateStr);
-            setTempEnd(null);
-            setIsSelectingRange(true);
+        // CASO 3: Ya hay un rango completo (ambos tempStart y tempEnd existen)
+        // Acción: Reemplazo inteligente según distancia
+        if (tempStart !== null && tempEnd !== null) {
+            const startTime = parseDate(tempStart).getTime();
+            const endTime = parseDate(tempEnd).getTime();
+            
+            // Si ya es un rango de un día (inicio === fin) y clickeas en esa misma fecha, no hacer nada
+            if (tempStart === tempEnd && dateStr === tempStart) {
+                return;
+            }
+            
+            // Si clickeas en una de las fechas seleccionadas (cuando son diferentes),
+            // crear un rango de un día en esa fecha
+            if (tempStart !== tempEnd) {
+                if (dateStr === tempStart || dateStr === tempEnd) {
+                    setTempStart(dateStr);
+                    setTempEnd(dateStr);
+                    return;
+                }
+            }
+            
+            // Calcular distancias
+            const distToStart = Math.abs(clickedTime - startTime);
+            const distToEnd = Math.abs(clickedTime - endTime);
+            
+            // Reemplazar la más cercana
+            if (distToStart <= distToEnd) {
+                // Reemplazar inicio
+                if (clickedTime <= endTime) {
+                    setTempStart(dateStr);
+                } else {
+                    // Intercambiar: la nueva fecha se vuelve fin, la antigua fin se vuelve inicio
+                    setTempStart(tempEnd);
+                    setTempEnd(dateStr);
+                }
+            } else {
+                // Reemplazar fin
+                if (clickedTime >= startTime) {
+                    setTempEnd(dateStr);
+                } else {
+                    // Intercambiar: la nueva fecha se vuelve inicio, el antiguo inicio se vuelve fin
+                    setTempEnd(tempStart);
+                    setTempStart(dateStr);
+                }
+            }
+            return;
         }
     };
 
     const handleClear = () => {
-        // Limpiar selección temporal (pero NO cerrar el dropdown)
+        // Limpiar selección temporal Y notificar al padre
         setTempStart(null);
         setTempEnd(null);
-        setIsSelectingRange(false);
-        // NO llamar onDateChange aquí - solo limpia la UI del calendario
-        // El padre solo se entera cuando presionas "Aplicar" o cierras sin aplicar
+        
+        // Notificar al padre que se limpiaron las fechas
+        onDateChange({ start: null, end: null });
     };
 
     const handleApply = () => {
-        // Aplicar y cerrar
-        if (tempStart && tempEnd) {
-            onDateChange({ start: tempStart, end: tempEnd });
-            // Llamar al callback onApply si existe (para confirmar la aplicación del filtro)
+        // Aplicar y cerrar - permite tanto rangos como fechas únicas
+        if (tempStart) {
+            // Si solo hay tempStart, usar la misma fecha para inicio y fin
+            const start = tempStart;
+            const end = tempEnd || tempStart;
+            
+            onDateChange({ start, end });
+            
+            // Llamar al callback onApply si existe
             if (onApply) {
                 onApply();
             }
@@ -202,14 +254,17 @@ export function DateRangeCalendar({
 
     const handleToggleDropdown = () => {
         if (!isOpen) {
-            // Al abrir, cargar las fechas actuales como estado temporal
-            setTempStart(startDate || null);
-            setTempEnd(endDate || null);
-            setIsSelectingRange(!!startDate && !endDate);
+            // Al abrir, forzar sincronización desde los props del padre
+            // Usar una función de actualización para asegurar que se ejecute
+            const initStart = startDate || null;
+            const initEnd = endDate || null;
+            
+            setTempStart(initStart);
+            setTempEnd(initEnd);
             
             // Si hay fechas seleccionadas, navegar al mes de la fecha de inicio
-            if (startDate) {
-                const parsed = parseDate(startDate);
+            if (initStart) {
+                const parsed = parseDate(initStart);
                 if (parsed) {
                     setCurrentMonth(parsed.getMonth());
                     setCurrentYear(parsed.getFullYear());
@@ -255,8 +310,8 @@ export function DateRangeCalendar({
     // Texto a mostrar en el trigger
     const getDisplayText = () => {
         if (parsedStart && parsedEnd) {
-            const start = parsedStart.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            const end = parsedEnd.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const start = formatDate(parsedStart);
+            const end = formatDate(parsedEnd);
             
             // Si inicio y fin son iguales, mostrar solo una fecha
             if (start === end) {
@@ -266,7 +321,7 @@ export function DateRangeCalendar({
             return `${start} - ${end}`;
         }
         if (parsedStart) {
-            return parsedStart.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            return formatDate(parsedStart);
         }
         return placeholder;
     };
@@ -409,9 +464,9 @@ export function DateRangeCalendar({
                             
                             <TouchableOpacity 
                                 onPress={handleApply}
-                                disabled={!tempStart || !tempEnd}
+                                disabled={!tempStart}
                                 style={{
-                                    opacity: (!tempStart || !tempEnd) ? 0.5 : 1
+                                    opacity: !tempStart ? 0.5 : 1
                                 }}
                             >
                                 <Text style={[styles.footerButton, { color: c.brand.primary, fontWeight: '700' }]}>

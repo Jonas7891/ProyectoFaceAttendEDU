@@ -7,6 +7,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import { Badge, Avatar, Button, ProgressBar, useAttendanceColor } from "../common";
 import { useTheme }       from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
@@ -28,6 +29,7 @@ export default function StudentDetailModal({
     const { t }     = useTranslation();
     const c         = theme.colors;
     const { courses, students } = useAppData();
+    const navigation = useNavigation();
 
     // Estado para controlar la modal de edición
     const [showEditModal, setShowEditModal] = useState(false);
@@ -64,6 +66,39 @@ export default function StudentDetailModal({
 
     const attColor = useAttendanceColor(student?.attendance ?? 0);
     const thresholds = getAttendanceThresholds();
+    
+    // Determinar si mostrar botón de acción y qué tipo
+    const attendanceActionButton = useMemo(() => {
+        if (!student || student.userType === "admin") return null;
+        
+        const attendance = student.attendance || 0;
+        
+        // PELIGRO: Asistencia por debajo del umbral de peligro (rojo) → Sancionar
+        if (attendance < thresholds.danger) {
+            return {
+                type: 'sanction',
+                label: t("Sancionar") + " →",
+                show: true,
+            };
+        }
+        
+        // RIESGO: Asistencia entre peligro y mínimo requerido (ámbar) → Notificar
+        if (attendance < thresholds.minAttendance) {
+            return {
+                type: 'notify',
+                label: t("Notificar") + " →",
+                show: true,
+            };
+        }
+        
+        return { show: false };
+    }, [student, thresholds, t]);
+    
+    // Función para manejar la redirección a reportes
+    const handleNavigateToReports = () => {
+        onClose(); // Cerrar el modal primero
+        navigation.navigate("Reports"); // Navegar a reportes
+    };
     
     // Función para manejar la apertura de la modal de edición
     const handleEditUser = () => {
@@ -183,11 +218,53 @@ export default function StudentDetailModal({
                                         </Text>
                                     </View>
                                     <ProgressBar value={student.attendance} color={attColor} height={6} />
-                                    <Text style={{ fontSize: 11, color: c.text.secondary, marginTop: 6 }}>
-                                        {student.attendance >= thresholds.minAttendance
-                                            ? t(`Cumple el mínimo requerido (${thresholds.minAttendance.toFixed(0)}%)`)
-                                            : t(`⚠ Por debajo del mínimo requerido (${thresholds.minAttendance.toFixed(0)}%)`)}
-                                    </Text>
+                                    
+                                    {/* Descripción y botón de acción en la misma línea */}
+                                    <View style={{ 
+                                        flexDirection: "row", 
+                                        justifyContent: "space-between", 
+                                        alignItems: "center",
+                                        marginTop: 6,
+                                        gap: 8,
+                                    }}>
+                                        <Text style={{ 
+                                            fontSize: 11, 
+                                            color: c.text.secondary,
+                                            flex: 1,
+                                        }}>
+                                            {student.attendance >= thresholds.minAttendance
+                                                ? t(`Cumple el mínimo requerido (${thresholds.minAttendance.toFixed(0)}%)`)
+                                                : t(`⚠ Por debajo del mínimo requerido (${thresholds.minAttendance.toFixed(0)}%)`)}
+                                        </Text>
+                                        
+                                        {/* Botón dinámico de acción */}
+                                        {attendanceActionButton.show && (
+                                            <TouchableOpacity
+                                                onPress={handleNavigateToReports}
+                                                style={{
+                                                    flexDirection: "row",
+                                                    alignItems: "center",
+                                                    gap: 4,
+                                                    paddingHorizontal: 10,
+                                                    paddingVertical: 4,
+                                                    borderRadius: 6,
+                                                    backgroundColor: attendanceActionButton.type === 'sanction' 
+                                                        ? c.status.danger + '15' 
+                                                        : c.status.warning + '15',
+                                                }}
+                                            >
+                                                <Text style={{
+                                                    fontSize: 11,
+                                                    fontWeight: "600",
+                                                    color: attendanceActionButton.type === 'sanction' 
+                                                        ? c.status.danger 
+                                                        : c.status.warning,
+                                                }}>
+                                                    {attendanceActionButton.label}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        )}
+                                    </View>
                                 </View>
                             )}
 

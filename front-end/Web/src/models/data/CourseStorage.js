@@ -22,7 +22,6 @@ export async function loadCourses() {
         
         if (raw) {
             const parsed = JSON.parse(raw);
-            console.log("📚 Parsed courses:", parsed);
             
             // Solo retornar si es un array válido Y tiene elementos
             if (Array.isArray(parsed) && parsed.length > 0) {

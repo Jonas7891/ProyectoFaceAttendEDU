@@ -15,7 +15,7 @@
 //  - Administradores (admins)
 // ============================================================
 
-import { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { isValidEmail } from "../core/utils/validation";

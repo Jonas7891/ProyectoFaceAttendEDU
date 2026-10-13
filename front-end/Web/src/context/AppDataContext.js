@@ -128,10 +128,9 @@ export function AppDataProvider({ children }) {
     
     // Recalcular estudiantes cuando cambia el periodType
     useEffect(() => {
-        if (students.length > 0 && courses.length > 0) {
-            console.log('[AppDataContext] Recalculando estudiantes por cambio de período:', periodType);
+        if (loadedStudents.length > 0 && courses.length > 0) {
             // Re-enriquecer estudiantes con el nuevo tipo de período
-            const enrichedStudents = students.map(student => {
+            const enrichedStudents = loadedStudents.map(student => {
                 const studentCourse = courses.find(
                     c => c.code === student.course || c.name === student.course || c.id === student.course
                 );
@@ -155,7 +154,7 @@ export function AppDataProvider({ children }) {
             
             setLoadedStudents(enrichedStudents);
         }
-    }, [periodType, students, courses]);
+    }, [periodType, courses]); // REMOVED: students, loadedStudents from dependencies
     
     // Cursos enriquecidos con período calculado (fuente de verdad)
     const enrichedCourses = useMemo(() => {

@@ -33,7 +33,7 @@ export default function UserHistoryModal({
     const c = theme.colors;
 
     // Componente interno para renderizar cada registro de asistencia
-    function AttendanceRecordRow({ record, index, isLast }) {
+    function AttendanceRecordRow({ record, index, isLast, environment, instructor }) {
         const statusConfig = {
             present: {
                 variant: "success",
@@ -105,6 +105,44 @@ export default function UserHistoryModal({
                         }}>
                             {formatDate(record.date, "dddd")}
                         </Text>
+                    </View>
+
+                    {/* Ambiente e Instructor */}
+                    <View style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 10,
+                        flexWrap: "wrap",
+                    }}>
+                        {environment && (
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                                <Feather name="map-pin" size={13} color={c.text.secondary} />
+                                <Text style={{
+                                    fontSize: 13,
+                                    color: c.text.secondary,
+                                    fontWeight: "500",
+                                }}>
+                                    Salón {environment}
+                                </Text>
+                            </View>
+                        )}
+                        
+                        {instructor && environment && (
+                            <Text style={{ fontSize: 13, color: c.text.disabled, fontWeight: "600" }}>•</Text>
+                        )}
+                        
+                        {instructor && (
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                                <Feather name="user" size={13} color={c.text.secondary} />
+                                <Text style={{
+                                    fontSize: 13,
+                                    color: c.text.secondary,
+                                    fontWeight: "500",
+                                }}>
+                                    {instructor}
+                                </Text>
+                            </View>
+                        )}
                     </View>
 
                     {/* Horarios */}
@@ -250,10 +288,27 @@ export default function UserHistoryModal({
         if (!course) return null;
 
         let environmentName = "Sin ambiente";
+        let instructorName = null;
+        let instructorId = null;
+        
         if (course.room) {
             const environment = environments.find(env => env.id === course.room);
             if (environment?.number) {
                 environmentName = environment.number;
+            }
+            
+            // Obtener información del instructor desde el schedule del ambiente
+            if (environment?.schedules && environment.schedules.length > 0) {
+                const courseSchedule = environment.schedules.find(
+                    sch => sch.courseCode === fullStudent.course
+                );
+                if (courseSchedule) {
+                    instructorName = courseSchedule.instructorName || null;
+                    instructorId = courseSchedule.instructor || null;
+                } else if (environment.schedules[0]) {
+                    instructorName = environment.schedules[0].instructorName || null;
+                    instructorId = environment.schedules[0].instructor || null;
+                }
             }
         }
 
@@ -261,6 +316,8 @@ export default function UserHistoryModal({
             name: course.name,
             code: course.code,
             environment: environmentName,
+            instructorName,
+            instructorId,
         };
     }, [fullStudent, courses, environments]);
 
@@ -580,6 +637,8 @@ export default function UserHistoryModal({
                                     record={record}
                                     index={index}
                                     isLast={index === attendanceHistory.length - 1}
+                                    environment={courseInfo?.environment}
+                                    instructor={courseInfo?.instructorName}
                                 />
                             ))}
                         </ScrollView>
