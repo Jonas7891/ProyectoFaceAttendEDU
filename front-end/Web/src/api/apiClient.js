@@ -95,7 +95,7 @@ export async function clearToken() {
     return removeRaw(TOKEN_KEY);
 }
 
-function resolveBaseUrl(override) {
+export function resolveBaseUrl(override) {
     if (override) return override.replace(/\/$/, "");
     if (
         typeof window !== "undefined" &&
