@@ -1,6 +1,13 @@
 import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
+import { useAuth } from "../context/AuthContext";
 import { getInstitutionConfig } from "../core/config/institutionConfig";
+import {
+    backendEnvId,
+    createEnvironment,
+    deleteEnvironment,
+    updateEnvironment,
+} from "../services/api/environmentManagement";
 
 // ── Formulario de ambiente ────────────────────────────────
 
@@ -273,6 +280,7 @@ export function getTimePlaceholders(shift, existingSchedules = [], selectedDays 
 
 export function useEnvironmentsViewModel() {
     const appData = useAppData();
+    const { user } = useAuth();
 
     const [search, setSearch] = useState("");
     const [selected, setSelected] = useState(null);
@@ -328,36 +336,61 @@ export function useEnvironmentsViewModel() {
         async (form) => {
             const err = validateEnvironmentForm(form);
             if (err) return err;
-            
+
             // Aplicar valores por defecto si están vacíos
             const description = form.description.trim() || "Sin descripción";
             const capacity = form.capacity ? parseInt(form.capacity, 10) : 30;
-            
-            await appData.addEnvironment({
-                number: form.number.trim(),
-                description,
-                capacity,
-                schedules: [],
-            });
+
+            // Alta real en el backend; el espejo usa el ID devuelto para
+            // que ediciones y borrados posteriores también lleguen al backend.
+            let mirror;
+            try {
+                mirror = await createEnvironment({
+                    schoolId: user?.schoolId ?? null,
+                    code: form.number.trim(),
+                    name: description,
+                    capacity,
+                });
+            } catch (e) {
+                return e?.message || "No se pudo registrar el ambiente en el backend";
+            }
+
+            await appData.addEnvironment(mirror);
             return null;
         },
-        [appData]
+        [appData, user]
     );
 
     const editEnvironment = useCallback(
         async (id, form) => {
             const err = validateEnvironmentForm(form);
             if (err) return err;
-            
+
             // Aplicar valores por defecto si están vacíos
             const description = form.description.trim() || "Sin descripción";
             const capacity = form.capacity ? parseInt(form.capacity, 10) : 30;
-            
-            await appData.updateEnvironment(id, {
+
+            const patch = {
                 number: form.number.trim(),
                 description,
                 capacity,
-            });
+            };
+
+            // Solo los ambientes del backend se actualizan en la API;
+            // las altas locales previas siguen viviendo en AsyncStorage.
+            if (backendEnvId(id) != null) {
+                try {
+                    await updateEnvironment(id, {
+                        code: form.number.trim(),
+                        name: description,
+                        capacity,
+                    });
+                } catch (e) {
+                    return e?.message || "No se pudo actualizar el ambiente en el backend";
+                }
+            }
+
+            await appData.updateEnvironment(id, patch);
             // Actualiza el selected sincronizando con el nuevo estado global
             const updatedEnv = appData.environments.find((e) => e.id === id);
             if (updatedEnv)
@@ -369,9 +402,17 @@ export function useEnvironmentsViewModel() {
 
     const removeEnvironment = useCallback(
         async (id) => {
+            if (backendEnvId(id) != null) {
+                try {
+                    await deleteEnvironment(id);
+                } catch (e) {
+                    return e?.message || "No se pudo eliminar el ambiente en el backend";
+                }
+            }
             await appData.removeEnvironment(id);
             setSelected(null);
             setEnvModalMode("none");
+            return null;
         },
         [appData]
     );
