@@ -6,7 +6,7 @@ jest.mock("../academicApi", () => ({
 }));
 
 import { academicApi } from "../academicApi";
-import { createCourse, listSchoolPrograms } from "../courseCreation";
+import { createCourse, importCourses, listSchoolPrograms } from "../courseCreation";
 
 beforeEach(() => {
     jest.clearAllMocks();
@@ -51,4 +51,27 @@ test("requires a program", async () => {
         "A program is required"
     );
     expect(academicApi.createCourse).not.toHaveBeenCalled();
+});
+
+test("bulk import resolves programs once and collects per-row errors", async () => {
+    academicApi.listSchoolPrograms.mockResolvedValue([
+        { programId: 4, code: "ADSI", name: "Análisis y Desarrollo" },
+    ]);
+    academicApi.createCourse.mockResolvedValueOnce({ courseId: 1 });
+    academicApi.createCourse.mockRejectedValueOnce(new Error("duplicate"));
+
+    const result = await importCourses(2, [
+        { code: "2240083", name: "Bases de Datos", program: "adsi" },
+        { code: "2240084", name: "Redes", program: "ADSI" },
+        { code: "2240085", name: "Sin programa", program: "OTRO" },
+        { code: "", name: "Sin código", program: "ADSI" },
+    ]);
+
+    expect(result.success).toBe(1);
+    expect(result.errors).toEqual([
+        { course: "2240084", reason: "duplicate" },
+        { course: "2240085", reason: "Programa no encontrado en la sede" },
+        { course: "Sin código", reason: "Código y nombre son requeridos" },
+    ]);
+    expect(academicApi.listSchoolPrograms).toHaveBeenCalledTimes(1);
 });

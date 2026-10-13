@@ -50,3 +50,45 @@ export async function createCourse({ programId, code, name }) {
         status: true,
     });
 }
+
+function normalizeProgramKey(value) {
+    return String(value ?? "").trim().toLowerCase();
+}
+
+/**
+ * Importación masiva: resuelve los programas una sola vez y crea
+ * los cursos uno por uno. No se detiene ante fallos individuales.
+ * @returns {{ success: number, errors: Array<{ course: string, reason: string }> }}
+ */
+export async function importCourses(schoolId, drafts) {
+    const programs = await listSchoolPrograms(schoolId);
+    const byKey = new Map();
+    for (const program of programs) {
+        if (normalizeProgramKey(program.code)) byKey.set(normalizeProgramKey(program.code), program);
+        if (normalizeProgramKey(program.name)) byKey.set(normalizeProgramKey(program.name), program);
+    }
+
+    let success = 0;
+    const errors = [];
+    for (const draft of drafts ?? []) {
+        const code = String(draft?.code ?? "").trim();
+        const name = String(draft?.name ?? "").trim();
+        const label = code || name || "Curso desconocido";
+        if (!code || !name) {
+            errors.push({ course: label, reason: "Código y nombre son requeridos" });
+            continue;
+        }
+        const program = byKey.get(normalizeProgramKey(draft?.program));
+        if (!program) {
+            errors.push({ course: label, reason: "Programa no encontrado en la sede" });
+            continue;
+        }
+        try {
+            await createCourse({ programId: program.programId, code, name });
+            success += 1;
+        } catch (e) {
+            errors.push({ course: label, reason: e?.message || "El backend rechazó el curso" });
+        }
+    }
+    return { success, errors };
+}
