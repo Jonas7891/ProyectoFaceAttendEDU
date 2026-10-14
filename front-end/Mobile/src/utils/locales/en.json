@@ -1000,5 +1000,25 @@
     "saveSuccessMsg": "Your face was successfully registered on this device.",
     "saveErrorTitle": "Save error",
     "saveErrorMsg": "A problem occurred while saving your facial record."
+  },
+  "faceCapture": {
+    "blink": "Blink once",
+    "turn": "Slowly turn your head",
+    "openMouth": "Open and close your mouth",
+    "followInstruction": "Follow the instruction",
+    "repeatGesture": "repeat the gesture",
+    "repeatSameGesture": "Repeat the same gesture.",
+    "cameraNotReady": "The camera is not ready yet",
+    "missingPerson": "The person to register was not found. Please sign in again.",
+    "registerIntro": "We will ask you for {{count}} gestures to register your face.",
+    "registering": "Registering face...",
+    "registered": "Face registered",
+    "genericError": "The face could not be registered. Please try again.",
+    "currentInstruction": "CURRENT INSTRUCTION",
+    "gestureProgress": "Gesture {{current}} of {{total}}",
+    "registerButton": "Register face ({{count}} gestures)",
+    "updateButton": "Update face ({{count}} gestures)",
+    "updateTitle": "Update face",
+    "cameraReady": "Camera ready. You can now register your face."
   }
 }

@@ -1000,5 +1000,25 @@
     "saveSuccessMsg": "Tu rostro fue registrado correctamente en este dispositivo.",
     "saveErrorTitle": "Error al guardar",
     "saveErrorMsg": "Ocurrió un problema al guardar tu registro facial."
+  },
+  "faceCapture": {
+    "blink": "Parpadea una vez",
+    "turn": "Gira lentamente la cabeza",
+    "openMouth": "Abre y cierra la boca",
+    "followInstruction": "Sigue la instrucción",
+    "repeatGesture": "repite el gesto",
+    "repeatSameGesture": "Repite el mismo gesto.",
+    "cameraNotReady": "La cámara aún no está lista",
+    "missingPerson": "No se encontró la persona a registrar. Inicia sesión de nuevo.",
+    "registerIntro": "Te pediremos {{count}} gestos para registrar el rostro.",
+    "registering": "Registrando rostro...",
+    "registered": "Rostro registrado",
+    "genericError": "No fue posible registrar el rostro. Intenta nuevamente.",
+    "currentInstruction": "INSTRUCCIÓN ACTUAL",
+    "gestureProgress": "Gesto {{current}} de {{total}}",
+    "registerButton": "Registrar rostro ({{count}} gestos)",
+    "updateButton": "Actualizar rostro ({{count}} gestos)",
+    "updateTitle": "Actualizar rostro",
+    "cameraReady": "Cámara lista. Ya puedes registrar tu rostro."
   }
 }
