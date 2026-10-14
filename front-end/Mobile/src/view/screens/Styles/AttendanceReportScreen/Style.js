@@ -1,9 +1,14 @@
 import {Platform, StyleSheet} from 'react-native';
 import {normalizeTypography} from '../../../../utils/typography';
 
-const styles = StyleSheet.create(normalizeTypography({
+// Estilos del reporte de asistencia. Los estados (ausencia = danger, atraso = warning)
+// y los neutros salen de los tokens del tema; usar con createAttendanceReportStyles(colors).
+export const createAttendanceReportStyles = (colors) => {
+const dangerTint = colors.danger + '1A';
+const warningTint = colors.warning + '1A';
+return StyleSheet.create(normalizeTypography({
 alertBadgeCriticalReport: {
-        backgroundColor: '#FDECEA',
+        backgroundColor: dangerTint,
     },
 
 alertBadgeReport: {
@@ -14,7 +19,7 @@ alertBadgeReport: {
     },
 
 alertBadgeTextCriticalReport: {
-        color: '#C62828',
+        color: colors.danger,
     },
 
 alertBadgeTextReport: {
@@ -24,11 +29,11 @@ alertBadgeTextReport: {
     },
 
 alertBadgeTextWarningReport: {
-        color: '#E65100',
+        color: colors.warning,
     },
 
 alertBadgeWarningReport: {
-        backgroundColor: '#FFF3E0',
+        backgroundColor: warningTint,
     },
 
 containerReport: {
@@ -39,7 +44,7 @@ containerReport: {
 
 counterDividerReport: {
         width: 1,
-        backgroundColor: '#E0E0E0',
+        backgroundColor: colors.border,
         marginVertical: 4,
     },
 
@@ -50,12 +55,12 @@ counterItemReport: {
 
 counterLabelReport: {
         fontSize: 11,
-        color: '#888888',
+        color: colors.textSecondary,
         fontWeight: '500',
     },
 
 counterValueOverLimitReport: {
-        color: '#F44336',
+        color: colors.danger,
     },
 
 counterValueReport: {
@@ -68,14 +73,14 @@ countersRowReport: {
         flexDirection: 'row',
         justifyContent: 'space-around',
         marginBottom: 14,
-        backgroundColor: '#FAFAFA',
+        backgroundColor: colors.background,
         borderRadius: 10,
         paddingVertical: 10,
     },
 
 emptyStateDescriptionReport: {
         fontSize: 14,
-        color: '#999999',
+        color: colors.textMuted,
         textAlign: 'center',
         lineHeight: 22,
     },
@@ -90,51 +95,51 @@ emptyStateReport: {
 emptyStateTitleReport: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#1A1A1A',
+        color: colors.text,
         marginBottom: 8,
         textAlign: 'center',
     },
 
 filterChipAllActiveReport: {
-        backgroundColor: '#E3F2FD',
-        borderColor: '#4A90E2',
+        backgroundColor: colors.primaryLight,
+        borderColor: colors.primary,
     },
 
 filterChipCriticalActiveReport: {
-        backgroundColor: '#FDECEA',
-        borderColor: '#F44336',
+        backgroundColor: dangerTint,
+        borderColor: colors.danger,
     },
 
 filterChipReport: {
         paddingHorizontal: 14,
         paddingVertical: 7,
         borderRadius: 20,
-        backgroundColor: '#F0F0F0',
+        backgroundColor: colors.categoryBackground,
         borderWidth: 1,
         borderColor: 'transparent',
     },
 
 filterChipTextAllActiveReport: {
-        color: '#4A90E2',
+        color: colors.primary,
     },
 
 filterChipTextCriticalActiveReport: {
-        color: '#C62828',
+        color: colors.danger,
     },
 
 filterChipTextReport: {
         fontSize: 13,
         fontWeight: '600',
-        color: '#888888',
+        color: colors.textSecondary,
     },
 
 filterChipTextWarningActiveReport: {
-        color: '#E65100',
+        color: colors.warning,
     },
 
 filterChipWarningActiveReport: {
-        backgroundColor: '#FFF3E0',
-        borderColor: '#FF9800',
+        backgroundColor: warningTint,
+        borderColor: colors.warning,
     },
 
 filterChipsRowReport: {
@@ -144,13 +149,13 @@ filterChipsRowReport: {
     },
 
 generateButtonAbsenceReport: {
-        borderColor: '#FFCDD2',
-        backgroundColor: '#FDECEA',
+        borderColor: colors.danger + '4D',
+        backgroundColor: dangerTint,
     },
 
 generateButtonLatenessReport: {
-        borderColor: '#FFE0B2',
-        backgroundColor: '#FFF3E0',
+        borderColor: colors.warning + '4D',
+        backgroundColor: warningTint,
     },
 
 generateButtonReport: {
@@ -164,11 +169,11 @@ generateButtonReport: {
     },
 
 generateButtonTextAbsenceReport: {
-        color: '#C62828',
+        color: colors.danger,
     },
 
 generateButtonTextLatenessReport: {
-        color: '#E65100',
+        color: colors.warning,
     },
 
 generateButtonTextReport: {
@@ -180,14 +185,14 @@ headerBackButtonReport: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: colors.backButtonBackground,
         justifyContent: 'center',
         alignItems: 'center',
     },
 
 headerBackTextReport: {
         fontSize: 20,
-        color: '#4A90E2',
+        color: colors.primary,
         fontWeight: '600',
     },
 
@@ -198,9 +203,9 @@ headerReport: {
         paddingHorizontal: 20,
         paddingTop: Platform.OS === 'android' ? 45 : 15,
         paddingBottom: 16,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
+        borderBottomColor: colors.border,
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.06,
@@ -211,7 +216,7 @@ headerReport: {
 headerTitleReport: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#1A1A1A',
+        color: colors.text,
         flex: 1,
         textAlign: 'center',
     },
@@ -226,11 +231,11 @@ loadingContainerReport: {
 loadingTextReport: {
         marginTop: 12,
         fontSize: 14,
-        color: '#7F8C8D',
+        color: colors.textSecondary,
     },
 
 mainGenerateButtonReport: {
-        backgroundColor: '#4A90E2',
+        backgroundColor: colors.primary,
         borderRadius: 14,
         paddingVertical: 16,
         alignItems: 'center',
@@ -239,7 +244,7 @@ mainGenerateButtonReport: {
         marginTop: 8,
         marginBottom: 24,
         gap: 8,
-        shadowColor: '#4A90E2',
+        shadowColor: colors.primary,
         shadowOffset: {width: 0, height: 4},
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -249,7 +254,7 @@ mainGenerateButtonReport: {
 mainGenerateButtonTextReport: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: colors.onPrimary,
     },
 
 modalActionsReport: {
@@ -261,17 +266,17 @@ modalCancelButtonReport: {
         paddingVertical: 14,
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: colors.border,
     },
 
 modalCancelButtonTextReport: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#666666',
+        color: colors.textSecondary,
     },
 
 modalConfirmButtonReport: {
-        backgroundColor: '#4A90E2',
+        backgroundColor: colors.primary,
         borderRadius: 12,
         paddingVertical: 15,
         alignItems: 'center',
@@ -280,13 +285,13 @@ modalConfirmButtonReport: {
 modalConfirmButtonTextReport: {
         fontSize: 15,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: colors.onPrimary,
     },
 
 modalHandleReport: {
         width: 40,
         height: 4,
-        backgroundColor: '#E0E0E0',
+        backgroundColor: colors.border,
         borderRadius: 2,
         alignSelf: 'center',
         marginBottom: 20,
@@ -294,7 +299,7 @@ modalHandleReport: {
 
 modalInfoDividerReport: {
         width: 1,
-        backgroundColor: '#E0E0E0',
+        backgroundColor: colors.border,
         marginVertical: 4,
     },
 
@@ -305,14 +310,14 @@ modalInfoItemReport: {
 
 modalInfoLabelReport: {
         fontSize: 11,
-        color: '#888888',
+        color: colors.textSecondary,
         textAlign: 'center',
     },
 
 modalInfoRowReport: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        backgroundColor: '#F8F9FA',
+        backgroundColor: colors.background,
         borderRadius: 12,
         padding: 14,
         marginBottom: 20,
@@ -321,18 +326,18 @@ modalInfoRowReport: {
 modalInfoValueReport: {
         fontSize: 20,
         fontWeight: '800',
-        color: '#1A1A1A',
+        color: colors.text,
         marginBottom: 4,
     },
 
 modalOverlayReport: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.45)',
+        backgroundColor: colors.overlay,
         justifyContent: 'flex-end',
     },
 
 modalSheetReport: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.modalBackground,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         padding: 24,
@@ -341,7 +346,7 @@ modalSheetReport: {
 
 modalSubtitleReport: {
         fontSize: 13,
-        color: '#888888',
+        color: colors.textSecondary,
         textAlign: 'center',
         marginBottom: 24,
         lineHeight: 20,
@@ -350,14 +355,14 @@ modalSubtitleReport: {
 modalTitleReport: {
         fontSize: 19,
         fontWeight: '700',
-        color: '#1A1A1A',
+        color: colors.text,
         marginBottom: 6,
         textAlign: 'center',
     },
 
 progressBarContainerReport: {
         height: 7,
-        backgroundColor: '#E0E0E0',
+        backgroundColor: colors.progressBackground,
         borderRadius: 4,
         overflow: 'hidden',
         marginBottom: 8,
@@ -365,26 +370,26 @@ progressBarContainerReport: {
 
 progressBarFillAbsenceReport: {
         height: '100%',
-        backgroundColor: '#F44336',
+        backgroundColor: colors.danger,
         borderRadius: 4,
     },
 
 progressBarFillLatenessReport: {
         height: '100%',
-        backgroundColor: '#FF9800',
+        backgroundColor: colors.warning,
         borderRadius: 4,
     },
 
 progressBarFillSafeReport: {
         height: '100%',
-        backgroundColor: '#4CAF50',
+        backgroundColor: colors.success,
         borderRadius: 4,
     },
 
 progressLabelReport: {
         fontSize: 12,
         fontWeight: '600',
-        color: '#555555',
+        color: colors.textSecondary,
     },
 
 progressRowReport: {
@@ -401,12 +406,12 @@ progressSectionReport: {
 progressValueReport: {
         fontSize: 12,
         fontWeight: '700',
-        color: '#F44336',
+        color: colors.danger,
     },
 
 roleSelectorReport: {
         flexDirection: 'row',
-        backgroundColor: '#F0F0F0',
+        backgroundColor: colors.categoryBackground,
         borderRadius: 12,
         padding: 4,
         marginTop: 20,
@@ -414,7 +419,7 @@ roleSelectorReport: {
     },
 
 roleTabActiveReport: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.08,
@@ -432,12 +437,12 @@ roleTabReport: {
 roleTabTextReport: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#999999',
+        color: colors.textMuted,
     },
 
 safeAreaReport: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: colors.background,
     },
 
 scrollContentReport: {
@@ -447,13 +452,13 @@ scrollContentReport: {
 searchBarContainerReport: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         borderRadius: 12,
         paddingHorizontal: 14,
         paddingVertical: 10,
         marginBottom: 16,
         borderWidth: 1,
-        borderColor: '#E8E8E8',
+        borderColor: colors.border,
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 1},
         shadowOpacity: 0.04,
@@ -464,20 +469,20 @@ searchBarContainerReport: {
 searchInputReport: {
         flex: 1,
         fontSize: 14,
-        color: '#333333',
+        color: colors.text,
         paddingVertical: 0,
     },
 
 sectionTitleReport: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#1A1A1A',
+        color: colors.text,
         marginBottom: 12,
         paddingLeft: 4,
     },
 
 studentCardCriticalReport: {
-        borderLeftColor: '#F44336',
+        borderLeftColor: colors.danger,
     },
 
 studentCardHeaderReport: {
@@ -487,7 +492,7 @@ studentCardHeaderReport: {
     },
 
 studentCardReport: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         borderRadius: 14,
         padding: 16,
         marginBottom: 12,
@@ -500,7 +505,7 @@ studentCardReport: {
     },
 
 studentCardWarningReport: {
-        borderLeftColor: '#FF9800',
+        borderLeftColor: colors.warning,
     },
 
 studentInfoReport: {
@@ -509,30 +514,30 @@ studentInfoReport: {
 
 studentMetaReport: {
         fontSize: 12,
-        color: '#888888',
+        color: colors.textSecondary,
     },
 
 studentNameReport: {
         fontSize: 15,
         fontWeight: '700',
-        color: '#1A1A1A',
+        color: colors.text,
         marginBottom: 3,
     },
 
 typeSelectorReport: {
         flexDirection: 'row',
-        backgroundColor: '#F0F0F0',
+        backgroundColor: colors.categoryBackground,
         borderRadius: 12,
         padding: 4,
         marginBottom: 20,
     },
 
 typeTabAbsenceActiveReport: {
-        backgroundColor: '#FDECEA',
+        backgroundColor: dangerTint,
     },
 
 typeTabLatenessActiveReport: {
-        backgroundColor: '#FFF3E0',
+        backgroundColor: warningTint,
     },
 
 typeTabReport: {
@@ -543,18 +548,17 @@ typeTabReport: {
     },
 
 typeTabTextAbsenceActiveReport: {
-        color: '#C62828',
+        color: colors.danger,
     },
 
 typeTabTextLatenessActiveReport: {
-        color: '#E65100',
+        color: colors.warning,
     },
 
 typeTabTextReport: {
         fontSize: 13,
         fontWeight: '600',
-        color: '#999999',
+        color: colors.textMuted,
     },
 }));
-
-export default styles;
+};
