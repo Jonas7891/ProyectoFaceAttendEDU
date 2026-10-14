@@ -1,6 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
-import { useAuth } from "../context/AuthContext";
 import { getInstitutionConfig } from "../core/config/institutionConfig";
 import {
     backendEnvId,
@@ -26,6 +25,7 @@ export const EMPTY_ENV_FORM = {
     number: "",
     description: "",
     capacity: "",
+    schoolId: "",
 };
 
 // ── Formulario de horario ─────────────────────────────────
@@ -306,7 +306,6 @@ export function getTimePlaceholders(shift, existingSchedules = [], selectedDays 
 
 export function useEnvironmentsViewModel() {
     const appData = useAppData();
-    const { user } = useAuth();
 
     const [search, setSearch] = useState("");
     const [selected, setSelected] = useState(null);
@@ -362,6 +361,8 @@ export function useEnvironmentsViewModel() {
         async (form) => {
             const err = validateEnvironmentForm(form);
             if (err) return err;
+            // La sede es obligatoria al registrar (el backend exige school_id).
+            if (!String(form.schoolId ?? "").trim()) return "Selecciona la sede";
 
             // Aplicar valores por defecto si están vacíos
             const description = form.description.trim() || "Sin descripción";
@@ -372,7 +373,7 @@ export function useEnvironmentsViewModel() {
             let mirror;
             try {
                 mirror = await createEnvironment({
-                    schoolId: user?.schoolId ?? null,
+                    schoolId: String(form.schoolId).trim(),
                     code: form.number.trim(),
                     name: description,
                     capacity,
@@ -384,7 +385,7 @@ export function useEnvironmentsViewModel() {
             await appData.addEnvironment(mirror);
             return null;
         },
-        [appData, user]
+        [appData]
     );
 
     const editEnvironment = useCallback(
