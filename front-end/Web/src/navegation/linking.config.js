@@ -56,6 +56,22 @@ export const linkingConfig = {
             Courses: 'app/courses',  // /app/courses
             Environments: 'app/environments',  // /app/environments
             Reports: 'app/reports',  // /app/reports
+            Schools: 'app/schools',  // /app/schools (gestión de escuelas)
+            History: 'app/history',  // /app/history
+            Justifications: 'app/justifications',  // /app/justifications
+            SchoolInfo: 'app/school-info',  // /app/school-info
+            Academic: 'app/academic',  // /app/academic
+            Contacts: 'app/contacts',  // /app/contacts
+            Biometrics: {
+                // /app/biometrics, /app/biometrics/face-login, /app/biometrics/fingerprint
+                path: 'app/biometrics/:section?',
+                parse: {
+                    section: (section) => section || null,
+                },
+                stringify: {
+                    section: (section) => section || '',
+                },
+            },
             Settings: {
                 path: 'app/settings/:section?',  // /app/settings o /app/settings/general
                 parse: {
@@ -64,8 +80,7 @@ export const linkingConfig = {
                 },
                 stringify: {
                     // Convertir el parámetro section a string para la URL
-                    section: (section) => section || '',
-                },
+                    section: (section) => section || '',                },
             },
         },
     },
@@ -127,6 +142,12 @@ export function buildUrl(screen, params = {}) {
         'Courses': '/app/courses',
         'Environments': '/app/environments',
         'Reports': '/app/reports',
+        'History': '/app/history',
+        'Justifications': '/app/justifications',
+        'SchoolInfo': '/app/school-info',
+        'Academic': '/app/academic',
+        'Contacts': '/app/contacts',
+        'Biometrics': params.section ? `/app/biometrics/${params.section}` : '/app/biometrics',
         'Settings': params.section ? `/app/settings/${params.section}` : '/app/settings',
     };
     

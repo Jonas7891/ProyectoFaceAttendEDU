@@ -5,6 +5,11 @@ Propósito:
 
 Archivo principal en este proyecto:
 - `TokenStorage.js` — abstracción para guardar/obtener/eliminar tokens de autenticación.
+  - Nativo: `expo-secure-store` (keystore / Keychain). Web o si el keystore no está
+    disponible: `AsyncStorage`. Las sesiones guardadas antes del keystore se migran
+    automáticamente al leerlas.
+  - Payload con forma compartida con Web: `{ token, savedAt, expiresAt, email }`.
+  - API: `saveToken(token, email?)`, `getToken()`, `removeToken()`, `hasValidToken()`.
 
 Qué debe manejar la carpeta:
 - Abstraer detalles de implementación (AsyncStorage, SecureStore, MMKV) para que el resto de la app no dependa de la librería concreta.

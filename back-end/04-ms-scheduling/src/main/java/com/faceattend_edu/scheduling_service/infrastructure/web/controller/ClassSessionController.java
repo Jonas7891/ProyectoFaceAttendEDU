@@ -2,6 +2,7 @@ package com.faceattend_edu.scheduling_service.infrastructure.web.controller;
 
 import com.faceattend_edu.scheduling_service.domain.model.ClassSession;
 import com.faceattend_edu.scheduling_service.domain.port.in.*;
+import com.faceattend_edu.scheduling_service.infrastructure.web.Paging;
 import com.faceattend_edu.scheduling_service.infrastructure.web.dto.*;
 import com.faceattend_edu.scheduling_service.infrastructure.web.mapper.ClassSessionWebMapper;
 import jakarta.validation.Valid;
@@ -30,11 +31,13 @@ public class ClassSessionController {
 
     @GetMapping
     public ResponseEntity<List<ClassSessionResponse>> list(
-            @RequestParam(required = false) Long scheduleBlockId) {
+            @RequestParam(required = false) Long scheduleBlockId,
+            @RequestParam(required = false) Integer limit,
+            @RequestParam(required = false) Integer offset) {
         List<ClassSessionResponse> list = listUseCase.list().stream()
                 .filter(s -> scheduleBlockId == null || scheduleBlockId.equals(s.getScheduleBlockId()))
                 .map(mapper::toResponse).collect(Collectors.toList());
-        return ResponseEntity.ok(list);
+        return Paging.slice(list, limit, offset);
     }
 
     @PostMapping

@@ -1,4 +1,5 @@
 import { request, GET, POST, PUT, DELETE } from '../api/apiClient';
+import { toSnakeDeep } from '../api/backend';
 import UserSession from '../models/identity/UserSession';
 
 const ENDPOINT = 'user_session';
@@ -19,6 +20,12 @@ export const SessionService = {
   getAll: async (params = {}) => {
     const data = await request({ method: GET, url: ENDPOINT, params, requiresAuth: false });
     return unwrap(data).map(UserSession.fromApi);
+  },
+
+  // GET /api/v1/user_session?user_id= no filtra; la ruta GET /api/v1/sessions/user/:userId sí.
+  listByUser: async (id) => {
+    const data = await request({ method: GET, url: `api/v1/sessions/user/${id}`, requiresAuth: false });
+    return unwrap(data).map((x) => UserSession.fromApi(toSnakeDeep(x)));
   },
 
   getById: async (id) => {

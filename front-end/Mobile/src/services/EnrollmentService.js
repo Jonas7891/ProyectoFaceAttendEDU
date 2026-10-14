@@ -1,4 +1,5 @@
 import { request, GET, POST, PUT, DELETE } from '../api/apiClient';
+import { toSnakeDeep } from '../api/backend';
 import Enrollment from '../models/academic/Enrollment';
 
 const ENDPOINT = 'enrollment';
@@ -19,6 +20,12 @@ export const EnrollmentService = {
   getAll: async (params = {}) => {
     const data = await request({ method: GET, url: ENDPOINT, params, requiresAuth: false });
     return unwrap(data).map(Enrollment.fromApi);
+  },
+
+  // GET /api/v1/enrollment?cohort_id= no filtra; la ruta anidada GET /api/v1/cohorts/:id/enrollments sí.
+  listByCohort: async (id) => {
+    const data = await request({ method: GET, url: `api/v1/cohorts/${id}/enrollments`, requiresAuth: false });
+    return unwrap(data).map((x) => Enrollment.fromApi(toSnakeDeep(x)));
   },
 
   getById: async (id) => {

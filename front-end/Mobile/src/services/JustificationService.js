@@ -42,15 +42,21 @@ export const JustificationService = {
     return list.map(Justification.fromApi);
   },
 
+  getByStatus: async (status) => {
+    const list = await backendGet(BASE(), ENDPOINT, { status });
+    return list.map(Justification.fromApi);
+  },
+
   getByActor: async (academicActorId) => {
     if (!academicActorId) return [];
     const records = await backendGet(BASE(), 'api/v1/attendance-records', { academicActorId });
-    const out = [];
-    for (const r of records) {
+    // En paralelo acotado (8): en serie, cada registro sumaba un viaje y la
+    // pantalla tardaba minutos con decenas de registros.
+    const nested = await mapConcurrent(records, async (r) => {
       const js = await backendGet(BASE(), ENDPOINT, { attendanceRecordId: r.attendance_record_id });
-      out.push(...js.map(Justification.fromApi));
-    }
-    return out;
+      return js.map(Justification.fromApi);
+    });
+    return nested.flat();
   },
 
   create: async ({ attendanceRecordId, justificationTypeId, reason }) => {

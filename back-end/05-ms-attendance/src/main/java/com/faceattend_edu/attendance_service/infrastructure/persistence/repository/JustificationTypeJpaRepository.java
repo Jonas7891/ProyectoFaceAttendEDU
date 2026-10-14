@@ -6,4 +6,6 @@ import java.util.Optional;
 
 public interface JustificationTypeJpaRepository extends JpaRepository<JustificationTypeJpaEntity, Integer> {
     Optional<JustificationTypeJpaEntity> findByName(String name);
+    Optional<JustificationTypeJpaEntity> findByNameAndSchoolId(String name, Integer schoolId);
+    Optional<JustificationTypeJpaEntity> findByNameAndSchoolIdIsNull(String name);
 }

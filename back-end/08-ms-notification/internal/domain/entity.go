@@ -36,6 +36,12 @@ type AlertType struct {
 	RowVersion  int64
 }
 
+// validChannels mirrors the DASHBOARD/EMAIL/PUSH set the alert webhook
+// dispatcher understands (see internal/application/usecase/create_alert.go).
+// A typo here used to persist silently and would have reached the webhook
+// as an unrecognized channel, since only "DASHBOARD" was ever special-cased.
+var validChannels = map[string]bool{"DASHBOARD": true, "EMAIL": true, "PUSH": true}
+
 func (at *AlertType) Validate() error {
 	if at.Code == "" {
 		return ErrValidation{Msg: "code is required"}
@@ -45,6 +51,9 @@ func (at *AlertType) Validate() error {
 	}
 	if at.Severity == "" {
 		return ErrValidation{Msg: "severity is required"}
+	}
+	if at.Channel != "" && !validChannels[at.Channel] {
+		return ErrValidation{Msg: "channel must be one of DASHBOARD, EMAIL, PUSH"}
 	}
 	return nil
 }

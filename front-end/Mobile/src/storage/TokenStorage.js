@@ -1,9 +1,49 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
+import {Platform} from 'react-native';
 import {jwtDecode} from "jwt-decode";
 
 const TOKEN_KEY = "auth_token";
 
-export const saveToken = async (token) => {
+// En nativo el token vive en el keystore/Keychain (expo-secure-store); en web esa
+// librería no está disponible, así que se cae a AsyncStorage con la misma forma.
+const useSecureStore = Platform.OS !== 'web';
+
+async function readPayload() {
+  if (useSecureStore) {
+    const stored = await SecureStore.getItemAsync(TOKEN_KEY);
+    if (stored) return stored;
+
+    // Migración de sesiones guardadas en AsyncStorage antes del keystore.
+    const legacy = await AsyncStorage.getItem(TOKEN_KEY);
+    if (legacy) {
+      await SecureStore.setItemAsync(TOKEN_KEY, legacy);
+      await AsyncStorage.removeItem(TOKEN_KEY);
+    }
+    return legacy;
+  }
+  return AsyncStorage.getItem(TOKEN_KEY);
+}
+
+async function writePayload(raw) {
+  if (useSecureStore) {
+    await SecureStore.setItemAsync(TOKEN_KEY, raw);
+    await AsyncStorage.removeItem(TOKEN_KEY);
+    return;
+  }
+  await AsyncStorage.setItem(TOKEN_KEY, raw);
+}
+
+async function clearPayload() {
+  if (useSecureStore) await SecureStore.removeItemAsync(TOKEN_KEY);
+  await AsyncStorage.removeItem(TOKEN_KEY);
+}
+
+/**
+ * Guarda la sesión con la forma compartida con Web:
+ * { token, savedAt, expiresAt, email }.
+ */
+export const saveToken = async (token, email = null) => {
   if (!token || typeof token !== 'string') {
     console.warn("saveToken: token inválido");
     return false;
@@ -25,15 +65,15 @@ export const saveToken = async (token) => {
     }
   }
 
-  const data = { token, savedAt: Date.now(), expiresAt };
-  await AsyncStorage.setItem(TOKEN_KEY, JSON.stringify(data));
+  const data = { token, savedAt: Date.now(), expiresAt, email: email || null };
+  await writePayload(JSON.stringify(data));
   console.log("saveToken: token guardado exitosamente");
   return true;
 };
 
 export const getToken = async () => {
   try {
-    const raw = await AsyncStorage.getItem(TOKEN_KEY);
+    const raw = await readPayload();
     if (!raw) return null;
 
     const { token, expiresAt } = JSON.parse(raw);
@@ -52,7 +92,7 @@ export const getToken = async () => {
 
 export const removeToken = async () => {
   try {
-    await AsyncStorage.removeItem(TOKEN_KEY);
+    await clearPayload();
     return true;
   } catch {
     return false;

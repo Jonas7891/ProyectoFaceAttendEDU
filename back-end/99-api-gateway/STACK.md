@@ -23,7 +23,7 @@
 ```
 99-api-gateway/
 ├── kong/kong.yml          # services/routes/plugins DB-less
-├── docker-compose.yml     # kong:3.6 + redis:7-alpine
+├── docker-compose.yml     # kong:3.6 solo (redis compartido, definido en back-end/)
 └── SERVICE.md/STACK.md
 ```
 
@@ -32,6 +32,9 @@
 `jwt` (RS256 identity), `rate-limiting` (60-200/min + 300 global), `cors`, `request-transformer`.
 
 ## Ejecución
+
+Requiere el stack `FULL/` ya levantado (crea las redes externas
+`faceattend-edge` y `faceattend-app`); este archivo solo reinicia Kong.
 
 ```bash
 docker compose up -d && curl http://localhost:8001/ && curl http://localhost:8080/api/v1/persons

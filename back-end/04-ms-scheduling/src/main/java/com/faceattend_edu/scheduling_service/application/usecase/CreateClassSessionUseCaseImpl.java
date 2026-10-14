@@ -15,8 +15,8 @@ public class CreateClassSessionUseCaseImpl implements CreateClassSessionUseCase 
     private final ClassSessionRepository repository;
     private final DomainEventPublisher eventPublisher;
     @Override public ClassSession create(ClassSession session) {
-        session.validate();
         session.touchCreated();
+        session.validate();
         try {
             ClassSession saved = repository.save(session);
             eventPublisher.publish("class-session-events", "{\"classSessionId\":" + saved.getClassSessionId() + ",\"scheduleBlockId\":" + saved.getScheduleBlockId() + "}");

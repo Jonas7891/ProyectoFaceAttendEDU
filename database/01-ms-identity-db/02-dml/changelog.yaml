@@ -5,3 +5,6 @@ databaseChangeLog:
   - include:
       file: 002-bootstrap-demo-users.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 003-seed-password-policy-table.yaml
+      relativeToChangelogFile: true

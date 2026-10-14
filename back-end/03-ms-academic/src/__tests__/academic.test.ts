@@ -5,8 +5,7 @@
  * Test IDs: TC-03-001 through TC-03-005
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { MemoryStore } from '../persistence/memory.store';
+import { MemoryStore } from '../infrastructure/persistence/memory.store';
 
 describe('IEEE 829 TC-03: School CRUD Tests', () => {
   let store: MemoryStore<any>;

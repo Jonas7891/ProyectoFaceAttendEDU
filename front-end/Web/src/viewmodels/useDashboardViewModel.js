@@ -87,7 +87,7 @@ export function useDashboardViewModel() {
     const { theme } = useTheme();
     const { t } = useTranslation();
     const { user } = useAuth();
-    const { fichas, students, teachers, courses } = useAppData();
+    const { fichas, students, teachers, courses, isLoading } = useAppData();
     const { formatDate } = useDateFormat();
     const c = theme.colors;
 
@@ -619,7 +619,7 @@ export function useDashboardViewModel() {
         }
 
         return mockAttendanceByWeek;
-    }, [userRole]);
+    }, [userRole, students]);
 
     // ── Asistencia por curso/ficha (filtrado por rol) ─────────
 
@@ -666,7 +666,10 @@ export function useDashboardViewModel() {
                 barColor 
             };
         });
-    }, [c, userRole, courses]);
+        // fichas debe estar en deps: el branch del teacher lee fichas, que llega
+        // asíncrona; sin ella el memo quedaba pegado en [] y nunca se recomputaba.
+        // (el "courses" local sombrea al del contexto, por eso no va en deps)
+    }, [c, userRole, fichas]);
 
     // ── Datos específicos de ADMIN ────────────────────────────
 
@@ -816,6 +819,7 @@ export function useDashboardViewModel() {
     return {
         // Datos comunes
         userRole,
+        isLoading, // AppDataContext todavía cargando el padrón de la sede
         todayLabel,
         stats: stats || [],
         attendanceByDay: attendanceByDay || [],      // Datos filtrados por rol

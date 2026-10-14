@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 public class UpdateScheduleBlockUseCaseImpl implements UpdateScheduleBlockUseCase {
 
     private final ScheduleBlockRepository repository;
+    private final ScheduleBlockOverlapGuard overlapGuard;
 
     @Override
     public ScheduleBlock update(Long id, ScheduleBlock block) {
@@ -26,6 +27,7 @@ public class UpdateScheduleBlockUseCaseImpl implements UpdateScheduleBlockUseCas
         if (block.getStartsAt() != null) existing.setStartsAt(block.getStartsAt());
         if (block.getEndsAt() != null) existing.setEndsAt(block.getEndsAt());
         existing.validate();
+        overlapGuard.check(existing, id);
         existing.touchUpdated();
         try {
             return repository.save(existing);

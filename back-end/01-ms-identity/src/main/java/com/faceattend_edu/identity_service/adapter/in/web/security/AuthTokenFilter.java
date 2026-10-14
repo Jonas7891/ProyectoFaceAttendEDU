@@ -4,6 +4,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -23,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 /**
  * Exige Bearer con sessionId opaco en todo /api/** salvo login/logout/me (bootstrap).
@@ -35,6 +38,8 @@ import java.util.UUID;
  */
 @Component
 public class AuthTokenFilter extends OncePerRequestFilter {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthTokenFilter.class);
 
     private static final List<String> PUBLIC_PREFIXES = List.of(
             "/health", "/api/v1/health", "/api/health",
@@ -123,6 +128,14 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         // Bootstrap: login/logout/me públicos; el resto de /api/** exige sesión.
         if (path.equals("/api/v1/auth/login") && method.equalsIgnoreCase("POST")) return true;
         if (path.equals("/api/v1/auth/logout") && method.equalsIgnoreCase("POST")) return true;
+        // Rotación de sesión (refresh token): el sessionId viejo viaja en el cuerpo
+        // y se cierra al emitir el nuevo, por eso no exige bearer previo.
+        if (path.equals("/api/v1/auth/refresh") && method.equalsIgnoreCase("POST")) return true;
+        // Recuperación de contraseña: todavía no hay sesión; la autorización la da
+        // el reto verificado que vive en el almacén de códigos.
+        if (path.equals("/api/v1/auth/forgot-password") && method.equalsIgnoreCase("POST")) return true;
+        if (path.equals("/api/v1/auth/verify-code") && method.equalsIgnoreCase("POST")) return true;
+        if (path.equals("/api/v1/auth/reset-password") && method.equalsIgnoreCase("POST")) return true;
         if (path.equals("/api/v1/auth/me") && method.equalsIgnoreCase("GET")) return true;
         // Lectura de sesión por UUID: la usa el propio filtro (fetchSession) en cada
         // MS. Sin bypass, la validación se llamaría a sí misma por HTTP en bucle
@@ -143,20 +156,44 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         return headers;
     }
 
+    /**
+     * Un reintento tras una pausa corta: justo después de `docker compose up`,
+     * identity/authorization pueden pasar su healthcheck mientras su pool de
+     * conexiones a Postgres todavía calienta, y esa primera llamada lenta
+     * superaba el timeout y denegaba sesiones válidas con 401/403 silenciosos
+     * (sin ningún log que lo explicara).
+     */
+    private <T> T withRetry(Supplier<T> call, T onFailure, String what) {
+        try {
+            return call.get();
+        } catch (Exception first) {
+            try {
+                Thread.sleep(250);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                return onFailure;
+            }
+            try {
+                return call.get();
+            } catch (Exception second) {
+                log.warn("AuthTokenFilter: {} failed twice: {}", what, second.getMessage());
+                return onFailure;
+            }
+        }
+    }
+
     @SuppressWarnings("unchecked")
     private Map<?, ?> fetchSession(String rawToken, UUID sessionId) {
-        try {
+        return withRetry(() -> {
             ResponseEntity<Map> response = restTemplate.exchange(
                     identityUrl + "/api/v1/sessions/" + sessionId, HttpMethod.GET,
                     new HttpEntity<>(bearerHeaders(rawToken)), Map.class);
             return response.getBody();
-        } catch (Exception e) {
-            return null;
-        }
+        }, null, "fetchSession(" + sessionId + ")");
     }
 
     private List<String> fetchRoles(String rawToken, String userId) {
-        try {
+        return withRetry(() -> {
             ResponseEntity<List> response = restTemplate.exchange(
                     authorizationUrl + "/api/v1/users/" + userId + "/roles", HttpMethod.GET,
                     new HttpEntity<>(bearerHeaders(rawToken)), List.class);
@@ -170,22 +207,18 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                 }
             }
             return roles;
-        } catch (Exception e) {
-            return null;
-        }
+        }, null, "fetchRoles(" + userId + ")");
     }
 
     @SuppressWarnings("unchecked")
     private boolean evaluate(String rawToken, String userId, String permission) {
-        try {
+        return withRetry(() -> {
             ResponseEntity<Map> response = restTemplate.exchange(
                     authorizationUrl + "/api/v1/auth/evaluate?userId=" + userId + "&permission=" + permission,
                     HttpMethod.GET, new HttpEntity<>(bearerHeaders(rawToken)), Map.class);
             Map<?, ?> result = response.getBody();
             return result != null && Boolean.TRUE.equals(result.get("allowed"));
-        } catch (Exception e) {
-            return false;
-        }
+        }, false, "evaluate(" + userId + ", " + permission + ")");
     }
 
     private void deny(HttpServletResponse response, int status, String message, String path) throws IOException {

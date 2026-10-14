@@ -7,7 +7,7 @@ services:
     url: http://ms-identity:8081
     routes:
       - name: identity-route
-        paths: [/api/v1/persons, /api/v1/users, /api/v1/auth, /api/v1/sessions, /api/v1/cities, /api/v1/password-policies]
+        paths: [/api/v1/persons, /api/v1/users, /api/v1/auth, /api/v1/sessions, /api/v1/password-policies]
         strip_path: false
       # Canonical school lives in academic-service; identity SchoolController kept direct-only for backward compat
       - name: identity-nested-route
@@ -32,7 +32,7 @@ services:
     url: http://ms-authorization:8082
     routes:
       - name: authorization-route
-        paths: [/api/v1/roles, /api/v1/permissions]
+        paths: [/api/v1/roles, /api/v1/permissions, /api/v1/user-roles]
         strip_path: false
       - name: authorization-nested-route
         paths: ["~/api/v1/users/.+/roles", /api/v1/auth/evaluate]
@@ -69,7 +69,7 @@ services:
     url: http://ms-attendance:8085
     routes:
       - name: attendance-route
-        paths: [/api/v1/attendance-records, /api/v1/justifications, /api/v1/justification-types, /api/v1/supporting-documents]
+        paths: [/api/v1/attendance-records, /api/v1/attendance-reports, /api/v1/justifications, /api/v1/justification-types, /api/v1/supporting-documents]
         strip_path: false
       - name: attendance-nested-route
         paths: ["~/api/v1/class-sessions/.+/attendance", "~/api/v1/academic-actors/.+/attendance", "~/api/v1/attendance/.+/justification", "~/api/v1/justifications/.+/documents"]
@@ -84,13 +84,18 @@ services:
           redis_port: 6379
           redis_database: 0
           policy: redis
+  # Incluye registro/reconocimiento facial y de huella (rostro -> encoding vía
+  # dlib, huella -> keypoints OpenCV), fusionado desde el antiguo face-auth-api;
+  # read_timeout elevado por el costo de ese cómputo en /enroll-image,
+  # /identify-image, /enroll-sample e /identify-sample.
   - name: biometric-service
     url: http://ms-biometric:8086
+    read_timeout: 60000
     routes:
       - name: biometric-route
         paths: [/api/v1/biometric]
         strip_path: false
-    # Sin plugins propios: el enforcement lo hace el MS.
+    # Sin plugins propios: el enforcement lo hace el MS (require_permission).
   - name: configuration-service
     url: http://ms-configuration:8087
     routes:
@@ -138,23 +143,67 @@ services:
           redis_port: 6379
           redis_database: 0
           policy: redis
-consumers:
-  # Local-dev consumer for the jwt plugin (HS256). Rotate before production.
-  # Production target per ADR-007: RS256 keys issued by identity-service.
-  - username: faceattend-admin
-    jwt_secrets:
-      - key: faceattend-admin-key
-        algorithm: HS256
-        secret: faceattend-local-dev-secret-change-me
+# No consumers here: the jwt plugin is not enabled (only rate-limiting and
+# cors are), and Kong cannot interpolate env vars in declarative config, so a
+# committed secret would be the only way to keep one. Provision RS256 keys
+# through the Admin API when jwt is enabled (ADR-007: identity-service).
 # TLS termination (production): mount cert/key and uncomment:
 # certificates:
 #   - cert: /kong/ssl/faceattend.crt
 #     key: /kong/ssl/faceattend.key
 #     snis: ["api.faceattend.local"]
 plugins:
+  # Edge authentication: the bearer is an opaque session UUID, so it is checked
+  # against identity (GET /sessions/{id}) instead of a JWT signature. Mirrors the
+  # public paths of each MS AuthTokenFilter; permissions are still evaluated there.
+  # Needs KONG_UNTRUSTED_LUA_SANDBOX_REQUIRES=resty.http on the gateway.
+  - name: pre-function
+    config:
+      access:
+        - |
+          local method = kong.request.get_method()
+          if method == "OPTIONS" then return end
+
+          local path = kong.request.get_path()
+          local public_prefixes = { "/health", "/api/v1/health", "/api/health" }
+          for _, prefix in ipairs(public_prefixes) do
+            if path:sub(1, #prefix) == prefix then return end
+          end
+          local public_posts = {
+            ["/api/v1/auth/login"] = true, ["/api/v1/auth/logout"] = true,
+            ["/api/v1/auth/refresh"] = true, ["/api/v1/auth/forgot-password"] = true,
+            ["/api/v1/auth/verify-code"] = true, ["/api/v1/auth/reset-password"] = true,
+          }
+          if method == "POST" and public_posts[path] then return end
+          if method == "GET" and path == "/api/v1/auth/me" then return end
+
+          local header = kong.request.get_header("authorization")
+          local token = header and header:match("^[Bb]earer%s+(%S+)$")
+          if not token or not token:match("^%x%x%x%x%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x$") then
+            return kong.response.exit(401, { status = 401, error = "Unauthorized", message = "Missing or invalid bearer token", path = path })
+          end
+
+          local httpc = require("resty.http").new()
+          httpc:set_timeouts(2000, 2000, 3000)
+          local res = httpc:request_uri("http://ms-identity:8081/api/v1/sessions/" .. token, {
+            method = "GET",
+            headers = { Authorization = "Bearer " .. token },
+          })
+          if not res then
+            return kong.response.exit(503, { status = 503, error = "Service Unavailable", message = "Cannot verify session", path = path })
+          end
+          if res.status ~= 200 or not res.body or not res.body:find('"sessionStatus"%s*:%s*"Active"') then
+            return kong.response.exit(401, { status = 401, error = "Unauthorized", message = "Invalid or expired session", path = path })
+          end
   - name: cors
     config:
-      origins: ["http://localhost:3000", "http://localhost:5173", "http://localhost:8090"]
+      # "*" + credentials true: Kong refleja el Origin real de cada petición
+      # (el navegador prohíbe "*" literal junto con credenciales), igual que
+      # ya hacía identity-service. Antes solo :3000/:5173/:8090 pasaban, así
+      # que abrir el frontend desde otra IP de la LAN (u otro puerto) dejaba
+      # bloqueadas por CORS las 6 rutas sin cors propio (academic, scheduling,
+      # attendance, authorization, biometric, configuration, notification).
+      origins: ["*"]
       methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
       headers: [Authorization, Content-Type, X-Requested-With]
       credentials: true

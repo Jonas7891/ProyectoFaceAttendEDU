@@ -8,7 +8,8 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "person", schema = "identity")
+@Table(name = "person", schema = "identity",
+        uniqueConstraints = @UniqueConstraint(name = "uq_person_document", columnNames = {"document_type", "document_number"}))
 @Getter
 @Setter
 @AllArgsConstructor
@@ -20,7 +21,7 @@ public class PersonJpaEntity {
     @Column(name = "person_id")
     private UUID personId;
 
-    @Column(name = "document_number", nullable = false, length = 50, unique = true)
+    @Column(name = "document_number", nullable = false, length = 50)
     private String documentNumber;
 
     @Column(name = "name", nullable = false)

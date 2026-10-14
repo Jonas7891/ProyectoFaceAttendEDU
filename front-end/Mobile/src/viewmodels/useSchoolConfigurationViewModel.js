@@ -169,10 +169,19 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
             fieldName === 'maxLatenesses' ||
             fieldName === 'minimumGrade'
         ) {
-            if (isNaN(value)) {
+            if (isNaN(value) || Number(value) < 0) {
                 errors[fieldName] = t('schoolConfig.validation.mustBeNumber');
             } else {
                 delete errors[fieldName];
+            }
+        } else if (fieldName === 'startDate' || fieldName === 'endDate') {
+            const start = fieldName === 'startDate' ? value : academicConfig.startDate;
+            const end = fieldName === 'endDate' ? value : academicConfig.endDate;
+            if (start && end && new Date(start) >= new Date(end)) {
+                errors[fieldName] = t('schoolConfig.validation.invalidDateRange');
+            } else {
+                delete errors.startDate;
+                delete errors.endDate;
             }
         } else {
             delete errors[fieldName];
@@ -214,6 +223,10 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
         if (!isAdmin) return;
         if (!schoolId) {
             Alert.alert(t('common.error'), t('schoolConfig.errors.schoolNotFound'));
+            return;
+        }
+        if (Object.keys(validationErrors).length > 0) {
+            Alert.alert(t('common.error'), t('schoolConfig.validation.fixErrorsBeforeSaving'));
             return;
         }
 

@@ -3,6 +3,11 @@ import { randomUUID } from 'node:crypto';
 import { registerConfigurationRoutes } from './infrastructure/http/routes';
 import { registerEventHook } from './infrastructure/messaging/event.publisher';
 import { registerQualityMiddleware, registerQualityHealthEndpoint } from './infrastructure/http/qualityMiddleware';
+import { registerAuthGuard } from './infrastructure/http/authGuard';
+import { configurationPermission } from './infrastructure/http/permissions';
+import { closeDatabase, connectDatabase, getDatabaseStatus, healthCheck } from './infrastructure/db/database';
+import { RepositoryError } from './infrastructure/persistence/errors';
+import { createConfigurationRepositories } from './infrastructure/persistence/postgres';
 
 const app = Fastify({ logger: true });
 const startedAt = Date.now();
@@ -16,12 +21,26 @@ app.addHook('onSend', async (_req, reply, payload) => {
   reply.header('x-content-type-options', 'nosniff');
   return payload;
 });
+/** Error name rendered in the response envelope, by HTTP status. */
+function errorNameFor(status: number): string {
+  switch (status) {
+    case 400: return 'BadRequest';
+    case 404: return 'NotFound';
+    case 409: return 'Conflict';
+    case 503: return 'ServiceUnavailable';
+    default: return status >= 500 ? 'InternalError' : 'BadRequest';
+  }
+}
+
 app.setErrorHandler((error, req, reply) => {
   const status = (error as any).statusCode && (error as any).statusCode >= 400 ? (error as any).statusCode : 500;
   req.log.error({ err: error, path: req.url }, 'unhandled error');
+  const details = error instanceof RepositoryError ? error.details : undefined;
   reply.code(status).send({
-    error: status === 404 ? 'NotFound' : status === 400 ? 'BadRequest' : 'InternalError',
-    message: status === 500 ? 'Unexpected internal error' : (error as Error).message,
+    error: errorNameFor(status),
+    // Never echo a raw driver message for a server-side failure.
+    message: status >= 500 && status !== 503 ? 'Unexpected internal error' : (error as Error).message,
+    ...(details === undefined ? {} : { details }),
     path: req.url,
     timestamp: new Date().toISOString(),
   });
@@ -37,31 +56,42 @@ function healthPayload(service: string) {
 app.get('/health', async () => healthPayload('configuration-service'));
 app.get('/api/v1/health', async () => healthPayload('configuration-service'));
 
+// Readiness is separate from liveness: `/health` keeps answering 200 for the
+// compose healthcheck, while `/health/ready` reports whether PostgreSQL answers.
+app.get('/health/ready', async (_req, reply) => {
+  const probe = await healthCheck();
+  return reply.code(probe.ok ? 200 : 503).send({
+    status: probe.ok ? 'ready' : 'not-ready',
+    service: 'configuration-service',
+    database: { ...getDatabaseStatus(), latencyMs: probe.latencyMs, error: probe.error },
+    timestamp: new Date().toISOString(),
+  });
+});
+
 async function start() {
-  // PostgreSQL best-effort: verify DATABASE_URL, fallback to MemoryStore.
-  const databaseUrl = process.env.DATABASE_URL;
-  const pgSchema = process.env.PG_SCHEMA || 'configuration';
-  if (databaseUrl) {
-    try {
-      const { Pool } = await import('pg');
-      const pool = new Pool({ connectionString: databaseUrl });
-      await pool.query(`CREATE SCHEMA IF NOT EXISTS "${pgSchema}"`);
-      await pool.query('SELECT 1');
-      app.log.info({ schema: pgSchema }, 'postgres connected (configuration)');
-      await pool.end();
-    } catch (err) {
-      app.log.warn({ err }, 'postgres unavailable, using MemoryStore');
-    }
-  } else {
-    app.log.warn('DATABASE_URL not set, using MemoryStore');
+  // PostgreSQL is the only persistence layer: there is no in-memory fallback, so
+  // a database that cannot be reached is a fatal boot error (compose restarts us).
+  try {
+    await connectDatabase();
+    app.log.info({ database: getDatabaseStatus() }, 'postgres connected (configuration)');
+  } catch (err) {
+    app.log.error({ err, database: getDatabaseStatus() }, 'postgres unavailable — refusing to start');
+    await closeDatabase().catch(() => undefined);
+    throw err;
   }
+
+  registerAuthGuard(app, configurationPermission);
 
   // ISO/IEC 9001 — Quality audit middleware (Cláusula 8.5.2 / 9.1)
   registerQualityMiddleware(app);
   registerQualityHealthEndpoint(app);
 
-  await registerConfigurationRoutes(app);
+  await registerConfigurationRoutes(app, createConfigurationRepositories());
   registerEventHook(app);
+  app.addHook('onClose', async () => {
+    await closeDatabase().catch(() => undefined);
+  });
+
   const port = Number(process.env.PORT) || 8087;
   await app.listen({ port, host: '0.0.0.0' });
 }

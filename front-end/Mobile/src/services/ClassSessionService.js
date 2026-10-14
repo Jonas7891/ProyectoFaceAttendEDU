@@ -1,4 +1,5 @@
 import { request, GET, POST, PUT, DELETE } from '../api/apiClient';
+import { toSnakeDeep } from '../api/backend';
 import ClassSession from '../models/scheduling/ClassSession';
 
 const ENDPOINT = 'class_session';
@@ -70,5 +71,32 @@ export const ClassSessionService = {
   cancel: async (id) => {
     const data = await request({ method: PUT, url: `${ENDPOINT}/${id}`, data: { session_status: 'Cancelled' }, requiresAuth: false });
     return ClassSession.fromApi(data);
+  },
+
+  // Endpoints de acción del backend (aplican las reglas de transición Open -> Closed | Cancelled):
+  // POST /api/v1/class-sessions/:id/open | close | cancel.
+  openById: async (id, openedBy = null) => {
+    const data = await request({
+      method: POST,
+      url: `api/v1/class-sessions/${id}/open`,
+      data: openedBy ? { openedBy } : null,
+      requiresAuth: false,
+    });
+    return ClassSession.fromApi(toSnakeDeep(data));
+  },
+
+  closeById: async (id, closedBy = null) => {
+    const data = await request({
+      method: POST,
+      url: `api/v1/class-sessions/${id}/close`,
+      data: closedBy ? { closedBy } : null,
+      requiresAuth: false,
+    });
+    return ClassSession.fromApi(toSnakeDeep(data));
+  },
+
+  cancelById: async (id) => {
+    const data = await request({ method: POST, url: `api/v1/class-sessions/${id}/cancel`, requiresAuth: false });
+    return ClassSession.fromApi(toSnakeDeep(data));
   },
 };

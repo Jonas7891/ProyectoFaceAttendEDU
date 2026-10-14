@@ -32,6 +32,13 @@ import CoursesScreen from "../view/screens/CoursesScreen";
 import EnvironmentsScreen from "../view/screens/EnvironmentsScreen";
 import ReportsScreen from "../view/screens/ReportsScreen";
 import SettingsScreen from "../view/screens/SettingsScreen";
+import SchoolsScreen from "../view/screens/SchoolsScreen";
+import SchoolInfoScreen from "../view/screens/SchoolInfoScreen";
+import HistoryScreen from "../view/screens/HistoryScreen";
+import JustificationsScreen from "../view/screens/JustificationsScreen";
+import AcademicScreen from "../view/screens/AcademicScreen";
+import ContactsScreen from "../view/screens/ContactsScreen";
+import BiometricsScreen from "../view/screens/BiometricsScreen";
 
 // ── Importación de Componentes de Layout ────────────────────
 import AuthMiddleware from "../view/authorized/AuthMiddleware";
@@ -85,6 +92,41 @@ export default function AppNavigator() {
             <Stack.Screen
                 name="Reports"
                 component={AuthMiddleware(ReportsScreen)}
+            />
+
+            <Stack.Screen
+                name="Schools"
+                component={AuthMiddleware(SchoolsScreen)}
+            />
+
+            <Stack.Screen
+                name="SchoolInfo"
+                component={AuthMiddleware(SchoolInfoScreen)}
+            />
+
+            <Stack.Screen
+                name="History"
+                component={AuthMiddleware(HistoryScreen)}
+            />
+
+            <Stack.Screen
+                name="Justifications"
+                component={AuthMiddleware(JustificationsScreen)}
+            />
+
+            <Stack.Screen
+                name="Academic"
+                component={AuthMiddleware(AcademicScreen)}
+            />
+
+            <Stack.Screen
+                name="Contacts"
+                component={AuthMiddleware(ContactsScreen)}
+            />
+
+            <Stack.Screen
+                name="Biometrics"
+                component={AuthMiddleware(BiometricsScreen)}
             />
 
             <Stack.Screen

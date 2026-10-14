@@ -16,7 +16,7 @@
 import React, { useMemo } from "react";
 import { View, TextInput } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Card } from "../../../components/common";
+import { Card, Select } from "../../../components/common";
 import {
     ColumnFilterDropdown,
     ContextualFilterDropdown,
@@ -34,6 +34,7 @@ import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation
  * @param {object} options - Opciones de configuración
  * @param {Array} options.filterColumns - Columnas disponibles para filtrar (opcional, usa default si no se pasa)
  * @param {string} options.searchPlaceholder - Placeholder del buscador (opcional)
+ * @param {boolean} options.showCourseFilter - Muestra el selector de curso (opcional)
  * 
  * @example
  * <UsersFilterBar 
@@ -125,6 +126,18 @@ export default function UsersFilterBar({ vm, options = {} }) {
                     onChange={vm.setAdvancedFilterColumn}
                     columns={filterColumns}
                 />
+
+                {/* Filtro por curso (opt-in: lo pide cada vista vía options) */}
+                {options.showCourseFilter && (vm.courseOptions?.length ?? 0) > 0 && (
+                    <Select
+                        value={vm.courseFilter}
+                        onValueChange={vm.setCourseFilter}
+                        options={vm.courseOptions}
+                        placeholder={t("Todos los cursos")}
+                        style={{ minWidth: 180 }}
+                        searchable
+                    />
+                )}
 
                 {/* Filtro contextual (aparece solo si hay columna seleccionada y no es attendance) */}
                 {vm.advancedFilter.column && vm.advancedFilter.column !== "attendance" && (

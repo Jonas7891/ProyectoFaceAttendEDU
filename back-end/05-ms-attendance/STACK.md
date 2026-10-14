@@ -1,12 +1,12 @@
 # STACK — 05-ms-attendance
 
-> **Stack ADR-005:** `Java 21 + Spring Boot 3` · **Guía:** `../../fae-docs/_stacks/java-spring.md`
+> **Stack ADR-005:** `Java 21 + Spring Boot 4.1.1` · **Guía:** `../../fae-docs/_stacks/java-spring.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md`
 > **Database:** `../database/05-ms-attendance-db` (schema `attendance`) · **Puerto:** `8085` · **Dominio:** `06-data/domains/05-attendance.md`
 
 ## Decisión (ADR-005 §5)
 
-**Best option: Java 21 + Spring Boot 3 (19/25)** — most critical business path, ACID `@Transactional`.
+**Best option: Java 21 + Spring Boot 4.1.1 (19/25)** — most critical business path, ACID `@Transactional`.
 
 | # | Option | Perf | Eco | Learn | Lib | Ops | Total | Notes |
 |---|--------|:----:|:---:|:-----:|:---:|:---:|-------|-------|

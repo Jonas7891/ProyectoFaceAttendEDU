@@ -1,4 +1,5 @@
-import { request, GET, POST, PUT, DELETE } from '../api/apiClient';
+import { request, GET, POST, PUT, PATCH, DELETE } from '../api/apiClient';
+import { toSnakeDeep } from '../api/backend';
 import Alert from '../models/notification/Alert';
 
 const ENDPOINT = 'alert';
@@ -49,6 +50,12 @@ export const AlertService = {
   resolve: async (id) => {
     const data = await request({ method: PUT, url: `${ENDPOINT}/${id}`, data: { resolved_at: new Date().toISOString() }, requiresAuth: false });
     return Alert.fromApi(data);
+  },
+
+  // PATCH /api/v1/alerts/:id/resolve — endpoint dedicado del backend (fija resolved_at en el servidor).
+  markResolved: async (id) => {
+    const data = await request({ method: PATCH, url: `api/v1/alerts/${id}/resolve`, requiresAuth: false });
+    return Alert.fromApi(toSnakeDeep(data));
   },
 
   delete: async (id) => {

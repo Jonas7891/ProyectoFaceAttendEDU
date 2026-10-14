@@ -8,6 +8,8 @@ public interface JustificationTypeRepository {
     JustificationType save(JustificationType t);
     Optional<JustificationType> findById(Integer id);
     Optional<JustificationType> findByName(String name);
+    Optional<JustificationType> findByNameAndSchoolId(String name, Integer schoolId);
+    Optional<JustificationType> findByNameAndSchoolIdIsNull(String name);
     List<JustificationType> findAll();
     void deleteById(Integer id);
     boolean existsById(Integer id);

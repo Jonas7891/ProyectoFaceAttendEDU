@@ -22,6 +22,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserRoleController {
 
+    /** Keeps the query string inside every sane URL limit and bounds the IN clause. */
+    private static final int MAX_BATCH_USERS = 300;
+
     private final AssignRoleToUserUseCase assignRoleToUserUseCase;
     private final CheckPermissionUseCase checkPermissionUseCase;
     private final UserRoleRepository userRoleRepository;
@@ -44,6 +47,26 @@ public class UserRoleController {
         List<Role> roles = userRoleRepository.findRolesByUserId(userId);
         List<RoleResponse> resp = roles.stream().map(roleWebMapper::toResponse).collect(Collectors.toList());
         return ResponseEntity.ok(resp);
+    }
+
+    /**
+     * Batch variant of the endpoint above. The users screen needs the roles of every listed
+     * user, and asking one by one meant one request per user; here one request covers them all.
+     * Users without an assignment are simply absent from the map.
+     */
+    @GetMapping({"/api/v1/user-roles", "/user-roles"})
+    public ResponseEntity<Map<String, List<RoleResponse>>> getRolesForUsers(
+            @RequestParam(name = "userIds", required = false) List<UUID> userIds) {
+        if (userIds == null || userIds.isEmpty()) return ResponseEntity.ok(Map.of());
+        if (userIds.size() > MAX_BATCH_USERS) {
+            throw new IllegalArgumentException("userIds accepts at most " + MAX_BATCH_USERS + " ids per request");
+        }
+        Map<String, List<RoleResponse>> body = userRoleRepository.findRolesByUserIds(userIds)
+                .entrySet().stream()
+                .collect(Collectors.toMap(
+                        entry -> entry.getKey().toString(),
+                        entry -> entry.getValue().stream().map(roleWebMapper::toResponse).collect(Collectors.toList())));
+        return ResponseEntity.ok(body);
     }
 
     @GetMapping({"/api/v1/auth/evaluate", "/auth/evaluate"})

@@ -9,7 +9,7 @@ export interface BiometricUpdateCase {
   currentEmbeddingRef?: string | null;
   reason: string;
   updateStatus: UpdateStatus;
-  requestedBy?: string | null;
+  requestedBy: string;
   requestedAt: string;
   reviewedBy?: string | null;
   reviewedAt?: string | null;

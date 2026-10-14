@@ -8,7 +8,6 @@ Gestionar la identidad de personas, credenciales de acceso, sesiones de usuario 
 
 | Tabla | Descripcion | PK |
 |-------|-------------|-----|
-| `city` | Catalogo de ciudades colombianas | `city_id` (INT) |
 | `person` | Identidad base: documento, nombre, contacto | `person_id` (UUID) |
 | `app_user` | Credenciales de acceso; 1:1 con `person` | `user_id` (UUID) |
 | `user_session` | Sesiones activas/cerradas | `session_id` (UUID) |
@@ -113,11 +112,52 @@ mapstruct-processor              <!-- Anotacion processor MapStruct -->
 
 | Metodo | Endpoint | Descripcion |
 |--------|----------|-------------|
-| POST | `/api/v1/auth/login` | Iniciar sesion |
+| POST | `/api/v1/auth/login` | Iniciar sesion (correo o username) |
 | POST | `/api/v1/auth/logout` | Cerrar sesion |
-| GET | `/api/v1/auth/me` | Usuario actual |
+| POST | `/api/v1/auth/refresh` | Rotar la sesion: devuelve un `sessionId` nuevo y cierra el anterior |
+| GET | `/api/v1/auth/me` | Usuario actual (`?username=` o `?email=`) |
 
-### 4.4 Sesiones
+**Refresh token.** No hay JWT: el `sessionId` opaco cumple las dos funciones.
+`POST /auth/refresh` recibe el `sessionId` vigente en el cuerpo y responde con
+otro distinto; el anterior se cierra con un `UPDATE ... WHERE status='Active'`
+de un solo uso, de modo que dos renovaciones concurrentes con el mismo token
+solo producen una sesion nueva. Si el cliente no renueva antes de
+`session-timeout-minutes` (480 por defecto, igual que el seed de
+`configuration.security_configuration`), la sesion expira y todo
+`/api/v1/auth/refresh` o peticion autenticada responde 401.
+
+**Expiracion perezosa.** `GET /api/v1/sessions/{id}` cierra la sesion vencida al
+leerla. Como ese GET es el que usan los `AuthTokenFilter` de todos los
+microservicios para validar el bearer, la expiracion se aplica en toda la
+plataforma sin duplicar logica en los demas servicios.
+
+### 4.4 Recuperacion de contrasena
+
+| Metodo | Endpoint | Descripcion |
+|--------|----------|-------------|
+| POST | `/api/v1/auth/forgot-password` | Genera el codigo de 6 digitos y lo envia por correo (`{email}`) |
+| POST | `/api/v1/auth/verify-code` | Valida el codigo y deja el reto verificado (`{email, code}`) |
+| POST | `/api/v1/auth/reset-password` | Aplica la contrasena nueva (`{email, password}`) |
+
+Los tres son publicos (aun no hay sesion): la autorizacion la da el reto
+verificado.
+
+- **Codigo**: 6 digitos, SHA-256 en memoria, TTL 10 min, 5 intentos, reenvio
+  cada 60 s (las mismas constantes del front). Se guarda solo el hash y la
+  comparacion es en tiempo constante.
+- **Anti-enumeracion**: `forgot-password` responde 202 exista o no la cuenta, y
+  `verify-code`/`reset-password` devuelven 401 identico si no hay reto.
+- **Politica**: `reset-password` valida la contrasena contra
+  `identity.password_policy` antes de consumir el reto y cierra todas las
+  sesiones abiertas del usuario.
+- **Correo**: identity no habla SMTP; entrega el mensaje a
+  `POST /api/v1/emails` de **08-ms-notification** (interno, no publicado en
+  Kong) mediante `faceattend.notification.base-url`.
+- **Limitacion**: el almacén vive en memoria del JVM; un reinicio de identity
+  descarta los codigos pendientes (el usuario vuelve a pedir uno). Si se necesita
+  persistencia o multiples replicas, cambia solo `RecoveryCodePort`.
+
+### 4.5 Sesiones
 
 | Metodo | Endpoint | Descripcion |
 |--------|----------|-------------|
@@ -136,11 +176,11 @@ El servicio Identity publica estos eventos via Kafka:
 | `PersonActivated` | Persona activada | Todos |
 | `PersonDeactivated` | Persona desactivada | Todos |
 | `UserCreated` | Nuevo usuario creado | Authorization |
-| `UserAuthenticated` | Login exitoso | Audit |
-| `UserAuthenticationFailed` | Login fallido | Audit, Notification |
-| `UserSessionStarted` | Sesion abierta | Audit |
-| `UserSessionClosed` | Sesion cerrada | Audit |
-| `PasswordChanged` | Contrasena cambiada | Audit |
+| `UserAuthenticated` | Login exitoso | — |
+| `UserAuthenticationFailed` | Login fallido | Notification |
+| `UserSessionStarted` | Sesion abierta | — |
+| `UserSessionClosed` | Sesion cerrada | — |
+| `PasswordChanged` | Contrasena cambiada | — |
 
 ---
 
@@ -215,6 +255,21 @@ springdoc:
     path: /swagger-ui.html
 ```
 
+### 7.1 Propiedades de autenticacion (`faceattend.*`)
+
+| Propiedad | Defecto | Descripcion |
+|-----------|---------|-------------|
+| `faceattend.auth.session-timeout-minutes` | `480` | Vigencia de la sesion opaca (start_date + esto) |
+| `faceattend.recovery.code-ttl-minutes` | `10` | Vida del codigo de recuperacion |
+| `faceattend.recovery.max-attempts` | `5` | Intentos fallidos antes de invalidar el codigo |
+| `faceattend.recovery.resend-cooldown-seconds` | `60` | Espera minima entre reenvios |
+| `faceattend.notification.base-url` | `http://localhost:8088` | 08-ms-notification (en compose: `http://ms-notification:8088`) |
+| `faceattend.notification.internal-token` | *(vacio)* | Header `X-Internal-Token` si el destino lo exige |
+
+Se sobrescriben por variable de entorno con la forma `FACEATTEND_AUTH_*`,
+`FACEATTEND_RECOVERY_*` y `FACEATTEND_NOTIFICATION_*` (p. ej.
+`FACEATTEND_NOTIFICATION_BASE_URL`).
+
 ---
 
 ## 8. Puertos del Servidor
@@ -227,35 +282,14 @@ springdoc:
 
 ---
 
-## 9. Analisis de Lenguaje
+## 9. Stack Actual
 
-### Candidatos evaluados
+Identity esta implementado en **Java 21 + Spring Boot 4.1.1** con arquitectura hexagonal.
 
-| # | Lenguaje | Framework | Ecosistema JWT/Security | ORM | Rendimiento | Ecosistema |
-|---|----------|-----------|:-----------------------:|:---:|:-----------:|:----------:|
-| 1 | **Java 21** | Spring Boot 4.1.1 | Excelente (Spring Security) | JPA/Hibernate | Excelente | Mas grande del mundo |
-| 2 | C# .NET 8 | ASP.NET Core | Excelente (Identity) | Entity Framework | Excelente | Muy grande, enterprise |
-| 3 | Go 1.22 | Gin + golang-jwt | Bueno (manual) | pgx/sqlc | Excelente | Moderado, cloud-native |
+### Justificacion
 
-### Por que Java gana
-
-- **Spring Security**: La libreria de seguridad mas madura y completa del ecosistema JVM. JWT, sesiones, OAuth2, RBAC nativo.
-- **Identity ya implementado**: 90+ archivos Java con arquitectura hexagonal completa. Reescribir en otro lenguaje no justifica el costo.
-- **Ecosistema**: Spring Data JPA, Liquibase, Kafka, OpenAPI — todo integrado y probado en produccion.
-- **Virtual Threads (JEP 444)**: Java 21 cierra la brecha de concurrencia con Go.
-
-### Por que no C# .NET 8
-
-- Mismo nivel de madurez que Java, pero sin ventaja para este caso de uso.
-- Requeriria reescribir todo el proyecto existente.
-- Menor ecosistema de seguridad biometrica que Java.
-
-### Por que no Go
-
-- Spring Security resuelve JWT, sesiones y politicas de forma integral.
-- Go requiere implementar manualmente lo que Spring Security da "out of the box".
-- Identity tiene dominios complejos (personas, usuarios, sesiones, escuelas) donde JPA simplifica el ORM.
-
-### Decision: Java 21
-
-Identity es el servicio base del sistema. Java 21 con Spring Boot ofrece el ecosistema mas completo para identidad y seguridad. El proyecto ya esta implementado y funcionando.
+- **Spring Security**: La libreria de seguridad mas madura del ecosistema JVM. JWT, sesiones Redis, refresh tokens y RBAC out-of-the-box.
+- **Spring Data JPA**: Persistencia relacional con la unicidad compuesta `(document_type, document_number)` y `username` unico; el correo vive en `identity.person` con `uq_person_email` (unicidad entre filas vivas) y es la alternate key de login.
+- **Spring Kafka**: Domain Events asincronos (`PersonCreated`, `UserLoggedIn`, ...).
+- **Liquibase**: Migraciones versionadas del schema `identity`.
+- **Testcontainers**: Tests de integracion con PostgreSQL real.

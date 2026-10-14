@@ -26,6 +26,8 @@ import {
     ProgressBar,
     AttendanceStatusIcon,
     AttendanceStatusBadge,
+    EmptyState,
+    Loader,
     PageHeader,
 } from "./components/common";
 import {
@@ -155,6 +157,25 @@ function SectionHeader({ title, subtitle, totalItems, maxItems, onSeeAll, colors
 }
 
 // ──────────────────────────────────────────────────────────────
+// Estado sin datos: antes los paneles hacían `return null` y la
+// pantalla de Inicio quedaba vacía en blanco mientras AppDataContext
+// cargaba (o si una carga fallaba). Ahora se informa al usuario.
+// ──────────────────────────────────────────────────────────────
+
+function PanelDataState({ isLoading, t }) {
+    if (isLoading) {
+        return <Loader message={t("Cargando información del panel...")} />;
+    }
+    return (
+        <EmptyState
+            icon="bar-chart-2"
+            title={t("Sin datos por ahora")}
+            message={t("Aún no hay información disponible en el panel. Verifica que tu cuenta tenga fichas y cursos asignados.")}
+        />
+    );
+}
+
+// ──────────────────────────────────────────────────────────────
 // ADMIN DASHBOARD — Vista completa del sistema
 // ──────────────────────────────────────────────────────────────
 
@@ -187,7 +208,7 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
     const weeklySubtitle = getWeeklyTrendSubtitle(academicPeriod, t);
     
     // Early return DESPUÉS de todos los hooks
-    if (!vm.adminData) return null;
+    if (!vm.adminData) return <PanelDataState isLoading={vm.isLoading} t={t} />;
 
     // Label dinámico: si es la semana actual mostrar "Esta semana (Sem X)", sino "Sem X"
     const weekLabel = isCurrentWeek && currentWeekNumber
@@ -450,8 +471,7 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t, navigation }) {
         return cleanup;
     }, [academicPeriod]);
     
-    if (!vm.teacherData) return null;
-    
+    if (!vm.teacherData) return <PanelDataState isLoading={vm.isLoading} t={t} />;    
     // Obtener subtítulo con el período académico reactivo
     const weeklySubtitle = getWeeklyTrendSubtitle(academicPeriod, t);
 
@@ -587,8 +607,8 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                 maxWeeks={5}
                 showTrend={false}
                 colorByPerformance={true}
-                weeklyTitle={t("Tendencia de mis cursos")}
-                weeklySubtitle={weeklySubtitle}
+                academicPeriod={academicPeriod}
+                weeklyTitle={t("Tendencia de mis cursos")}                weeklySubtitle={weeklySubtitle}
                 dailyTitle={t("Asistencia por día")}
                 currentWeekLabel={t("En mis cursos esta semana")}
                 isSmall={isSmall}
@@ -653,7 +673,7 @@ function StudentDashboard({ vm, permissions, isSmall, c, t }) {
     const weeklySubtitle = getWeeklyTrendSubtitle(academicPeriod, t);
     
     // Early return DESPUÉS de todos los hooks
-    if (!vm.studentData) return null;
+    if (!vm.studentData) return <PanelDataState isLoading={vm.isLoading} t={t} />;
 
     // Label dinámico: si es la semana actual mostrar "Esta semana (Sem X)", sino "Sem X"
     const weekLabel = isCurrentWeek && currentWeekNumber
@@ -898,6 +918,7 @@ export default function DashboardView({ navigation: navigationProp }) {
                             variant="primary" 
                             size="sm"
                             leftIcon={<Feather name="camera" size={16} color="#fff" />}
+                            onPress={() => navigation.navigate("Biometrics")}
                         >
                             {t("Tomar asistencia")}
                         </Button>

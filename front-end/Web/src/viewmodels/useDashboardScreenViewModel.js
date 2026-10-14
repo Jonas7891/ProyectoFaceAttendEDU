@@ -8,6 +8,11 @@ import { useTranslation }     from "../core/utils/i18n/hooks/useTranslation";
 // Soporta estructura jerárquica mediante la propiedad "children"
 const ALL_TABS = [
     { key: "dashboard",    label: "Inicio",        icon: "layout"      },
+    // Sección del super admin: gestión de escuelas y su asistencia
+    { key: "schools",      label: "Escuelas",      icon: "map"         },
+    // Pantallas de asistencia y de consulta (HU-HIST / HU-JUS / nav-map)
+    { key: "history",       label: "Historial",       icon: "clock"      },
+    { key: "justifications",label: "Justificaciones", icon: "file-text"  },
     { 
         key: "users",     
         label: "Usuarios",       
@@ -45,6 +50,10 @@ const ALL_TABS = [
             { key: "notifications",  label: "Notificaciones",  icon: "bell",     adminOnly: false },
             { key: "security",       label: "Seguridad",       icon: "shield",   adminOnly: true },
             { key: "appearance",     label: "Apariencia",      icon: "sliders",  adminOnly: false },
+            // Sede y Contactos dejaron de ser tabs propios y ahora son una
+            // sola sección: "Sede" reúne los datos de la institución y el
+            // directorio de instructores (antes "Contactos").
+            { key: "schoolInfo",     label: "Sede",            icon: "map-pin",  adminOnly: false },
         ]
     },
 ];

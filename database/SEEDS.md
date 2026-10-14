@@ -19,10 +19,11 @@ RBAC roles. Assigned via `user_role`.
 | 1 | `Administrador` | Rol Mobile: acceso total |
 | 2 | `Instructor` | Rol Mobile: docencia y asistencia |
 | 3 | `Aprendiz` | Rol Mobile: consulta propia |
+| — | `Super Administrador` | Rol Web: administrador global sin sede (id asignado por migración) |
 
-**File:** `02-ms-authorization-db/02-dml/001-seed-role-table.yaml` (legado de 4 roles) + `004-unify-mobile-roles.yaml` (unificación a 3 roles Mobile; renombra `SUPER_ADMIN`→`Administrador`, `INSTRUCTOR`→`Instructor`, `STUDENT`→`Aprendiz`, fusiona `SCHOOL_ADMIN` en `Administrador` y carga la matriz `role_permission`)
+**File:** `02-ms-authorization-db/02-dml/001-seed-role-table.yaml` (legado de 4 roles) + `004-unify-mobile-roles.yaml` (unificación a 3 roles Mobile; renombra `SUPER_ADMIN`→`Administrador`, `INSTRUCTOR`→`Instructor`, `STUDENT`→`Aprendiz`, fusiona `SCHOOL_ADMIN` en `Administrador` y carga la matriz `role_permission`) + `007-split-super-admin-role.yaml` (rol explícito `Super Administrador`, con los 12 permisos, y reasignación del admin bootstrap desde `Administrador`)
 
-> Bootstrap: `01-ms-identity-db/02-dml/001-bootstrap-admin-user.yaml` crea `person` + `app_user` (`admin.faceattend` / `Admin123!ChangeMe`, **cambiar en producción**), `002-bootstrap-demo-users.yaml` crea `instructor.faceattend` / `Instructor123!ChangeMe` y `aprendiz.faceattend` / `Aprendiz123!ChangeMe`, y `005/006-bootstrap-*-role-assignment.yaml` les asignan `Administrador`, `Instructor` y `Aprendiz`. Sin estos usuarios iniciales ningún endpoint protegido sería alcanzable.
+> Bootstrap: `01-ms-identity-db/02-dml/001-bootstrap-admin-user.yaml` crea `person` + `app_user` (`admin.faceattend` / `Admin123!ChangeMe`, **cambiar en producción**), `002-bootstrap-demo-users.yaml` crea `instructor.faceattend` / `Instructor123!ChangeMe` y `aprendiz.faceattend` / `Aprendiz123!ChangeMe`, y `005/006-bootstrap-*-role-assignment.yaml` les asignan `Administrador`, `Instructor` y `Aprendiz` (`007` posteriormente pasa `admin.faceattend` a `Super Administrador`). Sin estos usuarios iniciales ningún endpoint protegido sería alcanzable.
 
 ---
 
@@ -47,22 +48,22 @@ Atomic permissions with bounded-context prefix (`context.resource:action`). Assi
 
 **File:** `02-ms-authorization-db/02-dml/002-seed-permission-table.yaml`
 
-### Role × permission matrix (enforced by `004-unify-mobile-roles.yaml`)
+### Role × permission matrix (enforced by `004-unify-mobile-roles.yaml` and `007-split-super-admin-role.yaml`)
 
-| Permission | Administrador | Instructor | Aprendiz |
-|---------|:-------------:|:----------:|:--------:|
-| `identity.person:read` | ✅ | ✅ | ✅ |
-| `identity.person:write` | ✅ | ❌ | ❌ |
-| `academic.school:manage` | ✅ | ❌ | ❌ |
-| `academic.enrollment:manage` | ✅ | ❌ | ❌ |
-| `scheduling.session:manage` | ✅ | ✅ | ❌ |
-| `attendance.record:read` | ✅ | ✅ | ✅ |
-| `attendance.record:write` | ✅ | ✅ | ❌ |
-| `attendance.justification:approve` | ✅ | ✅ | ❌ |
-| `biometric.case:request` | ✅ | ✅ | ✅ |
-| `biometric.case:review` | ✅ | ✅ | ❌ |
-| `configuration:manage` | ✅ | ❌ | ❌ |
-| `notification.alert:read` | ✅ | ✅ | ✅ |
+| Permission | Super Administrador | Administrador | Instructor | Aprendiz |
+|---------|:-------------------:|:-------------:|:----------:|:--------:|
+| `identity.person:read` | ✅ | ✅ | ✅ | ✅ |
+| `identity.person:write` | ✅ | ✅ | ❌ | ❌ |
+| `academic.school:manage` | ✅ | ✅ | ❌ | ❌ |
+| `academic.enrollment:manage` | ✅ | ✅ | ❌ | ❌ |
+| `scheduling.session:manage` | ✅ | ✅ | ✅ | ❌ |
+| `attendance.record:read` | ✅ | ✅ | ✅ | ✅ |
+| `attendance.record:write` | ✅ | ✅ | ✅ | ❌ |
+| `attendance.justification:approve` | ✅ | ✅ | ✅ | ❌ |
+| `biometric.case:request` | ✅ | ✅ | ✅ | ✅ |
+| `biometric.case:review` | ✅ | ✅ | ✅ | ❌ |
+| `configuration:manage` | ✅ | ✅ | ❌ | ❌ |
+| `notification.alert:read` | ✅ | ✅ | ✅ | ✅ |
 
 ---
 
@@ -99,11 +100,39 @@ Global security params. Password policy lives in `identity.password_policy`.
 
 | ID | Parameter | Value | Description |
 |----|-----------|-------|-------------|
-| 1 | `session_timeout_minutes` | `480` | Session max duration |
+| 1 | `session_timeout_minutes` | `480` | Session max duration (8 hours) |
 | 2 | `max_login_attempts` | `5` | Max attempts before lockout |
-| 3 | `lockout_duration_minutes` | `30` | Lockout duration |
+| 3 | `lockout_duration_minutes` | `30` | Lockout duration (minutes) |
 
 **File:** `07-ms-configuration-db/02-dml/001-seed-security-configuration-table.yaml`
+
+---
+
+## 7. Configuration — `configuration.academic_configuration`
+
+Academic params per school. `school_id = 1` is the default school. Values align with frontend defaults (`front-end/Web/src/core/config/institutionConfig.js`).
+
+| ID | School | Parameter | Value | Description |
+|----|--------|-----------|-------|-------------|
+| 1 | 1 | `tardy_tolerance_minutes` | `15` | Minutes after start before marking late |
+| 2 | 1 | `min_attendance_percent` | `80` | Minimum attendance percentage to pass |
+| 3 | 1 | `days_until_sanction` | `15` | Days before sanction is applied |
+| 4 | 1 | `confidence_threshold` | `85` | Minimum facial recognition confidence (0-100) |
+| 5 | 1 | `session_time_minutes` | `60` | Default session duration |
+
+**File:** `07-ms-configuration-db/02-dml/002-seed-academic-configuration-table.yaml`
+
+---
+
+## 8. Identity — `identity.password_policy`
+
+Password complexity rules. Values align with frontend defaults (`front-end/Mobile/src/models/identity/PasswordPolicy.js`).
+
+| ID | Min Length | Max Length | Uppercase | Numbers | Symbols | Expiration Days |
+|----|------------|------------|-----------|---------|---------|-----------------|
+| 1 | 8 | 20 | true | true | true | 90 |
+
+**File:** `01-ms-identity-db/02-dml/001-seed-password-policy-table.yaml`
 
 ---
 
@@ -123,22 +152,24 @@ Alert types with `severity` and `channel` for `AlertsConfigContext` mapping.
 
 ---
 
-## 8. Summary by domain
+## 9. Summary by domain
 
 | Domain | Catalog table | Records | Seed file |
 |---------|---------------|:---------:|--------------|
-| Authorization | `role` | 3 | `02-ms-authorization-db/02-dml/001-seed-role-table.yaml` + `004-unify-mobile-roles.yaml` |
+| Authorization | `role` | 4 | `02-ms-authorization-db/02-dml/001-seed-role-table.yaml` + `004-unify-mobile-roles.yaml` + `007-split-super-admin-role.yaml` |
 | Authorization | `permission` | 12 | `02-ms-authorization-db/02-dml/002-seed-permission-table.yaml` |
 | Academic | `academic_actor_type` | 2 | `03-ms-academic-db/02-dml/001-seed-academic-actor-type-table.yaml` |
 | Attendance | `justification_type` | 3 | `05-ms-attendance-db/02-dml/001-seed-justification-type-table.yaml` |
 | Configuration | `security_configuration` | 3 | `07-ms-configuration-db/02-dml/001-seed-security-configuration-table.yaml` |
+| Configuration | `academic_configuration` | 5 | `07-ms-configuration-db/02-dml/002-seed-academic-configuration-table.yaml` |
+| Identity | `password_policy` | 1 | `01-ms-identity-db/02-dml/001-seed-password-policy-table.yaml` |
 | Notification | `alert_type` | 5 | `08-ms-notification-db/02-dml/001-seed-alert-type-table.yaml` |
 
-**Total: 28 seed records in 6 catalog tables.** `identity.city` removed (external API).
+**Total: 35 seed records in 8 catalog tables.** `identity.city` removed (external API).
 
 ---
 
-## 9. How to add new records
+## 10. How to add new records
 
 Seeds run once on DB creation. For post-init inserts use incremental DML:
 
@@ -157,15 +188,19 @@ databaseChangeLog:
               - column: { name: name, value: 'Sports leave' }
               - column: { name: description, value: 'Sports competition' }
               - column: { name: requires_attachment, value: false }
-              - column: { name: created_at, valueDate: { dateFunction: now } }
+              - column: { name: created_at, valueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, valueComputed: CURRENT_TIMESTAMP }
               - column: { name: row_version, value: 1 }
 ```
+
+> `valueDate: { dateFunction: now }` is **not** valid Liquibase syntax: it compiles to
+> `NULL` and breaks `created_at NOT NULL` on fresh databases. Use `valueComputed`.
 
 > Never modify existing seed changesets in production. Always add incremental changesets.
 
 ---
 
-## 10. Tables with ENUMs (no seeds)
+## 11. Tables with ENUMs (no seeds)
 
 | Domain | ENUM type | Values |
 |---------|-----------|---------|

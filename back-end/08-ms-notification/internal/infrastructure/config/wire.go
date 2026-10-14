@@ -4,13 +4,16 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/faceattend/notification-service/internal/application/usecase"
+	"github.com/faceattend/notification-service/internal/infrastructure/email"
 	"github.com/faceattend/notification-service/internal/infrastructure/http/handler"
 	"github.com/faceattend/notification-service/internal/infrastructure/postgres"
+	"github.com/faceattend/notification-service/internal/infrastructure/webhook"
 )
 
 type Container struct {
 	AlertHandler     *handler.AlertHandler
 	AlertTypeHandler *handler.AlertTypeHandler
+	EmailHandler     *handler.EmailHandler
 }
 
 func Wire(pool *pgxpool.Pool) *Container {
@@ -18,8 +21,11 @@ func Wire(pool *pgxpool.Pool) *Container {
 	alertRepo := postgres.NewAlertRepository(pool)
 	alertTypeRepo := postgres.NewAlertTypeRepository(pool)
 
+	// Webhook delivery for EMAIL/PUSH alert_type.channel, driven by WEBHOOK_* env vars.
+	alertNotifier := webhook.NewHTTPNotifier(webhook.FromEnv())
+
 	// usecases - if pool is nil (local dev without DB), provide in-memory-like fallback stubs via repos still work (they will error on nil pool but handlers still registered)
-	createAlert := usecase.NewCreateAlert(alertRepo, alertTypeRepo)
+	createAlert := usecase.NewCreateAlert(alertRepo, alertTypeRepo, alertNotifier)
 	listAlerts := usecase.NewListAlerts(alertRepo)
 	resolveAlert := usecase.NewResolveAlert(alertRepo)
 	deleteAlert := usecase.NewDeleteAlert(alertRepo)
@@ -32,8 +38,13 @@ func Wire(pool *pgxpool.Pool) *Container {
 	alertHandler := handler.NewAlertHandler(createAlert, listAlerts, resolveAlert, deleteAlert)
 	alertTypeHandler := handler.NewAlertTypeHandler(createAlertType, listAlertTypes, updateAlertType, deleteAlertType)
 
+	// Email channel (SMTP transport + templates) driven by SMTP_* env vars.
+	mailCfg := email.FromEnv()
+	emailHandler := handler.NewEmailHandler(email.NewSMTPSender(mailCfg), mailCfg)
+
 	return &Container{
 		AlertHandler:     alertHandler,
 		AlertTypeHandler: alertTypeHandler,
+		EmailHandler:     emailHandler,
 	}
 }

@@ -67,9 +67,13 @@ export function UserFilters({
     statusFilter,
     statusFilters,
     onStatusChange,
+    sortFilter,
+    sortFilters,
+    onSortChange,
     showUserTypeFilter = true,
     showCourseFilter = true,
     showStatusFilter = true,
+    showSortFilter = false,
     style,
 }) {
     const { isSmall } = useResponsive();
@@ -137,6 +141,17 @@ export function UserFilters({
                         onSelect={onStatusChange}
                         triggerIcon="activity"
                         style={{ minWidth: 180 }}
+                    />
+                )}
+
+                {/* Orden por asistencia */}
+                {showSortFilter && sortFilters && sortFilters.length > 0 && (
+                    <AnimatedDropdown
+                        items={sortFilters}
+                        value={sortFilter}
+                        onSelect={onSortChange}
+                        triggerIcon="trending-down"
+                        style={{ minWidth: 200 }}
                     />
                 )}
             </View>

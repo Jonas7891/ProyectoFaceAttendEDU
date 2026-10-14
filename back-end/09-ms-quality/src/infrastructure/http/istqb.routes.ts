@@ -1,6 +1,5 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { MemoryStore } from '../persistence/memory.store';
 import {
   ALL_ISTQB_ITEM_IDS,
   ISTQB_CATEGORIES,
@@ -8,10 +7,7 @@ import {
   scoreIstqbEvaluation,
 } from '../../domain/istqb';
 import type { IstqbAssessment } from '../../domain/entities/IstqbAssessment';
-
-export const istqbStores = {
-  assessments: new MemoryStore<any>('assessmentId'),
-};
+import type { IIstqbAssessmentRepository } from '../../domain/ports/out/IIstqbAssessmentRepository';
 
 function parseId(raw: unknown): number | null {
   const n = Number(raw);
@@ -48,7 +44,7 @@ function withScore(data: any): IstqbAssessment {
   return { ...data, ...scored } as IstqbAssessment;
 }
 
-export async function registerIstqbRoutes(app: FastifyInstance) {
+export async function registerIstqbRoutes(app: FastifyInstance, assessments: IIstqbAssessmentRepository) {
   // ---------- Instrumento (solo lectura): categorías, ítems y pesos ----------
   app.get('/api/v1/quality/istqb/categories', async () => ({
     standard: 'ISTQB CTFL v4.0',
@@ -74,7 +70,7 @@ export async function registerIstqbRoutes(app: FastifyInstance) {
     if (Object.keys(parsed.data.scores).length !== ISTQB_QUESTION_COUNT) {
       return send400(reply, `All ${ISTQB_QUESTION_COUNT} items are required`, { expected: ISTQB_QUESTION_COUNT, received: Object.keys(parsed.data.scores).length });
     }
-    const created = istqbStores.assessments.create(withScore(parsed.data) as any);
+    const created = await assessments.create(withScore(parsed.data));
     return reply.code(201).send(created);
   });
 
@@ -82,18 +78,15 @@ export async function registerIstqbRoutes(app: FastifyInstance) {
   app.get('/api/v1/quality/istqb/assessments', async (req) => {
     const q = ((req as any).query ?? {}) as any;
     const { limit, offset } = parsePagination(q);
-    const { data, total } = istqbStores.assessments.list(
-      (e: any) => (!q.service || e.service === q.service) && (!q.status || e.status === q.status) && (!q.projectId || e.projectId === Number(q.projectId)),
-      limit,
-      offset,
-    );
+    const projectId = q.projectId ? Number(q.projectId) : undefined;
+    const { data, total } = await assessments.list({ service: q.service, status: q.status, projectId }, { limit, offset });
     return { data, total, limit, offset };
   });
 
   // ---------- Detalle ----------
   app.get('/api/v1/quality/istqb/assessments/:id', async (req, reply) => {
     const id = parseId((req.params as any).id);
-    const found = id ? istqbStores.assessments.get(id) : null;
+    const found = id ? await assessments.findById(id) : null;
     if (!found) return reply.code(404).send({ error: 'NotFound', message: 'ISTQB assessment not found' });
     return found;
   });
@@ -108,24 +101,25 @@ export async function registerIstqbRoutes(app: FastifyInstance) {
       const unknownIds = Object.keys(parsed.data.scores).filter((k) => !ALL_ISTQB_ITEM_IDS.includes(k));
       if (unknownIds.length) return send400(reply, 'Unknown ISTQB item ids', unknownIds);
     }
-    const current = istqbStores.assessments.get(id);
+    const current = await assessments.findById(id);
     if (!current) return reply.code(404).send({ error: 'NotFound', message: 'ISTQB assessment not found' });
-    const merged = { ...(current as any), ...parsed.data };
-    const updated = istqbStores.assessments.update(id, withScore(merged) as any);
+    const merged = { ...current, ...parsed.data };
+    const updated = await assessments.update(id, { ...parsed.data, ...scoreIstqbEvaluation(merged.scores ?? {}) });
+    if (!updated) return reply.code(404).send({ error: 'NotFound', message: 'ISTQB assessment not found' });
     return updated;
   });
 
   // ---------- Eliminar (soft-delete) ----------
   app.delete('/api/v1/quality/istqb/assessments/:id', async (req, reply) => {
     const id = parseId((req.params as any).id);
-    if (!id || !istqbStores.assessments.remove(id)) return reply.code(404).send({ error: 'NotFound', message: 'ISTQB assessment not found' });
+    if (!id || !(await assessments.softDelete(id))) return reply.code(404).send({ error: 'NotFound', message: 'ISTQB assessment not found' });
     return reply.code(204).send();
   });
 
   // ---------- Resumen agregado por servicio ----------
   app.get('/api/v1/quality/istqb/services/:service/summary', async (req) => {
     const service = decodeURIComponent((req.params as any).service);
-    const { data, total } = istqbStores.assessments.list((e: any) => e.service === service, 1000, 0);
+    const { data, total } = await assessments.list({ service }, { limit: 1000, offset: 0 });
     if (!total) return { service, evaluations: 0, averageScore: null, averagePercentage: null, level: null, byCategory: {} };
     const avg = (xs: number[]) => Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 100) / 100;
     const byCat: Record<string, number[]> = {};

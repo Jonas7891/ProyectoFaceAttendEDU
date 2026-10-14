@@ -13,11 +13,14 @@
 // ============================================================
 
 import React, { useState } from "react";
-import { View } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
+import { Card } from "../common";
+import { useTheme } from "../hooks/useTheme";
 import { WeeklyTrend } from "./WeeklyTrend";
 import { DailyBarChart } from "./DailyBarChart";
 import { getInstitutionConfig } from "../../../core/config/institutionConfig";
 import { getCurrentPeriod, getCurrentAcademicWeek } from "../../../core/constants/academicPeriods";
+import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 
 /**
  * Orquestador de vista de asistencia semanal y diaria
@@ -31,6 +34,11 @@ import { getCurrentPeriod, getCurrentAcademicWeek } from "../../../core/constant
  * @param {Function} renderDailyBarChart - Render prop para DailyBarChart (recibe props y data)
  * @param {Object} weeklyTrendProps - Props adicionales para WeeklyTrend
  * @param {Object} dailyBarChartProps - Props adicionales para DailyBarChart
+ * @param {string} weeklyTitle - Título del gráfico semanal (render por defecto)
+ * @param {string} weeklySubtitle - Subtítulo del gráfico semanal
+ * @param {string} dailyTitle - Título del gráfico diario
+ * @param {string} currentWeekLabel - Etiqueta de la semana mostrada
+ * @param {boolean} isSmall - Layout compacto (una columna)
  */
 export function WeeklyAttendanceView({
     weeklyData = [],
@@ -39,9 +47,21 @@ export function WeeklyAttendanceView({
     renderDailyBarChart,
     weeklyTrendProps = {},
     dailyBarChartProps = {},
+    weeklyTitle,
+    weeklySubtitle,
+    dailyTitle,
+    currentWeekLabel,
+    maxWeeks = 5,
+    showTrend = true,
+    colorByPerformance = false,
+    academicPeriod,
+    isSmall = false,
 }) {
     // Estado: semana seleccionada (null = semana actual)
     const [selectedWeek, setSelectedWeek] = useState(null);
+    const { theme } = useTheme();
+    const c = theme.colors;
+    const { t } = useTranslation();
 
     // Determinar qué datos diarios mostrar
     const displayedDailyData = selectedWeek?.dailyData || currentWeekData;
@@ -76,21 +96,92 @@ export function WeeklyAttendanceView({
         );
     }
 
-    // Render por defecto: componentes básicos sin wrapper
-    return {
-        weeklyTrendProps: {
-            data: weeklyData,
-            onWeekSelect: handleWeekSelect,
-            selectedWeek: selectedWeek?.week,
-            ...weeklyTrendProps,
-        },
-        dailyBarChartProps: {
-            data: displayedDailyData,
-            ...dailyBarChartProps,
-        },
-        selectedWeek,
-        onResetToCurrentWeek: handleResetToCurrentWeek,
-    };
+    // Render por defecto: los dos gráficos con su título, cada uno en su Card.
+    // Antes esta rama devolvía un objeto de props y React reventaba con
+    // "Objects are not valid as a React child" (dashboard del docente).
+    return (
+        <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
+            <Card style={{ flex: 1 }}>
+                {weeklyTitle ? (
+                    <Text style={{
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: c.text.primary,
+                        marginBottom: 4,
+                    }}>
+                        {weeklyTitle}
+                    </Text>
+                ) : null}
+                {weeklySubtitle ? (
+                    <Text style={{
+                        fontSize: 12,
+                        color: c.text.secondary,
+                        marginBottom: 16,
+                    }}>
+                        {weeklySubtitle}
+                    </Text>
+                ) : null}
+                <WeeklyTrend
+                    data={weeklyData}
+                    onWeekSelect={handleWeekSelect}
+                    selectedWeek={selectedWeek?.week}
+                    maxWeeks={maxWeeks}
+                    showTrend={showTrend}
+                    colorByPerformance={colorByPerformance}
+                    academicPeriod={academicPeriod}
+                />
+            </Card>
+
+            <Card style={{ flex: 1 }}>
+                <View style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: 4,
+                }}>
+                    {dailyTitle ? (
+                        <Text style={{
+                            fontSize: 14,
+                            fontWeight: "600",
+                            color: c.text.primary,
+                        }}>
+                            {dailyTitle}
+                        </Text>
+                    ) : <View />}
+                    {selectedWeek && (
+                        <TouchableOpacity
+                            onPress={handleResetToCurrentWeek}
+                            style={{
+                                paddingHorizontal: 8,
+                                paddingVertical: 3,
+                                borderRadius: 4,
+                                backgroundColor: c.status.info + "15",
+                            }}
+                        >
+                            <Text style={{ fontSize: 10, fontWeight: "600", color: c.status.info }}>
+                                {t("Ver semana actual")}
+                            </Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
+                {currentWeekLabel ? (
+                    <Text style={{
+                        fontSize: 12,
+                        color: c.text.secondary,
+                        marginBottom: 16,
+                    }}>
+                        {selectedWeek?.week || currentWeekLabel}
+                    </Text>
+                ) : null}
+                <DailyBarChart
+                    data={displayedDailyData}
+                    height={100}
+                    showLegend={true}
+                    showSummary={true}
+                />
+            </Card>
+        </View>
+    );
 }
 
 /**

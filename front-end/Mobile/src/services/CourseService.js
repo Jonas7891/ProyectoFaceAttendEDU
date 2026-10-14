@@ -1,4 +1,5 @@
 import { request, GET, POST, PUT, DELETE } from '../api/apiClient';
+import { toSnakeDeep } from '../api/backend';
 import Course from '../models/academic/Course';
 
 const ENDPOINT = 'course';
@@ -19,6 +20,12 @@ export const CourseService = {
   getAll: async (params = {}) => {
     const data = await request({ method: GET, url: ENDPOINT, params, requiresAuth: false });
     return unwrap(data).map(Course.fromApi);
+  },
+
+  // GET /api/v1/course?program_id= no filtra; la ruta anidada GET /api/v1/programs/:id/courses sí.
+  listByProgram: async (id) => {
+    const data = await request({ method: GET, url: `api/v1/programs/${id}/courses`, requiresAuth: false });
+    return unwrap(data).map((x) => Course.fromApi(toSnakeDeep(x)));
   },
 
   getById: async (id) => {

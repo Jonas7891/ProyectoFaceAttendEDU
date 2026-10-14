@@ -9,13 +9,16 @@
 //    {canManageStudents && <UIButton>+ Nuevo</UIButton>}
 //
 //  Roles:
-//    admin   → acceso total
+//    admin   → acceso total; el rol explícito "Super Administrador"
+//              (o sin sede propia) es "Super Admin", el resto es
+//              "Admin de sede"
 //    teacher → acceso parcial (sus cursos, sin gestión de usuarios/ambientes)
 //    student → acceso mínimo (solo su perfil y sus cursos)
 // ============================================================
 
 import { useMemo } from "react";
 import { useAuth } from "../context/AuthContext";
+import { hasSuperAdminRole } from "../core/utils/backendRoles";
 
 // ── Permisos por rol ────────────────────────────────────────
 
@@ -28,9 +31,10 @@ const TAB_LABELS_BY_ROLE = {
     },
     teacher: {
         users: "Alumnos",
+        courses: "Mis cursos",
     },
     student: {
-        users: "Compañeros",
+        courses: "Mis cursos",
     },
 };
 
@@ -40,14 +44,60 @@ function getTabLabel(tabKey, role) {
 
 // ── Cálculo de tabs visibles ────────────────────────────────
 
-function getVisibleTabs(role) {
+function getVisibleTabs(role, isSuperAdmin) {
     switch (role) {
         case "admin":
-            return ["dashboard", "users", "courses", "environments", "reports", "settings"];
+            if (isSuperAdmin) {
+                // Super Admin (rol explícito "Super Administrador"): sin
+                // interés en expedientes de personas concretas (sin
+                // Justificaciones ni Historial): su consulta son las
+                // escuelas ("Escuelas", su sección de gestión) y los
+                // reportes por sede.
+                return [
+                    "dashboard",
+                    "schools",
+                    "reports",
+                    "users",
+                    "courses",
+                    "environments",
+                    "settings",
+                ];
+            }
+            // Admin de sede: gestión de su sede, sin "Historial" de personas
+            // y sin "Sede"/"Contactos" como tabs: viven dentro de Configuración.
+            // "Académico" se cayó por redundante: cursos, fichas y reportes
+            // ya exponen esa información con mucho más detalle.
+            return [
+                "dashboard",
+                "reports",
+                "users",
+                "courses",
+                "environments",
+                "justifications",
+                "settings",
+            ];
         case "teacher":
-            return ["dashboard", "users", "courses", "reports", "settings"];
+            // Sin "Académico" (redundante con "Mis cursos" y Reportes).
+            return [
+                "dashboard",
+                "users",
+                "courses",
+                "reports",
+                "history",
+                "justifications",
+                "settings",
+            ];
         case "student":
-            return ["dashboard", "courses", "settings"];
+            // Sin "users" (Compañeros): el estudiante no necesita consultar
+            // a sus compañeros. "Sede" (con instructores) vive en Configuración.
+            return [
+                "dashboard",
+                "history",
+                "justifications",
+                "academic",
+                "courses",
+                "settings",
+            ];
         default:
             return []; //Vacio aproposito, no queremos fugas aunque alguien logre pasar las validaciones
     }
@@ -55,10 +105,15 @@ function getVisibleTabs(role) {
 
 // ── Cálculo de permisos ──────────────────────────────────────
 
-function buildPermissions(role) {
+function buildPermissions(role, schoolId = null, roleNames = []) {
     const isAdmin = role === "admin";
     const isTeacher = role === "teacher";
     const isStudent = role === "student";
+    // La distinción es explícita en la DB: el rol "Super Administrador"
+    // (007-split-super-admin-role) marca al administrador global. El
+    // fallback por sede cubre cuentas con roles no reconocidos en la
+    // respuesta del backend.
+    const isSuperAdmin = isAdmin && (hasSuperAdminRole(roleNames) || schoolId == null);
 
     return {
         // Estudiantes
@@ -69,7 +124,7 @@ function buildPermissions(role) {
 
         // Cursos
         canViewCourses: true,
-        canManageCourses: isAdmin || isTeacher,
+        canManageCourses: isAdmin,
 
         // Ambientes
         canViewEnvironments: isAdmin || isTeacher,
@@ -81,18 +136,39 @@ function buildPermissions(role) {
         canNotifyAll: isAdmin,
         canViewAllReports: isAdmin,
 
+        // Historial de asistencia (HU-HIST-001: consulta los 3 roles, AC10/AC11/AC12)
+        canViewHistory: true,
+
+        // Justificaciones (HU-JUS-001 alumno · HU-JUS-002 instructor/admin)
+        // Nota: la matriz de acceso marca Instructor ✅ también para enviar, pero las
+        // reglas de navegación y el mapa de pantallas dicen "solo alumnos".
+        canSubmitJustifications: isStudent,
+        canReviewJustifications: isAdmin || isTeacher,
+
+        // Información de la sede (lectura los 3 roles, edición solo admin)
+        canViewSchoolInfo: true,
+        canEditSchoolInfo: isAdmin,
+
+        // Gestión de escuelas (CRUD de sedes): solo el super admin
+        canManageSchools: isSuperAdmin,
+
+        // Sección académica y contactos (solo lectura, los 3 roles)
+        canViewAcademic: true,
+        canViewContacts: true,
+
         // Configuración
         canEditAppearance: true,
         canManageUsers: isAdmin,
         canViewSettings: true,
 
         // Navegación
-        visibleTabs: getVisibleTabs(role),
+        visibleTabs: getVisibleTabs(role, isSuperAdmin),
         getTabLabel: (tabKey) => getTabLabel(tabKey, role),
 
         // Metadatos
         role,
         isAdmin,
+        isSuperAdmin,
         isTeacher,
         isStudent,
     };
@@ -107,5 +183,11 @@ const GUEST_PERMISSIONS = buildPermissions("student");
 export function useRolePermissions() {
     const { user } = useAuth();
 
-    return useMemo(() => (user ? buildPermissions(user.role) : GUEST_PERMISSIONS), [user]);
+    return useMemo(
+        () =>
+            user
+                ? buildPermissions(user.role, user.schoolId ?? null, user.roles ?? [])
+                : GUEST_PERMISSIONS,
+        [user]
+    );
 }

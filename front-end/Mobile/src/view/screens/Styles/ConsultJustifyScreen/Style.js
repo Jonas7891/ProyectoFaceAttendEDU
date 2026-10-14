@@ -20,11 +20,6 @@ activeSectionTab: {
         elevation: 2,
     },
 
-buttonContainer: {
-        marginBottom: Platform.OS === 'ios' ? 60 : 130,
-        marginHorizontal: 20
-    },
-
 cardDate: {
         fontSize: 14,
         fontWeight: "600",
@@ -60,6 +55,18 @@ dateTimeContainer: {
         flexDirection: "row",
         alignItems: "center",
         gap: 8,
+    },
+
+headerBackImageValidJustifications: {
+        width: 26,
+        height: 26,
+    },
+
+headerTopRowValidJustifications: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        marginBottom: 4,
     },
 
 emptyContainer: {
@@ -102,7 +109,6 @@ mainTitleValidJustifications: {
         fontSize: 24,
         fontWeight: "bold",
         color: "#1A1A1A",
-        textAlign: "center",
         paddingTop: Platform.OS === "android" ? 30 : 10,
         marginBottom: 10,
     },

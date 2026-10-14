@@ -55,6 +55,12 @@ def embedding_to_document(entity: FacialEmbedding | FingerprintEmbedding) -> dic
     finger = getattr(entity, "finger_number", None)
     if finger is not None:
         document["finger_number"] = int(finger)
+    raw_sample_b64 = getattr(entity, "raw_sample_b64", None)
+    if raw_sample_b64 is not None:
+        document["raw_sample_b64"] = raw_sample_b64
+    sample_format = getattr(entity, "sample_format", None)
+    if sample_format is not None:
+        document["sample_format"] = int(sample_format)
     if entity.deleted_at is not None:
         document["deleted_at"] = entity.deleted_at
     return document
@@ -79,6 +85,8 @@ def document_to_embedding(
     if biometric_type is BiometricType.FINGERPRINT:
         return FingerprintEmbedding(
             finger_number=int(document["finger_number"]),
+            raw_sample_b64=document.get("raw_sample_b64"),
+            sample_format=document.get("sample_format"),
             **shared,
         )
     return FacialEmbedding(**shared)

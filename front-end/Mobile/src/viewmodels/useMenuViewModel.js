@@ -5,7 +5,7 @@ import {useTheme} from '../view/components/common/ThemeContext';
 import {getHighestRole} from '../utils/getHighestRole';
 import {removeToken} from '../storage/TokenStorage';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
-import {getCurrentUserRole} from "../services/UserService";
+import {getCurrentUserRole, isSuperAdmin as checkIsSuperAdmin} from "../services/UserService";
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 
 export function useMenuViewModel({ onLogout }) {
@@ -15,6 +15,7 @@ export function useMenuViewModel({ onLogout }) {
 
     const [isLoading, setIsLoading] = useState(false);
     const [userRole, setUserRole] = useState(null);
+    const [isSuperAdmin, setIsSuperAdmin] = useState(false);
     const updateKey = useLanguageRefresh();
 
     const loadUserData = useCallback(async () => {
@@ -36,6 +37,9 @@ export function useMenuViewModel({ onLogout }) {
             }
 
             setUserRole(finalRole);
+            try {
+                setIsSuperAdmin(await checkIsSuperAdmin());
+            } catch {}
 
             if (finalRole) {
                 await loadThemeForRole(finalRole);
@@ -83,6 +87,7 @@ export function useMenuViewModel({ onLogout }) {
         isLoading,
         userRole,
         isAdmin,
+        isSuperAdmin,
         updateKey,
         handleLogout,
         navigateTo,

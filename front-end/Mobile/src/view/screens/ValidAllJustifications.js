@@ -2,6 +2,7 @@ import React from "react";
 import {Platform, SafeAreaView, ScrollView, Text, TouchableOpacity, View} from "react-native";
 import {useTranslation} from "react-i18next";
 import {useTheme} from '../components/common/ThemeContext';
+import BackButton from '../components/common/BackButton';
 import styles from "./Styles/ValidAllJustifications/Style";
 import {useJustificationsViewModel} from '../../viewmodels/useValidAllJustificationsViewModel';
 
@@ -55,8 +56,9 @@ export default function JustificationsScreen() {
             key={`${updateKey}`}
         >
             <View style={[styles.validAllJustificationsContainer, { backgroundColor: colors.background,  marginTop: Platform.OS === "ios" ? 0 : 50, marginHorizontal: 10 } ]}>
-                <View style={[styles.validAllJustificationsHeader, { backgroundColor: colors.background }]}>
-                    <Text style={[styles.validAllJustificationsTitle, { color: colors.text }]}>
+                <View style={[styles.validAllJustificationsHeader, { backgroundColor: colors.background, flexDirection: 'row', alignItems: 'center', gap: 8 }]}>
+                    <BackButton onPress={handleBack} />
+                    <Text style={[styles.validAllJustificationsTitle, { color: colors.text, flex: 1 }]}>
                         {t("justifications.validList")}
                     </Text>
                     <View style={[styles.validAllJustificationsBadge, { backgroundColor: colors.primary }]}>
@@ -95,15 +97,6 @@ export default function JustificationsScreen() {
                             </Text>
                         </View>
                     )}
-
-                    <TouchableOpacity
-                        onPress={handleBack}
-                        style={[styles.validAllJustificationsBackButton, { backgroundColor: colors.backButtonBackground, borderColor: colors.separator }]}
-                    >
-                        <Text style={{ color: colors.primary, fontSize: 15, fontWeight: '600' }}>
-                            ← {t('common.back')}
-                        </Text>
-                    </TouchableOpacity>
                 </ScrollView>
             </View>
         </SafeAreaView>

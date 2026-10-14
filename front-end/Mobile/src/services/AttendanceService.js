@@ -15,10 +15,38 @@ function unwrapFirst(data) {
   return arr.length > 0 ? arr[0] : null;
 }
 
+// El endpoint de resumen acepta hasta 300 ids por petición: se parte en lotes de 200.
+const SUMMARY_BATCH = 200;
+
 export const AttendanceService = {
   getAll: async (params = {}) => {
     const data = await request({ method: GET, url: ENDPOINT, params, requiresAuth: false });
     return unwrap(data).map(AttendanceRecord.fromApi);
+  },
+
+  // GET /api/v1/attendance-records/summary?academicActorIds=1,2,... — conteos por actor
+  // agregados en SQL. Devuelve Map<academicActorId, { present, late, absent, justified, total }>.
+  getSummary: async (academicActorIds = []) => {
+    const ids = [...new Set(academicActorIds)].filter((id) => id !== null && id !== undefined);
+    const batches = [];
+    for (let i = 0; i < ids.length; i += SUMMARY_BATCH) batches.push(ids.slice(i, i + SUMMARY_BATCH));
+
+    const responses = await Promise.all(
+      batches.map((batch) =>
+        request({
+          method: GET,
+          url: 'api/v1/attendance-records/summary',
+          params: { academicActorIds: batch.join(',') },
+          requiresAuth: false,
+        }),
+      ),
+    );
+
+    const byActor = new Map();
+    for (const response of responses) {
+      for (const [actorId, counts] of Object.entries(response ?? {})) byActor.set(Number(actorId), counts);
+    }
+    return byActor;
   },
 
   getById: async (id) => {

@@ -1,6 +1,6 @@
-////////////////////////////////////////////////////////////
-// FACEATTEND-EDU — MODELO RELACIONAL CORREGIDO (3FN)
-// v4: Unificación de facial_update_case + fingerprint_update_case
+﻿////////////////////////////////////////////////////////////
+// FACEATTEND-EDU â€” MODELO RELACIONAL CORREGIDO (3FN)
+// v4: UnificaciÃ³n de facial_update_case + fingerprint_update_case
 //     en biometric_update_case (Configuration context)
 // v5: city seeds removed (external API), permission refactored,
 //     justification_type per-school, security_configuration trimmed,
@@ -36,8 +36,10 @@ Table person {
   row_version bigint [not null, default: 1]
 
   indexes {
-    document_number [unique, name: 'uq_person_document']
-    email [name: 'idx_person_email']
+    (document_type, document_number) [unique, name: 'uq_person_document']
+    // Login por correo: unicidad del email entre filas vivas (los NULL siguen
+    // permitidos y un soft-delete libera el correo para reutilizarlo).
+    email [unique, name: 'uq_person_email', where: 'deleted_at IS NULL']
     deleted_at [name: 'idx_person_deleted']
   }
 }
@@ -296,7 +298,7 @@ Table academic_actor {
   person_id uuid [not null]
   actor_type_id smallint [not null]
   school_id int [not null]
-  actor_code varchar [not null, note: 'Código de aprendiz o instructor']
+  actor_code varchar [not null, note: 'CÃ³digo de aprendiz o instructor']
   started_on date [not null]
   ended_on date [null]
   status boolean [not null, default: true]
@@ -405,9 +407,9 @@ Table class_session {
   class_session_id bigint [pk, increment]
   schedule_block_id bigint [not null]
   session_date date [not null]
-  opened_by bigint [null, note: 'academic_actor_id (instructor) que abrió la clase']
+  opened_by bigint [null, note: 'academic_actor_id (instructor) que abriÃ³ la clase']
   opened_at datetime [null]
-  closed_by bigint [null, note: 'academic_actor_id (instructor) que cerró la clase']
+  closed_by bigint [null, note: 'academic_actor_id (instructor) que cerrÃ³ la clase']
   closed_at datetime [null]
   session_status varchar [not null, note: 'ENUM: Open / Closed / Cancelled']
 
@@ -485,6 +487,7 @@ Table justification_type {
   indexes {
     (school_id, name) [unique, name: 'uq_justification_type_school_name']
     school_id [name: 'idx_justification_type_school']
+    (name) [unique, name: 'uq_justification_type_global_name', where: 'school_id IS NULL']
   }
 }
 
@@ -568,13 +571,13 @@ Ref: supporting_document.justification_id > justification.justification_id
 
 
 ////////////////////////////////////////////////////////////
-// BIOMETRIC (NoSQL — colecciones documentales, fuera del modelo SQL)
+// BIOMETRIC (NoSQL â€” colecciones documentales, fuera del modelo SQL)
 ////////////////////////////////////////////////////////////
 // facial_embedding (collection)      -> person_id, template_version, encoding, model_version, enrolled_at, is_active
 // fingerprint_embedding (collection) -> person_id, finger_number, template_version, encoding, model_version, enrolled_at, is_active
 //
 // Estas colecciones NO se modelan como Table en este DBML relacional.
-// Su referencia lógica desde SQL se documenta como texto libre (current_embedding_ref),
+// Su referencia lÃ³gica desde SQL se documenta como texto libre (current_embedding_ref),
 // nunca como Ref: real, por ser cross-paradigm (SQL -> NoSQL).
 
 
@@ -626,66 +629,6 @@ Ref: alert.alert_type_id > alert_type.alert_type_id
 
 
 ////////////////////////////////////////////////////////////
-// AUDIT
-////////////////////////////////////////////////////////////
-
-Table audit_log {
-  audit_log_id bigint [pk, increment]
-  school_id int [null]
-  actor_id uuid [null]
-  action varchar [not null]
-  aggregate_type varchar [not null]
-  aggregate_id varchar [null]
-  description text [null]
-  source_ip varchar [null]
-  application varchar [null]
-  occurred_at datetime [not null]
-
-  created_at datetime [not null]
-  updated_at datetime [not null]
-  deleted_at datetime [null]
-  created_by uuid [null]
-  updated_by uuid [null]
-  deleted_by uuid [null]
-  row_version bigint [not null, default: 1]
-
-  indexes {
-    actor_id [name: 'idx_audit_actor']
-    (aggregate_type, aggregate_id) [name: 'idx_audit_aggregate']
-    occurred_at [name: 'idx_audit_date']
-    school_id [name: 'idx_audit_school']
-  }
-}
-
-Table error_log {
-  error_id bigint [pk, increment]
-  school_id int [null]
-  user_id uuid [null]
-  error_type varchar [not null]
-  description text [not null]
-  source_ip varchar [null]
-  application varchar [null]
-  occurred_at datetime [not null]
-
-  created_at datetime [not null]
-  updated_at datetime [not null]
-  deleted_at datetime [null]
-  created_by uuid [null]
-  updated_by uuid [null]
-  deleted_by uuid [null]
-  row_version bigint [not null, default: 1]
-
-  indexes {
-    user_id [name: 'idx_error_user']
-    occurred_at [name: 'idx_error_date']
-    school_id [name: 'idx_error_school']
-  }
-}
-
-// Cross-context (sin FK): actor_id/user_id -> Identity.app_user, school_id -> Academic.school
-
-
-////////////////////////////////////////////////////////////
 // CONFIGURATION
 ////////////////////////////////////////////////////////////
 
@@ -727,14 +670,15 @@ Table biometric_update_case {
   person_id uuid [not null]
   biometric_type varchar [not null, note: 'ENUM: FACIAL / FINGERPRINT']
   finger_number smallint [null, note: 'Obligatorio solo si biometric_type = FINGERPRINT (1..10); nulo si es FACIAL']
-  current_embedding_ref varchar [null, note: '_id lógico del documento activo en facial_embedding o fingerprint_embedding (NoSQL). Sin FK real: cross-paradigm.']
+  chk_finger_number finger_number [note: 'CHECK: (biometric_type = FINGERPRINT AND finger_number BETWEEN 1 AND 10) OR (biometric_type = FACIAL AND finger_number IS NULL)']
+  current_embedding_ref varchar [null, note: '_id lÃ³gico del documento activo en facial_embedding o fingerprint_embedding (NoSQL). Sin FK real: cross-paradigm.']
   reason text [not null]
-  update_status varchar [not null, note: 'ENUM: Pending / In_Review / Approved / Rejected']
-  requested_by uuid [null, note: 'app_user.user_id (cross-context)']
-  requested_at datetime [null]
+  update_status varchar [not null, default: 'Pending', note: 'ENUM: Pending / In_Review / Approved / Rejected']
+  requested_by uuid [not null, note: 'app_user.user_id (cross-context)']
+  requested_at datetime [not null]
   reviewed_by uuid [null, note: 'app_user.user_id (cross-context)']
   reviewed_at datetime [null]
-  resolution_notes varchar [null]
+  resolution_notes text [null]
 
   created_at datetime [not null]
   updated_at datetime [not null]
@@ -760,7 +704,181 @@ Table biometric_update_case {
 
 
 ////////////////////////////////////////////////////////////
-// BOUNDED CONTEXTS (Agrupación visual)
+// QUALITY
+// Instrumento ISO/IEC 25010, ISO/IEC 29110 e ISTQB de 09-ms-quality.
+// Hospedaje físico transitorio en el schema `quality` dentro de
+// 07-ms-configuration-db (no existe changelog propio para 09-ms-quality).
+// Catálogos de subcaracterísticas/objetivos/ítems viven en código
+// (09-ms-quality/src/domain/{iso25010,iso29110,istqb}.ts), no en tablas.
+////////////////////////////////////////////////////////////
+
+Table quality_project {
+  project_id bigint [pk, increment]
+  project_name varchar [not null]
+  description varchar [null]
+  customer varchar [null, note: 'Cliente/usuario que acepta la entrega (evidencia WP10)']
+  planned_start_on date [null]
+  planned_end_on date [null]
+  chk_quality_project_dates planned_start_on [note: 'CHECK: planned_start_on <= planned_end_on']
+  project_status varchar [not null, default: 'Planned', note: 'ENUM: Planned / Active / Closed']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    project_status [name: 'idx_quality_project_status']
+    deleted_at [name: 'idx_quality_project_deleted']
+  }
+}
+
+Table quality_evaluation {
+  evaluation_id bigint [pk, increment]
+  service_name varchar [not null, note: 'Microservicio evaluado, ej. 03-ms-academic (sin FK)']
+  evaluator_name varchar [not null]
+  evaluation_scope varchar [not null]
+  project_id bigint [null, note: 'Trazabilidad ISO/IEC 29110 SI.O2']
+  evaluation_status varchar [not null, default: 'Draft', note: 'ENUM: Draft / Completed']
+  comments text [null]
+  global_score decimal [null, note: 'Puntaje ponderado 1-5, derivado de quality_evaluation_item']
+  percentage decimal [null]
+  quality_level varchar [null, note: 'ENUM: Deficiente / En proceso / Aceptable / Bueno / Excelente']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    service_name [name: 'idx_quality_evaluation_service']
+    evaluation_status [name: 'idx_quality_evaluation_status']
+    project_id [name: 'idx_quality_evaluation_project']
+    deleted_at [name: 'idx_quality_evaluation_deleted']
+  }
+}
+
+Table quality_evaluation_item {
+  evaluation_item_id bigint [pk, increment]
+  evaluation_id bigint [not null]
+  subcharacteristic_code varchar [not null, note: 'Catálogo ISO/IEC 25010 en código, sin FK']
+  score smallint [not null, note: 'CHECK: 1..5']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes { (evaluation_id, subcharacteristic_code) [unique, name: 'uq_quality_evaluation_item_code'] }
+}
+
+Table process_assessment {
+  assessment_id bigint [pk, increment]
+  project_id bigint [not null]
+  process_code varchar [not null, note: 'ENUM: PM (Gestión de Proyecto) / SI (Implementación de Software)']
+  assessor_name varchar [not null]
+  assessment_status varchar [not null, default: 'Draft', note: 'ENUM: Draft / Completed']
+  comments text [null]
+  process_score decimal [null, note: '% de logro 0-100, derivado de process_assessment_rating']
+  process_rating varchar [null, note: 'ENUM: N / P / L / F']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    project_id [name: 'idx_process_assessment_project']
+    process_code [name: 'idx_process_assessment_process']
+    deleted_at [name: 'idx_process_assessment_deleted']
+  }
+}
+
+Table process_assessment_rating {
+  process_rating_id bigint [pk, increment]
+  assessment_id bigint [not null]
+  objective_code varchar [not null, note: 'Catálogo ISO/IEC 29110 en código, ej. PM.O1, sin FK']
+  objective_rating varchar [not null, note: 'ENUM: N / P / L / F']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes { (assessment_id, objective_code) [unique, name: 'uq_process_assessment_rating_objective'] }
+}
+
+Table istqb_assessment {
+  istqb_assessment_id bigint [pk, increment]
+  service_name varchar [not null, note: 'Microservicio evaluado (sin FK)']
+  evaluator_name varchar [not null]
+  assessment_scope varchar [not null]
+  project_id bigint [null, note: 'Trazabilidad ISO/IEC 29110 SI.O2/SI.O7']
+  assessment_status varchar [not null, default: 'Draft', note: 'ENUM: Draft / Completed']
+  comments text [null]
+  global_score decimal [null]
+  percentage decimal [null]
+  quality_level varchar [null, note: 'ENUM: Deficiente / En proceso / Aceptable / Bueno / Excelente']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    service_name [name: 'idx_istqb_assessment_service']
+    assessment_status [name: 'idx_istqb_assessment_status']
+    project_id [name: 'idx_istqb_assessment_project']
+    deleted_at [name: 'idx_istqb_assessment_deleted']
+  }
+}
+
+Table istqb_assessment_item {
+  istqb_assessment_item_id bigint [pk, increment]
+  istqb_assessment_id bigint [not null]
+  item_code varchar [not null, note: 'Catálogo ISTQB CTFL v4.0 en código, sin FK']
+  score smallint [not null, note: 'CHECK: 1..5']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes { (istqb_assessment_id, item_code) [unique, name: 'uq_istqb_assessment_item_code'] }
+}
+
+// Relaciones internas (Quality)
+Ref: quality_evaluation.project_id > quality_project.project_id
+Ref: quality_evaluation_item.evaluation_id > quality_evaluation.evaluation_id
+Ref: process_assessment.project_id > quality_project.project_id
+Ref: process_assessment_rating.assessment_id > process_assessment.assessment_id
+Ref: istqb_assessment.project_id > quality_project.project_id
+Ref: istqb_assessment_item.istqb_assessment_id > istqb_assessment.istqb_assessment_id
+
+
+////////////////////////////////////////////////////////////
+// BOUNDED CONTEXTS (AgrupaciÃ³n visual)
 ////////////////////////////////////////////////////////////
 
 TableGroup Identity [color: #3498DB] {
@@ -807,17 +925,23 @@ TableGroup Notification [color: #f1c40f] {
   alert
 }
 
-TableGroup Audit [color: #95a5a6] {
-  audit_log
-  error_log
-}
-
 TableGroup Configuration [color: #34495e] {
   academic_configuration
   security_configuration
   biometric_update_case
 }
 
+TableGroup Quality [color: #8e44ad] {
+  quality_project
+  quality_evaluation
+  quality_evaluation_item
+  process_assessment
+  process_assessment_rating
+  istqb_assessment
+  istqb_assessment_item
+}
+
 // Nota: el grupo "Biometric" ya no contiene tablas SQL en este archivo.
 // facial_embedding y fingerprint_embedding viven como colecciones NoSQL
 // documentadas aparte (modelo_conceptual.md), fuera del alcance de este DBML.
+// El grupo "Audit" fue removido: la observabilidad la provee la plataforma.

@@ -17,8 +17,13 @@
 
 import React, { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
+import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { isValidEmail } from "../core/utils/validation";
+
+// Usuarios pintados por página (la vista de Usuarios pagina en el cliente
+// para no cargar miles de filas de golpe en el DOM).
+export const USERS_PAGE_SIZE = 25;
 
 // ── Tipos de usuario ───────────────────────────────────────
 
@@ -148,6 +153,7 @@ export function useUsersViewModel(
     initialFilterColumn = null
 ) {
     const appData = useAppData();
+    const { user } = useAuth();
     const { t } = useTranslation();
 
     const [search, setSearch] = useState(initialSearchQuery || "");
@@ -213,16 +219,74 @@ export function useUsersViewModel(
         return [...students, ...teachers, ...admins];
     }, [appData.students, appData.teachers, appData.admins]);
 
-    // ── Programas únicos para filtro ──────────────────────────
-    
-    const courses = useMemo(
-        () => appData.programs.map((p) => ({
-            value: p.name,
-            label: p.name,
-            icon: "book-open"
-        })),
-        [appData.programs]
-    );
+    // ── Alcance por rol: "mis estudiantes" (teacher) / "mis compañeros" (student) ──
+    // Teacher: estudiantes matriculados en fichas donde es instructor.
+    // Student: compañeros matriculados en su misma ficha (excluyéndose a sí mismo).
+    // RN de dominio: schedule_block.instructor_actor_id / enrollment.cohort_id
+    // (ver 02-domain/entities-and-rules.md, HU-ACAD-003/004).
+
+    const myCourseIds = useMemo(() => {
+        if (!user || user.role !== "teacher") return null;
+        return (appData.courses || [])
+            .filter((c) => Array.isArray(c.instructorActorIds) && c.instructorActorIds.includes(user.academicActorId))
+            .map((c) => c.id);
+    }, [appData.courses, user]);
+
+    const myStudentRecord = useMemo(() => {
+        if (!user || user.role !== "student") return null;
+        return (appData.students || []).find((s) => s.personId === user.personId) || null;
+    }, [appData.students, user]);
+
+    const scopedUsers = useMemo(() => {
+        if (!user || user.role === "admin") return allUsers;
+
+        if (user.role === "teacher") {
+            if (!myCourseIds) return [];
+            // Una ficha cursa varios cursos a la vez (un bloque por curso, cada
+            // uno con su propio instructor): hay que mirar TODOS los cursos del
+            // estudiante (courseIds), no solo el primero que trae su registro.
+            return allUsers.filter(
+                (u) =>
+                    u.userType === USER_TYPES.STUDENT &&
+                    Array.isArray(u.courseIds) &&
+                    u.courseIds.some((id) => myCourseIds.includes(id))
+            );
+        }
+
+        if (user.role === "student") {
+            if (!myStudentRecord) return [];
+            // "Compañeros" = misma ficha (cohortId), no el mismo curso puntual:
+            // dos compañeros de ficha pueden tener cursos distintos entre sí
+            // en algún bloque, pero siguen siendo compañeros de ficha.
+            return allUsers.filter(
+                (u) =>
+                    u.userType === USER_TYPES.STUDENT &&
+                    u.cohortId != null &&
+                    u.cohortId === myStudentRecord.cohortId &&
+                    u.id !== myStudentRecord.id
+            );
+        }
+
+        return allUsers;
+    }, [allUsers, user, myCourseIds, myStudentRecord]);
+
+    // ── Cursos reales para el filtro de Curso ──────────────────
+    // El docente solo ve los cursos donde es instructor (myCourseIds);
+    // el admin, todos los de la sede activa. Se compara por id: el
+    // código y el nombre se repiten entre sedes.
+    const courseOptions = useMemo(() => {
+        const source = (appData.courses || []).filter(
+            (course) => !myCourseIds || myCourseIds.includes(course.id)
+        );
+        return [
+            { value: "", label: t("Todos los cursos"), icon: "filter" },
+            ...source.map((course) => ({
+                value: String(course.id),
+                label: course.name,
+                icon: "book-open",
+            })),
+        ];
+    }, [appData.courses, myCourseIds, t]);
 
     // ── Filtros de tipo de usuario ────────────────────────────
     
@@ -245,7 +309,7 @@ export function useUsersViewModel(
     
     const filteredUsers = useMemo(
         () => {
-            let result = allUsers.filter((user) => {
+            let result = scopedUsers.filter((user) => {
                 // Filtro de búsqueda por nombre, código o email
                 const matchSearch = !search ||
                     user.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -257,10 +321,13 @@ export function useUsersViewModel(
                 const matchUserType = effectiveUserTypeFilter === USER_TYPES.ALL || 
                     user.userType === effectiveUserTypeFilter;
                 
-                // Filtro por curso (solo aplicable a estudiantes)
-                const matchCourse = !courseFilter || 
-                    user.course === courseFilter ||
-                    user.userType !== USER_TYPES.STUDENT;
+                // Filtro por curso (solo aplica a estudiantes): compara por id
+                // (único entre sedes) con fallback al código/nombre del mock
+                const matchCourse = !courseFilter ||
+                    user.userType !== USER_TYPES.STUDENT ||
+                    (Array.isArray(user.courseIds) && user.courseIds.map(String).includes(courseFilter)) ||
+                    user.courseId === courseFilter ||
+                    user.course === courseFilter;
                 
                 // Filtro por estado
                 const matchStatus = !statusFilter || user.status === statusFilter;
@@ -332,7 +399,22 @@ export function useUsersViewModel(
             
             return result;
         },
-        [allUsers, search, userTypeFilter, courseFilter, statusFilter, advancedFilter, roleFilterFromSection, sortBy, sortOrder]
+        [scopedUsers, search, userTypeFilter, courseFilter, statusFilter, advancedFilter, roleFilterFromSection, sortBy, sortOrder]
+    );
+
+    // ── Paginación ────────────────────────────────────────────
+    // El listado completo (AppData) alimenta además reportes y paneles,
+    // así que no se recorta la consulta: se limita lo que se pinta por
+    // pantalla en páginas de USERS_PAGE_SIZE y se pagina en el cliente.
+    const [page, setPage] = useState(0);
+    const totalUsers = filteredUsers.length;
+    const totalPages = Math.max(1, Math.ceil(totalUsers / USERS_PAGE_SIZE));
+    // Recorte sin useEffect: si los filtros dejan la página fuera de rango
+    // se usa la última válida (regla de hooks: nada de setState en efecto).
+    const safePage = Math.min(page, totalPages - 1);
+    const pageUsers = filteredUsers.slice(
+        safePage * USERS_PAGE_SIZE,
+        safePage * USERS_PAGE_SIZE + USERS_PAGE_SIZE
     );
 
     // ── Estadísticas derivadas ─────────────────────────────────
@@ -469,7 +551,14 @@ export function useUsersViewModel(
         // Datos
         allUsers,
         filteredUsers,
-        courses,
+        // Paginación (solo lo que se pinta por página)
+        pageUsers,
+        page: safePage,
+        totalPages,
+        totalUsers,
+        pageSize: USERS_PAGE_SIZE,
+        setPage,
+        courseOptions,
         userTypeFilters,
         statusFilters,
         selected,

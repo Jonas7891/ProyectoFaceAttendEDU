@@ -171,9 +171,12 @@ export function useLoginViewModel(onSuccess) {
         const result = await login({
             email: emailRef.current,
             password: passwordRef.current,
-        });
+        }).catch((e) => (typeof e === "string" ? e : e?.message || "No se pudo iniciar sesión"));
 
-        // Detener animación de progreso
+        // Detener animación de progreso y desbloquear el botón SIEMPRE,
+        // incluso si login() lanzó en vez de devolver un string: sin esto
+        // un throw inesperado dejaba el spinner colgado y la promesa sin
+        // manejar, sin ningún mensaje para el usuario.
         clearInterval(progressInterval);
         setLoading(false);
 
@@ -453,35 +456,22 @@ export function useSignupViewModel(onSuccess) {
         return isValid;
     }
 
-    async function handleRegister() {
+    // El backend no expone un endpoint público de auto-registro: las cuentas
+    // las crea un administrador (POST /api/v1/users). No hay onSuccess real
+    // que llamar aquí, solo informar al usuario en vez de fingir un alta.
+    function handleRegister() {
         if (!validate()) return;
-        
+
         setLoading(true);
-        
-        const result = await register({
-            username: usernameRef.current,
-            email: emailRef.current,
-            password: passwordRef.current,
-        });
-
-        setLoading(false);
-        
-        // Manejar el resultado (puede ser string de error o objeto con success/redirectRoute)
-        const isError = typeof result === 'string';
-        const err = isError ? result : null;
-        const redirectRoute = !isError && result?.redirectRoute ? result.redirectRoute : null;
-
-        if (err) {
-            // TODO: manejar errores de registro
-            console.error('Register error:', err);
-        } else {
-            // Registro exitoso - NO pasar redirectRoute (por diseño)
-            onSuccess({
-                username: usernameRef.current,
-                email: emailRef.current,
-                password: passwordRef.current,
-            });
-        }
+        setTimeout(() => {
+            setLoading(false);
+            setUsernameError(t("El autorregistro no está disponible. Contacta a tu administrador."));
+            setUsernameValid(false);
+            setShakeFields({ username: true, email: false, password: false });
+            setTimeout(() => {
+                setShakeFields({ username: false, email: false, password: false });
+            }, 300);
+        }, 400);
     }
 
     return {

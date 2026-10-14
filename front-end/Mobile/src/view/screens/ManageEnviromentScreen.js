@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     FlatList,
     Keyboard,
@@ -19,6 +19,7 @@ import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import {useCustomAlert} from '../components/common/useCustomAlert';
 import CustomAlert from '../components/common/CustomAlert';
+import BackButton from '../components/common/BackButton';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import {useManageEnvironmentViewModel} from '../../viewmodels/useManageEnvironmentViewModel';
 
@@ -33,7 +34,14 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
         addAmbiente,
         updateAmbiente,
         deleteAmbiente,
-    } = useManageEnvironmentViewModel();
+    } = useManageEnvironmentViewModel(userRole === 'Administrador');
+
+    useEffect(() => {
+        if (userRole && userRole !== 'Administrador') {
+            showError(t('manageUsers.accessDenied'), t('manageUsers.onlyAdmins'));
+            navigation.goBack();
+        }
+    }, [userRole, navigation, showError]);
 
     const [modalVisible, setModalVisible] = useState(false);
     const [modalMode, setModalMode] = useState(null);
@@ -88,6 +96,14 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
         }
         if (!form.ubicacion) {
             showError(t('manageAmbientes.validation'), t('manageAmbientes.locationRequired'));
+            return;
+        }
+        if (!form.tipo) {
+            showError(t('manageAmbientes.validation'), t('manageAmbientes.typeRequired'));
+            return;
+        }
+        if (!form.capacidad || isNaN(form.capacidad) || Number(form.capacidad) <= 0) {
+            showError(t('manageAmbientes.validation'), t('manageAmbientes.capacityInvalid'));
             return;
         }
 
@@ -252,8 +268,9 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
             <SafeAreaView style={[styles.manageEnvironmentContainer, {backgroundColor: colors.background}]}>
-                <View style={styles.manageEnvironmentHeader}>
-                    <Text style={[styles.manageEnvironmentTitle, {color: colors.text}]}>
+                <View style={[styles.manageEnvironmentHeader, { flexDirection: 'row', alignItems: 'center', gap: 8 }]}>
+                    <BackButton onPress={handleBack} />
+                    <Text style={[styles.manageEnvironmentTitle, {color: colors.text, flex: 1}]}>
                         {t('manageAmbientes.title')}
                     </Text>
                 </View>
@@ -293,10 +310,6 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
                         </View>
                     )}
                 />
-
-                <View style={styles.manageEnviromentButtonContainer}>
-                    <PrimaryButton title={t('common.back')} onPress={handleBack}/>
-                </View>
 
                 {/* ===== MODAL ===== */}
                 <Modal

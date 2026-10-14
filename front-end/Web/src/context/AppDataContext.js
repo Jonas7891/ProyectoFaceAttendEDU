@@ -13,7 +13,10 @@
 //    const { students, addStudent, ... } = useAppData();
 // ============================================================
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+
+import { resetReferenceData, setActiveSchool } from "../services/api/referenceData";
+import { useAuth } from "./AuthContext";
 
 import {
     loadStudents,
@@ -53,11 +56,38 @@ import {
     deleteCourse as storageDeleteCourse,
 } from "../models/data/CourseStorage";
 
-import { mockTeachers, mockAdmins } from "../models/data/mockData";
 import { calculateStudentCurrentPeriod } from "../core/utils/studentPeriodCalculator";
 import { getConfiguredAcademicPeriodType } from "../core/constants/academicPeriods";
 import { getStudentPeriodFromData } from "../core/utils/studentPeriodCalculator";
 import { onInstitutionConfigChange } from "../core/config/institutionConfig";
+
+// ── Filas de personal (docentes / administradores) ─────────
+// Los usuarios vienen de la API con role admin|teacher|student;
+// aquí se completan los campos que la vista de personal espera y
+// que el backend aún no expone (asistencia, biométricos).
+
+function toStaffRow(user) {
+    return {
+        ...user,
+        grade: user.role === "admin" ? "Administrador" : "Docente",
+        attendance: 0, // pendiente de la fase de consulta
+        hasFacial: false,
+        hasFingerprint: false,
+    };
+}
+
+function splitStaff(users) {
+    const list = Array.isArray(users) ? users : [];
+    return {
+        teacherRows: list.filter((u) => u.role === "teacher").map(toStaffRow),
+        adminRows: list.filter((u) => u.role === "admin").map(toStaffRow),
+    };
+}
+
+// ── Revelado progresivo (efecto persiana) ─────────────────
+// Tandas fijas: la animación tarda lo mismo con 20 filas que con 2.000.
+const REVEAL_STEPS = 12;
+const REVEAL_INTERVAL_MS = 150;
 
 // ── Context ───────────────────────────────────────────────
 
@@ -67,14 +97,13 @@ const AppDataContext = createContext(null);
 
 export function AppDataProvider({ children }) {
     const [students, setStudents] = useState([]);
-    const [teachers] = useState(mockTeachers); // Mock data - TODO: cargar desde storage
-    const [admins] = useState(mockAdmins); // Mock data - TODO: cargar desde storage
     const [users, setUsers] = useState([]);
     const [environments, setEnvironments] = useState([]);
     const [fichas, setFichas] = useState([]);
     const [courses, setCourses] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    
+    const [loadError, setLoadError] = useState(null);
+
     // Estados para carga progresiva de usuarios
     const [loadedStudents, setLoadedStudents] = useState([]);
     const [loadedTeachers, setLoadedTeachers] = useState([]);
@@ -90,27 +119,10 @@ export function AppDataProvider({ children }) {
         setRefreshTrigger(prev => prev + 1);
     }, []);
 
-    // Carga inicial de datos base (environments, fichas, courses)
-    useEffect(() => {
-        Promise.all([
-            loadStudents(), 
-            loadUsers(), 
-            loadEnvironments(), 
-            loadFichas(),
-            loadCourses()
-        ]).then(([s, u, e, f, c]) => {
-            setStudents(s);
-            setUsers(u);
-            setEnvironments(e);
-            setFichas(f);
-            setCourses(c);
-            setIsLoading(false);
-            
-            // Iniciar carga progresiva de usuarios después de cargar datos base
-            startProgressiveUserLoading(s, c);
-        });
-    }, []);
-    
+    // Temporizador del revelado: se guarda para poder cancelarlo al cerrar sesión o
+    // al desmontar. Sin esto un login tras un logout dejaba dos revelados en marcha.
+    const revealTimer = useRef(null);
+
     // Escuchar cambios en la configuración institucional
     useEffect(() => {
         const cleanup = onInstitutionConfigChange((newConfig) => {
@@ -154,8 +166,7 @@ export function AppDataProvider({ children }) {
             
             setLoadedStudents(enrichedStudents);
         }
-    }, [periodType, courses]); // REMOVED: students, loadedStudents from dependencies
-    
+    }, [periodType, courses]); // REMOVED: students, loadedStudents from dependencies    
     // Cursos enriquecidos con período calculado (fuente de verdad)
     const enrichedCourses = useMemo(() => {
         if (!courses || courses.length === 0) return courses;
@@ -177,7 +188,7 @@ export function AppDataProvider({ children }) {
     }, [courses, periodType]);
     
     // Carga progresiva de usuarios (efecto persiana)
-    const startProgressiveUserLoading = useCallback((allStudents, allCourses) => {
+    const startProgressiveUserLoading = useCallback((allStudents, allCourses, allUsers) => {
         setIsLoadingUsers(true);
         setLoadedStudents([]);
         setLoadedTeachers([]);
@@ -200,9 +211,10 @@ export function AppDataProvider({ children }) {
         // Luego, estudiantes heredan el período de su curso
         const enrichedStudents = allStudents.map(student => {
             // Buscar el curso del estudiante
-            const studentCourse = coursesWithPeriod.find(
-                c => c.code === student.course || c.name === student.course || c.id === student.course
-            );
+            // Por id: buscar por code o name devolvia el primer curso homonimo, que
+            // puede ser el de la otra sede.
+            const studentCourse = coursesWithPeriod.find((c) => String(c.id) === student.courseId)
+                ?? coursesWithPeriod.find((c) => c.code === student.course || c.name === student.course);
             
             // Heredar el período del curso
             return {
@@ -212,58 +224,132 @@ export function AppDataProvider({ children }) {
             };
         });
         
-        // Combinar todos los usuarios
-        const allUsersToLoad = [
-            ...enrichedStudents,
-            ...mockTeachers,
-            ...mockAdmins,
-        ];
-        
-        // Cargar usuarios progresivamente (cada 150ms)
-        let currentIndex = 0;
+        // Combinar todos los usuarios (el personal sale de la API, no de mocks)
+        const { teacherRows, adminRows } = splitStaff(allUsers);
+        const total = enrichedStudents.length + teacherRows.length + adminRows.length;
+
+        // Revelado progresivo por tandas. Antes se revelaba UNA fila cada 150 ms con
+        // `prev => [...prev, user]`: con 1.688 estudiantes eran ~4,2 min de espera y
+        // una copia del arreglo completo por fila (coste cuadrático), con la vista
+        // re-renderizando 1.688 veces. Ahora la animación siempre dura REVEAL_STEPS
+        // tandas, así que el coste no depende del tamaño del conjunto de datos.
+        clearInterval(revealTimer.current);
+
+        let revealed = 0;
+        const step = Math.max(1, Math.ceil(total / REVEAL_STEPS));
+        const clamp = (value, max) => Math.min(Math.max(value, 0), max);
+
         const loadInterval = setInterval(() => {
-            if (currentIndex < allUsersToLoad.length) {
-                const user = allUsersToLoad[currentIndex];
-                
-                // Agregar al array correspondiente según tipo
-                if (currentIndex < enrichedStudents.length) {
-                    setLoadedStudents(prev => [...prev, user]);
-                } else if (currentIndex < enrichedStudents.length + mockTeachers.length) {
-                    setLoadedTeachers(prev => [...prev, user]);
-                } else {
-                    setLoadedAdmins(prev => [...prev, user]);
-                }
-                
-                currentIndex++;
-            } else {
-                // Terminó de cargar todos
+            revealed = Math.min(revealed + step, total);
+
+            // slice() sobre el origen en vez de acumular: una copia por tanda, no por fila.
+            setLoadedStudents(enrichedStudents.slice(0, clamp(revealed, enrichedStudents.length)));
+            setLoadedTeachers(
+                teacherRows.slice(0, clamp(revealed - enrichedStudents.length, teacherRows.length))
+            );
+            setLoadedAdmins(
+                adminRows.slice(
+                    0,
+                    clamp(revealed - enrichedStudents.length - teacherRows.length, adminRows.length)
+                )
+            );
+
+            if (revealed >= total) {
                 clearInterval(loadInterval);
                 setIsLoadingUsers(false);
             }
-        }, 150); // 150ms entre cada usuario (ajustable)
-        
+        }, REVEAL_INTERVAL_MS);
+
+        revealTimer.current = loadInterval;
         return () => clearInterval(loadInterval);
     }, [periodType]);
+
+    // ── Carga de datos base (environments, fichas, courses) ────
+    // Solo con sesión: sin token todas las peticiones responderían 401 y
+    // caeríamos al mock de respaldo sin reintentar (el efecto no se vuelve
+    // a ejecutar). Al cerrar sesión se limpia todo, incluida la caché de
+    // datos de referencia, para no arrastrar datos de otra sesión.
+    const { user, isLoadingAuth } = useAuth();
+
+    useEffect(() => {
+        if (isLoadingAuth) return undefined; // aún restaurando la sesión guardada
+
+        if (!user) {
+            // Sin sesión no hay nada que pedir; se olvida la caché de
+            // referencia para que el próximo login vuelva a consultar.
+            // El estado cargado se reemplaza entero al iniciar sesión.
+            resetReferenceData();
+            return undefined;
+        }
+
+        // La sede del usuario acota todas las cargas de abajo. Debe fijarse ANTES
+        // de pedir nada: setActiveSchool limpia la caché si la sede cambió.
+        setActiveSchool(user.schoolId ?? null);
+
+        let cancelled = false;
+        // allSettled en vez de all: si UNA carga falla (p. ej. /cohorts), las
+        // demás (usuarios, ambientes, cursos...) sí se muestran; antes un solo
+        // rechazo descartaba todo y el Inicio del docente quedaba vacío.
+        Promise.allSettled([
+            loadStudents(),
+            loadUsers(),
+            loadEnvironments(),
+            loadFichas(),
+            loadCourses(),
+        ]).then((results) => {
+            if (cancelled) return;
+            const [s, u, e, f, c] = results.map((r) =>
+                r.status === "fulfilled" ? r.value : []
+            );
+            const failed = results.filter((r) => r.status === "rejected");
+            if (failed.length > 0) {
+                const messages = failed.map((r) => r.reason?.message || "error desconocido");
+                console.error("[FaceAttend] AppDataContext: cargas parciales fallidas —", messages.join(" | "));
+                setLoadError(messages[0]);
+            } else {
+                setLoadError(null);
+            }
+            setStudents(s);
+            setUsers(u);
+            setEnvironments(e);
+            setFichas(f);
+            setCourses(c);
+            setIsLoading(false);
+
+            // Carga progresiva de usuarios (efecto persiana)
+            startProgressiveUserLoading(s, c, u);
+        });
+
+        return () => {
+            cancelled = true;
+            clearInterval(revealTimer.current); // corta un revelado a medias
+        };
+    }, [isLoadingAuth, user, startProgressiveUserLoading]);
 
     // ── Programs derivados (sin storage propio) ───────────
 
     const programs = useMemo(() => {
+        const byId = new Map(courses.map((c) => [String(c.id), c]));
         const map = new Map();
         // Usar loadedStudents para que se actualice progresivamente
         for (const s of loadedStudents) {
             if (!s.course?.trim()) continue;
-            
-            // Buscar el curso completo para obtener su nombre
-            const course = courses.find(c => c.code === s.course || c.name === s.course);
-            const courseName = course ? course.name : s.course;
-            
-            if (!map.has(courseName)) map.set(courseName, { attendance: [], active: 0, code: s.course });
-            const entry = map.get(courseName);
+
+            // Se agrupa por courseId, no por nombre: "Lengua Castellana" existe una vez
+            // por sede, y agrupar por nombre fundia las dos en una sola fila sumando los
+            // estudiantes de ambas.
+            const course = s.courseId ? byId.get(s.courseId) : null;
+            const key = course ? String(course.id) : s.course;
+
+            if (!map.has(key)) {
+                map.set(key, { attendance: [], active: 0, code: course?.code ?? s.course, name: course?.name ?? s.course });
+            }
+            const entry = map.get(key);
             entry.attendance.push(s.attendance);
             if (s.status === "active") entry.active += 1;
         }
-        return Array.from(map.entries())
-            .map(([name, { attendance, active, code }]) => ({
+        return Array.from(map.values())
+            .map(({ attendance, active, code, name }) => ({
                 name,
                 code, // Incluir el código del curso
                 studentCount: attendance.length,
@@ -512,6 +598,7 @@ export function AppDataProvider({ children }) {
     const value = useMemo(
         () => ({
             isLoading: isLoading || isLoadingUsers, // Incluye carga progresiva de usuarios
+            loadError,
 
             students: loadedStudents, // Usuarios cargados progresivamente
             addStudent: addStudentFn,
@@ -554,6 +641,7 @@ export function AppDataProvider({ children }) {
         [
             isLoading,
             isLoadingUsers,
+            loadError,
             loadedStudents,
             loadedTeachers,
             loadedAdmins,

@@ -5,6 +5,7 @@ import com.faceattend_edu.authorization_service.domain.exception.EntityNotFoundE
 import com.faceattend_edu.authorization_service.domain.exception.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -65,6 +66,15 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "ISO-8.2-VAL-002",
             "Invalid value for parameter '" + ex.getName() + "'", "8.2", "WARNING");
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleDataIntegrity(DataIntegrityViolationException ex) {
+        // Deleting a role/permission still referenced by role_permission or user_role
+        // hits this FK constraint (intra-context, per AGENTS.md section 2.1) instead
+        // of a clean delete — surface it as a conflict, not a 500.
+        return buildErrorResponse(HttpStatus.CONFLICT, "ISO-8.5-DUP-002",
+            "This resource is still referenced by another record and cannot be deleted", "8.5", "WARNING");
     }
 
     @ExceptionHandler(Exception.class)

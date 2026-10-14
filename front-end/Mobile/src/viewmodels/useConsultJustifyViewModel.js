@@ -25,6 +25,7 @@ export function useValidJustificationsViewModel() {
     const [activeSection, setActiveSection] = useState('inasistencias');
     const updateKey = useLanguageRefresh();
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [inasistenciasData, setInasistenciasData] = useState([]);
     const [retardosData, setRetardosData] = useState([]);
 
@@ -34,10 +35,10 @@ export function useValidJustificationsViewModel() {
         REJECTED: 'rejected',
     };
 
-    useEffect(() => {
-        const fetchData = async () => {
+    const fetchData = useCallback(async () => {
             try {
                 setIsLoading(true);
+                setError(null);
                 const timeLocale =
                     i18n.language === 'en' ? 'en-US'
                     : i18n.language === 'pt' ? 'pt-BR'
@@ -101,12 +102,15 @@ export function useValidJustificationsViewModel() {
                 setRetardosData(lates);
             } catch (error) {
                 console.error('Error fetching justifications:', error);
+                setError(t('justifications.loadError'));
             } finally {
                 setIsLoading(false);
             }
-        };
+    }, [t, i18n.language]);
+
+    useEffect(() => {
         fetchData();
-    }, [i18n.language]);
+    }, [fetchData]);
 
     const currentData = activeSection === 'inasistencias' ? inasistenciasData : retardosData;
 
@@ -117,7 +121,7 @@ export function useValidJustificationsViewModel() {
     }, []);
 
     return {
-        activeSection, setActiveSection, updateKey, isLoading,
+        activeSection, setActiveSection, updateKey, isLoading, error, retry: fetchData,
         inasistenciasData, retardosData, currentData,
         handleBack, getEstadoColor,
     };

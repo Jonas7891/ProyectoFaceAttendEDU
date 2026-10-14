@@ -1,6 +1,7 @@
 import React, {forwardRef, useEffect, useRef, useState} from 'react';
 import {
     Animated,
+    Image,
     Keyboard,
     KeyboardAvoidingView,
     Platform,
@@ -119,6 +120,7 @@ export default function LoginScreen({ onLogin, navigation }) {
 
     const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
     const [isTerminosModalVisible, setIsTerminosModalVisible] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const {
         email, password, terms, isLoading, error, errorTimestamp,
@@ -185,19 +187,42 @@ export default function LoginScreen({ onLogin, navigation }) {
                                         accessibilityLabel={t('login.email')}
                                     />
 
-                                    <FormInput
-                                        ref={passwordInputRef}
-                                        label={t('login.password')}
-                                        colors={colors}
-                                        value={password}
-                                        onChangeText={setPassword}
-                                        placeholder={t('login.passwordPlaceholder')}
-                                        secureTextEntry
-                                        textContentType="password"
-                                        returnKeyType="done"
-                                        onSubmitEditing={Keyboard.dismiss}
-                                        accessibilityLabel={t('login.password')}
-                                    />
+                                    <View>
+                                        <FormInput
+                                            ref={passwordInputRef}
+                                            label={t('login.password')}
+                                            colors={colors}
+                                            value={password}
+                                            onChangeText={setPassword}
+                                            placeholder={t('login.passwordPlaceholder')}
+                                            secureTextEntry={!showPassword}
+                                            textContentType="password"
+                                            returnKeyType="done"
+                                            onSubmitEditing={Keyboard.dismiss}
+                                            accessibilityLabel={t('login.password')}
+                                        />
+                                        <TouchableOpacity
+                                            onPress={() => setShowPassword((v) => !v)}
+                                            activeOpacity={0.7}
+                                            accessibilityRole="button"
+                                            accessibilityLabel={t(showPassword ? 'login.hidePassword' : 'login.showPassword')}
+                                            // Centrado vertical sobre la caja del input: el contenedor
+                                            // deja marginBottom 20 y la caja mide ~42 (texto 16 +
+                                            // paddings) frente a 34 del botón (22 + padding 6*2):
+                                            // 20 + (42-34)/2 = 24 desde abajo.
+                                            style={{ position: 'absolute', right: 10, bottom: 24, padding: 6 }}
+                                        >
+                                            <Image
+                                                source={require('../../../assets/images/esconder.png')}
+                                                style={{
+                                                    width: 22,
+                                                    height: 22,
+                                                    tintColor: colors.textMuted ?? colors.text,
+                                                    opacity: showPassword ? 1 : 0.4,
+                                                }}
+                                            />
+                                        </TouchableOpacity>
+                                    </View>
 
                                     {showForgotLink && (
                                         <Animated.View style={[styles.forgotPasswordContainer, animatedStyles]}>

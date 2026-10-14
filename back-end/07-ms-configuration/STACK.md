@@ -2,7 +2,7 @@
 
 > **Stack ADR-005:** `TypeScript + Fastify` · **Guía:** `../../fae-docs/_stacks/node-typescript.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md`
-> **Database:** `../database/07-ms-configuration-db` (schema `configuration`) · **Puerto:** `8087` · **Dominio:** `06-data/domains/09-configuration.md`
+> **Database:** `../database/07-ms-configuration-db` (schema `configuration`) · **Puerto:** `8087` · **Dominio:** `06-data/domains/08-configuration.md`
 
 ## Decisión (ADR-005 §9)
 

@@ -44,10 +44,17 @@ public class AttendanceRecord {
 
     public void touchCreated() {
         if (createdAt == null) createdAt = Instant.now();
-        if (capturedAt == null) capturedAt = Instant.now();
+        // Una ausencia no tiene captura: el modelo declara captured_at NULL justo
+        // para eso. Rellenarlo siempre dejaba a cada ausente con hora de registro
+        // biometrico como si hubiera pasado por el lector.
+        if (capturedAt == null && !"Absent".equals(attendanceStatus)) capturedAt = Instant.now();
         if (rowVersion == 0) rowVersion = 1L;
     }
-    public void touchUpdated() { updatedAt = Instant.now(); rowVersion++; }
+    public void touchUpdated() {
+        updatedAt = Instant.now();
+        // row_version is owned by JPA @Version (reinforced by fn_audit_timestamps trigger);
+        // pre-incrementing it here makes merge() fail with StaleObjectStateException
+    }
 
     @Override public boolean equals(Object o) {
         if (this == o) return true;

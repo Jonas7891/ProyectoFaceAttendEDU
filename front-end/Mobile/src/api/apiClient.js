@@ -35,6 +35,52 @@ function buildUrl(path) {
   return `${base}/${canonical.replace(/^\//, '')}`;
 }
 
+// ── Sesión rechazada por el backend ─────────────────────────
+// El sessionId opaco caduca a las 8 h (session_timeout_minutes) aunque
+// localmente no tenga expiresAt, así que la app arranca "logueada" con un
+// token muerto. AppNavigator se suscribe aquí para purgar la sesión y
+// volver al login en el primer 401, en vez de disparar 401 en cada llamada.
+let sessionExpiredHandler = null;
+let sessionExpiredNotified = false;
+
+/** Registra el callback de sesión caducada; devuelve la función para desuscribirse. */
+export function onSessionExpired(handler) {
+  sessionExpiredHandler = handler;
+  return () => {
+    if (sessionExpiredHandler === handler) sessionExpiredHandler = null;
+  };
+}
+
+/**
+ * En los flujos de credenciales el 401 es una respuesta de negocio
+ * (contraseña o código incorrectos), no una sesión muerta.
+ */
+function isCredentialFlow(url) {
+  return url.includes('/api/v1/auth/');
+}
+
+/** FastAPI devuelve { detail: string | [{loc, msg}] } en lugar de { message }. */
+function readErrorMessage(body, status) {
+  if (body?.message) return body.message;
+  const detail = body?.detail;
+  if (typeof detail === 'string' && detail) return detail;
+  if (Array.isArray(detail) && detail.length) {
+    return detail.map((d) => `${(d?.loc ?? []).join('.') || 'campo'}: ${d?.msg ?? ''}`).join('; ');
+  }
+  return `Error ${status}`;
+}
+
+function notifySessionExpired() {
+  // Una sola vez por sesión caída: varias llamadas fallan en paralelo.
+  if (sessionExpiredNotified || !sessionExpiredHandler) return;
+  sessionExpiredNotified = true;
+  try {
+    sessionExpiredHandler();
+  } catch (e) {
+    console.warn('onSessionExpired:', e?.message);
+  }
+}
+
 /**
  * Mapa legacy Mobile (singular snake, sin /api/v1, contra :3000)
  * -> canónico Gateway Kong :8080 (/api/v1/plural-kebab).
@@ -131,7 +177,30 @@ function unwrapPage(payload) {
   return payload;
 }
 
-export async function request({ method, url, data = null, params = null, requiresAuth = true }) {
+// Dos pantallas pidiendo el mismo GET a la vez (p. ej. al montar en
+// paralelo) no deben disparar dos viajes de red: comparten la misma
+// promesa mientras está en vuelo. Se limpia al terminar (éxito o error),
+// así un fallo no queda "cacheado" para la próxima petición.
+const inFlightGets = new Map();
+
+export function request({ method, url, data = null, params = null, requiresAuth = true, timeoutMs = TIMEOUT }) {
+  if (method !== 'GET') {
+    return performRequest({ method, url, data, params, requiresAuth, timeoutMs });
+  }
+
+  const rewritten = rewriteUserRoleQuery(url, params);
+  const key = `${buildUrl(rewritten.url)}?${JSON.stringify(rewritten.params || {})}`;
+  const pending = inFlightGets.get(key);
+  if (pending) return pending;
+
+  const promise = performRequest({ method, url, data, params, requiresAuth, timeoutMs }).finally(() => {
+    inFlightGets.delete(key);
+  });
+  inFlightGets.set(key, promise);
+  return promise;
+}
+
+async function performRequest({ method, url, data = null, params = null, requiresAuth = true, timeoutMs = TIMEOUT }) {
   const rewritten = rewriteUserRoleQuery(url, params);
   let fullUrl = buildUrl(rewritten.url);
   params = rewritten.params;
@@ -154,7 +223,7 @@ export async function request({ method, url, data = null, params = null, require
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   options.signal = controller.signal;
 
   try {
@@ -169,9 +238,14 @@ export async function request({ method, url, data = null, params = null, require
     }
 
     if (!response.ok) {
-      throw new ApiError(response.status, result?.message || `Error ${response.status}`, result);
+      if (response.status === 401 && !isCredentialFlow(fullUrl)) {
+        notifySessionExpired();
+      }
+      throw new ApiError(response.status, readErrorMessage(result, response.status), result);
     }
 
+    // Respuesta válida: rearma el aviso de sesión caducada para el próximo login.
+    sessionExpiredNotified = false;
     return unwrapPage(result);
   } catch (error) {
     clearTimeout(timeoutId);

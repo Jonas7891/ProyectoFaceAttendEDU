@@ -36,6 +36,13 @@ def template_response(template: BiometricTemplate) -> dict[str, Any]:
     finger_number = getattr(template, "finger_number", None)
     if finger_number is not None:
         payload["finger_number"] = finger_number
+    # Raw-sample fingerprint records (ported from 10-ms-face-auth) have no
+    # vector `encoding` — surface the sample fields so clients can tell the two
+    # kinds of record apart.
+    raw_sample_b64 = getattr(template, "raw_sample_b64", None)
+    if raw_sample_b64 is not None:
+        payload["raw_sample_b64"] = raw_sample_b64
+        payload["sample_format"] = getattr(template, "sample_format", None)
     return payload
 
 

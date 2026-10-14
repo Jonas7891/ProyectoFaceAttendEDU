@@ -3,6 +3,9 @@ import { NavigationContainer } from "@react-navigation/native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { enableScreens } from "react-native-screens";
 
+// Barras de scroll visibles en web (RN-web las oculta por defecto)
+import "./src/core/utils/webScrollbars";
+
 // Habilitar react-native-screens para mejor performance
 enableScreens();
 
@@ -13,7 +16,7 @@ import { AppDataProvider }  from "./src/context/AppDataContext";
 import { AuthProvider }     from "./src/context/AuthContext";
 import { PushNotificationProvider } from "./src/view/components/common/feedback/PushNotification";
 import { getInstitutionConfig } from "./src/core/config/institutionConfig";
-
+import { DataLoadErrorBanner } from "./src/view/components/common/DataLoadErrorBanner";
 import AppNavigator from "./src/navegation/appNavigator";
 import { linkingConfig } from "./src/navegation/linking.config";
 import LoadingView from "./src/view/LoadingView";
@@ -49,6 +52,7 @@ function AppContent() {
                     maxNotifications={config.pushNotificationLimit || 15} // Límite total
                     maxNotificationsByType={config.pushNotificationLimitByType || 5} // Límite por tipo
                 >
+                    <DataLoadErrorBanner />
                     <NavigationContainer
                         linking={linkingConfig}
                         onReady={onReady}
@@ -65,6 +69,13 @@ function AppContent() {
                                     'Courses': 'Cursos | FaceAttend EDU',
                                     'Environments': 'Ambientes | FaceAttend EDU',
                                     'Reports': 'Reportes | FaceAttend EDU',
+                                    'Schools': 'Escuelas | FaceAttend EDU',
+                                    'SchoolInfo': 'Información de la sede | FaceAttend EDU',
+                                    'History': 'Historial | FaceAttend EDU',
+                                    'Justifications': 'Justificaciones | FaceAttend EDU',
+                                    'Academic': 'Sección académica | FaceAttend EDU',
+                                    'Contacts': 'Contactos | FaceAttend EDU',
+                                    'Biometrics': 'Biometría | FaceAttend EDU',
                                     'Settings': 'Configuración | FaceAttend EDU',
                                 };
                                 return routeTitles[route?.name] || 'FaceAttend EDU';

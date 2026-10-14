@@ -2,6 +2,7 @@ import { request, GET, POST } from '../api/apiClient';
 import { toSnakeDeep } from '../api/backend';
 import AuthResponse from '../models/identity/AuthResponse';
 import AuthRequest from '../models/identity/AuthRequest';
+import AppUser from '../models/identity/AppUser';
 import { saveToken } from '../storage/TokenStorage';
 import { VerificationService } from './verificationService';
 import { PasswordService } from './passwordService';
@@ -24,8 +25,8 @@ function unwrapPage(data) {
   return unwrap(data);
 }
 
-async function doLogin(username, password) {
-  const body = new AuthRequest({ username, password }).toApi?.() ?? { username, password };
+async function doLogin(email, password) {
+  const body = new AuthRequest({ email, password }).toApi?.() ?? { email, password };
   const session = await request({
     method: POST,
     url: LOGIN_ENDPOINT,
@@ -108,8 +109,9 @@ async function evaluatePermission(userId, permission) {
 
 export const AuthService = {
   login: async (email, password) => {
-    // Login directo por username: los listados de persons/users ya no son
-    // públicos, así que no hay resolución email->username sin sesión.
+    // Login directo por correo: el backend resuelve email -> usuario vía
+    // identity.person.email, así que la app no tiene que resolverlo (los
+    // listados de persons/users ya no son públicos).
     const identity = (email || '').trim();
     let session = null;
     let person = null;
@@ -127,7 +129,7 @@ export const AuthService = {
     if (!sessionId || !userId) throw new Error('No se pudo crear la sesión');
 
     // Guardar el token ANTES de las llamadas autenticadas (roles, perfil, evaluate).
-    const saved = await saveToken(String(sessionId));
+    const saved = await saveToken(String(sessionId), identity);
     if (!saved) throw new Error('No se pudo guardar la sesión');
 
     // 3. Load roles + profile in parallel (una sola ronda tras guardar el
@@ -141,7 +143,7 @@ export const AuthService = {
     // 3b. Verificar que el rol tenga permisos efectivos.
     await evaluatePermission(userId, 'attendance.record:read');
 
-    // 3c. Complete the profile (person data) when login used the username directly.
+    // 3c. Complete the profile (person data); the session was opened with the email.
     if (!person?.person_id) {
       person = profile.person ? toSnakeDeep(profile.person) : person;
       if (profile.username) username = profile.username;
@@ -161,6 +163,18 @@ export const AuthService = {
         person: person || null,
       },
     });
+  },
+
+  // GET /api/v1/auth/me?email=|username= — perfil de usuario por identificador (público en el gateway).
+  me: async (identifier) => {
+    const value = String(identifier || '').trim();
+    const data = await request({
+      method: GET,
+      url: 'api/v1/auth/me',
+      params: value.includes('@') ? { email: value } : { username: value },
+      requiresAuth: false,
+    });
+    return AppUser.fromApi(toSnakeDeep(data));
   },
 
   refreshToken: async () => {

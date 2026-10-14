@@ -18,11 +18,10 @@
 // ============================================================
 
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-
 // ── Importación de Layout Components ──────────────────────────
 import { 
     SidebarHeader, 
@@ -42,23 +41,35 @@ import { useResponsive } from "../components/hooks/useResponsive";
 import { useAuth } from "../../context/AuthContext";
 import { useDashboardScreenViewModel } from "../../viewmodels/useDashboardScreenViewModel";
 import { useTranslation } from "../../core/utils/i18n/hooks/useTranslation";
-
+import { roleDisplayLabel } from "../../core/utils/backendRoles";
 // ── Constantes de mapeo de rutas ────────────────────────────
 const ROUTE_MAP = {
     "dashboard": "Dashboard",
-    "users": "Users", 
+    "schools": "Schools",
+    "users": "Users",
     "courses": "Courses",
     "environments": "Environments",
     "reports": "Reports",
+    "history": "History",
+    "justifications": "Justifications",
+    "schoolInfo": "SchoolInfo",
+    "academic": "Academic",
+    "contacts": "Contacts",
     "settings": "Settings",
 };
 
 const ROUTE_TO_KEY_MAP = {
     "Dashboard": "dashboard",
+    "Schools": "schools",
     "Users": "users",
     "Courses": "courses",
     "Environments": "environments",
     "Reports": "reports",
+    "History": "history",
+    "Justifications": "justifications",
+    "SchoolInfo": "schoolInfo",
+    "Academic": "academic",
+    "Contacts": "contacts",
     "Settings": "settings",
 };
 
@@ -169,11 +180,16 @@ function PersistentSidebar() {
                     }}>
                         {user.name}
                     </Text>
-                    <Text style={{
-                        fontSize: 12,
-                        color: c.text.secondary,
-                    }}>
-                        {user.role}
+                    <Text
+                        style={{
+                            fontSize: 12,
+                            color: c.text.secondary,
+                        }}
+                    >
+                        {/* Rol "Super Administrador" explícito (007) =
+                            Super Admin; "Administrador" = Admin de sede
+                            (ver backendRoles). */}
+                        {t(roleDisplayLabel(user))}
                     </Text>
                 </SidebarHeader>
             )}
@@ -296,20 +312,29 @@ function BottomTabs() {
         navigation.navigate(routeName, params);
     }, [navigation, setSidebarSelectedTab, setSidebarSelectedSubTab]);
     
+    // NO usar early return - el padre decide si renderizar este componente
+    // Con más tabs que pantallas fijas (Historial, Justificaciones y Sede)
+    // la barra se desplaza horizontalmente.
     return (
-        <View style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            backgroundColor: c.background.surface,
-            borderTopWidth: 1,
-            borderTopColor: c.border.primary,
-            flexDirection: "row",
-            paddingTop: 8,
-            paddingBottom: Math.max(8, insets.bottom),
-            minHeight: 52 + insets.bottom,
-        }}>
+        <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                backgroundColor: c.background.surface,
+                borderTopWidth: 1,
+                borderTopColor: c.border.primary,
+            }}
+            contentContainerStyle={{
+                flexDirection: "row",
+                paddingTop: 8,
+                paddingBottom: Math.max(8, insets.bottom),
+                minHeight: 52 + insets.bottom,
+            }}
+        >
             {vm.bottomTabs.map((item) => {
                 const active = currentTabKey === item.key;
                 
@@ -332,7 +357,8 @@ function BottomTabs() {
                         key={item.key}
                         onPress={handleBottomTabPress}
                         style={{
-                            flex: 1,
+                            minWidth: 72,
+                            paddingHorizontal: 6,
                             alignItems: "center",
                             paddingTop: 4,
                             borderTopWidth: active ? 2 : 0,
@@ -355,7 +381,7 @@ function BottomTabs() {
                     </TouchableOpacity>
                 );
             })}
-        </View>
+        </ScrollView>
     );
 }
 

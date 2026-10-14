@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
-import PrimaryButton from '../components/auth/PrimaryButton';
+import BackButton from '../components/common/BackButton';
 import {QuestionnaireModal} from '../components/common/QuestionnaireModal';
 import {FacialUpdateModal} from '../components/common/FacialUpdateModal';
 import CustomLogo from '../components/common/logo';
@@ -52,6 +52,7 @@ export default function FacialFail() {
                 >
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                         <View style={[styles.container, { marginHorizontal: 20 }]}>
+                            <BackButton onPress={handleBack} />
                             <View style={styles.headerContainer}>
                                 <Text style={[styles.mainTitle, { color: colors.text }]}>
                                     {t('facialFail.title')}
@@ -120,13 +121,6 @@ export default function FacialFail() {
                                 <Text style={[styles.recommendationText, { color: colors.textSecondary }]}>
                                     {t('facialFail.cameraQualityDescription')}
                                 </Text>
-                            </View>
-
-                            <View style={[styles.buttonContainer, { marginTop: 10 }]}>
-                                <PrimaryButton
-                                    title={t('common.back')}
-                                    onPress={handleBack}
-                                />
                             </View>
                         </View>
                     </TouchableWithoutFeedback>

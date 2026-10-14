@@ -8,6 +8,8 @@ import com.faceattend_edu.identity_service.application.port.out.SavePersonPort;
 import com.faceattend_edu.identity_service.application.port.out.UpdatePersonPort;
 import com.faceattend_edu.identity_service.domain.model.Person;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -26,9 +28,18 @@ public class PersonPersistenceAdapter implements LoadPersonPort, SavePersonPort,
         return mapper.toDomain(repository.findById(personId).orElse(null));
     }
 
+    // Sorted by the primary key: without a deterministic order Postgres may repeat or skip
+    // rows between pages, so a client walking every page would not see the table exactly once.
     @Override
-    public List<Person> listPersons() {
-        return repository.findAll().stream().map(mapper::toDomain).collect(Collectors.toList());
+    public List<Person> listPersons(int pageIndex, int limit) {
+        return repository.findAll(PageRequest.of(pageIndex, limit, Sort.by("personId")))
+                .map(mapper::toDomain)
+                .getContent();
+    }
+
+    @Override
+    public long countPersons() {
+        return repository.count();
     }
 
     @Override

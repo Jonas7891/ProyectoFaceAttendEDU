@@ -12,8 +12,9 @@
 // ============================================================
 
 import React, { useMemo } from "react";
-import { View, ScrollView } from "react-native";
-import { useAttendanceColor } from "../../components/common";
+import { View, ScrollView, Text } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { useAttendanceColor, Button } from "../../components/common";
 import { useTheme } from "../../components/hooks/useTheme";
 import { useResponsive } from "../../components/hooks/useResponsive";
 import { useUsersViewModel } from "../../../viewmodels/useUsersViewModel";
@@ -73,7 +74,10 @@ export function AdminUsers({ section, vm: vmProp }) {
         { key: "status", label: t("Estado"), icon: "activity" },
     ], [t]);
 
-    const users = vm.filteredUsers;
+    // Se pinta solo la página actual (la consulta completa se limita a
+    // USERS_PAGE_SIZE filas por render) y el resto se pagina en el cliente.
+    const users = vm.pageUsers ?? vm.filteredUsers;
+    const isPaginated = (vm.totalPages ?? 1) > 1;
     
     // Contexto para renderizado de columnas
     // CORREGIDO: roleVariant debe basarse en el roleFilter, no en el primer usuario
@@ -113,7 +117,11 @@ export function AdminUsers({ section, vm: vmProp }) {
     };
     
     const loadingMessage = `${t("Cargando")} ${getSectionLabel()}...`;
-    const completeMessage = t("¡Ya llegaste hasta el final de la lista, no hay más usuarios que mostrar!");
+    // Con paginación el "final de la lista" sería engañoso: se informa
+    // cuántos hay en la página actual sobre el total filtrado.
+    const completeMessage = isPaginated
+        ? `${t("Mostrando")} ${users.length} ${t("de")} ${vm.totalUsers} ${t("usuarios")}`
+        : t("¡Ya llegaste hasta el final de la lista, no hay más usuarios que mostrar!");
 
     return (
         <ScrollView
@@ -147,6 +155,50 @@ export function AdminUsers({ section, vm: vmProp }) {
                     description: t("Ajusta los filtros o agrega nuevos estudiantes"),
                 }}
             />
+
+            {/* Paginación: la consulta se limita a una página de la vez */}
+            {isPaginated && (
+                <View
+                    style={{
+                        flexDirection: isSmall ? "column" : "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 12,
+                    }}
+                >
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={vm.page <= 0}
+                        onPress={() => vm.setPage(Math.max(0, vm.page - 1))}
+                        leftIcon={<Feather name="chevron-left" size={16} color={c.text.primary} />}
+                    >
+                        {t("Anterior")}
+                    </Button>
+
+                    <Text
+                        style={{
+                            fontSize: 13,
+                            color: c.text.secondary,
+                            textAlign: "center",
+                        }}
+                    >
+                        {`${t("Página")} ${vm.page + 1} ${t("de")} ${vm.totalPages} · ${vm.totalUsers} ${t(
+                            "usuarios"
+                        )}`}
+                    </Text>
+
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={vm.page >= vm.totalPages - 1}
+                        onPress={() => vm.setPage(vm.page + 1)}
+                        leftIcon={<Feather name="chevron-right" size={16} color={c.text.primary} />}
+                    >
+                        {t("Siguiente")}
+                    </Button>
+                </View>
+            )}
 
             {/* Modales */}
             <StudentDetailModal

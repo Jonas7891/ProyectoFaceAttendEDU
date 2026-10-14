@@ -9,7 +9,7 @@ function unwrap(data) {
   return [];
 }
 
-export function useManageEnvironmentViewModel() {
+export function useManageEnvironmentViewModel(enabled = true) {
     const [ambientes, setAmbientes] = useState([]);
     const [updateKey, setUpdateKey] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -36,8 +36,14 @@ export function useManageEnvironmentViewModel() {
     }, []);
 
     useEffect(() => {
+        // Solo Administrador puede gestionar ambientes: evita la petición
+        // mientras la pantalla valida el rol (o si se monta sin permiso).
+        if (!enabled) {
+            setLoading(false);
+            return;
+        }
         fetchEnvironments();
-    }, []);
+    }, [enabled, fetchEnvironments]);
 
     const searchAmbientes = useCallback(
         (query) => {

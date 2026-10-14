@@ -1,6 +1,7 @@
 import React from 'react';
 import {
     FlatList,
+    Image,
     KeyboardAvoidingView,
     Platform,
     SafeAreaView,
@@ -27,6 +28,9 @@ export default function ValidJustificationsScreen() {
         inasistenciasData,
         retardosData,
         currentData,
+        isLoading,
+        error,
+        retry,
         handleBack,
         getEstadoColor,
     } = useValidJustificationsViewModel();
@@ -85,13 +89,29 @@ export default function ValidJustificationsScreen() {
                     keyboardShouldPersistTaps="handled"
                 >
                     <View style={styles.containerValidJustifications}>
-                        <Text style={[styles.mainTitleValidJustifications, { color: colors.text }]}>
-                            {t('consultJustify.mainTitle')}
-                        </Text>
+                        <View style={styles.headerTopRowValidJustifications}>
+                            <TouchableOpacity
+                                onPress={handleBack}
+                                activeOpacity={0.7}
+                                accessibilityRole="button"
+                                accessibilityLabel={t('common.back')}
+                                style={{ padding: 6 }}
+                            >
+                                <Image
+                                    source={require('../../assets/images/flecha-volver.png')}
+                                    style={[styles.headerBackImageValidJustifications, { tintColor: colors.text }]}
+                                />
+                            </TouchableOpacity>
+                            <View style={{ flex: 1 }}>
+                                <Text style={[styles.mainTitleValidJustifications, { color: colors.text }]}>
+                                    {t('consultJustify.mainTitle')}
+                                </Text>
 
-                        <Text style={[styles.subTitleValidJustifications, { color: colors.textSecondary }]}>
-                            {t('consultJustify.subtitle')}
-                        </Text>
+                                <Text style={[styles.subTitleValidJustifications, { color: colors.textSecondary }]}>
+                                    {t('consultJustify.subtitle')}
+                                </Text>
+                            </View>
+                        </View>
 
                         <Separador />
 
@@ -159,7 +179,28 @@ export default function ValidJustificationsScreen() {
                             </TouchableOpacity>
                         </View>
 
-                        {activeSection === 'inasistencias' && (
+                        {error ? (
+                            <View
+                                style={[
+                                    styles.emptyContainer,
+                                    {
+                                        backgroundColor: colors.card,
+                                        borderWidth: 1,
+                                        borderColor: colors.border,
+                                        borderStyle: 'dashed',
+                                    },
+                                ]}
+                            >
+                                <Text style={[styles.emptyText, { color: colors.text }]}>
+                                    {error}
+                                </Text>
+                                <View style={{ marginTop: 12, alignSelf: 'stretch' }}>
+                                    <PrimaryButton title={t('common.retry')} onPress={retry} />
+                                </View>
+                            </View>
+                        ) : null}
+
+                        {!error && activeSection === 'inasistencias' && (
                             <View style={styles.listContainer}>
                                 <Text style={[styles.sectionTitle, { color: colors.text }]}>
                                     {t('consultJustify.justifiedAbsences')}
@@ -191,7 +232,7 @@ export default function ValidJustificationsScreen() {
                             </View>
                         )}
 
-                        {activeSection === 'retardos' && (
+                        {!error && activeSection === 'retardos' && (
                             <View style={styles.listContainer}>
                                 <Text style={[styles.sectionTitle, { color: colors.text }]}>
                                     {t('consultJustify.justifiedDelays')}
@@ -223,9 +264,6 @@ export default function ValidJustificationsScreen() {
                             </View>
                         )}
 
-                        <View style={styles.buttonContainer}>
-                            <PrimaryButton title={t('common.back')} onPress={handleBack}/>
-                        </View>
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>

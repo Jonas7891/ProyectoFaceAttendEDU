@@ -28,7 +28,7 @@ Desde la raíz del proyecto:
 docker compose up -d postgres
 ```
 
-Esto levanta PostgreSQL en el puerto `5432` con la base de datos `db_test`.
+Esto levanta PostgreSQL en el puerto `5432` con la base de datos `faceattend_db`.
 
 ## Aplicar migraciones con Liquibase
 

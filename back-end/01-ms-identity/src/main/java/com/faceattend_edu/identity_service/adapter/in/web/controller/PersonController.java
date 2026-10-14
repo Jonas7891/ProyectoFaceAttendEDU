@@ -44,10 +44,13 @@ public class PersonController {
     public ResponseEntity<PageResponse<PersonDto>> listPersons(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer limit) {
-        List<PersonDto> all = listPersonsUseCase.listPersons().stream()
+        int safePage = PageResponse.safePage(page);
+        int safeLimit = PageResponse.safeLimit(limit);
+        List<PersonDto> slice = listPersonsUseCase.listPersons(safePage - 1, safeLimit).stream()
                 .map(personWebMapper::toDto)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(PageResponse.of(all, page, limit));
+        return ResponseEntity.ok(
+                PageResponse.ofSlice(slice, safePage, safeLimit, listPersonsUseCase.countPersons()));
     }
 
     @GetMapping("/{id}")

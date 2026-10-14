@@ -36,6 +36,15 @@ class FingerprintEmbedding:
     created_at: datetime | None = None
     updated_at: datetime | None = None
     deleted_at: datetime | None = None
+    # Raw-sample path (ported from 10-ms-face-auth): a fingerprint sample is
+    # matched by OpenCV keypoint count, not cosine similarity over a fixed-length
+    # vector, so a raw-sample record stores the sample instead of `encoding` and
+    # leaves `encoding` empty. Vector-based records (existing clients) populate
+    # `encoding` and leave these `None`. A document predating this merge has
+    # neither field set in Mongo — reads default both to `None` (see
+    # `document_to_embedding`).
+    raw_sample_b64: str | None = None
+    sample_format: int | None = None
 
     def __post_init__(self) -> None:
         if not MIN_FINGER_NUMBER <= self.finger_number <= MAX_FINGER_NUMBER:
@@ -44,5 +53,5 @@ class FingerprintEmbedding:
             )
         if not self.person_id:
             raise ValueError("person_id must not be empty")
-        if not self.encoding:
-            raise ValueError("encoding must not be empty")
+        if not self.encoding and not self.raw_sample_b64:
+            raise ValueError("either encoding or raw_sample_b64 must be set")

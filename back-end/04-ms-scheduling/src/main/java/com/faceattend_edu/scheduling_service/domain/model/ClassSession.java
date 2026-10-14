@@ -49,7 +49,8 @@ public class ClassSession {
 
     public void touchUpdated() {
         updatedAt = Instant.now();
-        rowVersion++;
+        // row_version is owned by JPA @Version (reinforced by fn_audit_timestamps trigger);
+        // pre-incrementing it here makes merge() fail with StaleObjectStateException
     }
 
     public boolean isOpen() { return "Open".equals(sessionStatus); }

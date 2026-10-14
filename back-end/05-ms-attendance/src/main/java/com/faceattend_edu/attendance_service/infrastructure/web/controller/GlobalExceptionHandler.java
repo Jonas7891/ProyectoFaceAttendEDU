@@ -6,6 +6,7 @@ import com.faceattend_edu.attendance_service.domain.exception.ValidationExceptio
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -47,6 +48,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleDataIntegrity(DataIntegrityViolationException ex) {
         return buildErrorResponse(HttpStatus.CONFLICT, "ISO-10.2-NC-003",
             "Data integrity violation: " + ex.getMostSpecificCause().getMessage(), "10.2", "ERROR");
+    }
+
+    // A concurrent writer bumped row_version first: that is a client-retryable conflict,
+    // not an internal failure, so it must not fall through to the generic 500 handler.
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<Map<String, Object>> handleOptimisticLock(ObjectOptimisticLockingFailureException ex) {
+        return buildErrorResponse(HttpStatus.CONFLICT, "ISO-8.5-LOCK-001",
+            "The record changed since it was read; reload it and retry", "8.5", "WARNING");
     }
 
     @ExceptionHandler(ValidationException.class)
