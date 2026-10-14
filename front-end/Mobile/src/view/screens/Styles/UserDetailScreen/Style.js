@@ -1,7 +1,7 @@
 import {StyleSheet} from 'react-native';
 import {normalizeTypography} from '../../../../utils/typography';
 
-const styles = StyleSheet.create(normalizeTypography({
+export const createUserDetailStyles = (colors) => StyleSheet.create(normalizeTypography({
 userDetailContainer: {
         flex: 1,
     },
@@ -46,7 +46,7 @@ userDetailAvatar: {
     },
 
 userDetailAvatarText: {
-        color: '#FFFFFF',
+        color: colors.onPrimary,
         fontSize: 20,
         fontWeight: '700',
     },
@@ -145,7 +145,7 @@ userDetailButton: {
     },
 
 userDetailButtonText: {
-        color: '#FFFFFF',
+        color: colors.onPrimary,
         fontSize: 15,
         fontWeight: '600',
     },
@@ -157,4 +157,3 @@ userDetailLoading: {
     },
 }));
 
-export default styles;

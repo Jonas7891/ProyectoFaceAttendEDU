@@ -1,7 +1,7 @@
 import {StyleSheet} from 'react-native';
 import {normalizeTypography} from '../../../../utils/typography';
 
-const styles = StyleSheet.create(normalizeTypography({
+export const createManageEnvironmentStyles = (colors) => StyleSheet.create(normalizeTypography({
 manageEnviromentButtonContainer: {
         paddingHorizontal: 20,
     },
@@ -27,7 +27,7 @@ manageEnvironmentActionsRow: {
 
 manageEnvironmentBackdrop: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: colors.overlay,
     },
 
 manageEnvironmentCancelButton: {
@@ -41,7 +41,7 @@ manageEnvironmentCancelButton: {
     },
 
 manageEnvironmentCancelButtonText: {
-        color: '#FFFFFF',
+        color: colors.onPrimary,
         fontSize: 15,
         fontWeight: '600',
     },
@@ -176,15 +176,14 @@ secondaryButton: {
         paddingVertical: 12,
         marginTop: 10,
         marginBottom: 30,
-        borderColor: "#E0E0E0",
+        borderColor: colors.border,
         borderWidth: 1,
         borderRadius: 12,
     },
 
 secondaryButtonText: {
-        color: '#2563EB',
+        color: colors.primary,
         fontWeight: '600',
     },
 }));
 
-export default styles;

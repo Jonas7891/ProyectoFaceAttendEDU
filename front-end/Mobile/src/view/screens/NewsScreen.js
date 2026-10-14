@@ -1,17 +1,18 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {Image, Platform, SafeAreaView, Text, View,} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import BottomBar from '../components/common/NavigationBar';
 import ScrollViewWrapper from '../components/common/ScrollView';
 import CustomTabs from '../components/common/CustomTabs';
 import Separador from '../components/common/Separador';
-import styles from './Styles/NewsScreen/Style';
+import {createNewsStyles} from './Styles/NewsScreen/Style';
 import {useTheme} from '../components/common/ThemeContext';
 import {useNewsViewModel} from '../../viewmodels/useNewsViewModel';
 
 export default function NewsScreen() {
     const { t } = useTranslation();
     const { colors, theme } = useTheme();
+    const styles = useMemo(() => createNewsStyles(colors), [colors]);
 
     const { userRole, updateKey } = useNewsViewModel();
 
@@ -45,7 +46,7 @@ export default function NewsScreen() {
                                 fontSize: 18,
                                 fontWeight: 'bold',
                                 marginTop: 30,
-                                color: theme === 'dark' ? colors.primary : '#000000'
+                                color: theme === 'dark' ? colors.primary : colors.text
                             }}
                         >
                             {t('news.title')}

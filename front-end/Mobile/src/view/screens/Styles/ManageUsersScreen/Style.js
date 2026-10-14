@@ -1,7 +1,7 @@
 import {StyleSheet} from 'react-native';
 import {normalizeTypography} from '../../../../utils/typography';
 
-const styles = StyleSheet.create(normalizeTypography({
+export const createManageUsersStyles = (colors) => StyleSheet.create(normalizeTypography({
 manageUsersActionButton: {
         paddingHorizontal: 14,
         paddingVertical: 8,
@@ -29,7 +29,7 @@ manageUsersAddButtonText: {
 
 manageUsersBackdrop: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: colors.overlay,
     },
 
 manageUsersButtonContainer: {
@@ -48,7 +48,7 @@ manageUsersCancelButton: {
     },
 
 manageUsersCancelButtonText: {
-        color: '#FFFFFF',
+        color: colors.onPrimary,
         fontSize: 15,
         fontWeight: '600',
     },
@@ -231,15 +231,14 @@ secondaryButton: {
         paddingVertical: 12,
         marginTop: 10,
         marginBottom: 30,
-        borderColor: "#E0E0E0",
+        borderColor: colors.border,
         borderWidth: 1,
         borderRadius: 12,
     },
 
 secondaryButtonText: {
-        color: '#2563EB',
+        color: colors.primary,
         fontWeight: '600',
     },
 }));
 
-export default styles;
