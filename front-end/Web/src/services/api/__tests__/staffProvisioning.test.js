@@ -25,13 +25,14 @@ jest.mock("../referenceData", () => ({
     listCohorts: jest.fn(),
     listCourses: jest.fn(),
     listPrograms: jest.fn(),
+    personMap: jest.fn(),
 }));
 
 import { authApi } from "../authApi";
 import { academicApi } from "../academicApi";
 import { authorizationApi } from "../authorizationApi";
-import { listBlocks, listCohorts, listCourses, listPrograms } from "../referenceData";
-import { cohortsForCourseCode, provisionStaff, provisionStudent } from "../staffProvisioning";
+import { listBlocks, listCohorts, listCourses, listPrograms, personMap } from "../referenceData";
+import { assertPersonUnique, cohortsForCourseCode, provisionStaff, provisionStudent } from "../staffProvisioning";
 
 const base = {
     name: "Ana García López",
@@ -43,6 +44,7 @@ const base = {
 
 beforeEach(() => {
     jest.clearAllMocks();
+    personMap.mockResolvedValue(new Map());
     authApi.createPerson.mockResolvedValue({ personId: "person-1" });
     authApi.createUser.mockResolvedValue({ userId: "user-1" });
     authorizationApi.listRoles.mockResolvedValue([
@@ -105,6 +107,36 @@ test("teacher: also creates the instructor actor in the given school", async () 
         })
     );
     expect(authorizationApi.assignRole).toHaveBeenCalledWith("user-1", 2);
+});
+
+test("duplicate document reports the field before posting", async () => {
+    personMap.mockResolvedValue(
+        new Map([["p-9", { personId: "p-9", documentNumber: "1234567890", email: "other@uni.edu" }]])
+    );
+
+    await expect(
+        provisionStaff({ ...base, role: "admin", schoolId: "2" })
+    ).rejects.toThrow("número de documento");
+    expect(authApi.createPerson).not.toHaveBeenCalled();
+});
+
+test("duplicate email reports the field before posting", async () => {
+    personMap.mockResolvedValue(
+        new Map([["p-9", { personId: "p-9", documentNumber: "999", email: "ana@universidad.edu" }]])
+    );
+
+    await expect(
+        provisionStaff({ ...base, role: "admin", schoolId: "2" })
+    ).rejects.toThrow("correo electrónico");
+    expect(authApi.createPerson).not.toHaveBeenCalled();
+});
+
+test("assertPersonUnique passes through when the roster is unavailable", async () => {
+    personMap.mockRejectedValueOnce(new Error("offline"));
+
+    await expect(
+        assertPersonUnique({ documentNumber: "1234567890", email: "ana@universidad.edu" })
+    ).resolves.toBeUndefined();
 });
 
 test("compensates actor and person when user creation fails", async () => {

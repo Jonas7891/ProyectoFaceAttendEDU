@@ -16,7 +16,7 @@
 import { authApi } from "./authApi";
 import { academicApi } from "./academicApi";
 import { authorizationApi } from "./authorizationApi";
-import { listBlocks, listCohorts, listCourses, listPrograms } from "./referenceData";
+import { listBlocks, listCohorts, listCourses, listPrograms, personMap } from "./referenceData";
 
 // Nombres de rol aceptados (ES actuales + legados EN): los IDs
 // autoincrementales dependen del seed, nunca se hardcodean.
@@ -54,6 +54,34 @@ function splitName(fullName) {
 function usernameFromEmail(email) {
     const prefix = String(email ?? "").split("@")[0] ?? "";
     return prefix.toLowerCase().trim();
+}
+
+/**
+ * El 409 del backend no dice qué campo duplica ("Resource violates a
+ * uniqueness constraint"): se verifica antes contra el padrón cargado
+ * para devolver un mensaje específico por campo.
+ * @throws Error con el campo duplicado.
+ */
+export async function assertPersonUnique({ documentNumber, email }) {
+    let persons;
+    try {
+        persons = await personMap();
+    } catch {
+        return; // Sin padrón no se puede verificar: lo valida el backend.
+    }
+    if (!persons || typeof persons.values !== "function") return;
+    const doc = String(documentNumber ?? "").trim();
+    const mail = String(email ?? "").trim().toLowerCase();
+    for (const person of persons.values()) {
+        const personDoc = String(person?.documentNumber ?? person?.document_number ?? "").trim();
+        const personMail = String(person?.email ?? "").trim().toLowerCase();
+        if (doc && personDoc === doc) {
+            throw new Error("Ya existe una persona con ese número de documento");
+        }
+        if (mail && personMail && personMail === mail) {
+            throw new Error("Ya existe una persona con ese correo electrónico");
+        }
+    }
 }
 
 /**
@@ -131,6 +159,7 @@ export async function provisionStaff({
     schoolId = null,
 }) {
     const { name: firstName, lastName } = splitName(name);
+    await assertPersonUnique({ documentNumber, email });
     const person = await authApi.createPerson({
         documentNumber: String(documentNumber).trim(),
         name: firstName,
@@ -223,6 +252,7 @@ export async function provisionStudent({
     if (target.schoolId == null) throw new Error("The cohort program has no school");
 
     const { name: firstName, lastName } = splitName(name);
+    await assertPersonUnique({ documentNumber, email });
     const person = await authApi.createPerson({
         documentNumber: String(documentNumber).trim(),
         name: firstName,
