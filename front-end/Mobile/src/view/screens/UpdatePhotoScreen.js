@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -21,7 +21,7 @@ import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import {QuestionInput} from '../components/common/QuestionInput';
 import BackButton from '../components/common/BackButton';
-import styles from './Styles/UpdatePhotoScreen/Style';
+import {createUpdatePhotoStyles} from './Styles/UpdatePhotoScreen/Style';
 import {useUpdatePhotoViewModel} from '../../viewmodels/useUpdatePhotoViewModel';
 
 // No hay endpoint de subida de fotos en el backend (biometric enroll recibe
@@ -29,6 +29,7 @@ import {useUpdatePhotoViewModel} from '../../viewmodels/useUpdatePhotoViewModel'
 // flujo continúa con el registro local de asistencia.
 
 function FaceGuideOval({status, colors}) {
+    const styles = useMemo(() => createUpdatePhotoStyles(colors), [colors]);
     const pulseAnim = useRef(new Animated.Value(1)).current;
 
     useEffect(() => {
@@ -45,11 +46,11 @@ function FaceGuideOval({status, colors}) {
     }, [status]);
 
     const borderColor = {
-        idle: 'rgba(255,255,255,0.4)',
-        ready: colors.success ?? '#10B981',
-        capturing: '#F59E0B',
-        done: colors.success ?? '#10B981',
-    }[status] || 'rgba(255,255,255,0.4)';
+        idle: colors.onCamera + '66',
+        ready: colors.success,
+        capturing: colors.warning,
+        done: colors.success,
+    }[status] || colors.onCamera + '66';
 
     return (
         <Animated.View
@@ -63,6 +64,7 @@ function FaceGuideOval({status, colors}) {
 export default function UpdatePhoto() {
     const {t} = useTranslation();
     const {colors, theme} = useTheme();
+    const styles = useMemo(() => createUpdatePhotoStyles(colors), [colors]);
 
     const {
         attendanceRegistered,
@@ -100,7 +102,7 @@ export default function UpdatePhoto() {
             borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10,
         },
         registerButtonUpdatePhoto: {
-            backgroundColor: '#2da351', padding: 12, borderRadius: 10,
+            backgroundColor: colors.primary, padding: 12, borderRadius: 10,
             marginTop: 20, alignItems: 'center', flexDirection: 'row',
             justifyContent: 'center', marginHorizontal: 'auto',
         },
@@ -329,7 +331,7 @@ export default function UpdatePhoto() {
                             {attendanceRegistered && (
                                 <View style={styles.alreadyRegisteredBox}>
                                     <Text
-                                        style={[styles.alreadyRegisteredText, {color: colors.success ?? '#10B981'}]}>
+                                        style={[styles.alreadyRegisteredText, {color: colors.success}]}>
                                         {t('updatePhoto.camera.alreadyRegistered')}
                                     </Text>
                                 </View>
@@ -397,15 +399,15 @@ export default function UpdatePhoto() {
                                             styles.previewStatusBox,
                                             {
                                                 backgroundColor: statusIsError
-                                                    ? 'rgba(239, 68, 68, 0.15)'
-                                                    : 'rgba(16, 185, 129, 0.15)',
+                                                    ? colors.danger + '26'
+                                                    : colors.success + '26',
                                                 borderColor: statusIsError
-                                                    ? 'rgba(239, 68, 68, 0.4)'
-                                                    : 'rgba(16, 185, 129, 0.4)',
+                                                    ? colors.danger + '66'
+                                                    : colors.success + '66',
                                             }
                                         ]}>
                                             <Text style={[styles.previewStatus, {
-                                                color: statusIsError ? '#FCA5A5' : '#6EE7B7'
+                                                color: statusIsError ? colors.danger : colors.success
                                             }]}>
                                                 {statusMessage}
                                             </Text>
@@ -435,7 +437,7 @@ export default function UpdatePhoto() {
                                             accessibilityLabel="Confirmar y guardar foto"
                                         >
                                             {isProcessing ? (
-                                                <ActivityIndicator color="#fff"/>
+                                                <ActivityIndicator color={colors.onPrimary}/>
                                             ) : (
                                                 <>
                                                     <Text style={styles.previewButtonIcon}>✓</Text>
