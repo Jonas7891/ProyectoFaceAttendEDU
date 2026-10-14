@@ -19,6 +19,7 @@ import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
+import { authApi } from "../services/api/authApi";
 import { provisionStaff, provisionStudent, cohortsForCourseCode } from "../services/api/staffProvisioning";
 
 // Usuarios pintados por página (la vista de Usuarios pagina en el cliente
@@ -174,6 +175,7 @@ export function useUsersViewModel(
     const [selected, setSelected] = useState(null);
     const [showRegisterModal, setShowRegisterModal] = useState(false);
     const [showImportModal, setShowImportModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
     
     // Estado de ordenamiento (inicializado desde parámetros de navegación)
     const [sortBy, setSortBy] = useState(initialSortBy || null);
@@ -522,6 +524,63 @@ export function useUsersViewModel(
         [appData]
     );
 
+    // Edición real: PUT /persons/{id} + PUT /users/{id} (+ PATCH de
+    // estado si cambió). Sin personId/userId no hay a quién actualizar.
+    const updateUserDetails = useCallback(
+        async (target, form) => {
+            if (!target?.personId || !target?.id) return "Falta el vínculo con el backend";
+            if (!String(form?.name ?? "").trim() || !String(form?.lastName ?? "").trim()) {
+                return "El nombre y el apellido son requeridos";
+            }
+            if (!String(form?.documentNumber ?? "").trim()) return "El documento es requerido";
+            if (!String(form?.email ?? "").trim()) return "El correo es requerido";
+            if (!String(form?.username ?? "").trim()) return "El usuario es requerido";
+
+            const nextActive = (form?.status ?? "active") === "active";
+            const wasActive = (target?.status ?? "active") === "active";
+            try {
+                await authApi.updatePerson(target.personId, {
+                    documentNumber: String(form.documentNumber).trim(),
+                    name: String(form.name).trim(),
+                    lastName: String(form.lastName).trim(),
+                    email: String(form.email).trim().toLowerCase(),
+                    phone: String(form.phone ?? "").trim() || null,
+                });
+                await authApi.updateUser(target.id, {
+                    username: String(form.username).trim(),
+                });
+                if (nextActive !== wasActive) {
+                    await authApi.setUserStatus(target.id, nextActive);
+                    await authApi.setPersonStatus(target.personId, nextActive).catch(() => {});
+                }
+            } catch (e) {
+                return e?.message || "No se pudo actualizar el usuario en el backend";
+            }
+
+            appData.patchStaff(target.userType || USER_TYPES.STUDENT, target.id, {
+                name: `${String(form.name).trim()} ${String(form.lastName).trim()}`.trim(),
+                email: String(form.email).trim().toLowerCase(),
+                username: String(form.username).trim(),
+                status: nextActive ? "active" : "inactive",
+            });
+            if (selected?.id === target.id) {
+                setSelected((prev) =>
+                    prev
+                        ? {
+                              ...prev,
+                              name: `${String(form.name).trim()} ${String(form.lastName).trim()}`.trim(),
+                              email: String(form.email).trim().toLowerCase(),
+                              username: String(form.username).trim(),
+                              status: nextActive ? "active" : "inactive",
+                          }
+                        : prev
+                );
+            }
+            return null;
+        },
+        [appData, selected]
+    );
+
     function selectUser(user) {
         setSelected(user);
     }
@@ -605,6 +664,7 @@ export function useUsersViewModel(
         // Estado de modales
         showRegisterModal,
         showImportModal,
+        showEditModal,
         
         // Setters de filtros básicos
         setSearch,
@@ -627,10 +687,13 @@ export function useUsersViewModel(
         closeRegisterModal: () => setShowRegisterModal(false),
         openImportModal: () => setShowImportModal(true),
         closeImportModal: () => setShowImportModal(false),
-        
+        openEditModal: () => setShowEditModal(true),
+        closeEditModal: () => setShowEditModal(false),
+
         // Acciones de CRUD
         registerUser,
         importUsers,
+        updateUserDetails,
         cohortsForCourse: cohortsForCourseCode,
     };
 }

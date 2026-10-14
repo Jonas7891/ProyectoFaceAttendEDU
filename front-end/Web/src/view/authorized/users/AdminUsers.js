@@ -22,6 +22,7 @@ import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../../../context/AppDataContext";
 import { Feather } from "@expo/vector-icons";
 import RegisterStudentModal from "../../components/students/RegisterStudentModal";
+import EditUserModal from "../../components/students/EditUserModal";
 import ImportStudentsModal from "../../components/students/ImportStudentsModal";
 import StudentDetailModal from "../../components/students/StudentDetailModal";
 import { UsersFilterBar, UsersTable } from "./sections";
@@ -174,9 +175,19 @@ export function AdminUsers({ section, vm: vmProp }) {
             <StudentDetailModal
                 student={vm.selected}
                 onClose={vm.clearSelection}
+                onEdit={vm.openEditModal}
                 canManage={canManage}
                 canRegisterFace={permissions.canRegisterFace}
             />
+
+            {canManage && (
+                <EditUserModal
+                    visible={vm.showEditModal}
+                    onClose={vm.closeEditModal}
+                    onSubmit={(form) => vm.updateUserDetails(vm.selected, form)}
+                    user={vm.selected}
+                />
+            )}
 
             {canManage && (
                 <RegisterStudentModal

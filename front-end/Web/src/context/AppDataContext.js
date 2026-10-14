@@ -411,6 +411,15 @@ export function AppDataProvider({ children }) {
         [users]
     );
 
+    // Parchea la fila visible en la lista de su tipo (estudiantes,
+    // docentes o administradores) tras una edición en el backend.
+    const patchStaffFn = useCallback((userType, id, patch) => {
+        const apply = (prev) => prev.map((u) => (String(u.id) === String(id) ? { ...u, ...patch } : u));
+        if (userType === "teacher") setLoadedTeachers(apply);
+        else if (userType === "admin") setLoadedAdmins(apply);
+        else setLoadedStudents(apply);
+    }, []);
+
     const removeUserFn = useCallback(
         async (id) => {
             const updated = await storageDeleteUser(users, id);
@@ -543,6 +552,7 @@ export function AppDataProvider({ children }) {
             addUser: addUserFn,
             updateUser: updateUserFn,
             removeUser: removeUserFn,
+            patchStaff: patchStaffFn,
 
             environments,
             addEnvironment: addEnvironmentFn,
@@ -579,6 +589,7 @@ export function AppDataProvider({ children }) {
             addUserFn,
             updateUserFn,
             removeUserFn,
+            patchStaffFn,
             environments,
             addEnvironmentFn,
             updateEnvironmentFn,
