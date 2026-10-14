@@ -16,6 +16,7 @@ import { useAppData } from "../../../context/AppDataContext";
 export default function StudentDetailModal({
     student,
     onClose,
+    onEdit,
     canManage,
     canRegisterFace,
 }) {
@@ -210,7 +211,16 @@ export default function StudentDetailModal({
                             <Button variant="ghost" onPress={onClose}>{t("Cerrar")}</Button>
                             {/* Editar solo para quienes pueden gestionar */}
                             {canManage && (
-                                <Button variant="primary">{t("Editar estudiante")}</Button>
+                                <Button
+                                    variant="primary"
+                                    onPress={onEdit}
+                                >
+                                    {student?.userType === "teacher"
+                                        ? t("Editar docente")
+                                        : student?.userType === "admin"
+                                            ? t("Editar administrador")
+                                            : t("Editar estudiante")}
+                                </Button>
                             )}
                         </View>
                     </View>
