@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+    ActivityIndicator,
     Keyboard,
     KeyboardAvoidingView,
     Platform,
@@ -26,6 +27,8 @@ export default function FacialFail() {
 
     const {
         updateKey,
+        verified,
+        verifying,
         showQuestionnaire,
         showFacialUpdate,
         handleBack,
@@ -88,6 +91,16 @@ export default function FacialFail() {
                                 <Text style={[styles.optionDescription, { color: colors.textSecondary }]}>
                                     {t('facialFail.questionnaireDescription')}
                                 </Text>
+                                {verifying ? (
+                                    <View style={{flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8}}>
+                                        <ActivityIndicator size="small" color={colors.primary}/>
+                                        <Text style={{color: colors.textSecondary}}>{t('facialFail.verifying')}</Text>
+                                    </View>
+                                ) : verified ? (
+                                    <Text style={{color: '#2E7D32', fontWeight: '600', marginTop: 8}}>
+                                        ✓ {t('facialFail.verifiedBadge')}
+                                    </Text>
+                                ) : null}
                             </TouchableOpacity>
 
                             <TouchableOpacity
@@ -98,6 +111,7 @@ export default function FacialFail() {
                                         borderColor: colors.cardBorder,
                                         borderWidth: 1,
                                     },
+                                    !verified && {opacity: 0.5},
                                 ]}
                                 onPress={openFacialUpdate}
                                 activeOpacity={0.7}
@@ -108,6 +122,11 @@ export default function FacialFail() {
                                 <Text style={[styles.optionDescription, { color: colors.textSecondary }]}>
                                     {t('facialFail.updateParamsDescription')}
                                 </Text>
+                                {!verified ? (
+                                    <Text style={{color: colors.textSecondary, fontStyle: 'italic', marginTop: 8}}>
+                                        {t('facialFail.lockedHint')}
+                                    </Text>
+                                ) : null}
                             </TouchableOpacity>
 
                             <Text style={[styles.recommendationsTitle, { color: colors.text }]}>
