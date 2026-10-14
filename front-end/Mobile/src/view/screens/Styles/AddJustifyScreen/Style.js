@@ -1,7 +1,8 @@
 import {Platform, StyleSheet} from 'react-native';
 import {normalizeTypography} from '../../../../utils/typography';
 
-const styles = StyleSheet.create(normalizeTypography({
+// Estilos de agregar justificación. Todo color sale de los tokens del tema; usar con createAddJustifyStyles(colors).
+export const createAddJustifyStyles = (colors) => StyleSheet.create(normalizeTypography({
 ScrollView: {
         flex: 1,
     },
@@ -26,7 +27,7 @@ containerAddJustification: {
 
 descriptionText: {
         fontSize: 14,
-        color: "#666",
+        color: colors.textSecondary,
         textAlign: "center",
         marginBottom: 20,
         lineHeight: 20,
@@ -35,7 +36,7 @@ descriptionText: {
 inputLabel: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#1A1A1A',
+        color: colors.text,
         marginBottom: 10,
         marginTop: 5,
     },
@@ -47,7 +48,7 @@ keyboardview: {
 mainTitleAddJustification: {
         fontSize: 24,
         fontWeight: "bold",
-        color: "#1A1A1A",
+        color: colors.text,
         textAlign: "center",
         marginTop: 20,
         marginBottom: 10,
@@ -55,7 +56,7 @@ mainTitleAddJustification: {
 
 safeAreaWhite: {
         flex: 1,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: colors.backgroundWhite,
     },
 
 secondaryButton: {
@@ -63,13 +64,13 @@ secondaryButton: {
         paddingVertical: 12,
         marginTop: 10,
         marginBottom: 30,
-        borderColor: "#E0E0E0",
+        borderColor: colors.border,
         borderWidth: 1,
         borderRadius: 12,
     },
 
 secondaryButtonText: {
-        color: '#2563EB',
+        color: colors.primary,
         fontWeight: '600',
     },
 
@@ -80,7 +81,7 @@ spacer: {
 
 supportedFormats: {
         fontSize: 11,
-        color: "#999",
+        color: colors.textMuted,
         marginTop: 8,
         textAlign: "center",
     },
@@ -91,12 +92,12 @@ textArea: {
     },
 
 textInput: {
-        backgroundColor: '#F8F9FA',
+        backgroundColor: colors.inputBackground,
         borderRadius: 12,
         paddingHorizontal: 16,
         paddingVertical: 12,
         fontSize: 15,
-        color: '#333',
+        color: colors.text,
         marginBottom: 20,
     },
 
@@ -110,7 +111,7 @@ typeButton: {
 
 typeButtonText: {
         fontSize: 14,
-        color: '#666',
+        color: colors.textSecondary,
         fontWeight: '500',
     },
 
@@ -121,12 +122,12 @@ typeSelector: {
     },
 
 uploadButton: {
-        backgroundColor: "#E3F2FD",
+        backgroundColor: colors.primaryLight,
         paddingVertical: 14,
         borderRadius: 12,
         alignItems: "center",
         borderWidth: 1,
-        borderColor: "#4A90E2",
+        borderColor: colors.primary,
         borderstyle: "dashed",
         marginBottom: 10,
     },
@@ -134,8 +135,6 @@ uploadButton: {
 uploadButtonText: {
         fontSize: 15,
         fontWeight: "600",
-        color: "#4A90E2",
+        color: colors.primary,
     },
 }));
-
-export default styles;

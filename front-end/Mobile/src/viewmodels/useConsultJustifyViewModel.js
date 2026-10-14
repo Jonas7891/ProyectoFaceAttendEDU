@@ -1,6 +1,7 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useNavigation} from '@react-navigation/native';
+import {useTheme} from '../view/components/common/ThemeContext';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 import {getCurrentUser} from '../services/UserService';
 import {ActorService} from '../services/ActorService';
@@ -116,9 +117,10 @@ export function useValidJustificationsViewModel() {
 
     const handleBack = useCallback(() => navigation.goBack(), [navigation]);
 
+    const {colors} = useTheme();
     const getEstadoColor = useCallback((estado) => {
-        return estado === JUSTIFICATION_STATUS.APPROVED ? "#4CAF50" : "#FF9800";
-    }, []);
+        return estado === JUSTIFICATION_STATUS.APPROVED ? colors.success : colors.warning;
+    }, [colors]);
 
     return {
         activeSection, setActiveSection, updateKey, isLoading, error, retry: fetchData,

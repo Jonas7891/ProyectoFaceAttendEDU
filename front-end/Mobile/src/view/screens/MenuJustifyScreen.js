@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {
   Image,
   KeyboardAvoidingView,
@@ -12,7 +12,7 @@ import {
 import {useTranslation} from 'react-i18next';
 import CustomLogo from '../components/common/logo';
 import Separador from '../components/common/Separador';
-import styles from './Styles/MenuJustifyScreen/Style';
+import {createMenuJustifyStyles} from './Styles/MenuJustifyScreen/Style';
 import {useTheme} from '../components/common/ThemeContext';
 import {useMenuJustifyViewModel} from '../../viewmodels/useMenuJustifyViewModel';
 import {useUser} from '../../utils/UserContext';
@@ -20,6 +20,7 @@ import {useUser} from '../../utils/UserContext';
 export default function MenuJustifyScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const styles = useMemo(() => createMenuJustifyStyles(colors), [colors]);
 
   const {isAdmin, isStudent, isTeacher} = useUser();
 
