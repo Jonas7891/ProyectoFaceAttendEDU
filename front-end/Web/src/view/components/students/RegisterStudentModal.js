@@ -62,9 +62,16 @@ export default function RegisterStudentModal({
     // Generar items de fichas desde los cursos disponibles
     const fichaItems = useMemo(() => {
         if (!appData.courses || appData.courses.length === 0) return [];
-        
+
+        // Los códigos se repiten entre sedes: se pinta uno solo por código.
+        const seen = new Set();
         return appData.courses
             .filter(course => course.status === "active")
+            .filter(course => {
+                if (seen.has(course.code)) return false;
+                seen.add(course.code);
+                return true;
+            })
             .map(course => ({
                 value: course.code,
                 label: course.name,
@@ -147,6 +154,8 @@ export default function RegisterStudentModal({
         return () => {
             cancelled = true;
         };
+    }, [visible]);
+
     // Sincronizar el rol del formulario cuando cambia initialRole (solo si el modal se abre de nuevo)
     React.useEffect(() => {
         if (visible && initialRole !== null && form.role !== initialRole) {
