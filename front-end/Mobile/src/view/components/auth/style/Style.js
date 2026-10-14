@@ -201,13 +201,11 @@ const styleAuth = StyleSheet.create(normalizeTypography({
         opacity: 0.6,
     },
     buttonPrimary: {
-        backgroundColor: '#1081D2',
         paddingVertical: 14,
         borderRadius: 8,
         alignItems: 'center',
         marginTop: 20,
         borderWidth: 1,
-        borderColor: '#1081D2',
         width: "100%",
         alignSelf: 'center',
         textAlign: 'center',
@@ -219,7 +217,6 @@ const styleAuth = StyleSheet.create(normalizeTypography({
         opacity: 0.6,
     },
     textPrimaryButton: {
-        color: '#FFFFFF',
         fontSize: 16,
         fontWeight: '600',
     },

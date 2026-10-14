@@ -22,7 +22,8 @@ import ScrollViewWrapper from '../components/common/ScrollView';
 import BackButton from '../components/common/BackButton';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import {useAppearanceSettingsViewModel} from '../../viewmodels/useAppearanceSettingsViewModel';
-import styles from './Styles/LanguageSettingsScreen/Style';
+import {createLanguageSettingsStyles} from './Styles/LanguageSettingsScreen/Style';
+import {readableOn} from '../../theme/contrast';
 
 // ─────────────────────────────────────────────────────────────
 //  Sub-componente: barra de presets de color
@@ -62,7 +63,7 @@ function ColorPresetBar({presets, currentHex, onSelect, colors}) {
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                 }}>
-                                    <Text style={{color: '#fff', fontSize: 14, fontWeight: 'bold'}}>✓</Text>
+                                    <Text style={{color: readableOn(preset.color), fontSize: 14, fontWeight: 'bold'}}>✓</Text>
                                 </View>
                             )}
                         </TouchableOpacity>
@@ -138,7 +139,7 @@ function HSLSliderRow({label, value, min, max, step = 1, onValueChange, trackCol
                         left: `${pct * 100}%`, marginLeft: -10,
                         width: 20, height: 20, borderRadius: 10,
                         backgroundColor: trackColor,
-                        borderWidth: 2, borderColor: '#fff',
+                        borderWidth: 2, borderColor: colors.backgroundWhite,
                         shadowColor: '#000',
                         shadowOffset: {width: 0, height: 1},
                         shadowOpacity: 0.25, shadowRadius: 3,
@@ -201,6 +202,7 @@ function ColorEvaluatorCard({verdict, colors}) {
 export default function AppearanceSettingsScreen() {
     const {t}      = useTranslation();
     const {colors} = useTheme();
+    const styles = React.useMemo(() => createLanguageSettingsStyles(colors), [colors]);
 
     const {
         selectedTheme, setSelectedTheme, themes,
@@ -314,7 +316,7 @@ export default function AppearanceSettingsScreen() {
                                 paddingHorizontal: 14, paddingVertical: 8,
                                 borderRadius: 10,
                             }}>
-                                <Text style={{color: '#fff', fontSize: 12, fontWeight: '600'}}>
+                                <Text style={{color: readableOn(currentHex), fontSize: 12, fontWeight: '600'}}>
                                     {t('settings.colorPreview')}
                                 </Text>
                             </View>
@@ -346,7 +348,7 @@ export default function AppearanceSettingsScreen() {
                                         <Text style={{
                                             fontSize: 11,
                                             fontWeight: active ? '700' : '400',
-                                            color: active ? '#fff' : colors.textSecondary,
+                                            color: active ? colors.onPrimary : colors.textSecondary,
                                         }}>
                                             {visionLabels[vm]}
                                         </Text>
@@ -471,15 +473,15 @@ export default function AppearanceSettingsScreen() {
                                 activeOpacity={0.85}
                                 style={{
                                     backgroundColor: alertData.type === 'success'
-                                        ? '#10B981' + '20' : '#EF4444' + '20',
+                                        ? colors.success + '20' : colors.danger + '20',
                                     borderRadius: 10, padding: 12, marginTop: 8,
                                     borderWidth: 1,
-                                    borderColor: alertData.type === 'success' ? '#10B981' : '#EF4444',
+                                    borderColor: alertData.type === 'success' ? colors.success : colors.danger,
                                 }}
                             >
                                 <Text style={{
                                     fontSize: 13, textAlign: 'center',
-                                    color: alertData.type === 'success' ? '#10B981' : '#EF4444',
+                                    color: alertData.type === 'success' ? colors.success : colors.danger,
                                 }}>
                                     {alertData.type === 'success' ? '✅  ' : '❌  '}{alertMessage}
                                 </Text>
