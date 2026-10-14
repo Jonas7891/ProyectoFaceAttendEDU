@@ -143,9 +143,12 @@ export function validateUserForm(form) {
         if (String(form.password ?? "").length < 8) return "La contraseña debe tener al menos 8 caracteres";
     }
 
-    // El administrador queda vinculado a su sede (actor ADMIN).
-    if (form.role === USER_TYPES.ADMIN && !String(form.schoolId ?? "").trim()) {
-        return "Selecciona la sede del administrador";
+    // El docente/administrador queda vinculado a su sede (actor).
+    if (
+        (form.role === USER_TYPES.TEACHER || form.role === USER_TYPES.ADMIN) &&
+        !String(form.schoolId ?? "").trim()
+    ) {
+        return "Selecciona la sede";
     }
     
     return null;

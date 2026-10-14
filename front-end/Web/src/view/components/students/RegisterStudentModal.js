@@ -15,6 +15,7 @@ import { useTheme }               from "../hooks/useTheme";
 import { useResponsive }          from "../hooks/useResponsive";
 import { useTranslation }         from "../../../core/utils/i18n/hooks/useTranslation";
 import { useAppData }             from "../../../context/AppDataContext";
+import { useAuth }                from "../../../context/AuthContext";
 import { academicApi }            from "../../../services/api/academicApi";
 import FaceRegistrationModal      from "./FaceRegistrationModal";
 import {
@@ -43,6 +44,7 @@ export default function RegisterStudentModal({
     const { t }       = useTranslation();
     const c           = theme.colors;
     const appData     = useAppData();
+    const { user }    = useAuth();
 
     const [form,          setForm]          = useState({ ...EMPTY_FORM, role: initialRole || "" });
     const [error,         setError]         = useState(null);
@@ -148,7 +150,11 @@ export default function RegisterStudentModal({
         if (visible && initialRole !== null && form.role !== initialRole) {
             setForm(prev => ({ ...prev, role: initialRole }));
         }
-    }, [initialRole, visible]);
+        // Preseleccionar la sede del creador (el super admin global la elige).
+        if (visible && user?.schoolId != null) {
+            setForm(prev => (prev.schoolId ? prev : { ...prev, schoolId: String(user.schoolId) }));
+        }
+    }, [initialRole, visible, user]);
 
     const setField = (key, value) => {
         setForm((prev) => {
@@ -409,8 +415,8 @@ export default function RegisterStudentModal({
                     </View>
                 )}
 
-                {/* Sede del administrador (vínculo admin→sede vía actor ADMIN) */}
-                {form.role === "admin" && (
+                {/* Sede del docente/administrador (vínculo a sede vía actor) */}
+                {(form.role === "admin" || form.role === "teacher") && (
                     <View style={{ marginBottom: 2 }}>
                         <Text style={{
                             fontSize: 14,

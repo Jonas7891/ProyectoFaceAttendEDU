@@ -69,9 +69,11 @@ async function resolveSchoolId(explicit) {
 }
 
 /**
- * Crea persona + usuario + rol (+ actor si es docente).
- * Si el usuario/rol/actor falla tras crear la persona, la elimina
- * (compensa) para no dejar huérfanos en identity.
+ * Crea persona + actor + usuario + rol (en ese orden para poder
+ * compensar: el actor se crea antes que el usuario porque el usuario
+ * no tiene endpoint de borrado).
+ * Si algo falla tras crear la persona, se intenta borrar el actor y
+ * la persona para no dejar huérfanos en identity/academic.
  */
 export async function provisionStaff({
     name,
@@ -93,7 +95,23 @@ export async function provisionStaff({
     const personId = person?.personId ?? person?.person_id ?? null;
     if (!personId) throw new Error("Person creation returned no id");
 
+    let actorId = null;
     try {
+        if (role === "teacher" || role === "admin") {
+            // INSTRUCTOR en docentes, ADMIN vinculado a sede en admins:
+            // la sesión queda acotada a la sede elegida en vez de global.
+            const targetSchoolId = await resolveSchoolId(schoolId);
+            const actor = await academicApi.createActor({
+                personId,
+                actorTypeId: role === "teacher" ? 2 : 3,
+                schoolId: targetSchoolId,
+                actorCode: String(code).trim(),
+                startedOn: new Date().toISOString().slice(0, 10),
+                status: true,
+            });
+            actorId = actor?.academicActorId ?? actor?.academic_actor_id ?? null;
+        }
+
         const user = await authApi.createUser({
             personId,
             username: usernameFromEmail(email),
@@ -109,34 +127,13 @@ export async function provisionStaff({
             await authorizationApi.assignRole(userId, roleId);
         }
 
-        if (role === "teacher") {
-            const targetSchoolId = await resolveSchoolId(schoolId);
-            await academicApi.createActor({
-                personId,
-                actorTypeId: 2,
-                schoolId: targetSchoolId,
-                actorCode: String(code).trim(),
-                startedOn: new Date().toISOString().slice(0, 10),
-                status: true,
-            });
-        }
-
-        if (role === "admin") {
-            // Vínculo admin→sede (actor ADMIN): la sesión queda acotada a
-            // la sede elegida en vez de global.
-            const targetSchoolId = await resolveSchoolId(schoolId);
-            await academicApi.createActor({
-                personId,
-                actorTypeId: 3,
-                schoolId: targetSchoolId,
-                actorCode: String(code).trim(),
-                startedOn: new Date().toISOString().slice(0, 10),
-                status: true,
-            });
-        }
-
         return { personId, userId };
     } catch (err) {
+        try {
+            if (actorId != null) await academicApi.deleteActor(actorId);
+        } catch {
+            // La compensación es best-effort: se propaga el error original.
+        }
         try {
             await authApi.deletePerson(personId);
         } catch {

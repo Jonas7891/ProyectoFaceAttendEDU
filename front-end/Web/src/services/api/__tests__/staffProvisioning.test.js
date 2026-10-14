@@ -8,6 +8,7 @@ jest.mock("../authApi", () => ({
 jest.mock("../academicApi", () => ({
     academicApi: {
         createActor: jest.fn(),
+        deleteActor: jest.fn(),
         listSchools: jest.fn(),
     },
 }));
@@ -97,9 +98,14 @@ test("teacher: also creates the instructor actor in the given school", async () 
     expect(authorizationApi.assignRole).toHaveBeenCalledWith("user-1", 2);
 });
 
-test("compensates the person when user creation fails", async () => {
+test("compensates actor and person when user creation fails", async () => {
+    academicApi.listSchools.mockResolvedValue([{ schoolId: 2, name: "Sede" }]);
+    academicApi.createActor.mockResolvedValue({ academicActorId: 77 });
     authApi.createUser.mockRejectedValueOnce(new Error("duplicate"));
 
-    await expect(provisionStaff({ ...base, role: "admin" })).rejects.toThrow("duplicate");
+    await expect(
+        provisionStaff({ ...base, role: "admin", schoolId: "2" })
+    ).rejects.toThrow("duplicate");
+    expect(academicApi.deleteActor).toHaveBeenCalledWith(77);
     expect(authApi.deletePerson).toHaveBeenCalledWith("person-1");
 });

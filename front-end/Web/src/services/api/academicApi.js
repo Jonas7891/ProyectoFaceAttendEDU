@@ -25,6 +25,7 @@ export const academicApi = {
     listActorTypes: () => request(endpoints.academic.actorTypes, { method: "GET" }),
     listActors: (p) => request(endpoints.academic.actors, { method: "GET", query: p }),
     createActor: (b) => request(endpoints.academic.actors, { method: "POST", body: b }),
+    deleteActor: (id) => request(endpoints.academic.actorById(id), { method: "DELETE" }),
     listEnrollments: (p) => request(endpoints.academic.enrollments, { method: "GET", query: p }),
     createEnrollment: (b) => request(endpoints.academic.enrollments, { method: "POST", body: b }),
 };
