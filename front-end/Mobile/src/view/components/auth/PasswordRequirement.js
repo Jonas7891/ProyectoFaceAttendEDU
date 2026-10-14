@@ -1,12 +1,13 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Animated, View, Text } from 'react-native';
-import styleAuth from './style/Style';
+import { createAuthStyles } from './style/Style';
 
 /**
  * Componente de requisito de contraseña con animación
  */
 export function PasswordRequirement({ met, label, colors }) {
     const scaleAnim = useRef(new Animated.Value(1)).current;
+    const styleAuth = useMemo(() => createAuthStyles(colors), [colors]);
 
     useEffect(() => {
         Animated.sequence([
@@ -23,9 +24,7 @@ export function PasswordRequirement({ met, label, colors }) {
         ]).start();
     }, [met, scaleAnim]);
 
-    const iconColor = met
-        ? (colors.success ?? '#38A169')
-        : (colors.textSecondary ?? '#999');
+    const iconColor = met ? colors.success : colors.textSecondary;
     const icon = met ? '✓' : '○';
 
     return (

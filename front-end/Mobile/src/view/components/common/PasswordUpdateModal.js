@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useMemo, useState} from 'react';
 import {
     Alert,
     Keyboard,
@@ -15,11 +15,12 @@ import {
 import {useTranslation} from 'react-i18next';
 import {useTheme} from './ThemeContext';
 import PrimaryButton from '../auth/PrimaryButton';
-import stylesCommon from './style/Style';
+import {createCommonStyles} from './style/Style';
 
 export default function PasswordUpdateModal() {
     const { t } = useTranslation();
     const { colors } = useTheme();
+    const stylesCommon = useMemo(() => createCommonStyles(colors), [colors]);
 
     const [isPasswordModalVisible, setPasswordModalVisible] = useState(false);
     const [currentPassword, setCurrentPassword] = useState('');
@@ -113,7 +114,7 @@ export default function PasswordUpdateModal() {
                                     stylesCommon.passwordModalCard,
                                     {
                                         backgroundColor: colors.card,
-                                        borderColor: colors.border ?? colors.textSecondary + '50',
+                                        borderColor: colors.border,
                                     },
                                 ]}>
                                     <Text style={[stylesCommon.passwordModalTitle, { color: colors.text }]}>
@@ -125,13 +126,13 @@ export default function PasswordUpdateModal() {
 
                                     <View style={[
                                         stylesCommon.passwordModalDivider,
-                                        { backgroundColor: colors.border ?? colors.textSecondary + '30' },
+                                        { backgroundColor: colors.border },
                                     ]} />
 
                                     {/* Inputs — sin labels uppercase, solo placeholder */}
                                     <TextInput
                                         style={[stylesCommon.passwordModalInput, {
-                                            borderColor: colors.border ?? colors.textSecondary + '50',
+                                            borderColor: colors.border,
                                             color: colors.text,
                                             backgroundColor: colors.background,
                                         }]}
@@ -144,7 +145,7 @@ export default function PasswordUpdateModal() {
                                         contraseña</Text>
                                     <TextInput
                                         style={[stylesCommon.passwordModalInput, {
-                                            borderColor: colors.border ?? colors.textSecondary + '50',
+                                            borderColor: colors.border,
                                             color: colors.text,
                                             backgroundColor: colors.background,
                                         }]}
@@ -157,7 +158,7 @@ export default function PasswordUpdateModal() {
                                         contraseña ingresada</Text>
                                     <TextInput
                                         style={[stylesCommon.passwordModalInput, {
-                                            borderColor: colors.border ?? colors.textSecondary + '50',
+                                            borderColor: colors.border,
                                             color: colors.text,
                                             backgroundColor: colors.background,
                                         }]}
@@ -172,11 +173,11 @@ export default function PasswordUpdateModal() {
                                         <View style={[
                                             stylesCommon.passwordModalErrorRow,
                                             {
-                                                backgroundColor: (colors.danger || '#ff0000') + '12',
-                                                borderColor: (colors.danger || '#ff0000') + '35',
+                                                backgroundColor: (colors.danger) + '12',
+                                                borderColor: (colors.danger) + '35',
                                             },
                                         ]}>
-                                            <Text style={[stylesCommon.passwordModalError, { color: colors.danger || '#ff0000' }]}>
+                                            <Text style={[stylesCommon.passwordModalError, { color: colors.danger }]}>
                                                 {passwordError}
                                             </Text>
                                         </View>

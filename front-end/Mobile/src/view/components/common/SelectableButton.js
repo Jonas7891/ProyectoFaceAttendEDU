@@ -1,6 +1,7 @@
-import React, {useState} from 'react';
+import React, {useMemo, useState} from 'react';
 import {Text, TouchableOpacity, View} from 'react-native';
-import styleAuth from './style/Style';
+import {useTheme} from './ThemeContext';
+import {createCommonStyles} from './style/Style';
 
 export default function SelectableButton({
     title,
@@ -9,6 +10,8 @@ export default function SelectableButton({
     checked = false,
     onCheckChange = null,
 }) {
+    const {colors} = useTheme();
+    const styleAuth = useMemo(() => createCommonStyles(colors), [colors]);
     const [isChecked, setIsChecked] = useState(checked);
 
     const handlePress = () => {

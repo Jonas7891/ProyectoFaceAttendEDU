@@ -1,6 +1,7 @@
-import React from "react";
+import React, {useMemo} from "react";
 import {ActivityIndicator, RefreshControl, ScrollView, View,} from "react-native";
-import stylescommon from "./style/Style";
+import {useTheme} from "./ThemeContext";
+import {createCommonStyles} from "./style/Style";
 
 export default function ScrollViews({
   children,
@@ -14,10 +15,13 @@ export default function ScrollViews({
   style = {},
   keyboardShouldPersistTaps = "handled"
 }) {
+  const {colors} = useTheme();
+  const stylescommon = useMemo(() => createCommonStyles(colors), [colors]);
+
   if (loading) {
     return (
       <View style={[stylescommon.loadingContainer, contentContainerStyle]}>
-        <ActivityIndicator color="#4CAF50" />
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
@@ -26,8 +30,8 @@ export default function ScrollViews({
     <RefreshControl
       refreshing={refreshing}
       onRefresh={onRefresh}
-      colors={["#4CAF50", "#2196F3", "#FF9800"]}
-      tintColor="#4CAF50"
+      colors={[colors.primary, colors.info, colors.warning]}
+      tintColor={colors.primary}
     />
   ) : undefined;
 

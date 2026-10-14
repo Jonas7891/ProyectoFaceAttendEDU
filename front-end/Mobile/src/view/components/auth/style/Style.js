@@ -1,7 +1,9 @@
 import {Platform, StyleSheet} from 'react-native';
 import {normalizeTypography} from '../../../../utils/typography';
 
-const styleAuth = StyleSheet.create(normalizeTypography({
+// Estilos de autenticación y de modales de contraseña/registro. Todo color sale de
+// los tokens del tema (ThemeContext.colors); usar con createAuthStyles(colors).
+export const createAuthStyles = (colors) => StyleSheet.create(normalizeTypography({
     /* ── CodeInput ───────────────────────────────────────────── */
     codeInputRow: {
         flexDirection: 'row',
@@ -37,7 +39,7 @@ const styleAuth = StyleSheet.create(normalizeTypography({
     /* ── PasswordModal ───────────────────────────────────────── */
     modalWrapper: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: colors.overlay,
         justifyContent: 'center',
         padding: 20,
     },
@@ -95,7 +97,7 @@ const styleAuth = StyleSheet.create(normalizeTypography({
     strengthBarTrack: {
         height: 6,
         borderRadius: 3,
-        backgroundColor: 'rgba(0, 0, 0, 0.08)',
+        backgroundColor: colors.progressBackground,
         overflow: 'hidden',
     },
     strengthBarFill: {
@@ -140,6 +142,7 @@ const styleAuth = StyleSheet.create(normalizeTypography({
     /* ── SuccessScreen ───────────────────────────────────────── */
     safeAreaWhite: {
         flex: 1,
+        backgroundColor: colors.background,
     },
     successContainer: {
         flex: 1,
@@ -168,13 +171,13 @@ const styleAuth = StyleSheet.create(normalizeTypography({
         justifyContent: 'center',
     },
     recoveryPrimaryButtonText: {
-        color: '#FFFFFF',
+        color: colors.onPrimary,
         fontSize: 16,
         fontWeight: '700',
     },
 
     dangerButton: {
-        backgroundColor: '#ff0000',
+        backgroundColor: colors.danger,
         paddingVertical: 14,
         paddingHorizontal: 24,
         borderRadius: 8,
@@ -191,13 +194,13 @@ const styleAuth = StyleSheet.create(normalizeTypography({
         width: '100%',
     },
     dangerButtonText: {
-        color: '#FFFFFF',
+        color: colors.onDanger,
         fontSize: 16,
         fontWeight: 'bold',
         textAlign: 'center',
     },
     buttonDisabled: {
-        backgroundColor: '#CCCCCC',
+        backgroundColor: colors.tabInactive,
         opacity: 0.6,
     },
     buttonPrimary: {
@@ -222,7 +225,7 @@ const styleAuth = StyleSheet.create(normalizeTypography({
     },
     overlayRegister: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.45)',
+        backgroundColor: colors.overlay,
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 20,
@@ -230,14 +233,14 @@ const styleAuth = StyleSheet.create(normalizeTypography({
     modalContainerRegister: {
         width: '100%',
         maxHeight: '80%',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.modalBackground,
         borderRadius: 14,
         padding: 20,
     },
     titleRegister: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#0B5FA5',
+        color: colors.primary,
         marginBottom: 16,
         textAlign: 'center',
     },
@@ -246,20 +249,18 @@ const styleAuth = StyleSheet.create(normalizeTypography({
     },
     paragraphRegister: {
         fontSize: 14,
-        color: '#374151',
+        color: colors.textSecondary,
         marginBottom: 14
     },
     buttonRegister: {
-        backgroundColor: '#118FC3',
+        backgroundColor: colors.primary,
         paddingVertical: 14,
         borderRadius: 8,
         alignItems: 'center',
     },
     buttonTextRegister: {
-        color: '#FFFFFF',
+        color: colors.onPrimary,
         fontSize: 16,
         fontWeight: '600',
     },
 }));
-
-export default styleAuth;

@@ -1,15 +1,18 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {Image, View} from "react-native";
-import styleAuth from "./style/Style";
+import {useTheme} from "./ThemeContext";
+import {createCommonStyles} from "./style/Style";
 
 export default function CustomLogo({
   source,
   size = "medium",
   customSize,
   rounded = true,
-  backgroundColor = "#000000",
+  backgroundColor,
   marginBottom = 20,
 }) {
+  const {colors} = useTheme();
+  const styleAuth = useMemo(() => createCommonStyles(colors), [colors]);
 
   const getSize = () => {
     if (customSize) return customSize;
@@ -38,7 +41,7 @@ export default function CustomLogo({
           width: dimensions.width,
           height: dimensions.height,
           borderRadius: rounded ? dimensions.width / 2 : 0,
-          backgroundColor,
+          backgroundColor: backgroundColor ?? colors.text,
           marginBottom,
         },
       ]}

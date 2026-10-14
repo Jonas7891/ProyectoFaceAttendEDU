@@ -1,12 +1,13 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {Modal, ScrollView, Text, TouchableOpacity, View,} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from './ThemeContext';
-import styleAuth from "./style/Style";
+import {createCommonStyles} from "./style/Style";
 
 export default function TerminosModal({ isVisible, onClose }) {
     const { t } = useTranslation();
     const { colors } = useTheme();
+    const styleAuth = useMemo(() => createCommonStyles(colors), [colors]);
 
     return (
         <Modal

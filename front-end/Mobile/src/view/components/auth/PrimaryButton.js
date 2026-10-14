@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { TouchableOpacity, Text } from 'react-native';
 import { useTheme } from '../common/ThemeContext';
-import styleAuth from "./style/Style";
+import { createAuthStyles } from "./style/Style";
 
 export default function PrimaryButton({
   title,
@@ -9,6 +9,7 @@ export default function PrimaryButton({
   disabled = false,
 }) {
   const { colors } = useTheme();
+  const styleAuth = useMemo(() => createAuthStyles(colors), [colors]);
 
   return (
     <TouchableOpacity

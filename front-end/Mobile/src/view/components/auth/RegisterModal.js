@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Modal,
   View,
@@ -8,11 +8,12 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../common/ThemeContext';
-import styleAuth from "./style/Style";
+import { createAuthStyles } from "./style/Style";
 
 export default function RegisterModal({ isVisible, onClose }) {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const styleAuth = useMemo(() => createAuthStyles(colors), [colors]);
 
   return (
     <Modal
