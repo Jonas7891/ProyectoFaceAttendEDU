@@ -14,14 +14,14 @@ import {
     View,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import styles from "./Styles/DisplayingAttendance/Style";
+import {createDisplayingAttendanceStyles} from "./Styles/DisplayingAttendance/Style";
 import BottomBar from "../components/common/NavigationBar";
 import CustomTabs from "../components/common/CustomTabs";
 import {
-    APPROVAL_CONFIG,
+    approvalTokens,
     formatDateDisplay,
     getSubjectLabel,
-    STATUS_CONFIG,
+    statusTokens,
     useAttendanceViewModel
 } from "../../viewmodels/useDisplayingAttendanceViewModel";
 
@@ -30,9 +30,10 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function DetailRow({icon, label, value, colors, valueColor}) {
+    const styles = React.useMemo(() => createDisplayingAttendanceStyles(colors), [colors]);
     if (!value || value === "—") return null;
     return (
-        <View style={[styles.detailRow, {borderBottomColor: colors.separator ?? "#F0F0F0"}]}>
+        <View style={[styles.detailRow, {borderBottomColor: colors.separator}]}>
             <View style={styles.detailRowBody}>
                 <Text style={[styles.detailRowLabel, {color: colors.textMuted}]}>{label}</Text>
                 <Text style={[styles.detailRowValue, {color: valueColor ?? colors.text}]}>
@@ -44,6 +45,7 @@ function DetailRow({icon, label, value, colors, valueColor}) {
 }
 
 function SectionLabel({text, colors}) {
+    const styles = React.useMemo(() => createDisplayingAttendanceStyles(colors), [colors]);
     return (
         <Text style={[styles.sectionLabel, {color: colors.primary}]}>
             {text}
@@ -56,8 +58,9 @@ function SectionLabel({text, colors}) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function TeacherDetailModal({item, visible, onClose, colors, t, isDark}) {
+    const styles = React.useMemo(() => createDisplayingAttendanceStyles(colors), [colors]);
     if (!item) return null;
-    const cfg = STATUS_CONFIG[item.estado] ?? STATUS_CONFIG.ausente;
+    const cfg = statusTokens(colors, item.estado);
     const initials = item.nombre.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 
     return (
@@ -70,7 +73,7 @@ function TeacherDetailModal({item, visible, onClose, colors, t, isDark}) {
             }]}>
                 {/* Handle */}
                 <View style={[styles.sheetHandle, {
-                    backgroundColor: colors.separator ?? "#E0E0E0",
+                    backgroundColor: colors.separator,
                 }]}/>
 
                 <ScrollView
@@ -80,7 +83,7 @@ function TeacherDetailModal({item, visible, onClose, colors, t, isDark}) {
                     {/* Cabecera */}
                     <View style={styles.sheetHeaderRow}>
                         <View style={[styles.avatarLarge, {
-                            backgroundColor: isDark ? cfg.darkBg : cfg.bg,
+                            backgroundColor: cfg.bg,
                             borderColor: cfg.color,
                         }]}>
                             <Text style={[styles.avatarLargeText, {color: cfg.color}]}>
@@ -132,7 +135,7 @@ function TeacherDetailModal({item, visible, onClose, colors, t, isDark}) {
                 <TouchableOpacity
                     onPress={onClose}
                     style={[styles.sheetCloseButton, {
-                        backgroundColor: isDark ? "#2A2A2A" : "#F5F5F5",
+                        backgroundColor: colors.categoryBackground,
                     }]}
                 >
                     <Text style={[styles.sheetCloseText, {color: colors.textSecondary}]}>
@@ -149,10 +152,11 @@ function TeacherDetailModal({item, visible, onClose, colors, t, isDark}) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
+    const styles = React.useMemo(() => createDisplayingAttendanceStyles(colors), [colors]);
     if (!item) return null;
-    const cfg = STATUS_CONFIG[item.estado] ?? STATUS_CONFIG.ausente;
+    const cfg = statusTokens(colors, item.estado);
     const justCfg = item.justificacion
-        ? (APPROVAL_CONFIG[item.justificacion.estado] ?? APPROVAL_CONFIG.Pending)
+        ? approvalTokens(colors, item.justificacion.estado)
         : null;
 
     return (
@@ -165,7 +169,7 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
             }]}>
                 {/* Handle */}
                 <View style={[styles.sheetHandle, {
-                    backgroundColor: colors.separator ?? "#E0E0E0",
+                    backgroundColor: colors.separator,
                 }]}/>
 
                 <ScrollView
@@ -174,7 +178,7 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
                 >
                     {/* Cabecera */}
                     <View style={[styles.statusCard, {
-                        backgroundColor: isDark ? cfg.darkBg : cfg.bg,
+                        backgroundColor: cfg.bg,
                         borderColor: cfg.color + "55",
                     }]}>
                         <View style={styles.statusCardBody}>
@@ -224,7 +228,7 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
                                           colors={colors}/>
 
                             {/* Badge de aprobación */}
-                            <View style={[styles.approvalRow, {borderBottomColor: colors.separator ?? "#F0F0F0"}]}>
+                            <View style={[styles.approvalRow, {borderBottomColor: colors.separator}]}>
                                 <View style={styles.approvalBody}>
                                     <Text style={[styles.approvalLabel, {color: colors.textMuted}]}>
                                         {t("attendance.approvalStatus")}
@@ -252,13 +256,13 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
                     {/* Sin justificación + ausente → aviso */}
                     {!item.justificacion && item.estado === "ausente" && (
                         <View style={[styles.warnBox, {
-                            backgroundColor: isDark ? "#451A03" : "#FEF3C7",
-                            borderColor: "#F59E0B55",
+                            backgroundColor: colors.statusTarde,
+                            borderColor: colors.warning + "55",
                         }]}>
-                            <Text style={[styles.warnTitle, {color: "#F59E0B"}]}>
+                            <Text style={[styles.warnTitle, {color: colors.warning}]}>
                                 {t("attendance.noJustification")}
                             </Text>
-                            <Text style={[styles.warnMsg, {color: isDark ? "#FDE68A" : "#92400E"}]}>
+                            <Text style={[styles.warnMsg, {color: colors.statusTextTarde}]}>
                                 {t("attendance.noJustificationHint")}
                             </Text>
                         </View>
@@ -268,7 +272,7 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
                 <TouchableOpacity
                     onPress={onClose}
                     style={[styles.sheetCloseButton, {
-                        backgroundColor: isDark ? "#2A2A2A" : "#F5F5F5",
+                        backgroundColor: colors.categoryBackground,
                     }]}
                 >
                     <Text style={[styles.sheetCloseTextPlain, {color: colors.textSecondary}]}>
@@ -285,17 +289,18 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function TeacherCard({item, colors, t, isDark, onInfo}) {
+    const styles = React.useMemo(() => createDisplayingAttendanceStyles(colors), [colors]);
     const initials = item.nombre.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
-    const cfg = STATUS_CONFIG[item.estado] ?? STATUS_CONFIG.ausente;
+    const cfg = statusTokens(colors, item.estado);
 
     return (
         <View style={[styles.teacherCard, {
             backgroundColor: colors.card,
-            borderColor: colors.separator ?? "#F0F0F0",
+            borderColor: colors.separator,
             borderLeftColor: cfg.color,
         }]}>
             <View style={[styles.teacherAvatar, {
-                backgroundColor: isDark ? cfg.darkBg : cfg.bg,
+                backgroundColor: cfg.bg,
             }]}>
                 <Text style={[styles.teacherAvatarText, {color: cfg.color}]}>{initials}</Text>
             </View>
@@ -318,7 +323,7 @@ function TeacherCard({item, colors, t, isDark, onInfo}) {
                 onPress={() => onInfo(item)}
                 hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
                 style={[styles.infoButton, {
-                    backgroundColor: isDark ? cfg.darkBg : cfg.bg,
+                    backgroundColor: cfg.bg,
                 }]}
             >
                 <Image
@@ -335,13 +340,14 @@ function TeacherCard({item, colors, t, isDark, onInfo}) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function MyAttendanceCard({item, colors, t, isDark, onInfo}) {
-    const cfg = STATUS_CONFIG[item.estado] ?? STATUS_CONFIG.ausente;
+    const styles = React.useMemo(() => createDisplayingAttendanceStyles(colors), [colors]);
+    const cfg = statusTokens(colors, item.estado);
     const hasJustification = !!item.justificacion;
 
     return (
         <View style={[styles.myCard, {
             backgroundColor: colors.card,
-            borderColor: colors.separator ?? "#F0F0F0",
+            borderColor: colors.separator,
         }]}>
             <View
                 style={styles.myCardHeader}>
@@ -357,7 +363,7 @@ function MyAttendanceCard({item, colors, t, isDark, onInfo}) {
                     onPress={() => onInfo(item)}
                     hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
                     style={[styles.infoButton, {
-                        backgroundColor: isDark ? cfg.darkBg : cfg.bg,
+                        backgroundColor: cfg.bg,
                     }]}
                 >
                     <Image
@@ -368,7 +374,7 @@ function MyAttendanceCard({item, colors, t, isDark, onInfo}) {
             </View>
 
             <View style={[styles.myCardBody, {
-                borderTopColor: colors.separator ?? "#F0F0F0",
+                borderTopColor: colors.separator,
             }]}>
                 <View style={styles.myCardField}>
                     <Text style={[styles.myCardFieldLabel, {color: colors.textMuted}]}>
@@ -384,7 +390,7 @@ function MyAttendanceCard({item, colors, t, isDark, onInfo}) {
                 </View>
                 {hasJustification && (
                     <View style={[styles.justifiedBadge, {
-                        backgroundColor: isDark ? "#2E1065" : "#EDE9FE",
+                        backgroundColor: colors.info + "1F",
                     }]}>
                         <Text style={styles.justifiedBadgeText}>
                             {t("attendance.justified")}
@@ -425,6 +431,7 @@ export default function DisplayingAttendance() {
         handleOpenPicker,
         handleAndroidChange,
     } = useAttendanceViewModel();
+    const styles = React.useMemo(() => createDisplayingAttendanceStyles(colors), [colors]);
 
     return (
         <SafeAreaView
@@ -444,7 +451,7 @@ export default function DisplayingAttendance() {
                     {isAdmin && (
                         <View style={[styles.searchBox, {
                             backgroundColor: colors.inputBackground,
-                            borderColor: searchText ? colors.primary : (colors.separator ?? "#E0E0E0"),
+                            borderColor: searchText ? colors.primary : (colors.separator),
                         }]}>
                             <TextInput
                                 style={[styles.searchInput, {color: colors.text}]}
@@ -467,7 +474,7 @@ export default function DisplayingAttendance() {
                     <TouchableOpacity onPress={handleOpenPicker} style={[styles.dateButton, {
                         flex: isAdmin ? 1.2 : 1,
                         backgroundColor: colors.inputBackground,
-                        borderColor: selectedDate ? colors.primary : (colors.separator ?? "#E0E0E0"),
+                        borderColor: selectedDate ? colors.primary : (colors.separator),
                     }]}>
                         <Text style={[styles.dateText, {color: selectedDate ? colors.text : colors.textMuted}]}
                               numberOfLines={1}>
@@ -494,7 +501,7 @@ export default function DisplayingAttendance() {
                                       style={styles.modalOverlayLight}/>
                     <View style={[styles.iosSheet, {backgroundColor: colors.card}]}>
                         <View style={[styles.iosHandle, {
-                            backgroundColor: colors.separator ?? "#E0E0E0",
+                            backgroundColor: colors.separator,
                         }]}/>
                         <View style={styles.iosActionsRow}>
                             <TouchableOpacity onPress={() => setShowIOSModal(false)}>
@@ -534,7 +541,7 @@ export default function DisplayingAttendance() {
                             accessibilityLabel={t('common.retry')}
                             style={{ marginTop: 12, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12, backgroundColor: colors.primary }}
                         >
-                            <Text style={{ fontSize: 15, fontWeight: '700', color: '#FFFFFF' }}>
+                            <Text style={{ fontSize: 15, fontWeight: '700', color: colors.onPrimary }}>
                                 {t('common.retry')}
                             </Text>
                         </TouchableOpacity>

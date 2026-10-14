@@ -117,17 +117,24 @@ async function enrichRecords(records, ctx) {
   return enriched;
 }
 
-export const STATUS_CONFIG = {
-    presente: {color: "#22C55E", bg: "#DCFCE7", darkBg: "#14532D", label: "attendance.present"},
-    tarde: {color: "#F59E0B", bg: "#FEF3C7", darkBg: "#451A03", label: "attendance.late"},
-    ausente: {color: "#EF4444", bg: "#FEE2E2", darkBg: "#450A0A", label: "attendance.absent"},
-    justificado: {color: "#8B5CF6", bg: "#EDE9FE", darkBg: "#2E1065", label: "attendance.justified"},
+// Tokens de estado tomados del tema (colors de ThemeContext). Válidos en claro y oscuro.
+const tint = (hex) => hex + "1F";
+
+export const statusTokens = (colors, estado) => {
+    switch (estado) {
+        case "presente":    return {color: colors.statusTextPresente, bg: colors.statusPresente, label: "attendance.present"};
+        case "tarde":       return {color: colors.statusTextTarde, bg: colors.statusTarde, label: "attendance.late"};
+        case "justificado": return {color: colors.info, bg: tint(colors.info), label: "attendance.justified"};
+        default:            return {color: colors.danger, bg: tint(colors.danger), label: "attendance.absent"};
+    }
 };
 
-export const APPROVAL_CONFIG = {
-    Pending: {color: "#F59E0B", label: "attendance.pending"},
-    Approved: {color: "#22C55E", label: "attendance.approved"},
-    Rejected: {color: "#EF4444", label: "attendance.rejected"},
+export const approvalTokens = (colors, estado) => {
+    switch (estado) {
+        case "Approved": return {color: colors.success, label: "attendance.approved"};
+        case "Rejected": return {color: colors.danger, label: "attendance.rejected"};
+        default:         return {color: colors.warning, label: "attendance.pending"};
+    }
 };
 
 const SUBJECT_KEYS = {
