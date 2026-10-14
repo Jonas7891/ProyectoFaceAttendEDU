@@ -143,7 +143,10 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
         const inactive = item.status === false;
         return (
         <View style={[styles.manageUsersItem, {backgroundColor: colors.card}, inactive && {opacity: 0.55}]}>
-            <View style={styles.manageUsersItemInfo}>
+            <TouchableOpacity
+                style={styles.manageUsersItemInfo}
+                onPress={() => navigation.navigate('UserDetailScreen', {user: item})}
+            >
                 <Text style={[styles.manageUsersItemName, {color: colors.text}]} numberOfLines={1}>
                     {item.nombre}
                 </Text>
@@ -153,7 +156,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                         : `${item.materia || ''} • ${item.email || ''}`}
                     {inactive ? ` • ${t('manageUsers.inactive')}` : ''}
                 </Text>
-            </View>
+            </TouchableOpacity>
             <View style={styles.manageUsersItemActions}>
                 <TouchableOpacity
                     style={[styles.manageUsersActionButton, {borderColor: colors.primary}]}

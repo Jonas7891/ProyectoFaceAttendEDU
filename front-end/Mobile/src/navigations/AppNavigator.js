@@ -21,6 +21,7 @@ import AddValidJustificationScreen from '../view/screens/AddValidJustificationSc
 import ValidJustificationsScreen from '../view/screens/ConsultJustifyScreen';
 import ProfileScreen from '../view/screens/ProfileScreen';
 import ManageUsersScreen from '../view/screens/ManageUsersScreen';
+import UserDetailScreen from '../view/screens/UserDetailScreen';
 import AttendanceReportScreen from '../view/screens/AttendanceReportScreen';
 import SchoolConfigurationScreen from '../view/screens/SchoolConfigurationScreen';
 import VerifyCodeScreen from "../view/screens/login/Verifycodescreen";
@@ -220,6 +221,14 @@ export default function App() {
                                     {...props}
                                     userRole={userRole}
                                     onLogout={handleLogout}
+                                />
+                            )}
+                        </Stack.Screen>
+                        <Stack.Screen name="UserDetailScreen">
+                            {props => (
+                                <UserDetailScreen
+                                    {...props}
+                                    userRole={userRole}
                                 />
                             )}
                         </Stack.Screen>
