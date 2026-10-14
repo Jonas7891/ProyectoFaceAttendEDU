@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {
     ActivityIndicator,
     Keyboard,
@@ -18,12 +18,13 @@ import {QuestionnaireModal} from '../components/common/QuestionnaireModal';
 import {FacialUpdateModal} from '../components/common/FacialUpdateModal';
 import CustomLogo from '../components/common/logo';
 import CustomAlert from '../components/common/CustomAlert';
-import styles from './Styles/FacialFailScreen/Style';
+import {createFacialFailStyles} from './Styles/FacialFailScreen/Style';
 import {useFacialFailViewModel} from '../../viewmodels/useFacialFailScreenViewModel';
 
 export default function FacialFail() {
     const { t } = useTranslation();
     const { colors } = useTheme();
+    const styles = useMemo(() => createFacialFailStyles(colors), [colors]);
 
     const {
         updateKey,
@@ -63,7 +64,7 @@ export default function FacialFail() {
                                 <CustomLogo
                                     size="small"
                                     rounded={true}
-                                    backgroundColor="#000000"
+                                    backgroundColor={colors.cameraBackground}
                                     marginBottom={-2}
                                 />
                             </View>
@@ -97,7 +98,7 @@ export default function FacialFail() {
                                         <Text style={{color: colors.textSecondary}}>{t('facialFail.verifying')}</Text>
                                     </View>
                                 ) : verified ? (
-                                    <Text style={{color: '#2E7D32', fontWeight: '600', marginTop: 8}}>
+                                    <Text style={{color: colors.success, fontWeight: '600', marginTop: 8}}>
                                         ✓ {t('facialFail.verifiedBadge')}
                                     </Text>
                                 ) : null}
