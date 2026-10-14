@@ -169,9 +169,9 @@ function ColorEvaluatorCard({verdict, colors}) {
                 <View style={{
                     width: 10, height: 10,
                     borderRadius: 5,
-                    backgroundColor: verdict.scoreColor,
+                    backgroundColor: colors[verdict.scoreTone],
                 }} />
-                <Text style={{fontSize: 13, fontWeight: '700', color: verdict.scoreColor, textTransform: 'capitalize'}}>
+                <Text style={{fontSize: 13, fontWeight: '700', color: colors[verdict.scoreTone], textTransform: 'capitalize'}}>
                     {verdict.score}
                 </Text>
                 <Text style={{fontSize: 12, color: colors.textSecondary, marginLeft: 'auto'}}>

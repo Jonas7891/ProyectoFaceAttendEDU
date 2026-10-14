@@ -145,10 +145,10 @@ export function PasswordModal({
                                             <View style={styleAuth.strengthBarTrack}>
                                                 <View style={[styleAuth.strengthBarFill, {
                                                     width: `${(strength.score / 5) * 100}%`,
-                                                    backgroundColor: strength.color,
+                                                    backgroundColor: strength.tone ? colors[strength.tone] : 'transparent',
                                                 }]} />
                                             </View>
-                                            <Text style={[styleAuth.strengthLabel, { color: strength.color }]}>
+                                            <Text style={[styleAuth.strengthLabel, { color: strength.tone ? colors[strength.tone] : colors.textSecondary }]}>
                                                 {strength.label}
                                             </Text>
                                         </View>
