@@ -1000,5 +1000,25 @@
     "saveSuccessMsg": "Votre visage a été enregistré avec succès sur cet appareil.",
     "saveErrorTitle": "Erreur d'enregistrement",
     "saveErrorMsg": "Un problème est survenu lors de l'enregistrement de votre visage."
+  },
+  "faceCapture": {
+    "blink": "Clignez des yeux une fois",
+    "turn": "Tournez lentement la tête",
+    "openMouth": "Ouvrez et fermez la bouche",
+    "followInstruction": "Suivez l'instruction",
+    "repeatGesture": "répétez le geste",
+    "repeatSameGesture": "Répétez le même geste.",
+    "cameraNotReady": "La caméra n'est pas encore prête",
+    "missingPerson": "La personne à enregistrer est introuvable. Reconnectez-vous.",
+    "registerIntro": "Nous vous demanderons {{count}} gestes pour enregistrer votre visage.",
+    "registering": "Enregistrement du visage...",
+    "registered": "Visage enregistré",
+    "genericError": "Impossible d'enregistrer le visage. Réessayez.",
+    "currentInstruction": "INSTRUCTION ACTUELLE",
+    "gestureProgress": "Geste {{current}} sur {{total}}",
+    "registerButton": "Enregistrer le visage ({{count}} gestes)",
+    "updateButton": "Mettre à jour le visage ({{count}} gestes)",
+    "updateTitle": "Mettre à jour le visage",
+    "cameraReady": "Caméra prête. Vous pouvez enregistrer votre visage."
   }
 }
