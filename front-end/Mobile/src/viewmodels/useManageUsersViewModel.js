@@ -107,12 +107,6 @@ export function useManageUsersViewModel(enabled = true) {
     return teachers.filter(teacher => (teacher.nombre || '').toLowerCase().includes(q));
   }, [teachers]);
 
-  const addStudentById = useCallback((id) => {
-    const found = students.find(s => s.id === id);
-    if (!found) return null;
-    return found;
-  }, [students]);
-
   const persistPerson = useCallback(async (item) => {
     const nameParts = String(item.nombre || '').trim().split(/\s+/);
     const person = await PersonService.update(item.personId, new Person({
@@ -154,11 +148,6 @@ export function useManageUsersViewModel(enabled = true) {
     const updated = await setActiveStatus(student, next);
     setStudents(prev => prev.map(s => (s.id === id ? updated : s)));
   }, [students, setActiveStatus]);
-
-  const addTeacher = useCallback((teacher) => {
-    setTeachers(prev => prev.some(item => item.id === teacher.id) ? prev : [...prev, teacher]);
-    return teacher;
-  }, []);
 
   // Alta real de personal (docente/administrador): persona + usuario +
   // rol (+ actor si es docente). La sede sale del actor propio o de la
@@ -210,11 +199,9 @@ export function useManageUsersViewModel(enabled = true) {
     updateKey,
     searchStudents,
     searchTeachers,
-    addStudentById,
     createStaff,
     updateStudent,
     deleteStudent,
-    addTeacher,
     updateTeacher,
     deleteTeacher,
     refresh: fetchUsers,

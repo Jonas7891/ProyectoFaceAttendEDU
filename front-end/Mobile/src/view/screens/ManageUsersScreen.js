@@ -36,11 +36,9 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
         updateKey,
         searchStudents,
         searchTeachers,
-        addStudentById,
         createStaff,
         updateStudent,
         deleteStudent,
-        addTeacher,
         updateTeacher,
         deleteTeacher,
     } = useManageUsersViewModel(userRole === 'Administrador');
@@ -259,12 +257,9 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                         key={item.id}
                         style={[styles.manageUsersSearchItem, {borderColor: colors.border}]}
                         onPress={() => {
-                            if (tab === 'students') {
-                                addStudentById(item.id);
-                            } else {
-                                addTeacher(item);
-                            }
-                            closeModal();
+                            // El resultado ya existe en el backend: se abre
+                            // su edición real en vez de un agregado falso.
+                            openEdit(item);
                         }}
                     >
                         <View style={{flex: 1}}>
@@ -278,7 +273,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                             </Text>
                         </View>
                         <Text style={[styles.manageUsersAddButtonText, {color: colors.primary}]}>
-                            {t('common.add')}
+                            {t('common.edit')}
                         </Text>
                     </TouchableOpacity>
                 )) : (
