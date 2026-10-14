@@ -1,5 +1,6 @@
 jest.mock("../academicApi", () => ({
     academicApi: {
+        listPrograms: jest.fn(),
         listSchoolPrograms: jest.fn(),
         createCourse: jest.fn(),
     },
@@ -23,14 +24,22 @@ test("lists school programs with canonical ids", async () => {
 
     expect(academicApi.listSchoolPrograms).toHaveBeenCalledWith(2);
     expect(programs).toEqual([
-        { programId: 4, code: "ADSI", name: "Análisis y Desarrollo" },
-        { programId: 5, code: "MULT", name: "Multimedia" },
+        { programId: 4, schoolId: 2, code: "ADSI", name: "Análisis y Desarrollo" },
+        { programId: 5, schoolId: 2, code: "MULT", name: "Multimedia" },
     ]);
 });
 
-test("throws without a school context", async () => {
-    await expect(listSchoolPrograms(null)).rejects.toThrow("No school context");
+test("falls back to all programs without a school context", async () => {
+    academicApi.listPrograms.mockResolvedValue([
+        { programId: 4, schoolId: 2, code: "ADSI", name: "Análisis y Desarrollo" },
+    ]);
+
+    const programs = await listSchoolPrograms(null);
+
     expect(academicApi.listSchoolPrograms).not.toHaveBeenCalled();
+    expect(programs).toEqual([
+        { programId: 4, schoolId: 2, code: "ADSI", name: "Análisis y Desarrollo" },
+    ]);
 });
 
 test("creates the course inside the chosen program", async () => {

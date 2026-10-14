@@ -19,14 +19,18 @@ function programListOf(response) {
 }
 
 /**
- * Programas de la sede con su ID canónico.
- * @throws si no hay contexto de sede.
+ * Programas visibles: los de la sede, o todos si no hay contexto
+ * (super admin global).
  */
 export async function listSchoolPrograms(schoolId) {
-    if (schoolId == null) throw new Error("No school context for programs");
-    return programListOf(await academicApi.listSchoolPrograms(schoolId))
+    const res =
+        schoolId == null
+            ? await academicApi.listPrograms()
+            : await academicApi.listSchoolPrograms(schoolId);
+    return programListOf(res)
         .map((p) => ({
             programId: programIdOf(p),
+            schoolId: p?.schoolId ?? p?.school_id ?? schoolId ?? null,
             code: p?.code ?? "",
             name: p?.name ?? "",
         }))
