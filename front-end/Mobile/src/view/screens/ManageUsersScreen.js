@@ -33,6 +33,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
         allStudents,
         students,
         teachers,
+        schools,
         updateKey,
         searchStudents,
         searchTeachers,
@@ -57,6 +58,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
         materia: '',
         password: '',
         role: 'teacher',
+        schoolId: null,
     });
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
@@ -73,7 +75,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
 
     const openAdd = () => {
         setEditing(null);
-        setForm({nombre: '', documento: '', email: '', grado: '', telefono: '', materia: '', password: '', role: 'teacher'});
+        setForm({nombre: '', documento: '', email: '', grado: '', telefono: '', materia: '', password: '', role: 'teacher', schoolId: null});
         setSearchQuery('');
         setSearchResults([]);
         setModalMode('searchAdd');
@@ -83,7 +85,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
     // Alta de personal nuevo (docente/administrador) en el backend.
     const openCreate = () => {
         setEditing(null);
-        setForm({nombre: '', documento: '', email: '', grado: '', telefono: '', materia: '', password: '', role: 'teacher'});
+        setForm({nombre: '', documento: '', email: '', grado: '', telefono: '', materia: '', password: '', role: 'teacher', schoolId: null});
         setModalMode('create');
         setModalVisible(true);
     };
@@ -147,6 +149,10 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
             showError(t('manageUsers.validation'), t('manageUsers.passwordMin'));
             return;
         }
+        if (form.role === 'admin' && form.schoolId == null) {
+            showError(t('manageUsers.validation'), t('manageUsers.schoolRequired'));
+            return;
+        }
         setSaving(true);
         try {
             await createStaff({
@@ -156,6 +162,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                 telefono: form.telefono.trim(),
                 password: form.password,
                 role: form.role,
+                schoolId: form.schoolId,
             });
             closeModal();
         } catch (e) {
@@ -403,6 +410,34 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                     </TouchableOpacity>
                 ))}
             </View>
+
+            {form.role === 'admin' && (
+                <>
+                    <Text style={[styles.manageUsersFieldLabel, {color: colors.text}]}>
+                        {t('manageUsers.school')}
+                    </Text>
+                    <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12}}>
+                        {(schools ?? []).map((school) => (
+                            <TouchableOpacity
+                                key={String(school.schoolId)}
+                                onPress={() => setForm((f) => ({...f, schoolId: school.schoolId}))}
+                                style={[styles.manageUsersActionButton, {
+                                    borderColor: colors.primary,
+                                    backgroundColor: form.schoolId === school.schoolId ? colors.primary : 'transparent',
+                                    alignItems: 'center',
+                                    paddingHorizontal: 12,
+                                }]}
+                            >
+                                <Text style={[styles.manageUsersActionText, {
+                                    color: form.schoolId === school.schoolId ? '#fff' : colors.primary,
+                                }]}>
+                                    {school.name || school.code}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </>
+            )}
 
             <View style={styles.manageUsersModalActions}>
                 <TouchableOpacity

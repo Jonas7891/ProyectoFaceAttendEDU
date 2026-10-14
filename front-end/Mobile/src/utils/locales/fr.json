@@ -740,7 +740,9 @@
     "password": "Mot de passe",
     "passwordMin": "Minimum 8 caractères",
     "role": "Rôle",
-    "createError": "Impossible de créer l'utilisateur"
+    "createError": "Impossible de créer l'utilisateur",
+    "school": "École",
+    "schoolRequired": "Sélectionnez l'école de l'administrateur"
   },
   "schoolConfig": {
     "title": "Configuration de l'école",

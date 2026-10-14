@@ -76,6 +76,19 @@ export const StaffService = {
         });
       }
 
+      if (role === 'admin') {
+        // Vínculo admin→sede (actor ADMIN): la sesión queda acotada a la
+        // sede elegida en vez de global.
+        if (schoolId == null) throw new Error('No school context for the admin record');
+        await ActorService.create({
+          personId,
+          actorTypeId: 3,
+          schoolId,
+          actorCode: String(code).trim(),
+          status: true,
+        });
+      }
+
       return {personId, userId};
     } catch (err) {
       try {

@@ -30,8 +30,8 @@ beforeEach(() => {
   ]);
 });
 
-test('admin: crea persona, usuario y asigna rol sin actor académico', async () => {
-  const result = await StaffService.createStaff({...base, role: 'admin'});
+test('admin: crea persona, usuario, rol y actor ADMIN de sede', async () => {
+  const result = await StaffService.createStaff({...base, role: 'admin', schoolId: 5});
 
   expect(result).toEqual({personId: 'person-1', userId: 'user-1'});
   expect(PersonService.create).toHaveBeenCalledWith({
@@ -49,7 +49,6 @@ test('admin: crea persona, usuario y asigna rol sin actor académico', async () 
     authenticationType: 'Local',
   });
   expect(UserRoleService.assign).toHaveBeenCalledWith('user-1', 1);
-  expect(ActorService.create).not.toHaveBeenCalled();
 });
 
 test('teacher: además crea el actor instructor en la sede', async () => {
@@ -63,6 +62,26 @@ test('teacher: además crea el actor instructor en la sede', async () => {
     status: true,
   });
   expect(UserRoleService.assign).toHaveBeenCalledWith('user-1', 2);
+});
+
+test('admin: crea el actor ADMIN vinculado a la sede', async () => {
+  await StaffService.createStaff({...base, role: 'admin', schoolId: 5});
+
+  expect(ActorService.create).toHaveBeenCalledWith({
+    personId: 'person-1',
+    actorTypeId: 3,
+    schoolId: 5,
+    actorCode: 'ADMIN001',
+    status: true,
+  });
+  expect(UserRoleService.assign).toHaveBeenCalledWith('user-1', 1);
+});
+
+test('admin sin sede falla en vez de quedar global', async () => {
+  await expect(StaffService.createStaff({...base, role: 'admin', schoolId: null})).rejects.toThrow(
+    'No school context'
+  );
+  expect(ActorService.create).not.toHaveBeenCalled();
 });
 
 test('compensa la persona si falla la creación del usuario', async () => {

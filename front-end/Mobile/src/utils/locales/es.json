@@ -747,7 +747,9 @@
     "password": "Contraseña",
     "passwordMin": "Mínimo 8 caracteres",
     "role": "Rol",
-    "createError": "No se pudo crear el usuario"
+    "createError": "No se pudo crear el usuario",
+    "school": "Sede",
+    "schoolRequired": "Selecciona la sede del administrador"
   },
   "schoolConfig": {
     "title": "Configuración del Colegio",

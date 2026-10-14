@@ -20,6 +20,7 @@ function unwrap(data) {
 export function useManageUsersViewModel(enabled = true) {
   const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
+  const [schools, setSchools] = useState([]);
   const [loading, setLoading] = useState(true);
   const updateKey = useLanguageRefresh();
 
@@ -84,6 +85,22 @@ export function useManageUsersViewModel(enabled = true) {
       setLoading(false);
     }
   }, []);
+
+  // Sedes para el vínculo del administrador (actor ADMIN).
+  const loadSchools = useCallback(async () => {
+    try {
+      const list = await SchoolService.getAll().catch(() => []);
+      setSchools(Array.isArray(list) ? list : []);
+    } catch {
+      setSchools([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (enabled) {
+      loadSchools();
+    }
+  }, [enabled, loadSchools]);
 
   useEffect(() => {
     // Solo Administrador puede listar/gestionar usuarios: evita la petición
@@ -150,20 +167,23 @@ export function useManageUsersViewModel(enabled = true) {
   }, [students, setActiveStatus]);
 
   // Alta real de personal (docente/administrador): persona + usuario +
-  // rol (+ actor si es docente). La sede sale del actor propio o de la
-  // sede única como respaldo; sin sede no hay alta de docentes.
-  const createStaff = useCallback(async ({nombre, documento, email, telefono, password, role}) => {
-    let schoolId = null;
-    try {
-      const me = await getCurrentUser();
-      if (me?.personId) {
-        const actors = await ActorService.getByPerson(me.personId);
-        schoolId = actors?.[0]?.schoolId ?? null;
-      }
-    } catch {}
-    if (schoolId == null && role === 'teacher') {
+  // rol (+ actor: INSTRUCTOR en docentes, ADMIN vinculado a sede en
+  // administradores). La sede del formulario manda; el actor propio o la
+  // sede única son respaldo.
+  const createStaff = useCallback(async ({nombre, documento, email, telefono, password, role, schoolId}) => {
+    let targetSchoolId = schoolId ?? null;
+    if (targetSchoolId == null) {
+      try {
+        const me = await getCurrentUser();
+        if (me?.personId) {
+          const actors = await ActorService.getByPerson(me.personId);
+          targetSchoolId = actors?.[0]?.schoolId ?? null;
+        }
+      } catch {}
+    }
+    if (targetSchoolId == null && (role === 'teacher' || role === 'admin')) {
       const schools = await SchoolService.getAll().catch(() => []);
-      if (schools.length === 1) schoolId = schools[0]?.schoolId ?? null;
+      if (schools.length === 1) targetSchoolId = schools[0]?.schoolId ?? null;
     }
     await StaffService.createStaff({
       name: nombre,
@@ -173,7 +193,7 @@ export function useManageUsersViewModel(enabled = true) {
       phone: telefono || null,
       password,
       role,
-      schoolId,
+      schoolId: targetSchoolId,
     });
     await fetchUsers();
   }, [fetchUsers]);
@@ -195,6 +215,7 @@ export function useManageUsersViewModel(enabled = true) {
     allStudents: students,
     students,
     teachers,
+    schools,
     loading,
     updateKey,
     searchStudents,

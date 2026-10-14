@@ -740,7 +740,9 @@
     "password": "Password",
     "passwordMin": "Minimum 8 characters",
     "role": "Role",
-    "createError": "Could not create the user"
+    "createError": "Could not create the user",
+    "school": "School",
+    "schoolRequired": "Select the administrator school"
   },
   "schoolConfig": {
     "title": "School Configuration",
