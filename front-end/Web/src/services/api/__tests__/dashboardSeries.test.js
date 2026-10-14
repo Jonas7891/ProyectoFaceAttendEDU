@@ -1,5 +1,5 @@
-jest.mock("../schedulingApi", () => ({
-    schedulingApi: { listSessions: jest.fn() },
+jest.mock("../../../api/apiClient", () => ({
+    fetchAllPages: jest.fn(),
 }));
 jest.mock("../attendanceApi", () => ({
     attendanceApi: { recordsBySession: jest.fn(), recordsByActor: jest.fn() },
@@ -12,7 +12,7 @@ jest.mock("../referenceData", () => ({
     personMap: jest.fn(),
 }));
 
-import { schedulingApi } from "../schedulingApi";
+import { fetchAllPages } from "../../../api/apiClient";
 import { attendanceApi } from "../attendanceApi";
 import { actorMap, courseMap, listBlocks, personMap } from "../referenceData";
 import { dashboardSeries, recentActivity } from "../dashboardSeries";
@@ -31,7 +31,7 @@ beforeEach(() => {
 });
 
 test("builds daily buckets from session records", async () => {
-    schedulingApi.listSessions.mockResolvedValue([
+    fetchAllPages.mockResolvedValue([
         { classSessionId: 1, scheduleBlockId: 501, sessionDate: isoDaysAgo(1) },
         { classSessionId: 2, scheduleBlockId: 501, sessionDate: isoDaysAgo(2) },
     ]);
@@ -57,7 +57,7 @@ test("builds daily buckets from session records", async () => {
 });
 
 test("teacher scope keeps only their blocks", async () => {
-    schedulingApi.listSessions.mockResolvedValue([
+    fetchAllPages.mockResolvedValue([
         { classSessionId: 1, scheduleBlockId: 501, sessionDate: isoDaysAgo(1) },
         { classSessionId: 2, scheduleBlockId: 999, sessionDate: isoDaysAgo(1) },
     ]);
@@ -84,11 +84,11 @@ test("student scope buckets their own records by date", async () => {
     expect(attendanceApi.recordsByActor).toHaveBeenCalledWith(77);
     expect(daily).toHaveLength(2);
     // Las sesiones solo alimentan la meta (clases de hoy de su ficha).
-    expect(schedulingApi.listSessions).toHaveBeenCalled();
+    expect(fetchAllPages).toHaveBeenCalled();
 });
 
 test("recent activity joins actor, person and course", async () => {
-    schedulingApi.listSessions.mockResolvedValue([
+    fetchAllPages.mockResolvedValue([
         { classSessionId: 1, scheduleBlockId: 501, sessionDate: isoDaysAgo(0) },
     ]);
     attendanceApi.recordsBySession.mockResolvedValue([
@@ -116,7 +116,7 @@ test("fetches every session in scope", async () => {
         scheduleBlockId: 501,
         sessionDate: isoDaysAgo(i + 1),
     }));
-    schedulingApi.listSessions.mockResolvedValue(sessions);
+    fetchAllPages.mockResolvedValue(sessions);
     attendanceApi.recordsBySession.mockResolvedValue([
         { attendanceRecordId: 1, attendanceStatus: "Present" },
     ]);
@@ -128,7 +128,7 @@ test("fetches every session in scope", async () => {
 });
 
 test("empty backend means empty series, never invented figures", async () => {
-    schedulingApi.listSessions.mockResolvedValue([]);
+    fetchAllPages.mockResolvedValue([]);
     attendanceApi.recordsByActor.mockResolvedValue([]);
 
     const admin = await dashboardSeries({ role: "admin" });

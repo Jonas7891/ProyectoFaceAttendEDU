@@ -11,8 +11,9 @@
 //  pintan su estado vacío): nunca se inventan cifras.
 // ============================================================
 
-import { schedulingApi } from "./schedulingApi";
 import { attendanceApi } from "./attendanceApi";
+import { fetchAllPages } from "../../api/apiClient";
+import { endpoints } from "../../api/endpoints";
 import {
     actorMap,
     courseMap,
@@ -97,8 +98,10 @@ function rateOf(bucket) {
  * opcionalmente a los bloques del instructor o a un cohorte.
  */
 async function scopedSessions({ maxSessions = 15, instructorActorId = null, cohortId = null } = {}) {
+    // Todas las sesiones en páginas acotadas (el listado completo supera
+    // el timeout de una sola petición); las N más recientes con datos.
     const [sessionsRes, blocks] = await Promise.all([
-        schedulingApi.listSessions().catch(() => []),
+        fetchAllPages(endpoints.scheduling.sessions, {}, { by: "offset", pageSize: 200, concurrency: 4 }).catch(() => []),
         listBlocks().catch(() => null),
     ]);
     const blockList = listOf(blocks);
@@ -267,7 +270,7 @@ function timeAgoOf(iso) {
  */
 export async function recentActivity({ limit = 5, maxSessions = 5 } = {}) {
     const [sessionsRes, blocks, actors, persons, courses] = await Promise.all([
-        schedulingApi.listSessions().catch(() => []),
+        fetchAllPages(endpoints.scheduling.sessions, {}, { by: "offset", pageSize: 200, concurrency: 4 }).catch(() => []),
         listBlocks().catch(() => []),
         actorMap().catch(() => new Map()),
         personMap().catch(() => new Map()),
