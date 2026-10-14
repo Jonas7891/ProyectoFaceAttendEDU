@@ -52,12 +52,12 @@ function ColorPresetBar({presets, currentHex, onSelect, colors}) {
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 borderRightWidth: idx === presets.length - 1 ? 0 : 1,
-                                borderRightColor: 'rgba(255,255,255,0.25)',
+                                borderRightColor: readableOn(preset.color) + '40',
                             }}
                         >
                             {active && (
                                 <View style={{
-                                    backgroundColor: 'rgba(255,255,255,0.35)',
+                                    backgroundColor: readableOn(preset.color) + '59',
                                     borderRadius: 20,
                                     width: 24, height: 24,
                                     alignItems: 'center',
