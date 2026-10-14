@@ -21,8 +21,10 @@ export function validateStudentForm(form) {
     if (!form.name.trim()) return "Completa todos los campos";
     if (!form.code.trim()) return "Completa todos los campos";
     if (!form.email.trim()) return "Completa todos los campos";
-    if (!form.course.trim()) return "Completa todos los campos";
     if (!form.role) return "Completa todos los campos";
+    // El programa/ficha solo aplica a estudiantes (el formulario de
+    // docente/administrador ni siquiera lo muestra).
+    if (form.role === "student" && !form.course.trim()) return "Completa todos los campos";
     // Docentes y administradores se crean en el backend (POST /persons
     // exige documentNumber, POST /users exige password de 8-100 chars).
     if (form.role === "teacher" || form.role === "admin") {

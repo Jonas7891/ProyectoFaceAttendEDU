@@ -155,7 +155,10 @@ export default function RegisterStudentModal({
 
         // Validación — la función es importada estáticamente
         const validationErr = validateStudentForm(form);
-        if (validationErr) return;
+        if (validationErr) {
+            setError(validationErr);
+            return;
+        }
 
         // Ya no validamos biometría aquí, los campos son opcionales
         await doSave(form);
