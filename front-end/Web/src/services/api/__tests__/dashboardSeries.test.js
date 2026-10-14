@@ -110,6 +110,23 @@ test("recent activity joins actor, person and course", async () => {
     ]);
 });
 
+test("fetches every session in scope", async () => {
+    const sessions = Array.from({ length: 10 }, (_, i) => ({
+        classSessionId: 100 + i,
+        scheduleBlockId: 501,
+        sessionDate: isoDaysAgo(i + 1),
+    }));
+    schedulingApi.listSessions.mockResolvedValue(sessions);
+    attendanceApi.recordsBySession.mockResolvedValue([
+        { attendanceRecordId: 1, attendanceStatus: "Present" },
+    ]);
+
+    const { daily } = await dashboardSeries({ role: "admin" });
+
+    expect(attendanceApi.recordsBySession).toHaveBeenCalledTimes(10);
+    expect(daily).toHaveLength(10);
+});
+
 test("empty backend means empty series, never invented figures", async () => {
     schedulingApi.listSessions.mockResolvedValue([]);
     attendanceApi.recordsByActor.mockResolvedValue([]);

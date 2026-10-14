@@ -28,6 +28,22 @@ function listOf(response) {
     return response?.content ?? [];
 }
 
+// Concurrencia acotada: cada petición pasa por la verificación de sesión
+// en Kong; decenas en paralelo saturan identity y responden 503/timeout.
+async function mapLimit(items, limit, fn) {
+    const results = new Array(items.length);
+    let next = 0;
+    const workers = new Array(Math.min(limit, items.length)).fill(null).map(async () => {
+        while (next < items.length) {
+            const index = next;
+            next += 1;
+            results[index] = await fn(items[index], index);
+        }
+    });
+    await Promise.all(workers);
+    return results;
+}
+
 function sessionOf(raw) {
     return {
         id: raw?.classSessionId ?? raw?.class_session_id ?? null,
@@ -76,17 +92,11 @@ function rateOf(bucket) {
     return Math.round(((bucket.present + bucket.late) / total) * 100);
 }
 
-function cutoffIso(days) {
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - days);
-    return cutoff.toISOString().slice(0, 10);
-}
-
 /**
  * Sesiones en ventana, acotadas a la sede (vía bloques) y
  * opcionalmente a los bloques del instructor o a un cohorte.
  */
-async function scopedSessions({ days = 14, maxSessions = 30, instructorActorId = null, cohortId = null } = {}) {
+async function scopedSessions({ maxSessions = 15, instructorActorId = null, cohortId = null } = {}) {
     const [sessionsRes, blocks] = await Promise.all([
         schedulingApi.listSessions().catch(() => []),
         listBlocks().catch(() => null),
@@ -105,7 +115,6 @@ async function scopedSessions({ days = 14, maxSessions = 30, instructorActorId =
                       .map((b) => b?.scheduleBlockId ?? b?.schedule_block_id)
               )
             : null;
-    const cutoff = cutoffIso(days);
     const today = new Date().toISOString().slice(0, 10);
     const inScope = listOf(sessionsRes)
         .map(sessionOf)
@@ -120,7 +129,8 @@ async function scopedSessions({ days = 14, maxSessions = 30, instructorActorId =
             return String(block?.cohortId ?? block?.cohort_id ?? "") === String(cohortId);
         });
     const inWindow = inScope
-        .filter((s) => s.date >= cutoff)
+        // Las N sesiones más recientes con datos (sin corte por fecha: en
+        // períodos sin clase la ventana de días quedaba vacía siempre).
         .sort((a, b) => (a.date < b.date ? 1 : -1))
         .slice(0, maxSessions);
     const todaySessions = inScope.filter((s) => s.date === today);
@@ -147,19 +157,20 @@ function bucketSessions(sessions, recordsBySession) {
 /**
  * Serie diaria del actor (estudiante): sus registros por fecha.
  */
-async function actorBuckets(academicActorId, days = 14) {
+async function actorBuckets(academicActorId, maxDays = 30) {
     const records = listOf(await attendanceApi.recordsByActor(academicActorId).catch(() => []));
-    const cutoff = cutoffIso(days);
     const byDate = new Map();
     for (const record of records) {
         const date = recordDateOf(record);
-        if (!date || date < cutoff) continue;
+        if (!date) continue;
         const bucket = byDate.get(date) ?? emptyBucket();
         tally(bucket, recordStatusOf(record));
         byDate.set(date, bucket);
     }
+    // Los días más recientes con registros.
     return [...byDate.entries()]
-        .sort(([a], [b]) => (a < b ? -1 : 1))
+        .sort(([a], [b]) => (a < b ? 1 : -1))
+        .slice(-maxDays)
         .map(([date, bucket]) => ({ date, day: dayLabelOf(date), ...bucket }));
 }
 
@@ -211,15 +222,22 @@ export async function dashboardSeries({ role, instructorActorId = null, academic
 
 async function bucketsFromSessions(sessions) {
     const recordsBySession = new Map();
-    await Promise.all(
-        sessions.map(async (session) => {
-            recordsBySession.set(
-                session.id,
-                listOf(await attendanceApi.recordsBySession(session.id).catch(() => []))
-            );
-        })
-    );
+    await mapLimit(sessions, 6, async (session) => {
+        recordsBySession.set(session.id, await sessionRecords(session.id));
+    });
     return bucketSessions(sessions, recordsBySession);
+}
+
+// Un reintento con pausa ante timeouts: el agregado por sesión a veces
+// agota el tiempo bajo carga (verificación de sesión en Kong + SQL).
+// Solo ante error lanzado, no ante sesión legítimamente vacía.
+async function sessionRecords(sessionId) {
+    try {
+        return listOf(await attendanceApi.recordsBySession(sessionId));
+    } catch {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        return listOf(await attendanceApi.recordsBySession(sessionId).catch(() => []));
+    }
 }
 
 function fullNameOf(person) {
