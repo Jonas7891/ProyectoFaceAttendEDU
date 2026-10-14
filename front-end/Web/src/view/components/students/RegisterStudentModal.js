@@ -15,6 +15,7 @@ import { useTheme }               from "../hooks/useTheme";
 import { useResponsive }          from "../hooks/useResponsive";
 import { useTranslation }         from "../../../core/utils/i18n/hooks/useTranslation";
 import { useAppData }             from "../../../context/AppDataContext";
+import { academicApi }            from "../../../services/api/academicApi";
 import FaceRegistrationModal      from "./FaceRegistrationModal";
 import {
     EMPTY_FORM,
@@ -50,6 +51,8 @@ export default function RegisterStudentModal({
     const [success,       setSuccess]       = useState(false);
     const [showFaceModal, setShowFaceModal] = useState(false);
     const [fichaSearch,   setFichaSearch]   = useState(""); // Para búsqueda de fichas
+    const [schoolItems,   setSchoolItems]   = useState([]); // Sedes (vínculo del admin)
+    const [schoolsError,  setSchoolsError]  = useState(null);
     const pendingFormRef = useRef(null);
 
     // Generar items de fichas desde los cursos disponibles
@@ -110,7 +113,37 @@ export default function RegisterStudentModal({
         return `${fichaCode}00${nextNumber}`;
     };
 
-    // Sincronizar el rol del formulario cuando cambia initialRole (solo si el modal se abre de nuevo)
+    // Sedes para el vínculo del administrador (actor ADMIN).
+    React.useEffect(() => {
+        if (!visible) return;
+        let cancelled = false;
+        setSchoolsError(null);
+        academicApi.listSchools().then(
+            (list) => {
+                if (cancelled) return;
+                const rows = Array.isArray(list) ? list : list?.content ?? [];
+                setSchoolItems(
+                    rows
+                        .map((s) => ({
+                            value: String(s?.schoolId ?? s?.school_id ?? ""),
+                            label: s?.name ?? s?.code ?? "",
+                            description: s?.code ?? "",
+                            icon: "map-pin",
+                        }))
+                        .filter((item) => item.value && item.label)
+                );
+            },
+            (e) => {
+                if (!cancelled) {
+                    setSchoolItems([]);
+                    setSchoolsError(e?.message || "No se pudieron cargar las sedes");
+                }
+            }
+        );
+        return () => {
+            cancelled = true;
+        };
+    }, [visible]);
     React.useEffect(() => {
         if (visible && initialRole !== null && form.role !== initialRole) {
             setForm(prev => ({ ...prev, role: initialRole }));
@@ -373,6 +406,36 @@ export default function RegisterStudentModal({
                                 helperText={t("El usuario deberá cambiarla al ingresar")}
                             />
                         </View>
+                    </View>
+                )}
+
+                {/* Sede del administrador (vínculo admin→sede vía actor ADMIN) */}
+                {form.role === "admin" && (
+                    <View style={{ marginBottom: 2 }}>
+                        <Text style={{
+                            fontSize: 14,
+                            fontWeight: "600",
+                            color: (showErrors && !form.schoolId) || schoolsError ? c.status.error : c.text.secondary,
+                            marginBottom: 6,
+                        }}>
+                            {t("Sede") + " *"}
+                        </Text>
+                        <AnimatedDropdown
+                            items={schoolItems}
+                            value={form.schoolId}
+                            onSelect={v => setField("schoolId", v)}
+                            placeholder={t("Seleccionar sede")}
+                            searchable={true}
+                            searchPlaceholder={t("Buscar...")}
+                            triggerIcon="map-pin"
+                            error={showErrors && !form.schoolId}
+                            triggerHeight={48}
+                        />
+                        {schoolsError && (
+                            <Text style={{ fontSize: 12, color: c.status.error, marginTop: 4 }}>
+                                {schoolsError}
+                            </Text>
+                        )}
                     </View>
                 )}
 

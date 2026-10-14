@@ -41,8 +41,9 @@ beforeEach(() => {
     ]);
 });
 
-test("admin: creates person, user and assigns role without academic actor", async () => {
-    const result = await provisionStaff({ ...base, role: "admin" });
+test("admin: creates person, user, role and the ADMIN school actor", async () => {
+    academicApi.listSchools.mockResolvedValue([{ schoolId: 2, name: "Sede" }]);
+    const result = await provisionStaff({ ...base, role: "admin", schoolId: "2" });
 
     expect(result).toEqual({ personId: "person-1", userId: "user-1" });
     expect(authApi.createPerson).toHaveBeenCalledWith({
@@ -59,7 +60,27 @@ test("admin: creates person, user and assigns role without academic actor", asyn
         authenticationType: "Local",
     });
     expect(authorizationApi.assignRole).toHaveBeenCalledWith("user-1", 1);
-    expect(academicApi.createActor).not.toHaveBeenCalled();
+    expect(academicApi.createActor).toHaveBeenCalledWith(
+        expect.objectContaining({ personId: "person-1", actorTypeId: 3, schoolId: 2 })
+    );
+});
+
+test("admin without school falls back to the only school", async () => {
+    academicApi.listSchools.mockResolvedValue([{ schoolId: 2, name: "Sede" }]);
+    await provisionStaff({ ...base, role: "admin", schoolId: null });
+
+    expect(academicApi.createActor).toHaveBeenCalledWith(
+        expect.objectContaining({ schoolId: 2 })
+    );
+});
+
+test("admin without school fails when several schools exist", async () => {
+    academicApi.listSchools.mockResolvedValue([{ schoolId: 2 }, { schoolId: 3 }]);
+
+    await expect(provisionStaff({ ...base, role: "admin", schoolId: null })).rejects.toThrow(
+        "No school available"
+    );
+    expect(authApi.deletePerson).toHaveBeenCalledWith("person-1");
 });
 
 test("teacher: also creates the instructor actor in the given school", async () => {

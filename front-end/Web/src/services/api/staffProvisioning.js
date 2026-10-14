@@ -6,6 +6,8 @@
 //  2. POST /api/v1/users            (CreateUserRequest: personId, username, password)
 //  3. POST /api/v1/users/{id}/roles ({roleId}, resuelto por nombre)
 //  4. Solo docentes: POST /api/v1/academic-actors (actorTypeId 2 = INSTRUCTOR)
+//     Solo admins:    POST /api/v1/academic-actors (actorTypeId 3 = ADMIN,
+//                     vínculo admin→sede para acotar su sesión)
 //
 //  Los admins no llevan academic_actor: la identidad es agnóstica de
 //  sede (AGENTS.md §2.6) y el actor solo existe para STUDENT/INSTRUCTOR.
@@ -53,12 +55,16 @@ function usernameFromEmail(email) {
 }
 
 async function resolveSchoolId(explicit) {
-    if (explicit != null) return explicit;
+    const parsed = explicit != null && String(explicit).trim() !== "" ? Number(explicit) : null;
+    if (parsed != null && Number.isInteger(parsed)) return parsed;
+    if (explicit != null && String(explicit).trim() !== "") {
+        throw new Error("Invalid school");
+    }
     const schools = await academicApi.listSchools();
     const list = Array.isArray(schools) ? schools : schools?.content ?? [];
-    const first = list[0];
-    const id = first?.schoolId ?? first?.school_id ?? null;
-    if (id == null) throw new Error("No school available for the teacher record");
+    if (list.length !== 1) throw new Error("No school available for the staff record");
+    const id = list[0]?.schoolId ?? list[0]?.school_id ?? null;
+    if (id == null) throw new Error("No school available for the staff record");
     return id;
 }
 
@@ -108,6 +114,20 @@ export async function provisionStaff({
             await academicApi.createActor({
                 personId,
                 actorTypeId: 2,
+                schoolId: targetSchoolId,
+                actorCode: String(code).trim(),
+                startedOn: new Date().toISOString().slice(0, 10),
+                status: true,
+            });
+        }
+
+        if (role === "admin") {
+            // Vínculo admin→sede (actor ADMIN): la sesión queda acotada a
+            // la sede elegida en vez de global.
+            const targetSchoolId = await resolveSchoolId(schoolId);
+            await academicApi.createActor({
+                personId,
+                actorTypeId: 3,
                 schoolId: targetSchoolId,
                 actorCode: String(code).trim(),
                 startedOn: new Date().toISOString().slice(0, 10),

@@ -51,6 +51,7 @@ export const EMPTY_USER_FORM = {
     role: USER_TYPES.STUDENT,
     documentNumber: "",
     password: "",
+    schoolId: "",
     attendance: 0,
     hasFacial: false,      // Registro facial
     hasFingerprint: false, // Registro de huella dactilar
@@ -140,6 +141,11 @@ export function validateUserForm(form) {
     if (form.role === USER_TYPES.TEACHER || form.role === USER_TYPES.ADMIN) {
         if (!String(form.documentNumber ?? "").trim()) return "El documento es requerido";
         if (String(form.password ?? "").length < 8) return "La contraseña debe tener al menos 8 caracteres";
+    }
+
+    // El administrador queda vinculado a su sede (actor ADMIN).
+    if (form.role === USER_TYPES.ADMIN && !String(form.schoolId ?? "").trim()) {
+        return "Selecciona la sede del administrador";
     }
     
     return null;
@@ -456,7 +462,8 @@ export function useUsersViewModel(
             }
 
             // Docentes y administradores: alta real en el backend
-            // (persona + usuario + rol, más academic_actor en docentes).
+            // (persona + usuario + rol, más academic_actor en docentes y
+            // vínculo a sede con actor ADMIN en administradores).
             try {
                 await provisionStaff({
                     name: form.name.trim(),
@@ -465,7 +472,7 @@ export function useUsersViewModel(
                     documentNumber: String(form.documentNumber ?? "").trim(),
                     password: String(form.password ?? ""),
                     role: form.role === USER_TYPES.TEACHER ? "teacher" : "admin",
-                    schoolId: user?.schoolId ?? null,
+                    schoolId: String(form.schoolId ?? "").trim() || user?.schoolId,
                 });
             } catch (e) {
                 return e?.message || "No se pudo registrar el usuario en el backend";

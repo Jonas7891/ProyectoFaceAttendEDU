@@ -11,6 +11,7 @@ export const EMPTY_FORM = {
     role: "student",
     documentNumber: "",
     password: "",
+    schoolId: "",
     attendance: 0,
     hasFacial: false,      // Registro facial
     hasFingerprint: false, // Registro de huella dactilar
@@ -30,6 +31,10 @@ export function validateStudentForm(form) {
     if (form.role === "teacher" || form.role === "admin") {
         if (!String(form.documentNumber ?? "").trim()) return "Completa todos los campos";
         if (String(form.password ?? "").length < 8) return "La contraseña debe tener al menos 8 caracteres";
+    }
+    // El administrador queda vinculado a su sede (actor ADMIN).
+    if (form.role === "admin" && !String(form.schoolId ?? "").trim()) {
+        return "Selecciona la sede del administrador";
     }
     return null;
 }
