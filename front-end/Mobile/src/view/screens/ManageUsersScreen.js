@@ -149,7 +149,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
             showError(t('manageUsers.validation'), t('manageUsers.passwordMin'));
             return;
         }
-        if (form.role === 'admin' && form.schoolId == null) {
+        if ((form.role === 'admin' || form.role === 'teacher') && form.schoolId == null) {
             showError(t('manageUsers.validation'), t('manageUsers.schoolRequired'));
             return;
         }
@@ -411,7 +411,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                 ))}
             </View>
 
-            {form.role === 'admin' && (
+            {(form.role === 'admin' || form.role === 'teacher') && (
                 <>
                     <Text style={[styles.manageUsersFieldLabel, {color: colors.text}]}>
                         {t('manageUsers.school')}
