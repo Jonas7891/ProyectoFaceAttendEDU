@@ -64,11 +64,18 @@ test("creates missing keys and updates existing ones", async () => {
     });
 });
 
-test("requires a school context", async () => {
-    await expect(pushInstitutionConfig(null, { minAttendance: 80 })).rejects.toThrow(
-        "No school context"
-    );
+test("without school only persists the global security keys", async () => {
+    await pushInstitutionConfig(null, {
+        minAttendance: 80,
+        sessionTime: "45",
+    });
+
+    expect(configurationApi.schoolConfigurations).not.toHaveBeenCalled();
     expect(configurationApi.createAcademic).not.toHaveBeenCalled();
+    expect(configurationApi.createSecurity).toHaveBeenCalledWith({
+        configurationName: "web.session_time",
+        configurationValue: "45",
+    });
 });
 
 test("loads backend overrides keyed by institution field", async () => {

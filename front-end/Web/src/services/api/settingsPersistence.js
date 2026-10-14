@@ -99,21 +99,28 @@ async function upsertSecurity(existing, name, value) {
 
 /**
  * Sube los ajustes al backend (upsert por clave).
- * @throws si no hay sede o el backend rechaza alguna clave.
+ * Las claves académicas son por sede (requieren schoolId); las de
+ * seguridad son globales y se guardan siempre. Sin sede solo se
+ * persiste seguridad, nunca se finge el resto.
+ * @throws si falla alguna escritura.
  */
 export async function pushInstitutionConfig(schoolId, config) {
-    if (schoolId == null) throw new Error("No school context for settings");
     const source = config ?? {};
     const [existingAcademic, existingSecurity] = await Promise.all([
-        recordListOf(await configurationApi.schoolConfigurations(schoolId)),
+        schoolId != null
+            ? recordListOf(await configurationApi.schoolConfigurations(schoolId))
+            : [],
         recordListOf(await configurationApi.listSecurity()),
     ]);
 
-    const academicJobs = Object.entries(ACADEMIC_FIELD_NAMES)
-        .filter(([field]) => source[field] !== undefined)
-        .map(([field, name]) =>
-            upsertAcademic(schoolId, existingAcademic, name, stringifySetting(source[field]))
-        );
+    const academicJobs =
+        schoolId == null
+            ? []
+            : Object.entries(ACADEMIC_FIELD_NAMES)
+                  .filter(([field]) => source[field] !== undefined)
+                  .map(([field, name]) =>
+                      upsertAcademic(schoolId, existingAcademic, name, stringifySetting(source[field]))
+                  );
     const securityJobs = Object.entries(SECURITY_FIELD_NAMES)
         .filter(([field]) => source[field] !== undefined)
         .map(([field, name]) =>
