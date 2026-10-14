@@ -184,6 +184,7 @@ export function AdminUsers({ section, vm: vmProp }) {
                     onClose={vm.closeRegisterModal}
                     onSubmit={vm.registerUser}
                     initialRole={roleFilter || null}
+                    getCohortsForCourse={vm.cohortsForCourse}
                 />
             )}
 

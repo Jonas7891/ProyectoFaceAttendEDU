@@ -38,6 +38,7 @@ export default function RegisterStudentModal({
     onClose,
     onSubmit,
     initialRole = null, // null = modo genérico, "student"/"teacher"/"admin" = modo específico
+    getCohortsForCourse = null, // Fichas del curso (backend) para matrícula
 }) {
     const { theme }   = useTheme();
     const { isSmall } = useResponsive();
@@ -55,6 +56,7 @@ export default function RegisterStudentModal({
     const [fichaSearch,   setFichaSearch]   = useState(""); // Para búsqueda de fichas
     const [schoolItems,   setSchoolItems]   = useState([]); // Sedes (vínculo del admin)
     const [schoolsError,  setSchoolsError]  = useState(null);
+    const [cohortItems,   setCohortItems]   = useState([]); // Fichas del curso (matrícula)
     const pendingFormRef = useRef(null);
 
     // Generar items de fichas desde los cursos disponibles
@@ -145,7 +147,7 @@ export default function RegisterStudentModal({
         return () => {
             cancelled = true;
         };
-    }, [visible]);
+    // Sincronizar el rol del formulario cuando cambia initialRole (solo si el modal se abre de nuevo)
     React.useEffect(() => {
         if (visible && initialRole !== null && form.role !== initialRole) {
             setForm(prev => ({ ...prev, role: initialRole }));
@@ -155,6 +157,35 @@ export default function RegisterStudentModal({
             setForm(prev => (prev.schoolId ? prev : { ...prev, schoolId: String(user.schoolId) }));
         }
     }, [initialRole, visible, user]);
+
+    // Fichas vigentes del curso elegido (matrícula del estudiante).
+    React.useEffect(() => {
+        if (!visible || form.role !== "student" || !form.course || !getCohortsForCourse) {
+            setCohortItems([]);
+            return;
+        }
+        let cancelled = false;
+        getCohortsForCourse(form.course).then(
+            (list) => {
+                if (cancelled) return;
+                const options = (Array.isArray(list) ? list : []).map((c) => ({
+                    value: String(c.cohortId),
+                    label: c.code || String(c.cohortId),
+                    icon: "users",
+                }));
+                setCohortItems(options);
+                if (options.length === 1) {
+                    setForm((prev) => ({ ...prev, cohortId: options[0].value }));
+                }
+            },
+            () => {
+                if (!cancelled) setCohortItems([]);
+            }
+        );
+        return () => {
+            cancelled = true;
+        };
+    }, [visible, form.role, form.course, getCohortsForCourse]);
 
     const setField = (key, value) => {
         setForm((prev) => {
@@ -386,9 +417,9 @@ export default function RegisterStudentModal({
                     errorMessage={isEmpty(form.email) ? t("Campo requerido") : ""}
                 />
 
-                {/* Documento y contraseña: el backend los exige para
-                    docentes/administradores (POST /persons y POST /users) */}
-                {form.role && form.role !== "student" && (
+                {/* Documento y contraseña: el backend los exige para crear
+                    persona y usuario en todos los roles */}
+                {form.role && (
                     <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
                         <View style={{ flex: 1 }}>
                             <TextInput
@@ -442,6 +473,29 @@ export default function RegisterStudentModal({
                                 {schoolsError}
                             </Text>
                         )}
+                    </View>
+                )}
+
+                {/* Ficha de matrícula (si el curso tiene varias vigentes) */}
+                {form.role === "student" && cohortItems.length > 1 && (
+                    <View style={{ marginBottom: 2 }}>
+                        <Text style={{
+                            fontSize: 14,
+                            fontWeight: "600",
+                            color: showErrors && !form.cohortId ? c.status.error : c.text.secondary,
+                            marginBottom: 6,
+                        }}>
+                            {t("Ficha") + " *"}
+                        </Text>
+                        <AnimatedDropdown
+                            items={cohortItems}
+                            value={form.cohortId}
+                            onSelect={v => setField("cohortId", v)}
+                            placeholder={t("Seleccionar ficha")}
+                            triggerIcon="users"
+                            error={showErrors && !form.cohortId}
+                            triggerHeight={48}
+                        />
                     </View>
                 )}
 

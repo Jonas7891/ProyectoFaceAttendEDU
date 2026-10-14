@@ -19,7 +19,7 @@ import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
-import { provisionStaff } from "../services/api/staffProvisioning";
+import { provisionStaff, provisionStudent, cohortsForCourseCode } from "../services/api/staffProvisioning";
 
 // Usuarios pintados por página (la vista de Usuarios pagina en el cliente
 // para no cargar miles de filas de golpe en el DOM).
@@ -52,6 +52,7 @@ export const EMPTY_USER_FORM = {
     documentNumber: "",
     password: "",
     schoolId: "",
+    cohortId: "",
     attendance: 0,
     hasFacial: false,      // Registro facial
     hasFingerprint: false, // Registro de huella dactilar
@@ -130,17 +131,15 @@ export function validateUserForm(form) {
     if (!form.code.trim()) return "El código es requerido";
     if (!form.email.trim()) return "El correo es requerido";
     if (!form.role) return "El rol es requerido";
-    
+
+    // Todos los roles se crean en el backend (POST /persons exige
+    // documentNumber, POST /users exige password de 8-100 chars).
+    if (!String(form.documentNumber ?? "").trim()) return "El documento es requerido";
+    if (String(form.password ?? "").length < 8) return "La contraseña debe tener al menos 8 caracteres";
+
     // Validación adicional para estudiantes
     if (form.role === USER_TYPES.STUDENT && !form.course.trim()) {
         return "El programa es requerido para estudiantes";
-    }
-
-    // Docentes y administradores se crean en el backend (POST /persons
-    // exige documentNumber, POST /users exige password de 8-100 chars).
-    if (form.role === USER_TYPES.TEACHER || form.role === USER_TYPES.ADMIN) {
-        if (!String(form.documentNumber ?? "").trim()) return "El documento es requerido";
-        if (String(form.password ?? "").length < 8) return "La contraseña debe tener al menos 8 caracteres";
     }
 
     // El docente/administrador queda vinculado a su sede (actor).
@@ -150,7 +149,7 @@ export function validateUserForm(form) {
     ) {
         return "Selecciona la sede";
     }
-    
+
     return null;
 }
 
@@ -448,8 +447,23 @@ export function useUsersViewModel(
             const err = validateUserForm(form);
             if (err) return err;
 
-            // Delegar al método correspondiente según el tipo de usuario
+            // Estudiante: alta completa en el backend (persona + actor +
+            // matrícula + usuario + rol).
             if (form.role === USER_TYPES.STUDENT) {
+                try {
+                    await provisionStudent({
+                        name: form.name.trim(),
+                        code: form.code.trim(),
+                        email: form.email.trim(),
+                        documentNumber: String(form.documentNumber ?? "").trim(),
+                        password: String(form.password ?? ""),
+                        courseCode: form.course.trim(),
+                        cohortId: String(form.cohortId ?? "").trim() || null,
+                    });
+                } catch (e) {
+                    return e?.message || "No se pudo registrar el estudiante en el backend";
+                }
+
                 await appData.addStudent({
                     name: form.name.trim(),
                     code: form.code.trim(),
@@ -617,5 +631,6 @@ export function useUsersViewModel(
         // Acciones de CRUD
         registerUser,
         importUsers,
+        cohortsForCourse: cohortsForCourseCode,
     };
 }
