@@ -46,6 +46,7 @@ export function TextInput({
   rightIcon,
   style,
   inputStyle,
+  containerStyle,
   shake = false,
   ...props
 }) {
@@ -133,6 +134,7 @@ export function TextInput({
             paddingRight: rightIcon || success ? 40 : DESIGN_TOKENS.spacing.sm,
           },
           multiline && { height: 'auto', minHeight: 80, alignItems: 'flex-start' },
+          containerStyle, // Permite sobrescribir height desde fuera
         ]}
       >
         {/* Progress bar animado en el borde */}

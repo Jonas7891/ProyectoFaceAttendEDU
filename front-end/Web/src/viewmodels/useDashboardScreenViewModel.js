@@ -10,9 +10,6 @@ const ALL_TABS = [
     { key: "dashboard",    label: "Inicio",        icon: "layout"      },
     // Sección del super admin: gestión de escuelas y su asistencia
     { key: "schools",      label: "Escuelas",      icon: "map"         },
-    // Reportes de escuelas: consulta principal de todos los roles que lo ven
-    // (el super admin tiene además "Escuelas" justo antes).
-    { key: "reports",      label: "Reportes",      icon: "bar-chart-2" },
     // Pantallas de asistencia y de consulta (HU-HIST / HU-JUS / nav-map)
     { key: "history",       label: "Historial",       icon: "clock"      },
     { key: "justifications",label: "Justificaciones", icon: "file-text"  },
@@ -30,7 +27,17 @@ const ALL_TABS = [
     },
     { key: "courses",      label: "Cursos",        icon: "book-open"   },
     { key: "environments", label: "Ambientes",     icon: "home"        },
-    { key: "academic",     label: "Académico",     icon: "award"       },
+    { 
+        key: "reports",      
+        label: "Reportes",      
+        icon: "bar-chart-2",
+        // SIN optionalNavigation - el item padre navega directamente
+        // Sub-secciones de reportes
+        children: [
+            { key: "historicos", label: "Históricos", icon: "clock",          adminOnly: false },
+            { key: "sanciones",  label: "Sanciones",  icon: "alert-triangle", adminOnly: false },
+        ]
+    },
     { 
         key: "settings",     
         label: "Configuración",  

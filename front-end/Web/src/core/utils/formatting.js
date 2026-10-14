@@ -76,7 +76,7 @@ export function truncate(text, maxLength, suffix = "...") {
  * @returns {string} Texto con primera letra en mayúscula
  * @example
  * capitalize("hello world") // "Hello world"
- * capitalize("HELLO") // "Hello"
+ * capitalize("josé maría") // "José maría"
  */
 export function capitalize(text) {
   if (!text) return "";
@@ -89,7 +89,7 @@ export function capitalize(text) {
  * @returns {string} Texto con cada palabra capitalizada
  * @example
  * titleCase("hello world") // "Hello World"
- * titleCase("the quick brown fox") // "The Quick Brown Fox"
+ * titleCase("josé maría lópez") // "José María López"
  */
 export function titleCase(text) {
   if (!text) return "";
@@ -100,12 +100,28 @@ export function titleCase(text) {
 }
 
 /**
+ * Normaliza texto eliminando acentos y caracteres especiales
+ * @param {string} text - Texto a normalizar
+ * @returns {string} Texto sin acentos ni caracteres especiales
+ * @example
+ * normalizeText("Niño con tílde") // "Nino con tilde"
+ * normalizeText("José María") // "Jose Maria"
+ */
+export function normalizeText(text) {
+  if (!text) return "";
+  return text
+    .toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+/**
  * Convierte texto a slug (URL-friendly)
  * @param {string} text - Texto a convertir
  * @returns {string} Slug en minúsculas con guiones
  * @example
  * slugify("Hello World!") // "hello-world"
- * slugify("Título con Ñ") // "titulo-con-"
+ * slugify("Título con Ñ") // "titulo-con-n"
  */
 export function slugify(text) {
   if (!text) return "";
@@ -113,9 +129,17 @@ export function slugify(text) {
     .toString()
     .toLowerCase()
     .trim()
+    // Normalizar caracteres con acentos/tildes
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    // Reemplazar espacios con guiones
     .replace(/\s+/g, "-")
+    // Eliminar caracteres especiales excepto letras, números y guiones
     .replace(/[^\w\-]+/g, "")
-    .replace(/\-\-+/g, "-");
+    // Eliminar guiones múltiples
+    .replace(/\-\-+/g, "-")
+    // Eliminar guiones al inicio y final
+    .replace(/^-+|-+$/g, "");
 }
 
 /**

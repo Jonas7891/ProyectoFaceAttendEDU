@@ -59,6 +59,7 @@ import {
 import { calculateStudentCurrentPeriod } from "../core/utils/studentPeriodCalculator";
 import { getConfiguredAcademicPeriodType } from "../core/constants/academicPeriods";
 import { getStudentPeriodFromData } from "../core/utils/studentPeriodCalculator";
+import { onInstitutionConfigChange } from "../core/config/institutionConfig";
 
 // ── Filas de personal (docentes / administradores) ─────────
 // Los usuarios vienen de la API con role admin|teacher|student;
@@ -108,14 +109,64 @@ export function AppDataProvider({ children }) {
     const [loadedTeachers, setLoadedTeachers] = useState([]);
     const [loadedAdmins, setLoadedAdmins] = useState([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(true);
+    const [refreshTrigger, setRefreshTrigger] = useState(0); // Para forzar re-renders
+    
+    // Estado para el tipo de período académico (reactivo a cambios en Settings)
+    const [periodType, setPeriodType] = useState(() => getConfiguredAcademicPeriodType());
+    
+    // Función para forzar refresh del contexto (definida antes para usarla en efectos)
+    const forceRefresh = useCallback(() => {
+        setRefreshTrigger(prev => prev + 1);
+    }, []);
 
     // Temporizador del revelado: se guarda para poder cancelarlo al cerrar sesión o
     // al desmontar. Sin esto un login tras un logout dejaba dos revelados en marcha.
     const revealTimer = useRef(null);
 
-    // Obtener tipo de período académico
-    const periodType = useMemo(() => getConfiguredAcademicPeriodType(), []);
+    // Escuchar cambios en la configuración institucional
+    useEffect(() => {
+        const cleanup = onInstitutionConfigChange((newConfig) => {
+            // Actualizar el tipo de período si cambió
+            if (newConfig.academicPeriodType && newConfig.academicPeriodType !== periodType) {
+                console.log('[AppDataContext] Tipo de período cambió:', newConfig.academicPeriodType);
+                setPeriodType(newConfig.academicPeriodType);
+                // Forzar recálculo de datos enriquecidos
+                forceRefresh();
+            }
+        });
+        
+        return cleanup;
+    }, [periodType, forceRefresh]);
     
+    // Recalcular estudiantes cuando cambia el periodType
+    useEffect(() => {
+        if (loadedStudents.length > 0 && courses.length > 0) {
+            // Re-enriquecer estudiantes con el nuevo tipo de período
+            const enrichedStudents = loadedStudents.map(student => {
+                const studentCourse = courses.find(
+                    c => c.code === student.course || c.name === student.course || c.id === student.course
+                );
+                
+                if (studentCourse) {
+                    const periodInfo = calculateStudentCurrentPeriod(
+                        studentCourse.startDate,
+                        studentCourse.endDate,
+                        periodType
+                    );
+                    
+                    return {
+                        ...student,
+                        grade: periodInfo.label || '—',
+                        periodInfo,
+                    };
+                }
+                
+                return student;
+            });
+            
+            setLoadedStudents(enrichedStudents);
+        }
+    }, [periodType, courses]); // REMOVED: students, loadedStudents from dependencies    
     // Cursos enriquecidos con período calculado (fuente de verdad)
     const enrichedCourses = useMemo(() => {
         if (!courses || courses.length === 0) return courses;
@@ -359,10 +410,16 @@ export function AppDataProvider({ children }) {
 
     const updateStudentFn = useCallback(
         async (id, patch) => {
-            const updated = students.map((s) => (s.id === id ? { ...s, ...patch } : s));
+            // Actualizar en ambos estados: students (interno) y loadedStudents (expuesto)
+            const updateStudentInArray = (studentArray) => {
+                return studentArray.map((s) => (s.id === id ? { ...s, ...patch } : s));
+            };
+            
+            const updatedStudents = updateStudentInArray(students);
+            const updatedLoadedStudents = updateStudentInArray(loadedStudents);
             
             // Re-heredar período del curso para el estudiante actualizado
-            const enrichedUpdated = updated.map(student => {
+            const enrichStudent = (student) => {
                 if (student.id === id) {
                     const studentCourse = enrichedCourses.find(
                         c => c.code === student.course || c.name === student.course || c.id === student.course
@@ -374,13 +431,22 @@ export function AppDataProvider({ children }) {
                     };
                 }
                 return student;
-            });
+            };
             
-            await saveStudents(enrichedUpdated);
-            setStudents(enrichedUpdated);
-            setLoadedStudents(enrichedUpdated);
+            const enrichedStudents = updatedStudents.map(enrichStudent);
+            const enrichedLoadedStudents = updatedLoadedStudents.map(enrichStudent);
+            
+            // Persistir y actualizar estados
+            await saveStudents(enrichedStudents);
+            setStudents(enrichedStudents);
+            setLoadedStudents(enrichedLoadedStudents);
+            
+            // Forzar un refresh para asegurar que la UI se actualice
+            setTimeout(() => {
+                forceRefresh();
+            }, 100);
         },
-        [students, enrichedCourses]
+        [students, loadedStudents, enrichedCourses, forceRefresh]
     );
 
     const removeStudentFn = useCallback(
@@ -405,10 +471,16 @@ export function AppDataProvider({ children }) {
 
     const updateUserFn = useCallback(
         async (id, patch) => {
+            console.log('updateUserFn: Actualizando usuario', id, 'con patch:', patch);
             const updated = await storageUpdateUser(users, id, patch);
             setUsers(updated);
+            
+            // Forzar un refresh para asegurar que la UI se actualice
+            setTimeout(() => {
+                forceRefresh();
+            }, 100);
         },
-        [users]
+        [users, forceRefresh]
     );
 
     const removeUserFn = useCallback(
@@ -562,6 +634,9 @@ export function AppDataProvider({ children }) {
             addCourse: addCourseFn,
             updateCourse: updateCourseFn,
             removeCourse: removeCourseFn,
+            
+            // Utilidades
+            forceRefresh,
         }),
         [
             isLoading,
@@ -594,6 +669,8 @@ export function AppDataProvider({ children }) {
             addCourseFn,
             updateCourseFn,
             removeCourseFn,
+            forceRefresh,
+            refreshTrigger, // Incluir refreshTrigger para forzar re-cálculos
         ]
     );
 

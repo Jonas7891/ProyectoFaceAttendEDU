@@ -54,6 +54,7 @@ export default function EnvironmentDetailModal({
         <BaseModal
             visible={!!environment}
             onClose={onClose}
+            closeOnBackdrop={true}
             title={`${t("Ambiente")} ${environment.number}`}
             icon="home"
             iconColor={c.brand.primary}

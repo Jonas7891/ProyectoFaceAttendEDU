@@ -1,36 +1,27 @@
 // ============================================================
-//  FaceAttend EDU — Authenticated Navigator
+//  FaceAttend EDU — Authenticated Layout
 // ============================================================
-//  RESPONSABILIDAD: Navegación entre pantallas autenticadas
+//  RESPONSABILIDAD: Layout wrapper para pantallas autenticadas
 //
-//  Este navigator maneja las rutas internas de la aplicación autenticada.
-//  Ahora el Sidebar está FUERA del ciclo de navegación para mantener estado.
+//  Este componente:
+//  ✓ Proporciona sidebar persistente (desktop)
+//  ✓ Proporciona bottom tabs (móvil)  
+//  ✓ Maneja navegación entre pantallas
+//  ✓ Mantiene estado compartido del sidebar
 //
-//  Arquitectura:
-//  AppNavigator → AuthenticatedNavigator → [Sidebar persistente + Stack de Screens]
+//  NO debe:
+//  ✗ Crear jerarquías de rutas (Stack.Navigator)
+//  ✗ Validar autenticación (eso es AuthMiddleware)
+//  ✗ Renderizar NotAuthorized
+//
+//  Es un layout puro que wrappea el contenido de la pantalla
 // ============================================================
 
 import React from "react";
-import { View , Text, TouchableOpacity, ScrollView } from "react-native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-
-// ── Importación de Screens ────────────────────────────────────
-import DashboardScreen from "../view/screens/DashboardScreen";
-import SchoolsScreen from "../view/screens/SchoolsScreen";
-import UsersScreen from "../view/screens/UsersScreen";
-import CoursesScreen from "../view/screens/CoursesScreen";
-import EnvironmentsScreen from "../view/screens/EnvironmentsScreen";
-import ReportsScreen from "../view/screens/ReportsScreen";
-import BiometricsScreen from "../view/screens/BiometricsScreen";
-import SettingsScreen from "../view/screens/SettingsScreen";
-import HistoryScreen from "../view/screens/HistoryScreen";
-import JustificationsScreen from "../view/screens/JustificationsScreen";
-import SchoolInfoScreen from "../view/screens/SchoolInfoScreen";
-import AcademicScreen from "../view/screens/AcademicScreen";
-import ContactsScreen from "../view/screens/ContactsScreen";
-
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Feather } from "@expo/vector-icons";
 // ── Importación de Layout Components ──────────────────────────
 import { 
     SidebarHeader, 
@@ -39,31 +30,18 @@ import {
     SidebarItemCollapsible, 
     SidebarFooter,
     CollapsibleSidebar 
-} from "../view/components/common/layout";
+} from "../components/common/layout";
 
 // ── Importación de componentes de seguridad ───────────────────
-import { NotAuthorized, AUTH_EXCEPTION_TYPES } from "../view/authorized/NotAuthorized";
+import { SessionManager } from "../components/auth";
 
 // ── Importación de Hooks ──────────────────────────────────────
-import { useTheme } from "../view/components/hooks/useTheme";
-import { useResponsive } from "../view/components/hooks/useResponsive";
-import { useAuth } from "../context/AuthContext";
-import { useRolePermissions } from "../viewmodels/useRolePermissions";
-import { useDashboardScreenViewModel } from "../viewmodels/useDashboardScreenViewModel";
-import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
-import { roleDisplayLabel } from "../core/utils/backendRoles";
-import { Feather } from "@expo/vector-icons";
-
-const Stack = createNativeStackNavigator();
-
-// ── Contexto para compartir estado del sidebar ────────────────
-const SidebarStateContext = React.createContext({
-    sidebarSelectedTab: "dashboard",
-    sidebarSelectedSubTab: null,
-    setSidebarSelectedTab: () => {},
-    setSidebarSelectedSubTab: () => {},
-});
-
+import { useTheme } from "../components/hooks/useTheme";
+import { useResponsive } from "../components/hooks/useResponsive";
+import { useAuth } from "../../context/AuthContext";
+import { useDashboardScreenViewModel } from "../../viewmodels/useDashboardScreenViewModel";
+import { useTranslation } from "../../core/utils/i18n/hooks/useTranslation";
+import { roleDisplayLabel } from "../../core/utils/backendRoles";
 // ── Constantes de mapeo de rutas ────────────────────────────
 const ROUTE_MAP = {
     "dashboard": "Dashboard",
@@ -95,8 +73,15 @@ const ROUTE_TO_KEY_MAP = {
     "Settings": "settings",
 };
 
+// ── Contexto para compartir estado del sidebar ────────────────
+const SidebarStateContext = React.createContext({
+    sidebarSelectedTab: "dashboard",
+    sidebarSelectedSubTab: null,
+    setSidebarSelectedTab: () => {},
+    setSidebarSelectedSubTab: () => {},
+});
+
 // ── Sidebar Persistente Component ────────────────────────────
-// Este componente DEBE estar dentro del Stack.Navigator para tener acceso a useNavigation
 function PersistentSidebar() {
     const navigation = useNavigation();
     const { theme } = useTheme();
@@ -155,7 +140,17 @@ function PersistentSidebar() {
         setSidebarSelectedTab(tabKey);
         setSidebarSelectedSubTab(subTabKey || null);
         
-        const params = subTabKey ? { section: subTabKey } : undefined;
+        // Construir params: si hay subTabKey, usarlo; si no, y es "users", usar "all"
+        let params;
+        if (subTabKey) {
+            params = { section: subTabKey };
+        } else if (tabKey === "users") {
+            // Click en el item padre "Usuarios" → mostrar todos
+            params = { section: "all" };
+        } else {
+            params = undefined;
+        }
+        
         navigation.navigate(routeName, params);
     }, [navigation, setSidebarSelectedTab, setSidebarSelectedSubTab]);
     
@@ -170,13 +165,9 @@ function PersistentSidebar() {
     // Manejo de logout
     const handleLogout = React.useCallback(async () => {
         await logout();
-        const parent = navigation.getParent();
-        if (parent) {
-            parent.replace("FaceAttendEDU");
-        }
+        navigation.navigate("FaceAttendEDU");
     }, [logout, navigation]);
     
-    // NO usar early return - el padre decide si renderizar este componente
     return (
         <CollapsibleSidebar width={240}>
             {user && (
@@ -221,20 +212,16 @@ function PersistentSidebar() {
                             }
                             : () => handleNavigate(tab.key);
                         
-                        // Memoizar children para evitar recrear en cada render
-                        const childrenItems = React.useMemo(() => 
-                            tab.children.map(child => ({
-                                key: child.key,
-                                icon: child.icon,
-                                label: child.label,
-                                active: isTabActive(tab.key, child.key),
-                                onPress: () => handleNavigate(tab.key, child.key),
-                                badge: child.badge,
-                                indicator: child.indicator,
-                            })), 
-                            // eslint-disable-next-line react-hooks/exhaustive-deps
-                            [tab.key, tab.children, sidebarSelectedTab, sidebarSelectedSubTab]
-                        );
+                        // Mapear children items
+                        const childrenItems = tab.children.map(child => ({
+                            key: child.key,
+                            icon: child.icon,
+                            label: child.label,
+                            active: isTabActive(tab.key, child.key),
+                            onPress: () => handleNavigate(tab.key, child.key),
+                            badge: child.badge,
+                            indicator: child.indicator,
+                        }));
                         
                         return (
                             <SidebarItemCollapsible
@@ -244,8 +231,9 @@ function PersistentSidebar() {
                                 active={shouldShowActive}
                                 defaultExpanded={shouldShowActive}
                                 onPress={mainItemOnPress}
-                                children={childrenItems}
-                            />
+                            >
+                                {childrenItems}
+                            </SidebarItemCollapsible>
                         );
                     }
                     
@@ -273,23 +261,6 @@ function PersistentSidebar() {
     );
 }
 
-// ── Wrapper que renderiza Sidebar + Screen ───────────────────
-function ScreenWithSidebar({ children }) {
-    const { isSmall } = useResponsive();
-    
-    return (
-        <View style={{ flex: 1, flexDirection: "row" }}>
-            {/* Sidebar persistente - renderizado condicional en PADRE */}
-            {!isSmall && <PersistentSidebar />}
-            
-            {/* Contenido de la screen */}
-            <View style={{ flex: 1 }}>
-                {children}
-            </View>
-        </View>
-    );
-}
-
 // ── Bottom Tabs Component (solo móvil) ───────────────────────
 function BottomTabs() {
     const navigation = useNavigation();
@@ -302,26 +273,31 @@ function BottomTabs() {
     // Usar contexto compartido
     const { setSidebarSelectedTab, setSidebarSelectedSubTab } = React.useContext(SidebarStateContext);
     
-    // Estado para tracking de ruta actual
-    const [currentRouteName, setCurrentRouteName] = React.useState("Dashboard");
+    // Estado para tracking de ruta actual derivado del navigation state
+    const [navigationState, setNavigationState] = React.useState(null);
     
     // Listener para cambios de navegación
     React.useEffect(() => {
-        const unsubscribe = navigation.addListener('state', (e) => {
-            const state = navigation.getState();
-            if (state?.routes && state.routes.length > 0) {
-                setCurrentRouteName(state.routes[state.index]?.name || "Dashboard");
-            }
-        });
+        const updateNavigationState = () => {
+            setNavigationState(navigation.getState());
+        };
         
-        // Obtener estado inicial
-        const state = navigation.getState();
-        if (state?.routes && state.routes.length > 0) {
-            setCurrentRouteName(state.routes[state.index]?.name || "Dashboard");
-        }
+        // Establecer estado inicial
+        updateNavigationState();
+        
+        // Escuchar cambios
+        const unsubscribe = navigation.addListener('state', updateNavigationState);
         
         return unsubscribe;
     }, [navigation]);
+    
+    // Derivar currentRouteName del navigation state
+    const currentRouteName = React.useMemo(() => {
+        if (navigationState?.routes && navigationState.routes.length > 0) {
+            return navigationState.routes[navigationState.index]?.name || "Dashboard";
+        }
+        return "Dashboard";
+    }, [navigationState]);
     
     const currentTabKey = ROUTE_TO_KEY_MAP[currentRouteName] || "dashboard";
     
@@ -364,9 +340,14 @@ function BottomTabs() {
                 
                 const handleBottomTabPress = () => {
                     if (item.optionalNavigation && item.children && item.children.length > 0) {
+                        // Navegar al primer hijo si tiene optionalNavigation
                         const firstChild = item.children[0];
                         handleNavigate(item.key, firstChild.key);
+                    } else if (!item.optionalNavigation && item.children && item.children.length > 0 && item.key === "users") {
+                        // Para "users", navegar al padre con section: "all"
+                        handleNavigate(item.key, "all");
                     } else {
+                        // Navegar normalmente sin subTabKey
                         handleNavigate(item.key);
                     }
                 };
@@ -404,12 +385,11 @@ function BottomTabs() {
     );
 }
 
-export default function AuthenticatedNavigator() {
-    const { theme } = useTheme();
+// ── Layout Principal ──────────────────────────────────────────
+export default function AuthenticatedLayout({ children }) {
     const { isSmall } = useResponsive();
-    const { user } = useAuth();
-    const permissions = useRolePermissions();
-    const c = theme.colors;
+    const { user, saveIntendedRoute, clearIntendedRoute } = useAuth();
+    const navigation = useNavigation();
     
     // ============================================================
     // HOOKS - Deben estar ANTES de cualquier return condicional
@@ -425,100 +405,66 @@ export default function AuthenticatedNavigator() {
     }), [sidebarSelectedTab, sidebarSelectedSubTab]);
     
     const bottomPadding = isSmall ? 64 : 0;
-    
+
     // ============================================================
-    // VALIDACIÓN GLOBAL DE AUTORIZACIÓN
-    // Si el usuario NO está autorizado, renderizar SOLO NotAuthorized
-    // Esto previene que se renderice CUALQUIER layout (sidebar, tabs, etc.)
+    // TRACKING DE RUTA INTERNA para guardar intención de navegación
     // ============================================================
     
-    // 1. Verificar sesión activa
-    if (!user) {
-        return <NotAuthorized type={AUTH_EXCEPTION_TYPES.NO_SESSION} />;
-    }
+    // Flag para rastrear si ya se inició el tracking (derivado del usuario)
+    const isRouteTrackingActive = React.useMemo(() => {
+        return user !== null;
+    }, [user]);
     
-    // 2. Verificar rol asignado
-    if (!user.role) {
-        return <NotAuthorized type={AUTH_EXCEPTION_TYPES.NO_ROLE} />;
-    }
-    
-    // 3. Verificar que el rol sea válido
-    if (!permissions.isAdmin && !permissions.isTeacher && !permissions.isStudent) {
-        return <NotAuthorized type={AUTH_EXCEPTION_TYPES.INSUFFICIENT_PERMISSIONS} />;
-    }
-    
-    // ============================================================
-    // USUARIO AUTORIZADO - Renderizar navegación normal
-    // ============================================================
-    
+    // Listener de navegación - solo se activa cuando hay usuario
+    React.useEffect(() => {
+        if (!isRouteTrackingActive) return;
+        
+        //console.log('[AuthenticatedLayout] Starting navigation listener for route tracking');
+        
+        const unsubscribe = navigation.addListener('focus', () => {
+            // Obtener el estado del navigation stack
+            const state = navigation.getState();
+            if (state?.routes && state.routes.length > 0) {
+                const activeRoute = state.routes[state.index];
+                const routeName = activeRoute?.name || "Dashboard";
+                const routeParams = activeRoute?.params || {};
+                
+                console.log('[AuthenticatedLayout] Current route:', routeName, routeParams);
+                
+                // Guardar TODAS las rutas autenticadas para redirección futura
+                const routeInfo = {
+                    name: routeName,
+                    params: routeParams
+                };
+                console.log('[AuthenticatedLayout] Saving route for future redirect:', routeInfo);
+                saveIntendedRoute(routeInfo);
+            }
+        });
+        
+        return unsubscribe;
+    }, [isRouteTrackingActive, navigation, saveIntendedRoute, clearIntendedRoute]);
+
     return (
         <SidebarStateContext.Provider value={sidebarState}>
-            <SafeAreaProvider>
-                <SafeAreaView
-                    style={{ flex: 1, flexDirection: "row", backgroundColor: c.background.app }}
-                    edges={["top", "bottom"]}
-                >
-                    {/* Contenedor del Stack Navigator con Sidebar integrado */}
-                    <View style={{ 
-                        flex: 1,
-                        overflow: "hidden",
-                        paddingBottom: bottomPadding,
-                    }}>
-                        <Stack.Navigator
-                            initialRouteName="Dashboard"
-                            screenOptions={{
-                                headerShown: false,
-                                animation: "fade",
-                                animationDuration: 150,
-                            }}
-                        >
-                            <Stack.Screen name="Dashboard">
-                                {(props) => <ScreenWithSidebar><DashboardScreen {...props} /></ScreenWithSidebar>}
-                            </Stack.Screen>
-                            <Stack.Screen name="Schools">
-                                {(props) => <ScreenWithSidebar><SchoolsScreen {...props} /></ScreenWithSidebar>}
-                            </Stack.Screen>
-                            <Stack.Screen name="Users">
-                                {(props) => <ScreenWithSidebar><UsersScreen {...props} /></ScreenWithSidebar>}
-                            </Stack.Screen>
-                            <Stack.Screen name="Courses">
-                                {(props) => <ScreenWithSidebar><CoursesScreen {...props} /></ScreenWithSidebar>}
-                            </Stack.Screen>
-                            <Stack.Screen name="Environments">
-                                {(props) => <ScreenWithSidebar><EnvironmentsScreen {...props} /></ScreenWithSidebar>}
-                            </Stack.Screen>
-                            <Stack.Screen name="Reports">
-                                {(props) => <ScreenWithSidebar><ReportsScreen {...props} /></ScreenWithSidebar>}
-                            </Stack.Screen>
-                            <Stack.Screen name="History">
-                                {(props) => <ScreenWithSidebar><HistoryScreen {...props} /></ScreenWithSidebar>}
-                            </Stack.Screen>
-                            <Stack.Screen name="Justifications">
-                                {(props) => <ScreenWithSidebar><JustificationsScreen {...props} /></ScreenWithSidebar>}
-                            </Stack.Screen>
-                            <Stack.Screen name="SchoolInfo">
-                                {(props) => <ScreenWithSidebar><SchoolInfoScreen {...props} /></ScreenWithSidebar>}
-                            </Stack.Screen>
-                            <Stack.Screen name="Academic">
-                                {(props) => <ScreenWithSidebar><AcademicScreen {...props} /></ScreenWithSidebar>}
-                            </Stack.Screen>
-                            <Stack.Screen name="Contacts">
-                                {(props) => <ScreenWithSidebar><ContactsScreen {...props} /></ScreenWithSidebar>}
-                            </Stack.Screen>
-                            {/* Sin item en la sidebar: se abre desde «Tomar asistencia» en Inicio. */}
-                            <Stack.Screen name="Biometrics">
-                                {(props) => <ScreenWithSidebar><BiometricsScreen {...props} /></ScreenWithSidebar>}
-                            </Stack.Screen>
-                            <Stack.Screen name="Settings">
-                                {(props) => <ScreenWithSidebar><SettingsScreen {...props} /></ScreenWithSidebar>}
-                            </Stack.Screen>
-                        </Stack.Navigator>
-                    </View>
-                    
-                    {/* Bottom tabs (solo móvil) - renderizado condicional */}
-                    {isSmall && <BottomTabs />}
-                </SafeAreaView>
-            </SafeAreaProvider>
+            <View style={{ flex: 1, flexDirection: "row" }}>
+                {/* Sidebar persistente - solo desktop */}
+                {!isSmall && <PersistentSidebar />}
+                
+                {/* Contenido de la pantalla */}
+                <View style={{ 
+                    flex: 1,
+                    paddingBottom: bottomPadding,
+                    overflow: "hidden",
+                }}>
+                    {children}
+                </View>
+                
+                {/* Bottom tabs - solo móvil */}
+                {isSmall && <BottomTabs />}
+            </View>
+
+            {/* Session Manager - Gestiona advertencias de timeout */}
+            <SessionManager />
         </SidebarStateContext.Provider>
     );
 }

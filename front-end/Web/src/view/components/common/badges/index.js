@@ -8,7 +8,7 @@ export {
   AttendanceBadge, 
   AttendanceStatusBadge,
   useAttendanceColor,
+  useAttendanceStatus,
   AttendanceStatusIcon,
-  ATTENDANCE_THRESHOLDS,
 } from './StatusBadge';
 export { FloatingBadge } from './FloatingBadge';

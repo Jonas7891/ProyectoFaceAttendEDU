@@ -21,12 +21,11 @@ import { useCoursesViewModel } from "../../../viewmodels/useCoursesViewModel";
 import { useRolePermissions } from "../../../viewmodels/useRolePermissions";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useCourseDetails } from "../../../core/hooks/useCourseDetails";
-import { CourseDetailModal, RegisterCourseModal, ImportCoursesModal } from "./modals";
+import { CourseDetailModal, RegisterCourseModal } from "./modals";
 
 // ── CourseCard (diseño original con datos dinámicos) ──────────────────────────
 
-export function CourseCard({ course, onPress, onStudentsPress }) {
-    const { theme } = useTheme();
+export function CourseCard({ course, onPress, onStudentsPress, onReportsPress }) {    const { theme } = useTheme();
     const { t } = useTranslation();
     const c = theme.colors;
     
@@ -124,6 +123,10 @@ export function CourseCard({ course, onPress, onStudentsPress }) {
                     }}
                 >
                     <TouchableOpacity
+                        onPress={(e) => {
+                            e.stopPropagation(); // Evitar que se dispare el onPress del Card
+                            onReportsPress(course);
+                        }}
                         style={{
                             flex: 1,
                             flexDirection: "row",
@@ -133,8 +136,8 @@ export function CourseCard({ course, onPress, onStudentsPress }) {
                             padding: 12,
                         }}
                     >
-                        <Feather name="bar-chart-2" size={14} color={c.text.secondary} />
-                        <Text style={{ fontSize: 13, color: c.text.secondary }}>
+                        <Feather name="bar-chart-2" size={14} color={c.status.danger} />
+                        <Text style={{ fontSize: 13, color: c.status.danger, fontWeight: "500" }}>
                             {t("Reportes")}
                         </Text>
                     </TouchableOpacity>
@@ -190,6 +193,10 @@ export function AdminCourses({ vm: vmProp }) {
 
     const canManage = permissions.canManageCourses;
 
+    // Colores dinámicos para las estadísticas
+    const avgAttendanceColor = useAttendanceColor(vm.avgAttendance);
+    const alertColor = vm.alertCount > 0 ? c.status.warning : c.status.success;
+
     // Handler para navegar a estudiantes filtrados por curso
     const handleNavigateToStudents = React.useCallback((course) => {
         // Navegar a la vista de Usuarios con el subtab de Estudiantes y filtros pre-configurados:
@@ -202,6 +209,15 @@ export function AdminCourses({ vm: vmProp }) {
             sortBy: 'name',
             sortOrder: 'asc',
             filterColumn: 'name'
+        });
+    }, [navigation]);
+
+    // Handler para navegar a reportes históricos filtrados por curso
+    const handleNavigateToReports = React.useCallback((course) => {
+        // Navegar a la vista de Reportes con el subtab de Históricos y filtro de curso preseleccionado
+        navigation.navigate('Reports', { 
+            section: 'historicos',
+            courseFilter: course.code, // Filtro de curso preseleccionado
         });
     }, [navigation]);
 
@@ -325,13 +341,13 @@ export function AdminCourses({ vm: vmProp }) {
                             style={{
                                 fontSize: 20,
                                 fontWeight: "800",
-                                color: c.brand.primary,
+                                color: avgAttendanceColor,
                                 marginBottom: 8,
                             }}
                         >
                             {vm.avgAttendance}%
                         </Text>
-                        <ProgressBar value={vm.avgAttendance} color={c.brand.primary} height={4} />
+                        <ProgressBar value={vm.avgAttendance} color={avgAttendanceColor} height={4} />
                     </View>
 
                     {/* Con Alerta */}
@@ -352,7 +368,7 @@ export function AdminCourses({ vm: vmProp }) {
                             style={{
                                 fontSize: 20,
                                 fontWeight: "800",
-                                color: c.status.warning,
+                                color: alertColor,
                                 marginBottom: 8,
                             }}
                         >
@@ -360,7 +376,7 @@ export function AdminCourses({ vm: vmProp }) {
                         </Text>
                         <ProgressBar
                             value={vm.alertCount > 0 ? 100 : 0}
-                            color={c.status.warning}
+                            color={alertColor}
                             height={4}
                         />
                     </View>
@@ -387,6 +403,7 @@ export function AdminCourses({ vm: vmProp }) {
                                 course={course}
                                 onPress={() => vm.selectCourse(course)}
                                 onStudentsPress={handleNavigateToStudents}
+                                onReportsPress={handleNavigateToReports}
                             />
                         </View>
                     ))}
@@ -401,19 +418,11 @@ export function AdminCourses({ vm: vmProp }) {
             />
 
             {canManage && (
-                <>
-                    <RegisterCourseModal
-                        visible={vm.showRegisterModal}
-                        onClose={vm.closeRegisterModal}
-                        onSubmit={vm.registerCourse}
-                    />
-
-                    <ImportCoursesModal
-                        visible={vm.showImportModal}
-                        onClose={vm.closeImportModal}
-                        onImport={vm.importCourses}
-                    />
-                </>
+                <RegisterCourseModal
+                    visible={vm.showRegisterModal}
+                    onClose={vm.closeRegisterModal}
+                    onSubmit={vm.registerCourse}
+                />
             )}
         </ScrollView>
     );

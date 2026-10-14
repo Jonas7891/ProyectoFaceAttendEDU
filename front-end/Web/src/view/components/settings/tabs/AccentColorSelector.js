@@ -223,7 +223,7 @@ export function AccentColorSelector({ onColorsExport, onHasChanges, onDiscardReg
             {/* Selector de modo claro/oscuro */}
             <View style={{ gap: 8 }}>
                 <Text style={{ 
-                    fontSize: 13, 
+                    fontSize: 14, 
                     fontWeight: "600", 
                     color: c.text.secondary 
                 }}>
@@ -273,7 +273,7 @@ export function AccentColorSelector({ onColorsExport, onHasChanges, onDiscardReg
                                 }}
                             >
                                 <Feather name="refresh-cw" size={14} color={c.text.secondary} />
-                                <Text style={{ fontSize: 12, color: c.text.secondary, fontWeight: "500" }}>
+                                <Text style={{ fontSize: 13, color: c.text.secondary, fontWeight: "500" }}>
                                     {t("Restablecer paleta")}
                                 </Text>
                             </TouchableOpacity>
@@ -308,16 +308,16 @@ export function AccentColorSelector({ onColorsExport, onHasChanges, onDiscardReg
                             }}
                         >
                             <Feather name="rotate-ccw" size={14} color={c.text.secondary} />
-                            <Text style={{ fontSize: 12, color: c.text.secondary }}>
+                            <Text style={{ fontSize: 13, color: c.text.secondary }}>
                                 {t("Restablecer")}
                             </Text>
                         </TouchableOpacity>
                     )}
                 </View>
                 <Text style={{ 
-                    fontSize: 12, 
+                    fontSize: 13, 
                     color: c.text.tertiary,
-                    lineHeight: 8,
+                    lineHeight: 20,
                 }}>
                     {t(currentSlot?.description || "")}
                 </Text>

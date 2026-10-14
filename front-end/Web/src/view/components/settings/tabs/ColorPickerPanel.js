@@ -161,14 +161,14 @@ export function ColorPickerPanel({ currentHex, onColorChange, verdict }) {
                                     placeholderTextColor={c.text.tertiary}
                                     style={{
                                         flex: 1,
-                                        fontSize: 14,
+                                        fontSize: 15,
                                         color: c.text.primary,
                                         padding: 0,
                                         margin: 0,
                                     }}
                                 />
                                 <Text style={{
-                                    fontSize: 11,
+                                    fontSize: 12,
                                     fontWeight: "600",
                                     color: c.text.tertiary,
                                     textTransform: "uppercase",
@@ -342,7 +342,7 @@ export function ColorPickerPanel({ currentHex, onColorChange, verdict }) {
 
                         {/* Valor numérico de luminosidad */}
                         <Text style={{
-                            fontSize: 13,
+                            fontSize: 14,
                             fontWeight: "600",
                             color: c.text.secondary,
                             minWidth: 35,

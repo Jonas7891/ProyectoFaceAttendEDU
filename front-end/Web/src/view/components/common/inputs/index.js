@@ -4,6 +4,7 @@
 
 // Basic Inputs
 export { TextInput } from './TextInput';
+export { DateInput } from './DateInput';
 export { Select } from './Select';
 export { TextArea } from './TextArea';
 
@@ -20,6 +21,7 @@ export { Autocomplete } from './Autocomplete';
 
 // Date/Time Inputs (placeholders)
 export { DatePicker } from './DatePicker';
+export { DateRangeCalendar } from './DateRangeCalendar';
 export { TimePicker } from './TimePicker';
 
 // File & Media

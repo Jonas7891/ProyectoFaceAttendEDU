@@ -539,7 +539,7 @@ function Footer() {
                             }}
                         >
                             <Image
-                                source={require("../assets/images/logoFaceAttend.png")}
+                                source={require("../assets/images/logoFaceAttend.svg")}
                                 style={{ width: 40, height: 40 }}
                             />
                             <Text style={[T.brandName, { color: c.text.primary }]}>

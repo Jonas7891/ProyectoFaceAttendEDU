@@ -24,6 +24,39 @@ export function validateStudentForm(form) {
     return null;
 }
 
+/**
+ * Validación que devuelve todos los errores encontrados
+ * @param {Object} form - Formulario a validar
+ * @returns {Array} Array de objetos con errores { field, message }
+ */
+export function validateStudentFormDetailed(form) {
+    const errors = [];
+    
+    if (!form.name.trim()) {
+        errors.push({ field: 'name', message: 'El nombre completo es requerido' });
+    }
+    
+    if (!form.code.trim()) {
+        errors.push({ field: 'code', message: 'El código es requerido' });
+    }
+    
+    if (!form.email.trim()) {
+        errors.push({ field: 'email', message: 'El correo electrónico es requerido' });
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+        errors.push({ field: 'email', message: 'El formato del correo electrónico no es válido' });
+    }
+    
+    if (!form.course.trim()) {
+        errors.push({ field: 'course', message: 'El programa/departamento es requerido' });
+    }
+    
+    if (!form.role) {
+        errors.push({ field: 'role', message: 'El rol es requerido' });
+    }
+    
+    return errors;
+}
+
 // ── ViewModel ─────────────────────────────────────────────
 
 export function useStudentsViewModel() {

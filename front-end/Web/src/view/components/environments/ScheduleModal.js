@@ -11,6 +11,7 @@ import TextInput from "../common/inputs/TextInput";
 import { useTheme } from "../hooks/useTheme";
 import { useResponsive } from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
+import { usePushNotification } from "../common/feedback/PushNotification";
 import { useAppData } from "../../../context/AppDataContext";
 import { getInstitutionConfig } from "../../../core/config/institutionConfig";
 import InstructorAutocomplete from "./InstructorAutocomplete";
@@ -34,11 +35,11 @@ export default function ScheduleModal({
     const { theme } = useTheme();
     const { isSmall } = useResponsive();
     const { t } = useTranslation();
+    const pushNotification = usePushNotification();
     const c = theme.colors;
     const appData = useAppData();
 
     const [form, setForm] = useState(EMPTY_SCHEDULE_FORM);
-    const [error, setError] = useState(null);
     const [saving, setSaving] = useState(false);
     const [showErrors, setShowErrors] = useState(false);
     const [courseNameInput, setCourseNameInput] = useState(""); // Para búsqueda bidireccional
@@ -105,14 +106,13 @@ export default function ScheduleModal({
             setForm(EMPTY_SCHEDULE_FORM);
             setCourseNameInput(""); // Limpiar input de nombre
         }
-        setError(null);
         setShowErrors(false);
         setSaving(false);
     }, [visible, editing]);
 
     const setField = (key, value) => {
         setForm((prev) => ({ ...prev, [key]: value }));
-        if (showErrors) setError(null);
+        // No necesitamos limpiar error aquí ya que usamos push notifications
     };
 
     // Auto-formato para campos de hora con soporte para 24h y 12h (AM/PM)
@@ -352,7 +352,7 @@ export default function ScheduleModal({
             setCourseNameInput(selectedFicha.name); // Sincronizar input
         }
         setDropdownOpen(false); // Cerrar dropdown al seleccionar
-        if (showErrors) setError(null);
+        // No necesitamos limpiar error aquí ya que usamos push notifications
     };
 
     // Handler para cuando se escribe en "Nombre del programa"
@@ -370,7 +370,7 @@ export default function ScheduleModal({
             setDropdownOpen(false);
         }
         
-        if (showErrors) setError(null);
+        // No necesitamos limpiar error aquí ya que usamos push notifications
     };
 
     const toggleDay = (day) => {
@@ -384,14 +384,87 @@ export default function ScheduleModal({
     const handleSave = async () => {
         setShowErrors(true);
         setSaving(true);
-        setError(null);
         
+        const config = getInstitutionConfig();
         const err = await onSave(form);
         setSaving(false);
         
         if (err) {
-            setError(t(err));
+            // Mostrar diferentes tipos de notificación según el tipo de error
+            const isConflictError = err.includes("Conflicto de horarios") || err.includes("conflicto");
+            const isCapacityError = err.includes("capacidad") || err.includes("excede");
+            const isValidationError = err.includes("Completa todos los campos") || err.includes("requerido");
+            const isFormatError = err.includes("Formato de hora");
+            
+            if (config.pushNotifications) {
+                if (isConflictError) {
+                    pushNotification.warning(
+                        t("Conflicto de horarios"),
+                        t(err),
+                        {
+                            source: "schedule-form",
+                            priority: "high",
+                            duration: 8000, // Más tiempo para leer el conflicto
+                        }
+                    );
+                } else if (isCapacityError) {
+                    pushNotification.warning(
+                        t("Problema de capacidad"),
+                        t(err),
+                        {
+                            source: "schedule-form",
+                            priority: "high",
+                            duration: 6000,
+                        }
+                    );
+                } else if (isValidationError) {
+                    pushNotification.error(
+                        t("Campos requeridos"),
+                        t(err),
+                        {
+                            source: "schedule-form",
+                            priority: "normal",
+                            duration: 4000,
+                        }
+                    );
+                } else if (isFormatError) {
+                    pushNotification.error(
+                        t("Formato incorrecto"),
+                        t(err),
+                        {
+                            source: "schedule-form",
+                            priority: "normal",
+                            duration: 5000,
+                        }
+                    );
+                } else {
+                    // Error genérico
+                    pushNotification.error(
+                        t("Error de validación"),
+                        t(err),
+                        {
+                            source: "schedule-form",
+                            priority: "high",
+                            duration: 6000,
+                        }
+                    );
+                }
+            }
         } else {
+            // Mostrar notificación de éxito
+            if (config.pushNotifications) {
+                pushNotification.success(
+                    t("¡Horario guardado!"),
+                    mode === "add" 
+                        ? t("Horario asignado correctamente") 
+                        : t("Horario actualizado correctamente"),
+                    {
+                        source: "schedule-form",
+                        priority: "normal",
+                        duration: 3000,
+                    }
+                );
+            }
             onClose();
         }
     };
@@ -432,26 +505,6 @@ export default function ScheduleModal({
             size="md"
             footer={footer}
         >
-            {/* Error alert */}
-            {error && (
-                <View
-                    style={{
-                        backgroundColor: c.status.dangerLight,
-                        borderRadius: 12,
-                        padding: 14,
-                        flexDirection: "row",
-                        gap: 10,
-                        marginBottom: 20,
-                    }}
-                >
-                    <Feather name="alert-circle" size={16} color={c.status.danger} />
-                    <Text style={{ fontSize: 13, color: c.status.danger, flex: 1 }}>
-                        {error}
-                    </Text>
-                </View>
-            )}
-
-            {/* Course info - Dropdown bidireccional */}
             <View style={{ marginBottom: 14, position: 'relative', zIndex: 10 }}>
                 <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 14, marginBottom: isSmall ? 0 : 14 }}>
                     <View style={{ flex: 1, minWidth: 160, zIndex: 10 }}>
@@ -505,34 +558,8 @@ export default function ScheduleModal({
                 />
             </View>
 
-            {/* Time range */}
-            <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 14, marginBottom: 14, position: 'relative', zIndex: 1 }}>
-                <View style={{ flex: 1 }}>
-                    <TextInput
-                        label={t("Hora inicio") + " *"}
-                        value={form.startTime}
-                        onChangeText={(v) => handleTimeInput("startTime", v)}
-                        onBlur={() => handleTimeBlur("startTime")}
-                        placeholder={timePlaceholders.startPlaceholder}
-                        error={isEmpty(form.startTime)}
-                        maxLength={8} // "HH:MM AM" = 8 caracteres
-                    />
-                </View>
-                <View style={{ flex: 1 }}>
-                    <TextInput
-                        label={t("Hora fin") + " *"}
-                        value={form.endTime}
-                        onChangeText={(v) => handleTimeInput("endTime", v)}
-                        onBlur={() => handleTimeBlur("endTime")}
-                        placeholder={timePlaceholders.endPlaceholder}
-                        error={isEmpty(form.endTime)}
-                        maxLength={8} // "HH:MM AM" = 8 caracteres
-                    />
-                </View>
-            </View>
-
             {/* Days selector */}
-            <View style={{ marginBottom: 0, position: 'relative', zIndex: 1 }}>
+            <View style={{ marginBottom: 14, position: 'relative', zIndex: 1 }}>
                 <Text
                     style={{
                         fontSize: 13,
@@ -571,6 +598,32 @@ export default function ScheduleModal({
                             </TouchableOpacity>
                         );
                     })}
+                </View>
+            </View>
+
+            {/* Time range */}
+            <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 14, marginBottom: 0, position: 'relative', zIndex: 1 }}>
+                <View style={{ flex: 1 }}>
+                    <TextInput
+                        label={t("Hora inicio") + " *"}
+                        value={form.startTime}
+                        onChangeText={(v) => handleTimeInput("startTime", v)}
+                        onBlur={() => handleTimeBlur("startTime")}
+                        placeholder={timePlaceholders.startPlaceholder}
+                        error={isEmpty(form.startTime)}
+                        maxLength={8} // "HH:MM AM" = 8 caracteres
+                    />
+                </View>
+                <View style={{ flex: 1 }}>
+                    <TextInput
+                        label={t("Hora fin") + " *"}
+                        value={form.endTime}
+                        onChangeText={(v) => handleTimeInput("endTime", v)}
+                        onBlur={() => handleTimeBlur("endTime")}
+                        placeholder={timePlaceholders.endPlaceholder}
+                        error={isEmpty(form.endTime)}
+                        maxLength={8} // "HH:MM AM" = 8 caracteres
+                    />
                 </View>
             </View>
         </BaseModal>

@@ -12,6 +12,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Card } from "../../components/common";
 import { useResponsive } from "../../components/hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
+import { useDateFormat } from "../../components/hooks/useDateFormat";
 import { useEditableConfig } from "../../components/hooks/useEditableConfig";
 import { SecurityMeter } from "../../components/settings/tabs";
 import {
@@ -35,6 +36,7 @@ import {
     AtRiskAlertToggle,
     DailySummaryToggle,
     PushNotificationToggle,
+    PushNotificationLimit,
     TwoFactorRow,
     SessionTimeInput,
     AccentBlock,
@@ -51,6 +53,7 @@ import {
 export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onSaveSuccessColors, previewAccent, onPreviewChange, previewTheme, onHasChanges, onColorChanges }) {
     const { isSmall } = useResponsive();
     const { currentLanguage, t } = useTranslation();
+    const { dateFormat } = useDateFormat(); // Forzar re-render cuando cambie el formato
 
     // ── Estado no editable (UI temporal) ──────────────────────
     const [showExpirationAlert, setShowExpirationAlert] = useState(true);
@@ -69,6 +72,7 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
             timeFormat24h: config.timeFormat24h ?? false,
             minAttendance: config.minAttendance,
             daysUntilSanction: config.daysUntilSanction,
+            consecutiveDaysForSanction: config.consecutiveDaysForSanction ?? 3,
             confidence: config.confidenceThreshold,
             autoRegister: config.autoRegister,
             savePhotos: config.savePhotos,
@@ -115,7 +119,7 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
     // ── Derivados ─────────────────────────────────────────────
     const automaticPeriod = useMemo(() => {
         return getCurrentPeriod(config.academicPeriodType);
-    }, [config.academicPeriodType]);
+    }, [config.academicPeriodType, dateFormat]); // Añadir dateFormat como dependencia
 
     const periodExpiration = useMemo(() => {
         return checkPeriodExpiration();
@@ -185,6 +189,8 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                         onMinAttendanceChange={(value) => updateConfig("minAttendance", value)}
                         daysUntilSanction={config.daysUntilSanction}
                         onDaysSanctionChange={(value) => updateConfig("daysUntilSanction", value)}
+                        consecutiveDaysForSanction={config.consecutiveDaysForSanction}
+                        onConsecutiveDaysChange={(value) => updateConfig("consecutiveDaysForSanction", value)}
                     />,
                     <ConfidenceSlider
                         value={config.confidence}
@@ -231,6 +237,14 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                         onDurationChange={(value) => updateConfig("pushDuration", value)}
                         description={t("Notificaciones emergentes en tiempo real del sistema.")}
                     />,
+                    ...(config.pushNotifications ? [
+                        <PushNotificationLimit
+                            limit={config.pushNotificationLimit}
+                            limitByType={config.pushNotificationLimitByType}
+                            onLimitChange={(value) => updateConfig("pushNotificationLimit", value)}
+                            onLimitByTypeChange={(value) => updateConfig("pushNotificationLimitByType", value)}
+                        />
+                    ] : []),
                 ]}
             />
         ),

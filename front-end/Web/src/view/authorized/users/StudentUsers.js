@@ -14,7 +14,7 @@ import { useResponsive } from "../../components/hooks/useResponsive";
 import { useUsersViewModel } from "../../../viewmodels/useUsersViewModel";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../../../context/AppDataContext";
-import StudentDetailModal from "../../components/students/StudentDetailModal";
+import StudentDetailModal from "../../components/users/StudentDetailModal";
 import { UsersFilterBar, UsersTable } from "./sections";
 import { COLUMNS, createCompactRowConfig } from "./columns/usersColumns";
 

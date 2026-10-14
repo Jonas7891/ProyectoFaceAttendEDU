@@ -22,11 +22,11 @@ export function AccentBlock({ onColorsExport, onHasChanges, onDiscardRegister, o
     const { labelStyle, descStyle } = useSettingsSectionStyles();
 
     return (
-        <View style={{ gap: 10 }}>
+        <View style={{ gap: 4 }}>
             {/* Selector de tema y paleta de colores integrado */}
             <View>
                 <Text style={labelStyle}>{t("Tema y paleta de colores")}</Text>
-                <Text style={descStyle}>
+                <Text style={[descStyle, { marginTop: -4, lineHeight: 22 }]}>
                     {t("Personaliza el modo de visualización (claro/oscuro) y los colores semánticos de la aplicación: Primario (interacción), Correcto (éxitos), Advertencias, Errores y Fuentes. Los cambios se previsualizan en tiempo real. Presiona \"Guardar cambios\" para aplicarlos en toda la aplicación.")}
                 </Text>
             </View>

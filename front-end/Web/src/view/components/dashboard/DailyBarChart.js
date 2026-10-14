@@ -13,6 +13,24 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { BarChart } from "../common/charts/BarChart";
 import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
+import { useAttendanceStatus } from "../common/badges/StatusBadge";
+
+// Componente helper para renderizar texto de tasa con color dinámico
+function AttendanceRateText({ rate, total }) {
+    const { theme } = useTheme();
+    const c = theme.colors;
+    const status = useAttendanceStatus(parseFloat(rate));
+    
+    return (
+        <Text style={{
+            fontSize: 16,
+            fontWeight: "700",
+            color: total === 0 ? c.text.disabled : status.color,
+        }}>
+            {total === 0 ? "0%" : `${rate}%`}
+        </Text>
+    );
+}
 
 /**
  * Gráfico de barras para asistencia diaria (genérico, adaptable por rol)
@@ -263,19 +281,7 @@ export function DailyBarChart({
                         }}>
                             {t("Tasa")}
                         </Text>
-                        <Text style={{
-                            fontSize: 16,
-                            fontWeight: "700",
-                            color: displayData.total === 0
-                                ? c.text.disabled
-                                : parseFloat(attendanceRate) >= 85 
-                                ? c.status.success 
-                                : parseFloat(attendanceRate) >= 75 
-                                ? c.status.warning 
-                                : c.status.danger,
-                        }}>
-                            {displayData.total === 0 ? "0%" : `${attendanceRate}%`}
-                        </Text>
+                        <AttendanceRateText rate={attendanceRate} total={displayData.total} />
                     </View>
                     <View style={{ alignItems: "center" }}>
                         <Text style={{
@@ -285,19 +291,7 @@ export function DailyBarChart({
                         }}>
                             {t("Puntualidad")}
                         </Text>
-                        <Text style={{
-                            fontSize: 16,
-                            fontWeight: "700",
-                            color: displayData.total === 0
-                                ? c.text.disabled
-                                : parseFloat(punctualityRate) >= 85 
-                                ? c.status.success 
-                                : parseFloat(punctualityRate) >= 75 
-                                ? c.status.warning 
-                                : c.status.danger,
-                        }}>
-                            {displayData.total === 0 ? "0%" : `${punctualityRate}%`}
-                        </Text>
+                        <AttendanceRateText rate={punctualityRate} total={displayData.total} />
                     </View>
                 </View>
             )}

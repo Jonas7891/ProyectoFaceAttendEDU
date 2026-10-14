@@ -14,7 +14,7 @@
 import React from "react";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import BiometricsView from "../BiometricsView";
-import { NotAuthorized, AUTH_EXCEPTION_TYPES } from "../authorized/NotAuthorized";
+import { NotAuthorized, AUTH_EXCEPTION_TYPES } from "../NotAuthorized";
 import { useRolePermissions } from "../../viewmodels/useRolePermissions";
 import { normalizeBiometricSection } from "../../viewmodels/useBiometricsViewModel";
 
