@@ -19,7 +19,7 @@ import {useTheme} from '../../components/common/ThemeContext';
 import BackButton from '../../components/common/BackButton';
 import {VerificationService, VerificationError} from '../../../services/verificationService';
 import {VerificationErrorType} from '../../../services/constants/auths';
-import styles from '../Styles/Forgotpasswordscreen/Style';
+import {createLoginStyles} from '../Styles/Forgotpasswordscreen/Style';
 
 const COOLDOWN_MS = 60000;
 const REQUEST_TIMEOUT_MS = 15000;
@@ -254,10 +254,11 @@ const FormInput = React.forwardRef(({
                                         disabled,
                                         ...props
                                     }, ref) => {
+    const styles = useMemo(() => createLoginStyles(colors), [colors]);
     const borderColor = useMemo(() => {
-        if (error && touched) return colors.error ?? '#E53E3E';
-        if (isValid && touched) return '#10B981';
-        return colors.border ?? colors.separator;
+        if (error && touched) return colors.danger;
+        if (isValid && touched) return colors.success;
+        return colors.border;
     }, [error, isValid, touched, colors]);
 
     return (
@@ -286,23 +287,15 @@ const FormInput = React.forwardRef(({
 FormInput.displayName = 'FormInput';
 
 const AlertBox = ({ type, message, colors }) => {
-    const isError = type === 'error';
-    const backgroundColor = isError
-        ? (colors.error ?? '#E53E3E') + '12'
-        : '#10B98112';
-    const borderColor = isError
-        ? (colors.error ?? '#E53E3E') + '35'
-        : '#10B98135';
-    const textColor = isError
-        ? (colors.error ?? '#E53E3E')
-        : '#10B981';
+    const styles = useMemo(() => createLoginStyles(colors), [colors]);
+    const tone = type === 'error' ? colors.danger : colors.success;
 
     return (
         <View style={[
             styles.recoveryErrorBox,
-            { backgroundColor, borderColor }
+            { backgroundColor: tone + '12', borderColor: tone + '35' }
         ]}>
-            <Text style={[styles.recoveryErrorText, { color: textColor }]}>
+            <Text style={[styles.recoveryErrorText, { color: tone }]}>
                 {type === 'success' && '✓ '}
                 {message}
             </Text>
@@ -317,6 +310,7 @@ const SubmitButton = ({
                           onPress,
                           labels
                       }) => {
+    const styles = useMemo(() => createLoginStyles(labels.colors), [labels.colors]);
     const backgroundColor = disabled
         ? (labels.colors.primary + '60')
         : labels.colors.primary;
@@ -341,7 +335,7 @@ const SubmitButton = ({
             accessibilityState={{ disabled, busy: isLoading }}
         >
             {isLoading ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
+                <ActivityIndicator color={labels.colors.onPrimary} size="small" />
             ) : cooldown.isActive ? (
                 <Text style={styles.recoveryPrimaryButtonText}>
                     Reintentar en {cooldown.remaining}s
@@ -358,6 +352,7 @@ const SubmitButton = ({
 export default function ForgotPasswordScreen({ navigation }) {
     const { t } = useTranslation();
     const { colors } = useTheme();
+    const styles = useMemo(() => createLoginStyles(colors), [colors]);
     const emailInputRef = useRef(null);
 
     const emailValidation = useEmailValidation();
@@ -447,7 +442,7 @@ export default function ForgotPasswordScreen({ navigation }) {
                                     {labels.title}
                                 </Text>
 
-                                <Text style={[styles.textoCredenciales, { color: colors.textSecondary ?? '#666666' }]}>
+                                <Text style={[styles.textoCredenciales, { color: colors.textSecondary }]}>
                                     {labels.description}
                                 </Text>
 
