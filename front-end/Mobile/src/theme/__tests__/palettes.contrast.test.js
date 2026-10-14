@@ -43,6 +43,18 @@ describe('palettes — WCAG AA (4.5:1) en tema claro y oscuro', () => {
         }
     });
 
+    test.each(cases)('categorías cumplen AA y son distintas · $name', ({colors}) => {
+        const surfaces = CONTENT_SURFACE_KEYS.map((k) => colors[k]);
+        colors.categorical.forEach((c) => {
+            expect(minContrast(c, surfaces)).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);
+        });
+        // Acromatopsia: con AA todos los grises caen en un rango estrecho, así que
+        // sus categorías se distinguen por etiqueta/icono (ver palettes.js).
+        if (!colors.isAchromatic) {
+            expect(new Set(colors.categorical.map((c) => c.toLowerCase())).size).toBe(colors.categorical.length);
+        }
+    });
+
     test.each(cases)('texto sobre rellenos (botones, estados) · $name', ({colors}) => {
         for (const [textToken, fillToken] of FILL_PAIRS) {
             expect(contrastRatio(colors[textToken], colors[fillToken])).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);

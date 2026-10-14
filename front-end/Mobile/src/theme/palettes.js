@@ -59,7 +59,7 @@ export const PALETTE_SPECS = {
         neutral:   [220, 10],
         secondary: [140, 62, 42],
         accent:    [330, 65, 55],
-        success:   [140, 62, 36],
+        success:   [125, 60, 28],
         warning:   [22, 86, 52],
         danger:    [358, 72, 50],
         info:      [275, 60, 52],
@@ -193,6 +193,16 @@ export function buildThemeColors({mode, accent = DEFAULT_ACCENT, isDark = false}
         modalRadioSelected:  primary,
         modalBorder:         surfaces.border,
         modalOverlay:        isDark ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.5)',
+        overlay:             isDark ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.5)',
+
+        // Vista de cámara: fija por decisión de diseño (no cambia con la paleta)
+        cameraBackground: '#000000',
+        onCamera:         WHITE,
+
+        // Colores categóricos (tarjetas, avatares, tipos): orden estable entre paletas
+        // Sin primary: es el acento de navegación y podría coincidir con una categoría.
+        categorical: [secondary, accentTok, info, success, warning, danger],
+        isAchromatic: mode === 'achromatopsia',
     };
 }
 
