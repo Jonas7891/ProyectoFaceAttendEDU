@@ -239,7 +239,19 @@
     "cameraQualityDescription": "Otra de las razones por la que ocurre fallos en el sistema es debido a la iluminación del lugar, la calidad de la camara o en que angulo se pone el dispositivo para realizar el escaneo.",
     "returningToMenu": "Volviendo al Menu...",
     "success": "Éxito",
-    "backToMenu": "Volver"
+    "backToMenu": "Volver",
+    "questionnaireFirstTitle": "Primero el cuestionario",
+    "questionnaireFirstMessage": "Responde el cuestionario de verificación antes de actualizar tu rostro.",
+    "verifiedMessage": "Identidad verificada. Ahora actualiza tu rostro.",
+    "verifyFailedTitle": "Verificación fallida",
+    "verifyFailedMessage": "Las respuestas no coinciden con tus datos registrados. Intentos restantes: {{remaining}}.",
+    "verifyErrorTitle": "Error de verificación",
+    "verifyErrorMessage": "No fue posible consultar tus datos. Intenta nuevamente.",
+    "lockedTitle": "Verificación bloqueada",
+    "lockedMessage": "Superaste el número de intentos. Comunícate con un administrador para actualizar tu rostro.",
+    "verifying": "Verificando respuestas...",
+    "verifiedBadge": "Verificado",
+    "lockedHint": "Disponible después de verificar el cuestionario"
   },
   "dashboard": {
     "greeting": "Buen día",

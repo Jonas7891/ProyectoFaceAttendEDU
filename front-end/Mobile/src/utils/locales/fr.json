@@ -239,7 +239,19 @@
     "cameraQualityDescription": "Les défaillances peuvent également être causées par l'éclairage, la qualité de la caméra ou l'angle de l'appareil pendant le scan.",
     "backToMenu": "Retour",
     "returningToMenu": "Retour au menu...",
-    "success": "Succès"
+    "success": "Succès",
+    "questionnaireFirstTitle": "D'abord le questionnaire",
+    "questionnaireFirstMessage": "Répondez au questionnaire de vérification avant de mettre à jour votre visage.",
+    "verifiedMessage": "Identité vérifiée. Mettez maintenant à jour votre visage.",
+    "verifyFailedTitle": "Échec de la vérification",
+    "verifyFailedMessage": "Les réponses ne correspondent pas à vos données enregistrées. Tentatives restantes : {{remaining}}.",
+    "verifyErrorTitle": "Erreur de vérification",
+    "verifyErrorMessage": "Impossible de consulter vos données. Réessayez.",
+    "lockedTitle": "Vérification bloquée",
+    "lockedMessage": "Vous avez dépassé le nombre de tentatives. Contactez un administrateur pour mettre à jour votre visage.",
+    "verifying": "Vérification des réponses...",
+    "verifiedBadge": "Vérifié",
+    "lockedHint": "Disponible après la vérification du questionnaire"
   },
   "dashboard": {
     "greeting": "Bonjour",

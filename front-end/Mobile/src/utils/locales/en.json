@@ -239,7 +239,19 @@
     "cameraQualityDescription": "Another reason for system failures is the lighting of the place, the camera quality, or the angle at which the device is placed for scanning.",
     "backToMenu": "Back",
     "returningToMenu": "Returning to Menu...",
-    "success": "Success"
+    "success": "Success",
+    "questionnaireFirstTitle": "Questionnaire first",
+    "questionnaireFirstMessage": "Answer the verification questionnaire before updating your face.",
+    "verifiedMessage": "Identity verified. Now update your face.",
+    "verifyFailedTitle": "Verification failed",
+    "verifyFailedMessage": "The answers do not match your registered data. Attempts left: {{remaining}}.",
+    "verifyErrorTitle": "Verification error",
+    "verifyErrorMessage": "Your data could not be retrieved. Please try again.",
+    "lockedTitle": "Verification locked",
+    "lockedMessage": "You exceeded the number of attempts. Contact an administrator to update your face.",
+    "verifying": "Verifying answers...",
+    "verifiedBadge": "Verified",
+    "lockedHint": "Available after verifying the questionnaire"
   },
   "dashboard": {
     "greeting": "Good day",

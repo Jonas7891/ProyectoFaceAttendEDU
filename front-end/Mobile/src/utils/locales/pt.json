@@ -239,7 +239,19 @@
     "cameraQualityDescription": "Outra razão para falhas no sistema é devido à iluminação do local, qualidade da câmera ou ângulo em que o dispositivo é colocado para escanear.",
     "backToMenu": "Voltar",
     "returningToMenu": "Voltando ao Menu...",
-    "success": "Sucesso"
+    "success": "Sucesso",
+    "questionnaireFirstTitle": "Primeiro o questionário",
+    "questionnaireFirstMessage": "Responda ao questionário de verificação antes de atualizar seu rosto.",
+    "verifiedMessage": "Identidade verificada. Agora atualize seu rosto.",
+    "verifyFailedTitle": "Falha na verificação",
+    "verifyFailedMessage": "As respostas não coincidem com seus dados registrados. Tentativas restantes: {{remaining}}.",
+    "verifyErrorTitle": "Erro de verificação",
+    "verifyErrorMessage": "Não foi possível consultar seus dados. Tente novamente.",
+    "lockedTitle": "Verificação bloqueada",
+    "lockedMessage": "Você excedeu o número de tentativas. Contate um administrador para atualizar seu rosto.",
+    "verifying": "Verificando respostas...",
+    "verifiedBadge": "Verificado",
+    "lockedHint": "Disponível após verificar o questionário"
   },
   "dashboard": {
     "greeting": "Bom dia",
