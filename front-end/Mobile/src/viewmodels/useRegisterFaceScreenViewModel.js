@@ -1,91 +1,76 @@
-import {useCallback, useRef, useState} from 'react';
-import {useNavigation} from '@react-navigation/native';
+import {useCallback, useEffect, useState} from 'react';
+import {useNavigation, useRoute} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
 import {useCameraPermissions} from 'expo-camera';
-import * as FileSystem from 'expo-file-system';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useCustomAlert} from '../view/components/common/useCustomAlert';
+import {getCurrentUser} from '../services/UserService';
+import {REGISTER_GESTURES, useFaceLivenessCapture} from './useFaceLivenessCapture';
 
-const STORAGE_KEY = '@faceattend_edu:rostro_registrado';
-const FACE_FILE = 'rostro_faceattend.jpg';
-
+// Registro/actualización facial contra ms-biometric, igual que el FaceModule
+// web: prueba de vida de 3 gestos y POST /facial/enroll-image por person_id.
+// Params opcionales: { personId, personName, mode: 'register' | 'update' }.
+// Sin personId se registra el rostro del usuario autenticado.
 export function useRegisterFaceScreenViewModel() {
     const navigation = useNavigation();
+    const route = useRoute();
     const {t} = useTranslation();
-    const cameraRef = useRef(null);
-
     const {alertConfig, hideAlert, showSuccess, showError} = useCustomAlert();
-
     const [permission, requestPermission] = useCameraPermissions();
-    const [cameraReady, setCameraReady] = useState(false);
-    const [capturedPhoto, setCapturedPhoto] = useState(null);
-    const [saving, setSaving] = useState(false);
 
-    const handleCameraReady = useCallback(() => setCameraReady(true), []);
+    const params = route.params || {};
+    const isUpdate = params.mode === 'update';
+    const [personId, setPersonId] = useState(params.personId || null);
+
+    const capture = useFaceLivenessCapture();
+    const {registerFace, status, setStatus} = capture;
+
+    useEffect(() => {
+        if (params.personId) return;
+        let active = true;
+        getCurrentUser().then((user) => {
+            if (active) setPersonId(user?.personId || null);
+        });
+        return () => {
+            active = false;
+        };
+    }, [params.personId]);
+
+    const handleCameraReady = useCallback(async () => {
+        await capture.handleCameraReady();
+        setStatus(t('faceCapture.cameraReady'));
+    }, [capture.handleCameraReady, setStatus, t]);
 
     const handleMountError = useCallback((event) => {
         console.error('Error montando cámara:', event?.message);
         showError(t('registerFace.cameraErrorTitle'), t('registerFace.cameraErrorMsg'));
     }, [showError, t]);
 
-    const handleCapture = useCallback(async () => {
-        const camera = cameraRef.current;
-        if (!camera || !cameraReady) return;
+    const handleBack = useCallback(() => {
+        if (!capture.busy) navigation.goBack();
+    }, [capture.busy, navigation]);
 
-        try {
-            const takePicture = camera.takePictureAsync || camera.takePhotoAsync;
-            const photo = await takePicture.call(camera, {base64: true, quality: 0.9});
-            setCapturedPhoto(photo);
-        } catch (error) {
-            console.error('Error de captura:', error);
-            showError(t('registerFace.captureErrorTitle'), t('registerFace.captureErrorMsg'));
+    const handleRegister = useCallback(async () => {
+        const ok = await registerFace(personId);
+        if (ok) {
+            showSuccess(t('registerFace.saveSuccessTitle'), t('faceCapture.registered'), () => navigation.goBack());
         }
-    }, [cameraReady, showError, t]);
+    }, [registerFace, personId, showSuccess, t, navigation]);
 
-    const handleRetake = useCallback(() => {
-        setCapturedPhoto(null);
-        setCameraReady(false);
-    }, []);
-
-    const handleSave = useCallback(async () => {
-        if (!capturedPhoto || saving) return;
-        setSaving(true);
-        try {
-            const destination = `${FileSystem.documentDirectory}${FACE_FILE}`;
-            const info = await FileSystem.getInfoAsync(destination);
-            if (info.exists) await FileSystem.deleteAsync(destination);
-
-            await FileSystem.moveAsync({from: capturedPhoto.uri, to: destination});
-            await AsyncStorage.setItem(
-                STORAGE_KEY,
-                JSON.stringify({uri: destination, registradoEl: new Date().toISOString()})
-            );
-
-            setCapturedPhoto(null);
-            showSuccess(t('registerFace.saveSuccessTitle'), t('registerFace.saveSuccessMsg'));
-        } catch (error) {
-            console.error('Error al guardar:', error);
-            showError(t('registerFace.saveErrorTitle'), t('registerFace.saveErrorMsg'));
-        } finally {
-            setSaving(false);
-        }
-    }, [capturedPhoto, saving, showSuccess, showError, t]);
-
-    const handleBack = useCallback(() => navigation.goBack(), [navigation]);
+    const subtitle = status.message
+        || (capture.cameraReady ? t('registerFace.subtitleReady') : t('registerFace.subtitleStarting'));
 
     return {
+        ...capture,
+        title: isUpdate ? t('faceCapture.updateTitle') : t('registerFace.title'),
+        actionLabel: t(isUpdate ? 'faceCapture.updateButton' : 'faceCapture.registerButton', {count: REGISTER_GESTURES}),
+        personName: params.personName || null,
+        subtitle,
         permissionLoading: !permission,
         permissionGranted: !!permission?.granted,
         requestPermission,
-        cameraRef,
-        cameraReady,
         handleCameraReady,
         handleMountError,
-        capturedPhoto,
-        saving,
-        handleCapture,
-        handleRetake,
-        handleSave,
+        handleRegister,
         handleBack,
         alertConfig,
         hideAlert,
