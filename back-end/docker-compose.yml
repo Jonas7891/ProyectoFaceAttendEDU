@@ -254,6 +254,9 @@ services:
       SPRING_JPA_PROPERTIES_HIBERNATE_GLOBALLY_QUOTED_IDENTIFIERS: "true"
       FACEATTEND_AUTH_IDENTITY_URL: http://ms-identity:8081
       FACEATTEND_AUTH_AUTHORIZATION_URL: http://ms-authorization:8082
+      # Alcance por actor: matrículas (academic) y fichas que dicta el instructor (scheduling).
+      FACEATTEND_AUTH_ACADEMIC_URL: http://ms-academic:8083
+      FACEATTEND_AUTH_SCHEDULING_URL: http://ms-scheduling:8084
       SERVER_PORT: 8085
     ports:
       - "${BIND_IP:-127.0.0.1}:8085:8085"

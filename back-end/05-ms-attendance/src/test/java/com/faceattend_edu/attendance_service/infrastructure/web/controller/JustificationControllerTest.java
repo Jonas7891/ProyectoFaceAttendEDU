@@ -4,6 +4,7 @@ import com.faceattend_edu.attendance_service.domain.exception.DuplicateEntityExc
 import com.faceattend_edu.attendance_service.domain.exception.EntityNotFoundException;
 import com.faceattend_edu.attendance_service.domain.exception.ValidationException;
 import com.faceattend_edu.attendance_service.domain.model.Justification;
+import com.faceattend_edu.attendance_service.domain.port.in.GetAttendanceRecordUseCase;
 import com.faceattend_edu.attendance_service.domain.port.in.CreateJustificationUseCase;
 import com.faceattend_edu.attendance_service.domain.port.in.DeleteJustificationUseCase;
 import com.faceattend_edu.attendance_service.domain.port.in.GetJustificationUseCase;
@@ -60,6 +61,8 @@ class JustificationControllerTest {
     private ListJustificationsUseCase listUseCase;
     @MockitoBean
     private DeleteJustificationUseCase deleteUseCase;
+    @MockitoBean
+    private GetAttendanceRecordUseCase recordUseCase;
 
     private Justification justification(Long id, Long recordId, Integer typeId, String reason, String reviewStatus) {
         Justification j = new Justification();

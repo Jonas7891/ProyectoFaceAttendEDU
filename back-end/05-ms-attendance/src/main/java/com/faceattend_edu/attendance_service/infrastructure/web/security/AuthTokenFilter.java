@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -24,6 +25,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -51,6 +53,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             "/actuator/", "/v3/api-docs", "/swagger-ui", "/swagger-ui.html");
 
     private final RestTemplate restTemplate;
+    private final ObjectProvider<CallerScopeResolver> scopeResolver;
 
     @Value("${faceattend.auth.identity-url:http://localhost:8081}")
     private String identityUrl;
@@ -58,7 +61,8 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     @Value("${faceattend.auth.authorization-url:http://localhost:8082}")
     private String authorizationUrl;
 
-    public AuthTokenFilter() {
+    public AuthTokenFilter(ObjectProvider<CallerScopeResolver> scopeResolver) {
+        this.scopeResolver = scopeResolver;
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(3000);
         factory.setReadTimeout(5000);
@@ -111,6 +115,21 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         if (required != null && !evaluate(rawToken, caller, required)) {
             deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: requires " + required, path);
             return;
+        }
+
+        // Quien no es administrador solo ve los registros de su alcance (ActorScope).
+        // El catálogo de tipos de justificación es común a todos.
+        CallerScopeResolver resolver = scopeResolver.getIfAvailable();
+        if (resolver != null && !path.startsWith("/api/v1/justification-types")) {
+            Set<Long> scope;
+            try {
+                scope = resolver.resolve(caller, roles, rawToken);
+            } catch (RuntimeException e) {
+                log.warn("AuthTokenFilter: actor scope for {} failed: {}", caller, e.getMessage());
+                deny(response, HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Cannot resolve actor scope", path);
+                return;
+            }
+            if (scope != null) request.setAttribute(ActorScope.ATTRIBUTE, scope);
         }
 
         request.setAttribute("X-User-Id", caller);
@@ -222,7 +241,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         response.setContentType("application/json");
         String safe = message.replace("\"", "'");
         String body = "{\"status\":" + status + ",\"error\":\""
-                + (status == 401 ? "Unauthorized" : "Forbidden") + "\",\"message\":\"" + safe
+                + (status == 401 ? "Unauthorized" : status == 503 ? "Service Unavailable" : "Forbidden") + "\",\"message\":\"" + safe
                 + "\",\"path\":\"" + path.replace("\"", "'") + "\"}";
         response.getWriter().write(body);
     }
