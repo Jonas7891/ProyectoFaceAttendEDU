@@ -91,6 +91,9 @@ export default function MenuJustifyScreen() {
 
                 {(isStudent || isTeacher) ? (
                     <>
+                      {isStudent && (
+                        <MenuItem label={t('teacher.newJustification')} onPress={handleAddOrEditJustify} />
+                      )}
                       <MenuItem label={t('consultJustify.mainTitle')} onPress={handleValidJustifications} />
                       <MenuItem label={t('admin.pendingJustifications')} onPress={handlePendingJustificationScreen} />
                     </>
