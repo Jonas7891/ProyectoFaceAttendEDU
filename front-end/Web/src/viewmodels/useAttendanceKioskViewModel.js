@@ -179,9 +179,15 @@ export function useAttendanceKioskViewModel() {
                 );
 
                 if (!nextSession) {
+                    // La sesión nace ya "Open" (no hay estado "Creada" en el
+                    // enum), así que este es el único momento en que el POST
+                    // /open que sigue no va a chocar con "already Open": sin
+                    // openedBy aquí, quién abrió la clase nunca quedaba
+                    // registrado.
                     nextSession = await schedulingApi.createSession({
                         scheduleBlockId: nextBlock.scheduleBlockId,
                         sessionDate: today,
+                        openedBy: user?.academicActorId,
                     });
                 }
 
