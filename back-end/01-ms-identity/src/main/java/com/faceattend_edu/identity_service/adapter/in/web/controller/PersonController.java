@@ -3,12 +3,14 @@ package com.faceattend_edu.identity_service.adapter.in.web.controller;
 import com.faceattend_edu.identity_service.adapter.in.web.dto.PageResponse;
 import com.faceattend_edu.identity_service.adapter.in.web.dto.PersonDto;
 import com.faceattend_edu.identity_service.adapter.in.web.mapper.PersonWebMapper;
+import com.faceattend_edu.identity_service.adapter.in.web.security.AuthTokenFilter;
 import com.faceattend_edu.identity_service.application.port.in.ChangePersonStatusUseCase;
 import com.faceattend_edu.identity_service.application.port.in.CreatePersonUseCase;
 import com.faceattend_edu.identity_service.application.port.in.GetPersonUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ListPersonsUseCase;
 import com.faceattend_edu.identity_service.application.port.in.UpdatePersonUseCase;
 import com.faceattend_edu.identity_service.domain.model.Person;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -59,8 +61,16 @@ public class PersonController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PersonDto> updatePerson(@PathVariable UUID id, @Valid @RequestBody PersonDto personDto) {
+    public ResponseEntity<PersonDto> updatePerson(@PathVariable UUID id, @Valid @RequestBody PersonDto personDto,
+                                                  HttpServletRequest request) {
         personDto.setPersonId(id);
+        if (Boolean.TRUE.equals(request.getAttribute(AuthTokenFilter.SELF_EDIT_ATTRIBUTE))) {
+            // Autoedición: estado y documento de identidad solo los cambia administración.
+            PersonDto current = personWebMapper.toDto(getPersonUseCase.getPerson(id));
+            personDto.setStatus(current.getStatus());
+            personDto.setDocumentNumber(current.getDocumentNumber());
+            personDto.setDocumentType(current.getDocumentType());
+        }
         updatePersonUseCase.updatePerson(id, personWebMapper.toDomain(personDto));
         return ResponseEntity.ok(personWebMapper.toDto(getPersonUseCase.getPerson(id)));
     }
