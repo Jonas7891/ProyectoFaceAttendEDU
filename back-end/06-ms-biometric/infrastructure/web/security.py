@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import logging
 import re
+import time
 from urllib.parse import quote
 
 import httpx
@@ -27,6 +28,37 @@ _UUID_RE = re.compile(
     r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.IGNORECASE
 )
 _TIMEOUT_SECONDS = 4.0
+
+# Caché positiva de autenticación (TTL corto). Cada request autenticado
+# costaba 1-2 introspecciones secuenciales; bajo fan-out eso saturaba
+# identity/authorization y el gateway respondía 503. Solo se cachean
+# resultados POSITIVOS: cualquier fallo se revalida en vivo (fail-secure).
+# Ventana de revocación/logout: _AUTH_CACHE_TTL_SECONDS.
+_AUTH_CACHE_TTL_SECONDS = 10.0
+_AUTH_CACHE_MAX_ENTRIES = 5000
+
+# token -> (user_id, expira_en_monotonic)
+_session_cache: dict[str, tuple[str, float]] = {}
+# (token, user_id, permission) -> expira_en_monotonic (solo permitidos)
+_eval_cache: dict[tuple[str, str, str], float] = {}
+
+
+def _cache_get(mapping: dict, key):
+    """Devuelve el valor si no expiró; si no, lo purga y devuelve None."""
+    hit = mapping.get(key)
+    if hit is None:
+        return None
+    value, exp = hit
+    if exp <= time.monotonic():
+        mapping.pop(key, None)
+        return None
+    return value
+
+
+def _cache_store(mapping: dict, key, value) -> None:
+    if len(mapping) > _AUTH_CACHE_MAX_ENTRIES:
+        mapping.clear()
+    mapping[key] = (value, time.monotonic() + _AUTH_CACHE_TTL_SECONDS)
 
 # WS close codes in the private-use range (RFC 6455 §7.4.2), mirroring the
 # REST status they replace — a WebSocket handshake has no status line.
@@ -97,18 +129,28 @@ async def _validate_session_and_permission(token: str, permission: str | None) -
         raise _AuthError(status.HTTP_401_UNAUTHORIZED, "Invalid token format")
 
     settings = get_settings()
-    try:
-        code, session = await _get_json(
-            f"{settings.identity_url}/api/v1/sessions/{token}", token
-        )
-    except httpx.HTTPError:
-        logger.warning("identity unreachable while validating a session")
-        raise _AuthError(status.HTTP_503_SERVICE_UNAVAILABLE, "Cannot verify session")
-    if code != 200 or not session or session.get("sessionStatus") != "Active" or not session.get("userId"):
-        raise _AuthError(status.HTTP_401_UNAUTHORIZED, "Invalid or expired session")
+    cached_user = _cache_get(_session_cache, token)
+    if cached_user is not None:
+        user_id = cached_user
+    else:
+        try:
+            code, session = await _get_json(
+                f"{settings.identity_url}/api/v1/sessions/{token}", token
+            )
+        except httpx.HTTPError:
+            logger.warning("identity unreachable while validating a session")
+            raise _AuthError(status.HTTP_503_SERVICE_UNAVAILABLE, "Cannot verify session")
+        if code != 200 or not session or session.get("sessionStatus") != "Active" or not session.get("userId"):
+            raise _AuthError(status.HTTP_401_UNAUTHORIZED, "Invalid or expired session")
 
-    user_id = str(session["userId"])
+        user_id = str(session["userId"])
+        _cache_store(_session_cache, token, user_id)
+
     if permission is None:
+        return user_id
+
+    eval_key = (token, user_id, permission)
+    if _cache_get(_eval_cache, eval_key) is True:
         return user_id
 
     url = (
@@ -122,6 +164,7 @@ async def _validate_session_and_permission(token: str, permission: str | None) -
         raise _AuthError(status.HTTP_503_SERVICE_UNAVAILABLE, "Cannot verify permissions")
     if code != 200 or not result or result.get("allowed") is not True:
         raise _AuthError(status.HTTP_403_FORBIDDEN, f"Forbidden: requires {permission}")
+    _cache_store(_eval_cache, eval_key, True)
     return user_id
 
 

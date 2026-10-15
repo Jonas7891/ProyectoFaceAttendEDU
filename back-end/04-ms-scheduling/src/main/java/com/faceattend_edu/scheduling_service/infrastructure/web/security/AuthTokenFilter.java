@@ -50,6 +50,50 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
     private final RestTemplate restTemplate;
 
+    /**
+    * Caché positiva de autenticación (TTL corto). Cada request autenticado
+    * costaba 2-3 introspecciones secuenciales (sesión + roles + evaluate);
+    * bajo fan-out del frontend eso saturaba identity/authorization y Kong
+    * respondía 503 "Cannot verify session". Solo se cachean resultados
+    * POSITIVOS: cualquier fallo se revalida en vivo (fail-secure). Ventana
+    * de revocación/logout: AUTH_CACHE_TTL_MS.
+    */
+    private static final long AUTH_CACHE_TTL_MS = 10_000;
+    private static final int AUTH_CACHE_MAX_ENTRIES = 5_000;
+    private final java.util.Map<String, CachedSession> sessionCache = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.Map<String, CachedEvaluation> evaluationCache = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private record CachedSession(String userId, java.util.List<String> roles, long expiresAt) {}
+    private record CachedEvaluation(boolean allowed, long expiresAt) {}
+
+    private CachedSession cachedSession(String rawToken) {
+        CachedSession hit = sessionCache.get(rawToken);
+        if (hit == null) return null;
+        if (hit.expiresAt() <= System.currentTimeMillis()) { sessionCache.remove(rawToken); return null; }
+        return hit;
+    }
+
+    private void storeSession(String rawToken, String userId, java.util.List<String> roles) {
+        if (sessionCache.size() > AUTH_CACHE_MAX_ENTRIES) sessionCache.clear();
+        sessionCache.put(rawToken, new CachedSession(userId, java.util.List.copyOf(roles), System.currentTimeMillis() + AUTH_CACHE_TTL_MS));
+    }
+
+    private boolean cachedEvaluate(String rawToken, String userId, String permission) {
+        String key = rawToken + "\n" + userId + "\n" + permission;
+        CachedEvaluation hit = evaluationCache.get(key);
+        long now = System.currentTimeMillis();
+        if (hit != null) {
+            if (hit.expiresAt() > now) return hit.allowed();
+            evaluationCache.remove(key);
+        }
+        boolean allowed = evaluate(rawToken, userId, permission);
+        if (allowed) {
+            if (evaluationCache.size() > AUTH_CACHE_MAX_ENTRIES) evaluationCache.clear();
+            evaluationCache.put(key, new CachedEvaluation(true, now + AUTH_CACHE_TTL_MS));
+        }
+        return allowed;
+    }
+
     @Value("${faceattend.auth.identity-url:http://localhost:8081}")
     private String identityUrl;
 
@@ -87,26 +131,35 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             return;
         }
 
-        Map<?, ?> session = fetchSession(rawToken, sessionId);
-        if (session == null || !"Active".equals(session.get("sessionStatus"))) {
-            deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired session", path);
-            return;
-        }
-        Object userId = session.get("userId");
-        if (userId == null) {
-            deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Session without user", path);
-            return;
-        }
-        String caller = String.valueOf(userId);
-
-        List<String> roles = fetchRoles(rawToken, caller);
-        if (roles == null) {
-            deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Cannot verify user roles", path);
-            return;
+        CachedSession cached = cachedSession(rawToken);
+        final String caller;
+        final List<String> roles;
+        if (cached != null) {
+            caller = cached.userId();
+            roles = cached.roles();
+        } else {
+            Map<?, ?> session = fetchSession(rawToken, sessionId);
+            if (session == null || !"Active".equals(session.get("sessionStatus"))) {
+                deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired session", path);
+                return;
+            }
+            Object userId = session.get("userId");
+            if (userId == null) {
+                deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Session without user", path);
+                return;
+            }
+            caller = String.valueOf(userId);
+            List<String> fetched = fetchRoles(rawToken, caller);
+            if (fetched == null) {
+                deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Cannot verify user roles", path);
+                return;
+            }
+            roles = fetched;
+            storeSession(rawToken, caller, roles);
         }
 
         String required = requiredPermission(request.getMethod());
-        if (required != null && !evaluate(rawToken, caller, required)) {
+        if (required != null && !cachedEvaluate(rawToken, caller, required)) {
             deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: requires " + required, path);
             return;
         }
