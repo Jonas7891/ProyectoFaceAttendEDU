@@ -26,6 +26,12 @@ class AuthTokenFilterTest {
     void otherWritesRequireRecordWrite() {
         assertEquals("attendance.record:write", AuthTokenFilter.requiredPermission("POST", "/api/v1/attendance-records"));
         assertEquals("attendance.record:write", AuthTokenFilter.requiredPermission("DELETE", "/api/v1/justifications/7"));
-        assertEquals("attendance.record:write", AuthTokenFilter.requiredPermission("POST", "/api/v1/justification-types"));
+    }
+
+    @Test
+    void justificationTypeWritesAreAdminOnly() {
+        assertEquals("configuration:manage", AuthTokenFilter.requiredPermission("POST", "/api/v1/justification-types"));
+        assertEquals("configuration:manage", AuthTokenFilter.requiredPermission("DELETE", "/api/v1/justification-types/4"));
+        assertEquals("attendance.record:read", AuthTokenFilter.requiredPermission("GET", "/api/v1/justification-types"));
     }
 }

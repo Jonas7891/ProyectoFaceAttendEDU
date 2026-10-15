@@ -34,7 +34,8 @@ import java.util.function.Supplier;
  *
  * <p>Lecturas exigen attendance.record:read; escrituras attendance.record:write;
  * la revisión de justificaciones exige attendance.justification:approve y radicar
- * justificaciones o soportes exige attendance.justification:request.</p>
+ * justificaciones o soportes exige attendance.justification:request; el catálogo de
+ * tipos de justificación exige configuration:manage.</p>
  *
  * <p>Duplicado intencional por MS: el repo no tiene módulo compartido.
  * Futuro ADR-007 (JWT RS256 emitido por identity): aceptar JWT firmado aquí
@@ -128,6 +129,8 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     static String requiredPermission(String method, String path) {
         if (method.equalsIgnoreCase("GET")) return "attendance.record:read";
         if (path.contains("/justifications/") && path.endsWith("/review")) return "attendance.justification:approve";
+        // El catálogo de tipos es configuración de la sede: solo Administrador.
+        if (path.startsWith("/api/v1/justification-types")) return "configuration:manage";
         // Aprendiz radica sus propias justificaciones y soportes (HU-JUS-001) sin poder escribir asistencia.
         if (method.equalsIgnoreCase("POST")
                 && (path.equals("/api/v1/justifications") || path.equals("/api/v1/supporting-documents"))) {
