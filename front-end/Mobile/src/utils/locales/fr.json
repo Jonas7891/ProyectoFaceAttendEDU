@@ -873,7 +873,9 @@
     "latenessLabel": "Retards\n(limite {{limit}})",
     "reportSent": "Le rapport a été envoyé avec succès.",
     "reportError": "Le rapport n'a pas pu être envoyé.",
-    "confirmGeneral": "Un rapport sera généré pour {{count}} personnes. Continuer ?"
+    "confirmGeneral": "Un rapport sera généré pour {{count}} personnes. Continuer ?",
+    "absenceShort": "{{count}} absences",
+    "latenessShort": "{{count}} retards"
   },
   "validation": {
     "title": "Champs incomplets",

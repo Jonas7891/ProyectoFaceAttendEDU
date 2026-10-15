@@ -2,6 +2,8 @@ import {useCallback, useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {getCurrentUserRole, getCurrentUser} from '../services/UserService';
 import {ActorService} from '../services/ActorService';
+import {getInstructorScope} from '../services/teachingScope';
+import {normalizeBackendRole} from '../utils/getHighestRole';
 import {JustificationService, getJustificationTypeMap, getAcademicActorMap, getAttendanceRecordCached, getPersonCached, mapConcurrent} from '../services/JustificationService';
 
 function unwrap(data) {
@@ -44,15 +46,9 @@ export const getFileIcon = (mime = '') => {
     return '📎';
 };
 
-const normalizeRole = (role = '') => {
-    const r = String(role).toLowerCase();
-    if (r.includes('admin')) return USER_ROLE.ADMIN;
-    if (r.includes('docen') || r.includes('profesor') || r.includes('teacher') || r.includes('instructor'))
-        return USER_ROLE.TEACHER;
-    if (r.includes('estud') || r.includes('student') || r.includes('aprendiz')) return USER_ROLE.STUDENT;
-    // Sin fallback silencioso: rol desconocido o ausente bloquea el acceso.
-    return null;
-};
+// Mismo mapper que el login (getHighestRole); rol desconocido o ausente bloquea el acceso.
+const ROLE_KEYS = {Administrador: USER_ROLE.ADMIN, Instructor: USER_ROLE.TEACHER, Aprendiz: USER_ROLE.STUDENT};
+const normalizeRole = (role) => ROLE_KEYS[normalizeBackendRole(role)] ?? null;
 
 const getLocaleForLanguage = (lang) => {
     const localeMap = { es: 'es-CO', en: 'en-US', fr: 'fr-FR', pt: 'pt-BR' };
@@ -83,6 +79,7 @@ export const usePendingJustificationViewModel = () => {
                 return;
             }
             let records;
+            let scope = null;
             if (normalizedRole === USER_ROLE.STUDENT) {
                 const user = await getCurrentUser();
                 const actors = await ActorService.getByPerson(user?.personId);
@@ -99,11 +96,13 @@ export const usePendingJustificationViewModel = () => {
                 // Para teachers: solo Pending + Approved, pedidas en paralelo.
                 // Antes se descargaba TODO (getAll) y se filtraba en el
                 // dispositivo, lo que colgaba la pantalla con volumen.
-                const [pending, approved] = await Promise.all([
+                const [pending, approved, teaching] = await Promise.all([
                     JustificationService.getByStatus('Pending'),
                     JustificationService.getByStatus('Approved'),
+                    getInstructorScope(),
                 ]);
                 records = [...pending, ...approved];
+                scope = teaching;
             } else {
                 // ADMIN: traer todas
                 records = await JustificationService.getAll();
@@ -131,6 +130,7 @@ export const usePendingJustificationViewModel = () => {
 
                 return {
                     id: String(jd.justification_id),
+                    sessionId: String(ar?.class_session_id),
                     role: actor.actor_type_id === 1 ? USER_ROLE.STUDENT : USER_ROLE.TEACHER,
                     userName: `${person?.name || ''} ${person?.last_name || ''}`.trim(),
                     userCode: actor.actor_code || '—',
@@ -145,7 +145,8 @@ export const usePendingJustificationViewModel = () => {
                 };
             });
 
-            setJustifications(enriched);
+            // El instructor solo revisa justificaciones de las sesiones que dicta.
+            setJustifications(scope ? enriched.filter((j) => scope.sessionIds.has(j.sessionId)) : enriched);
         } catch (error) {
             console.error('Error fetching justifications:', error);
             setJustifications([]);
@@ -203,25 +204,27 @@ export const usePendingJustificationViewModel = () => {
     const openDetail = useCallback((item) => { setSelectedItem(item); setModalVisible(true); }, []);
     const closeDetail = useCallback(() => { setModalVisible(false); setTimeout(() => setSelectedItem(null), 300); }, []);
 
+    const canReview = userRole === USER_ROLE.ADMIN || userRole === USER_ROLE.TEACHER;
+
     const approveJustification = useCallback(async (id) => {
-        if (userRole === USER_ROLE.STUDENT) return;
+        if (!canReview) return;
         const reviewer = await getCurrentUser();
         const updated = await JustificationService.approve(id, reviewer?.userId);
         if (updated) {
             setJustifications((prev) => prev.map((j) => j.id === id ? {...j, status: JUSTIFICATION_STATUS_INTERNAL.APPROVED} : j));
             closeDetail();
         }
-    }, [closeDetail, userRole]);
+    }, [closeDetail, canReview]);
 
     const rejectJustification = useCallback(async (id) => {
-        if (userRole === USER_ROLE.STUDENT) return;
+        if (!canReview) return;
         const reviewer = await getCurrentUser();
         const updated = await JustificationService.reject(id, reviewer?.userId);
         if (updated) {
             setJustifications((prev) => prev.map((j) => j.id === id ? {...j, status: JUSTIFICATION_STATUS_INTERNAL.REJECTED} : j));
             closeDetail();
         }
-    }, [closeDetail, userRole]);
+    }, [closeDetail, canReview]);
 
     const counts = useMemo(() => {
         if (userRole === USER_ROLE.TEACHER) {

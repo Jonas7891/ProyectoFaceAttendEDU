@@ -873,7 +873,9 @@
     "latenessLabel": "Atrasos\n(limite {{limit}})",
     "reportSent": "O relatório foi enviado com sucesso.",
     "reportError": "Não foi possível enviar o relatório.",
-    "confirmGeneral": "Será gerado um relatório para {{count}} pessoas. Continuar?"
+    "confirmGeneral": "Será gerado um relatório para {{count}} pessoas. Continuar?",
+    "absenceShort": "{{count}} faltas",
+    "latenessShort": "{{count}} atrasos"
   },
   "validation": {
     "title": "Campos incompletos",

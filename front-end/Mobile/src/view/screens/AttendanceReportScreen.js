@@ -210,6 +210,7 @@ export default function AttendanceReportScreen({ navigation }) {
         handleConfirmReport,
         handleGenerateAll,
         handleRoleChange,
+        canSeeTeachers,
     } = useAttendanceReportViewModel();
 
     return (
@@ -227,10 +228,9 @@ export default function AttendanceReportScreen({ navigation }) {
 
                     {/* ── SELECTOR ROL ── */}
                     <View style={[styles.roleSelectorReport, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }]}>
-                        {[{key: 'student', label: t('attendanceReport.tabs.students')}, {
-                            key: 'teacher',
-                            label: t('attendanceReport.tabs.teachers')
-                        }].map(tab => (
+                        {[{key: 'student', label: t('attendanceReport.tabs.students')},
+                            ...(canSeeTeachers ? [{key: 'teacher', label: t('attendanceReport.tabs.teachers')}] : []),
+                        ].map(tab => (
                             <TouchableOpacity
                                 key={tab.key}
                                 style={[

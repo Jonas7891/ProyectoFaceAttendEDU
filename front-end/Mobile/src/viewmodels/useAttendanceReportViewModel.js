@@ -1,11 +1,14 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
+import {Share} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useCustomAlert} from '../view/components/common/useCustomAlert';
 import {request, GET} from '../api/apiClient';
 import {backendGet} from '../api/backend';
 import ENV from '../config/env';
-import {getCurrentUserRole, getCurrentUser} from '../services/UserService';
-import {ActorService} from '../services/ActorService';
+import {getCurrentUserRole} from '../services/UserService';
+import {getInstructorScope} from '../services/teachingScope';
+
+const SUMMARY_MAX_IDS = 300; // tope de /attendance-records/summary
 
 export function useAttendanceReportViewModel() {
     const {t} = useTranslation();
@@ -29,6 +32,7 @@ export function useAttendanceReportViewModel() {
     const [selectedPerson, setSelectedPerson] = useState(null);
     const [students, setStudents] = useState([]);
     const [teachers, setTeachers] = useState([]);
+    const [canSeeTeachers, setCanSeeTeachers] = useState(false);
 
     const fetchData = useCallback(async () => {
             try {
@@ -37,24 +41,26 @@ export function useAttendanceReportViewModel() {
                 // Conteos agregados en SQL vía /summary: descargar la tabla
                 // entera y enriquecer actor por actor no terminaba nunca en el
                 // dispositivo con volumen real.
-                const actorsRaw = (await backendGet(ENV.ACADEMIC_BASE_URL, 'api/v1/academic-actors', { limit: 100 })) ?? [];
-                const actors = Array.isArray(actorsRaw) ? actorsRaw : [];
-                const ids = actors
-                    .map((a) => a.academic_actor_id)
-                    .filter((id) => id !== undefined && id !== null)
-                    .slice(0, 300);
-                let summary = {};
-                if (ids.length > 0) {
-                    const query = ids.map((id) => `academicActorIds=${encodeURIComponent(id)}`).join('&');
+                // El instructor solo ve a los aprendices de sus fichas; el
+                // administrador, a toda la institución (aprendices e instructores).
+                const isAdmin = (await getCurrentUserRole()) === 'Administrador';
+                setCanSeeTeachers(isAdmin);
+                const scope = isAdmin ? null : await getInstructorScope();
+                const actorsRaw = (await backendGet(ENV.ACADEMIC_BASE_URL, 'api/v1/academic-actors', { limit: 2000 }, { useCache: true })) ?? [];
+                const actors = (Array.isArray(actorsRaw) ? actorsRaw : [])
+                    .filter((a) => a.academic_actor_id != null)
+                    .filter((a) => !scope || (a.actor_type_id === 1 && scope.actorIds.has(String(a.academic_actor_id))));
+                const ids = actors.map((a) => a.academic_actor_id);
+                const summary = {};
+                for (let i = 0; i < ids.length; i += SUMMARY_MAX_IDS) {
+                    const query = ids.slice(i, i + SUMMARY_MAX_IDS).map((id) => `academicActorIds=${encodeURIComponent(id)}`).join('&');
                     try {
-                        summary = await request({
+                        Object.assign(summary, await request({
                             method: GET,
                             url: `${ENV.ATTENDANCE_BASE_URL}api/v1/attendance-records/summary?${query}`,
                             requiresAuth: true,
-                        });
-                    } catch {
-                        summary = {};
-                    }
+                        }));
+                    } catch {}
                 }
 
                 const perActor = actors.map((actor) => {
@@ -142,40 +148,38 @@ export function useAttendanceReportViewModel() {
     const handleGenerateIndividual = useCallback((person) => { setSelectedPerson(person); setModalVisible(true); }, []);
     const closeModal = useCallback(() => { setModalVisible(false); }, []);
 
-    // No hay endpoint de reportes en el backend: el reporte se compone en el
-    // dispositivo con los datos ya cargados; solo se confirma en pantalla.
-    const sendReport = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            showSuccess(t('attendanceReport.title'), t('attendanceReport.reportSent'));
-        } finally {
-            setIsLoading(false);
-        }
+    // No hay endpoint de reportes en el backend (attendance-reports está
+    // planificado): el reporte se compone con los datos cargados y se comparte
+    // por la hoja nativa (correo, mensajería), en vez de fingir un envío.
+    const sendReport = useCallback(async (people) => {
+        const lines = people.map((p) => `${p.name} (${p.code}): ${t('attendanceReport.absenceShort', {count: p.absences})}, ${t('attendanceReport.latenessShort', {count: p.lateness})}`);
+        const result = await Share.share({title: t('attendanceReport.title'), message: [t('attendanceReport.title'), ...lines].join('\n')});
+        if (result?.action === Share.sharedAction) showSuccess(t('attendanceReport.title'), t('attendanceReport.reportSent'));
     }, [showSuccess, t]);
 
     const handleConfirmReport = useCallback(async () => {
         setModalVisible(false);
         try {
-            await sendReport();
+            await sendReport(selectedPerson ? [selectedPerson] : []);
         } catch (error) {
             showError(t('common.error'), error.message || t('attendanceReport.reportError'));
         }
-    }, [sendReport, showError, t]);
+    }, [sendReport, selectedPerson, showError, t]);
 
     const handleGenerateAll = useCallback(() => {
         if (filteredData.length === 0) return;
         showConfirm(
             t('attendanceReport.title'),
             t('attendanceReport.confirmGeneral', {count: filteredData.length}),
-            () => sendReport(),
+            () => sendReport(filteredData).catch((error) => showError(t('common.error'), error.message || t('attendanceReport.reportError'))),
         );
-    }, [filteredData, sendReport, showConfirm, t]);
+    }, [filteredData, sendReport, showConfirm, showError, t]);
 
     const handleRoleChange = useCallback((role) => { setActiveRole(role); setSearchText(''); setActiveFilter('all'); }, []);
 
     return {
         ABSENCE_LIMIT, LATENESS_LIMIT, alertConfig, hideAlert,
-        activeRole, activeType, setActiveType, activeFilter, setActiveFilter,
+        activeRole, canSeeTeachers, activeType, setActiveType, activeFilter, setActiveFilter,
         searchText, setSearchText, isLoading, error, retry: fetchData, selectedPerson, modalVisible,
         closeModal, summary, filteredData,
         handleGenerateIndividual, handleConfirmReport, handleGenerateAll, handleRoleChange,

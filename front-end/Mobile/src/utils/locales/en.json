@@ -873,7 +873,9 @@
     "latenessLabel": "Lateness\n(limit {{limit}})",
     "reportSent": "The report was sent successfully.",
     "reportError": "The report could not be sent.",
-    "confirmGeneral": "A report will be generated for {{count}} people. Continue?"
+    "confirmGeneral": "A report will be generated for {{count}} people. Continue?",
+    "absenceShort": "{{count}} absences",
+    "latenessShort": "{{count}} late arrivals"
   },
   "validation": {
     "title": "Incomplete fields",
