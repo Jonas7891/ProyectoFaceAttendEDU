@@ -33,7 +33,8 @@ import java.util.function.Supplier;
  * contra authorization. Propaga X-User-Id / X-User-Roles.
  *
  * <p>Lecturas exigen attendance.record:read; escrituras attendance.record:write;
- * la revisión de justificaciones exige attendance.justification:approve.</p>
+ * la revisión de justificaciones exige attendance.justification:approve y radicar
+ * justificaciones o soportes exige attendance.justification:request.</p>
  *
  * <p>Duplicado intencional por MS: el repo no tiene módulo compartido.
  * Futuro ADR-007 (JWT RS256 emitido por identity): aceptar JWT firmado aquí
@@ -124,9 +125,14 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         }
     }
 
-    private String requiredPermission(String method, String path) {
+    static String requiredPermission(String method, String path) {
         if (method.equalsIgnoreCase("GET")) return "attendance.record:read";
         if (path.contains("/justifications/") && path.endsWith("/review")) return "attendance.justification:approve";
+        // Aprendiz radica sus propias justificaciones y soportes (HU-JUS-001) sin poder escribir asistencia.
+        if (method.equalsIgnoreCase("POST")
+                && (path.equals("/api/v1/justifications") || path.equals("/api/v1/supporting-documents"))) {
+            return "attendance.justification:request";
+        }
         return "attendance.record:write";
     }
 
