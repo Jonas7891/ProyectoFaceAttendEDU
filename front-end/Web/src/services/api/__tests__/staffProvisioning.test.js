@@ -26,6 +26,7 @@ jest.mock("../referenceData", () => ({
     listCourses: jest.fn(),
     listPrograms: jest.fn(),
     personMap: jest.fn(),
+    resetReferenceData: jest.fn(),
 }));
 
 import { authApi } from "../authApi";
@@ -57,7 +58,7 @@ test("admin: creates person, user, role and the ADMIN school actor", async () =>
     academicApi.listSchools.mockResolvedValue([{ schoolId: 2, name: "Sede" }]);
     const result = await provisionStaff({ ...base, role: "admin", schoolId: "2" });
 
-    expect(result).toEqual({ personId: "person-1", userId: "user-1" });
+    expect(result).toEqual({ personId: "person-1", userId: "user-1", username: "ana" });
     expect(authApi.createPerson).toHaveBeenCalledWith({
         documentNumber: "1234567890",
         name: "Ana",

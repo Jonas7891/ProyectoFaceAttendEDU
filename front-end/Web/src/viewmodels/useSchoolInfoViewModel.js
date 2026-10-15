@@ -91,6 +91,7 @@ export function useSchoolInfoViewModel() {
             name: school?.name ?? "",
             code: school?.code ?? "",
             address: school?.address ?? "",
+            cityId: school?.cityId ?? school?.city_id ?? "",
             phone: school?.phone ?? "",
             email: school?.email ?? "",
         });
@@ -113,6 +114,10 @@ export function useSchoolInfoViewModel() {
             setFeedback({ type: "error", message: t("El correo electrónico no es válido.") });
             return;
         }
+        if (String(form.cityId ?? "").trim() !== "" && !/^\d+$/.test(String(form.cityId).trim())) {
+            setFeedback({ type: "error", message: t("La ciudad debe ser un identificador numérico.") });
+            return;
+        }
 
         setIsSaving(true);
         setFeedback(null);
@@ -121,6 +126,7 @@ export function useSchoolInfoViewModel() {
                 name: form.name.trim(),
                 code: form.code?.trim() || undefined,
                 address: form.address?.trim() || undefined,
+                cityId: String(form.cityId ?? "").trim() !== "" ? Number(form.cityId) : undefined,
                 phone: form.phone?.trim() || undefined,
                 email: form.email?.trim() || undefined,
             };

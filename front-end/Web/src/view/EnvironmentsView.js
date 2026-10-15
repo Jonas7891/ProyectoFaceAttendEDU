@@ -19,6 +19,7 @@ import { Feather } from "@expo/vector-icons";
 import { Button, EmptyState, SearchInput, PageHeader } from "./components/common";
 import { useTheme } from "./components/hooks/useTheme";
 import { useResponsive } from "./components/hooks/useResponsive";
+import { useAppData } from "../context/AppDataContext";
 import { useEnvironmentsViewModel } from "../viewmodels/useEnvironmentsViewModel";
 import { useRolePermissions } from "../viewmodels/useRolePermissions";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
@@ -38,6 +39,23 @@ export default function EnvironmentsView() {
     const vm = useEnvironmentsViewModel();
     const { t } = useTranslation();
     const permissions = useRolePermissions();
+    const appData = useAppData();
+
+    // Código de ficha por cohortId para las filas de horario de la tarjeta.
+    const cohortCodeById = React.useMemo(() => {
+        const map = new Map();
+        for (const ficha of appData.fichas ?? []) {
+            if (ficha?.code) {
+                map.set(String(ficha.id ?? ficha.cohortId), ficha.code);
+                map.set(Number(ficha.id ?? ficha.cohortId), ficha.code);
+            }
+        }
+        return map;
+    }, [appData.fichas]);
+    const cohortCodeOf = React.useCallback(
+        (cohortId) => cohortCodeById.get(cohortId) ?? cohortCodeById.get(Number(cohortId)) ?? null,
+        [cohortCodeById]
+    );
 
     if (vm.isLoading) {
         return (
@@ -180,7 +198,11 @@ export default function EnvironmentsView() {
                     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16 }}>
                         {vm.filtered.map((env) => (
                             <View key={env.id} style={{ flexBasis: isSmall ? "100%" : "30%", flexGrow: 1 }}>
-                                <EnvironmentCard environment={env} onPress={() => vm.selectEnvironment(env)} />
+                                <EnvironmentCard
+                                    environment={env}
+                                    onPress={() => vm.selectEnvironment(env)}
+                                    cohortCodeOf={cohortCodeOf}
+                                />
                             </View>
                         ))}
                     </View>

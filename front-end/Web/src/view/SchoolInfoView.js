@@ -108,7 +108,7 @@ export default function SchoolInfoView({ embedded = false }) {
                 {/* Modo embebido (Configuración > Sede): el botón vive aquí,
                     porque el PageHeader con sus acciones queda fuera. */}
                 {embedded && vm.canEdit && vm.school && (
-                    <View style={{ alignItems: "flex-end" }}>
+                    <View style={{ alignItems: "flex-end", marginBottom: 12 }}>
                         <Button
                             variant="primary"
                             size="sm"
@@ -163,6 +163,11 @@ export default function SchoolInfoView({ embedded = false }) {
                             <InfoField label={t("Nombre")} value={vm.school.name} icon="home" />
                             <InfoField label={t("Código")} value={vm.school.code} icon="hash" />
                             <InfoField label={t("Dirección")} value={vm.school.address} icon="map" />
+                            <InfoField
+                                label={t("Ciudad (ID)")}
+                                value={vm.school.cityId ?? vm.school.city_id ?? null}
+                                icon="map-pin"
+                            />
                             <InfoField label={t("Teléfono")} value={vm.school.phone} icon="phone" />
                             <InfoField label={t("Correo")} value={vm.school.email} icon="mail" />
                             <View style={{ flexBasis: 140, flexGrow: 1, gap: 4 }}>
@@ -262,6 +267,12 @@ function EditModal({ vm, t }) {
                     label={t("Dirección")}
                     value={vm.form.address}
                     onChangeText={(v) => vm.setField("address", v)}
+                />
+                <TextInput
+                    label={t("Ciudad (ID catálogo externo)")}
+                    value={String(vm.form.cityId ?? "")}
+                    onChangeText={(v) => vm.setField("cityId", v.replace(/[^\d]/g, ""))}
+                    placeholder={t("Ej: 1")}
                 />
                 <TextInput
                     label={t("Teléfono")}

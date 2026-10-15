@@ -14,7 +14,7 @@
 
 import React, { useState, useRef } from "react";
 import { View, Text, ScrollView } from "react-native";
-import { Button, PageHeader } from "./components/common";
+import { Button, EmptyState, PageHeader } from "./components/common";
 import { useTheme } from "./components/hooks/useTheme";
 import { generateTheme } from "../core/theme/generateTheme";
 import { useResponsive } from "./components/hooks/useResponsive";
@@ -173,15 +173,38 @@ export default function SettingsView({ section = "appearance" }) {
     // UNA sola sección dentro de Configuración: "Sede" reúne los datos de la
     // institución y el directorio de instructores (sus Views se embeben sin
     // PageHeader/ScrollView). "contacts" se mapea aquí por compatibilidad con
-    // los deep links antiguos.
+    // los deep links antiguos. El Super Admin global no tiene sede propia y
+    // no ve esta sección.
     const isSchoolSection = section === "schoolInfo" || section === "contacts";
-    const infoSection = isSchoolSection ? (
-        <>
-            <SchoolInfoView embedded />
-            <ContactsView embedded hideSchoolSection />
-        </>
-    ) : (
+    const infoSection = !isSchoolSection ? (
         SettingsComponent
+    ) : permissions.isSuperAdmin ? (
+        <EmptyState
+            icon="map-pin"
+            title={t("Sección no disponible")}
+            message={t("La sede pertenece a cada institución; el administrador global la gestiona desde Escuelas")}
+        />
+    ) : (
+        <>
+            <View style={{ gap: 8 }}>
+                <Text style={{ fontSize: 15, fontWeight: "700", color: c.text.primary }}>
+                    {t("Datos de la sede")}
+                </Text>
+                <Text style={{ fontSize: 13, color: c.text.secondary }}>
+                    {t("Información institucional. Solo un administrador puede modificarla.")}
+                </Text>
+                <SchoolInfoView embedded />
+            </View>
+            <View style={{ gap: 8 }}>
+                <Text style={{ fontSize: 15, fontWeight: "700", color: c.text.primary }}>
+                    {t("Directorio")}
+                </Text>
+                <Text style={{ fontSize: 13, color: c.text.secondary }}>
+                    {t("Instructores de tu sede. Solo lectura.")}
+                </Text>
+                <ContactsView embedded hideSchoolSection />
+            </View>
+        </>
     );
 
     const headerSubtitle = isSchoolSection

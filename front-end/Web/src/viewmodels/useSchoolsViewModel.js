@@ -25,6 +25,7 @@ export const EMPTY_SCHOOL_FORM = {
     name: "",
     code: "",
     address: "",
+    cityId: "",
     phone: "",
     email: "",
 };
@@ -35,6 +36,9 @@ export function validateSchoolForm(form, isEdit) {
     if (!isEdit && !form.code?.trim()) return "El código de la sede es obligatorio.";
     if (form.email?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
         return "El correo electrónico no es válido.";
+    // city_id numérico (catálogo externo countriesnow.space): opcional.
+    if (String(form.cityId ?? "").trim() !== "" && !/^\d+$/.test(String(form.cityId).trim()))
+        return "La ciudad debe ser un identificador numérico.";
     return null;
 }
 
@@ -161,6 +165,7 @@ export function useSchoolsViewModel() {
             name: school.name ?? "",
             code: school.code ?? "",
             address: school.address ?? "",
+            cityId: school.cityId ?? school.city_id ?? "",
             phone: school.phone ?? "",
             email: school.email ?? "",
         });
@@ -192,6 +197,7 @@ export function useSchoolsViewModel() {
                 name: form.name.trim(),
                 code: form.code?.trim() || undefined,
                 address: form.address?.trim() || undefined,
+                cityId: String(form.cityId ?? "").trim() !== "" ? Number(form.cityId) : undefined,
                 phone: form.phone?.trim() || undefined,
                 email: form.email?.trim() || undefined,
             };

@@ -181,6 +181,13 @@ function SchoolFormModal({ vm, t, c }) {
                     onChangeText={(v) => vm.setField("address", v)}
                 />
                 <TextInput
+                    label={t("Ciudad (ID catálogo externo)")}
+                    value={String(vm.form.cityId ?? "")}
+                    onChangeText={(v) => vm.setField("cityId", v.replace(/[^\d]/g, ""))}
+                    placeholder={t("Ej: 1")}
+                    hint={t("Opcional")}
+                />
+                <TextInput
                     label={t("Teléfono")}
                     type="phone"
                     value={vm.form.phone}

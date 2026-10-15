@@ -62,7 +62,7 @@ export default function EnvironmentDetailModal({
             title={`${t("Ambiente")} ${environment.number}`}
             icon="home"
             iconColor={c.brand.primary}
-            size="md"
+            size="lg"
             footer={footer}
             bodyScrollEnabled={false}
         >
@@ -142,8 +142,8 @@ export default function EnvironmentDetailModal({
                 </View>
 
                 {/* Sección SCROLLEABLE */}
-                <ScrollView 
-                    style={{ flex: 1, maxHeight: 140 }}
+                <ScrollView
+                    style={{ flex: 1, maxHeight: 320, minHeight: 160 }}
                     showsVerticalScrollIndicator={false}
                     nestedScrollEnabled={true}
                 >

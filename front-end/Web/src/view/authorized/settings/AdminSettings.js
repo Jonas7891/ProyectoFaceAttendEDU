@@ -11,7 +11,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Card } from "../../components/common";
 import { useAuth } from "../../../context/AuthContext";
-import { pushInstitutionConfig } from "../../../services/api/settingsPersistence";
+import { pushInstitutionConfig, loadBackendOverrides, parseSetting } from "../../../services/api/settingsPersistence";
 import { useResponsive } from "../../components/hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useEditableConfig } from "../../components/hooks/useEditableConfig";
@@ -93,6 +93,7 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
         hasChanges,
         save,
         discard,
+        reset,
     } = useEditableConfig(initialConfig, {
         onSave: async (cfg) => {
             // Transformar sessionTime a número antes de guardar
@@ -119,6 +120,31 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
     useEffect(() => {
         if (onSave) onSave(save);
     }, [onSave, save]);
+
+    // ── Hidratación desde el backend ──────────────────────────
+    // La réplica web.* por sede es la fuente compartida entre
+    // dispositivos: al abrir se fusiona sobre los valores locales.
+    // Si el backend no responde, se conserva lo local sin errores.
+    useEffect(() => {
+        let alive = true;
+        loadBackendOverrides(user?.schoolId ?? null)
+            .then((overrides) => {
+                if (!alive) return;
+                const keys = Object.keys(overrides).filter((k) => k in initialConfig);
+                if (keys.length === 0) return;
+                const merged = { ...initialConfig };
+                for (const key of keys) {
+                    merged[key] = parseSetting(overrides[key], initialConfig[key]);
+                }
+                if (merged.sessionTime != null) merged.sessionTime = String(merged.sessionTime);
+                reset(merged);
+            })
+            .catch(() => {});
+        return () => {
+            alive = false;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => {
         if (onDiscard) onDiscard(discard);
