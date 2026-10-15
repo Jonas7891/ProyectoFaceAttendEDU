@@ -1,19 +1,21 @@
 import {Platform, StyleSheet} from 'react-native';
 import {normalizeTypography} from '../../../../utils/typography';
 
-const styles = StyleSheet.create(normalizeTypography({
+// Estilos de login, recuperación y verificación. Todo color sale de los tokens del
+// tema: usar con createLoginStyles(colors) dentro de un useMemo.
+export const createLoginStyles = (colors) => StyleSheet.create(normalizeTypography({
     safeArea: {
         flex: 1,
-        backgroundColor: "#F5F5F5",
+        backgroundColor: colors.background,
         marginTop: 10
     },
     safeAreaWhite: {
         flex: 1,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: colors.backgroundWhite,
     },
     safeAreaFacialFail: {
         flex: 1,
-        backgroundColor: "#F5F5F5",
+        backgroundColor: colors.background,
         marginTop: Platform.OS === 'android' ? 25 : 20
     },
     keyboardview: {
@@ -50,7 +52,7 @@ const styles = StyleSheet.create(normalizeTypography({
     },
     textoSesion: {
         textAlign: "left",
-        color: "#000000",
+        color: colors.text,
         fontWeight: "700",
         fontSize: 30,
         marginBottom: 10,
@@ -58,7 +60,7 @@ const styles = StyleSheet.create(normalizeTypography({
     },
     textoCredenciales: {
         textAlign: "left",
-        color: "#666666",
+        color: colors.textSecondary,
         fontWeight: "400",
         fontSize: 16,
         marginBottom: 30,
@@ -69,25 +71,25 @@ const styles = StyleSheet.create(normalizeTypography({
     },
     inputTitulo: {
         textAlign: "left",
-        color: "#000000",
+        color: colors.text,
         fontWeight: "500",
         marginBottom: 8,
         fontSize: 16,
     },
     inputEscrito: {
         textAlign: "left",
-        color: "#000000",
+        color: colors.text,
         fontWeight: "400",
         fontSize: 16,
         borderWidth: 1,
-        borderColor: "#CCCCCC",
+        borderColor: colors.border,
         borderRadius: 8,
         paddingHorizontal: 12,
         paddingVertical: 10,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: colors.inputBackground,
     },
     noRegistro: {
-        color: "#666666",
+        color: colors.textSecondary,
         fontSize: 14,
         textAlign: "center",
     },
@@ -105,7 +107,7 @@ const styles = StyleSheet.create(normalizeTypography({
         marginLeft: -4,
         marginTop: 10,
         fontSize: 14,
-        color: '#0B5FA5',
+        color: colors.primary,
         textDecorationLine: 'underline',
     },
 
@@ -116,7 +118,7 @@ const styles = StyleSheet.create(normalizeTypography({
     },
     forgotPasswordText: {
         fontSize: 14,
-        color: '#0B5FA5',
+        color: colors.primary,
         textDecorationLine: 'underline',
         fontWeight: '500',
     },
@@ -129,7 +131,7 @@ const styles = StyleSheet.create(normalizeTypography({
     },
     backButtonText: {
         fontSize: 17,
-        color: '#0B5FA5',
+        color: colors.primary,
         fontWeight: '500',
     },
     recoveryIconContainer: {
@@ -159,7 +161,7 @@ const styles = StyleSheet.create(normalizeTypography({
         marginTop: 4,
     },
     recoveryPrimaryButtonText: {
-        color: '#FFFFFF',
+        color: colors.onPrimary,
         fontSize: 16,
         fontWeight: '600',
         letterSpacing: 0.3,
@@ -168,16 +170,16 @@ const styles = StyleSheet.create(normalizeTypography({
     // ── Input código alfanumérico ──
     codeInput: {
         textAlign: 'center',
-        color: "#000000",
+        color: colors.text,
         fontWeight: '700',
         fontSize: 26,
         letterSpacing: 8,
         borderWidth: 1,
-        borderColor: "#CCCCCC",
+        borderColor: colors.border,
         borderRadius: 10,
         paddingHorizontal: 12,
         paddingVertical: 14,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: colors.inputBackground,
     },
 
     // ========== SUCCESS SCREEN ==========
@@ -196,17 +198,19 @@ const styles = StyleSheet.create(normalizeTypography({
         fontWeight: '700',
         textAlign: 'center',
         marginBottom: 12,
+        color: colors.text,
     },
     successMessage: {
         fontSize: 16,
         textAlign: 'center',
         lineHeight: 24,
+        color: colors.textSecondary,
     },
 
     // ========== PASSWORD MODAL (PasswordUpdateModal + VerifyCodeScreen) ==========
     modalWrapper: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.55)',
+        backgroundColor: colors.overlay,
     },
     modalScrollContent: {
         flexGrow: 1,
@@ -228,15 +232,18 @@ const styles = StyleSheet.create(normalizeTypography({
         fontSize: 22,
         fontWeight: '700',
         marginBottom: 6,
+        color: colors.modalText,
     },
     passwordModalDescription: {
         fontSize: 14,
         lineHeight: 20,
         marginBottom: 16,
+        color: colors.textSecondary,
     },
     passwordModalDivider: {
         height: 1,
         marginBottom: 20,
+        backgroundColor: colors.border,
     },
     passwordModalInput: {
         fontSize: 15,
@@ -245,6 +252,9 @@ const styles = StyleSheet.create(normalizeTypography({
         paddingHorizontal: 14,
         paddingVertical: 12,
         marginBottom: 14,
+        color: colors.modalInputText,
+        borderColor: colors.modalBorder,
+        backgroundColor: colors.modalInputBackground,
     },
     passwordModalErrorRow: {
         borderWidth: 1,
@@ -256,6 +266,7 @@ const styles = StyleSheet.create(normalizeTypography({
     passwordModalError: {
         fontSize: 13,
         fontWeight: '500',
+        color: colors.danger,
     },
     passwordModalButtons: {
         marginTop: 8,
@@ -268,6 +279,7 @@ const styles = StyleSheet.create(normalizeTypography({
     passwordModalCancelText: {
         fontSize: 15,
         fontWeight: '500',
+        color: colors.primary,
     },
 
     // ── Trigger button (PasswordUpdateModal original) ──
@@ -282,6 +294,7 @@ const styles = StyleSheet.create(normalizeTypography({
     passwordSettingsTitle: {
         fontSize: 16,
         fontWeight: '500',
+        color: colors.text,
     },
 
     // ── Fortaleza de contraseña ──
@@ -296,7 +309,7 @@ const styles = StyleSheet.create(normalizeTypography({
         flex: 1,
         height: 5,
         borderRadius: 3,
-        backgroundColor: '#E2E8F0',
+        backgroundColor: colors.progressBackground,
         overflow: 'hidden',
     },
     strengthBarFill: {
@@ -373,5 +386,3 @@ const styles = StyleSheet.create(normalizeTypography({
         fontWeight: '700',
     },
 }));
-
-export default styles;

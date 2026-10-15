@@ -1,5 +1,6 @@
 package com.faceattend_edu.attendance_service.infrastructure.web.controller;
 
+import com.faceattend_edu.attendance_service.infrastructure.web.security.ActorScope;
 import com.faceattend_edu.attendance_service.domain.exception.DuplicateEntityException;
 import com.faceattend_edu.attendance_service.domain.exception.EntityNotFoundException;
 import com.faceattend_edu.attendance_service.domain.exception.ValidationException;
@@ -56,6 +57,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleOptimisticLock(ObjectOptimisticLockingFailureException ex) {
         return buildErrorResponse(HttpStatus.CONFLICT, "ISO-8.5-LOCK-001",
             "The record changed since it was read; reload it and retry", "8.5", "WARNING");
+    }
+
+    @ExceptionHandler(ActorScope.ScopeForbiddenException.class)
+    public ResponseEntity<Map<String, Object>> handleOutOfScope(ActorScope.ScopeForbiddenException ex) {
+        return buildErrorResponse(HttpStatus.FORBIDDEN, "ISO-8.2-AUTH-001", ex.getMessage(), "8.2", "WARNING");
     }
 
     @ExceptionHandler(ValidationException.class)

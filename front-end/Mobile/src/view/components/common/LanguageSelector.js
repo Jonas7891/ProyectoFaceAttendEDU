@@ -1,13 +1,16 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {Modal, Text, TouchableOpacity, View} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {saveLanguageForRole} from './languageByRole';
 import {LanguageService, DEFAULT_LANGUAGES} from '../../../services/LanguageService';
-import stylescommon from './style/Style';
+import {useTheme} from './ThemeContext';
+import {createCommonStyles} from './style/Style';
 
 const LanguageSelector = ({ isVisible, onClose }) => {
   const { i18n, t } = useTranslation();
+  const { colors } = useTheme();
+  const stylescommon = useMemo(() => createCommonStyles(colors), [colors]);
   const [selectedLanguage, setSelectedLanguage] = useState(i18n.language);
   const [languages, setLanguages] = useState(DEFAULT_LANGUAGES);
 
@@ -61,7 +64,7 @@ const LanguageSelector = ({ isVisible, onClose }) => {
                 {lang.name}
               </Text>
               {selectedLanguage === lang.code && (
-                <Text style={{ marginLeft: 10, color: 'green' }}>✓</Text>
+                <Text style={{ marginLeft: 10, color: colors.success }}>✓</Text>
               )}
             </TouchableOpacity>
           ))}

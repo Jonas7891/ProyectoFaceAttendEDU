@@ -1,10 +1,11 @@
 import {StyleSheet} from 'react-native';
 import {normalizeTypography} from '../../../../utils/typography';
 
-const styles = StyleSheet.create(normalizeTypography({
+// Estilos de asistencia. Todo color sale de los tokens del tema; usar con createDisplayingAttendanceStyles(colors).
+export const createDisplayingAttendanceStyles = (colors) => StyleSheet.create(normalizeTypography({
 safeArea: {
         flex: 1,
-        backgroundColor: "#F5F5F5",
+        backgroundColor: colors.background,
     },
     // ── Contenedor principal ──
     mainContainer: {
@@ -108,11 +109,11 @@ safeArea: {
     // ── Modales de detalle ──
     modalOverlay: {
         flex: 1,
-        backgroundColor: "rgba(0,0,0,0.5)",
+        backgroundColor: colors.overlay,
     },
     modalOverlayLight: {
         flex: 1,
-        backgroundColor: "rgba(0,0,0,0.45)",
+        backgroundColor: colors.overlay,
     },
     bottomSheet: {
         position: "absolute",
@@ -354,7 +355,7 @@ safeArea: {
     justifiedBadgeText: {
         fontSize: 11,
         fontWeight: "700",
-        color: "#8B5CF6",
+        color: colors.info,
     },
     // ── Modal iOS date picker ──
     iosSheet: {
@@ -384,5 +385,3 @@ safeArea: {
         fontWeight: "600",
     },
 }));
-
-export default styles;

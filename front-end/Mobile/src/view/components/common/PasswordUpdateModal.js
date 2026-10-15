@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useMemo, useState} from 'react';
 import {
     Alert,
     Keyboard,
@@ -15,11 +15,14 @@ import {
 import {useTranslation} from 'react-i18next';
 import {useTheme} from './ThemeContext';
 import PrimaryButton from '../auth/PrimaryButton';
-import stylesCommon from './style/Style';
+import {createCommonStyles} from './style/Style';
+import {PasswordService} from '../../../services/passwordService';
+import {areAllRequirementsMet, validatePasswordRequirements} from '../../../utils/passwordValidator';
 
 export default function PasswordUpdateModal() {
     const { t } = useTranslation();
     const { colors } = useTheme();
+    const stylesCommon = useMemo(() => createCommonStyles(colors), [colors]);
 
     const [isPasswordModalVisible, setPasswordModalVisible] = useState(false);
     const [currentPassword, setCurrentPassword] = useState('');
@@ -56,13 +59,13 @@ export default function PasswordUpdateModal() {
             setPasswordError(t('profile.passwordModal.errorMatch', 'Las contraseñas no coinciden'));
             return;
         }
-        if (newPassword.length < 6) {
-            setPasswordError(t('profile.passwordModal.errorLength', 'Mínimo 6 caracteres'));
+        if (!areAllRequirementsMet(validatePasswordRequirements(newPassword))) {
+            setPasswordError(t('profile.passwordModal.errorPolicy'));
             return;
         }
         try {
             setPasswordLoading(true);
-            await new Promise((resolve) => setTimeout(resolve, 600));
+            await PasswordService.changePassword(currentPassword, newPassword);
             setPasswordLoading(false);
             Alert.alert(
                 t('profile.passwordModal.successTitle', 'Contraseña actualizada'),
@@ -71,7 +74,7 @@ export default function PasswordUpdateModal() {
             closePasswordModal();
         } catch (error) {
             setPasswordLoading(false);
-            setPasswordError(t('profile.passwordModal.errorGeneric', 'No se pudo actualizar. Intenta de nuevo.'));
+            setPasswordError(error?.message || t('profile.passwordModal.errorGeneric', 'No se pudo actualizar. Intenta de nuevo.'));
         }
     };
 
@@ -113,7 +116,7 @@ export default function PasswordUpdateModal() {
                                     stylesCommon.passwordModalCard,
                                     {
                                         backgroundColor: colors.card,
-                                        borderColor: colors.border ?? colors.textSecondary + '50',
+                                        borderColor: colors.border,
                                     },
                                 ]}>
                                     <Text style={[stylesCommon.passwordModalTitle, { color: colors.text }]}>
@@ -125,13 +128,13 @@ export default function PasswordUpdateModal() {
 
                                     <View style={[
                                         stylesCommon.passwordModalDivider,
-                                        { backgroundColor: colors.border ?? colors.textSecondary + '30' },
+                                        { backgroundColor: colors.border },
                                     ]} />
 
                                     {/* Inputs — sin labels uppercase, solo placeholder */}
                                     <TextInput
                                         style={[stylesCommon.passwordModalInput, {
-                                            borderColor: colors.border ?? colors.textSecondary + '50',
+                                            borderColor: colors.border,
                                             color: colors.text,
                                             backgroundColor: colors.background,
                                         }]}
@@ -144,7 +147,7 @@ export default function PasswordUpdateModal() {
                                         contraseña</Text>
                                     <TextInput
                                         style={[stylesCommon.passwordModalInput, {
-                                            borderColor: colors.border ?? colors.textSecondary + '50',
+                                            borderColor: colors.border,
                                             color: colors.text,
                                             backgroundColor: colors.background,
                                         }]}
@@ -157,7 +160,7 @@ export default function PasswordUpdateModal() {
                                         contraseña ingresada</Text>
                                     <TextInput
                                         style={[stylesCommon.passwordModalInput, {
-                                            borderColor: colors.border ?? colors.textSecondary + '50',
+                                            borderColor: colors.border,
                                             color: colors.text,
                                             backgroundColor: colors.background,
                                         }]}
@@ -172,11 +175,11 @@ export default function PasswordUpdateModal() {
                                         <View style={[
                                             stylesCommon.passwordModalErrorRow,
                                             {
-                                                backgroundColor: (colors.danger || '#ff0000') + '12',
-                                                borderColor: (colors.danger || '#ff0000') + '35',
+                                                backgroundColor: (colors.danger) + '12',
+                                                borderColor: (colors.danger) + '35',
                                             },
                                         ]}>
-                                            <Text style={[stylesCommon.passwordModalError, { color: colors.danger || '#ff0000' }]}>
+                                            <Text style={[stylesCommon.passwordModalError, { color: colors.danger }]}>
                                                 {passwordError}
                                             </Text>
                                         </View>

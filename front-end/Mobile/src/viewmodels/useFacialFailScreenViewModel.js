@@ -2,20 +2,31 @@ import {useCallback, useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../view/components/common/ThemeContext';
 import {useNavigation} from '@react-navigation/native';
-import {getCurrentUserRole} from "../services/UserService";
+import {getCurrentUser, getCurrentUserRole} from "../services/UserService";
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 import {useCustomAlert} from '../view/components/common/useCustomAlert';
+import {backendGet} from '../api/backend';
+import ENV from '../config/env';
+import {verifyQuestionnaireAnswers} from '../utils/identityVerification';
 
+// Intentos de cuestionario antes de bloquear la actualización en esta visita.
+const MAX_ATTEMPTS = 3;
+
+// Flujo: 1) cuestionario con datos personales, verificado contra la persona
+// registrada; 2) solo entonces se pasa a solicitar la actualización del rostro
+// (UpdatePhoto): RN-29 exige un caso aprobado antes de re-registrarlo.
 export function useFacialFailViewModel() {
     const navigation = useNavigation();
-    const {i18n, t} = useTranslation();
+    const {t} = useTranslation();
     const {loadThemeForRole} = useTheme();
-    const {alertConfig, hideAlert, showSuccess} = useCustomAlert();
+    const {alertConfig, hideAlert, showSuccess, showError, showWarning} = useCustomAlert();
 
     const [userRole, setUserRole] = useState(null);
     const [showQuestionnaire, setShowQuestionnaire] = useState(false);
     const [showFacialUpdate, setShowFacialUpdate] = useState(false);
-    const [formData, setFormData] = useState(null);
+    const [verified, setVerified] = useState(false);
+    const [attempts, setAttempts] = useState(0);
+    const [verifying, setVerifying] = useState(false);
     const updateKey = useLanguageRefresh();
 
     // Inicialización: cargar rol y tema
@@ -34,52 +45,75 @@ export function useFacialFailViewModel() {
 
     // Navegación
     const handleBack = useCallback(() => navigation.goBack(), [navigation]);
+    const locked = attempts >= MAX_ATTEMPTS;
 
-    // Modal de cuestionario
-    const openQuestionnaire = useCallback(() => setShowQuestionnaire(true), []);
+    const goToFaceUpdate = useCallback(() => {
+        navigation.navigate('UpdatePhoto');
+    }, [navigation]);
+
+    // Paso 1: cuestionario
+    const openQuestionnaire = useCallback(() => {
+        if (locked) {
+            showError(t('facialFail.lockedTitle'), t('facialFail.lockedMessage'));
+            return;
+        }
+        if (verified) {
+            goToFaceUpdate();
+            return;
+        }
+        setShowQuestionnaire(true);
+    }, [locked, verified, goToFaceUpdate, showError, t]);
     const closeQuestionnaire = useCallback(() => setShowQuestionnaire(false), []);
-    const handleQuestionnaireSuccess = useCallback((data) => {
-        // Guardar datos y mostrar alerta con la información
-        setFormData(data);
-        const message =
-            `${t('questionnaire.document')}: ${data.documentType}\n` +
-            `${t('questionnaire.number')}: ${data.documentNumber}\n` +
-            `${t('questionnaire.rhType')}: ${data.rhType}\n` +
-            `${t('questionnaire.relativeDocument')}: ${data.relativeDocument}\n` +
-            `${t('questionnaire.birthDate')}: ${data.birthDate}\n` +
-            `${t('questionnaire.address')}: ${data.address}\n` +
-            `${t('questionnaire.phone')}: ${data.phone}`;
 
-        showSuccess(
-            t('facialFail.success'),
-            message,
-            () => {
-                console.log('Cuestionario completado');
+    const handleQuestionnaireSuccess = useCallback(async (data) => {
+        setVerifying(true);
+        try {
+            const user = await getCurrentUser();
+            if (!user?.personId) throw new Error('missing person');
+            // backendGet normaliza a lista en snake_case (document_number, blood_type...).
+            const [person] = await backendGet(ENV.API_BASE_URL, `api/v1/persons/${user.personId}`);
+
+            if (!verifyQuestionnaireAnswers(person, data)) {
+                const next = attempts + 1;
+                setAttempts(next);
+                showError(
+                    t('facialFail.verifyFailedTitle'),
+                    next >= MAX_ATTEMPTS
+                        ? t('facialFail.lockedMessage')
+                        : t('facialFail.verifyFailedMessage', {remaining: MAX_ATTEMPTS - next})
+                );
+                return;
             }
-        );
-    }, [showSuccess, t]);
+            setVerified(true);
+            showSuccess(t('facialFail.success'), t('facialFail.verifiedMessage'), goToFaceUpdate);
+        } catch (error) {
+            console.error('Error verificando cuestionario:', error);
+            showError(t('facialFail.verifyErrorTitle'), t('facialFail.verifyErrorMessage'));
+        } finally {
+            setVerifying(false);
+        }
+    }, [attempts, goToFaceUpdate, showError, showSuccess, t]);
 
-    // Modal de actualización facial
-    const openFacialUpdate = useCallback(() => setShowFacialUpdate(true), []);
+    // Paso 2: actualización facial, solo tras verificar el cuestionario
+    const openFacialUpdate = useCallback(() => {
+        if (!verified) {
+            showWarning(
+                t('facialFail.questionnaireFirstTitle'),
+                t('facialFail.questionnaireFirstMessage'),
+                [{text: 'OK', onPress: hideAlert}]
+            );
+            return;
+        }
+        setShowFacialUpdate(true);
+    }, [verified, showWarning, hideAlert, t]);
     const closeFacialUpdate = useCallback(() => setShowFacialUpdate(false), []);
-    const handleFacialUpdateSuccess = useCallback((data) => {
-        // Guardar datos y mostrar alerta con la información
-        setFormData(data);
-        const message =
-            `${t('facialUpdate.changeType')}: ${data.changeLabel}`;
-
-        showSuccess(
-            t('facialFail.success'),
-            message,
-            () => {
-                console.log('Parámetros actualizados');
-            }
-        );
-    }, [showSuccess, t]);
+    const handleFacialUpdateSuccess = useCallback(() => goToFaceUpdate(), [goToFaceUpdate]);
 
     return {
         userRole,
         updateKey,
+        verified,
+        verifying,
         showQuestionnaire,
         showFacialUpdate,
         handleBack,

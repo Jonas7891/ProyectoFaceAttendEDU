@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import {
     FlatList,
     KeyboardAvoidingView,
@@ -16,13 +16,14 @@ import {useNavigation} from "@react-navigation/native";
 import PrimaryButton from "../components/auth/PrimaryButton";
 import BackButton from "../components/common/BackButton";
 import {useTheme} from "../components/common/ThemeContext";
-import styles from "./Styles/AddValidJustificationScreen/Style";
+import {createAddValidJustificationStyles} from "./Styles/AddValidJustificationScreen/Style";
 import {useAddValidJustificationViewModel} from "../../viewmodels/useAddValidJustificationViewModel";
 import CustomAlert from "../components/common/CustomAlert";
 import {useCustomAlert} from "../components/common/useCustomAlert";
 
 // ─── Selector desplegable reutilizable (sin cambios) ─────────────────────────────
 function DropdownSelector({ label, placeholder, value, options, onSelect, colors }) {
+    const styles = useMemo(() => createAddValidJustificationStyles(colors), [colors]);
     const [visible, setVisible] = useState(false);
 
     return (
@@ -40,7 +41,7 @@ function DropdownSelector({ label, placeholder, value, options, onSelect, colors
                     paddingHorizontal: 16,
                     paddingVertical: 14,
                     borderWidth: 1.5,
-                    borderColor: value ? colors.primary : colors.border ?? "#E0E0E0",
+                    borderColor: value ? colors.primary : colors.border,
                     marginBottom: 4,
                 }}
             >
@@ -67,7 +68,7 @@ function DropdownSelector({ label, placeholder, value, options, onSelect, colors
                 <TouchableOpacity
                     activeOpacity={1}
                     onPress={() => setVisible(false)}
-                    style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)" }}
+                    style={{ flex: 1, backgroundColor: colors.overlay }}
                 />
 
                 {/* Panel inferior */}
@@ -92,7 +93,7 @@ function DropdownSelector({ label, placeholder, value, options, onSelect, colors
                             width: 40,
                             height: 4,
                             borderRadius: 2,
-                            backgroundColor: colors.border ?? "#E0E0E0",
+                            backgroundColor: colors.border,
                             alignSelf: "center",
                             marginBottom: 16,
                         }}
@@ -119,7 +120,7 @@ function DropdownSelector({ label, placeholder, value, options, onSelect, colors
                             <View
                                 style={{
                                     height: 1,
-                                    backgroundColor: colors.border ?? "#F0F0F0",
+                                    backgroundColor: colors.border,
                                     marginHorizontal: 24,
                                 }}
                             />
@@ -151,7 +152,7 @@ function DropdownSelector({ label, placeholder, value, options, onSelect, colors
                                             borderRadius: 20,
                                             backgroundColor: isSelected
                                                 ? colors.primary
-                                                : colors.card ?? "#F5F5F5",
+                                                : colors.card,
                                             justifyContent: "center",
                                             alignItems: "center",
                                             marginRight: 14,
@@ -211,6 +212,7 @@ export default function AddValidJustificationScreen() {
     const navigation = useNavigation();
     const { t } = useTranslation();
     const { colors } = useTheme();
+    const styles = useMemo(() => createAddValidJustificationStyles(colors), [colors]);
 
     // Hook de alerta personalizada
     const {
@@ -243,6 +245,7 @@ export default function AddValidJustificationScreen() {
         // Manejo de errores (asumimos que el ViewModel expone 'error' y 'clearError')
         error,
         clearError,
+        isEditing,
     } = useAddValidJustificationViewModel();
 
     // Mostrar errores automáticamente desde el ViewModel
@@ -312,7 +315,7 @@ export default function AddValidJustificationScreen() {
                             {/* ── Encabezado ───────────────────────────────────────── */}
                             <BackButton onPress={handleBack} />
                             <Text style={[styles.mainTitle, { color: colors.text, marginTop: Platform.OS === "ios" ? 0 : 15 }]}>
-                                {t("justify.title")}
+                                {t(isEditing ? "admin.editJustificationType" : "admin.newJustificationType")}
                             </Text>
 
                             {/* ── Tarjeta de resumen (aparece cuando ambos están seleccionados) ── */}
@@ -414,7 +417,7 @@ export default function AddValidJustificationScreen() {
                                         color: colors.text,
                                         borderColor: description
                                             ? colors.primary
-                                            : colors.border ?? "#E0E0E0",
+                                            : colors.border,
                                         borderWidth: 1.5,
                                     },
                                 ]}
@@ -457,7 +460,7 @@ export default function AddValidJustificationScreen() {
                                         borderWidth: 1.5,
                                         borderColor: requiresDocument
                                             ? colors.primary
-                                            : colors.border ?? "#E0E0E0",
+                                            : colors.border,
                                         backgroundColor: requiresDocument
                                             ? colors.primary
                                             : colors.inputBackground,
@@ -468,7 +471,7 @@ export default function AddValidJustificationScreen() {
                                             fontSize: 14,
                                             fontWeight: "600",
                                             color: requiresDocument
-                                                ? "#fff"
+                                                ? colors.onPrimary
                                                 : colors.text,
                                         }}
                                     >
@@ -491,7 +494,7 @@ export default function AddValidJustificationScreen() {
                                         borderWidth: 1.5,
                                         borderColor: !requiresDocument
                                             ? colors.primary
-                                            : colors.border ?? "#E0E0E0",
+                                            : colors.border,
                                         backgroundColor: !requiresDocument
                                             ? colors.primary
                                             : colors.inputBackground,
@@ -502,7 +505,7 @@ export default function AddValidJustificationScreen() {
                                             fontSize: 14,
                                             fontWeight: "600",
                                             color: !requiresDocument
-                                                ? "#fff"
+                                                ? colors.onPrimary
                                                 : colors.text,
                                         }}
                                     >
@@ -517,7 +520,7 @@ export default function AddValidJustificationScreen() {
                                     title={
                                         isSaving
                                             ? t("common.saving")
-                                            : t("admin.saveJustification")
+                                            : t(isEditing ? "admin.updateJustification" : "admin.saveJustification")
                                     }
                                     onPress={handleSaveWithValidation}
                                     disabled={isSaving}

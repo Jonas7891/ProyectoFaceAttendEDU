@@ -1,5 +1,6 @@
 import { request, POST } from '../api/apiClient';
 import { VerificationErrorType, REQUEST_TIMEOUT_MS } from './constants/auths';
+import { timeoutMessage } from '../api/httpErrors';
 
 export class VerificationError extends Error {
   constructor(type, message) {
@@ -13,7 +14,7 @@ const withTimeout = (promise, ms) =>
   Promise.race([
     promise,
     new Promise((_, reject) =>
-      setTimeout(() => reject(new VerificationError(VerificationErrorType.TIMEOUT, 'La verificación tardó demasiado.')), ms)
+      setTimeout(() => reject(new VerificationError(VerificationErrorType.TIMEOUT, timeoutMessage())), ms)
     ),
   ]);
 

@@ -2,7 +2,7 @@ import {useState} from "react";
 import {useTranslation} from "react-i18next";
 import {restoreLanguageForRole} from "../view/components/common/languageByRole";
 import {useTheme} from "../view/components/common/ThemeContext";
-import {AuthService} from "../services/AuthService";
+import {AuthService, authError} from "../services/AuthService";
 import {ApiError} from "../api/apiClient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {removeToken, saveToken} from "../storage/TokenStorage";
@@ -29,8 +29,12 @@ export function useLoginViewModel({onLogin}) {
     };
 
     const validate = () => {
-        if (!email.trim() || !password.trim()) {
-            setErrorWithTimestamp(t("login.invalidCredentials"));
+        if (!email.trim()) {
+            setErrorWithTimestamp(t("login.errorEmail"));
+            return false;
+        }
+        if (!password.trim()) {
+            setErrorWithTimestamp(t("login.errorPassword"));
             return false;
         }
         if (!terms) {
@@ -47,23 +51,17 @@ export function useLoginViewModel({onLogin}) {
     // la pantalla ya muestra el alerta con el motivo.
     const isExpectedLoginError = (err) =>
         (err instanceof ApiError && [0, 400, 401, 403, 408].includes(err.status)) ||
-        err?.message === "Credenciales inválidas";
+        ["INVALID_CREDENTIALS", "ACCOUNT_DISABLED", "NO_ROLES", "ROLE_WITHOUT_PERMISSIONS"].includes(err?.code);
 
     const handleError = (err) => {
         const newCount = failedAttempts + 1;
         setFailedAttempts(newCount);
 
-        if (err instanceof ApiError && (err.status === 0 || err.status === 408)) {
-            setErrorWithTimestamp(t("login.connectionError"));
-            return;
-        }
-
-        if (err instanceof ApiError && err.message) {
-            setErrorWithTimestamp(err.message);
-            return;
-        }
-
-        setErrorWithTimestamp(t("login.invalidCredentials"));
+        // ApiError y authError ya traen el motivo traducido (red, tiempo de
+        // espera, permisos, 5xx, credenciales, sin rol…): se muestra tal cual.
+        // Antes todo lo que no era ApiError salía como "credenciales inválidas"
+        // aunque el problema fuera otro.
+        setErrorWithTimestamp(err?.message || t("httpErrors.unknown"));
     };
 
     const submit = async () => {
@@ -78,19 +76,19 @@ export function useLoginViewModel({onLogin}) {
             const authResponse = await AuthService.login(email, password);
 
             if (!authResponse || !authResponse.token) {
-                throw new Error("Token no recibido en la respuesta");
+                throw authError("SESSION_NOT_CREATED", "authErrors.sessionNotCreated");
             }
 
             const userData = authResponse.user;
             const saved = await saveToken(authResponse.token, userData?.email || email);
 
             if (!saved) {
-                throw new Error("No se pudo guardar el token");
+                throw authError("SESSION_NOT_SAVED", "authErrors.sessionNotSaved");
             }
 
             const role = getHighestRole(userData?.roles ?? []);
             if (!role) {
-                throw new Error('El usuario no tiene un rol válido asignado');
+                throw authError("NO_ROLES", "authErrors.noRoles");
             }
 
             setFailedAttempts(0);

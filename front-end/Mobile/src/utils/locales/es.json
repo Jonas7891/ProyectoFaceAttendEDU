@@ -37,7 +37,9 @@
     "send": "Enviar",
     "retry": "Reintentar",
     "activate": "Activar",
-    "deactivate": "Desactivar"
+    "deactivate": "Desactivar",
+    "logoLabel": "Logo de FaceAttend",
+    "logoPlaceholder": "logo"
   },
   "login": {
     "title": "Inicio de Sesión",
@@ -56,7 +58,8 @@
     "acceptTerms": "Acepta los términos y condiciones",
     "forgotPassword": "¿Olvidaste tu contraseña?",
     "showPassword": "Mostrar contraseña",
-    "hidePassword": "Ocultar contraseña"
+    "hidePassword": "Ocultar contraseña",
+    "errorTitle": "No se pudo iniciar sesión"
   },
   "tabs": {
     "home": "Inicio",
@@ -219,7 +222,26 @@
       "usePhoto": "Usar foto",
       "title": "Registro Facial",
       "alreadyRegistered": "Tus parámetros faciales ya están registrados."
-    }
+    },
+    "loadError": "No se pudieron cargar tus solicitudes.",
+    "requestInstructions": "Para cambiar tu rostro registrado envía una solicitud. Cuando un revisor la apruebe podrás registrar tu rostro nuevo.",
+    "latestRequest": "Tu última solicitud",
+    "status": {
+      "pending": "Pendiente de revisión",
+      "inReview": "En revisión",
+      "approved": "Aprobada",
+      "rejected": "Rechazada"
+    },
+    "reviewNotes": "Observaciones: {{notes}}",
+    "updateFaceNow": "Registrar mi rostro nuevo",
+    "newRequest": "Nueva solicitud",
+    "reasonLabel": "Motivo del cambio",
+    "reasonPlaceholder": "Ej.: cambio de apariencia, el reconocimiento falla con frecuencia…",
+    "reasonTooShort": "Escribe al menos {{min}} caracteres.",
+    "sendRequest": "Enviar solicitud",
+    "requestSentTitle": "Solicitud enviada",
+    "requestSentMsg": "Te avisaremos aquí cuando sea revisada.",
+    "requestError": "No se pudo enviar la solicitud."
   },
   "takePhoto": {
     "title": "Foto para Reconocimiento Facial Inicial",
@@ -239,7 +261,19 @@
     "cameraQualityDescription": "Otra de las razones por la que ocurre fallos en el sistema es debido a la iluminación del lugar, la calidad de la camara o en que angulo se pone el dispositivo para realizar el escaneo.",
     "returningToMenu": "Volviendo al Menu...",
     "success": "Éxito",
-    "backToMenu": "Volver"
+    "backToMenu": "Volver",
+    "questionnaireFirstTitle": "Primero el cuestionario",
+    "questionnaireFirstMessage": "Responde el cuestionario de verificación antes de actualizar tu rostro.",
+    "verifiedMessage": "Identidad verificada. Ahora actualiza tu rostro.",
+    "verifyFailedTitle": "Verificación fallida",
+    "verifyFailedMessage": "Las respuestas no coinciden con tus datos registrados. Intentos restantes: {{remaining}}.",
+    "verifyErrorTitle": "Error de verificación",
+    "verifyErrorMessage": "No fue posible consultar tus datos. Intenta nuevamente.",
+    "lockedTitle": "Verificación bloqueada",
+    "lockedMessage": "Superaste el número de intentos. Comunícate con un administrador para actualizar tu rostro.",
+    "verifying": "Verificando respuestas...",
+    "verifiedBadge": "Verificado",
+    "lockedHint": "Disponible después de verificar el cuestionario"
   },
   "dashboard": {
     "greeting": "Buen día",
@@ -279,7 +313,9 @@
     "registerAttendance": "Actualizar Parámetros",
     "seeAll": "Ver todos",
     "statusLate": "Tarde",
-    "statusPresent": "Presente"
+    "statusPresent": "Presente",
+    "justifications": "Justificaciones",
+    "justificationsDesc": "Revisa justificaciones y sus tipos"
   },
   "consultJustify": {
     "mainTitle": "Justificaciones Aceptadas",
@@ -363,7 +399,15 @@
     "title": "Novedades",
     "content": "Imagínate que tienes que usar una aplicación para registrar tu asistencia con el rostro, lo primero es que el sistema te muestra un recuadro en la pantalla para que sepas exactamente dónde poner la cara. A medida que te vas acomodando, se pone en verde para que sepas que ya estás listo.\n\nEs importante que te pongas en un lugar con buena luz. Una vez que el rostro se ve bien, el sistema te pide un pequeño gesto, como parpadear o mover un poco la cabeza, para asegurarse de que no sea una foto o algo falso.\n\nLo mejor es que el escaneo no tarda mucho, apenas unos dos o tres segundos, y enseguida te aparece en la pantalla un mensaje claro que dice si la asistencia quedó registrada o si hubo algún problema. Todo está pensado para que sea rápido y sencillo: abres la app, presionas el botón para dirigirte al apartado de Escaneo Facial, te acomodas en el recuadro, parpadeas y en cuestión de segundos ya tienes tu asistencia guardada.",
     "creationDate": "Fecha de creación",
-    "unknownDate": "##/##/####"
+    "unknownDate": "##/##/####",
+    "alertsTitle": "Alertas y novedades",
+    "alert": "Alerta",
+    "loadError": "No se pudieron cargar las novedades. Toca para reintentar.",
+    "resolveError": "No se pudo resolver la alerta.",
+    "empty": "No hay novedades por ahora.",
+    "resolved": "Resuelta",
+    "open": "Pendiente",
+    "resolve": "Resolver"
   },
   "history": {
     "title": "Historial",
@@ -374,7 +418,7 @@
   },
   "registerModal": {
     "title": "Solicitud de Cuenta Personal",
-    "description": "Si no tienes una cuenta creada, la debes crear en el aplicativo web.",
+    "description": "Si no tienes una cuenta, solicítala al administrador de tu institución.",
     "close": "Cerrar"
   },
   "termsModal": {
@@ -633,7 +677,11 @@
     "selectType": "Selecciona un tipo...",
     "approve": "Aprobar",
     "date": "Fecha",
-    "reject": "Rechazar"
+    "reject": "Rechazar",
+    "justificationUpdated": "Tipo de justificación actualizado.",
+    "newJustificationType": "Nuevo tipo de justificación",
+    "editJustificationType": "Editar tipo de justificación",
+    "updateJustification": "Guardar cambios"
   },
   "justifications": {
     "validList": "Justificaciones Válidas",
@@ -642,7 +690,11 @@
     "items": "justificaciones",
     "noJustifications": "No hay justificaciones registradas",
     "noJustificationsDesc": "Las justificaciones válidas aparecerán aquí cuando sean agregadas por el administrador",
-    "loadError": "No se pudieron cargar las justificaciones"
+    "loadError": "No se pudieron cargar las justificaciones",
+    "typesTitle": "Tipos de justificación",
+    "deleteTypeTitle": "Eliminar tipo",
+    "deleteTypeQuestion": "¿Eliminar el tipo «{{name}}»?",
+    "deleteTypeError": "No se pudo eliminar el tipo; puede que ya esté en uso."
   },
   "profile": {
     "personalInfo": "Información Personal",
@@ -682,7 +734,8 @@
       "saving": "Guardando...",
       "successMessage": "Contraseña actualizada correctamente",
       "successTitle": "Contraseña actualizada",
-      "title": "Cambiar contraseña"
+      "title": "Cambiar contraseña",
+      "errorPolicy": "Usa 8 o más caracteres con mayúscula, minúscula, número y símbolo, sin secuencias ni repeticiones."
     },
     "pendingJustifications": "Justificaciones",
     "phone": "Teléfono",
@@ -733,7 +786,23 @@
     "searchTeacher": "Buscar docente",
     "activateQuestion": "¿Reactivar este usuario?",
     "deactivateQuestion": "¿Desactivar este usuario? Podrás reactivarlo después.",
-    "inactive": "Inactivo"
+    "inactive": "Inactivo",
+    "lastName": "Apellidos",
+    "documentNumber": "Número de documento",
+    "phone": "Teléfono",
+    "username": "Usuario",
+    "initialPassword": "Contraseña inicial",
+    "role": "Rol",
+    "documentRequired": "El número de documento es obligatorio.",
+    "usernameRequired": "El usuario es obligatorio.",
+    "saveError": "No se pudo guardar el usuario.",
+    "roleNotFound": "El rol \"{{role}}\" no existe en el catálogo de roles.",
+    "steps": {
+      "person": "persona",
+      "user": "usuario",
+      "role": "rol",
+      "actor": "actor académico"
+    }
   },
   "schoolConfig": {
     "title": "Configuración del Colegio",
@@ -858,10 +927,12 @@
       "warning": "EN LÍMITE"
     },
     "absenceLabel": "Inasistencias\n(tope {{limit}})",
-    "latenessLabel": "Retardos\n(tope {{limit}})"
-    ,"reportSent": "El reporte fue enviado correctamente."
-    ,"reportError": "No fue posible enviar el reporte."
-    ,"confirmGeneral": "Se generará un reporte para {{count}} personas. ¿Deseas continuar?"
+    "latenessLabel": "Retardos\n(tope {{limit}})",
+    "reportSent": "El reporte fue enviado correctamente.",
+    "reportError": "No fue posible enviar el reporte.",
+    "confirmGeneral": "Se generará un reporte para {{count}} personas. ¿Deseas continuar?",
+    "absenceShort": "{{count}} inasistencias",
+    "latenessShort": "{{count}} retardos"
   },
   "validation": {
     "title": "Campos incompletos",
@@ -898,7 +969,11 @@
     "errorTimeout": "La petición tardó demasiado. Verifica tu conexión e intenta nuevamente.",
     "errorGeneric": "Ocurrió un error. Intenta de nuevo.",
     "errorRateLimit": "Debes esperar {{seconds}} segundos antes de reintentar.",
-    "successMessage": "Código enviado correctamente. Redirigiendo..."
+    "successMessage": "Código enviado correctamente. Redirigiendo...",
+    "sending": "Enviando código",
+    "sendA11y": "Enviar código de recuperación",
+    "emailHint": "Ingresa tu correo para recibir el código de recuperación",
+    "waitSeconds": "Espera {{seconds}} segundos"
   },
   "passwordUpdate": {
     "title": "Nueva contraseña",
@@ -920,7 +995,11 @@
     "successTitle": "¡Contraseña actualizada!",
     "successMessage": "Tu contraseña ha sido restablecida correctamente. Ya puedes iniciar sesión.",
     "goToLogin": "Ir al inicio de sesión",
-    "discardMessage": "Si sales, perderás la contraseña que escribiste."
+    "discardMessage": "Si sales, perderás la contraseña que escribiste.",
+    "a11yRequirementsHint": "Debe tener al menos 8 caracteres, con mayúsculas, minúsculas, números y caracteres especiales.",
+    "a11yShowConfirmation": "Mostrar confirmación",
+    "a11yHideConfirmation": "Ocultar confirmación",
+    "a11yCancel": "Cancelar y descartar cambios"
   },
   "verifyCode": {
     "title": "Revisa tu correo",
@@ -931,7 +1010,15 @@
     "resendButton": "Reenviar código",
     "errorInvalid": "Código incorrecto. Intentos restantes: {{attempts}}",
     "errorExpired": "El código ha expirado. Solicita uno nuevo.",
-    "errorNoCode": "No hay un código activo. Vuelve atrás y solicita uno nuevo."
+    "errorNoCode": "No hay un código activo. Vuelve atrás y solicita uno nuevo.",
+    "errorLocked": "Demasiados intentos fallidos. Espera {{seconds}} segundos antes de volver a intentarlo.",
+    "verifying": "Verificando código",
+    "verifyA11y": "Verificar código de recuperación",
+    "resendA11y": "Reenviar código de verificación",
+    "resendIn": "Reenviar código en {{seconds}} segundos",
+    "resentTitle": "Código reenviado",
+    "resentMessage": "Revisa tu correo para ver el nuevo código.",
+    "resendError": "No se pudo reenviar el código."
   },
   "manageAmbientes": {
     "title": "Gestión de ambientes",
@@ -954,7 +1041,9 @@
     "typeRequired": "El tipo es obligatorio.",
     "capacityInvalid": "La capacidad debe ser un número mayor a 0.",
     "confirm": "Confirmar",
-    "deleteQuestion": "¿Seguro que quieres eliminar este ambiente?"
+    "deleteQuestion": "¿Seguro que quieres eliminar este ambiente?",
+    "saveError": "No se pudo guardar el ambiente.",
+    "deleteError": "No se pudo eliminar el ambiente."
   },
   "userRoles": {
     "administrator": "Administrador",
@@ -1000,5 +1089,111 @@
     "saveSuccessMsg": "Tu rostro fue registrado correctamente en este dispositivo.",
     "saveErrorTitle": "Error al guardar",
     "saveErrorMsg": "Ocurrió un problema al guardar tu registro facial."
+  },
+  "faceCapture": {
+    "blink": "Parpadea una vez",
+    "turn": "Gira lentamente la cabeza",
+    "openMouth": "Abre y cierra la boca",
+    "followInstruction": "Sigue la instrucción",
+    "repeatGesture": "repite el gesto",
+    "repeatSameGesture": "Repite el mismo gesto.",
+    "cameraNotReady": "La cámara aún no está lista",
+    "missingPerson": "No se encontró la persona a registrar. Inicia sesión de nuevo.",
+    "registerIntro": "Te pediremos {{count}} gestos para registrar el rostro.",
+    "registering": "Registrando rostro...",
+    "registered": "Rostro registrado",
+    "genericError": "No fue posible registrar el rostro. Intenta nuevamente.",
+    "currentInstruction": "INSTRUCCIÓN ACTUAL",
+    "gestureProgress": "Gesto {{current}} de {{total}}",
+    "registerButton": "Registrar rostro ({{count}} gestos)",
+    "updateButton": "Actualizar rostro ({{count}} gestos)",
+    "updateTitle": "Actualizar rostro",
+    "cameraReady": "Cámara lista. Ya puedes registrar tu rostro."
+  },
+  "userDetail": {
+    "title": "Detalle del usuario",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "personalInfo": "Información personal",
+    "email": "Correo",
+    "phone": "Teléfono",
+    "document": "Documento",
+    "username": "Usuario",
+    "program": "Programa",
+    "cohort": "Ficha",
+    "attendance": "Asistencia",
+    "attendanceOk": "Cumple el mínimo requerido ({{min}}%)",
+    "attendanceLow": "⚠ Por debajo del mínimo requerido ({{min}}%)",
+    "noAttendance": "Sin registros de asistencia",
+    "attendanceCounts": "Presente {{present}} · Tarde {{late}} · Ausente {{absent}} · Justificada {{justified}}",
+    "biometrics": "Reconocimiento biométrico",
+    "biometricsRegistered": "Biometría registrada",
+    "missingFingerprint": "Falta registro de huella dactilar",
+    "missingFace": "Falta registro facial",
+    "noBiometrics": "Sin registro biométrico",
+    "biometricsUnavailable": "No fue posible consultar la biometría",
+    "face": "Rostro",
+    "fingerprint": "Huella",
+    "registered": "Registrado",
+    "pending": "Pendiente",
+    "registerFace": "Registrar rostro",
+    "updateFace": "Actualizar rostro",
+    "loading": "Cargando información..."
+  },
+  "biometricCases": {
+    "title": "Solicitudes faciales",
+    "menuDesc": "Revisa cambios de rostro solicitados",
+    "loadError": "No se pudieron cargar las solicitudes.",
+    "reviewError": "No se pudo registrar la revisión.",
+    "requestedAt": "Solicitada el {{date}}",
+    "approve": "Aprobar",
+    "reject": "Rechazar",
+    "confirmApprove": "¿Aprobar esta solicitud? La persona podrá registrar un rostro nuevo una vez.",
+    "confirmReject": "¿Rechazar esta solicitud?",
+    "empty": "No hay solicitudes pendientes."
+  },
+  "httpErrors": {
+    "204": "La operación se realizó, pero el servidor no devolvió datos.",
+    "300": "La solicitud tiene varias respuestas posibles y no se pudo elegir una.",
+    "301": "Este servicio cambió de dirección de forma permanente. Actualiza la aplicación.",
+    "302": "Este servicio se movió temporalmente. Intenta de nuevo en unos minutos.",
+    "304": "No hay cambios desde la última consulta.",
+    "307": "Este servicio se movió temporalmente. Intenta de nuevo.",
+    "308": "Este servicio cambió de dirección de forma permanente. Actualiza la aplicación.",
+    "400": "Los datos enviados no son válidos. Revisa la información e intenta de nuevo.",
+    "401": "Tu sesión expiró o no es válida. Inicia sesión de nuevo.",
+    "403": "Tu rol no tiene permiso para realizar esta acción.",
+    "404": "No se encontró la información solicitada; puede que haya sido eliminada.",
+    "405": "El servidor no permite esta acción.",
+    "408": "El servidor tardó demasiado en responder. Revisa tu conexión e intenta de nuevo.",
+    "409": "La operación entra en conflicto con datos existentes (por ejemplo, un registro duplicado).",
+    "410": "La información solicitada ya no está disponible.",
+    "413": "El archivo o los datos enviados son demasiado grandes.",
+    "415": "El formato del archivo o de los datos no es compatible.",
+    "422": "Algunos datos no cumplen las reglas requeridas. Revísalos e intenta de nuevo.",
+    "423": "El recurso está bloqueado temporalmente. Intenta más tarde.",
+    "429": "Hiciste demasiadas solicitudes seguidas. Espera un momento e intenta de nuevo.",
+    "500": "Ocurrió un error interno en el servidor. Intenta de nuevo más tarde.",
+    "501": "Esta función aún no está disponible en el servidor.",
+    "502": "El servidor no pudo comunicarse con otro servicio. Intenta de nuevo en unos minutos.",
+    "503": "El servicio no está disponible en este momento (puede estar en mantenimiento). Intenta más tarde.",
+    "504": "Un servicio interno tardó demasiado en responder. Intenta de nuevo en unos minutos.",
+    "network": "No hay conexión con el servidor. Revisa tu conexión a internet y que el servidor esté disponible, e intenta de nuevo.",
+    "timeout": "El servidor tardó demasiado en responder. Revisa tu conexión e intenta de nuevo.",
+    "noSession": "No hay una sesión activa. Inicia sesión de nuevo.",
+    "unknown": "Ocurrió un error inesperado. Intenta de nuevo.",
+    "2xx": "El servidor respondió, pero sin la información esperada. Intenta de nuevo.",
+    "3xx": "El servidor redirigió la solicitud a otra dirección. Verifica la configuración de la aplicación.",
+    "4xx": "La solicitud no se pudo procesar. Revisa los datos e intenta de nuevo.",
+    "5xx": "El servidor tuvo un problema. Intenta de nuevo más tarde."
+  },
+  "authErrors": {
+    "accountDisabled": "Tu cuenta está inactiva o bloqueada. Contacta al administrador de tu institución.",
+    "rolesUnavailable": "No se pudieron consultar tus roles en el servidor. Intenta de nuevo en unos minutos.",
+    "roleWithoutPermissions": "Tu rol no tiene permisos para usar la aplicación. Contacta al administrador.",
+    "noRoles": "Tu usuario no tiene un rol asignado. Contacta al administrador de tu institución.",
+    "sessionNotCreated": "El servidor no pudo crear tu sesión. Intenta de nuevo.",
+    "sessionNotSaved": "No se pudo guardar la sesión en este dispositivo. Revisa el espacio disponible e intenta de nuevo.",
+    "sessionNotRenewable": "Tu sesión no se puede renovar. Inicia sesión de nuevo."
   }
 }

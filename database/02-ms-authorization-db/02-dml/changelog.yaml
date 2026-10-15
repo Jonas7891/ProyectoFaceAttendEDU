@@ -20,3 +20,6 @@ databaseChangeLog:
   - include:
       file: 007-split-super-admin-role.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 008-justification-request-permission.yaml
+      relativeToChangelogFile: true

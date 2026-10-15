@@ -85,6 +85,11 @@ class Settings(BaseSettings):
         default="http://localhost:8082",
         validation_alias=AliasChoices("BIOMETRIC_AUTHORIZATION_URL", "AUTHORIZATION_URL"),
     )
+    # Owner of the canonical biometric update cases (RN-29 re-enrollment check).
+    configuration_url: str = Field(
+        default="http://localhost:8087",
+        validation_alias=AliasChoices("BIOMETRIC_CONFIGURATION_URL", "CONFIGURATION_URL"),
+    )
 
     # ── Health probes ──────────────────────────────────────────────────
     health_ping_timeout_seconds: float = 2.0

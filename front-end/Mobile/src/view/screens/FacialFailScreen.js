@@ -1,5 +1,6 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {
+    ActivityIndicator,
     Keyboard,
     KeyboardAvoidingView,
     Platform,
@@ -17,15 +18,18 @@ import {QuestionnaireModal} from '../components/common/QuestionnaireModal';
 import {FacialUpdateModal} from '../components/common/FacialUpdateModal';
 import CustomLogo from '../components/common/logo';
 import CustomAlert from '../components/common/CustomAlert';
-import styles from './Styles/FacialFailScreen/Style';
+import {createFacialFailStyles} from './Styles/FacialFailScreen/Style';
 import {useFacialFailViewModel} from '../../viewmodels/useFacialFailScreenViewModel';
 
 export default function FacialFail() {
     const { t } = useTranslation();
     const { colors } = useTheme();
+    const styles = useMemo(() => createFacialFailStyles(colors), [colors]);
 
     const {
         updateKey,
+        verified,
+        verifying,
         showQuestionnaire,
         showFacialUpdate,
         handleBack,
@@ -60,7 +64,7 @@ export default function FacialFail() {
                                 <CustomLogo
                                     size="small"
                                     rounded={true}
-                                    backgroundColor="#000000"
+                                    backgroundColor={colors.cameraBackground}
                                     marginBottom={-2}
                                 />
                             </View>
@@ -88,6 +92,16 @@ export default function FacialFail() {
                                 <Text style={[styles.optionDescription, { color: colors.textSecondary }]}>
                                     {t('facialFail.questionnaireDescription')}
                                 </Text>
+                                {verifying ? (
+                                    <View style={{flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8}}>
+                                        <ActivityIndicator size="small" color={colors.primary}/>
+                                        <Text style={{color: colors.textSecondary}}>{t('facialFail.verifying')}</Text>
+                                    </View>
+                                ) : verified ? (
+                                    <Text style={{color: colors.success, fontWeight: '600', marginTop: 8}}>
+                                        ✓ {t('facialFail.verifiedBadge')}
+                                    </Text>
+                                ) : null}
                             </TouchableOpacity>
 
                             <TouchableOpacity
@@ -98,6 +112,7 @@ export default function FacialFail() {
                                         borderColor: colors.cardBorder,
                                         borderWidth: 1,
                                     },
+                                    !verified && {opacity: 0.5},
                                 ]}
                                 onPress={openFacialUpdate}
                                 activeOpacity={0.7}
@@ -108,6 +123,11 @@ export default function FacialFail() {
                                 <Text style={[styles.optionDescription, { color: colors.textSecondary }]}>
                                     {t('facialFail.updateParamsDescription')}
                                 </Text>
+                                {!verified ? (
+                                    <Text style={{color: colors.textSecondary, fontStyle: 'italic', marginTop: 8}}>
+                                        {t('facialFail.lockedHint')}
+                                    </Text>
+                                ) : null}
                             </TouchableOpacity>
 
                             <Text style={[styles.recommendationsTitle, { color: colors.text }]}>

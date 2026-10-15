@@ -7,20 +7,12 @@ import {getCurrentUserRole, getCurrentUser, isSuperAdmin as checkIsSuperAdmin} f
 import {ActorService} from '../services/ActorService';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 import {backendGet} from '../api/backend';
+import {loadScopedAlerts} from '../services/alertFeed';
 import ENV from '../config/env';
 
 const ATT = () => ENV.ATTENDANCE_BASE_URL;
 const SCHED = () => ENV.SCHEDULING_BASE_URL;
 const ACAD = () => ENV.ACADEMIC_BASE_URL;
-const NOTIFY = () => ENV.NOTIFY_BASE_URL;
-const API = () => ENV.API_BASE_URL;
-
-function unwrap(data) {
-  if (data && Array.isArray(data.value)) return data.value;
-  if (Array.isArray(data)) return data;
-  if (data && typeof data === 'object') return [data];
-  return [];
-}
 
 // Una lista que falla devuelve [] en vez de tumbar la sección: el dashboard
 // pinta ceros parciales en lugar de quedarse sin datos por un timeout.
@@ -72,47 +64,17 @@ async function getCourseNameForRecord(record) {
   }
 }
 
+// Últimas alertas con el mismo alcance por rol que Novedades (antes cualquier
+// rol veía las de toda la institución con nombres).
 async function fetchRecentNovedades(t) {
   try {
-    const typeMap = {};
-    (await backendGet(NOTIFY(), 'api/v1/alert-types')).forEach((at) => {
-      typeMap[at.alert_type_id] = at.name;
-    });
-
-    const all = await backendGet(NOTIFY(), 'api/v1/alerts', { limit: 50 });
-    const alerts = [...all]
-      .filter((a) => a && (a.alert_id ?? a.alertId) != null)
-      .sort((a, b) => new Date(b.raised_at || 0) - new Date(a.raised_at || 0))
-      .slice(0, 5);
-
-    const items = [];
-    let actorById = {};
-    try {
-      const actors = await backendGet(ACAD(), 'api/v1/academic-actors', { limit: 2000 }, { useCache: true });
-      actors.forEach((x) => { actorById[String(x.academic_actor_id)] = x; });
-    } catch {}
-    // Personas en paralelo: en serie cada aviso sumaba un viaje.
-    const names = await Promise.all(alerts.map(async (a) => {
-      try {
-        const actor = actorById[String(a.academic_actor_id)];
-        if (actor?.person_id) {
-          const person = unwrap(await backendGet(API(), `api/v1/persons/${actor.person_id}`))[0];
-          if (person) return `${person.name || ''} ${person.last_name || person.lastName || ''}`.trim();
-        }
-      } catch {}
-      return '';
+    return (await loadScopedAlerts()).slice(0, 5).map((a) => ({
+      id: a.id,
+      titulo: a.title,
+      descripcion: a.person,
+      tiempo: formatRelativeTime(a.raisedAt, t),
+      tipo: a.resolved ? 'success' : 'warning',
     }));
-    for (let i = 0; i < alerts.length; i++) {
-      const a = alerts[i];
-      items.push({
-        id: a.alert_id ?? i + 1,
-        titulo: typeMap[a.alert_type_id] || '',
-        descripcion: names[i],
-        tiempo: formatRelativeTime(a.raised_at, t),
-        tipo: a.resolved_at ? 'success' : 'warning',
-      });
-    }
-    return items;
   } catch {
     return [];
   }
@@ -360,32 +322,37 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     });
 
+    // Colores de categoría tomados de la paleta activa (posición estable entre paletas).
+    const cat = colors.categorical;
     const menuAccionesAdmin = [
-        { id: 1, title: t('dashboard.manageUsers'), description: t('dashboard.manageUsersDesc'), color: '#E91E63', screen: 'ManageUsersScreen' },
-        { id: 2, title: t('dashboard.environmentManagement'), description: t('dashboard.manageEnvironmentDesc'), color: '#1e58e9', screen: 'ManageEnviromentScreen' },
-        { id: 3, title: t('dashboard.reports'), description: t('dashboard.reportsDesc'), color: '#FF9800', screen: 'AttendanceReportScreen' },
+        { id: 1, title: t('dashboard.manageUsers'), description: t('dashboard.manageUsersDesc'), color: cat[0], screen: 'ManageUsersScreen' },
+        { id: 2, title: t('dashboard.environmentManagement'), description: t('dashboard.manageEnvironmentDesc'), color: cat[1], screen: 'ManageEnviromentScreen' },
+        { id: 3, title: t('dashboard.reports'), description: t('dashboard.reportsDesc'), color: cat[2], screen: 'AttendanceReportScreen' },
         ...(isSuperAdmin
-            ? [{ id: 4, title: t('schools.title'), description: t('schools.subtitle'), color: '#673AB7', screen: 'Schools' }]
+            ? [{ id: 4, title: t('schools.title'), description: t('schools.subtitle'), color: cat[3], screen: 'Schools' }]
             : []),
-        { id: 5, title: t('dashboard.news'), description: t('dashboard.newsDesc'), color: '#00ACC1', screen: 'Novedades' },
-        { id: 6, title: t('dashboard.schoolConfig'), description: t('dashboard.schoolConfigDesc'), color: '#6D4C41', screen: 'SchoolConfigurationScreen' },
+        { id: 5, title: t('dashboard.news'), description: t('dashboard.newsDesc'), color: cat[4], screen: 'Novedades' },
+        { id: 6, title: t('dashboard.schoolConfig'), description: t('dashboard.schoolConfigDesc'), color: cat[5], screen: 'SchoolConfigurationScreen' },
+        { id: 7, title: t('biometricCases.title'), description: t('biometricCases.menuDesc'), color: cat[2], screen: 'BiometricCasesScreen' },
+        { id: 8, title: t('dashboard.justifications'), description: t('dashboard.justificationsDesc'), color: cat[4], screen: 'MenuJustify' },
     ];
     const menuAccionesEstudiante = [
-        { id: 1, title: t('student.registerFace'), description: t('student.registerFaceDesc'), color: '#4CAF50', screen: 'RegisterFace' },
-        { id: 2, title: t('student.myAttendance'), description: t('student.myAttendanceDesc'), color: '#2196F3', screen: 'DisplayingAttendance' },
-        { id: 3, title: t('student.myCourses'), description: t('student.myCoursesDesc'), color: '#9C27B0', screen: 'MyCourses' },
-        { id: 4, title: t('student.myJustifications'), description: t('student.myJustificationsDesc'), color: '#FF9800', screen: 'MenuJustify' },
-        { id: 5, title: t('student.UpdateFace'), description: t('student.UpdateFaceDesc'), color: '#f32152', screen: 'UpdatePhoto' },
-        { id: 6, title: t('dashboard.news'), description: t('dashboard.newsDesc'), color: '#00ACC1', screen: 'Novedades' },
+        { id: 1, title: t('student.registerFace'), description: t('student.registerFaceDesc'), color: cat[0], screen: 'RegisterFace' },
+        { id: 2, title: t('student.myAttendance'), description: t('student.myAttendanceDesc'), color: cat[1], screen: 'DisplayingAttendance' },
+        { id: 3, title: t('student.myCourses'), description: t('student.myCoursesDesc'), color: cat[2], screen: 'MyCourses' },
+        { id: 4, title: t('student.myJustifications'), description: t('student.myJustificationsDesc'), color: cat[3], screen: 'MenuJustify' },
+        { id: 5, title: t('student.UpdateFace'), description: t('student.UpdateFaceDesc'), color: cat[4], screen: 'UpdatePhoto' },
+        { id: 6, title: t('dashboard.news'), description: t('dashboard.newsDesc'), color: cat[5], screen: 'Novedades' },
     ];
     const menuAccionesDocente = [
-        { id: 1, title: t('teacher.updateFace'), description: t('teacher.updateFaceDesc'), color: '#2196F3', screen: 'UpdatePhoto' },
-        { id: 2, title: t('teacher.myAttendance'), description: t('teacher.myAttendanceDesc'), color: '#4CAF50', screen: 'DisplayingAttendance' },
-        { id: 3, title: t('teacher.myCourses'), description: t('teacher.myCoursesDesc'), color: '#9C27B0', screen: 'MyCourses' },
-        { id: 4, title: t('teacher.pendingJustifications'), description: t('teacher.pendingJustificationsDesc'), color: '#FF9800', screen: 'PendingJustificationScreen' },
-        { id: 5, title: t('student.registerFace'), description: t('student.registerFaceDesc'), color: '#4CAF50', screen: 'RegisterFace' },
-        { id: 6, title: t('dashboard.reports'), description: t('teacher.reportsDesc'), color: '#F4511E', screen: 'AttendanceReportScreen' },
-        { id: 7, title: t('dashboard.news'), description: t('dashboard.newsDesc'), color: '#00ACC1', screen: 'Novedades' },
+        { id: 1, title: t('teacher.updateFace'), description: t('teacher.updateFaceDesc'), color: cat[0], screen: 'UpdatePhoto' },
+        { id: 2, title: t('teacher.myAttendance'), description: t('teacher.myAttendanceDesc'), color: cat[1], screen: 'DisplayingAttendance' },
+        { id: 3, title: t('teacher.myCourses'), description: t('teacher.myCoursesDesc'), color: cat[2], screen: 'MyCourses' },
+        { id: 4, title: t('teacher.pendingJustifications'), description: t('teacher.pendingJustificationsDesc'), color: cat[3], screen: 'PendingJustificationScreen' },
+        { id: 5, title: t('student.registerFace'), description: t('student.registerFaceDesc'), color: cat[4], screen: 'RegisterFace' },
+        { id: 6, title: t('dashboard.reports'), description: t('teacher.reportsDesc'), color: cat[5], screen: 'AttendanceReportScreen' },
+        { id: 7, title: t('dashboard.news'), description: t('dashboard.newsDesc'), color: cat[0], screen: 'Novedades' },
+        { id: 8, title: t('biometricCases.title'), description: t('biometricCases.menuDesc'), color: cat[2], screen: 'BiometricCasesScreen' },
     ];
 
     const menuAcciones = isAdmin ? menuAccionesAdmin : isTeacher ? menuAccionesDocente : menuAccionesEstudiante;

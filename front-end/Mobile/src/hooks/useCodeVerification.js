@@ -1,8 +1,11 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
+import { ApiError } from '../api/apiClient';
 import { MAX_CODE_ATTEMPTS, LOCKOUT_DURATION_MS, VerificationErrorType } from '../services/constants/auths';
 import { VerificationService, VerificationError } from '../services/verificationService';
 
 export function useCodeVerification({ email, onSuccess }) {
+    const { t } = useTranslation();
     const [code, setCode] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -34,26 +37,32 @@ export function useCodeVerification({ email, onSuccess }) {
             const newAttempts = attempts + 1;
             setAttempts(newAttempts);
 
-            // ✅ instanceof contra la CLASE correcta
-            if (err instanceof VerificationError && err.type === VerificationErrorType.INVALID_CODE) {
+            // identity responde 400/401 a un código incorrecto, vencido o ya usado;
+            // antes caía en el error genérico y nunca contaba intentos.
+            const invalidCode = (err instanceof VerificationError && err.type === VerificationErrorType.INVALID_CODE)
+                || (err instanceof ApiError && (err.status === 400 || err.status === 401));
+            if (invalidCode) {
                 if (newAttempts >= MAX_CODE_ATTEMPTS) {
                     setLockoutUntil(Date.now() + LOCKOUT_DURATION_MS);
-                    setError({ type: err.type, message: 'Demasiados intentos fallidos. Espera 30 segundos.' });
+                    setError({
+                        type: VerificationErrorType.GENERIC,
+                        message: t('verifyCode.errorLocked', { seconds: Math.ceil(LOCKOUT_DURATION_MS / 1000) }),
+                    });
                 } else {
                     setError({
-                        type: err.type,
-                        message: `Código incorrecto. Intentos restantes: ${MAX_CODE_ATTEMPTS - newAttempts}`,
+                        type: VerificationErrorType.INVALID_CODE,
+                        message: t('verifyCode.errorInvalid', { attempts: MAX_CODE_ATTEMPTS - newAttempts }),
                     });
                 }
             } else if (err instanceof VerificationError) {
                 setError({ type: err.type, message: err.message });
             } else {
-                setError({ type: VerificationErrorType.GENERIC, message: err?.message ?? 'Ocurrió un error.' });
+                setError({ type: VerificationErrorType.GENERIC, message: err?.message || t('httpErrors.unknown') });
             }
         } finally {
             setIsLoading(false);
         }
-    }, [code, email, attempts, canSubmit, onSuccess]);
+    }, [code, email, attempts, canSubmit, onSuccess, t]);
 
     const resetAttempts = useCallback(() => {
         setAttempts(0);

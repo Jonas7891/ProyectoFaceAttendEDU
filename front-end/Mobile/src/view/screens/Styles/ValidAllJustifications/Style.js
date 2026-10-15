@@ -1,7 +1,8 @@
 import {StyleSheet} from 'react-native';
 import {normalizeTypography} from '../../../../utils/typography';
 
-const styles = StyleSheet.create(normalizeTypography({
+// Estilos de todas las justificaciones validadas. Todo color sale de los tokens del tema; usar con createValidAllJustificationsStyles(colors).
+export const createValidAllJustificationsStyles = (colors) => StyleSheet.create(normalizeTypography({
 validAllJustificationsBackButton: {
         borderRadius: 10,
         paddingVertical: 14,
@@ -19,7 +20,7 @@ validAllJustificationsBadge: {
     },
 
 validAllJustificationsBadgeText: {
-        color: '#FFFFFF',
+        color: colors.onPrimary,
         fontSize: 14,
         fontWeight: '700',
     },
@@ -126,7 +127,7 @@ validAllJustificationsItemNumber: {
     },
 
 validAllJustificationsItemNumberText: {
-        color: '#FFFFFF',
+        color: colors.onPrimary,
         fontSize: 13,
         fontWeight: '700',
     },
@@ -162,5 +163,3 @@ validAllJustificationsTitle: {
         fontWeight: '700',
     },
 }));
-
-export default styles;

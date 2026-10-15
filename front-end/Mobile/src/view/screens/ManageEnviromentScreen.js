@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {
     FlatList,
     Keyboard,
@@ -14,7 +14,7 @@ import {
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
-import styles from './Styles/ManageEnviromentScreen/Style';
+import {createManageEnvironmentStyles} from './Styles/ManageEnviromentScreen/Style';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import {useCustomAlert} from '../components/common/useCustomAlert';
@@ -26,6 +26,7 @@ import {useManageEnvironmentViewModel} from '../../viewmodels/useManageEnvironme
 export default function ManageEnviromentScreen({navigation, userRole}) {
     const {t} = useTranslation();
     const {colors} = useTheme();
+    const styles = useMemo(() => createManageEnvironmentStyles(colors), [colors]);
     const {alertConfig, hideAlert, showError, showConfirm} = useCustomAlert();
 
     const {
@@ -50,12 +51,11 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
         nombre: '',
         ubicacion: '',
         capacidad: '',
-        tipo: '',
     });
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
 
-    const emptyForm = {nombre: '', ubicacion: '', capacidad: '', tipo: ''};
+    const emptyForm = {nombre: '', ubicacion: '', capacidad: ''};
 
     const openAdd = () => {
         setEditing(null);
@@ -87,7 +87,7 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
         }
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         Keyboard.dismiss();
 
         if (!form.nombre) {
@@ -98,30 +98,33 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
             showError(t('manageAmbientes.validation'), t('manageAmbientes.locationRequired'));
             return;
         }
-        if (!form.tipo) {
-            showError(t('manageAmbientes.validation'), t('manageAmbientes.typeRequired'));
-            return;
-        }
         if (!form.capacidad || isNaN(form.capacidad) || Number(form.capacidad) <= 0) {
             showError(t('manageAmbientes.validation'), t('manageAmbientes.capacityInvalid'));
             return;
         }
 
-        if (modalMode === 'edit') {
-            updateAmbiente({...editing, ...form});
-        } else {
-            addAmbiente({...form});
+        try {
+            if (modalMode === 'edit') {
+                await updateAmbiente({...editing, ...form});
+            } else {
+                await addAmbiente({...form});
+            }
+            closeModal();
+        } catch (error) {
+            showError(t('common.error'), error?.message || t('manageAmbientes.saveError'));
         }
-
-        closeModal();
     };
 
     const confirmDelete = (id) => {
         showConfirm(
             t('manageAmbientes.confirm'),
             t('manageAmbientes.deleteQuestion'),
-            () => {
-                deleteAmbiente(id);
+            async () => {
+                try {
+                    await deleteAmbiente(id);
+                } catch (error) {
+                    showError(t('common.error'), error?.message || t('manageAmbientes.deleteError'));
+                }
             }
         );
     };
@@ -140,7 +143,7 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
                     {item.nombre}
                 </Text>
                 <Text style={[styles.manageEnvironmentItemMeta, {color: colors.textSecondary}]} numberOfLines={1}>
-                    {`${item.tipo || ''} • ${item.ubicacion || ''} • Cap. ${item.capacidad || '-'}`}
+                    {`${item.ubicacion || ''} • Cap. ${item.capacidad || '-'}`}
                 </Text>
             </View>
             <View style={styles.manageEnvironmentItemActions}>
@@ -153,10 +156,10 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    style={[styles.manageEnvironmentActionButton, {borderColor: '#E53935'}]}
+                    style={[styles.manageEnvironmentActionButton, {borderColor: colors.danger}]}
                     onPress={() => confirmDelete(item.id)}
                 >
-                    <Text style={[styles.manageEnvironmentActionText, {color: '#E53935'}]}>
+                    <Text style={[styles.manageEnvironmentActionText, {color: colors.danger}]}>
                         {t('common.delete')}
                     </Text>
                 </TouchableOpacity>
@@ -219,21 +222,6 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
                 value={String(form.capacidad ?? '')}
                 onChangeText={(text) => setForm((f) => ({...f, capacidad: text.replace(/[^0-9]/g, '')}))}
                 keyboardType="numeric"
-            />
-
-            <Text style={[styles.manageEnvironmentFieldLabel, {color: colors.text}]}>
-                {t('manageAmbientes.type')}
-            </Text>
-            <TextInput
-                placeholder={t('manageAmbientes.typePlaceholder')}
-                placeholderTextColor={colors.modalInputPlaceholder}
-                style={[styles.manageEnvironmentInput, {
-                    color: colors.text,
-                    backgroundColor: colors.modalInputBackground,
-                    borderColor: colors.modalBorder,
-                }]}
-                value={form.tipo}
-                onChangeText={(text) => setForm((f) => ({...f, tipo: text}))}
             />
 
             <View style={styles.manageEnvironmentModalActions}>

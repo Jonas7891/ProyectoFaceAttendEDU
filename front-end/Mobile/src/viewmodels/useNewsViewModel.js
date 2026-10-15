@@ -1,33 +1,65 @@
-import {useEffect, useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../view/components/common/ThemeContext';
 import {getCurrentUserRole} from "../services/UserService";
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
+import {AlertService} from '../services/AlertService';
+import {loadScopedAlerts} from '../services/alertFeed';
 
+// Novedades = alertas con alcance por rol; resolver es acción del staff (RBAC del backend).
 export function useNewsViewModel() {
-    const { i18n } = useTranslation();
-    const { loadThemeForRole } = useTheme();
+    const {t} = useTranslation();
+    const {loadThemeForRole} = useTheme();
+    const updateKey = useLanguageRefresh();
 
     const [userRole, setUserRole] = useState(null);
-    const updateKey = useLanguageRefresh(); // para refrescar al cambiar idioma
+    const [alerts, setAlerts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [resolvingId, setResolvingId] = useState(null);
+
+    const load = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const role = await getCurrentUserRole();
+            setUserRole(role);
+            if (role) await loadThemeForRole(role);
+            const scoped = await loadScopedAlerts();
+            setAlerts(scoped.map((a) => ({...a, title: a.title || t('news.alert')})));
+        } catch (e) {
+            console.error('Error cargando novedades:', e);
+            setError(t('news.loadError'));
+        } finally {
+            setLoading(false);
+        }
+    }, [loadThemeForRole, t]);
 
     useEffect(() => {
-        const init = async () => {
-            try {
-                const role = await getCurrentUserRole();
-                setUserRole(role);
-                if (role) {
-                    await loadThemeForRole(role);
-                }
-            } catch (error) {
-                console.error('Error inicializando NewsScreen:', error);
-            }
-        };
-        init();
-    }, [loadThemeForRole]);
+        load();
+    }, [load]);
+
+    const resolve = useCallback(async (id) => {
+        setResolvingId(id);
+        try {
+            await AlertService.markResolved(id);
+            setAlerts((prev) => prev.map((a) => (a.id === id ? {...a, resolved: true} : a)));
+        } catch (e) {
+            setError(e?.message || t('news.resolveError'));
+        } finally {
+            setResolvingId(null);
+        }
+    }, [t]);
 
     return {
         userRole,
         updateKey,
+        alerts,
+        loading,
+        error,
+        resolvingId,
+        canResolve: userRole === 'Administrador' || userRole === 'Instructor',
+        resolve,
+        reload: load,
     };
 }

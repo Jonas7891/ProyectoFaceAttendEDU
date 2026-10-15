@@ -20,6 +20,21 @@ export function toSnakeDeep(value) {
   return value;
 }
 
+const AUDIT_KEYS = new Set(["created_at", "updated_at", "deleted_at", "created_by", "updated_by", "deleted_by", "row_version"]);
+
+/**
+ * Cuerpo para los MS Java/TS (hablan camelCase y descartan llaves snake):
+ * snake -> camel, sin campos de auditoría ni null/undefined (zod los rechaza).
+ */
+export function toCamelBody(value) {
+  const out = {};
+  for (const [k, v] of Object.entries(value || {})) {
+    if (AUDIT_KEYS.has(k) || v === null || v === undefined) continue;
+    out[k.replace(/_([a-z0-9])/g, (_, c) => c.toUpperCase())] = v;
+  }
+  return out;
+}
+
 export function asList(data) {
   const norm = toSnakeDeep(data);
   if (Array.isArray(norm)) return norm;

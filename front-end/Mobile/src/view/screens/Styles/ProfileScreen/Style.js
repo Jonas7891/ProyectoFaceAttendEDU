@@ -1,7 +1,8 @@
 import {Platform, StyleSheet} from 'react-native';
 import {normalizeTypography} from '../../../../utils/typography';
 
-const styles = StyleSheet.create(normalizeTypography({
+// Estilos del perfil. Todo color sale de los tokens del tema; usar con createProfileStyles(colors).
+export const createProfileStyles = (colors) => StyleSheet.create(normalizeTypography({
 ScrollViewContent: {
         flexGrow: 1,
         paddingBottom: 30,
@@ -100,11 +101,11 @@ roleBadgeTextProfile: {
 
 safeAreaWhite: {
         flex: 1,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: colors.card,
     },
 
 schoolInfoCardSchoolConfig: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         borderRadius: 16,
         padding: 20,
         marginBottom: 20,
@@ -114,20 +115,20 @@ schoolInfoCardSchoolConfig: {
         shadowRadius: 6,
         elevation: 3,
         borderWidth: 1,
-        borderColor: '#F0F0F0',
+        borderColor: colors.border,
     },
 
 schoolLogoContainerSchoolConfig: {
         width: 100,
         height: 100,
         borderRadius: 16,
-        backgroundColor: '#F0F8FF',
+        backgroundColor: colors.primaryLight,
         justifyContent: 'center',
         alignItems: 'center',
         alignSelf: 'center',
         marginBottom: 16,
         borderWidth: 2,
-        borderColor: '#E3F2FD',
+        borderColor: colors.border,
     },
 
 schoolLogoSchoolConfig: {
@@ -200,4 +201,3 @@ userNameProfile: {
     },
 }));
 
-export default styles;

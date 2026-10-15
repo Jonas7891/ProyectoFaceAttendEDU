@@ -19,8 +19,10 @@ import LanguageSettingsScreen from '../view/screens/LanguageSettingsScreen';
 import AppearanceSettingsScreen from '../view/screens/AppearanceSettingsScreen';
 import AddValidJustificationScreen from '../view/screens/AddValidJustificationScreen';
 import ValidJustificationsScreen from '../view/screens/ConsultJustifyScreen';
+import JustificationTypesScreen from '../view/screens/ValidAllJustifications';
 import ProfileScreen from '../view/screens/ProfileScreen';
 import ManageUsersScreen from '../view/screens/ManageUsersScreen';
+import UserDetailScreen from '../view/screens/UserDetailScreen';
 import AttendanceReportScreen from '../view/screens/AttendanceReportScreen';
 import SchoolConfigurationScreen from '../view/screens/SchoolConfigurationScreen';
 import VerifyCodeScreen from "../view/screens/login/Verifycodescreen";
@@ -30,6 +32,7 @@ import ManageEnviromentScreen from "../view/screens/ManageEnviromentScreen";
 import SchoolsScreen from "../view/screens/SchoolsScreen";
 import RegisterFace from "../view/screens/RegisterFace";
 import MyCoursesScreen from "../view/screens/MyCoursesScreen";
+import BiometricCasesScreen from "../view/screens/BiometricCasesScreen";
 import {SuccessScreen} from "../view/components/auth/SuccessScreen";
 
 const Stack = createStackNavigator();
@@ -154,6 +157,13 @@ export default function App() {
         return null;
     }
 
+    // Guard por rol: una pantalla que el rol no puede usar ni se registra, así
+    // que navegar a ella (deep link, menú desactualizado) no la abre. Sin rol
+    // verificado (null) solo quedan las pantallas comunes.
+    const isAdmin = userRole === 'Administrador';
+    const isStaff = isAdmin || userRole === 'Instructor';
+    const isApprentice = userRole === 'Aprendiz';
+
     return (
         <NavigationContainer ref={navigationRef}>
             <Stack.Navigator
@@ -203,8 +213,9 @@ export default function App() {
                         <Stack.Screen name="DisplayingAttendance" component={DisplayingAttendance}/>
                         <Stack.Screen name="MyCourses" component={MyCoursesScreen}/>
                         <Stack.Screen name="MenuJustify" component={MenuJustify}/>
-                        <Stack.Screen name="AddJustification" component={AddJustification}/>
-                        <Stack.Screen name="AddValidJustification" component={AddValidJustificationScreen}/>
+                        {isApprentice && <Stack.Screen name="AddJustification" component={AddJustification}/>}
+                        {isAdmin && <Stack.Screen name="AddValidJustification" component={AddValidJustificationScreen}/>}
+                        {isAdmin && <Stack.Screen name="JustificationTypes" component={JustificationTypesScreen}/>}
                         <Stack.Screen name="ValidJustifications" component={ValidJustificationsScreen}/>
                         <Stack.Screen name="Profile">
                             {props => (
@@ -214,26 +225,43 @@ export default function App() {
                                 />
                             )}
                         </Stack.Screen>
-                        <Stack.Screen name="ManageUsersScreen">
-                            {props => (
-                                <ManageUsersScreen
-                                    {...props}
-                                    userRole={userRole}
-                                    onLogout={handleLogout}
-                                />
-                            )}
-                        </Stack.Screen>
-                        <Stack.Screen name="ManageEnviromentScreen">
-                            {props => (
-                                <ManageEnviromentScreen
-                                    {...props}
-                                    userRole={userRole}
-                                />
-                            )}
-                        </Stack.Screen>
-                        <Stack.Screen name="AttendanceReportScreen" component={AttendanceReportScreen}/>
-                        <Stack.Screen name="Schools" component={SchoolsScreen}/>
-                        <Stack.Screen name="SchoolConfigurationScreen" component={SchoolConfigurationScreen}/>
+                        {isAdmin && (
+                            <>
+                                <Stack.Screen name="ManageUsersScreen">
+                                    {props => (
+                                        <ManageUsersScreen
+                                            {...props}
+                                            userRole={userRole}
+                                            onLogout={handleLogout}
+                                        />
+                                    )}
+                                </Stack.Screen>
+                                <Stack.Screen name="UserDetailScreen">
+                                    {props => (
+                                        <UserDetailScreen
+                                            {...props}
+                                            userRole={userRole}
+                                        />
+                                    )}
+                                </Stack.Screen>
+                                <Stack.Screen name="ManageEnviromentScreen">
+                                    {props => (
+                                        <ManageEnviromentScreen
+                                            {...props}
+                                            userRole={userRole}
+                                        />
+                                    )}
+                                </Stack.Screen>
+                                <Stack.Screen name="Schools" component={SchoolsScreen}/>
+                                <Stack.Screen name="SchoolConfigurationScreen" component={SchoolConfigurationScreen}/>
+                            </>
+                        )}
+                        {isStaff && (
+                            <>
+                                <Stack.Screen name="AttendanceReportScreen" component={AttendanceReportScreen}/>
+                                <Stack.Screen name="BiometricCasesScreen" component={BiometricCasesScreen}/>
+                            </>
+                        )}
                         <Stack.Screen name="PendingJustificationScreen" component={PendingJustificationScreen}/>
                         <Stack.Screen name="RegisterFace" component={RegisterFace} />
                         <Stack.Screen name="SuccessScreen" component={SuccessScreen}/>

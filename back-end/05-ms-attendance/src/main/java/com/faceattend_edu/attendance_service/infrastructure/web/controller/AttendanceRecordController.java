@@ -1,5 +1,6 @@
 package com.faceattend_edu.attendance_service.infrastructure.web.controller;
 
+import com.faceattend_edu.attendance_service.infrastructure.web.security.ActorScope;
 import com.faceattend_edu.attendance_service.domain.model.AttendanceRecord;
 import com.faceattend_edu.attendance_service.domain.port.in.*;
 import com.faceattend_edu.attendance_service.infrastructure.web.dto.*;
@@ -50,7 +51,9 @@ public class AttendanceRecordController {
         }
 
         Map<String, AttendanceSummaryResponse> body = new LinkedHashMap<>();
-        for (ActorAttendanceCount row : recordRepository.summarizeByActors(Set.copyOf(academicActorIds))) {
+        Set<Long> visible = academicActorIds.stream().filter(ActorScope::allows).collect(Collectors.toSet());
+        if (visible.isEmpty()) return ResponseEntity.ok(body);
+        for (ActorAttendanceCount row : recordRepository.summarizeByActors(visible)) {
             AttendanceSummaryResponse summary =
                     body.computeIfAbsent(String.valueOf(row.getAcademicActorId()), key -> new AttendanceSummaryResponse());
             long count = row.getTotal();
@@ -76,6 +79,7 @@ public class AttendanceRecordController {
         List<AttendanceRecordResponse> list = listUseCase.list().stream()
                 .filter(r -> classSessionId == null || classSessionId.equals(r.getClassSessionId()))
                 .filter(r -> academicActorId == null || academicActorId.equals(r.getAcademicActorId()))
+                .filter(r -> ActorScope.allows(r.getAcademicActorId()))
                 .filter(r -> attendanceStatus == null || attendanceStatus.equals(r.getAttendanceStatus()))
                 .map(mapper::toResponse).collect(Collectors.toList());
         return Paging.slice(list, limit, offset);
@@ -83,12 +87,14 @@ public class AttendanceRecordController {
 
     @PostMapping
     public ResponseEntity<AttendanceRecordResponse> create(@Valid @RequestBody CreateAttendanceRecordRequest req){
+        ActorScope.require(req.getAcademicActorId());
         AttendanceRecord created = createUseCase.create(mapper.toDomain(req));
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponse(created));
     }
 
     @PostMapping("/bulk")
     public ResponseEntity<List<AttendanceRecordResponse>> bulk(@Valid @RequestBody List<CreateAttendanceRecordRequest> reqs){
+        reqs.forEach(r -> ActorScope.require(r.getAcademicActorId()));
         List<AttendanceRecord> domains = reqs.stream().map(mapper::toDomain).collect(Collectors.toList());
         List<AttendanceRecordResponse> saved = bulkUseCase.bulk(domains).stream().map(mapper::toResponse).collect(Collectors.toList());
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
@@ -96,18 +102,26 @@ public class AttendanceRecordController {
 
     @GetMapping("/{id}")
     public ResponseEntity<AttendanceRecordResponse> get(@PathVariable Long id){
-        return ResponseEntity.ok(mapper.toResponse(getUseCase.getById(id)));
+        AttendanceRecord record = getUseCase.getById(id);
+        ActorScope.require(record.getAcademicActorId());
+        return ResponseEntity.ok(mapper.toResponse(record));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<AttendanceRecordResponse> update(@PathVariable Long id, @Valid @RequestBody UpdateAttendanceRecordRequest req){
+        requireRecord(id);
         AttendanceRecord updated = updateUseCase.update(id, mapper.toDomain(req));
         return ResponseEntity.ok(mapper.toResponse(updated));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id){
+        requireRecord(id);
         deleteUseCase.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private void requireRecord(Long id) {
+        if (ActorScope.restricted()) ActorScope.require(getUseCase.getById(id).getAcademicActorId());
     }
 }
