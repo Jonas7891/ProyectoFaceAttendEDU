@@ -21,7 +21,7 @@ import { useCoursesViewModel } from "../../../viewmodels/useCoursesViewModel";
 import { useRolePermissions } from "../../../viewmodels/useRolePermissions";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useCourseDetails } from "../../../core/hooks/useCourseDetails";
-import { CourseDetailModal, RegisterCourseModal, ImportCoursesModal } from "./modals";
+import { CourseDetailModal, RegisterCourseModal, EditCourseModal, ImportCoursesModal } from "./modals";
 
 // ── CourseCard (diseño original con datos dinámicos) ──────────────────────────
 
@@ -398,6 +398,7 @@ export function AdminCourses({ vm: vmProp }) {
                 course={vm.selected}
                 onClose={vm.clearSelection}
                 canManage={canManage}
+                onEdit={vm.openEditModal}
             />
 
             {canManage && (
@@ -406,6 +407,12 @@ export function AdminCourses({ vm: vmProp }) {
                         visible={vm.showRegisterModal}
                         onClose={vm.closeRegisterModal}
                         onSubmit={vm.registerCourse}
+                    />
+
+                    <EditCourseModal
+                        course={vm.editingCourse}
+                        onClose={vm.closeEditModal}
+                        onSubmit={vm.editCourse}
                     />
 
                     <ImportCoursesModal

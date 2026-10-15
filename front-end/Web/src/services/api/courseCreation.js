@@ -8,6 +8,7 @@
 // ============================================================
 
 import { academicApi } from "./academicApi";
+import { resetReferenceData } from "./referenceData";
 
 function programIdOf(program) {
     return program?.programId ?? program?.program_id ?? program?.id ?? null;
@@ -38,6 +39,35 @@ export async function listSchoolPrograms(schoolId) {
 }
 
 /**
+ * Crea un programa en la sede indicada. Sin esto no hay cursos ni fichas
+ * posibles para una sede nueva: program_id es FK NOT NULL de ambas.
+ * @throws si falta la sede o el backend rechaza el payload.
+ */
+export async function createProgram({ schoolId, code, name }) {
+    if (schoolId == null || String(schoolId).trim() === "") {
+        throw new Error("A school is required");
+    }
+    const sid = Number(schoolId);
+    if (!Number.isInteger(sid)) throw new Error("A school is required");
+    const created = await academicApi.createProgram({
+        schoolId: sid,
+        code: String(code).trim(),
+        name: String(name).trim(),
+        status: true,
+    });
+    // Los listPrograms()/listCourses()/listCohorts() de referenceData.js se
+    // memorizan para toda la sesión: sin esto, lo que se acaba de crear no
+    // aparece en ninguna pantalla que los use hasta cerrar sesión.
+    resetReferenceData();
+    return {
+        programId: programIdOf(created),
+        schoolId: sid,
+        code: created?.code ?? String(code).trim(),
+        name: created?.name ?? String(name).trim(),
+    };
+}
+
+/**
  * Crea el curso en el programa indicado.
  * @throws si falta el programa o el backend rechaza el payload.
  */
@@ -47,12 +77,34 @@ export async function createCourse({ programId, code, name }) {
     }
     const pid = Number(programId);
     if (!Number.isInteger(pid)) throw new Error("A program is required");
-    return academicApi.createCourse({
+    const created = await academicApi.createCourse({
         programId: pid,
         code: String(code).trim(),
         name: String(name).trim(),
         status: true,
     });
+    resetReferenceData();
+    return created;
+}
+
+/**
+ * Edita nombre/código/programa de un curso ya existente.
+ * @throws si falta el id, el programa o el backend rechaza el payload.
+ */
+export async function updateCourse(courseId, { programId, code, name }) {
+    if (courseId == null) throw new Error("A course is required");
+    if (programId == null || String(programId).trim() === "") {
+        throw new Error("A program is required");
+    }
+    const pid = Number(programId);
+    if (!Number.isInteger(pid)) throw new Error("A program is required");
+    const updated = await academicApi.updateCourse(courseId, {
+        programId: pid,
+        code: String(code).trim(),
+        name: String(name).trim(),
+    });
+    resetReferenceData();
+    return updated;
 }
 
 function normalizeProgramKey(value) {

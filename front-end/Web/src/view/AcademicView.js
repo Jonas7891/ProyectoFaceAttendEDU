@@ -7,14 +7,16 @@
 //  Toda la lógica de negocio está en useAcademicViewModel.
 // ============================================================
 
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, ScrollView, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Alert, Badge, Card, EmptyState, PageHeader } from "./components/common";
+import { Alert, Badge, Button, Card, EmptyState, PageHeader } from "./components/common";
 import { useTheme } from "./components/hooks/useTheme";
 import { useResponsive } from "./components/hooks/useResponsive";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useAcademicViewModel } from "../viewmodels/useAcademicViewModel";
+import { useRolePermissions } from "../viewmodels/useRolePermissions";
+import RegisterFichaModal from "./components/academic/RegisterFichaModal";
 
 function SectionTitle({ icon, title, count }) {
     const { theme } = useTheme();
@@ -56,6 +58,9 @@ export default function AcademicView() {
     const c = theme.colors;
     const { t } = useTranslation();
     const vm = useAcademicViewModel();
+    const permissions = useRolePermissions();
+    const [showNewFicha, setShowNewFicha] = useState(false);
+    const canManage = permissions.canManageCourses && vm.hasSchool;
 
     if (vm.isLoading) {
         return (
@@ -80,6 +85,24 @@ export default function AcademicView() {
                         ? t("Estructura académica de tu sede")
                         : t("Estructura académica de la institución")
                 }
+                actions={
+                    canManage && (
+                        <Button
+                            variant="primary"
+                            size="sm"
+                            onPress={() => setShowNewFicha(true)}
+                            leftIcon={<Feather name="plus" size={16} color={c.brand.textOnPrimary} />}
+                        >
+                            {t("Nueva ficha")}
+                        </Button>
+                    )
+                }
+            />
+
+            <RegisterFichaModal
+                visible={showNewFicha}
+                onClose={() => setShowNewFicha(false)}
+                onCreated={vm.refresh}
             />
 
             <ScrollView

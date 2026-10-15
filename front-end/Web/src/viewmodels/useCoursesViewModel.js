@@ -14,7 +14,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { useAuth } from "../context/AuthContext";
-import { createCourse, importCourses as bulkImportCourses } from "../services/api/courseCreation";
+import { createCourse, updateCourse, importCourses as bulkImportCourses } from "../services/api/courseCreation";
 
 // ── Formulario vacío ───────────────────────────────────────
 
@@ -120,6 +120,7 @@ export function useCoursesViewModel() {
     const [selected, setSelected] = useState(null);
     const [showRegisterModal, setShowRegisterModal] = useState(false);
     const [showImportModal, setShowImportModal] = useState(false);
+    const [editingCourse, setEditingCourse] = useState(null);
 
     // ── Estado de filtrado avanzado ────────────────────────────
     
@@ -351,20 +352,43 @@ export function useCoursesViewModel() {
                 return e?.message || "No se pudo registrar el curso en el backend";
             }
 
-            // Espejo local (jornada, salón y fechas son conceptos de la UI).
-            await appData.addCourse({
-                code: form.code.trim(),
-                name: form.name.trim(),
-                schedule: form.schedule,
-                room: form.room, // ID del ambiente
-                startDate: form.startDate,
-                endDate: form.endDate,
-                status: "active",
-            });
+            // Se trae la lista real del backend en vez de fabricar una fila
+            // local: un espejo local quedaba duplicado para siempre frente
+            // al curso real que luego trae loadCourses() (mismo problema que
+            // reloadUsers resolvió para docentes/admins).
+            await appData.reloadCourses();
 
             return null;
         },
         [appData]
+    );
+
+    const editCourse = useCallback(
+        async (form) => {
+            const err = validateCourseForm(form);
+            if (err) return err;
+            if (editingCourse == null) return "No hay curso seleccionado";
+
+            try {
+                await updateCourse(Number(editingCourse.id), {
+                    programId: form.programId,
+                    code: form.code.trim(),
+                    name: form.name.trim(),
+                });
+            } catch (e) {
+                return e?.message || "No se pudo editar el curso en el backend";
+            }
+
+            // El id ya existe en `courses`: se parchea, no se agrega una fila.
+            await appData.updateCourse(editingCourse.id, {
+                programId: form.programId,
+                code: form.code.trim(),
+                name: form.name.trim(),
+            });
+
+            return null;
+        },
+        [appData, editingCourse]
     );
 
     const importCourses = useCallback(
@@ -460,6 +484,7 @@ export function useCoursesViewModel() {
         // Estado de modales
         showRegisterModal,
         showImportModal,
+        editingCourse,
         
         // Setters de filtros básicos
         setSearch,
@@ -481,9 +506,15 @@ export function useCoursesViewModel() {
         closeRegisterModal: () => setShowRegisterModal(false),
         openImportModal: () => setShowImportModal(true),
         closeImportModal: () => setShowImportModal(false),
-        
+        openEditModal: (course) => {
+            setEditingCourse(course);
+            setSelected(null); // cierra el detalle para mostrar la edición
+        },
+        closeEditModal: () => setEditingCourse(null),
+
         // Acciones de CRUD
         registerCourse,
+        editCourse,
         importCourses,
         
         // Estadísticas (legacy - mantener por compatibilidad)

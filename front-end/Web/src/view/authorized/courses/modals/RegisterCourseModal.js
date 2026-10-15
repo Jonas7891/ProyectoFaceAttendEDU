@@ -16,7 +16,7 @@ import { useAppData } from "../../../../context/AppDataContext";
 import { useAuth } from "../../../../context/AuthContext";
 import { useDateFormat } from "../../../../core/utils/hooks/useDateFormat";
 import { getInstitutionConfig } from "../../../../core/config/institutionConfig";
-import { listSchoolPrograms } from "../../../../services/api/courseCreation";
+import { listSchoolPrograms, createProgram } from "../../../../services/api/courseCreation";
 import {
     EMPTY_COURSE_FORM,
     validateCourseForm,
@@ -60,8 +60,16 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
     const [schoolPrograms, setSchoolPrograms] = useState([]);
     const [programsError, setProgramsError] = useState(null);
 
-    useEffect(() => {
-        if (!visible) return;
+    // Alta de programa en línea: una sede nueva no tiene ninguno y no hay
+    // otra pantalla en la app para crearlos, así que sin esto el curso
+    // queda inalcanzable (el dropdown de Programa aparece vacío siempre).
+    const [showNewProgram, setShowNewProgram] = useState(false);
+    const [newProgramName, setNewProgramName] = useState("");
+    const [newProgramCode, setNewProgramCode] = useState("");
+    const [savingProgram, setSavingProgram] = useState(false);
+    const [newProgramError, setNewProgramError] = useState(null);
+
+    const reloadPrograms = React.useCallback(() => {
         let cancelled = false;
         setProgramsError(null);
         listSchoolPrograms(user?.schoolId ?? null).then(
@@ -78,7 +86,37 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
         return () => {
             cancelled = true;
         };
-    }, [visible, user?.schoolId]);
+    }, [user?.schoolId]);
+
+    useEffect(() => {
+        if (!visible) return;
+        return reloadPrograms();
+    }, [visible, reloadPrograms]);
+
+    const handleCreateProgram = async () => {
+        if (!newProgramName.trim() || !newProgramCode.trim()) {
+            setNewProgramError(t("Nombre y código son requeridos"));
+            return;
+        }
+        setSavingProgram(true);
+        setNewProgramError(null);
+        try {
+            const created = await createProgram({
+                schoolId: user?.schoolId ?? null,
+                code: newProgramCode.trim(),
+                name: newProgramName.trim(),
+            });
+            setSchoolPrograms((prev) => [...prev, created]);
+            setField("programId", String(created.programId));
+            setShowNewProgram(false);
+            setNewProgramName("");
+            setNewProgramCode("");
+        } catch (e) {
+            setNewProgramError(e?.message || t("No se pudo crear el programa"));
+        } finally {
+            setSavingProgram(false);
+        }
+    };
 
     // Calcular placeholders dinámicos basados en HOY y el período configurado
     const [datePlaceholders, setDatePlaceholders] = useState({ start: "", end: "" });
@@ -136,6 +174,10 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
         setError(null);
         setShowErrors(false);
         setSuccess(false);
+        setShowNewProgram(false);
+        setNewProgramName("");
+        setNewProgramCode("");
+        setNewProgramError(null);
         onClose();
     };
 
@@ -256,14 +298,70 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
 
             {/* Programa (el backend lo exige para crear el curso) */}
             <View style={{ marginBottom: 2 }}>
-                <Text style={{
-                    fontSize: 14,
-                    fontWeight: "600",
-                    color: (showErrors && !form.programId) || programsError ? c.status.error : c.text.secondary,
-                    marginBottom: 6,
-                }}>
-                    {t("Programa") + " *"}
-                </Text>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                    <Text style={{
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: (showErrors && !form.programId) || programsError ? c.status.error : c.text.secondary,
+                    }}>
+                        {t("Programa") + " *"}
+                    </Text>
+                    <TouchableOpacity
+                        onPress={() => {
+                            setNewProgramError(null);
+                            setShowNewProgram((v) => !v);
+                        }}
+                        style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+                    >
+                        <Feather name="plus-circle" size={13} color={c.brand.primary} />
+                        <Text style={{ fontSize: 12, fontWeight: "600", color: c.brand.primary }}>
+                            {t("Nuevo programa")}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+
+                {showNewProgram ? (
+                    <View style={{
+                        borderWidth: 1,
+                        borderColor: c.border.primary,
+                        borderRadius: 14,
+                        padding: 12,
+                        gap: 10,
+                        marginBottom: 10,
+                    }}>
+                        <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 10 : 8 }}>
+                            <View style={{ flex: 1 }}>
+                                <TextInput
+                                    label={t("Nombre del programa")}
+                                    value={newProgramName}
+                                    onChangeText={setNewProgramName}
+                                    placeholder={t("Ingeniería de Sistemas")}
+                                    leftIcon={<Feather name="book" size={16} color={c.text.tertiary} />}
+                                />
+                            </View>
+                            <View style={{ width: isSmall ? "100%" : 140 }}>
+                                <TextInput
+                                    label={t("Código")}
+                                    value={newProgramCode}
+                                    onChangeText={setNewProgramCode}
+                                    placeholder={t("IS-2026")}
+                                    leftIcon={<Feather name="hash" size={16} color={c.text.tertiary} />}
+                                />
+                            </View>
+                        </View>
+                        {newProgramError && (
+                            <Text style={{ fontSize: 12, color: c.status.error }}>{newProgramError}</Text>
+                        )}
+                        <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
+                            <Button variant="primary" size="sm" onPress={handleCreateProgram} disabled={savingProgram}>
+                                {savingProgram
+                                    ? <ActivityIndicator size="small" color={c.brand.textOnPrimary} />
+                                    : t("Crear programa")}
+                            </Button>
+                        </View>
+                    </View>
+                ) : null}
+
                 <AnimatedDropdown
                     items={programItems}
                     value={form.programId}

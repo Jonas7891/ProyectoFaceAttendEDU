@@ -65,13 +65,15 @@ function getVisibleTabs(role, isSuperAdmin) {
             }
             // Admin de sede: gestión de su sede, sin "Historial" de personas
             // y sin "Sede"/"Contactos" como tabs: viven dentro de Configuración.
-            // "Académico" se cayó por redundante: cursos, fichas y reportes
-            // ya exponen esa información con mucho más detalle.
+            // "Académico" SÍ se necesita: es la única pantalla con períodos
+            // académicos y fichas (cohortes) — "Cursos" solo gestiona la
+            // materia, no el período ni el grupo que la cursa.
             return [
                 "dashboard",
                 "reports",
                 "users",
                 "courses",
+                "academic",
                 "environments",
                 "justifications",
                 "settings",

@@ -19,9 +19,12 @@ export const academicApi = {
     listPeriods: (p) => request(endpoints.academic.periods, { method: "GET", query: p }),
     listSchoolPeriods: (schoolId) =>
         request(endpoints.academic.schoolPeriods(schoolId), { method: "GET" }),
+    createPeriod: (b) => request(endpoints.academic.periods, { method: "POST", body: b }),
     listCohorts: (p) => request(endpoints.academic.cohorts, { method: "GET", query: p }),
+    createCohort: (b) => request(endpoints.academic.cohorts, { method: "POST", body: b }),
     listCourses: (p) => request(endpoints.academic.courses, { method: "GET", query: p }),
     createCourse: (b) => request(endpoints.academic.courses, { method: "POST", body: b }),
+    updateCourse: (id, b) => request(endpoints.academic.courseById(id), { method: "PUT", body: b }),
     listActorTypes: () => request(endpoints.academic.actorTypes, { method: "GET" }),
     listActors: (p) => request(endpoints.academic.actors, { method: "GET", query: p }),
     createActor: (b) => request(endpoints.academic.actors, { method: "POST", body: b }),
