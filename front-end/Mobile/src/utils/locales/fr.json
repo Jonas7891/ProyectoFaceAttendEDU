@@ -870,10 +870,10 @@
       "warning": "À LA LIMITE"
     },
     "absenceLabel": "Absences\n(limite {{limit}})",
-    "latenessLabel": "Retards\n(limite {{limit}})"
-    ,"reportSent": "Le rapport a été envoyé avec succès."
-    ,"reportError": "Le rapport n'a pas pu être envoyé."
-    ,"confirmGeneral": "Un rapport sera généré pour {{count}} personnes. Continuer ?"
+    "latenessLabel": "Retards\n(limite {{limit}})",
+    "reportSent": "Le rapport a été envoyé avec succès.",
+    "reportError": "Le rapport n'a pas pu être envoyé.",
+    "confirmGeneral": "Un rapport sera généré pour {{count}} personnes. Continuer ?"
   },
   "validation": {
     "title": "Champs incomplets",
@@ -990,7 +990,9 @@
     "typeRequired": "Le type est obligatoire.",
     "capacityInvalid": "La capacité doit être un nombre supérieur à 0.",
     "confirm": "Confirmer",
-    "deleteQuestion": "Voulez-vous vraiment supprimer cet environnement ?"
+    "deleteQuestion": "Voulez-vous vraiment supprimer cet environnement ?",
+    "saveError": "Impossible d’enregistrer l’espace.",
+    "deleteError": "Impossible de supprimer l’espace."
   },
   "registerFace": {
     "title": "Enregistrement du visage",

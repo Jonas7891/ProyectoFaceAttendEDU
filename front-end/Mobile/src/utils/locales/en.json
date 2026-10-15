@@ -870,10 +870,10 @@
       "warning": "AT LIMIT"
     },
     "absenceLabel": "Absences\n(limit {{limit}})",
-    "latenessLabel": "Lateness\n(limit {{limit}})"
-    ,"reportSent": "The report was sent successfully."
-    ,"reportError": "The report could not be sent."
-    ,"confirmGeneral": "A report will be generated for {{count}} people. Continue?"
+    "latenessLabel": "Lateness\n(limit {{limit}})",
+    "reportSent": "The report was sent successfully.",
+    "reportError": "The report could not be sent.",
+    "confirmGeneral": "A report will be generated for {{count}} people. Continue?"
   },
   "validation": {
     "title": "Incomplete fields",
@@ -990,7 +990,9 @@
     "typeRequired": "Type is required.",
     "capacityInvalid": "Capacity must be a number greater than 0.",
     "confirm": "Confirm",
-    "deleteQuestion": "Are you sure you want to delete this environment?"
+    "deleteQuestion": "Are you sure you want to delete this environment?",
+    "saveError": "The environment could not be saved.",
+    "deleteError": "The environment could not be deleted."
   },
   "registerFace": {
     "title": "Face registration",

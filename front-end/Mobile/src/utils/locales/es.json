@@ -870,10 +870,10 @@
       "warning": "EN LÍMITE"
     },
     "absenceLabel": "Inasistencias\n(tope {{limit}})",
-    "latenessLabel": "Retardos\n(tope {{limit}})"
-    ,"reportSent": "El reporte fue enviado correctamente."
-    ,"reportError": "No fue posible enviar el reporte."
-    ,"confirmGeneral": "Se generará un reporte para {{count}} personas. ¿Deseas continuar?"
+    "latenessLabel": "Retardos\n(tope {{limit}})",
+    "reportSent": "El reporte fue enviado correctamente.",
+    "reportError": "No fue posible enviar el reporte.",
+    "confirmGeneral": "Se generará un reporte para {{count}} personas. ¿Deseas continuar?"
   },
   "validation": {
     "title": "Campos incompletos",
@@ -966,7 +966,9 @@
     "typeRequired": "El tipo es obligatorio.",
     "capacityInvalid": "La capacidad debe ser un número mayor a 0.",
     "confirm": "Confirmar",
-    "deleteQuestion": "¿Seguro que quieres eliminar este ambiente?"
+    "deleteQuestion": "¿Seguro que quieres eliminar este ambiente?",
+    "saveError": "No se pudo guardar el ambiente.",
+    "deleteError": "No se pudo eliminar el ambiente."
   },
   "userRoles": {
     "administrator": "Administrador",

@@ -1,33 +1,32 @@
 import {useCallback, useEffect, useState} from 'react';
-import {backendGet} from '../api/backend';
-import ENV from '../config/env';
+import {EnvironmentService} from '../services/EnvironmentService';
+import {SchoolService} from '../services/SchoolService';
+import Environment from '../models/scheduling/Environment';
 
-function unwrap(data) {
-  if (data && Array.isArray(data.value)) return data.value;
-  if (Array.isArray(data)) return data;
-  if (data && typeof data === 'object') return [data];
-  return [];
-}
+const toItem = (env) => ({
+    id: String(env.environmentId),
+    nombre: env.name || env.code || '—',
+    ubicacion: env.code || '—',
+    capacidad: env.capacity || 0,
+    status: env.status,
+});
 
 export function useManageEnvironmentViewModel(enabled = true) {
     const [ambientes, setAmbientes] = useState([]);
+    const [schoolId, setSchoolId] = useState(null);
     const [updateKey, setUpdateKey] = useState(0);
     const [loading, setLoading] = useState(true);
 
     const fetchEnvironments = useCallback(async () => {
         try {
             setLoading(true);
-            const data = await backendGet(ENV.ACADEMIC_BASE_URL, 'api/v1/environments', {_limit: 100});
-            const records = unwrap(data);
-            const mapped = records.map(r => ({
-                id: r.environment_id || r.id,
-                nombre: r.name || r.code || '—',
-                ubicacion: r.code || '—',
-                capacidad: r.capacity || 0,
-                tipo: 'Aula',
-                status: r.status,
-            }));
-            setAmbientes(mapped);
+            const currentSchoolId = await SchoolService.getCurrentSchoolId();
+            setSchoolId(currentSchoolId);
+            const list = currentSchoolId
+                ? await EnvironmentService.getBySchool(currentSchoolId)
+                : await EnvironmentService.getAll();
+            setAmbientes(list.filter(Boolean).map(toItem));
+            setUpdateKey((k) => k + 1);
         } catch (error) {
             console.error('Error fetching environments:', error);
         } finally {
@@ -58,34 +57,30 @@ export function useManageEnvironmentViewModel(enabled = true) {
         [ambientes]
     );
 
-    const addAmbiente = useCallback((nuevoAmbiente) => {
-        const ambiente = {
-            id: Date.now().toString(),
-            nombre: nuevoAmbiente.nombre,
-            ubicacion: nuevoAmbiente.ubicacion,
-            capacidad: nuevoAmbiente.capacidad ? Number(nuevoAmbiente.capacidad) : null,
-            tipo: nuevoAmbiente.tipo,
-        };
-        setAmbientes((prev) => [...prev, ambiente]);
-        setUpdateKey((k) => k + 1);
-        return ambiente;
-    }, []);
+    const toModel = (form, base = {}) => new Environment({
+        school_id: base.schoolId ?? schoolId,
+        code: form.ubicacion.trim(),
+        name: form.nombre.trim(),
+        capacity: Number(form.capacidad),
+        status: base.status ?? true,
+    });
 
-    const updateAmbiente = useCallback((ambienteActualizado) => {
-        setAmbientes((prev) =>
-            prev.map((a) =>
-                a.id === ambienteActualizado.id
-                    ? { ...a, ...ambienteActualizado, capacidad: ambienteActualizado.capacidad ? Number(ambienteActualizado.capacidad) : null }
-                    : a
-            )
-        );
-        setUpdateKey((k) => k + 1);
-    }, []);
+    // Las tres operaciones lanzan el error del backend para que la pantalla lo muestre.
+    const addAmbiente = useCallback(async (form) => {
+        if (!schoolId) throw new Error('missing school');
+        await EnvironmentService.create(toModel(form));
+        await fetchEnvironments();
+    }, [schoolId, fetchEnvironments]);
 
-    const deleteAmbiente = useCallback((id) => {
-        setAmbientes((prev) => prev.filter((a) => a.id !== id));
-        setUpdateKey((k) => k + 1);
-    }, []);
+    const updateAmbiente = useCallback(async (form) => {
+        await EnvironmentService.update(form.id, toModel(form, {status: form.status}));
+        await fetchEnvironments();
+    }, [schoolId, fetchEnvironments]);
+
+    const deleteAmbiente = useCallback(async (id) => {
+        await EnvironmentService.delete(id);
+        await fetchEnvironments();
+    }, [fetchEnvironments]);
 
     return {
         ambientes, updateKey, loading,

@@ -870,10 +870,10 @@
       "warning": "NO LIMITE"
     },
     "absenceLabel": "Faltas\n(limite {{limit}})",
-    "latenessLabel": "Atrasos\n(limite {{limit}})"
-    ,"reportSent": "O relatório foi enviado com sucesso."
-    ,"reportError": "Não foi possível enviar o relatório."
-    ,"confirmGeneral": "Será gerado um relatório para {{count}} pessoas. Continuar?"
+    "latenessLabel": "Atrasos\n(limite {{limit}})",
+    "reportSent": "O relatório foi enviado com sucesso.",
+    "reportError": "Não foi possível enviar o relatório.",
+    "confirmGeneral": "Será gerado um relatório para {{count}} pessoas. Continuar?"
   },
   "validation": {
     "title": "Campos incompletos",
@@ -990,7 +990,9 @@
     "typeRequired": "O tipo é obrigatório.",
     "capacityInvalid": "A capacidade deve ser um número maior que 0.",
     "confirm": "Confirmar",
-    "deleteQuestion": "Tem certeza de que deseja excluir este ambiente?"
+    "deleteQuestion": "Tem certeza de que deseja excluir este ambiente?",
+    "saveError": "Não foi possível salvar o ambiente.",
+    "deleteError": "Não foi possível excluir o ambiente."
   },
   "registerFace": {
     "title": "Registro de rosto",
