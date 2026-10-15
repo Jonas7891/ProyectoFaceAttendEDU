@@ -213,7 +213,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                         {/* ── Tarjeta resumen ── */}
                         <View style={[styles.schoolInfoCardSchoolConfig, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
                             <View style={styles.schoolLogoContainerSchoolConfig}>
-                                <Text style={{ color: colors.textSecondary }}>logo</Text>
+                                <Text style={{ color: colors.textSecondary }}>{t('common.logoPlaceholder')}</Text>
                             </View>
                             <Text style={[styles.schoolNameSchoolConfig, { color: colors.text }]}>
                                 {generalInfo?.name}

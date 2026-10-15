@@ -37,7 +37,9 @@
     "send": "Enviar",
     "retry": "Reintentar",
     "activate": "Activar",
-    "deactivate": "Desactivar"
+    "deactivate": "Desactivar",
+    "logoLabel": "Logo de FaceAttend",
+    "logoPlaceholder": "logo"
   },
   "login": {
     "title": "Inicio de Sesión",
@@ -416,7 +418,7 @@
   },
   "registerModal": {
     "title": "Solicitud de Cuenta Personal",
-    "description": "Si no tienes una cuenta creada, la debes crear en el aplicativo web.",
+    "description": "Si no tienes una cuenta, solicítala al administrador de tu institución.",
     "close": "Cerrar"
   },
   "termsModal": {
@@ -967,7 +969,11 @@
     "errorTimeout": "La petición tardó demasiado. Verifica tu conexión e intenta nuevamente.",
     "errorGeneric": "Ocurrió un error. Intenta de nuevo.",
     "errorRateLimit": "Debes esperar {{seconds}} segundos antes de reintentar.",
-    "successMessage": "Código enviado correctamente. Redirigiendo..."
+    "successMessage": "Código enviado correctamente. Redirigiendo...",
+    "sending": "Enviando código",
+    "sendA11y": "Enviar código de recuperación",
+    "emailHint": "Ingresa tu correo para recibir el código de recuperación",
+    "waitSeconds": "Espera {{seconds}} segundos"
   },
   "passwordUpdate": {
     "title": "Nueva contraseña",
@@ -989,7 +995,11 @@
     "successTitle": "¡Contraseña actualizada!",
     "successMessage": "Tu contraseña ha sido restablecida correctamente. Ya puedes iniciar sesión.",
     "goToLogin": "Ir al inicio de sesión",
-    "discardMessage": "Si sales, perderás la contraseña que escribiste."
+    "discardMessage": "Si sales, perderás la contraseña que escribiste.",
+    "a11yRequirementsHint": "Debe tener al menos 8 caracteres, con mayúsculas, minúsculas, números y caracteres especiales.",
+    "a11yShowConfirmation": "Mostrar confirmación",
+    "a11yHideConfirmation": "Ocultar confirmación",
+    "a11yCancel": "Cancelar y descartar cambios"
   },
   "verifyCode": {
     "title": "Revisa tu correo",
@@ -1001,7 +1011,14 @@
     "errorInvalid": "Código incorrecto. Intentos restantes: {{attempts}}",
     "errorExpired": "El código ha expirado. Solicita uno nuevo.",
     "errorNoCode": "No hay un código activo. Vuelve atrás y solicita uno nuevo.",
-    "errorLocked": "Demasiados intentos fallidos. Espera {{seconds}} segundos antes de volver a intentarlo."
+    "errorLocked": "Demasiados intentos fallidos. Espera {{seconds}} segundos antes de volver a intentarlo.",
+    "verifying": "Verificando código",
+    "verifyA11y": "Verificar código de recuperación",
+    "resendA11y": "Reenviar código de verificación",
+    "resendIn": "Reenviar código en {{seconds}} segundos",
+    "resentTitle": "Código reenviado",
+    "resentMessage": "Revisa tu correo para ver el nuevo código.",
+    "resendError": "No se pudo reenviar el código."
   },
   "manageAmbientes": {
     "title": "Gestión de ambientes",

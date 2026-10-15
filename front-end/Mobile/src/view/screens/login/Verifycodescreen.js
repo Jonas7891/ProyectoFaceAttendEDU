@@ -163,21 +163,22 @@ export default function VerifyCodeScreen({ route, navigation }) {
     /**
      * Reenvía el código de verificación
      */
-    const handleResendCode = useCallback(() => {
+    const handleResendCode = useCallback(async () => {
         if (resendCooldown.isActive) return;
 
         try {
-            VerificationService.sendRecoveryCode(email); // ← mismo almacén
+            // Se espera la respuesta: sin await un fallo de red nunca llegaba al catch.
+            await VerificationService.sendRecoveryCode(email);
             resendCooldown.start(Math.ceil(RESEND_COOLDOWN_MS / 1000));
             codeVerification.resetAttempts();
 
-            Alert.alert('Código reenviado', 'Revisa tu correo para ver el nuevo código.', [{ text: 'OK' }]);
+            Alert.alert(t('verifyCode.resentTitle'), t('verifyCode.resentMessage'), [{ text: t('common.ok') }]);
             setTimeout(() => codeRefs.current[0]?.current?.focus(), 300);
         } catch (err) {
-            Alert.alert('Error', 'No se pudo reenviar el código.');
+            Alert.alert(t('common.error'), err?.message || t('verifyCode.resendError'));
             resendCooldown.reset();
         }
-    }, [email, resendCooldown, codeVerification]);
+    }, [email, resendCooldown, codeVerification, t]);
 
     /**
      * Maneja la verificación del código
@@ -301,10 +302,10 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                     activeOpacity={0.8}
                                     accessibilityLabel={
                                         codeVerification.isLockedOut
-                                            ? `Espera ${codeVerification.lockoutRemaining} segundos`
+                                            ? t('forgotPassword.waitSeconds', {seconds: codeVerification.lockoutRemaining})
                                             : codeVerification.isLoading
-                                                ? 'Verificando código'
-                                                : 'Verificar código de recuperación'
+                                                ? t('verifyCode.verifying')
+                                                : t('verifyCode.verifyA11y')
                                     }
                                     accessibilityRole="button"
                                     accessibilityState={{
@@ -336,8 +337,8 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                         activeOpacity={0.7}
                                         accessibilityLabel={
                                             resendCooldown.isActive
-                                                ? `Reenviar código en ${resendCooldown.remaining} segundos`
-                                                : 'Reenviar código de verificación'
+                                                ? t('verifyCode.resendIn', {seconds: resendCooldown.remaining})
+                                                : t('verifyCode.resendA11y')
                                         }
                                         accessibilityRole="button"
                                     >

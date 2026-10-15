@@ -20,7 +20,7 @@ export function SuccessScreen({ colors, t, onNavigateToLogin }) {
                     }]}
                     onPress={onNavigateToLogin}
                     activeOpacity={0.8}
-                    accessibilityLabel="Ir al inicio de sesión"
+                    accessibilityLabel={t('passwordUpdate.goToLogin')}
                     accessibilityRole="button"
                 >
                     <Text style={styleAuth.recoveryPrimaryButtonText}>

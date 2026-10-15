@@ -37,7 +37,9 @@
     "send": "Envoyer",
     "retry": "Réessayer",
     "activate": "Activer",
-    "deactivate": "Désactiver"
+    "deactivate": "Désactiver",
+    "logoLabel": "Logo de FaceAttend",
+    "logoPlaceholder": "logo"
   },
   "login": {
     "title": "Connexion",
@@ -416,7 +418,7 @@
   },
   "registerModal": {
     "title": "Demande de compte personnel",
-    "description": "Si vous n'avez pas de compte, vous devez en faire la demande à l'administrateur.",
+    "description": "Si vous n’avez pas de compte, demandez-en un à l’administrateur de votre établissement.",
     "close": "Fermer"
   },
   "termsModal": {
@@ -991,7 +993,11 @@
     "errorTimeout": "La requête a pris trop de temps. Vérifiez votre connexion et réessayez.",
     "errorGeneric": "Une erreur s'est produite. Réessayez.",
     "errorRateLimit": "Vous devez attendre {{seconds}} secondes avant de réessayer.",
-    "successMessage": "Code envoyé avec succès. Redirection..."
+    "successMessage": "Code envoyé avec succès. Redirection...",
+    "sending": "Envoi du code",
+    "sendA11y": "Envoyer le code de récupération",
+    "emailHint": "Saisissez votre e-mail pour recevoir le code de récupération",
+    "waitSeconds": "Patientez {{seconds}} secondes"
   },
   "passwordUpdate": {
     "title": "Nouveau mot de passe",
@@ -1013,7 +1019,11 @@
     "successTitle": "Mot de passe mis à jour !",
     "successMessage": "Votre mot de passe a été réinitialisé. Vous pouvez maintenant vous connecter.",
     "goToLogin": "Accéder à la connexion",
-    "discardMessage": "Si vous quittez, vous perdrez le mot de passe saisi."
+    "discardMessage": "Si vous quittez, vous perdrez le mot de passe saisi.",
+    "a11yRequirementsHint": "Au moins 8 caractères, avec majuscules, minuscules, chiffres et caractères spéciaux.",
+    "a11yShowConfirmation": "Afficher la confirmation",
+    "a11yHideConfirmation": "Masquer la confirmation",
+    "a11yCancel": "Annuler et ignorer les modifications"
   },
   "verifyCode": {
     "title": "Consultez votre e-mail",
@@ -1025,7 +1035,14 @@
     "errorInvalid": "Code incorrect. Tentatives restantes : {{attempts}}",
     "errorExpired": "Le code a expiré. Demandez-en un nouveau.",
     "errorNoCode": "Aucun code actif. Revenez en arrière et demandez-en un nouveau.",
-    "errorLocked": "Trop de tentatives échouées. Attendez {{seconds}} secondes avant de réessayer."
+    "errorLocked": "Trop de tentatives échouées. Attendez {{seconds}} secondes avant de réessayer.",
+    "verifying": "Vérification du code",
+    "verifyA11y": "Vérifier le code de récupération",
+    "resendA11y": "Renvoyer le code de vérification",
+    "resendIn": "Renvoyer le code dans {{seconds}} secondes",
+    "resentTitle": "Code renvoyé",
+    "resentMessage": "Consultez votre e-mail pour voir le nouveau code.",
+    "resendError": "Impossible de renvoyer le code."
   },
   "manageAmbientes": {
     "title": "Gestion des environnements",

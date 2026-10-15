@@ -271,7 +271,7 @@ export default function ProfileScreen({ onLogout }) {
                     ]}>
                         <View style={[styles.schoolInfoCardSchoolConfig, { marginTop: Platform.OS === 'ios' ? 10 : 25 }]}>
                             <View style={styles.schoolLogoContainerSchoolConfig}>
-                                <Text style={styles.schoolLogoSchoolConfig}>logo</Text>
+                                <Text style={styles.schoolLogoSchoolConfig}>{t('common.logoPlaceholder')}</Text>
                             </View>
                         </View>
 

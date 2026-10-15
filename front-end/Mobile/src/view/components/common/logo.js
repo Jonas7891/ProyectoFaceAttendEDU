@@ -1,5 +1,6 @@
 import React from 'react';
 import {Image, View} from "react-native";
+import {useTranslation} from "react-i18next";
 import styleAuth from "./style/Style";
 
 export default function CustomLogo({
@@ -10,6 +11,7 @@ export default function CustomLogo({
   backgroundColor = "#000000",
   marginBottom = 20,
 }) {
+  const {t} = useTranslation();
 
   const getSize = () => {
     if (customSize) return customSize;
@@ -46,7 +48,7 @@ export default function CustomLogo({
       <Image
         style={styleAuth.image}
         source={source || require("../../../assets/images/logoFaceAttend.png")}
-        accessibilityLabel="Logo de FaceAttend"
+        accessibilityLabel={t('common.logoLabel')}
         resizeMode="cover"
       />
     </View>

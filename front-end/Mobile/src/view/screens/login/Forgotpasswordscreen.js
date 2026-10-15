@@ -322,10 +322,10 @@ const SubmitButton = ({
         : labels.colors.primary;
 
     const accessibilityLabel = useMemo(() => {
-        if (isLoading) return 'Enviando código';
-        if (cooldown.isActive) return `Espera ${cooldown.remaining} segundos`;
-        return 'Enviar código de recuperación';
-    }, [isLoading, cooldown]);
+        if (isLoading) return labels.sending;
+        if (cooldown.isActive) return labels.waitSeconds(cooldown.remaining);
+        return labels.sendA11y;
+    }, [isLoading, cooldown, labels]);
 
     return (
         <TouchableOpacity
@@ -405,6 +405,10 @@ export default function ForgotPasswordScreen({ navigation }) {
         errorTimeout: t('forgotPassword.errorTimeout'),
         errorGeneric: t('forgotPassword.errorGeneric'),
         successMessage: t('forgotPassword.successMessage'),
+        sending: t('forgotPassword.sending'),
+        sendA11y: t('forgotPassword.sendA11y'),
+        emailHint: t('forgotPassword.emailHint'),
+        waitSeconds: (seconds) => t('forgotPassword.waitSeconds', {seconds}),
         colors,
     }), [t, colors]);
 
@@ -468,8 +472,8 @@ export default function ForgotPasswordScreen({ navigation }) {
                                     autoCorrect={false}
                                     returnKeyType="send"
                                     onSubmitEditing={handleSend}
-                                    accessibilityLabel="Correo electrónico"
-                                    accessibilityHint="Ingresa tu correo para recibir el código de recuperación"
+                                    accessibilityLabel={labels.emailLabel}
+                                    accessibilityHint={labels.emailHint}
                                 />
 
                                 {errorMessage && (

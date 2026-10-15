@@ -37,7 +37,9 @@
     "send": "Send",
     "retry": "Retry",
     "activate": "Activate",
-    "deactivate": "Deactivate"
+    "deactivate": "Deactivate",
+    "logoLabel": "FaceAttend logo",
+    "logoPlaceholder": "logo"
   },
   "login": {
     "title": "Login",
@@ -416,7 +418,7 @@
   },
   "registerModal": {
     "title": "Personal Account Request",
-    "description": "If you do not have a created account, you must request one from the administrator.",
+    "description": "If you do not have an account, request one from your institution's administrator.",
     "close": "Close"
   },
   "termsModal": {
@@ -991,7 +993,11 @@
     "errorTimeout": "The request took too long. Check your connection and try again.",
     "errorGeneric": "An error occurred. Try again.",
     "errorRateLimit": "You must wait {{seconds}} seconds before retrying.",
-    "successMessage": "Code sent successfully. Redirecting..."
+    "successMessage": "Code sent successfully. Redirecting...",
+    "sending": "Sending code",
+    "sendA11y": "Send recovery code",
+    "emailHint": "Enter your email to receive the recovery code",
+    "waitSeconds": "Wait {{seconds}} seconds"
   },
   "passwordUpdate": {
     "title": "New password",
@@ -1013,7 +1019,11 @@
     "successTitle": "Password updated!",
     "successMessage": "Your password was reset successfully. You can now log in.",
     "goToLogin": "Go to login",
-    "discardMessage": "If you leave, you will lose the password you entered."
+    "discardMessage": "If you leave, you will lose the password you entered.",
+    "a11yRequirementsHint": "Must have at least 8 characters, with uppercase, lowercase, numbers and special characters.",
+    "a11yShowConfirmation": "Show confirmation",
+    "a11yHideConfirmation": "Hide confirmation",
+    "a11yCancel": "Cancel and discard changes"
   },
   "verifyCode": {
     "title": "Check your email",
@@ -1025,7 +1035,14 @@
     "errorInvalid": "Incorrect code. Attempts remaining: {{attempts}}",
     "errorExpired": "The code has expired. Request a new one.",
     "errorNoCode": "There is no active code. Go back and request a new one.",
-    "errorLocked": "Too many failed attempts. Wait {{seconds}} seconds before trying again."
+    "errorLocked": "Too many failed attempts. Wait {{seconds}} seconds before trying again.",
+    "verifying": "Verifying code",
+    "verifyA11y": "Verify recovery code",
+    "resendA11y": "Resend verification code",
+    "resendIn": "Resend code in {{seconds}} seconds",
+    "resentTitle": "Code resent",
+    "resentMessage": "Check your email for the new code.",
+    "resendError": "The code could not be resent."
   },
   "manageAmbientes": {
     "title": "Environment management",

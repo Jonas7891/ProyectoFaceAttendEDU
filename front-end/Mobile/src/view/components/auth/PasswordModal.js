@@ -117,14 +117,14 @@ export function PasswordModal({
                                             }}
                                             returnKeyType="next"
                                             onSubmitEditing={() => confirmPasswordRef.current?.focus()}
-                                            accessibilityLabel="Nueva contraseña"
-                                            accessibilityHint="Debe tener al menos 8 caracteres, mayúsculas, minúsculas, números y caracteres especiales"
+                                            accessibilityLabel={t('passwordUpdate.newPassword')}
+                                            accessibilityHint={t('passwordUpdate.a11yRequirementsHint')}
                                             editable={!passwordUpdate.isLoading}
                                         />
                                         <TouchableOpacity
                                             style={styleAuth.eyeButton}
                                             onPress={() => passwordUpdate.setShowNewPassword(!passwordUpdate.showNewPassword)}
-                                            accessibilityLabel={passwordUpdate.showNewPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                            accessibilityLabel={t(passwordUpdate.showNewPassword ? 'login.hidePassword' : 'login.showPassword')}
                                             accessibilityRole="button"
                                         >
                                             <Image
@@ -219,13 +219,13 @@ export function PasswordModal({
                                             }}
                                             returnKeyType="done"
                                             onSubmitEditing={passwordUpdate.updatePassword}
-                                            accessibilityLabel="Confirmar contraseña"
+                                            accessibilityLabel={t('passwordUpdate.confirmPassword')}
                                             editable={!passwordUpdate.isLoading}
                                         />
                                         <TouchableOpacity
                                             style={styleAuth.eyeButton}
                                             onPress={() => passwordUpdate.setShowConfirmPassword(!passwordUpdate.showConfirmPassword)}
-                                            accessibilityLabel={passwordUpdate.showConfirmPassword ? 'Ocultar confirmación' : 'Mostrar confirmación'}
+                                            accessibilityLabel={t(passwordUpdate.showConfirmPassword ? 'passwordUpdate.a11yHideConfirmation' : 'passwordUpdate.a11yShowConfirmation')}
                                             accessibilityRole="button"
                                         >
                                             <Image
@@ -280,7 +280,7 @@ export function PasswordModal({
                                         <TouchableOpacity
                                             onPress={onClose}
                                             style={styleAuth.passwordModalCancelButton}
-                                            accessibilityLabel="Cancelar y descartar cambios"
+                                            accessibilityLabel={t('passwordUpdate.a11yCancel')}
                                             accessibilityRole="button"
                                         >
                                             <Text style={[styleAuth.passwordModalCancelText, { color: colors.primary }]}>
