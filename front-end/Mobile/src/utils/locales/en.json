@@ -56,7 +56,8 @@
     "acceptTerms": "Accept the terms and conditions",
     "forgotPassword": "Forgot password?",
     "showPassword": "Show password",
-    "hidePassword": "Hide password"
+    "hidePassword": "Hide password",
+    "errorTitle": "Could not log in"
   },
   "tabs": {
     "home": "Home",
@@ -792,7 +793,14 @@
     "role": "Role",
     "documentRequired": "The document number is required.",
     "usernameRequired": "The username is required.",
-    "saveError": "The user could not be saved."
+    "saveError": "The user could not be saved.",
+    "roleNotFound": "The role \"{{role}}\" does not exist in the role catalog.",
+    "steps": {
+      "person": "person",
+      "user": "user",
+      "role": "role",
+      "actor": "academic actor"
+    }
   },
   "schoolConfig": {
     "title": "School Configuration",
@@ -1016,7 +1024,8 @@
     "resendButton": "Resend code",
     "errorInvalid": "Incorrect code. Attempts remaining: {{attempts}}",
     "errorExpired": "The code has expired. Request a new one.",
-    "errorNoCode": "There is no active code. Go back and request a new one."
+    "errorNoCode": "There is no active code. Go back and request a new one.",
+    "errorLocked": "Too many failed attempts. Wait {{seconds}} seconds before trying again."
   },
   "manageAmbientes": {
     "title": "Environment management",
@@ -1160,5 +1169,14 @@
     "3xx": "The server redirected the request to another address. Check the app configuration.",
     "4xx": "The request could not be processed. Check the data and try again.",
     "5xx": "The server had a problem. Please try again later."
+  },
+  "authErrors": {
+    "accountDisabled": "Your account is inactive or locked. Contact your institution's administrator.",
+    "rolesUnavailable": "Your roles could not be checked on the server. Try again in a few minutes.",
+    "roleWithoutPermissions": "Your role has no permission to use the app. Contact the administrator.",
+    "noRoles": "Your user has no role assigned. Contact your institution's administrator.",
+    "sessionNotCreated": "The server could not create your session. Please try again.",
+    "sessionNotSaved": "The session could not be saved on this device. Check the available storage and try again.",
+    "sessionNotRenewable": "Your session cannot be renewed. Please log in again."
   }
 }

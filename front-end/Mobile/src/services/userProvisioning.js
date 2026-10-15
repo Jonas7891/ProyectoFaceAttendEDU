@@ -1,5 +1,6 @@
 import { request, GET, POST, PUT, DELETE } from '../api/apiClient';
 import { toSnakeDeep } from '../api/backend';
+import i18n from '../utils/i18n';
 
 // Tipos de actor académico sembrados en 03 (001-seed-academic-actor-type-table).
 const ACTOR_TYPE_BY_ROLE = { Aprendiz: 1, Instructor: 2 };
@@ -13,7 +14,7 @@ export async function listRoles() {
 
 async function roleIdOf(roleName) {
   const role = (await listRoles()).find((r) => r.role_name === roleName);
-  if (!role) throw new Error(`Rol "${roleName}" no existe en el catálogo`);
+  if (!role) throw new Error(i18n.t('manageUsers.roleNotFound', { role: roleName }));
   return role.role_id;
 }
 
@@ -32,21 +33,21 @@ export async function createAccount({ name, lastName, documentNumber, email, pho
       throw error;
     }
   };
-  const person = toSnakeDeep(await step('persona', () => request({
+  const person = toSnakeDeep(await step(i18n.t('manageUsers.steps.person'), () => request({
     method: POST,
     url: 'api/v1/persons',
     data: { documentNumber, name, lastName, ...(email ? { email } : {}), ...(phone ? { phone } : {}) },
   })));
-  const user = toSnakeDeep(await step('usuario', () => request({
+  const user = toSnakeDeep(await step(i18n.t('manageUsers.steps.user'), () => request({
     method: POST,
     url: 'api/v1/users',
     data: { personId: person.person_id, username, password, authenticationType: 'Local' },
   })));
-  const roleId = await step('rol', () => roleIdOf(roleName));
-  await step('rol', () => request({ method: POST, url: `api/v1/users/${user.user_id}/roles`, data: { roleId } }));
+  const roleId = await step(i18n.t('manageUsers.steps.role'), () => roleIdOf(roleName));
+  await step(i18n.t('manageUsers.steps.role'), () => request({ method: POST, url: `api/v1/users/${user.user_id}/roles`, data: { roleId } }));
   const actorTypeId = ACTOR_TYPE_BY_ROLE[roleName];
   if (actorTypeId && schoolId) {
-    await step('actor académico', () => request({
+    await step(i18n.t('manageUsers.steps.actor'), () => request({
       method: POST,
       url: 'api/v1/academic-actors',
       data: { personId: person.person_id, actorTypeId, schoolId: Number(schoolId), actorCode: documentNumber },

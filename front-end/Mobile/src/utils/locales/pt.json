@@ -56,7 +56,8 @@
     "acceptTerms": "Aceite os termos e condições",
     "forgotPassword": "Esqueceu sua senha?",
     "showPassword": "Mostrar senha",
-    "hidePassword": "Ocultar senha"
+    "hidePassword": "Ocultar senha",
+    "errorTitle": "Não foi possível entrar"
   },
   "tabs": {
     "home": "Início",
@@ -792,7 +793,14 @@
     "role": "Função",
     "documentRequired": "O número do documento é obrigatório.",
     "usernameRequired": "O usuário é obrigatório.",
-    "saveError": "Não foi possível salvar o usuário."
+    "saveError": "Não foi possível salvar o usuário.",
+    "roleNotFound": "A função \"{{role}}\" não existe no catálogo de funções.",
+    "steps": {
+      "person": "pessoa",
+      "user": "usuário",
+      "role": "função",
+      "actor": "ator acadêmico"
+    }
   },
   "schoolConfig": {
     "title": "Configuração da escola",
@@ -1016,7 +1024,8 @@
     "resendButton": "Reenviar código",
     "errorInvalid": "Código incorreto. Tentativas restantes: {{attempts}}",
     "errorExpired": "O código expirou. Solicite um novo.",
-    "errorNoCode": "Não há código ativo. Volte e solicite um novo."
+    "errorNoCode": "Não há código ativo. Volte e solicite um novo.",
+    "errorLocked": "Muitas tentativas sem sucesso. Aguarde {{seconds}} segundos antes de tentar novamente."
   },
   "manageAmbientes": {
     "title": "Gestão de ambientes",
@@ -1160,5 +1169,14 @@
     "3xx": "O servidor redirecionou a solicitação para outro endereço. Verifique a configuração do aplicativo.",
     "4xx": "A solicitação não pôde ser processada. Verifique os dados e tente novamente.",
     "5xx": "O servidor teve um problema. Tente novamente mais tarde."
+  },
+  "authErrors": {
+    "accountDisabled": "Sua conta está inativa ou bloqueada. Entre em contato com o administrador da sua instituição.",
+    "rolesUnavailable": "Não foi possível consultar suas funções no servidor. Tente novamente em alguns minutos.",
+    "roleWithoutPermissions": "Sua função não tem permissão para usar o aplicativo. Entre em contato com o administrador.",
+    "noRoles": "Seu usuário não tem uma função atribuída. Entre em contato com o administrador da sua instituição.",
+    "sessionNotCreated": "O servidor não conseguiu criar sua sessão. Tente novamente.",
+    "sessionNotSaved": "Não foi possível salvar a sessão neste dispositivo. Verifique o espaço disponível e tente novamente.",
+    "sessionNotRenewable": "Sua sessão não pode ser renovada. Faça login novamente."
   }
 }

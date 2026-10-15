@@ -56,7 +56,8 @@
     "acceptTerms": "Acceptez les conditions générales",
     "forgotPassword": "Mot de passe oublié ?",
     "showPassword": "Afficher le mot de passe",
-    "hidePassword": "Masquer le mot de passe"
+    "hidePassword": "Masquer le mot de passe",
+    "errorTitle": "Connexion impossible"
   },
   "tabs": {
     "home": "Accueil",
@@ -792,7 +793,14 @@
     "role": "Rôle",
     "documentRequired": "Le numéro de document est obligatoire.",
     "usernameRequired": "Le nom d’utilisateur est obligatoire.",
-    "saveError": "Impossible d’enregistrer l’utilisateur."
+    "saveError": "Impossible d’enregistrer l’utilisateur.",
+    "roleNotFound": "Le rôle « {{role}} » n’existe pas dans le catalogue des rôles.",
+    "steps": {
+      "person": "personne",
+      "user": "utilisateur",
+      "role": "rôle",
+      "actor": "acteur académique"
+    }
   },
   "schoolConfig": {
     "title": "Configuration de l'école",
@@ -1016,7 +1024,8 @@
     "resendButton": "Renvoyer le code",
     "errorInvalid": "Code incorrect. Tentatives restantes : {{attempts}}",
     "errorExpired": "Le code a expiré. Demandez-en un nouveau.",
-    "errorNoCode": "Aucun code actif. Revenez en arrière et demandez-en un nouveau."
+    "errorNoCode": "Aucun code actif. Revenez en arrière et demandez-en un nouveau.",
+    "errorLocked": "Trop de tentatives échouées. Attendez {{seconds}} secondes avant de réessayer."
   },
   "manageAmbientes": {
     "title": "Gestion des environnements",
@@ -1160,5 +1169,14 @@
     "3xx": "Le serveur a redirigé la requête vers une autre adresse. Vérifiez la configuration de l’application.",
     "4xx": "La requête n’a pas pu être traitée. Vérifiez les données et réessayez.",
     "5xx": "Le serveur a rencontré un problème. Réessayez plus tard."
+  },
+  "authErrors": {
+    "accountDisabled": "Votre compte est inactif ou bloqué. Contactez l’administrateur de votre établissement.",
+    "rolesUnavailable": "Impossible de vérifier vos rôles sur le serveur. Réessayez dans quelques minutes.",
+    "roleWithoutPermissions": "Votre rôle n’a pas l’autorisation d’utiliser l’application. Contactez l’administrateur.",
+    "noRoles": "Aucun rôle n’est attribué à votre utilisateur. Contactez l’administrateur de votre établissement.",
+    "sessionNotCreated": "Le serveur n’a pas pu créer votre session. Veuillez réessayer.",
+    "sessionNotSaved": "La session n’a pas pu être enregistrée sur cet appareil. Vérifiez l’espace disponible et réessayez.",
+    "sessionNotRenewable": "Votre session ne peut pas être renouvelée. Veuillez vous reconnecter."
   }
 }

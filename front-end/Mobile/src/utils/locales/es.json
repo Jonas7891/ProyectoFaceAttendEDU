@@ -56,7 +56,8 @@
     "acceptTerms": "Acepta los términos y condiciones",
     "forgotPassword": "¿Olvidaste tu contraseña?",
     "showPassword": "Mostrar contraseña",
-    "hidePassword": "Ocultar contraseña"
+    "hidePassword": "Ocultar contraseña",
+    "errorTitle": "No se pudo iniciar sesión"
   },
   "tabs": {
     "home": "Inicio",
@@ -792,7 +793,14 @@
     "role": "Rol",
     "documentRequired": "El número de documento es obligatorio.",
     "usernameRequired": "El usuario es obligatorio.",
-    "saveError": "No se pudo guardar el usuario."
+    "saveError": "No se pudo guardar el usuario.",
+    "roleNotFound": "El rol \"{{role}}\" no existe en el catálogo de roles.",
+    "steps": {
+      "person": "persona",
+      "user": "usuario",
+      "role": "rol",
+      "actor": "actor académico"
+    }
   },
   "schoolConfig": {
     "title": "Configuración del Colegio",
@@ -992,7 +1000,8 @@
     "resendButton": "Reenviar código",
     "errorInvalid": "Código incorrecto. Intentos restantes: {{attempts}}",
     "errorExpired": "El código ha expirado. Solicita uno nuevo.",
-    "errorNoCode": "No hay un código activo. Vuelve atrás y solicita uno nuevo."
+    "errorNoCode": "No hay un código activo. Vuelve atrás y solicita uno nuevo.",
+    "errorLocked": "Demasiados intentos fallidos. Espera {{seconds}} segundos antes de volver a intentarlo."
   },
   "manageAmbientes": {
     "title": "Gestión de ambientes",
@@ -1160,5 +1169,14 @@
     "3xx": "El servidor redirigió la solicitud a otra dirección. Verifica la configuración de la aplicación.",
     "4xx": "La solicitud no se pudo procesar. Revisa los datos e intenta de nuevo.",
     "5xx": "El servidor tuvo un problema. Intenta de nuevo más tarde."
+  },
+  "authErrors": {
+    "accountDisabled": "Tu cuenta está inactiva o bloqueada. Contacta al administrador de tu institución.",
+    "rolesUnavailable": "No se pudieron consultar tus roles en el servidor. Intenta de nuevo en unos minutos.",
+    "roleWithoutPermissions": "Tu rol no tiene permisos para usar la aplicación. Contacta al administrador.",
+    "noRoles": "Tu usuario no tiene un rol asignado. Contacta al administrador de tu institución.",
+    "sessionNotCreated": "El servidor no pudo crear tu sesión. Intenta de nuevo.",
+    "sessionNotSaved": "No se pudo guardar la sesión en este dispositivo. Revisa el espacio disponible e intenta de nuevo.",
+    "sessionNotRenewable": "Tu sesión no se puede renovar. Inicia sesión de nuevo."
   }
 }
