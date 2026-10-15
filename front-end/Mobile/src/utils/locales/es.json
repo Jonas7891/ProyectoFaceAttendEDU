@@ -310,7 +310,9 @@
     "registerAttendance": "Actualizar Parámetros",
     "seeAll": "Ver todos",
     "statusLate": "Tarde",
-    "statusPresent": "Presente"
+    "statusPresent": "Presente",
+    "justifications": "Justificaciones",
+    "justificationsDesc": "Revisa justificaciones y sus tipos"
   },
   "consultJustify": {
     "mainTitle": "Justificaciones Aceptadas",
@@ -1085,5 +1087,17 @@
     "registerFace": "Registrar rostro",
     "updateFace": "Actualizar rostro",
     "loading": "Cargando información..."
+  },
+  "biometricCases": {
+    "title": "Solicitudes faciales",
+    "menuDesc": "Revisa cambios de rostro solicitados",
+    "loadError": "No se pudieron cargar las solicitudes.",
+    "reviewError": "No se pudo registrar la revisión.",
+    "requestedAt": "Solicitada el {{date}}",
+    "approve": "Aprobar",
+    "reject": "Rechazar",
+    "confirmApprove": "¿Aprobar esta solicitud? La persona podrá registrar un rostro nuevo una vez.",
+    "confirmReject": "¿Rechazar esta solicitud?",
+    "empty": "No hay solicitudes pendientes."
   }
 }

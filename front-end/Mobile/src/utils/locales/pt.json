@@ -310,7 +310,9 @@
     "news": "Novidades",
     "newsDesc": "Acompanhe os avisos recentes",
     "schoolConfig": "Unidade",
-    "schoolConfigDesc": "Dados e configuração da sua unidade"
+    "schoolConfigDesc": "Dados e configuração da sua unidade",
+    "justifications": "Justificativas",
+    "justificationsDesc": "Revise justificativas e seus tipos"
   },
   "consultJustify": {
     "mainTitle": "Justificativas Aceitas",
@@ -1085,5 +1087,17 @@
     "registerFace": "Registrar rosto",
     "updateFace": "Atualizar rosto",
     "loading": "Carregando informações..."
+  },
+  "biometricCases": {
+    "title": "Solicitações faciais",
+    "menuDesc": "Revise as alterações de rosto solicitadas",
+    "loadError": "Não foi possível carregar as solicitações.",
+    "reviewError": "Não foi possível registrar a revisão.",
+    "requestedAt": "Solicitada em {{date}}",
+    "approve": "Aprovar",
+    "reject": "Rejeitar",
+    "confirmApprove": "Aprovar esta solicitação? A pessoa poderá cadastrar um novo rosto uma vez.",
+    "confirmReject": "Rejeitar esta solicitação?",
+    "empty": "Não há solicitações pendentes."
   }
 }

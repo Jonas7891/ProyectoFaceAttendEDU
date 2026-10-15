@@ -310,7 +310,9 @@
     "news": "News",
     "newsDesc": "Catch up on recent notices",
     "schoolConfig": "School site",
-    "schoolConfigDesc": "Your site data and configuration"
+    "schoolConfigDesc": "Your site data and configuration",
+    "justifications": "Justifications",
+    "justificationsDesc": "Review justifications and their types"
   },
   "consultJustify": {
     "mainTitle": "Approved Justifications",
@@ -1085,5 +1087,17 @@
     "registerFace": "Register face",
     "updateFace": "Update face",
     "loading": "Loading information..."
+  },
+  "biometricCases": {
+    "title": "Face requests",
+    "menuDesc": "Review requested face changes",
+    "loadError": "The requests could not be loaded.",
+    "reviewError": "The review could not be saved.",
+    "requestedAt": "Requested on {{date}}",
+    "approve": "Approve",
+    "reject": "Reject",
+    "confirmApprove": "Approve this request? The person will be able to register a new face once.",
+    "confirmReject": "Reject this request?",
+    "empty": "There are no pending requests."
   }
 }

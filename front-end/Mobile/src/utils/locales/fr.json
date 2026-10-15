@@ -310,7 +310,9 @@
     "news": "Actualités",
     "newsDesc": "Rattrapez les avis récents",
     "schoolConfig": "Établissement",
-    "schoolConfigDesc": "Données et configuration de votre site"
+    "schoolConfigDesc": "Données et configuration de votre site",
+    "justifications": "Justificatifs",
+    "justificationsDesc": "Examinez les justificatifs et leurs types"
   },
   "consultJustify": {
     "mainTitle": "Justificatifs approuvés",
@@ -1085,5 +1087,17 @@
     "registerFace": "Enregistrer le visage",
     "updateFace": "Mettre à jour le visage",
     "loading": "Chargement des informations..."
+  },
+  "biometricCases": {
+    "title": "Demandes faciales",
+    "menuDesc": "Examinez les changements de visage demandés",
+    "loadError": "Impossible de charger les demandes.",
+    "reviewError": "Impossible d’enregistrer la révision.",
+    "requestedAt": "Demandée le {{date}}",
+    "approve": "Approuver",
+    "reject": "Refuser",
+    "confirmApprove": "Approuver cette demande ? La personne pourra enregistrer un nouveau visage une fois.",
+    "confirmReject": "Refuser cette demande ?",
+    "empty": "Aucune demande en attente."
   }
 }

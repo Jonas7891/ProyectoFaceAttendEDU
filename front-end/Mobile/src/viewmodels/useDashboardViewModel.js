@@ -369,6 +369,8 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
             : []),
         { id: 5, title: t('dashboard.news'), description: t('dashboard.newsDesc'), color: '#00ACC1', screen: 'Novedades' },
         { id: 6, title: t('dashboard.schoolConfig'), description: t('dashboard.schoolConfigDesc'), color: '#6D4C41', screen: 'SchoolConfigurationScreen' },
+        { id: 7, title: t('biometricCases.title'), description: t('biometricCases.menuDesc'), color: '#3949AB', screen: 'BiometricCasesScreen' },
+        { id: 8, title: t('dashboard.justifications'), description: t('dashboard.justificationsDesc'), color: '#FF9800', screen: 'MenuJustify' },
     ];
     const menuAccionesEstudiante = [
         { id: 1, title: t('student.registerFace'), description: t('student.registerFaceDesc'), color: '#4CAF50', screen: 'RegisterFace' },
@@ -386,6 +388,7 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
         { id: 5, title: t('student.registerFace'), description: t('student.registerFaceDesc'), color: '#4CAF50', screen: 'RegisterFace' },
         { id: 6, title: t('dashboard.reports'), description: t('teacher.reportsDesc'), color: '#F4511E', screen: 'AttendanceReportScreen' },
         { id: 7, title: t('dashboard.news'), description: t('dashboard.newsDesc'), color: '#00ACC1', screen: 'Novedades' },
+        { id: 8, title: t('biometricCases.title'), description: t('biometricCases.menuDesc'), color: '#3949AB', screen: 'BiometricCasesScreen' },
     ];
 
     const menuAcciones = isAdmin ? menuAccionesAdmin : isTeacher ? menuAccionesDocente : menuAccionesEstudiante;
