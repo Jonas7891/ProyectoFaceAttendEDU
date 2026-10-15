@@ -46,6 +46,21 @@ import AuthMiddleware from "../view/authorized/AuthMiddleware";
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
+    // Crear componentes wrapeados UNA VEZ para evitar re-creaciones
+    const DashboardWrapped = React.useMemo(() => AuthMiddleware(DashboardScreen), []);
+    const UsersWrapped = React.useMemo(() => AuthMiddleware(UsersScreen), []);
+    const CoursesWrapped = React.useMemo(() => AuthMiddleware(CoursesScreen), []);
+    const EnvironmentsWrapped = React.useMemo(() => AuthMiddleware(EnvironmentsScreen), []);
+    const ReportsWrapped = React.useMemo(() => AuthMiddleware(ReportsScreen), []);
+    const SchoolsWrapped = React.useMemo(() => AuthMiddleware(SchoolsScreen), []);
+    const SchoolInfoWrapped = React.useMemo(() => AuthMiddleware(SchoolInfoScreen), []);
+    const HistoryWrapped = React.useMemo(() => AuthMiddleware(HistoryScreen), []);
+    const JustificationsWrapped = React.useMemo(() => AuthMiddleware(JustificationsScreen), []);
+    const AcademicWrapped = React.useMemo(() => AuthMiddleware(AcademicScreen), []);
+    const ContactsWrapped = React.useMemo(() => AuthMiddleware(ContactsScreen), []);
+    const BiometricsWrapped = React.useMemo(() => AuthMiddleware(BiometricsScreen), []);
+    const SettingsWrapped = React.useMemo(() => AuthMiddleware(SettingsScreen), []);
+
     return (
         <Stack.Navigator
             screenOptions={{           
@@ -69,70 +84,19 @@ export default function AppNavigator() {
             />
 
             {/* ── Rutas Autenticadas (con AuthMiddleware) ─────── */}
-            <Stack.Screen
-                name="Dashboard"
-                component={AuthMiddleware(DashboardScreen)}
-            />
-
-            <Stack.Screen
-                name="Users"
-                component={AuthMiddleware(UsersScreen)}
-            />
-
-            <Stack.Screen
-                name="Courses"
-                component={AuthMiddleware(CoursesScreen)}
-            />
-
-            <Stack.Screen
-                name="Environments"
-                component={AuthMiddleware(EnvironmentsScreen)}
-            />
-
-            <Stack.Screen
-                name="Reports"
-                component={AuthMiddleware(ReportsScreen)}
-            />
-
-            <Stack.Screen
-                name="Schools"
-                component={AuthMiddleware(SchoolsScreen)}
-            />
-
-            <Stack.Screen
-                name="SchoolInfo"
-                component={AuthMiddleware(SchoolInfoScreen)}
-            />
-
-            <Stack.Screen
-                name="History"
-                component={AuthMiddleware(HistoryScreen)}
-            />
-
-            <Stack.Screen
-                name="Justifications"
-                component={AuthMiddleware(JustificationsScreen)}
-            />
-
-            <Stack.Screen
-                name="Academic"
-                component={AuthMiddleware(AcademicScreen)}
-            />
-
-            <Stack.Screen
-                name="Contacts"
-                component={AuthMiddleware(ContactsScreen)}
-            />
-
-            <Stack.Screen
-                name="Biometrics"
-                component={AuthMiddleware(BiometricsScreen)}
-            />
-
-            <Stack.Screen
-                name="Settings"
-                component={AuthMiddleware(SettingsScreen)}
-            />
+            <Stack.Screen name="Dashboard" component={DashboardWrapped} />
+            <Stack.Screen name="Users" component={UsersWrapped} />
+            <Stack.Screen name="Courses" component={CoursesWrapped} />
+            <Stack.Screen name="Environments" component={EnvironmentsWrapped} />
+            <Stack.Screen name="Reports" component={ReportsWrapped} />
+            <Stack.Screen name="Schools" component={SchoolsWrapped} />
+            <Stack.Screen name="SchoolInfo" component={SchoolInfoWrapped} />
+            <Stack.Screen name="History" component={HistoryWrapped} />
+            <Stack.Screen name="Justifications" component={JustificationsWrapped} />
+            <Stack.Screen name="Academic" component={AcademicWrapped} />
+            <Stack.Screen name="Contacts" component={ContactsWrapped} />
+            <Stack.Screen name="Biometrics" component={BiometricsWrapped} />
+            <Stack.Screen name="Settings" component={SettingsWrapped} />
         </Stack.Navigator>
     );
 }
