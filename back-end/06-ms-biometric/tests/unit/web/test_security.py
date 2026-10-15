@@ -117,3 +117,79 @@ def test_identity_down_is_service_unavailable(client, monkeypatch):
 
     monkeypatch.setattr(security, "_get_json", boom)
     assert client.get("/api/v1/biometric/facial/person-1", headers=_auth(ADMIN)).status_code == 503
+
+
+# ── /enroll-image: self-enrollment and RN-29 re-enrollment ─────────────────
+
+STUDENT_PERSON = "p-student"
+ENROLL_BODY = {"person_id": STUDENT_PERSON, "image_base64": "x", "challenge_token": "bad"}
+
+
+@pytest.fixture
+def enroll_client(client, monkeypatch):
+    async def get_json(url: str, token: str):
+        if "/api/v1/users/" in url:
+            return 200, {"personId": STUDENT_PERSON}
+        return await _fake_get_json(url, token)
+
+    monkeypatch.setattr(security, "_get_json", get_json)
+    repository = InMemoryBiometricRepository(BiometricType.FACIAL)
+    app.dependency_overrides[get_facial_repository] = lambda: repository
+    client.repository = repository
+    return client
+
+
+def _cases(monkeypatch, cases):
+    async def get_list(url: str, token: str):
+        return cases
+
+    monkeypatch.setattr(security, "_get_list", get_list)
+
+
+async def _enroll_existing(repository):
+    from domain.entities.facial_embedding import FacialEmbedding
+
+    await repository.enroll(FacialEmbedding(person_id=STUDENT_PERSON, encoding=[0.1, 0.2], model_version="v1"))
+
+
+def test_student_cannot_enroll_another_person(enroll_client):
+    body = {**ENROLL_BODY, "person_id": "someone-else"}
+    response = enroll_client.post("/api/v1/biometric/facial/enroll-image", json=body, headers=_auth(STUDENT))
+    assert response.status_code == 403
+
+
+def test_student_first_enrollment_passes_the_guard(enroll_client):
+    # 400 = the guard let it through and the (fake) liveness token was rejected.
+    response = enroll_client.post("/api/v1/biometric/facial/enroll-image", json=ENROLL_BODY, headers=_auth(STUDENT))
+    assert response.status_code == 400
+
+
+def test_student_reenrollment_needs_an_approved_case(enroll_client, monkeypatch):
+    import asyncio
+
+    asyncio.run(_enroll_existing(enroll_client.repository))
+    _cases(monkeypatch, [{"status": "Pending"}])
+    response = enroll_client.post("/api/v1/biometric/facial/enroll-image", json=ENROLL_BODY, headers=_auth(STUDENT))
+    assert response.status_code == 403
+
+
+def test_student_reenrollment_with_case_approved_after_template_passes(enroll_client, monkeypatch):
+    import asyncio
+
+    asyncio.run(_enroll_existing(enroll_client.repository))
+    _cases(monkeypatch, [{"status": "Approved", "reviewedAt": "2999-01-01T00:00:00Z"}])
+    response = enroll_client.post("/api/v1/biometric/facial/enroll-image", json=ENROLL_BODY, headers=_auth(STUDENT))
+    assert response.status_code == 400
+
+
+def test_student_case_approved_before_template_is_spent(enroll_client, monkeypatch):
+    import asyncio
+
+    asyncio.run(_enroll_existing(enroll_client.repository))
+    _cases(monkeypatch, [{"status": "Approved", "reviewedAt": "2000-01-01T00:00:00Z"}])
+    response = enroll_client.post("/api/v1/biometric/facial/enroll-image", json=ENROLL_BODY, headers=_auth(STUDENT))
+    assert response.status_code == 403
+
+
+def test_student_can_start_liveness(enroll_client):
+    assert enroll_client.get("/api/v1/biometric/facial/liveness-challenge", headers=_auth(STUDENT)).status_code == 200

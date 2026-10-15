@@ -366,6 +366,8 @@ services:
       # Session + RBAC guard: sessions come from identity, permissions from authorization.
       IDENTITY_URL: http://ms-identity:8081
       AUTHORIZATION_URL: http://ms-authorization:8082
+      # Casos de actualización biométrica (RN-29) para re-registrar el propio rostro.
+      CONFIGURATION_URL: http://ms-configuration:8087
       KAFKA_BROKERS: kafka:29092
       BIOMETRIC_FINGERPRINT_MATCH_THRESHOLD: ${BIOMETRIC_FINGERPRINT_MATCH_THRESHOLD:-8}
       # >= 32 chars; firma los retos de prueba de vida (liveness), nunca un JWT
