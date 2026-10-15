@@ -1079,9 +1079,7 @@
     "registerButton": "Registrar rosto ({{count}} gestos)",
     "updateButton": "Atualizar rosto ({{count}} gestos)",
     "updateTitle": "Atualizar rosto",
-    "cameraReady": "Câmera pronta. Você já pode registrar seu rosto.",
-    "identifying": "Identificando…",
-    "noMatch": "O rosto não foi reconhecido. Verifique se a pessoa tem o rosto cadastrado."
+    "cameraReady": "Câmera pronta. Você já pode registrar seu rosto."
   },
   "userDetail": {
     "title": "Detalhes do usuário",
@@ -1124,34 +1122,5 @@
     "confirmApprove": "Aprovar esta solicitação? A pessoa poderá cadastrar um novo rosto uma vez.",
     "confirmReject": "Rejeitar esta solicitação?",
     "empty": "Não há solicitações pendentes."
-  },
-  "takeAttendance": {
-    "title": "Registrar presença",
-    "menuDesc": "Registre seus aprendizes por reconhecimento facial",
-    "loadError": "Não foi possível carregar as aulas de hoje.",
-    "openError": "Não foi possível abrir a sessão de aula.",
-    "recordError": "Não foi possível registrar a presença.",
-    "closeError": "Não foi possível encerrar a sessão.",
-    "pickClass": "Escolha a aula de hoje.",
-    "noClasses": "Você não tem aulas programadas para hoje.",
-    "class": "Aula",
-    "notStarted": "Não iniciada",
-    "sessionOpen": "Em andamento",
-    "sessionClosed": "Sessão encerrada",
-    "sessionCancelled": "Cancelada",
-    "deadline": "Após {{time}} a chegada conta como falta e os ausentes são marcados automaticamente.",
-    "capture": "Registrar rosto",
-    "closeSession": "Encerrar sessão de aula",
-    "closeTitle": "Encerrar sessão",
-    "closeQuestion": "Encerrar a sessão? Não será possível registrar mais presenças.",
-    "notEnrolled": "A pessoa identificada não pertence a esta turma.",
-    "recorded": "{{name}}: {{status}}",
-    "alreadyRecorded": "{{name}} já estava registrado ({{status}}).",
-    "roster": "Aprendizes ({{count}})",
-    "pending": "Pendente",
-    "present": "Presente",
-    "absent": "Ausente",
-    "late": "Atrasado",
-    "justified": "Justificada"
   }
 }

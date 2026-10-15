@@ -1079,9 +1079,7 @@
     "registerButton": "Enregistrer le visage ({{count}} gestes)",
     "updateButton": "Mettre à jour le visage ({{count}} gestes)",
     "updateTitle": "Mettre à jour le visage",
-    "cameraReady": "Caméra prête. Vous pouvez enregistrer votre visage.",
-    "identifying": "Identification…",
-    "noMatch": "Visage non reconnu. Vérifiez que la personne a enregistré son visage."
+    "cameraReady": "Caméra prête. Vous pouvez enregistrer votre visage."
   },
   "userDetail": {
     "title": "Détails de l'utilisateur",
@@ -1124,34 +1122,5 @@
     "confirmApprove": "Approuver cette demande ? La personne pourra enregistrer un nouveau visage une fois.",
     "confirmReject": "Refuser cette demande ?",
     "empty": "Aucune demande en attente."
-  },
-  "takeAttendance": {
-    "title": "Faire l’appel",
-    "menuDesc": "Enregistrez vos apprenants par reconnaissance faciale",
-    "loadError": "Impossible de charger les cours du jour.",
-    "openError": "Impossible d’ouvrir la séance.",
-    "recordError": "Impossible d’enregistrer la présence.",
-    "closeError": "Impossible de clôturer la séance.",
-    "pickClass": "Choisissez le cours du jour.",
-    "noClasses": "Aucun cours prévu aujourd’hui.",
-    "class": "Cours",
-    "notStarted": "Non commencé",
-    "sessionOpen": "En cours",
-    "sessionClosed": "Séance clôturée",
-    "sessionCancelled": "Annulée",
-    "deadline": "Après {{time}}, l’arrivée compte comme absence et les absents sont marqués automatiquement.",
-    "capture": "Enregistrer le visage",
-    "closeSession": "Clôturer la séance",
-    "closeTitle": "Clôturer la séance",
-    "closeQuestion": "Clôturer la séance ? Aucune présence ne pourra plus être enregistrée.",
-    "notEnrolled": "La personne identifiée n’appartient pas à ce groupe.",
-    "recorded": "{{name}} : {{status}}",
-    "alreadyRecorded": "{{name}} était déjà enregistré ({{status}}).",
-    "roster": "Apprenants ({{count}})",
-    "pending": "En attente",
-    "present": "Présent",
-    "absent": "Absent",
-    "late": "En retard",
-    "justified": "Justifiée"
   }
 }

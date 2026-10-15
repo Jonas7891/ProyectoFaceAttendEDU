@@ -1079,9 +1079,7 @@
     "registerButton": "Registrar rostro ({{count}} gestos)",
     "updateButton": "Actualizar rostro ({{count}} gestos)",
     "updateTitle": "Actualizar rostro",
-    "cameraReady": "Cámara lista. Ya puedes registrar tu rostro.",
-    "identifying": "Identificando…",
-    "noMatch": "No se reconoció el rostro. Verifica que la persona tenga su rostro registrado."
+    "cameraReady": "Cámara lista. Ya puedes registrar tu rostro."
   },
   "userDetail": {
     "title": "Detalle del usuario",
@@ -1124,34 +1122,5 @@
     "confirmApprove": "¿Aprobar esta solicitud? La persona podrá registrar un rostro nuevo una vez.",
     "confirmReject": "¿Rechazar esta solicitud?",
     "empty": "No hay solicitudes pendientes."
-  },
-  "takeAttendance": {
-    "title": "Tomar asistencia",
-    "menuDesc": "Registra a tus aprendices por reconocimiento facial",
-    "loadError": "No se pudieron cargar tus clases de hoy.",
-    "openError": "No se pudo abrir la sesión de clase.",
-    "recordError": "No se pudo registrar la asistencia.",
-    "closeError": "No se pudo cerrar la sesión.",
-    "pickClass": "Elige la clase de hoy.",
-    "noClasses": "No tienes clases programadas para hoy.",
-    "class": "Clase",
-    "notStarted": "Sin iniciar",
-    "sessionOpen": "En curso",
-    "sessionClosed": "Sesión cerrada",
-    "sessionCancelled": "Cancelada",
-    "deadline": "Después de las {{time}} se registra ausencia y los faltantes quedan ausentes automáticamente.",
-    "capture": "Registrar rostro",
-    "closeSession": "Cerrar sesión de clase",
-    "closeTitle": "Cerrar sesión",
-    "closeQuestion": "¿Cerrar la sesión? Ya no se podrán registrar más asistencias.",
-    "notEnrolled": "La persona identificada no pertenece a esta ficha.",
-    "recorded": "{{name}}: {{status}}",
-    "alreadyRecorded": "{{name}} ya estaba registrado ({{status}}).",
-    "roster": "Aprendices ({{count}})",
-    "pending": "Pendiente",
-    "present": "Presente",
-    "absent": "Ausente",
-    "late": "Tarde",
-    "justified": "Justificada"
   }
 }

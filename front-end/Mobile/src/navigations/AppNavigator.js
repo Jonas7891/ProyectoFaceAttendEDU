@@ -33,7 +33,6 @@ import SchoolsScreen from "../view/screens/SchoolsScreen";
 import RegisterFace from "../view/screens/RegisterFace";
 import MyCoursesScreen from "../view/screens/MyCoursesScreen";
 import BiometricCasesScreen from "../view/screens/BiometricCasesScreen";
-import TakeAttendanceScreen from "../view/screens/TakeAttendanceScreen";
 import {SuccessScreen} from "../view/components/auth/SuccessScreen";
 
 const Stack = createStackNavigator();
@@ -261,7 +260,6 @@ export default function App() {
                             <>
                                 <Stack.Screen name="AttendanceReportScreen" component={AttendanceReportScreen}/>
                                 <Stack.Screen name="BiometricCasesScreen" component={BiometricCasesScreen}/>
-                                <Stack.Screen name="TakeAttendance" component={TakeAttendanceScreen}/>
                             </>
                         )}
                         <Stack.Screen name="PendingJustificationScreen" component={PendingJustificationScreen}/>

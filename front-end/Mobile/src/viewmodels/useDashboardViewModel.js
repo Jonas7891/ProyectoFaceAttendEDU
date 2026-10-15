@@ -343,7 +343,6 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
         { id: 6, title: t('dashboard.news'), description: t('dashboard.newsDesc'), color: '#00ACC1', screen: 'Novedades' },
     ];
     const menuAccionesDocente = [
-        { id: 0, title: t('takeAttendance.title'), description: t('takeAttendance.menuDesc'), color: '#00897B', screen: 'TakeAttendance' },
         { id: 1, title: t('teacher.updateFace'), description: t('teacher.updateFaceDesc'), color: '#2196F3', screen: 'UpdatePhoto' },
         { id: 2, title: t('teacher.myAttendance'), description: t('teacher.myAttendanceDesc'), color: '#4CAF50', screen: 'DisplayingAttendance' },
         { id: 3, title: t('teacher.myCourses'), description: t('teacher.myCoursesDesc'), color: '#9C27B0', screen: 'MyCourses' },
