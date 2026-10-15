@@ -7,20 +7,12 @@ import {getCurrentUserRole, getCurrentUser, isSuperAdmin as checkIsSuperAdmin} f
 import {ActorService} from '../services/ActorService';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 import {backendGet} from '../api/backend';
+import {loadScopedAlerts} from '../services/alertFeed';
 import ENV from '../config/env';
 
 const ATT = () => ENV.ATTENDANCE_BASE_URL;
 const SCHED = () => ENV.SCHEDULING_BASE_URL;
 const ACAD = () => ENV.ACADEMIC_BASE_URL;
-const NOTIFY = () => ENV.NOTIFY_BASE_URL;
-const API = () => ENV.API_BASE_URL;
-
-function unwrap(data) {
-  if (data && Array.isArray(data.value)) return data.value;
-  if (Array.isArray(data)) return data;
-  if (data && typeof data === 'object') return [data];
-  return [];
-}
 
 // Una lista que falla devuelve [] en vez de tumbar la sección: el dashboard
 // pinta ceros parciales en lugar de quedarse sin datos por un timeout.
@@ -72,47 +64,17 @@ async function getCourseNameForRecord(record) {
   }
 }
 
-async function fetchRecentNovedades(t) {
+// Últimas alertas con el mismo alcance por rol que Novedades (antes cualquier
+// rol veía las de toda la institución con nombres).
+async function fetchRecentNovedades(t, role) {
   try {
-    const typeMap = {};
-    (await backendGet(NOTIFY(), 'api/v1/alert-types')).forEach((at) => {
-      typeMap[at.alert_type_id] = at.name;
-    });
-
-    const all = await backendGet(NOTIFY(), 'api/v1/alerts', { limit: 50 });
-    const alerts = [...all]
-      .filter((a) => a && (a.alert_id ?? a.alertId) != null)
-      .sort((a, b) => new Date(b.raised_at || 0) - new Date(a.raised_at || 0))
-      .slice(0, 5);
-
-    const items = [];
-    let actorById = {};
-    try {
-      const actors = await backendGet(ACAD(), 'api/v1/academic-actors', { limit: 2000 }, { useCache: true });
-      actors.forEach((x) => { actorById[String(x.academic_actor_id)] = x; });
-    } catch {}
-    // Personas en paralelo: en serie cada aviso sumaba un viaje.
-    const names = await Promise.all(alerts.map(async (a) => {
-      try {
-        const actor = actorById[String(a.academic_actor_id)];
-        if (actor?.person_id) {
-          const person = unwrap(await backendGet(API(), `api/v1/persons/${actor.person_id}`))[0];
-          if (person) return `${person.name || ''} ${person.last_name || person.lastName || ''}`.trim();
-        }
-      } catch {}
-      return '';
+    return (await loadScopedAlerts(role)).slice(0, 5).map((a) => ({
+      id: a.id,
+      titulo: a.title,
+      descripcion: a.person,
+      tiempo: formatRelativeTime(a.raisedAt, t),
+      tipo: a.resolved ? 'success' : 'warning',
     }));
-    for (let i = 0; i < alerts.length; i++) {
-      const a = alerts[i];
-      items.push({
-        id: a.alert_id ?? i + 1,
-        titulo: typeMap[a.alert_type_id] || '',
-        descripcion: names[i],
-        tiempo: formatRelativeTime(a.raised_at, t),
-        tipo: a.resolved_at ? 'success' : 'warning',
-      });
-    }
-    return items;
   } catch {
     return [];
   }
@@ -341,7 +303,7 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                 }
 
                 try {
-                    setNovedades(await fetchRecentNovedades(t));
+                    setNovedades(await fetchRecentNovedades(t, userRole));
                 } catch (sectionError) {
                     console.error('Error fetching dashboard news section:', sectionError);
                 }
