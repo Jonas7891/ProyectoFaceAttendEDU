@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { TouchableOpacity, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import styleAuth from './style/Style';
+import { useTheme } from '../common/ThemeContext';
+import { createAuthStyles } from './style/Style';
 import { useCustomAlert } from '../common/useCustomAlert';
 import CustomAlert from '../common/CustomAlert';
 import { removeToken } from "../../../storage/TokenStorage";
@@ -11,6 +12,8 @@ import { removeToken } from "../../../storage/TokenStorage";
 export default function DangerButton({ title, disabled = false, onLogout }) {
     const navigation = useNavigation();
     const { t } = useTranslation();
+    const { colors } = useTheme();
+    const styleAuth = useMemo(() => createAuthStyles(colors), [colors]);
     const { alertConfig, hideAlert, showError } = useCustomAlert();
 
     const handleLogout = async () => {

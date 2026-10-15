@@ -28,16 +28,6 @@ export default class AttendanceRecord extends BaseModel {
     return this.attendanceStatus === 'Justified';
   }
 
-  get statusColor() {
-    const colors = {
-      Present: '#2da351',
-      Absent: '#ff0000',
-      Late: '#E65100',
-      Justified: '#2196F3',
-    };
-    return colors[this.attendanceStatus] || '#999999';
-  }
-
   static fromApi(data) {
     if (!data) return null;
     return new AttendanceRecord(data);

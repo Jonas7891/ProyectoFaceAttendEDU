@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {
     ActivityIndicator,
     Modal,
@@ -14,7 +14,7 @@ import {useTheme} from '../components/common/ThemeContext';
 import {useTranslation} from 'react-i18next';
 import CustomAlert from '../components/common/CustomAlert';
 import BackButton from '../components/common/BackButton';
-import styles from './Styles/AttendanceReportScreen/Style';
+import {createAttendanceReportStyles} from './Styles/AttendanceReportScreen/Style';
 import {useAttendanceReportViewModel} from '../../viewmodels/useAttendanceReportViewModel';
 
 // ===========================================================================
@@ -35,6 +35,7 @@ const clampPct = (val, max) => Math.min(val / max, 1);
 // SUB-COMPONENTE: Barra de progreso
 // ===========================================================================
 function ProgressRow({ label, value, limit, type, colors }) {
+    const styles = useMemo(() => createAttendanceReportStyles(colors), [colors]);
     const pct = clampPct(value, limit);
     const over = value > limit;
     const fillStyle =
@@ -46,7 +47,7 @@ function ProgressRow({ label, value, limit, type, colors }) {
         <View style={styles.progressSectionReport}>
             <View style={styles.progressRowReport}>
                 <Text style={[styles.progressLabelReport, { color: colors.text }]}>{label}</Text>
-                <Text style={[styles.progressValueReport, { color: over ? '#F44336' : '#4CAF50' }]}>
+                <Text style={[styles.progressValueReport, { color: over ? colors.danger : colors.success }]}>
                     {value}/{limit}
                 </Text>
             </View>
@@ -61,6 +62,7 @@ function ProgressRow({ label, value, limit, type, colors }) {
 // SUB-COMPONENTE: Tarjeta de persona
 // ===========================================================================
 function PersonCard({person, onGenerateReport, ABSENCE_LIMIT, LATENESS_LIMIT, colors, t}) {
+    const styles = useMemo(() => createAttendanceReportStyles(colors), [colors]);
     const level = getAlertLevel(person, ABSENCE_LIMIT, LATENESS_LIMIT);
     const isCrit = level === 'critical';
 
@@ -132,59 +134,20 @@ function PersonCard({person, onGenerateReport, ABSENCE_LIMIT, LATENESS_LIMIT, co
 // ===========================================================================
 export default function AttendanceReportScreen({ navigation }) {
     const { colors, isDark } = useTheme();
+    const styles = useMemo(() => createAttendanceReportStyles(colors), [colors]);
     const {t} = useTranslation();
 
-    // Los estilos "activos" de Style.js (fondo rosado/celeste pálido) están pensados
-    // solo para tema claro. En oscuro generamos un tinte translúcido del mismo color
-    // de acento en vez de dejar que se vea una tarjeta clara flotando sobre fondo oscuro.
-    const absenceActive = isDark
-        ? {
-            backgroundColor: '#4A1F1F',
-            borderColor: '#C62828',
-        }
-        : styles.typeTabAbsenceActiveReport;
-
-    const absenceActiveText = isDark
-        ? {
-            color: '#FF8A80',
-            fontWeight: '700',
-        }
-        : styles.typeTabTextAbsenceActiveReport;
-
-    const latenessActive = isDark
-        ? {
-            backgroundColor: '#4A3414',
-            borderColor: '#F57C00',
-        }
-        : styles.typeTabLatenessActiveReport;
-
-    const latenessActiveText = isDark
-        ? {
-            color: '#FFCC80',
-            fontWeight: '700',
-        }
-        : styles.typeTabTextLatenessActiveReport;
-
-    const allChipActive = isDark
-        ? { backgroundColor: 'rgba(74,144,226,0.18)', borderColor: colors.primary }
-        : styles.filterChipAllActiveReport;
-    const allChipActiveText = isDark
-        ? { color: colors.primary, fontWeight: '700' }
-        : styles.filterChipTextAllActiveReport;
-
-    const criticalChipActive = isDark
-        ? { backgroundColor: 'rgba(244,67,54,0.18)', borderColor: '#F44336' }
-        : styles.filterChipCriticalActiveReport;
-    const criticalChipActiveText = isDark
-        ? { color: '#FF6F60', fontWeight: '700' }
-        : styles.filterChipTextCriticalActiveReport;
-
-    const warningChipActive = isDark
-        ? { backgroundColor: 'rgba(255,152,0,0.18)', borderColor: '#FF9800' }
-        : styles.filterChipWarningActiveReport;
-    const warningChipActiveText = isDark
-        ? { color: '#FFB74D', fontWeight: '700' }
-        : styles.filterChipTextWarningActiveReport;
+    // Estados activos: los tokens del tema ya se adaptan a claro y oscuro.
+    const absenceActive = styles.typeTabAbsenceActiveReport;
+    const absenceActiveText = styles.typeTabTextAbsenceActiveReport;
+    const latenessActive = styles.typeTabLatenessActiveReport;
+    const latenessActiveText = styles.typeTabTextLatenessActiveReport;
+    const allChipActive = styles.filterChipAllActiveReport;
+    const allChipActiveText = styles.filterChipTextAllActiveReport;
+    const criticalChipActive = styles.filterChipCriticalActiveReport;
+    const criticalChipActiveText = styles.filterChipTextCriticalActiveReport;
+    const warningChipActive = styles.filterChipWarningActiveReport;
+    const warningChipActiveText = styles.filterChipTextWarningActiveReport;
 
     const {
         ABSENCE_LIMIT,
@@ -245,7 +208,7 @@ export default function AttendanceReportScreen({ navigation }) {
                                 <Text
                                     style={[
                                         styles.roleTabTextReport,
-                                        { color: activeRole === tab.key ? '#FFFFFF' : colors.textSecondary },
+                                        { color: activeRole === tab.key ? colors.onPrimary : colors.textSecondary },
                                         activeRole === tab.key && { fontWeight: '700' },
                                     ]}
                                 >
@@ -260,8 +223,8 @@ export default function AttendanceReportScreen({ navigation }) {
                         style={[
                             styles.typeSelectorReport,
                             {
-                                backgroundColor: isDark ? '#2B2B2B' : '#F0F0F0',
-                                borderColor: isDark ? '#444' : '#D8D8D8',
+                                backgroundColor: colors.categoryBackground,
+                                borderColor: colors.border,
                                 borderWidth: 1,
                             },
                         ]}
@@ -281,7 +244,7 @@ export default function AttendanceReportScreen({ navigation }) {
                                     {
                                         color:
                                             activeType === 'absence'
-                                                ? (isDark ? '#FF8A80' : '#C62828')
+                                                ? colors.danger
                                                 : colors.textSecondary,
                                     },
                                     activeType === 'absence' && { fontWeight: '700' },
@@ -305,7 +268,7 @@ export default function AttendanceReportScreen({ navigation }) {
                                     {
                                         color:
                                             activeType === 'lateness'
-                                                ? (isDark ? '#FFCC80' : '#F57C00')
+                                                ? colors.warning
                                                 : colors.textSecondary,
                                     },
                                     activeType === 'lateness' && { fontWeight: '700' },
@@ -467,7 +430,7 @@ export default function AttendanceReportScreen({ navigation }) {
                                     <Text
                                         style={[
                                             styles.modalInfoValueReport,
-                                            { color: selectedPerson.absences > ABSENCE_LIMIT ? '#F44336' : colors.text },
+                                            { color: selectedPerson.absences > ABSENCE_LIMIT ? colors.danger : colors.text },
                                         ]}
                                     >
                                         {selectedPerson.absences}
@@ -481,7 +444,7 @@ export default function AttendanceReportScreen({ navigation }) {
                                     <Text
                                         style={[
                                             styles.modalInfoValueReport,
-                                            { color: selectedPerson.lateness > LATENESS_LIMIT ? '#FF9800' : colors.text },
+                                            { color: selectedPerson.lateness > LATENESS_LIMIT ? colors.warning : colors.text },
                                         ]}
                                     >
                                         {selectedPerson.lateness}

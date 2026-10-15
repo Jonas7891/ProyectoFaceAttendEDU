@@ -1,9 +1,12 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {View} from 'react-native';
-import stylescommon from './style/Style';
+import {useTheme} from './ThemeContext';
+import {createCommonStyles} from './style/Style';
 
-const Separador = () => (
-  <View style={stylescommon.separador} />
-);
+const Separador = () => {
+  const {colors} = useTheme();
+  const stylescommon = useMemo(() => createCommonStyles(colors), [colors]);
+  return <View style={stylescommon.separador} />;
+};
 
 export default Separador;

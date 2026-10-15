@@ -19,7 +19,7 @@ import {
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../../components/common/ThemeContext';
 import BackButton from '../../components/common/BackButton';
-import styles from '../Styles/Verifycodescreen/Style';
+import {createLoginStyles} from '../Styles/Verifycodescreen/Style';
 
 // Componentes
 import {CodeInput} from '../../components/auth/CodeInput';
@@ -49,6 +49,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
     const { email } = route?.params ?? {};
     const { t } = useTranslation();
     const { colors } = useTheme();
+    const styles = useMemo(() => createLoginStyles(colors), [colors]);
 
     // Refs
     const codeRefs = useRef([0, 1, 2, 3, 4, 5].map(() => React.createRef()));
@@ -249,7 +250,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                     {t('verifyCode.title')}
                                 </Text>
 
-                                <Text style={[styles.textoCredenciales, { color: colors.textSecondary ?? '#666' }]}>
+                                <Text style={[styles.textoCredenciales, { color: colors.textSecondary }]}>
                                     {t('verifyCode.description')}{' '}
                                     <Text style={{ fontWeight: '600', color: colors.text }}>{email}</Text>.
                                     {'\n'}
@@ -280,10 +281,10 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                 {/* Error */}
                                 {errorMessage && (
                                     <View style={[styles.recoveryErrorBox, {
-                                        backgroundColor: (colors.error ?? '#E53E3E') + '12',
-                                        borderColor: (colors.error ?? '#E53E3E') + '35',
+                                        backgroundColor: (colors.danger) + '12',
+                                        borderColor: (colors.danger) + '35',
                                     }]}>
-                                        <Text style={[styles.recoveryErrorText, { color: colors.error ?? '#E53E3E' }]}>
+                                        <Text style={[styles.recoveryErrorText, { color: colors.danger }]}>
                                             {errorMessage}
                                         </Text>
                                     </View>
@@ -314,7 +315,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                     }}
                                 >
                                     {codeVerification.isLoading ? (
-                                        <ActivityIndicator color="#FFFFFF" size="small" />
+                                        <ActivityIndicator color={colors.onPrimary} size="small" />
                                     ) : codeVerification.isLockedOut ? (
                                         <Text style={styles.recoveryPrimaryButtonText}>
                                             Espera {codeVerification.lockoutRemaining}s
@@ -344,7 +345,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                     >
                                         <Text style={{
                                             color: resendCooldown.isActive
-                                                ? (colors.textSecondary ?? '#999')
+                                                ? (colors.textSecondary)
                                                 : colors.primary,
                                             fontWeight: '600',
                                             marginTop: 4,

@@ -18,12 +18,13 @@ import {useAlertsConfig} from '../../utils/AlertsConfigContext';
 import ScrollViewWrapper from '../components/common/ScrollView';
 import BackButton from '../components/common/BackButton';
 import PrimaryButton from '../components/auth/PrimaryButton';
-import styles from './Styles/LanguageSettingsScreen/Style';
+import {createLanguageSettingsStyles} from './Styles/LanguageSettingsScreen/Style';
 import {useLanguageSettingsViewModel} from '../../viewmodels/useLanguageSettingsViewModel';
 
 export default function LanguageSettingsScreen() {
     const {t} = useTranslation();
     const {colors} = useTheme();
+    const styles = React.useMemo(() => createLanguageSettingsStyles(colors), [colors]);
     const {alertsConfig, toggleAlertType} = useAlertsConfig();
     const navigation = useNavigation();
     const [showAlertsModal, setShowAlertsModal] = React.useState(false);
@@ -227,7 +228,7 @@ export default function LanguageSettingsScreen() {
                     <View
                         style={{
                             flex: 1,
-                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                            backgroundColor: colors.modalOverlay,
                             justifyContent: 'center',
                             alignItems: 'center',
                             paddingHorizontal: 15,
@@ -285,7 +286,7 @@ export default function LanguageSettingsScreen() {
                                         paddingVertical: 12,
                                         borderBottomWidth: 1,
                                         borderBottomColor:
-                                            colors.border ?? colors.textSecondary + '20',
+                                            colors.border,
                                         marginBottom: 5,
                                     }}
                                 >
@@ -343,7 +344,7 @@ export default function LanguageSettingsScreen() {
                                         paddingVertical: 12,
                                         borderBottomWidth: 1,
                                         borderBottomColor:
-                                            colors.border ?? colors.textSecondary + '20',
+                                            colors.border,
                                         marginBottom: 5,
                                     }}
                                 >
@@ -382,11 +383,11 @@ export default function LanguageSettingsScreen() {
                                         onValueChange={() => toggleAlertType('error')}
                                         trackColor={{
                                             false: colors.textSecondary + '40',
-                                            true: (colors.danger || '#ff0000') + '70',
+                                            true: colors.danger + '70',
                                         }}
                                         thumbColor={
                                             alertsConfig.enableError
-                                                ? colors.danger || '#ff0000'
+                                                ? colors.danger
                                                 : colors.textSecondary
                                         }
                                     />
@@ -401,7 +402,7 @@ export default function LanguageSettingsScreen() {
                                         paddingVertical: 12,
                                         borderBottomWidth: 1,
                                         borderBottomColor:
-                                            colors.border ?? colors.textSecondary + '20',
+                                            colors.border,
                                         marginBottom: 5,
                                     }}
                                 >
@@ -440,11 +441,11 @@ export default function LanguageSettingsScreen() {
                                         onValueChange={() => toggleAlertType('warning')}
                                         trackColor={{
                                             false: colors.textSecondary + '40',
-                                            true: (colors.warning ?? '#FF9800') + '70',
+                                            true: colors.warning + '70',
                                         }}
                                         thumbColor={
                                             alertsConfig.enableWarning
-                                                ? colors.warning ?? '#FF9800'
+                                                ? colors.warning
                                                 : colors.textSecondary
                                         }
                                     />
@@ -459,7 +460,7 @@ export default function LanguageSettingsScreen() {
                                         paddingVertical: 12,
                                         borderBottomWidth: 1,
                                         borderBottomColor:
-                                            colors.border ?? colors.textSecondary + '20',
+                                            colors.border,
                                         marginBottom: 5,
                                     }}
                                 >
@@ -517,7 +518,7 @@ export default function LanguageSettingsScreen() {
                                         paddingVertical: 12,
                                         borderBottomWidth: 1,
                                         borderBottomColor:
-                                            colors.border ?? colors.textSecondary + '20',
+                                            colors.border,
                                         marginBottom: 5,
                                     }}
                                 >
@@ -610,11 +611,11 @@ export default function LanguageSettingsScreen() {
                                         onValueChange={() => toggleAlertType('iot')}
                                         trackColor={{
                                             false: colors.textSecondary + '40',
-                                            true: (colors.danger ?? '#F44336') + '70',
+                                            true: colors.danger + '70',
                                         }}
                                         thumbColor={
                                             alertsConfig.enableIot
-                                                ? colors.danger ?? '#F44336'
+                                                ? colors.danger
                                                 : colors.textSecondary
                                         }
                                     />
@@ -634,7 +635,7 @@ export default function LanguageSettingsScreen() {
                             >
                                 <Text
                                     style={{
-                                        color: '#FFFFFF',
+                                        color: colors.modalButtonText,
                                         fontSize: 16,
                                         fontWeight: '600',
                                     }}

@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useMemo} from "react";
 import {
     Image,
     KeyboardAvoidingView,
@@ -15,13 +15,14 @@ import DangerButton from "../components/auth/DangerButton";
 import CustomLogo from "../components/common/logo";
 import CustomAlert from '../components/common/CustomAlert';
 import {useCustomAlert} from '../components/common/useCustomAlert';
-import styles from "./Styles/MenuScreen/Style";
+import {createMenuStyles} from "./Styles/MenuScreen/Style";
 import {useMenuViewModel} from '../../viewmodels/useMenuViewModel';
 import {useUser} from '../../utils/UserContext';
 
 export default function MenuScreen({ onLogout }) {
     const { t } = useTranslation();
     const { colors } = useTheme();
+    const styles = useMemo(() => createMenuStyles(colors), [colors]);
 
     // 👈 NUEVO: Obtenemos el usuario actual y las validaciones de rol
     const { currentUser, isTeacher, isStudent } = useUser();
@@ -118,7 +119,7 @@ export default function MenuScreen({ onLogout }) {
                                 <CustomLogo
                                     size="large"
                                     rounded={true}
-                                    backgroundColor="#000000"
+                                    backgroundColor={colors.text}
                                     marginBottom={15}
                                 />
 

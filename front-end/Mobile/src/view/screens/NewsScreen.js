@@ -1,16 +1,17 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {ActivityIndicator, SafeAreaView, Text, TouchableOpacity, View} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import BottomBar from '../components/common/NavigationBar';
 import ScrollViewWrapper from '../components/common/ScrollView';
 import CustomTabs from '../components/common/CustomTabs';
-import styles from './Styles/NewsScreen/Style';
+import {createNewsStyles} from './Styles/NewsScreen/Style';
 import {useTheme} from '../components/common/ThemeContext';
 import {useNewsViewModel} from '../../viewmodels/useNewsViewModel';
 
 export default function NewsScreen() {
     const {t, i18n} = useTranslation();
     const {colors} = useTheme();
+    const styles = useMemo(() => createNewsStyles(colors), [colors]);
     const {userRole, updateKey, alerts, loading, error, resolvingId, canResolve, resolve, reload} = useNewsViewModel();
 
     const formatDate = (iso) => (iso ? new Date(iso).toLocaleString(i18n.language) : '—');

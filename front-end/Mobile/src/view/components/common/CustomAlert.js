@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useMemo} from "react";
 import {
     View,
     Text,
@@ -7,8 +7,20 @@ import {
     StyleSheet,
     Dimensions,
 } from "react-native";
+import {useTheme} from "./ThemeContext";
 
 const {width} = Dimensions.get("window");
+
+// Colores de cada tipo de alerta, tomados de los tokens del tema.
+const typePalette = (colors, type) => {
+    switch (type) {
+        case "success": return {background: colors.success, text: colors.onSuccess};
+        case "error":   return {background: colors.danger, text: colors.onDanger};
+        case "warning": return {background: colors.warning, text: colors.onWarning};
+        case "confirm": return {background: colors.primary, text: colors.onPrimary};
+        default:        return {background: colors.modalBackground, text: colors.modalText};
+    }
+};
 
 export default function CustomAlert({
                                         visible,
@@ -18,23 +30,9 @@ export default function CustomAlert({
                                         onClose,
                                         type = "default",
                                     }) {
-    // Paleta azulada y armónica
-    const getColors = () => {
-        switch (type) {
-            case "success":
-                return {background: "#2E86AB", text: "#FFFFFF"};
-            case "error":
-                return {background: "#D64545", text: "#FFFFFF"};
-            case "warning":
-                return {background: "#1E88E5", text: "#FFFFFF"};
-            case "confirm":
-                return {background: "#1565C0", text: "#FFFFFF"};
-            default:
-                return {background: "#FFFFFF", text: "#1A237E"};
-        }
-    };
-
-    const colors = getColors();
+    const {colors} = useTheme();
+    const styles = useMemo(() => createAlertStyles(colors), [colors]);
+    const palette = typePalette(colors, type);
 
     const alertButtons =
         buttons.length > 0
@@ -51,18 +49,18 @@ export default function CustomAlert({
         switch (style) {
             case "cancel":
                 return {
-                    backgroundColor: "#E8EAF6",
-                    textColor: "#3949AB",
+                    backgroundColor: colors.backButtonBackground,
+                    textColor: colors.text,
                 };
             case "destructive":
                 return {
-                    backgroundColor: "#EF5350",
-                    textColor: "#FFFFFF",
+                    backgroundColor: colors.danger,
+                    textColor: colors.onDanger,
                 };
             default:
                 return {
-                    backgroundColor: type !== "default" ? colors.background : "#2196F3",
-                    textColor: type !== "default" ? colors.text : "#FFFFFF",
+                    backgroundColor: type !== "default" ? palette.background : colors.primary,
+                    textColor: type !== "default" ? palette.text : colors.onPrimary,
                 };
         }
     };
@@ -77,8 +75,8 @@ export default function CustomAlert({
             <View style={styles.overlay}>
                 <View style={styles.alertContainer}>
                     {type !== "default" && (
-                        <View style={[styles.header, {backgroundColor: colors.background}]}>
-                            <Text style={[styles.headerText, {color: colors.text}]}>
+                        <View style={[styles.header, {backgroundColor: palette.background}]}>
+                            <Text style={[styles.headerText, {color: palette.text}]}>
                                 {title}
                             </Text>
                         </View>
@@ -127,17 +125,17 @@ export default function CustomAlert({
     );
 }
 
-const styles = StyleSheet.create({
+const createAlertStyles = (colors) => StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: "rgba(0, 0, 0, 0.4)",
+        backgroundColor: colors.overlay,
         justifyContent: "center",
         alignItems: "center",
         paddingHorizontal: 20,
     },
     alertContainer: {
         width: width * 0.88,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: colors.modalBackground,
         borderRadius: 20,
         paddingTop: 28,
         paddingBottom: 24,
@@ -164,7 +162,7 @@ const styles = StyleSheet.create({
     defaultTitle: {
         fontSize: 18,
         fontWeight: "600",
-        color: "#1A237E",
+        color: colors.modalText,
         textAlign: "center",
         paddingTop: 8,
         paddingHorizontal: 24,
@@ -176,14 +174,14 @@ const styles = StyleSheet.create({
     },
     message: {
         fontSize: 16,
-        color: "#37474F",
+        color: colors.modalTextSecondary,
         textAlign: "justify",
         lineHeight: 22,
     },
     buttonContainer: {
         flexDirection: "row",
         borderTopWidth: 1,
-        borderTopColor: "#E0E0E0",
+        borderTopColor: colors.border,
         marginTop: 4,
     },
     button: {

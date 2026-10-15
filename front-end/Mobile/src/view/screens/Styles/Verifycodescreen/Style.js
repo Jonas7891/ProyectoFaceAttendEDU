@@ -1,1 +1,1 @@
-export {default} from '../../login/style/Style';
+export {createLoginStyles} from '../../login/style/Style';

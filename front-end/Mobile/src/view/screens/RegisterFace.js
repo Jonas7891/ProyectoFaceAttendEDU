@@ -1,19 +1,24 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {ActivityIndicator, SafeAreaView, Text, TouchableOpacity, View,} from 'react-native';
 import {CameraView} from 'expo-camera';
 import {useIsFocused} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
+import {useTheme} from '../components/common/ThemeContext';
 import CustomLogo from '../components/common/logo';
 import CustomAlert from '../components/common/CustomAlert';
 import BackButton from '../components/common/BackButton';
-import styles from './Styles/RegisterFace/Style';
+import {createRegisterFaceStyles} from './Styles/RegisterFace/Style';
 import {useRegisterFaceScreenViewModel} from '../../viewmodels/useRegisterFaceScreenViewModel';
 
-const STATUS_COLORS = {info: '#64748B', ok: '#10B981', error: '#E53935'};
 
 export default function RegisterFace() {
     const isFocused = useIsFocused();
     const {t} = useTranslation();
+    const {colors} = useTheme();
+    const styles = useMemo(() => createRegisterFaceStyles(colors), [colors]);
+
+    // Tono del subtítulo según el estado del registro.
+    const statusColors = {info: colors.textSecondary, ok: colors.success, error: colors.danger};
 
     const {
         title,
@@ -51,18 +56,18 @@ export default function RegisterFace() {
                 <View style={styles.registerFaceHeader}>
                     <BackButton onPress={handleBack} />
                     <Text style={styles.registerFaceTitle}>{title}</Text>
-                    <CustomLogo size="small" rounded={true} backgroundColor="#000000" marginBottom={-2}/>
+                    <CustomLogo size="small" rounded={true} backgroundColor={colors.cameraBackground} marginBottom={-2}/>
                 </View>
 
                 {personName ? <Text style={styles.registerFacePerson}>{personName}</Text> : null}
 
-                <Text style={[styles.registerFaceSubtitle, {color: STATUS_COLORS[status.tone] || STATUS_COLORS.info}]}>
+                <Text style={[styles.registerFaceSubtitle, {color: statusColors[status.tone] || statusColors.info}]}>
                     {subtitle}
                 </Text>
 
                 {permissionLoading ? (
                     <View style={styles.cameraWrapper}>
-                        <ActivityIndicator color="#2563EB"/>
+                        <ActivityIndicator color={colors.primary}/>
                     </View>
                 ) : !permissionGranted ? (
                     <View style={styles.cameraWrapper}>
@@ -104,7 +109,7 @@ export default function RegisterFace() {
                         disabled={!cameraReady || busy}
                     >
                         {busy ? (
-                            <ActivityIndicator color="#FFFFFF"/>
+                            <ActivityIndicator color={colors.onPrimary}/>
                         ) : (
                             <Text style={styles.captureButtonText}>
                                 {cameraReady ? actionLabel : t('registerFace.startingCamera')}

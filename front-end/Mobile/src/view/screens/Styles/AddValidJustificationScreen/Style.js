@@ -1,7 +1,8 @@
 import {Platform, StyleSheet} from 'react-native';
 import {normalizeTypography} from '../../../../utils/typography';
 
-const styles = StyleSheet.create(normalizeTypography({
+// Estilos de validación de justificación. Todo color sale de los tokens del tema; usar con createAddValidJustificationStyles(colors).
+export const createAddValidJustificationStyles = (colors) => StyleSheet.create(normalizeTypography({
 ScrollView: {
         flex: 1,
     },
@@ -26,7 +27,7 @@ containerAddValidJustification: {
 inputLabel: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#1A1A1A',
+        color: colors.text,
         marginBottom: 10,
         marginTop: 5,
     },
@@ -44,7 +45,7 @@ mainTitle: {
 
 safeAreaWhite: {
         flex: 1,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: colors.backgroundWhite,
     },
 
 secondaryButton: {
@@ -52,13 +53,13 @@ secondaryButton: {
         paddingVertical: 12,
         marginTop: 10,
         marginBottom: 30,
-        borderColor: "#E0E0E0",
+        borderColor: colors.border,
         borderWidth: 1,
         borderRadius: 12,
     },
 
 secondaryButtonText: {
-        color: '#2563EB',
+        color: colors.primary,
         fontWeight: '600',
     },
 
@@ -68,14 +69,12 @@ textArea: {
     },
 
 textInput: {
-        backgroundColor: '#F8F9FA',
+        backgroundColor: colors.inputBackground,
         borderRadius: 12,
         paddingHorizontal: 16,
         paddingVertical: 12,
         fontSize: 15,
-        color: '#333',
+        color: colors.text,
         marginBottom: 20,
     },
 }));
-
-export default styles;

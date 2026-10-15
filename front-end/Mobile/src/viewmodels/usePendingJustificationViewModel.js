@@ -1,5 +1,6 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
+import {useTheme} from '../view/components/common/ThemeContext';
 import {getCurrentUserRole, getCurrentUser} from '../services/UserService';
 import {ActorService} from '../services/ActorService';
 import {normalizeBackendRole} from '../utils/getHighestRole';
@@ -32,10 +33,10 @@ export const JUSTIFICATION_STATUS_INTERNAL = {
 export const getInitials = (name = '') =>
     name.split(' ').slice(0, 2).map((w) => w[0]?.toUpperCase() ?? '').join('');
 
-const AVATAR_COLORS = ['#2563EB', '#7C3AED', '#DB2777', '#059669', '#D97706', '#DC2626'];
-export const getAvatarColor = (name = '') => {
-    const index = name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % AVATAR_COLORS.length;
-    return AVATAR_COLORS[index];
+// palette: paleta categórica del tema (colors.categorical); el índice es estable por nombre.
+export const getAvatarColor = (name = '', palette) => {
+    const index = name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % palette.length;
+    return palette[index];
 };
 
 export const getFileIcon = (mime = '') => {
@@ -56,6 +57,7 @@ const getLocaleForLanguage = (lang) => {
 
 export const usePendingJustificationViewModel = () => {
     const {t, i18n} = useTranslation();
+    const {colors} = useTheme();
     const currentLocale = getLocaleForLanguage(i18n.language);
 
     const [justifications, setJustifications] = useState([]);
@@ -249,13 +251,17 @@ export const usePendingJustificationViewModel = () => {
         type === JUSTIFICATION_TYPE.ABSENCE ? t('justificationType.absence') : t('justificationType.late'), [t]);
 
     const getTypeColors = useCallback((type) =>
-        type === JUSTIFICATION_TYPE.ABSENCE ? {bg: '#FEF3C7', text: '#92400E'} : {bg: '#DBEAFE', text: '#1E40AF'}, []);
+        type === JUSTIFICATION_TYPE.ABSENCE
+            ? {bg: colors.statusTarde, text: colors.statusTextTarde}
+            : {bg: colors.badgeBackground, text: colors.badgeText}, [colors]);
 
     const getRoleLabel = useCallback((role) =>
         role === USER_ROLE.STUDENT ? t('userRole.student') : t('userRole.teacher'), [t]);
 
     const getRoleColors = useCallback((role) =>
-        role === USER_ROLE.STUDENT ? {bg: '#F3E8FF', text: '#6B21A8'} : {bg: '#DCFCE7', text: '#14532D'}, []);
+        role === USER_ROLE.STUDENT
+            ? {bg: colors.categoryBackground, text: colors.categoryText}
+            : {bg: colors.statusPresente, text: colors.statusTextPresente}, [colors]);
 
     return {
         filtered, selectedItem, counts, activeFilter, userRole, loading, error, reload,

@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {
     FlatList,
     Keyboard,
@@ -14,7 +14,7 @@ import {
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
-import styles from './Styles/ManageEnviromentScreen/Style';
+import {createManageEnvironmentStyles} from './Styles/ManageEnviromentScreen/Style';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import {useCustomAlert} from '../components/common/useCustomAlert';
@@ -26,6 +26,7 @@ import {useManageEnvironmentViewModel} from '../../viewmodels/useManageEnvironme
 export default function ManageEnviromentScreen({navigation, userRole}) {
     const {t} = useTranslation();
     const {colors} = useTheme();
+    const styles = useMemo(() => createManageEnvironmentStyles(colors), [colors]);
     const {alertConfig, hideAlert, showError, showConfirm} = useCustomAlert();
 
     const {
@@ -155,10 +156,10 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    style={[styles.manageEnvironmentActionButton, {borderColor: '#E53935'}]}
+                    style={[styles.manageEnvironmentActionButton, {borderColor: colors.danger}]}
                     onPress={() => confirmDelete(item.id)}
                 >
-                    <Text style={[styles.manageEnvironmentActionText, {color: '#E53935'}]}>
+                    <Text style={[styles.manageEnvironmentActionText, {color: colors.danger}]}>
                         {t('common.delete')}
                     </Text>
                 </TouchableOpacity>

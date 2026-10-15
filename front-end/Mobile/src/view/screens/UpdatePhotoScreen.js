@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {
     ActivityIndicator,
     Image,
@@ -15,7 +15,7 @@ import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import BackButton from '../components/common/BackButton';
 import CustomAlert from '../components/common/CustomAlert';
-import styles from './Styles/UpdatePhotoScreen/Style';
+import {createUpdatePhotoStyles} from './Styles/UpdatePhotoScreen/Style';
 import {useUpdatePhotoViewModel} from '../../viewmodels/useUpdatePhotoViewModel';
 
 const STATUS_KEYS = {
@@ -28,6 +28,7 @@ const STATUS_KEYS = {
 export default function UpdatePhoto() {
     const {t} = useTranslation();
     const {colors, theme} = useTheme();
+    const styles = useMemo(() => createUpdatePhotoStyles(colors), [colors]);
     const {
         updateKey, loading, submitting,
         latestCase, status, canRequest, canUpdateFace,

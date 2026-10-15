@@ -16,7 +16,7 @@ import {
 import PrimaryButton from '../../components/auth/PrimaryButton';
 import { PasswordRequirement } from './PasswordRequirement';
 import { calculatePasswordStrength } from '../../../utils/passwordValidator';
-import styleAuth from './style/Style';
+import { createAuthStyles } from './style/Style';
 
 /**
  * Modal de nueva contraseña
@@ -32,6 +32,7 @@ export function PasswordModal({
                               }) {
     const modalScale = React.useRef(new Animated.Value(0.92)).current;
     const modalOpacity = React.useRef(new Animated.Value(0)).current;
+    const styleAuth = React.useMemo(() => createAuthStyles(colors), [colors]);
 
     React.useEffect(() => {
         if (visible) {
@@ -79,7 +80,7 @@ export function PasswordModal({
                                     styleAuth.passwordModalCard,
                                     {
                                         backgroundColor: colors.card,
-                                        borderColor: colors.border ?? colors.textSecondary + '50',
+                                        borderColor: colors.border,
                                         transform: [{ scale: modalScale }],
                                         opacity: modalOpacity,
                                     },
@@ -94,7 +95,7 @@ export function PasswordModal({
 
                                     <View style={[
                                         styleAuth.passwordModalDivider,
-                                        { backgroundColor: colors.border ?? colors.textSecondary + '30' }
+                                        { backgroundColor: colors.border }
                                     ]} />
 
                                     {/* Campo nueva contraseña */}
@@ -102,7 +103,7 @@ export function PasswordModal({
                                         <TextInput
                                             ref={newPasswordRef}
                                             style={[styleAuth.passwordModalInput, {
-                                                borderColor: colors.border ?? colors.textSecondary + '50',
+                                                borderColor: colors.border,
                                                 color: colors.text,
                                                 backgroundColor: colors.background,
                                                 paddingRight: 48,
@@ -144,10 +145,10 @@ export function PasswordModal({
                                             <View style={styleAuth.strengthBarTrack}>
                                                 <View style={[styleAuth.strengthBarFill, {
                                                     width: `${(strength.score / 5) * 100}%`,
-                                                    backgroundColor: strength.color,
+                                                    backgroundColor: strength.tone ? colors[strength.tone] : 'transparent',
                                                 }]} />
                                             </View>
-                                            <Text style={[styleAuth.strengthLabel, { color: strength.color }]}>
+                                            <Text style={[styleAuth.strengthLabel, { color: strength.tone ? colors[strength.tone] : colors.textSecondary }]}>
                                                 {strength.label}
                                             </Text>
                                         </View>
@@ -203,8 +204,8 @@ export function PasswordModal({
                                             ref={confirmPasswordRef}
                                             style={[styleAuth.passwordModalInput, {
                                                 borderColor: passwordUpdate.confirmPassword && !passwordUpdate.passwordsMatch
-                                                    ? (colors.error ?? '#E53E3E')
-                                                    : (colors.border ?? colors.textSecondary + '50'),
+                                                    ? (colors.danger)
+                                                    : (colors.border),
                                                 color: colors.text,
                                                 backgroundColor: colors.background,
                                                 paddingRight: 48,
@@ -243,8 +244,8 @@ export function PasswordModal({
                                     {passwordUpdate.confirmPassword.length > 0 && (
                                         <Text style={[styleAuth.passwordMatchIndicator, {
                                             color: passwordUpdate.passwordsMatch
-                                                ? (colors.success ?? '#38A169')
-                                                : (colors.error ?? '#E53E3E'),
+                                                ? (colors.success)
+                                                : (colors.danger),
                                         }]} accessibilityLiveRegion="polite">
                                             {passwordUpdate.passwordsMatch
                                                 ? t('passwordUpdate.passwordsMatch')
@@ -255,10 +256,10 @@ export function PasswordModal({
                                     {/* Error general */}
                                     {passwordUpdate.error && (
                                         <View style={[styleAuth.passwordModalErrorRow, {
-                                            backgroundColor: (colors.error ?? '#E53E3E') + '12',
-                                            borderColor: (colors.error ?? '#E53E3E') + '35',
+                                            backgroundColor: (colors.danger) + '12',
+                                            borderColor: (colors.danger) + '35',
                                         }]}>
-                                            <Text style={[styleAuth.passwordModalError, { color: colors.error ?? '#E53E3E' }]}>
+                                            <Text style={[styleAuth.passwordModalError, { color: colors.danger }]}>
                                                 {passwordUpdate.error.message}
                                             </Text>
                                         </View>

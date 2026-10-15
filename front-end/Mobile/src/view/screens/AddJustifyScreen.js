@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {
     KeyboardAvoidingView,
     Platform,
@@ -13,13 +13,14 @@ import {useTranslation} from 'react-i18next';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import BackButton from '../components/common/BackButton';
 import Separador from '../components/common/Separador';
-import styles from './Styles/AddJustifyScreen/Style';
+import {createAddJustifyStyles} from './Styles/AddJustifyScreen/Style';
 import {useTheme} from '../components/common/ThemeContext';
 import {useAddJustificationViewModel} from '../../viewmodels/useAddJustifyViewModel';
 
 export default function AddJustification() {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const styles = useMemo(() => createAddJustifyStyles(colors), [colors]);
 
   const {
     justificationType,
@@ -85,7 +86,7 @@ export default function AddJustification() {
                           style={[
                             styles.typeButtonText,
                             {
-                              color: justificationType === type ? '#fff' : colors.text,
+                              color: justificationType === type ? colors.onPrimary : colors.text,
                             },
                           ]}
                       >
@@ -166,7 +167,7 @@ export default function AddJustification() {
                   style={[styles.uploadButton, { backgroundColor: colors.primary }]}
                   onPress={pickFile}
               >
-                <Text style={[styles.uploadButtonText, { color: '#fff' }]}>
+                <Text style={[styles.uploadButtonText, { color: colors.onPrimary }]}>
                   {t('justify.selectFile')}
                 </Text>
               </TouchableOpacity>

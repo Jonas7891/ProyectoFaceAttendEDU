@@ -1,4 +1,4 @@
-﻿import React, {useEffect, useState} from 'react';
+﻿import React, {useEffect, useMemo, useState} from 'react';
 import {
     FlatList,
     Keyboard,
@@ -14,7 +14,7 @@ import {
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
-import styles from './Styles/ManageUsersScreen/Style';
+import {createManageUsersStyles} from './Styles/ManageUsersScreen/Style';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import {useCustomAlert} from '../components/common/useCustomAlert';
@@ -30,6 +30,7 @@ const ROLE_LABEL_KEYS = {Aprendiz: 'userRoles.student', Instructor: 'userRoles.t
 export default function ManageUsersScreen({navigation, userRole, onLogout}) {
     const {t} = useTranslation();
     const {colors, theme, toggleTheme} = useTheme();
+    const styles = useMemo(() => createManageUsersStyles(colors), [colors]);
     const {alertConfig, hideAlert, showError, showConfirm} = useCustomAlert();
 
     const {
@@ -171,10 +172,10 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    style={[styles.manageUsersActionButton, {borderColor: inactive ? '#2E7D32' : '#E53935'}]}
+                    style={[styles.manageUsersActionButton, {borderColor: inactive ? colors.success : colors.danger}]}
                     onPress={() => confirmToggleStatus(item.id, !inactive)}
                 >
-                    <Text style={[styles.manageUsersActionText, {color: inactive ? '#2E7D32' : '#E53935'}]}>
+                    <Text style={[styles.manageUsersActionText, {color: inactive ? colors.success : colors.danger}]}>
                         {inactive ? t('common.activate') : t('common.deactivate')}
                     </Text>
                 </TouchableOpacity>

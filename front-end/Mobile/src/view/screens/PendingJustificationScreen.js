@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {
     ActivityIndicator,
     FlatList,
@@ -14,7 +14,8 @@ import {
     View,
 } from 'react-native';
 import {useTranslation} from 'react-i18next';
-import styles from './Styles/PendingJustificationScreen/Style';
+import {createPendingStyles} from './Styles/PendingJustificationScreen/Style';
+import {readableOn} from '../../theme/contrast';
 import {useTheme} from '../components/common/ThemeContext';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import {usePendingJustificationViewModel} from '../../viewmodels/usePendingJustificationViewModel';
@@ -31,7 +32,9 @@ const getLocaleForLanguage = (lang) => {
 };
 
 /** Chip de filtro (Todos / Estudiantes / Docentes) */
-const FilterChip = ({ label, count, active, onPress, colors }) => (
+const FilterChip = ({ label, count, active, onPress, colors }) => {
+    const styles = useMemo(() => createPendingStyles(colors), [colors]);
+    return (
     <TouchableOpacity
         style={[
             styles.filterChipPending,
@@ -47,14 +50,15 @@ const FilterChip = ({ label, count, active, onPress, colors }) => (
         <Text
             style={[
                 styles.filterChipTextPending,
-                { color: active ? '#FFFFFF' : colors.textSecondary },
+                { color: active ? colors.onPrimary : colors.textSecondary },
                 active && { fontWeight: '700' },
             ]}
         >
             {label} ({count})
         </Text>
     </TouchableOpacity>
-);
+    );
+};
 
 /** Tarjeta de una justificación en la lista */
 const JustificationCard = ({
@@ -70,9 +74,10 @@ const JustificationCard = ({
                                colors,
                            }) => {
     const {t} = useTranslation();
+    const styles = useMemo(() => createPendingStyles(colors), [colors]);
     const typeColors = getTypeColors(item.type);
     const roleColors = getRoleColors(item.role);
-    const avatarColor = getAvatarColor(item.userName);
+    const avatarColor = getAvatarColor(item.userName, colors.categorical);
 
     return (
         <TouchableOpacity
@@ -90,7 +95,7 @@ const JustificationCard = ({
             {/* Cabecera */}
             <View style={styles.cardHeaderPending}>
                 <View style={[styles.avatarContainerPending, { backgroundColor: avatarColor }]}>
-                    <Text style={styles.avatarTextPending}>{getInitials(item.userName)}</Text>
+                    <Text style={[styles.avatarTextPending, { color: readableOn(avatarColor) }]}>{getInitials(item.userName)}</Text>
                 </View>
                 <View style={styles.cardHeaderInfoPending}>
                     <Text style={[styles.cardNamePending, { color: colors.text }]}>{item.userName}</Text>
@@ -148,7 +153,7 @@ const JustificationCard = ({
                     onPress={() => onPress(item)}
                 >
                     <Text style={{ fontSize: 12 }}>👁</Text>
-                    <Text style={[styles.viewButtonTextPending, {color: '#FFFFFF'}]}>
+                    <Text style={[styles.viewButtonTextPending, {color: colors.onPrimary}]}>
                         {t('consultJustify.viewDetail')}
                     </Text>
                 </TouchableOpacity>
@@ -181,12 +186,13 @@ const DetailModal = ({
                          colors,
                      }) => {
     const {t, i18n} = useTranslation();
+    const styles = useMemo(() => createPendingStyles(colors), [colors]);
 
     if (!item) return null;
 
     const typeColors = getTypeColors(item.type);
     const roleColors = getRoleColors(item.role);
-    const avatarColor = getAvatarColor(item.userName);
+    const avatarColor = getAvatarColor(item.userName, colors.categorical);
     const currentLocale = getLocaleForLanguage(i18n.language);
 
     return (
@@ -251,7 +257,7 @@ const DetailModal = ({
                             ]}
                         >
                             <View style={[styles.detailAvatarLargePending, { backgroundColor: avatarColor }]}>
-                                <Text style={styles.detailAvatarTextPending}>{getInitials(item.userName)}</Text>
+                                <Text style={[styles.detailAvatarTextPending, { color: readableOn(avatarColor) }]}>{getInitials(item.userName)}</Text>
                             </View>
                             <View style={{ flex: 1 }}>
                                 <Text style={[styles.detailUserNamePending, { color: colors.text }]}>
@@ -455,6 +461,7 @@ const DetailModal = ({
 // ─────────────────────────────────────────────────────────────────────────────
 export default function PendingJustificationScreen({ navigation }) {
     const { colors } = useTheme();
+    const styles = useMemo(() => createPendingStyles(colors), [colors]);
     const {t, i18n} = useTranslation();
     const handleBack = () => navigation.goBack();
 

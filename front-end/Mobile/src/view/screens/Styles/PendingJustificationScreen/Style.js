@@ -1,7 +1,9 @@
 import {Platform, StyleSheet} from 'react-native';
 import {normalizeTypography} from '../../../../utils/typography';
 
-const styles = StyleSheet.create(normalizeTypography({
+// Estilos de justificaciones pendientes. Todo color sale de los tokens del tema;
+// usar con createPendingStyles(colors) dentro de un useMemo.
+export const createPendingStyles = (colors) => StyleSheet.create(normalizeTypography({
 actionRowPending: {
         flexDirection: 'row',
         gap: 10,
@@ -11,7 +13,7 @@ actionRowPending: {
 
 approveBtnPending: {
         flex: 1,
-        backgroundColor: '#16A34A',
+        backgroundColor: colors.success,
         borderRadius: 14,
         paddingVertical: 14,
         alignItems: 'center',
@@ -21,7 +23,7 @@ approveBtnPending: {
     },
 
 approveBtnTextPending: {
-        color: '#FFFFFF',
+        color: colors.onSuccess,
         fontSize: 15,
         fontWeight: '700',
     },
@@ -29,24 +31,24 @@ approveBtnTextPending: {
 attachmentBoxPending: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         borderRadius: 14,
         padding: 14,
         marginBottom: 16,
         borderWidth: 1,
-        borderColor: '#E5E7EB',
+        borderColor: colors.border,
         gap: 12,
     },
 
 attachmentFileNamePending: {
         fontSize: 13,
         fontWeight: '600',
-        color: '#111827',
+        color: colors.text,
     },
 
 attachmentFileSizePending: {
         fontSize: 11,
-        color: '#9CA3AF',
+        color: colors.textMuted,
         marginTop: 2,
     },
 
@@ -54,7 +56,7 @@ attachmentIconBoxPending: {
         width: 44,
         height: 44,
         borderRadius: 10,
-        backgroundColor: '#EFF6FF',
+        backgroundColor: colors.primaryLight,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -71,7 +73,7 @@ attachmentIndicatorPending: {
 
 attachmentTextPending: {
         fontSize: 11,
-        color: '#9CA3AF',
+        color: colors.textMuted,
     },
 
 avatarContainerPending: {
@@ -86,7 +88,6 @@ avatarContainerPending: {
 avatarTextPending: {
         fontSize: 17,
         fontWeight: '700',
-        color: '#FFFFFF',
     },
 
 badgeRowPending: {
@@ -97,12 +98,12 @@ badgeRowPending: {
 
 cardDatePending: {
         fontSize: 12,
-        color: '#9CA3AF',
+        color: colors.textMuted,
     },
 
 cardDescriptionPending: {
         fontSize: 13,
-        color: '#6B7280',
+        color: colors.textSecondary,
         lineHeight: 18,
         marginBottom: 10,
     },
@@ -112,7 +113,7 @@ cardFooterPending: {
         justifyContent: 'space-between',
         alignItems: 'center',
         borderTopWidth: 1,
-        borderTopColor: '#F3F4F6',
+        borderTopColor: colors.border,
         paddingTop: 10,
         marginTop: 2,
     },
@@ -129,23 +130,23 @@ cardHeaderPending: {
 
 cardMetaPending: {
         fontSize: 12,
-        color: '#9CA3AF',
+        color: colors.textMuted,
         marginTop: 1,
     },
 
 cardNamePending: {
         fontSize: 15,
         fontWeight: '700',
-        color: '#111827',
+        color: colors.text,
     },
 
 cardPending: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         borderRadius: 16,
         marginBottom: 12,
         padding: 16,
         borderWidth: 1,
-        borderColor: '#E5E7EB',
+        borderColor: colors.border,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.06,
@@ -158,17 +159,17 @@ containerPending: {
     },
 
 descriptionBoxPending: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         borderRadius: 14,
         padding: 14,
         marginBottom: 12,
         borderWidth: 1,
-        borderColor: '#E5E7EB',
+        borderColor: colors.border,
     },
 
 descriptionTextPending: {
         fontSize: 14,
-        color: '#374151',
+        color: colors.textSecondary,
         lineHeight: 21,
     },
 
@@ -183,16 +184,15 @@ detailAvatarLargePending: {
 detailAvatarTextPending: {
         fontSize: 20,
         fontWeight: '800',
-        color: '#FFFFFF',
     },
 
 detailCardPending: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         borderRadius: 14,
         padding: 14,
         marginBottom: 12,
         borderWidth: 1,
-        borderColor: '#E5E7EB',
+        borderColor: colors.border,
     },
 
 detailIconPending: {
@@ -203,7 +203,7 @@ detailIconPending: {
 
 detailKeyPending: {
         fontSize: 13,
-        color: '#6B7280',
+        color: colors.textSecondary,
         width: 80,
     },
 
@@ -216,38 +216,38 @@ detailRowPending: {
         alignItems: 'center',
         paddingVertical: 6,
         borderBottomWidth: 1,
-        borderBottomColor: '#F3F4F6',
+        borderBottomColor: colors.border,
         gap: 10,
     },
 
 detailUserMetaPending: {
         fontSize: 13,
-        color: '#6B7280',
+        color: colors.textSecondary,
         marginTop: 1,
     },
 
 detailUserNamePending: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#111827',
+        color: colors.text,
     },
 
 detailUserRowPending: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         borderRadius: 14,
         padding: 14,
         marginBottom: 16,
         borderWidth: 1,
-        borderColor: '#E5E7EB',
+        borderColor: colors.border,
         gap: 12,
     },
 
 detailValuePending: {
         fontSize: 13,
         fontWeight: '600',
-        color: '#111827',
+        color: colors.text,
         flex: 1,
     },
 
@@ -265,14 +265,14 @@ emptyIconPending: {
 
 emptySubtitlePending: {
         fontSize: 13,
-        color: '#9CA3AF',
+        color: colors.textMuted,
         textAlign: 'center',
     },
 
 emptyTitlePending: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#111827',
+        color: colors.text,
         marginBottom: 4,
     },
 
@@ -281,14 +281,14 @@ filterChipPending: {
         paddingVertical: 7,
         borderRadius: 20,
         borderWidth: 1.5,
-        borderColor: '#E5E7EB',
-        backgroundColor: '#FFFFFF',
+        borderColor: colors.border,
+        backgroundColor: colors.card,
     },
 
 filterChipTextPending: {
         fontSize: 13,
         fontWeight: '600',
-        color: '#6B7280',
+        color: colors.textSecondary,
     },
 
 filterRowPending: {
@@ -315,19 +315,19 @@ headerPending: {
         paddingHorizontal: 20,
         paddingTop: 16,
         paddingBottom: 12,
-        backgroundColor: '#F4F6FB',
+        backgroundColor: colors.background,
     },
 
 headerSubtitlePending: {
         fontSize: 14,
-        color: '#6B7280',
+        color: colors.textSecondary,
         marginTop: 2,
     },
 
 headerTitlePending: {
         fontSize: 26,
         fontWeight: '800',
-        color: '#111827',
+        color: colors.text,
         letterSpacing: -0.5,
     },
 
@@ -340,23 +340,23 @@ modalCloseBtnPending: {
         width: 32,
         height: 32,
         borderRadius: 16,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 1,
-        borderColor: '#E5E7EB',
+        borderColor: colors.border,
     },
 
 modalCloseTextPending: {
         fontSize: 16,
-        color: '#6B7280',
+        color: colors.textSecondary,
         lineHeight: 18,
     },
 
 modalHandlePending: {
         width: 40,
         height: 4,
-        backgroundColor: '#D1D5DB',
+        backgroundColor: colors.textMuted,
         borderRadius: 2,
         alignSelf: 'center',
         marginTop: 10,
@@ -370,12 +370,12 @@ modalHeaderPending: {
         paddingHorizontal: 20,
         paddingVertical: 14,
         borderBottomWidth: 1,
-        borderBottomColor: '#E5E7EB',
+        borderBottomColor: colors.border,
     },
 
 modalOverlayPending: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.45)',
+        backgroundColor: colors.overlay,
         justifyContent: 'flex-end',
     },
 
@@ -386,7 +386,7 @@ modalScrollPending: {
     },
 
 modalSheetPending: {
-        backgroundColor: '#F4F6FB',
+        backgroundColor: colors.background,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         maxHeight: '92%',
@@ -396,12 +396,12 @@ modalSheetPending: {
 modalTitlePending: {
         fontSize: 17,
         fontWeight: '800',
-        color: '#111827',
+        color: colors.text,
     },
 
 rejectBtnPending: {
         flex: 1,
-        backgroundColor: '#DC2626',
+        backgroundColor: colors.danger,
         borderRadius: 14,
         paddingVertical: 14,
         alignItems: 'center',
@@ -411,13 +411,13 @@ rejectBtnPending: {
     },
 
 rejectBtnTextPending: {
-        color: '#FFFFFF',
+        color: colors.onDanger,
         fontSize: 15,
         fontWeight: '700',
     },
 
 resultsBadgePending: {
-        backgroundColor: '#2563EB',
+        backgroundColor: colors.primary,
         borderRadius: 10,
         paddingHorizontal: 7,
         paddingVertical: 1,
@@ -426,7 +426,7 @@ resultsBadgePending: {
 resultsBadgeTextPending: {
         fontSize: 11,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: colors.onPrimary,
     },
 
 resultsRowPending: {
@@ -439,7 +439,7 @@ resultsRowPending: {
 
 resultsTextPending: {
         fontSize: 13,
-        color: '#9CA3AF',
+        color: colors.textMuted,
     },
 
 roleBadgePending: {
@@ -455,13 +455,13 @@ roleBadgeTextPending: {
 
 safeAreaPending: {
         flex: 1,
-        backgroundColor: '#F4F6FB',
+        backgroundColor: colors.background,
     },
 
 sectionLabelPending: {
         fontSize: 11,
         fontWeight: '700',
-        color: '#9CA3AF',
+        color: colors.textMuted,
         letterSpacing: 0.8,
         textTransform: 'uppercase',
         marginBottom: 8,
@@ -483,7 +483,7 @@ typeBadgeTextPending: {
 viewButtonPending: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#2563EB',
+        backgroundColor: colors.primary,
         paddingHorizontal: 14,
         paddingVertical: 6,
         borderRadius: 10,
@@ -493,8 +493,6 @@ viewButtonPending: {
 viewButtonTextPending: {
         fontSize: 12,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: colors.onPrimary,
     },
 }));
-
-export default styles;

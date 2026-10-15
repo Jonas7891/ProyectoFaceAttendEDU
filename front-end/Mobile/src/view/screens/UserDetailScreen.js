@@ -1,14 +1,11 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useMemo} from 'react';
 import {ActivityIndicator, SafeAreaView, ScrollView, Text, TouchableOpacity, View} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import BackButton from '../components/common/BackButton';
-import styles from './Styles/UserDetailScreen/Style';
+import {createUserDetailStyles} from './Styles/UserDetailScreen/Style';
 import {MIN_ATTENDANCE, useUserDetailViewModel} from '../../viewmodels/useUserDetailViewModel';
 
-const SUCCESS = '#2E7D32';
-const WARNING = '#F59E0B';
-const DANGER = '#E53935';
 
 const initials = (name) => String(name || '?')
     .split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('') || '?';
@@ -18,6 +15,7 @@ const initials = (name) => String(name || '?')
 export default function UserDetailScreen({navigation, userRole}) {
     const {t} = useTranslation();
     const {colors} = useTheme();
+    const styles = useMemo(() => createUserDetailStyles(colors), [colors]);
     const vm = useUserDetailViewModel();
 
     // Solo el Administrador consulta el detalle completo de otro usuario.
@@ -28,7 +26,7 @@ export default function UserDetailScreen({navigation, userRole}) {
     const card = [styles.userDetailCard, {backgroundColor: colors.card, borderColor: colors.cardBorder || colors.border}];
     const rate = vm.attendance?.rate;
     const attColor = rate === null || rate === undefined ? colors.textSecondary
-        : rate >= MIN_ATTENDANCE ? SUCCESS : rate >= 70 ? WARNING : DANGER;
+        : rate >= MIN_ATTENDANCE ? colors.success : rate >= 70 ? colors.warning : colors.danger;
 
     const Row = ({label, value}) => (
         <View style={styles.userDetailRow}>
@@ -53,7 +51,7 @@ export default function UserDetailScreen({navigation, userRole}) {
     const BioItem = ({label, ok}) => (
         <View style={styles.userDetailBiometricItem}>
             <Text style={{color: colors.text}}>{label}</Text>
-            <Text style={{color: ok ? SUCCESS : colors.textSecondary, fontWeight: '600'}}>
+            <Text style={{color: ok ? colors.success : colors.textSecondary, fontWeight: '600'}}>
                 {ok ? t('userDetail.registered') : t('userDetail.pending')}
             </Text>
         </View>
@@ -80,7 +78,7 @@ export default function UserDetailScreen({navigation, userRole}) {
                         <View style={styles.userDetailBadges}>
                             <Badge
                                 text={vm.active ? t('userDetail.active') : t('userDetail.inactive')}
-                                color={vm.active ? SUCCESS : colors.textSecondary}
+                                color={vm.active ? colors.success : colors.textSecondary}
                             />
                             {vm.roleNames.map((role) => <Badge key={role} text={role} color={colors.primary}/>)}
                         </View>

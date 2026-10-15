@@ -1,16 +1,17 @@
-import React from "react";
+import React, {useMemo} from "react";
 import {Platform, SafeAreaView, ScrollView, Text, TouchableOpacity, View} from "react-native";
 import {useTranslation} from "react-i18next";
 import {useTheme} from '../components/common/ThemeContext';
 import BackButton from '../components/common/BackButton';
 import CustomAlert from '../components/common/CustomAlert';
 import PrimaryButton from '../components/auth/PrimaryButton';
-import styles from "./Styles/ValidAllJustifications/Style";
+import {createValidAllJustificationsStyles} from "./Styles/ValidAllJustifications/Style";
 import {useJustificationsViewModel} from '../../viewmodels/useValidAllJustificationsViewModel';
 
 export default function JustificationsScreen() {
     const { t } = useTranslation();
     const { colors } = useTheme();
+    const styles = useMemo(() => createValidAllJustificationsStyles(colors), [colors]);
 
     const {
         justifications,

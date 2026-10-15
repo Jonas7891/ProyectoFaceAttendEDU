@@ -73,11 +73,12 @@ export function calculatePasswordStrength(requirements, length) {
     if (length >= 12) score++;
 
     const labels = ['', 'Muy débil', 'Débil', 'Regular', 'Fuerte', 'Muy fuerte'];
-    const colors = ['transparent', '#E53E3E', '#ED8936', '#ECC94B', '#48BB78', '#38A169'];
+    // Tono semántico de la barra (danger/warning/success); la UI lo resuelve con colors del tema.
+    const tones = [null, 'danger', 'warning', 'warning', 'success', 'success'];
 
     return {
         score,
         label: labels[score],
-        color: colors[score],
+        tone: tones[score],
     };
 }

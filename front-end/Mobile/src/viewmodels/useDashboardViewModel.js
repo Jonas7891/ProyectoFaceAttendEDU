@@ -322,35 +322,37 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     });
 
+    // Colores de categoría tomados de la paleta activa (posición estable entre paletas).
+    const cat = colors.categorical;
     const menuAccionesAdmin = [
-        { id: 1, title: t('dashboard.manageUsers'), description: t('dashboard.manageUsersDesc'), color: '#E91E63', screen: 'ManageUsersScreen' },
-        { id: 2, title: t('dashboard.environmentManagement'), description: t('dashboard.manageEnvironmentDesc'), color: '#1e58e9', screen: 'ManageEnviromentScreen' },
-        { id: 3, title: t('dashboard.reports'), description: t('dashboard.reportsDesc'), color: '#FF9800', screen: 'AttendanceReportScreen' },
+        { id: 1, title: t('dashboard.manageUsers'), description: t('dashboard.manageUsersDesc'), color: cat[0], screen: 'ManageUsersScreen' },
+        { id: 2, title: t('dashboard.environmentManagement'), description: t('dashboard.manageEnvironmentDesc'), color: cat[1], screen: 'ManageEnviromentScreen' },
+        { id: 3, title: t('dashboard.reports'), description: t('dashboard.reportsDesc'), color: cat[2], screen: 'AttendanceReportScreen' },
         ...(isSuperAdmin
-            ? [{ id: 4, title: t('schools.title'), description: t('schools.subtitle'), color: '#673AB7', screen: 'Schools' }]
+            ? [{ id: 4, title: t('schools.title'), description: t('schools.subtitle'), color: cat[3], screen: 'Schools' }]
             : []),
-        { id: 5, title: t('dashboard.news'), description: t('dashboard.newsDesc'), color: '#00ACC1', screen: 'Novedades' },
-        { id: 6, title: t('dashboard.schoolConfig'), description: t('dashboard.schoolConfigDesc'), color: '#6D4C41', screen: 'SchoolConfigurationScreen' },
-        { id: 7, title: t('biometricCases.title'), description: t('biometricCases.menuDesc'), color: '#3949AB', screen: 'BiometricCasesScreen' },
-        { id: 8, title: t('dashboard.justifications'), description: t('dashboard.justificationsDesc'), color: '#FF9800', screen: 'MenuJustify' },
+        { id: 5, title: t('dashboard.news'), description: t('dashboard.newsDesc'), color: cat[4], screen: 'Novedades' },
+        { id: 6, title: t('dashboard.schoolConfig'), description: t('dashboard.schoolConfigDesc'), color: cat[5], screen: 'SchoolConfigurationScreen' },
+        { id: 7, title: t('biometricCases.title'), description: t('biometricCases.menuDesc'), color: cat[2], screen: 'BiometricCasesScreen' },
+        { id: 8, title: t('dashboard.justifications'), description: t('dashboard.justificationsDesc'), color: cat[4], screen: 'MenuJustify' },
     ];
     const menuAccionesEstudiante = [
-        { id: 1, title: t('student.registerFace'), description: t('student.registerFaceDesc'), color: '#4CAF50', screen: 'RegisterFace' },
-        { id: 2, title: t('student.myAttendance'), description: t('student.myAttendanceDesc'), color: '#2196F3', screen: 'DisplayingAttendance' },
-        { id: 3, title: t('student.myCourses'), description: t('student.myCoursesDesc'), color: '#9C27B0', screen: 'MyCourses' },
-        { id: 4, title: t('student.myJustifications'), description: t('student.myJustificationsDesc'), color: '#FF9800', screen: 'MenuJustify' },
-        { id: 5, title: t('student.UpdateFace'), description: t('student.UpdateFaceDesc'), color: '#f32152', screen: 'UpdatePhoto' },
-        { id: 6, title: t('dashboard.news'), description: t('dashboard.newsDesc'), color: '#00ACC1', screen: 'Novedades' },
+        { id: 1, title: t('student.registerFace'), description: t('student.registerFaceDesc'), color: cat[0], screen: 'RegisterFace' },
+        { id: 2, title: t('student.myAttendance'), description: t('student.myAttendanceDesc'), color: cat[1], screen: 'DisplayingAttendance' },
+        { id: 3, title: t('student.myCourses'), description: t('student.myCoursesDesc'), color: cat[2], screen: 'MyCourses' },
+        { id: 4, title: t('student.myJustifications'), description: t('student.myJustificationsDesc'), color: cat[3], screen: 'MenuJustify' },
+        { id: 5, title: t('student.UpdateFace'), description: t('student.UpdateFaceDesc'), color: cat[4], screen: 'UpdatePhoto' },
+        { id: 6, title: t('dashboard.news'), description: t('dashboard.newsDesc'), color: cat[5], screen: 'Novedades' },
     ];
     const menuAccionesDocente = [
-        { id: 1, title: t('teacher.updateFace'), description: t('teacher.updateFaceDesc'), color: '#2196F3', screen: 'UpdatePhoto' },
-        { id: 2, title: t('teacher.myAttendance'), description: t('teacher.myAttendanceDesc'), color: '#4CAF50', screen: 'DisplayingAttendance' },
-        { id: 3, title: t('teacher.myCourses'), description: t('teacher.myCoursesDesc'), color: '#9C27B0', screen: 'MyCourses' },
-        { id: 4, title: t('teacher.pendingJustifications'), description: t('teacher.pendingJustificationsDesc'), color: '#FF9800', screen: 'PendingJustificationScreen' },
-        { id: 5, title: t('student.registerFace'), description: t('student.registerFaceDesc'), color: '#4CAF50', screen: 'RegisterFace' },
-        { id: 6, title: t('dashboard.reports'), description: t('teacher.reportsDesc'), color: '#F4511E', screen: 'AttendanceReportScreen' },
-        { id: 7, title: t('dashboard.news'), description: t('dashboard.newsDesc'), color: '#00ACC1', screen: 'Novedades' },
-        { id: 8, title: t('biometricCases.title'), description: t('biometricCases.menuDesc'), color: '#3949AB', screen: 'BiometricCasesScreen' },
+        { id: 1, title: t('teacher.updateFace'), description: t('teacher.updateFaceDesc'), color: cat[0], screen: 'UpdatePhoto' },
+        { id: 2, title: t('teacher.myAttendance'), description: t('teacher.myAttendanceDesc'), color: cat[1], screen: 'DisplayingAttendance' },
+        { id: 3, title: t('teacher.myCourses'), description: t('teacher.myCoursesDesc'), color: cat[2], screen: 'MyCourses' },
+        { id: 4, title: t('teacher.pendingJustifications'), description: t('teacher.pendingJustificationsDesc'), color: cat[3], screen: 'PendingJustificationScreen' },
+        { id: 5, title: t('student.registerFace'), description: t('student.registerFaceDesc'), color: cat[4], screen: 'RegisterFace' },
+        { id: 6, title: t('dashboard.reports'), description: t('teacher.reportsDesc'), color: cat[5], screen: 'AttendanceReportScreen' },
+        { id: 7, title: t('dashboard.news'), description: t('dashboard.newsDesc'), color: cat[0], screen: 'Novedades' },
+        { id: 8, title: t('biometricCases.title'), description: t('biometricCases.menuDesc'), color: cat[2], screen: 'BiometricCasesScreen' },
     ];
 
     const menuAcciones = isAdmin ? menuAccionesAdmin : isTeacher ? menuAccionesDocente : menuAccionesEstudiante;

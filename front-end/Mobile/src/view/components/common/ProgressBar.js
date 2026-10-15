@@ -1,12 +1,13 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {Text, View,} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from './ThemeContext';
-import stylescommon from './style/Style';
+import {createCommonStyles} from './style/Style';
 
 export const ProgressBar = ({ currentStep, totalSteps }) => {
     const { t } = useTranslation();
     const { colors } = useTheme();
+    const stylescommon = useMemo(() => createCommonStyles(colors), [colors]);
     const progress = (currentStep / totalSteps) * 100;
 
     return (

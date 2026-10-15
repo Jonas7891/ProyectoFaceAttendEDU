@@ -1,7 +1,8 @@
 import {StyleSheet} from 'react-native';
 import {appFontFamily, normalizeTypography} from '../../../../utils/typography';
 
-const styles = StyleSheet.create(normalizeTypography({
+// Estilos del menú de justificaciones. Todo color sale de los tokens del tema; usar con createMenuJustifyStyles(colors).
+export const createMenuJustifyStyles = (colors) => StyleSheet.create(normalizeTypography({
 ScrollView: {
         flex: 1,
     },
@@ -58,7 +59,7 @@ menuItem: {
 
 safeAreaWhite: {
         flex: 1,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: colors.backgroundWhite,
     },
 
 sectionTitleMenu: {
@@ -66,11 +67,9 @@ sectionTitleMenu: {
         fontFamily: appFontFamily,
         textAlign: "justify",
         marginBottom: 15,
-        color: "#000000",
+        color: colors.text,
         fontWeight: '600',
         marginTop: 15,
         alignSelf: "left",
     },
 }));
-
-export default styles;

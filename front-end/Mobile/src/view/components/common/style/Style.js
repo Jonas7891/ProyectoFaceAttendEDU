@@ -1,7 +1,9 @@
 import { StyleSheet, Platform } from 'react-native';
 import {normalizeTypography} from '../../../../utils/typography';
 
-const stylescommon = StyleSheet.create(normalizeTypography({
+// Estilos compartidos de componentes comunes. Todo color sale de los tokens
+// del tema (ThemeContext.colors); usar con useMemo(() => createCommonStyles(colors)).
+export const createCommonStyles = (colors) => StyleSheet.create(normalizeTypography({
     container: {
         alignSelf: "center",
         overflow: "hidden",
@@ -9,7 +11,7 @@ const stylescommon = StyleSheet.create(normalizeTypography({
     image: {
         width: "100%",
         height: "100%",
-        color: "black",
+        color: colors.text,
     },
     containerCustomTabs: {
         flexDirection: "row",
@@ -17,17 +19,17 @@ const stylescommon = StyleSheet.create(normalizeTypography({
         ...(Platform.OS === "android" && { paddingTop: 40 }),
     },
     buttonCustomTabs: {
-        backgroundColor: "#D9D9D9",
+        backgroundColor: colors.tabInactive,
         paddingVertical: 8,
         paddingHorizontal: 20,
         borderRadius: 20,
         marginHorizontal: 5,
     },
     activeButtonCustomTabs: {
-        backgroundColor: "#41c0ff",
+        backgroundColor: colors.primary,
     },
     textCustomTabs: {
-        color: "#000",
+        color: colors.text,
         fontWeight: "500",
     },
     activeTextCustomTabs: {
@@ -39,7 +41,7 @@ const stylescommon = StyleSheet.create(normalizeTypography({
     selectorLabelSelector: {
         fontSize: 14,
         fontWeight: "600",
-        color: "#333",
+        color: colors.text,
         marginBottom: 12,
     },
     optionsContainerSelector: {
@@ -51,13 +53,13 @@ const stylescommon = StyleSheet.create(normalizeTypography({
         paddingVertical: 12,
         paddingHorizontal: 12,
         borderRadius: 8,
-        backgroundColor: "#F9F9F9",
+        backgroundColor: colors.card,
         borderWidth: 1,
-        borderColor: "#E0E0E0",
+        borderColor: colors.border,
     },
     optionSelected: {
-        backgroundColor: "#E3F2FD",
-        borderColor: "#007AFF",
+        backgroundColor: colors.primaryLight,
+        borderColor: colors.primary,
     },
     radioContainerSelector: {
         marginRight: 12,
@@ -67,26 +69,26 @@ const stylescommon = StyleSheet.create(normalizeTypography({
         height: 20,
         borderRadius: 10,
         borderWidth: 2,
-        borderColor: "#999",
+        borderColor: colors.textMuted,
         justifyContent: "center",
         alignItems: "center",
     },
     radioOuterSelected: {
-        borderColor: "#007AFF",
+        borderColor: colors.primary,
     },
     radioInnerSelector: {
         width: 10,
         height: 10,
         borderRadius: 5,
-        backgroundColor: "#007AFF",
+        backgroundColor: colors.primary,
     },
     optionTextSelector: {
         fontSize: 14,
-        color: "#555",
+        color: colors.textSecondary,
         flex: 1,
     },
     optionTextSelected: {
-        color: "#007AFF",
+        color: colors.primary,
         fontWeight: "500",
     },
     progressContainer: {
@@ -94,18 +96,18 @@ const stylescommon = StyleSheet.create(normalizeTypography({
     },
     progressText: {
         fontSize: 12,
-        color: "#666",
+        color: colors.textSecondary,
         marginBottom: 5,
     },
     progressBar: {
         height: 4,
-        backgroundColor: "#E0E0E0",
+        backgroundColor: colors.progressBackground,
         borderRadius: 2,
         overflow: "hidden",
     },
     progressFill: {
         height: "100%",
-        backgroundColor: "#007AFF",
+        backgroundColor: colors.primary,
         borderRadius: 2,
     },
     navBarContainer: {
@@ -114,7 +116,7 @@ const stylescommon = StyleSheet.create(normalizeTypography({
         left: 20,
         right: 20,
         height: 70,
-        backgroundColor: "#EDEDED",
+        backgroundColor: colors.navBar,
         borderRadius: 20,
         flexDirection: "row",
         justifyContent: "space-around",
@@ -133,17 +135,17 @@ const stylescommon = StyleSheet.create(normalizeTypography({
         borderRadius: 18,
     },
     activeNavButton: {
-        backgroundColor: "#d9f4ff",
+        backgroundColor: colors.primaryLight,
     },
     navIcon: {
         width: 28,
         height: 28,
-        tintColor: "#000",
+        tintColor: colors.text,
     },
     navIconCenter: {
         width: 40,
         height: 40,
-        tintColor: "#000",
+        tintColor: colors.text,
     },
     ScrollViewWrapper: {
         flex: 1,
@@ -158,18 +160,18 @@ const stylescommon = StyleSheet.create(normalizeTypography({
     },
     separador: {
         height: 1,
-        backgroundColor: '#b4b4b4',
+        backgroundColor: colors.separator,
         marginVertical: 10,
         width: '100%',
     },
     languageOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: colors.overlay,
         justifyContent: 'center',
         alignItems: 'center',
     },
     languageModal: {
-        backgroundColor: 'white',
+        backgroundColor: colors.card,
         padding: 20,
         borderRadius: 10,
         width: '80%',
@@ -179,40 +181,44 @@ const stylescommon = StyleSheet.create(normalizeTypography({
         fontWeight: 'bold',
         marginBottom: 20,
         textAlign: 'center',
+        color: colors.text,
     },
     languageOption: {
         padding: 15,
         borderBottomWidth: 1,
-        borderBottomColor: '#ddd',
+        borderBottomColor: colors.border,
     },
     languageSelectedOption: {
-        backgroundColor: '#e0f7fa',
+        backgroundColor: colors.primaryLight,
     },
     languageOptionText: {
         fontSize: 16,
+        color: colors.text,
     },
     languageCloseButton: {
         marginTop: 20,
         padding: 10,
-        backgroundColor: '#ccc',
+        backgroundColor: colors.tabInactive,
         borderRadius: 5,
         alignItems: 'center',
     },
     languageCloseText: {
         fontSize: 16,
+        color: colors.text,
     },
     questionInput: {
         borderWidth: 1,
-        borderColor: "#E0E0E0",
+        borderColor: colors.border,
         borderRadius: 8,
         padding: 12,
         fontSize: 14,
-        backgroundColor: "#F9F9F9",
+        color: colors.text,
+        backgroundColor: colors.inputBackground,
         marginBottom: 8,
     },
     hintText: {
         fontSize: 12,
-        color: "#999",
+        color: colors.textMuted,
         marginBottom: 20,
         fontstyle: "italic",
     },
@@ -222,7 +228,7 @@ const stylescommon = StyleSheet.create(normalizeTypography({
     rhSelectorLabel: {
         fontSize: 14,
         fontWeight: "600",
-        color: "#333",
+        color: colors.text,
         marginBottom: 12,
     },
     rhGridContainer: {
@@ -233,34 +239,34 @@ const stylescommon = StyleSheet.create(normalizeTypography({
     },
     rhOption: {
         width: "23%",
-        backgroundColor: "#F9F9F9",
+        backgroundColor: colors.card,
         borderWidth: 1,
-        borderColor: "#E0E0E0",
+        borderColor: colors.border,
         borderRadius: 8,
         paddingVertical: 12,
         alignItems: "center",
         justifyContent: "center",
     },
     rhOptionSelected: {
-        backgroundColor: "#007AFF",
-        borderColor: "#007AFF",
+        backgroundColor: colors.primary,
+        borderColor: colors.primary,
     },
     rhOptionText: {
         fontSize: 16,
         fontWeight: "600",
-        color: "#333",
+        color: colors.text,
     },
     rhOptionTextSelected: {
-        color: "#FFF",
+        color: colors.onPrimary,
     },
     questionnaireModalOverlay: {
         flex: 1,
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        backgroundColor: colors.overlay,
         justifyContent: "center",
         alignItems: "center",
     },
     questionnaireModalContainer: {
-        backgroundColor: "#FFF",
+        backgroundColor: colors.modalBackground,
         borderRadius: 15,
         padding: 20,
         width: "90%",
@@ -270,14 +276,14 @@ const stylescommon = StyleSheet.create(normalizeTypography({
     questionnaireModalTitle: {
         fontSize: 18,
         fontWeight: "bold",
-        color: "#1a1a1a",
+        color: colors.modalText,
         marginBottom: 15,
         textAlign: "center",
     },
     questionnaireQuestion: {
         fontSize: 16,
         fontWeight: "600",
-        color: "#333",
+        color: colors.text,
         marginBottom: 15,
     },
     questionnaireButtonsContainer: {
@@ -293,31 +299,31 @@ const stylescommon = StyleSheet.create(normalizeTypography({
         alignItems: "center",
     },
     questionnairePreviousButton: {
-        backgroundColor: "#F5F5F5",
+        backgroundColor: colors.backButtonBackground,
         borderWidth: 1,
-        borderColor: "#E0E0E0",
+        borderColor: colors.border,
     },
     questionnairePreviousButtonText: {
-        color: "#666",
+        color: colors.textSecondary,
         fontSize: 14,
         fontWeight: "600",
     },
     questionnaireNextButton: {
-        backgroundColor: "#007AFF",
+        backgroundColor: colors.primary,
     },
     questionnaireNextButtonText: {
-        color: "#FFF",
+        color: colors.onPrimary,
         fontSize: 14,
         fontWeight: "600",
     },
     facialModalOverlay: {
         flex: 1,
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        backgroundColor: colors.overlay,
         justifyContent: "center",
         alignItems: "center",
     },
     facialModalContainer: {
-        backgroundColor: "#FFF",
+        backgroundColor: colors.modalBackground,
         borderRadius: 15,
         padding: 20,
         width: "90%",
@@ -327,13 +333,13 @@ const stylescommon = StyleSheet.create(normalizeTypography({
     facialModalTitle: {
         fontSize: 18,
         fontWeight: "bold",
-        color: "#1a1a1a",
+        color: colors.modalText,
         marginBottom: 10,
         textAlign: "center",
     },
     facialModalSubtitle: {
         fontSize: 14,
-        color: "#666",
+        color: colors.textSecondary,
         textAlign: "center",
         marginBottom: 20,
         lineHeight: 20,
@@ -342,7 +348,7 @@ const stylescommon = StyleSheet.create(normalizeTypography({
     facialSelectLabel: {
         fontSize: 14,
         fontWeight: "600",
-        color: "#333",
+        color: colors.text,
         marginBottom: 15,
     },
     facialChangeOption: {
@@ -352,20 +358,20 @@ const stylescommon = StyleSheet.create(normalizeTypography({
         paddingHorizontal: 10,
         marginBottom: 8,
         borderWidth: 1,
-        borderColor: "#E0E0E0",
+        borderColor: colors.border,
         borderRadius: 8,
-        backgroundColor: "#FFF",
+        backgroundColor: colors.modalBackground,
     },
     facialChangeOptionSelected: {
-        borderColor: "#007AFF",
-        backgroundColor: "#F0F8FF",
+        borderColor: colors.primary,
+        backgroundColor: colors.primaryLight,
     },
     facialRadioCircle: {
         width: 20,
         height: 20,
         borderRadius: 10,
         borderWidth: 2,
-        borderColor: "#007AFF",
+        borderColor: colors.primary,
         marginRight: 12,
         justifyContent: "center",
         alignItems: "center",
@@ -374,11 +380,11 @@ const stylescommon = StyleSheet.create(normalizeTypography({
         width: 10,
         height: 10,
         borderRadius: 5,
-        backgroundColor: "#007AFF",
+        backgroundColor: colors.primary,
     },
     facialChangeLabel: {
         fontSize: 14,
-        color: "#333",
+        color: colors.text,
         flex: 1,
     },
     facialModalButtons: {
@@ -394,26 +400,26 @@ const stylescommon = StyleSheet.create(normalizeTypography({
         alignItems: "center",
     },
     facialCancelModalButton: {
-        backgroundColor: "#F5F5F5",
+        backgroundColor: colors.backButtonBackground,
         borderWidth: 1,
-        borderColor: "#E0E0E0",
+        borderColor: colors.border,
     },
     facialCancelModalButtonText: {
-        color: "#666",
+        color: colors.textSecondary,
         fontSize: 14,
         fontWeight: "600",
     },
     facialConfirmModalButton: {
-        backgroundColor: "#007AFF",
+        backgroundColor: colors.primary,
     },
     facialConfirmModalButtonText: {
-        color: "#FFF",
+        color: colors.onPrimary,
         fontSize: 14,
         fontWeight: "600",
     },
     overlayTerminos: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.45)',
+        backgroundColor: colors.overlay,
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 20,
@@ -421,14 +427,14 @@ const stylescommon = StyleSheet.create(normalizeTypography({
     modalContainerTerminos: {
         width: '100%',
         maxHeight: '80%',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.modalBackground,
         borderRadius: 14,
         padding: 20,
     },
     titleTerminos: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#0B5FA5',
+        color: colors.primary,
         marginBottom: 16,
         textAlign: 'center',
     },
@@ -437,25 +443,25 @@ const stylescommon = StyleSheet.create(normalizeTypography({
     },
     paragraphTerminos: {
         fontSize: 17,
-        color: '#374151',
+        color: colors.textSecondary,
         marginBottom: 14,
         lineHeight: 24,
     },
     buttonTerminos: {
-        backgroundColor: '#118FC3',
+        backgroundColor: colors.primary,
         paddingVertical: 14,
         borderRadius: 8,
         alignItems: 'center',
     },
     buttonTextTerminos: {
-        color: '#FFFFFF',
+        color: colors.onPrimary,
         fontSize: 16,
         fontWeight: '600',
     },
     subtitleTerminos: {
         fontSize: 18,
         fontWeight: '800',
-        color: '#0B5FA5',
+        color: colors.primary,
     },
     containerSelectable: {
         flexDirection: 'row',
@@ -469,25 +475,25 @@ const stylescommon = StyleSheet.create(normalizeTypography({
         height: 24,
         borderRadius: 4,
         borderWidth: 2,
-        borderColor: '#1081D2',
-        backgroundColor: '#FFFFFF',
+        borderColor: colors.primary,
+        backgroundColor: colors.backgroundWhite,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
     },
     checkboxCheckedSelectable: {
-        backgroundColor: '#1081D2',
+        backgroundColor: colors.primary,
     },
     checkboxDisabledSelectable: {
         opacity: 0.5,
     },
     checkmarkSelectable: {
-        color: '#FFFFFF',
+        color: colors.onPrimary,
         fontSize: 16,
         fontWeight: 'bold',
     },
     textSelectable: {
-        color: '#333333',
+        color: colors.text,
         fontSize: 16,
         fontWeight: '500',
     },
@@ -500,7 +506,7 @@ const stylescommon = StyleSheet.create(normalizeTypography({
     // ── Modal ──────────────────────────────────────────────
     modalWrapper: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.68)',
+        backgroundColor: colors.overlay,
     },
     // ScrollView interno centra el card verticalmente
     modalScrollContent: {
@@ -542,17 +548,20 @@ const stylescommon = StyleSheet.create(normalizeTypography({
         fontWeight: '600',
         marginBottom: 5,
         textAlign: 'center',
+        color: colors.modalText,
     },
     passwordModalDescription: {
         fontSize: 13,
         marginBottom: 16,
         lineHeight: 19,
         textAlign: 'center',
+        color: colors.textSecondary,
     },
     passwordModalDivider: {
         height: 0.5,
         marginBottom: 18,
         opacity: 0.4,
+        backgroundColor: colors.border,
     },
 
     // Inputs sin labels — más compactos
@@ -565,6 +574,9 @@ const stylescommon = StyleSheet.create(normalizeTypography({
         fontSize: 14,
         textAlign: 'left',
         marginBottom: 10,
+        color: colors.modalInputText,
+        borderColor: colors.modalBorder,
+        backgroundColor: colors.modalInputBackground,
     },
 
     passwordModalErrorRow: {
@@ -581,6 +593,7 @@ const stylescommon = StyleSheet.create(normalizeTypography({
     passwordModalError: {
         flex: 1,
         fontSize: 13,
+        color: colors.danger,
     },
 
     passwordModalButtons: {
@@ -597,6 +610,7 @@ const stylescommon = StyleSheet.create(normalizeTypography({
     passwordModalCancelText: {
         fontSize: 14,
         fontWeight: '500',
+        color: colors.modalButtonSecondaryText,
     },
 
     // ── Trigger button ──────────────────────────────────────
@@ -621,11 +635,11 @@ const stylescommon = StyleSheet.create(normalizeTypography({
         fontSize: 15,
         fontWeight: '500',
         marginBottom: 2,
+        color: colors.text,
     },
     passwordSettingsSubtitle: {
         fontSize: 12,
         lineHeight: 17,
+        color: colors.textSecondary,
     },
 }));
-
-export default stylescommon;
