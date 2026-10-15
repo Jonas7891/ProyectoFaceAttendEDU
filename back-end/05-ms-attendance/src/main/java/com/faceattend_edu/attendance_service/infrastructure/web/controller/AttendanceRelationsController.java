@@ -29,15 +29,13 @@ public class AttendanceRelationsController {
 
     @GetMapping("/api/v1/class-sessions/{id}/attendance")
     public ResponseEntity<List<AttendanceRecordResponse>> bySession(@PathVariable Long id) {
-        return ResponseEntity.ok(listRecordsUseCase.list().stream()
-                .filter(r -> id.equals(r.getClassSessionId()))
+        return ResponseEntity.ok(listRecordsUseCase.listBySession(id).stream()
                 .map(recordMapper::toResponse).collect(Collectors.toList()));
     }
 
     @GetMapping("/api/v1/academic-actors/{actorId}/attendance")
     public ResponseEntity<List<AttendanceRecordResponse>> byActor(@PathVariable Long actorId) {
-        return ResponseEntity.ok(listRecordsUseCase.list().stream()
-                .filter(r -> actorId.equals(r.getAcademicActorId()))
+        return ResponseEntity.ok(listRecordsUseCase.listByActor(actorId).stream()
                 .map(recordMapper::toResponse).collect(Collectors.toList()));
     }
 

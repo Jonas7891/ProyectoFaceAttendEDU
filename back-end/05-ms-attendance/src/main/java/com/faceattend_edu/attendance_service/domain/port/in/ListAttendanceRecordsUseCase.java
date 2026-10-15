@@ -5,4 +5,6 @@ import java.util.List;
 
 public interface ListAttendanceRecordsUseCase {
     List<AttendanceRecord> list();
+    List<AttendanceRecord> listBySession(Long sessionId);
+    List<AttendanceRecord> listByActor(Long actorId);
 }

@@ -10,6 +10,7 @@ public interface AttendanceRecordRepository {
     Optional<AttendanceRecord> findByClassSessionIdAndAcademicActorId(Long sessionId, Long actorId);
     List<AttendanceRecord> findAll();
     List<AttendanceRecord> findByClassSessionId(Long sessionId);
+    List<AttendanceRecord> findByAcademicActorId(Long actorId);
     void deleteById(Long id);
     boolean existsById(Long id);
 }

@@ -12,6 +12,7 @@ import java.util.Optional;
 public interface AttendanceRecordJpaRepository extends JpaRepository<AttendanceRecordJpaEntity, Long> {
     Optional<AttendanceRecordJpaEntity> findByClassSessionIdAndAcademicActorId(Long classSessionId, Long academicActorId);
     List<AttendanceRecordJpaEntity> findByClassSessionId(Long classSessionId);
+    List<AttendanceRecordJpaEntity> findByAcademicActorId(Long academicActorId);
 
     /**
      * Conteo por actor y estado, agregado en SQL. Es lo que permite que una vista

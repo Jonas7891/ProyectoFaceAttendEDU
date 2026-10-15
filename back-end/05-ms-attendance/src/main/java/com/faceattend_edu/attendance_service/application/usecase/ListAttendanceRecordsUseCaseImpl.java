@@ -12,4 +12,6 @@ import java.util.List;
 public class ListAttendanceRecordsUseCaseImpl implements ListAttendanceRecordsUseCase {
     private final AttendanceRecordRepository repository;
     @Override public List<AttendanceRecord> list(){ return repository.findAll(); }
+    @Override public List<AttendanceRecord> listBySession(Long s){ return repository.findByClassSessionId(s); }
+    @Override public List<AttendanceRecord> listByActor(Long a){ return repository.findByAcademicActorId(a); }
 }

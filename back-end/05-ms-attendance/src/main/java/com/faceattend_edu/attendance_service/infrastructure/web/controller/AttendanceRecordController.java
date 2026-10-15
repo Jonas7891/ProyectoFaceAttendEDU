@@ -73,9 +73,22 @@ public class AttendanceRecordController {
             @RequestParam(required = false) String attendanceStatus,
             @RequestParam(required = false) Integer limit,
             @RequestParam(required = false) Integer offset){
-        List<AttendanceRecordResponse> list = listUseCase.list().stream()
-                .filter(r -> classSessionId == null || classSessionId.equals(r.getClassSessionId()))
-                .filter(r -> academicActorId == null || academicActorId.equals(r.getAcademicActorId()))
+        // Los filtros por sesión/actor van a SQL (índices uq_attendance_session_actor
+        // e idx_attendance_actor): traer los ~81k registros y filtrar en memoria
+        // agotaba el heap (OutOfMemoryError). Solo el estado se filtra en memoria.
+        List<AttendanceRecord> base;
+        if (classSessionId != null && academicActorId != null) {
+            base = listUseCase.listBySession(classSessionId).stream()
+                    .filter(r -> academicActorId.equals(r.getAcademicActorId()))
+                    .collect(Collectors.toList());
+        } else if (classSessionId != null) {
+            base = listUseCase.listBySession(classSessionId);
+        } else if (academicActorId != null) {
+            base = listUseCase.listByActor(academicActorId);
+        } else {
+            base = listUseCase.list();
+        }
+        List<AttendanceRecordResponse> list = base.stream()
                 .filter(r -> attendanceStatus == null || attendanceStatus.equals(r.getAttendanceStatus()))
                 .map(mapper::toResponse).collect(Collectors.toList());
         return Paging.slice(list, limit, offset);

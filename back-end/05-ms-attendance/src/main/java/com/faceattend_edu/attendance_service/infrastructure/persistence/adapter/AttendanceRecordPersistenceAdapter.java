@@ -20,6 +20,7 @@ public class AttendanceRecordPersistenceAdapter implements AttendanceRecordRepos
     @Override public Optional<AttendanceRecord> findByClassSessionIdAndAcademicActorId(Long s, Long a){ return jpaRepository.findByClassSessionIdAndAcademicActorId(s,a).map(mapper::toDomain); }
     @Override public List<AttendanceRecord> findAll(){ return jpaRepository.findAll().stream().map(mapper::toDomain).collect(Collectors.toList()); }
     @Override public List<AttendanceRecord> findByClassSessionId(Long s){ return jpaRepository.findByClassSessionId(s).stream().map(mapper::toDomain).collect(Collectors.toList()); }
+    @Override public List<AttendanceRecord> findByAcademicActorId(Long a){ return jpaRepository.findByAcademicActorId(a).stream().map(mapper::toDomain).collect(Collectors.toList()); }
     @Override public void deleteById(Long id){ jpaRepository.deleteById(id); }
     @Override public boolean existsById(Long id){ return jpaRepository.existsById(id); }
 }
