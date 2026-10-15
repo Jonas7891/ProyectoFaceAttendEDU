@@ -241,6 +241,13 @@ export async function registerConfigurationRoutes(app: FastifyInstance, repos: C
     if (!parsed.success) return badRequest(reply, parsed.error.flatten());
     const id = String((req.params as any).id);
     const reviewer = parsed.data.reviewedBy ?? ((req as any).userId as string | undefined);
+    const caller = (req as any).userId as string | undefined;
+    const found = UUID_RE.test(id) ? await repos.cases.findById(id) : null;
+    if (!found) return notFound(reply);
+    // Separation of duties (RN-29): nobody approves or rejects their own request.
+    if (caller && found.requestedBy === caller) {
+      return reply.code(403).send({ error: 'Forbidden', message: 'You cannot review your own request', timestamp: new Date().toISOString() });
+    }
     const updated = UUID_RE.test(id)
       ? await repos.cases.update(id, {
           updateStatus: parsed.data.updateStatus,
