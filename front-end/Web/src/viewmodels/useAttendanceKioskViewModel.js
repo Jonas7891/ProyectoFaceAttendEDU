@@ -72,6 +72,10 @@ export function useAttendanceKioskViewModel() {
     const actorByPersonRef = useRef(new Map());
     const registeredActorIdsRef = useRef(new Set());
     const registeredMethodsRef = useRef(new Map());
+    // academicActorId -> attendance_record_id, para corregir/eliminar el
+    // registro desde el kiosco (canCorrectAttendance, HU-ATT-003).
+    const recordIdByActorRef = useRef(new Map());
+    const [recordIdByActor, setRecordIdByActor] = useState(new Map());
     const unsubscribeAttendanceRef = useRef(null);
     const unsubscribeStatusRef = useRef(null);
     const resetTimerRef = useRef(null);
@@ -222,8 +226,19 @@ export function useAttendanceKioskViewModel() {
                     cohortRoster(nextBlock.cohortId),
                 ]);
                 actorByPersonRef.current = actorByPerson;
-                registeredActorIdsRef.current = new Set(records.map((r) => r.academicActorId));
+                registeredActorIdsRef.current = new Set(
+                    records.map((r) => r.academicActorId ?? r.academic_actor_id)
+                );
                 setRegisteredActorIds(new Set(registeredActorIdsRef.current));
+                recordIdByActorRef.current = new Map(
+                    records
+                        .filter((r) => (r.academicActorId ?? r.academic_actor_id) != null)
+                        .map((r) => [
+                            r.academicActorId ?? r.academic_actor_id,
+                            r.attendanceRecordId ?? r.attendance_record_id ?? r.id ?? null,
+                        ])
+                );
+                setRecordIdByActor(new Map(recordIdByActorRef.current));
                 // "IOT" es el valor que el kiosco manda al backend para huella
                 // (ver onIdentified) — al releer un registro existente, se
                 // muestra de vuelta como "FINGERPRINT" para el profesor.
@@ -275,6 +290,8 @@ export function useAttendanceKioskViewModel() {
         setRegisteredActorIds(new Set());
         registeredMethodsRef.current = new Map();
         setRegisteredMethods(new Map());
+        recordIdByActorRef.current = new Map();
+        setRecordIdByActor(new Map());
         setRoster([]);
         sessionRef.current = null;
         setSession(null);
@@ -359,11 +376,78 @@ export function useAttendanceKioskViewModel() {
         scheduleReturnToWaiting();
     }, []);
 
+    function resetKioskState() {
+        actorByPersonRef.current = new Map();
+        registeredActorIdsRef.current = new Set();
+        setRegisteredActorIds(new Set());
+        registeredMethodsRef.current = new Map();
+        setRegisteredMethods(new Map());
+        recordIdByActorRef.current = new Map();
+        setRecordIdByActor(new Map());
+        setRoster([]);
+        sessionRef.current = null;
+        setSession(null);
+        setBlock(null);
+        setView("SELECT_SESSION");
+    }
+
+    // Cancelar sesión (Open -> Cancelled, AGENTS.md §6 regla 8).
+    const cancelClass = useCallback(async () => {
+        if (!session?.classSessionId) return "No hay sesión activa";
+        try {
+            await schedulingApi.cancelSession(session.classSessionId);
+        } catch (e) {
+            return e?.message || "No se pudo cancelar la sesión";
+        }
+        resetKioskState();
+        return null;
+    }, [session]);
+
+    // Corregir estado del registro (Present/Absent/Late/Justified).
+    const correctRecord = useCallback(
+        async (academicActorId, attendanceStatus) => {
+            const recordId = recordIdByActorRef.current.get(academicActorId);
+            if (recordId == null) return "Sin registro para corregir";
+            try {
+                await attendanceApi.updateRecord(recordId, {
+                    attendanceStatus,
+                    captureMethod: "MANUAL",
+                });
+            } catch (e) {
+                return e?.message || "No se pudo corregir el registro";
+            }
+            return null;
+        },
+        []
+    );
+
+    // Eliminar registro del kiosco (dentro de sesión abierta).
+    const removeRecord = useCallback(async (academicActorId) => {
+        const recordId = recordIdByActorRef.current.get(academicActorId);
+        if (recordId == null) return "Sin registro para eliminar";
+        try {
+            await attendanceApi.deleteRecord(recordId);
+        } catch (e) {
+            return e?.message || "No se pudo eliminar el registro";
+        }
+        recordIdByActorRef.current.delete(academicActorId);
+        setRecordIdByActor(new Map(recordIdByActorRef.current));
+        registeredActorIdsRef.current.delete(academicActorId);
+        setRegisteredActorIds(new Set(registeredActorIdsRef.current));
+        registeredMethodsRef.current.delete(academicActorId);
+        setRegisteredMethods(new Map(registeredMethodsRef.current));
+        return null;
+    }, []);
+
     return {
         view,
         todaysBlocks,
         startClass,
         endClass,
+        cancelClass,
+        correctRecord,
+        removeRecord,
+        recordIdByActor,
         session,
         statusMessage,
         socket,

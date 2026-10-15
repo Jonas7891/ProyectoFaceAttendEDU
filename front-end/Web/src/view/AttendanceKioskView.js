@@ -29,8 +29,10 @@ import { Button } from "./components/common/buttons/Button";
 import { useTheme } from "./components/hooks/useTheme";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useAttendanceKioskViewModel } from "../viewmodels/useAttendanceKioskViewModel";
+import { useRolePermissions } from "../viewmodels/useRolePermissions";
 import { useFaceCapture, CAMERA_SUPPORTED } from "../viewmodels/useFaceCapture";
 import { useFingerprintReader } from "../viewmodels/useFingerprintReader";
+import { ConfirmModal } from "./components/common/modals/ConfirmModal";
 
 const TONE_COLOR_KEY = {
     default: "secondary",
@@ -128,8 +130,9 @@ function SelectSessionPanel({ kioskVm }) {
 
 // Panel lateral junto a la cámara: lista de estudiantes matriculados en la
 // cohorte de esta clase y quiénes ya registraron asistencia (y con qué
-// método). Puramente de lectura — no dispara ninguna captura por sí mismo.
-function RosterPanel({ kioskVm }) {
+// método). Con canCorrectAttendance permite corregir a Tarde y quitar el
+// registro (HU-ATT-003, attendance.record:write).
+function RosterPanel({ kioskVm, canCorrect, onCorrect, onRemove }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
     const c = theme.colors;
@@ -175,6 +178,24 @@ function RosterPanel({ kioskVm }) {
                                         {methodLabel[method] || method || ""}
                                     </Text>
                                 )}
+                                {present && canCorrect && (
+                                    <View style={{ flexDirection: "row", gap: 6 }}>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onPress={() => onCorrect?.(student.academicActorId)}
+                                        >
+                                            {t("Tarde")}
+                                        </Button>
+                                        <Button
+                                            variant="danger"
+                                            size="sm"
+                                            onPress={() => onRemove?.(student.academicActorId)}
+                                        >
+                                            {t("Quitar")}
+                                        </Button>
+                                    </View>
+                                )}
                             </View>
                         );
                     })
@@ -188,6 +209,26 @@ function CapturePanel({ kioskVm }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
     const c = theme.colors;
+    const permissions = useRolePermissions();
+    const canCorrect = permissions.canCorrectAttendance ?? false;
+    const [pending, setPending] = useState(null);
+    const [busy, setBusy] = useState(false);
+
+    async function runPending() {
+        if (!pending) return;
+        setBusy(true);
+        if (pending.kind === "cancel") {
+            await kioskVm.cancelClass().catch((e) => kioskVm.onCaptureError(e.message));
+        } else if (pending.kind === "correct") {
+            const err = await kioskVm.correctRecord?.(pending.actorId, "Late");
+            if (err) kioskVm.onCaptureError(err);
+        } else if (pending.kind === "remove") {
+            const err = await kioskVm.removeRecord?.(pending.actorId);
+            if (err) kioskVm.onCaptureError(err);
+        }
+        setBusy(false);
+        setPending(null);
+    }
 
     // null | "FACE" | "FINGER" — qué captura está corriendo ahora mismo en
     // ESTA pantalla. kioskVm.view nunca distingue esto (ver cabecera del
@@ -534,10 +575,49 @@ function CapturePanel({ kioskVm }) {
                         >
                             {t("Finalizar clase")}
                         </Button>
+                        {permissions.canManageSessions && (
+                            <Button
+                                variant="outline"
+                                style={{ flex: 1 }}
+                                leftIcon={<Feather name="x-circle" size={16} color={c.status.danger} />}
+                                onPress={() => setPending({ kind: "cancel" })}
+                            >
+                                {t("Cancelar clase")}
+                            </Button>
+                        )}
                     </View>
                 </View>
 
-                <RosterPanel kioskVm={kioskVm} />
+                <RosterPanel
+                    kioskVm={kioskVm}
+                    canCorrect={canCorrect}
+                    onCorrect={(actorId) => setPending({ kind: "correct", actorId })}
+                    onRemove={(actorId) => setPending({ kind: "remove", actorId })}
+                />
+                {pending != null && (
+                    <ConfirmModal
+                        visible
+                        onClose={() => (busy ? null : setPending(null))}
+                        onConfirm={runPending}
+                        loading={busy}
+                        variant="danger"
+                        title={
+                            pending?.kind === "cancel"
+                                ? t("Cancelar clase")
+                                : pending?.kind === "correct"
+                                  ? t("Marcar tarde")
+                                  : t("Quitar registro")
+                        }
+                        message={
+                            pending?.kind === "cancel"
+                                ? t("La sesión pasará a Cancelled y no se podrá reabrir. ¿Continuar?")
+                                : pending?.kind === "correct"
+                                  ? t("El registro pasará a Tarde (captura MANUAL). ¿Continuar?")
+                                  : t("Se eliminará el registro de asistencia. ¿Continuar?")
+                        }
+                        confirmText={t("Confirmar")}
+                    />
+                )}
                 </View>
             </ScrollView>
         </View>
