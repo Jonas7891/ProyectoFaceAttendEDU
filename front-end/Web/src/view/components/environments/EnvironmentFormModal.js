@@ -13,6 +13,7 @@ import { useResponsive } from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { EMPTY_ENV_FORM } from "../../../viewmodels/useEnvironmentsViewModel";
 import { academicApi } from "../../../services/api/academicApi";
+import { useAuth } from "../../../context/AuthContext";
 
 // Placeholders rotativos para mostrar variedad de identificadores
 const IDENTIFIER_PLACEHOLDERS = [
@@ -39,6 +40,11 @@ export default function EnvironmentFormModal({
     const { isSmall } = useResponsive();
     const { t } = useTranslation();
     const c = theme.colors;
+    const { user } = useAuth();
+    // Un admin de sede solo administra la suya (schoolId no nulo): no tiene
+    // sentido ofrecerle las demás sedes del sistema en el selector. Solo el
+    // Super Admin (sin sede propia) necesita elegir entre todas.
+    const isScopedToSchool = user?.schoolId != null;
 
     const [form, setForm] = useState(EMPTY_ENV_FORM);
     const [error, setError] = useState(null);
@@ -59,17 +65,22 @@ export default function EnvironmentFormModal({
                 schoolId: environment.schoolId ?? "",
             });
         } else if (visible) {
-            setForm(EMPTY_ENV_FORM);
+            setForm({
+                ...EMPTY_ENV_FORM,
+                // Admin de sede: se asigna la suya de una vez, sin selector.
+                schoolId: isScopedToSchool ? String(user.schoolId) : "",
+            });
         }
         setError(null);
         setSaving(false);
         setSuccess(false);
         setShowErrors(false);
-    }, [visible, mode, environment]);
+    }, [visible, mode, environment, isScopedToSchool, user?.schoolId]);
 
-    // Sedes para el alta (el backend exige school_id).
+    // Sedes para el alta (el backend exige school_id). Solo para Super
+    // Admin: un admin de sede ya trae la suya fijada arriba.
     useEffect(() => {
-        if (!visible || mode !== "register") return;
+        if (!visible || mode !== "register" || isScopedToSchool) return;
         let cancelled = false;
         setSchoolsError(null);
         academicApi.listSchools().then(
@@ -268,7 +279,7 @@ export default function EnvironmentFormModal({
                 hint={form.description.trim() === "" && showErrors ? t("*Se guardará como 'Sin descripción'") : t("Opcional")}
             />
 
-            {mode === "register" && (
+            {mode === "register" && !isScopedToSchool && (
                 <View style={{ marginTop: 2 }}>
                     <Text style={{
                         fontSize: 14,
