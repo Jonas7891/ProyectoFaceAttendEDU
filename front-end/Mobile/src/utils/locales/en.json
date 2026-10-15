@@ -1079,7 +1079,9 @@
     "registerButton": "Register face ({{count}} gestures)",
     "updateButton": "Update face ({{count}} gestures)",
     "updateTitle": "Update face",
-    "cameraReady": "Camera ready. You can now register your face."
+    "cameraReady": "Camera ready. You can now register your face.",
+    "identifying": "Identifying…",
+    "noMatch": "The face was not recognized. Check that the person has a registered face."
   },
   "userDetail": {
     "title": "User details",

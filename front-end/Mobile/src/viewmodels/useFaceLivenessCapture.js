@@ -13,6 +13,8 @@ const FRAME_INTERVAL_MS = 280;
 const GESTURE_ATTEMPTS = 2;
 const MAX_FRAME_WIDTH = 640;
 export const REGISTER_GESTURES = 3;
+// Identificar en clase es repetitivo: 2 gestos bastan para descartar fotos.
+const IDENTIFY_GESTURES = 2;
 
 const ACTION_KEYS = {
     blink: 'faceCapture.blink',
@@ -147,6 +149,28 @@ export function useFaceLivenessCapture() {
         }
     }, [busy, captureLiveness, resetLiveness, setStatus, t]);
 
+    /** Identifica 1:N a quien está frente a la cámara; devuelve { personId, score } o null. */
+    const identifyFace = useCallback(async () => {
+        if (busy) return null;
+        setBusy(true);
+        try {
+            const liveness = await captureLiveness(IDENTIFY_GESTURES);
+            setStatus(t('faceCapture.identifying'));
+            const match = await FaceAuthService.identifyFace({
+                imageBase64: liveness.image,
+                challengeToken: liveness.challengeToken,
+            });
+            return {personId: match.person_id, score: match.score};
+        } catch (error) {
+            // 404 = rostro vivo pero sin coincidencia registrada.
+            setStatus(error?.status === 404 ? t('faceCapture.noMatch') : (error?.message || t('faceCapture.genericError')), 'error');
+            return null;
+        } finally {
+            resetLiveness();
+            setBusy(false);
+        }
+    }, [busy, captureLiveness, resetLiveness, setStatus, t]);
+
     return {
         cameraRef,
         cameraReady,
@@ -159,5 +183,6 @@ export function useFaceLivenessCapture() {
         livenessAction,
         livenessProgress,
         registerFace,
+        identifyFace,
     };
 }

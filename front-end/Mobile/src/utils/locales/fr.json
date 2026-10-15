@@ -1079,7 +1079,9 @@
     "registerButton": "Enregistrer le visage ({{count}} gestes)",
     "updateButton": "Mettre à jour le visage ({{count}} gestes)",
     "updateTitle": "Mettre à jour le visage",
-    "cameraReady": "Caméra prête. Vous pouvez enregistrer votre visage."
+    "cameraReady": "Caméra prête. Vous pouvez enregistrer votre visage.",
+    "identifying": "Identification…",
+    "noMatch": "Visage non reconnu. Vérifiez que la personne a enregistré son visage."
   },
   "userDetail": {
     "title": "Détails de l'utilisateur",

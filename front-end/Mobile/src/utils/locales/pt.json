@@ -1079,7 +1079,9 @@
     "registerButton": "Registrar rosto ({{count}} gestos)",
     "updateButton": "Atualizar rosto ({{count}} gestos)",
     "updateTitle": "Atualizar rosto",
-    "cameraReady": "Câmera pronta. Você já pode registrar seu rosto."
+    "cameraReady": "Câmera pronta. Você já pode registrar seu rosto.",
+    "identifying": "Identificando…",
+    "noMatch": "O rosto não foi reconhecido. Verifique se a pessoa tem o rosto cadastrado."
   },
   "userDetail": {
     "title": "Detalhes do usuário",
