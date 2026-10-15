@@ -675,7 +675,10 @@
     "confirmDiscard": "Tem certeza de que deseja descartar as alterações?",
     "selectCategory": "Selecione uma categoria...",
     "selectType": "Selecione um tipo...",
-    "justificationUpdated": "Tipo de justificativa atualizado."
+    "justificationUpdated": "Tipo de justificativa atualizado.",
+    "newJustificationType": "Novo tipo de justificativa",
+    "editJustificationType": "Editar tipo de justificativa",
+    "updateJustification": "Salvar alterações"
   },
   "justifications": {
     "validList": "Justificativas Válidas",

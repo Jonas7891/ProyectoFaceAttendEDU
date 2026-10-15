@@ -675,7 +675,10 @@
     "approve": "Aprobar",
     "date": "Fecha",
     "reject": "Rechazar",
-    "justificationUpdated": "Tipo de justificación actualizado."
+    "justificationUpdated": "Tipo de justificación actualizado.",
+    "newJustificationType": "Nuevo tipo de justificación",
+    "editJustificationType": "Editar tipo de justificación",
+    "updateJustification": "Guardar cambios"
   },
   "justifications": {
     "validList": "Justificaciones Válidas",

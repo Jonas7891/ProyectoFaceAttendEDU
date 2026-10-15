@@ -243,6 +243,7 @@ export default function AddValidJustificationScreen() {
         // Manejo de errores (asumimos que el ViewModel expone 'error' y 'clearError')
         error,
         clearError,
+        isEditing,
     } = useAddValidJustificationViewModel();
 
     // Mostrar errores automáticamente desde el ViewModel
@@ -312,7 +313,7 @@ export default function AddValidJustificationScreen() {
                             {/* ── Encabezado ───────────────────────────────────────── */}
                             <BackButton onPress={handleBack} />
                             <Text style={[styles.mainTitle, { color: colors.text, marginTop: Platform.OS === "ios" ? 0 : 15 }]}>
-                                {t("justify.title")}
+                                {t(isEditing ? "admin.editJustificationType" : "admin.newJustificationType")}
                             </Text>
 
                             {/* ── Tarjeta de resumen (aparece cuando ambos están seleccionados) ── */}
@@ -517,7 +518,7 @@ export default function AddValidJustificationScreen() {
                                     title={
                                         isSaving
                                             ? t("common.saving")
-                                            : t("admin.saveJustification")
+                                            : t(isEditing ? "admin.updateJustification" : "admin.saveJustification")
                                     }
                                     onPress={handleSaveWithValidation}
                                     disabled={isSaving}

@@ -675,7 +675,10 @@
     "errorCreating": "An error occurred while saving. Please try again.",
     "selectCategory": "Select a category...",
     "selectType": "Select a type...",
-    "justificationUpdated": "Justification type updated."
+    "justificationUpdated": "Justification type updated.",
+    "newJustificationType": "New justification type",
+    "editJustificationType": "Edit justification type",
+    "updateJustification": "Save changes"
   },
   "justifications": {
     "validList": "Valid Justifications",

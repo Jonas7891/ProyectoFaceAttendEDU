@@ -675,7 +675,10 @@
     "errorCreating": "Une erreur s'est produite lors de l'enregistrement. Veuillez réessayer.",
     "selectCategory": "Sélectionnez une catégorie...",
     "selectType": "Sélectionnez un type...",
-    "justificationUpdated": "Type de justificatif mis à jour."
+    "justificationUpdated": "Type de justificatif mis à jour.",
+    "newJustificationType": "Nouveau type de justificatif",
+    "editJustificationType": "Modifier le type de justificatif",
+    "updateJustification": "Enregistrer les modifications"
   },
   "justifications": {
     "validList": "Justifications Valides",
