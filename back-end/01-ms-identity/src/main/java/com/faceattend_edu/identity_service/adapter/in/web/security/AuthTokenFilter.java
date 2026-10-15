@@ -52,14 +52,18 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
     /** Atributo que marca un PUT sobre la propia persona hecho sin identity.person:write. */
     public static final String SELF_EDIT_ATTRIBUTE = "identity.selfEdit";
+    /** Set<UUID> de personas visibles para quien no es administrador (listado de /persons). */
+    public static final String PERSON_SCOPE_ATTRIBUTE = "identity.personScope";
 
     private static final Pattern PERSON_ITEM = Pattern.compile("^/api/v1/persons/([0-9a-fA-F-]{36})$");
+    private static final Pattern USER_ITEM = Pattern.compile("^/api/v1/users/([0-9a-fA-F-]{36})$");
     private static final Pattern USER_SESSIONS = Pattern.compile("^/api/v1/sessions/user/([0-9a-fA-F-]{36})$");
     private static final String WRITE = "identity.person:write";
 
     private final RestTemplate restTemplate;
     // Perezoso: los tests @WebMvcTest cargan el filtro sin la capa de persistencia.
     private final ObjectProvider<LoadUserPort> loadUserPort;
+    private final ObjectProvider<CallerScopeResolver> scopeResolver;
 
     @Value("${faceattend.auth.identity-url:http://localhost:8081}")
     private String identityUrl;
@@ -67,8 +71,9 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     @Value("${faceattend.auth.authorization-url:http://localhost:8082}")
     private String authorizationUrl;
 
-    public AuthTokenFilter(ObjectProvider<LoadUserPort> loadUserPort) {
+    public AuthTokenFilter(ObjectProvider<LoadUserPort> loadUserPort, ObjectProvider<CallerScopeResolver> scopeResolver) {
         this.loadUserPort = loadUserPort;
+        this.scopeResolver = scopeResolver;
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(3000);
         factory.setReadTimeout(5000);
@@ -128,6 +133,11 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             return;
         }
 
+        if (request.getMethod().equalsIgnoreCase("GET") && path.startsWith("/api/v1/persons")
+                && !applyPersonScope(request, response, path, caller, roles, rawToken)) {
+            return;
+        }
+
         request.setAttribute("X-User-Id", caller);
         request.setAttribute("X-User-Roles", roles);
         response.setHeader("X-User-Roles", String.join(",", roles));
@@ -173,9 +183,38 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         if (!method.equalsIgnoreCase("GET")) return WRITE;
         // Listados completos de cuentas y sesiones: solo administración.
         if (path.equals("/api/v1/users") || path.equals("/api/v1/sessions")) return WRITE;
+        // Una cuenta ajena solo la consulta administración.
+        Matcher user = USER_ITEM.matcher(path);
+        if (user.matches() && !user.group(1).equalsIgnoreCase(caller)) return WRITE;
         Matcher own = USER_SESSIONS.matcher(path);
         if (own.matches() && !own.group(1).equalsIgnoreCase(caller)) return WRITE;
         return "identity.person:read";
+    }
+
+    /**
+     * Admin ve todas las personas; el resto solo las de su alcance (CallerScopeResolver).
+     * Devuelve false si ya respondió (403/503).
+     */
+    private boolean applyPersonScope(HttpServletRequest request, HttpServletResponse response, String path,
+                                     String caller, List<String> roles, String rawToken) throws IOException {
+        CallerScopeResolver resolver = scopeResolver.getIfAvailable();
+        if (resolver == null) return true;
+        CallerScopeResolver.Scope scope;
+        try {
+            scope = resolver.resolve(caller, roles, rawToken);
+        } catch (RuntimeException e) {
+            log.warn("AuthTokenFilter: person scope for {} failed: {}", caller, e.getMessage());
+            deny(response, HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Cannot resolve person scope", path);
+            return false;
+        }
+        if (scope.all()) return true;
+        Matcher item = PERSON_ITEM.matcher(path);
+        if (item.matches() && !scope.allows(UUID.fromString(item.group(1)))) {
+            deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: person outside your scope", path);
+            return false;
+        }
+        request.setAttribute(PERSON_SCOPE_ATTRIBUTE, scope.personIds());
+        return true;
     }
 
     private boolean isOwnPerson(String method, String path, String caller) {
@@ -267,7 +306,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         response.setContentType("application/json");
         String safe = message.replace("\"", "'");
         String body = "{\"status\":" + status + ",\"error\":\""
-                + (status == 401 ? "Unauthorized" : "Forbidden") + "\",\"message\":\"" + safe
+                + (status == 401 ? "Unauthorized" : status == 503 ? "Service Unavailable" : "Forbidden") + "\",\"message\":\"" + safe
                 + "\",\"path\":\"" + path.replace("\"", "'") + "\"}";
         response.getWriter().write(body);
     }

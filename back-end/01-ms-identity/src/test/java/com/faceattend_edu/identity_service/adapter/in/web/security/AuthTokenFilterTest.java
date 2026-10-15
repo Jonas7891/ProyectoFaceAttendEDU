@@ -12,7 +12,6 @@ class AuthTokenFilterTest {
     @Test
     void itemReadsNeedPersonRead() {
         assertEquals("identity.person:read", AuthTokenFilter.requiredPermission("GET", "/api/v1/persons/" + OTHER, ME));
-        assertEquals("identity.person:read", AuthTokenFilter.requiredPermission("GET", "/api/v1/users/" + OTHER, ME));
     }
 
     @Test
@@ -36,5 +35,11 @@ class AuthTokenFilterTest {
     @Test
     void changingOwnPasswordNeedsOnlyASession() {
         assertEquals(null, AuthTokenFilter.requiredPermission("POST", "/api/v1/auth/change-password", ME));
+    }
+
+    @Test
+    void anotherAccountIsReadableOnlyByAdmins() {
+        assertEquals("identity.person:write", AuthTokenFilter.requiredPermission("GET", "/api/v1/users/" + OTHER, ME));
+        assertEquals("identity.person:read", AuthTokenFilter.requiredPermission("GET", "/api/v1/users/" + ME, ME));
     }
 }
