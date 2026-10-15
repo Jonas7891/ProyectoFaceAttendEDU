@@ -32,7 +32,8 @@ import java.util.function.Supplier;
  * Valida la sesión contra identity, resuelve roles y evalúa el permiso requerido
  * contra authorization. Propaga X-User-Id / X-User-Roles.
  *
- * <p>Lecturas exigen attendance.record:read (lo tienen los 3 roles); escrituras
+ * <p>Lecturas exigen attendance.record:read (lo tienen los 3 roles); escrituras de
+ * ambientes y bloques exigen academic.school:manage (Administrador); las de sesiones
  * y open/close/cancel exigen scheduling.session:manage (Administrador, Instructor).</p>
  *
  * <p>Duplicado intencional por MS: el repo no tiene módulo compartido.
@@ -105,7 +106,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             return;
         }
 
-        String required = requiredPermission(request.getMethod());
+        String required = requiredPermission(request.getMethod(), path);
         if (required != null && !evaluate(rawToken, caller, required)) {
             deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: requires " + required, path);
             return;
@@ -124,8 +125,12 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         }
     }
 
-    private String requiredPermission(String method) {
+    static String requiredPermission(String method, String path) {
         if (method.equalsIgnoreCase("GET")) return "attendance.record:read";
+        // Ambientes y bloques horarios son infraestructura de la sede: solo Administrador.
+        if (path.startsWith("/api/v1/environments") || path.startsWith("/api/v1/schedule-blocks")) {
+            return "academic.school:manage";
+        }
         return "scheduling.session:manage";
     }
 
