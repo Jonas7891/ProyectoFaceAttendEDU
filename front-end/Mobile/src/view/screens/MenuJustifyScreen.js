@@ -28,7 +28,8 @@ export default function MenuJustifyScreen() {
     handleBack,
     handleAddOrEditJustify,
     handleValidJustifications,
-    handlePendingJustificationScreen
+    handlePendingJustificationScreen,
+    handleJustificationTypes,
   } = useMenuJustifyViewModel();
 
   const Header = ({ title }) => (
@@ -102,6 +103,7 @@ export default function MenuJustifyScreen() {
                       <MenuItem label={t('admin.validJustifications')} onPress={handleValidJustifications} />
                       <MenuItem label={t('admin.pendingJustifications')} onPress={handlePendingJustificationScreen} />
                       <MenuItem label={t('admin.addNewJustification')} onPress={handleAddOrEditJustify}/>
+                      <MenuItem label={t('justifications.typesTitle')} onPress={handleJustificationTypes}/>
                     </>
                 )}
               </View>

@@ -666,7 +666,8 @@
     "justificationCreated": "Justification créée avec succès.",
     "errorCreating": "Une erreur s'est produite lors de l'enregistrement. Veuillez réessayer.",
     "selectCategory": "Sélectionnez une catégorie...",
-    "selectType": "Sélectionnez un type..."
+    "selectType": "Sélectionnez un type...",
+    "justificationUpdated": "Type de justificatif mis à jour."
   },
   "justifications": {
     "validList": "Justifications Valides",
@@ -675,7 +676,11 @@
     "items": "justifications",
     "noJustifications": "Aucune justification enregistrée",
     "noJustificationsDesc": "Les justifications valides apparaîtront ici lorsqu'elles seront ajoutées par l'administrateur",
-    "loadError": "Impossible de charger les justifications"
+    "loadError": "Impossible de charger les justifications",
+    "typesTitle": "Types de justificatif",
+    "deleteTypeTitle": "Supprimer le type",
+    "deleteTypeQuestion": "Supprimer le type « {{name}} » ?",
+    "deleteTypeError": "Impossible de supprimer le type ; il est peut-être déjà utilisé."
   },
   "profile": {
     "personalInfo": "Informations Personnelles",

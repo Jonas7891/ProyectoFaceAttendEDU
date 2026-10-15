@@ -19,6 +19,7 @@ import LanguageSettingsScreen from '../view/screens/LanguageSettingsScreen';
 import AppearanceSettingsScreen from '../view/screens/AppearanceSettingsScreen';
 import AddValidJustificationScreen from '../view/screens/AddValidJustificationScreen';
 import ValidJustificationsScreen from '../view/screens/ConsultJustifyScreen';
+import JustificationTypesScreen from '../view/screens/ValidAllJustifications';
 import ProfileScreen from '../view/screens/ProfileScreen';
 import ManageUsersScreen from '../view/screens/ManageUsersScreen';
 import UserDetailScreen from '../view/screens/UserDetailScreen';
@@ -214,6 +215,7 @@ export default function App() {
                         <Stack.Screen name="MenuJustify" component={MenuJustify}/>
                         {isApprentice && <Stack.Screen name="AddJustification" component={AddJustification}/>}
                         {isAdmin && <Stack.Screen name="AddValidJustification" component={AddValidJustificationScreen}/>}
+                        {isAdmin && <Stack.Screen name="JustificationTypes" component={JustificationTypesScreen}/>}
                         <Stack.Screen name="ValidJustifications" component={ValidJustificationsScreen}/>
                         <Stack.Screen name="Profile">
                             {props => (

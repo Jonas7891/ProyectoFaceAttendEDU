@@ -666,7 +666,8 @@
     "errorCreating": "Erro ao criar justificativa",
     "confirmDiscard": "Tem certeza de que deseja descartar as alterações?",
     "selectCategory": "Selecione uma categoria...",
-    "selectType": "Selecione um tipo..."
+    "selectType": "Selecione um tipo...",
+    "justificationUpdated": "Tipo de justificativa atualizado."
   },
   "justifications": {
     "validList": "Justificativas Válidas",
@@ -675,7 +676,11 @@
     "items": "justificativas",
     "noJustifications": "Nenhuma justificativa registrada",
     "noJustificationsDesc": "Justificativas válidas aparecerão aqui quando adicionadas pelo administrador",
-    "loadError": "Não foi possível carregar as justificativas"
+    "loadError": "Não foi possível carregar as justificativas",
+    "typesTitle": "Tipos de justificativa",
+    "deleteTypeTitle": "Excluir tipo",
+    "deleteTypeQuestion": "Excluir o tipo “{{name}}”?",
+    "deleteTypeError": "Não foi possível excluir o tipo; ele pode já estar em uso."
   },
   "profile": {
     "personalInfo": "Informações Pessoais",

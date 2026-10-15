@@ -49,6 +49,7 @@ export function useMenuJustifyViewModel() {
     const handleBack = useCallback(() => navigation.goBack(), [navigation]);
     const handleValidJustifications = useCallback(() => navigation.navigate('ValidJustifications'), [navigation]);
     const handlePendingJustificationScreen = useCallback(() => navigation.navigate('PendingJustificationScreen'), [navigation]);
+    const handleJustificationTypes = useCallback(() => navigation.navigate('JustificationTypes'), [navigation]);
 
     const handleAddOrEditJustify = useCallback(() => {
         if (!userRole) {
@@ -62,6 +63,6 @@ export function useMenuJustifyViewModel() {
 
     return {
         userRole, pendingCount, updateKey,
-        handleBack, handleAddOrEditJustify, handleValidJustifications, handlePendingJustificationScreen,
+        handleBack, handleAddOrEditJustify, handleValidJustifications, handlePendingJustificationScreen, handleJustificationTypes,
     };
 }

@@ -666,7 +666,8 @@
     "justificationCreated": "Justification created successfully.",
     "errorCreating": "An error occurred while saving. Please try again.",
     "selectCategory": "Select a category...",
-    "selectType": "Select a type..."
+    "selectType": "Select a type...",
+    "justificationUpdated": "Justification type updated."
   },
   "justifications": {
     "validList": "Valid Justifications",
@@ -675,7 +676,11 @@
     "items": "justifications",
     "noJustifications": "No justifications registered",
     "noJustificationsDesc": "Valid justifications will appear here when added by the administrator",
-    "loadError": "Could not load justifications"
+    "loadError": "Could not load justifications",
+    "typesTitle": "Justification types",
+    "deleteTypeTitle": "Delete type",
+    "deleteTypeQuestion": "Delete the type “{{name}}”?",
+    "deleteTypeError": "The type could not be deleted; it may already be in use."
   },
   "profile": {
     "personalInfo": "Personal Information",

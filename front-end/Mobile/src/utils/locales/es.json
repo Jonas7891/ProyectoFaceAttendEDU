@@ -666,7 +666,8 @@
     "selectType": "Selecciona un tipo...",
     "approve": "Aprobar",
     "date": "Fecha",
-    "reject": "Rechazar"
+    "reject": "Rechazar",
+    "justificationUpdated": "Tipo de justificación actualizado."
   },
   "justifications": {
     "validList": "Justificaciones Válidas",
@@ -675,7 +676,11 @@
     "items": "justificaciones",
     "noJustifications": "No hay justificaciones registradas",
     "noJustificationsDesc": "Las justificaciones válidas aparecerán aquí cuando sean agregadas por el administrador",
-    "loadError": "No se pudieron cargar las justificaciones"
+    "loadError": "No se pudieron cargar las justificaciones",
+    "typesTitle": "Tipos de justificación",
+    "deleteTypeTitle": "Eliminar tipo",
+    "deleteTypeQuestion": "¿Eliminar el tipo «{{name}}»?",
+    "deleteTypeError": "No se pudo eliminar el tipo; puede que ya esté en uso."
   },
   "profile": {
     "personalInfo": "Información Personal",
