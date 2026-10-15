@@ -219,7 +219,26 @@
       "usePhoto": "Utiliser la photo",
       "title": "Enregistrement facial",
       "alreadyRegistered": "Vos paramètres faciaux sont déjà enregistrés."
-    }
+    },
+    "loadError": "Impossible de charger vos demandes.",
+    "requestInstructions": "Pour changer votre visage enregistré, envoyez une demande. Une fois approuvée, vous pourrez enregistrer votre nouveau visage.",
+    "latestRequest": "Votre dernière demande",
+    "status": {
+      "pending": "En attente de révision",
+      "inReview": "En cours de révision",
+      "approved": "Approuvée",
+      "rejected": "Refusée"
+    },
+    "reviewNotes": "Observations : {{notes}}",
+    "updateFaceNow": "Enregistrer mon nouveau visage",
+    "newRequest": "Nouvelle demande",
+    "reasonLabel": "Motif du changement",
+    "reasonPlaceholder": "Ex. : changement d’apparence, la reconnaissance échoue souvent…",
+    "reasonTooShort": "Écrivez au moins {{min}} caractères.",
+    "sendRequest": "Envoyer la demande",
+    "requestSentTitle": "Demande envoyée",
+    "requestSentMsg": "Vous verrez le résultat ici après la révision.",
+    "requestError": "Impossible d’envoyer la demande."
   },
   "takePhoto": {
     "title": "Photo pour la reconnaissance faciale initiale",

@@ -13,8 +13,8 @@ import {verifyQuestionnaireAnswers} from '../utils/identityVerification';
 const MAX_ATTEMPTS = 3;
 
 // Flujo: 1) cuestionario con datos personales, verificado contra la persona
-// registrada; 2) solo entonces se pasa a actualizar el rostro (RegisterFace en
-// modo 'update'), opcionalmente indicando antes qué cambió en el rostro.
+// registrada; 2) solo entonces se pasa a solicitar la actualización del rostro
+// (UpdatePhoto): RN-29 exige un caso aprobado antes de re-registrarlo.
 export function useFacialFailViewModel() {
     const navigation = useNavigation();
     const {t} = useTranslation();
@@ -48,7 +48,7 @@ export function useFacialFailViewModel() {
     const locked = attempts >= MAX_ATTEMPTS;
 
     const goToFaceUpdate = useCallback(() => {
-        navigation.navigate('RegisterFace', {mode: 'update'});
+        navigation.navigate('UpdatePhoto');
     }, [navigation]);
 
     // Paso 1: cuestionario

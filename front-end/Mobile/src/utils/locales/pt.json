@@ -219,7 +219,26 @@
       "usePhoto": "Usar foto",
       "title": "Registro Facial",
       "alreadyRegistered": "Seus parâmetros faciais já estão registrados."
-    }
+    },
+    "loadError": "Não foi possível carregar suas solicitações.",
+    "requestInstructions": "Para alterar seu rosto cadastrado, envie uma solicitação. Quando um revisor aprová-la, você poderá cadastrar seu novo rosto.",
+    "latestRequest": "Sua última solicitação",
+    "status": {
+      "pending": "Aguardando revisão",
+      "inReview": "Em revisão",
+      "approved": "Aprovada",
+      "rejected": "Rejeitada"
+    },
+    "reviewNotes": "Observações: {{notes}}",
+    "updateFaceNow": "Cadastrar meu novo rosto",
+    "newRequest": "Nova solicitação",
+    "reasonLabel": "Motivo da alteração",
+    "reasonPlaceholder": "Ex.: mudança de aparência, o reconhecimento falha com frequência…",
+    "reasonTooShort": "Escreva pelo menos {{min}} caracteres.",
+    "sendRequest": "Enviar solicitação",
+    "requestSentTitle": "Solicitação enviada",
+    "requestSentMsg": "Você verá o resultado aqui após a revisão.",
+    "requestError": "Não foi possível enviar a solicitação."
   },
   "takePhoto": {
     "title": "Foto para Reconhecimento Facial Inicial",

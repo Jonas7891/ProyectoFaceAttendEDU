@@ -219,7 +219,26 @@
       "usePhoto": "Use photo",
       "title": "Facial Registration",
       "alreadyRegistered": "Your facial parameters are already registered."
-    }
+    },
+    "loadError": "Your requests could not be loaded.",
+    "requestInstructions": "To change your registered face, send a request. Once a reviewer approves it you can register your new face.",
+    "latestRequest": "Your latest request",
+    "status": {
+      "pending": "Pending review",
+      "inReview": "In review",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "reviewNotes": "Notes: {{notes}}",
+    "updateFaceNow": "Register my new face",
+    "newRequest": "New request",
+    "reasonLabel": "Reason for the change",
+    "reasonPlaceholder": "E.g. change in appearance, recognition often fails…",
+    "reasonTooShort": "Write at least {{min}} characters.",
+    "sendRequest": "Send request",
+    "requestSentTitle": "Request sent",
+    "requestSentMsg": "You will see the result here once it is reviewed.",
+    "requestError": "The request could not be sent."
   },
   "takePhoto": {
     "title": "Photo for Initial Facial Recognition",
