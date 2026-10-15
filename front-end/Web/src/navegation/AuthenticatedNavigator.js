@@ -20,6 +20,8 @@ import { useNavigation } from "@react-navigation/native";
 import DashboardScreen from "../view/screens/DashboardScreen";
 import SchoolsScreen from "../view/screens/SchoolsScreen";
 import UsersScreen from "../view/screens/UsersScreen";
+import RolesScreen from "../view/screens/RolesScreen";
+import AlertsScreen from "../view/screens/AlertsScreen";
 import CoursesScreen from "../view/screens/CoursesScreen";
 import EnvironmentsScreen from "../view/screens/EnvironmentsScreen";
 import ReportsScreen from "../view/screens/ReportsScreen";
@@ -70,6 +72,8 @@ const ROUTE_MAP = {
     "dashboard": "Dashboard",
     "schools": "Schools",
     "users": "Users",
+    "roles": "Roles",
+    "alerts": "Alerts",
     "courses": "Courses",
     "environments": "Environments",
     "reports": "Reports",
@@ -85,6 +89,8 @@ const ROUTE_TO_KEY_MAP = {
     "Dashboard": "dashboard",
     "Schools": "schools",
     "Users": "users",
+    "Roles": "roles",
+    "Alerts": "alerts",
     "Courses": "courses",
     "Environments": "environments",
     "Reports": "reports",
@@ -481,6 +487,12 @@ export default function AuthenticatedNavigator() {
                             </Stack.Screen>
                             <Stack.Screen name="Users">
                                 {(props) => <ScreenWithSidebar><UsersScreen {...props} /></ScreenWithSidebar>}
+                            </Stack.Screen>
+                            <Stack.Screen name="Roles">
+                                {(props) => <ScreenWithSidebar><RolesScreen {...props} /></ScreenWithSidebar>}
+                            </Stack.Screen>
+                            <Stack.Screen name="Alerts">
+                                {(props) => <ScreenWithSidebar><AlertsScreen {...props} /></ScreenWithSidebar>}
                             </Stack.Screen>
                             <Stack.Screen name="Courses">
                                 {(props) => <ScreenWithSidebar><CoursesScreen {...props} /></ScreenWithSidebar>}

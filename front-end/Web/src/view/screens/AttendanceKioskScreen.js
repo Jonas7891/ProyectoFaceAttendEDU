@@ -15,7 +15,9 @@ import { useRolePermissions } from "../../viewmodels/useRolePermissions";
 export default function AttendanceKioskScreen() {
     const permissions = useRolePermissions();
 
-    if (!permissions.canRegisterFace) {
+    // canManageSessions es el permiso canónico (scheduling.session:manage);
+    // se acepta canRegisterFace como fallback por compatibilidad.
+    if (!permissions.canManageSessions && !permissions.canRegisterFace) {
         return <NotAuthorized type={AUTH_EXCEPTION_TYPES.INSUFFICIENT_PERMISSIONS} />;
     }
 
