@@ -85,7 +85,7 @@ function TeacherCourseCard({ course, meta, onPress, onStudentsPress }) {
     }).filter((s) => s);
 
     return (
-        <TouchableOpacity onPress={onPress} style={{ flex: 1, minWidth: 260 }}>
+        <TouchableOpacity onPress={onPress} style={{ flex: 1 }}>
             <Card padding={0} style={{ overflow: "hidden", height: "100%" }}>
                 <View style={{ height: 5, backgroundColor: course.color }} />
                 <View style={{ padding: 16, flex: 1, gap: 8 }}>
@@ -142,7 +142,7 @@ function TeacherCourseCard({ course, meta, onPress, onStudentsPress }) {
 }
 
 export function TeacherCourses({ vm: vmProp }) {
-    const { isSmall } = useResponsive();
+    const { isSmall, isMedium } = useResponsive();
     const { theme } = useTheme();
     const c = theme.colors;
     const vmLocal = useCoursesViewModel();
@@ -231,7 +231,14 @@ export function TeacherCourses({ vm: vmProp }) {
             ) : (
                 <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16 }}>
                     {vm.myFiltered.map((course) => (
-                        <View key={course.id} style={{ flexBasis: isSmall ? "100%" : "30%", flexGrow: 1 }}>
+                        <View
+                            key={course.id}
+                            style={{
+                                flexBasis: isSmall ? "100%" : isMedium ? "48%" : "31%",
+                                flexGrow: 0,
+                                flexShrink: 1,
+                            }}
+                        >
                             <TeacherCourseCard
                                 course={course}
                                 meta={meta}

@@ -444,7 +444,30 @@ export function useDashboardViewModel() {
     // ── Asistencia por curso/ficha (tasas reales por curso) ────
 
     const courseAttendance = useMemo(() => {
-        const source = (courses || [])
+        // Alcance por rol (igual que Mis cursos): el docente solo ve sus
+        // cursos (instructorActorIds), el estudiante los suyos. Sin esto el
+        // panel mostraba todos los cursos como "Mis fichas asignadas".
+        let scoped = courses || [];
+        if (userRole === "teacher") {
+            // Mismo criterio que Mis cursos: sin academicActorId no hay fichas
+            // propias (no se debe listar el curso ajeno).
+            const actorId = user?.academicActorId;
+            scoped = (courses || []).filter(
+                (course) =>
+                    Array.isArray(course.instructorActorIds) &&
+                    actorId != null &&
+                    course.instructorActorIds.includes(actorId)
+            );
+        } else if (userRole === "student" && ownStudent) {
+            const ownCourseIds = new Set((ownStudent.courseIds || []).map(String));
+            scoped = (courses || []).filter((course) =>
+                ownCourseIds.size === 0
+                    ? course.code === ownStudent.course ||
+                      String(course.id) === String(ownStudent.courseId)
+                    : ownCourseIds.has(String(course.id))
+            );
+        }
+        const source = scoped
             .filter((course) => course && (course.avgAttendance || 0) > 0)
             .slice(0, 8);
         return source.map((course) => {
@@ -462,7 +485,7 @@ export function useDashboardViewModel() {
                 barColor,
             };
         });
-    }, [c, courses]);
+    }, [c, courses, userRole, user, ownStudent]);
 
     // ── Datos específicos de ADMIN ────────────────────────────
 

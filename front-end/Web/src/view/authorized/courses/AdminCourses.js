@@ -43,7 +43,7 @@ export function CourseCard({ course, onPress, onStudentsPress }) {
     const barColor = useAttendanceColor(courseAvgAttendance);
 
     return (
-        <TouchableOpacity onPress={onPress} style={{ flex: 1, minWidth: 260 }}>
+        <TouchableOpacity onPress={onPress} style={{ flex: 1 }}>
             <Card padding={0} style={{ overflow: "hidden", height: "100%" }}>
                 <View style={{ height: 5, backgroundColor: course.color }} />
                 <View style={{ padding: 16, flex: 1 }}>
@@ -180,7 +180,7 @@ export function CourseCard({ course, onPress, onStudentsPress }) {
 // ── AdminCourses Component ────────────────────────────────
 
 export function AdminCourses({ vm: vmProp }) {
-    const { isSmall } = useResponsive();
+    const { isSmall, isMedium } = useResponsive();
     const { theme } = useTheme();
     const c = theme.colors;
     const vmLocal = useCoursesViewModel();
@@ -414,7 +414,11 @@ export function AdminCourses({ vm: vmProp }) {
                     {vm.filtered.map((course) => (
                         <View
                             key={course.id}
-                            style={{ flexBasis: isSmall ? "100%" : "30%", flexGrow: 1 }}
+                            style={{
+                                flexBasis: isSmall ? "100%" : isMedium ? "48%" : "31%",
+                                flexGrow: 0,
+                                flexShrink: 1,
+                            }}
                         >
                             <CourseCard
                                 course={course}

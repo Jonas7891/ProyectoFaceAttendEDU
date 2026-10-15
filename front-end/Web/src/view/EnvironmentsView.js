@@ -33,7 +33,7 @@ import {
 // ── EnvironmentsView ─────────────────────────────────────────
 
 export default function EnvironmentsView() {
-    const { isSmall } = useResponsive();
+    const { isSmall, isMedium } = useResponsive();
     const { theme } = useTheme();
     const c = theme.colors;
     const vm = useEnvironmentsViewModel();
@@ -197,7 +197,14 @@ export default function EnvironmentsView() {
                 ) : (
                     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16 }}>
                         {vm.filtered.map((env) => (
-                            <View key={env.id} style={{ flexBasis: isSmall ? "100%" : "30%", flexGrow: 1 }}>
+                            <View
+                                key={env.id}
+                                style={{
+                                    flexBasis: isSmall ? "100%" : isMedium ? "48%" : "31%",
+                                    flexGrow: 0,
+                                    flexShrink: 1,
+                                }}
+                            >
                                 <EnvironmentCard
                                     environment={env}
                                     onPress={() => vm.selectEnvironment(env)}
