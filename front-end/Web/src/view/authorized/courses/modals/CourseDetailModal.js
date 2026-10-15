@@ -12,7 +12,7 @@ import { useTheme } from "../../../components/hooks/useTheme";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { useCourseDetails } from "../../../../core/hooks/useCourseDetails";
 
-export default function CourseDetailModal({ course, onClose, canManage, onEdit }) {
+export default function CourseDetailModal({ course, onClose, canManage, canDeleteCourse, onEdit, onRemove, onToggleStatus }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
     const c = theme.colors;
@@ -44,14 +44,32 @@ export default function CourseDetailModal({ course, onClose, canManage, onEdit }
                     <Button variant="ghost" onPress={onClose}>
                         {t("Cerrar")}
                     </Button>
-                    {canManage && (
+                    {canDeleteCourse && (
                         <Button
-                            variant="primary"
-                            onPress={() => onEdit?.(course)}
-                            leftIcon={<Feather name="edit-3" size={14} color={c.brand.textOnPrimary} />}
+                            variant="danger"
+                            onPress={() => onRemove?.(course)}
                         >
-                            {t("Editar curso")}
+                            {t("Eliminar")}
                         </Button>
+                    )}
+                    {canManage && (
+                        <>
+                            <Button
+                                variant="outline"
+                                onPress={() => onToggleStatus?.(course)}
+                            >
+                                {(course?.status ?? "active") === "active"
+                                    ? t("Desactivar")
+                                    : t("Activar")}
+                            </Button>
+                            <Button
+                                variant="primary"
+                                onPress={() => onEdit?.(course)}
+                                leftIcon={<Feather name="edit-3" size={14} color={c.brand.textOnPrimary} />}
+                            >
+                                {t("Editar curso")}
+                            </Button>
+                        </>
                     )}
                 </React.Fragment>
             }

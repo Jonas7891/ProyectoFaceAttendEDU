@@ -14,7 +14,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { useAuth } from "../context/AuthContext";
-import { createCourse, updateCourse, importCourses as bulkImportCourses } from "../services/api/courseCreation";
+import { createCourse, updateCourse, deleteCourse as deleteCourseApi, importCourses as bulkImportCourses } from "../services/api/courseCreation";
 
 // ── Formulario vacío ───────────────────────────────────────
 
@@ -22,6 +22,7 @@ export const EMPTY_COURSE_FORM = {
     code: "",
     name: "",
     programId: "",
+    creditHours: "",
     schedule: "mañana",
     room: "",
     startDate: "",
@@ -30,11 +31,27 @@ export const EMPTY_COURSE_FORM = {
 
 // ── Validación de formulario ──────────────────────────────
 
+/**
+ * Créditos opcionales (credit_hours SMALLINT 0..32767): null si vacío.
+ */
+export function parseCreditHours(value) {
+    const raw = String(value ?? "").trim();
+    if (raw === "") return null;
+    if (!/^\d+$/.test(raw)) return null;
+    const n = Number(raw);
+    return n <= 32767 ? n : null;
+}
+
 export function validateCourseForm(form) {
     if (!form.code.trim()) return "El código es requerido";
     if (!form.name.trim()) return "El nombre es requerido";
     // El backend exige program_id (FK NOT NULL) para crear el curso.
     if (!String(form.programId ?? "").trim()) return "El programa es requerido";
+    // credit_hours es SMALLINT (0..32767, default 3 en el backend): opcional.
+    const rawCredits = String(form.creditHours ?? "").trim();
+    if (rawCredits !== "" && (!/^\d+$/.test(rawCredits) || Number(rawCredits) > 32767)) {
+        return "Los créditos deben ser un número entre 0 y 32767";
+    }
 
     return null;
 }
@@ -292,13 +309,28 @@ export function useCoursesViewModel() {
     }, [myCourses, search]);
 
     const myStats = useMemo(() => {
-        const totalStudents = myCourses.reduce((a, x) => a + (x.students || 0), 0);
-        const avgAttendance = myCourses.length === 0
-            ? 0
-            : Math.round(myCourses.reduce((a, x) => a + (x.avgAttendance || 0), 0) / myCourses.length);
+        // Estudiantes ÚNICOS en mis cursos: sumar x.students por curso
+        // duplica cuando dos cursos comparten la misma ficha.
+        const mine = new Set(myCourseIds.map(String));
+        const seen = new Set();
+        let attSum = 0;
+        for (const s of appData.students || []) {
+            const ids = Array.isArray(s.courseIds) ? s.courseIds.map(String) : [];
+            const match = ids.length
+                ? ids.some((id) => mine.has(id))
+                : myCourses.some((c) => c.code === s.course || c.name === s.course);
+            if (!match) continue;
+            const key = s.personId ?? s.id;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            attSum += s.attendance || 0;
+        }
+        const totalStudents = seen.size;
+        const avgAttendance =
+            totalStudents === 0 ? 0 : Math.round(attSum / totalStudents);
         const alertCount = myCourses.filter((x) => (x.avgAttendance || 0) < 80).length;
         return { total: myCourses.length, totalStudents, avgAttendance, alertCount };
-    }, [myCourses]);
+    }, [myCourses, myCourseIds, appData.students]);
 
     // ── Estadísticas derivadas ─────────────────────────────────
 
@@ -347,6 +379,7 @@ export function useCoursesViewModel() {
                     programId: form.programId,
                     code: form.code.trim(),
                     name: form.name.trim(),
+                    creditHours: parseCreditHours(form.creditHours),
                 });
             } catch (e) {
                 return e?.message || "No se pudo registrar el curso en el backend";
@@ -374,6 +407,7 @@ export function useCoursesViewModel() {
                     programId: form.programId,
                     code: form.code.trim(),
                     name: form.name.trim(),
+                    creditHours: parseCreditHours(form.creditHours),
                 });
             } catch (e) {
                 return e?.message || "No se pudo editar el curso en el backend";
@@ -384,6 +418,9 @@ export function useCoursesViewModel() {
                 programId: form.programId,
                 code: form.code.trim(),
                 name: form.name.trim(),
+                ...(parseCreditHours(form.creditHours) != null
+                    ? { creditHours: parseCreditHours(form.creditHours) }
+                    : {}),
             });
 
             return null;
@@ -405,6 +442,45 @@ export function useCoursesViewModel() {
             }
         },
         [user]
+    );
+
+    // Eliminar curso (HU-SCH-001, FR 8.1, solo Super Admin en UI).
+    const removeCourse = useCallback(
+        async (course) => {
+            if (course?.id == null) return "Falta el curso a eliminar";
+            try {
+                await deleteCourseApi(course.id);
+            } catch (e) {
+                return e?.message || "No se pudo eliminar el curso en el backend";
+            }
+            await appData.reloadCourses();
+            if (selected?.id === course.id) setSelected(null);
+            if (editingCourse?.id === course.id) setEditingCourse(null);
+            return null;
+        },
+        [appData, selected, editingCourse]
+    );
+
+    // Activar/desactivar curso (actualizar estado).
+    const toggleCourseStatus = useCallback(
+        async (course) => {
+            if (course?.id == null) return "Falta el curso";
+            if (course.programId == null) return "El curso no tiene programa asociado";
+            const nextActive = (course.status ?? "active") !== "active";
+            try {
+                await updateCourse(Number(course.id), {
+                    programId: course.programId,
+                    code: course.code,
+                    name: course.name,
+                    status: nextActive,
+                });
+            } catch (e) {
+                return e?.message || "No se pudo cambiar el estado del curso";
+            }
+            await appData.updateCourse(course.id, { status: nextActive ? "active" : "inactive" });
+            return null;
+        },
+        [appData]
     );
 
     function selectCourse(course) {
@@ -516,6 +592,8 @@ export function useCoursesViewModel() {
         registerCourse,
         editCourse,
         importCourses,
+        removeCourse,
+        toggleCourseStatus,
         
         // Estadísticas (legacy - mantener por compatibilidad)
         totalStudents,

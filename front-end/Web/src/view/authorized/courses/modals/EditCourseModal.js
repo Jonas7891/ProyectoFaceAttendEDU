@@ -36,6 +36,7 @@ export default function EditCourseModal({ course, onClose, onSubmit }) {
             code: course.code ?? "",
             name: course.name ?? "",
             programId: course.programId != null ? String(course.programId) : "",
+            creditHours: course.creditHours ?? course.credit_hours ?? "",
         });
         setError(null);
         setShowErrors(false);
@@ -165,6 +166,17 @@ export default function EditCourseModal({ course, onClose, onSubmit }) {
                         error={isEmpty(form.code)}
                         errorMessage={isEmpty(form.code) ? t("Campo requerido") : ""}
                         leftIcon={<Feather name="hash" size={16} color={c.text.tertiary} />}
+                    />
+                </View>
+                <View style={{ width: isSmall ? "100%" : 120 }}>
+                    <TextInput
+                        label={t("Créditos")}
+                        value={String(form.creditHours ?? "")}
+                        onChangeText={v => setField("creditHours", v.replace(/[^\d]/g, ""))}
+                        placeholder="3"
+                        error={showErrors && String(form.creditHours ?? "").trim() !== "" && (!/^\d+$/.test(String(form.creditHours).trim()) || Number(form.creditHours) > 32767)}
+                        errorMessage={t("0 a 32767")}
+                        leftIcon={<Feather name="award" size={16} color={c.text.tertiary} />}
                     />
                 </View>
             </View>

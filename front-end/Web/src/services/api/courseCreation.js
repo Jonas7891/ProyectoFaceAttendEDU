@@ -71,18 +71,20 @@ export async function createProgram({ schoolId, code, name }) {
  * Crea el curso en el programa indicado.
  * @throws si falta el programa o el backend rechaza el payload.
  */
-export async function createCourse({ programId, code, name }) {
+export async function createCourse({ programId, code, name, creditHours }) {
     if (programId == null || String(programId).trim() === "") {
         throw new Error("A program is required");
     }
     const pid = Number(programId);
     if (!Number.isInteger(pid)) throw new Error("A program is required");
-    const created = await academicApi.createCourse({
+    const body = {
         programId: pid,
         code: String(code).trim(),
         name: String(name).trim(),
         status: true,
-    });
+    };
+    if (creditHours != null) body.creditHours = creditHours;
+    const created = await academicApi.createCourse(body);
     resetReferenceData();
     return created;
 }
@@ -91,20 +93,33 @@ export async function createCourse({ programId, code, name }) {
  * Edita nombre/código/programa de un curso ya existente.
  * @throws si falta el id, el programa o el backend rechaza el payload.
  */
-export async function updateCourse(courseId, { programId, code, name }) {
+export async function updateCourse(courseId, { programId, code, name, status, creditHours }) {
     if (courseId == null) throw new Error("A course is required");
     if (programId == null || String(programId).trim() === "") {
         throw new Error("A program is required");
     }
     const pid = Number(programId);
     if (!Number.isInteger(pid)) throw new Error("A program is required");
-    const updated = await academicApi.updateCourse(courseId, {
+    const body = {
         programId: pid,
         code: String(code).trim(),
         name: String(name).trim(),
-    });
+    };
+    if (status !== undefined) body.status = status;
+    if (creditHours !== undefined && creditHours !== null) body.creditHours = creditHours;
+    const updated = await academicApi.updateCourse(courseId, body);
     resetReferenceData();
     return updated;
+}
+
+/**
+ * Elimina un curso (HU-SCH-001, FR 8.1). Solo Super Admin en UI.
+ * @throws si falta el id o el backend rechaza la operación.
+ */
+export async function deleteCourse(courseId) {
+    if (courseId == null) throw new Error("A course is required");
+    await academicApi.deleteCourse(courseId);
+    resetReferenceData();
 }
 
 function normalizeProgramKey(value) {

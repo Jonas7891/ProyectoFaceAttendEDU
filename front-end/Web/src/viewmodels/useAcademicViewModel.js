@@ -9,12 +9,17 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useAppData } from "../context/AppDataContext";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { academicApi } from "../services/api";
+import { createProgram } from "../services/api/courseCreation";
+import { createPeriod } from "../services/api/fichaCreation";
+import { resetReferenceData } from "../services/api/referenceData";
 import { getActiveSchool, listCohorts, listCourses, listPrograms, optional } from "../services/api/referenceData";
 
 export function useAcademicViewModel() {
     const { user } = useAuth();
+    const appData = useAppData();
     const { t } = useTranslation();
 
     const [isLoading, setIsLoading] = useState(true);
@@ -60,17 +65,188 @@ export function useAcademicViewModel() {
         [programs]
     );
 
+    // El estudiante solo ve la ficha que cursa (no todas las de la sede).
+    const myCohortId =
+        user?.role === "student"
+            ? (appData.students || []).find((s) => s.personId === user.personId)?.cohortId ?? null
+            : null;
+    const visibleCohorts =
+        user?.role === "student" && myCohortId != null
+            ? cohorts.filter((cohort) => Number(cohort.cohortId) === Number(myCohortId))
+            : cohorts;
+
+    // Activar/desactivar + eliminar lógico (HU-ACAD-002/004, FR 2.2).
+    // El backend expone PUT + DELETE; la UI usa ConfirmModal antes de llamar.
+    const toggleProgramStatus = useCallback(
+        async (program) => {
+            const id = program?.programId;
+            if (id == null) return "Falta el programa";
+            const next = !(program.status !== false);
+            try {
+                await academicApi.updateProgram(id, { status: next });
+            } catch (e) {
+                return e?.message || "No se pudo actualizar el programa";
+            }
+            resetReferenceData();
+            setPrograms((prev) => prev.map((p) => (p.programId === id ? { ...p, status: next } : p)));
+            return null;
+        },
+        []
+    );
+
+    const removeProgram = useCallback(async (program) => {
+        const id = program?.programId;
+        if (id == null) return "Falta el programa";
+        try {
+            await academicApi.deleteProgram(id);
+        } catch (e) {
+            return e?.message || "No se pudo eliminar el programa";
+        }
+        resetReferenceData();
+        setPrograms((prev) => prev.filter((p) => p.programId !== id));
+        return null;
+    }, []);
+
+    const togglePeriodStatus = useCallback(async (period) => {
+        const id = period?.academicPeriodId;
+        if (id == null) return "Falta el período";
+        const next = !period.isActive;
+        try {
+            await academicApi.updatePeriod(id, { isActive: next });
+        } catch (e) {
+            return e?.message || "No se pudo actualizar el período";
+        }
+        resetReferenceData();
+        setPeriods((prev) =>
+            prev.map((p) => (p.academicPeriodId === id ? { ...p, isActive: next } : p))
+        );
+        return null;
+    }, []);
+
+    const removePeriod = useCallback(async (period) => {
+        const id = period?.academicPeriodId;
+        if (id == null) return "Falta el período";
+        try {
+            await academicApi.deletePeriod(id);
+        } catch (e) {
+            return e?.message || "No se pudo eliminar el período";
+        }
+        resetReferenceData();
+        setPeriods((prev) => prev.filter((p) => p.academicPeriodId !== id));
+        return null;
+    }, []);
+
+    const toggleCohortStatus = useCallback(async (cohort) => {
+        const id = cohort?.cohortId;
+        if (id == null) return "Falta la ficha";
+        const next = !(cohort.status !== false);
+        try {
+            await academicApi.updateCohort(id, { status: next });
+        } catch (e) {
+            return e?.message || "No se pudo actualizar la ficha";
+        }
+        resetReferenceData();
+        setCohorts((prev) => prev.map((c) => (c.cohortId === id ? { ...c, status: next } : c)));
+        return null;
+    }, []);
+
+    const removeCohort = useCallback(async (cohort) => {
+        const id = cohort?.cohortId;
+        if (id == null) return "Falta la ficha";
+        try {
+            await academicApi.deleteCohort(id);
+        } catch (e) {
+            return e?.message || "No se pudo eliminar la ficha";
+        }
+        resetReferenceData();
+        setCohorts((prev) => prev.filter((c) => c.cohortId !== id));
+        return null;
+    }, []);
+
+    // Crear/editar programa (HU-ACAD-002, FR 2.2). schoolId obligatorio al crear.
+    const saveProgram = useCallback(
+        async ({ programId, code, name }) => {
+            if (!String(code ?? "").trim()) return "El código es requerido";
+            if (!String(name ?? "").trim()) return "El nombre es requerido";
+            try {
+                if (programId == null) {
+                    if (schoolId == null) return "Falta la sede";
+                    await createProgram({
+                        schoolId,
+                        code: String(code).trim(),
+                        name: String(name).trim(),
+                    });
+                } else {
+                    await academicApi.updateProgram(programId, {
+                        code: String(code).trim(),
+                        name: String(name).trim(),
+                    });
+                    resetReferenceData();
+                }
+            } catch (e) {
+                return e?.message || "No se pudo guardar el programa";
+            }
+            await load();
+            return null;
+        },
+        [schoolId, load]
+    );
+
+    // Crear/editar período académico (HU-ACAD-002). chk_period_dates: inicio < fin.
+    const savePeriod = useCallback(
+        async ({ academicPeriodId, name, startsOn, endsOn }) => {
+            if (!String(name ?? "").trim()) return "El nombre es requerido";
+            const from = String(startsOn ?? "").trim();
+            const to = String(endsOn ?? "").trim();
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
+                return "Las fechas deben tener formato AAAA-MM-DD";
+            }
+            if (from >= to) return "El inicio debe ser anterior al fin";
+            try {
+                if (academicPeriodId == null) {
+                    if (schoolId == null) return "Falta la sede";
+                    await createPeriod({
+                        schoolId,
+                        name: String(name).trim(),
+                        startsOn: from,
+                        endsOn: to,
+                    });
+                } else {
+                    await academicApi.updatePeriod(academicPeriodId, {
+                        name: String(name).trim(),
+                        startsOn: from,
+                        endsOn: to,
+                    });
+                    resetReferenceData();
+                }
+            } catch (e) {
+                return e?.message || "No se pudo guardar el período";
+            }
+            await load();
+            return null;
+        },
+        [schoolId, load]
+    );
+
     return {
         isLoading,
         error,
         programs,
         periods,
-        cohorts,
+        cohorts: visibleCohorts,
         courses,
         // false cuando la sesión no tiene sede (super admin): no se le habla
         // de "tu sede" porque no pertenece a ninguna.
         hasSchool: schoolId != null,
         programName,
         refresh: load,
+        toggleProgramStatus,
+        removeProgram,
+        togglePeriodStatus,
+        removePeriod,
+        toggleCohortStatus,
+        removeCohort,
+        saveProgram,
+        savePeriod,
     };
 }

@@ -294,6 +294,17 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
                         style={{ paddingRight: 8 }}
                     />
                 </View>
+                <View style={{ width: isSmall ? "100%" : 120 }}>
+                    <TextInput
+                        label={t("Créditos")}
+                        value={String(form.creditHours ?? "")}
+                        onChangeText={v => setField("creditHours", v.replace(/[^\d]/g, ""))}
+                        placeholder="3"
+                        error={showErrors && String(form.creditHours ?? "").trim() !== "" && (!/^\d+$/.test(String(form.creditHours).trim()) || Number(form.creditHours) > 32767)}
+                        errorMessage={t("0 a 32767")}
+                        leftIcon={<Feather name="award" size={16} color={c.text.tertiary} />}
+                    />
+                </View>
             </View>
 
             {/* Programa (el backend lo exige para crear el curso) */}

@@ -9,11 +9,12 @@
 //  Los modales están en /modals/
 // ============================================================
 
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { Card, Badge, Button, ProgressBar, EmptyState, useAttendanceColor } from "../../components/common";
+import { Card, Badge, Button, ProgressBar, EmptyState, Alert, useAttendanceColor } from "../../components/common";
+import { ConfirmModal } from "../../components/common/modals/ConfirmModal";
 import { Navbar as PageHeader } from "../../components/common/navigation/Navbar";
 import { useTheme } from "../../components/hooks/useTheme";
 import { useResponsive } from "../../components/hooks/useResponsive";
@@ -189,6 +190,38 @@ export function AdminCourses({ vm: vmProp }) {
     const navigation = useNavigation();
 
     const canManage = permissions.canManageCourses;
+    const canDelete = permissions.canDeleteCourse ?? false;
+
+    const [pendingDelete, setPendingDelete] = useState(null);
+    const [pendingToggle, setPendingToggle] = useState(null);
+    const [busy, setBusy] = useState(false);
+    const [actionError, setActionError] = useState(null);
+
+    async function confirmDelete() {
+        if (!pendingDelete) return;
+        setBusy(true);
+        setActionError(null);
+        const err = await vm.removeCourse?.(pendingDelete);
+        setBusy(false);
+        if (err) {
+            setActionError(err);
+            return;
+        }
+        setPendingDelete(null);
+    }
+
+    async function confirmToggle() {
+        if (!pendingToggle) return;
+        setBusy(true);
+        setActionError(null);
+        const err = await vm.toggleCourseStatus?.(pendingToggle);
+        setBusy(false);
+        if (err) {
+            setActionError(err);
+            return;
+        }
+        setPendingToggle(null);
+    }
 
     // Handler para navegar a estudiantes filtrados por curso
     const handleNavigateToStudents = React.useCallback((course) => {
@@ -398,8 +431,37 @@ export function AdminCourses({ vm: vmProp }) {
                 course={vm.selected}
                 onClose={vm.clearSelection}
                 canManage={canManage}
+                canDeleteCourse={canDelete}
                 onEdit={vm.openEditModal}
+                onRemove={(course) => setPendingDelete(course)}
+                onToggleStatus={(course) => setPendingToggle(course)}
             />
+
+            <ConfirmModal
+                visible={pendingDelete != null}
+                onClose={() => (busy ? null : setPendingDelete(null))}
+                onConfirm={confirmDelete}
+                loading={busy}
+                variant="danger"
+                title={t("Eliminar curso")}
+                message={t("Se eliminará el curso. ¿Continuar?")}
+                confirmText={t("Eliminar")}
+            />
+            {pendingToggle != null && (
+                <ConfirmModal
+                    visible
+                    onClose={() => (busy ? null : setPendingToggle(null))}
+                    onConfirm={confirmToggle}
+                    loading={busy}
+                    variant="default"
+                    title={t("Cambiar estado")}
+                    message={t("Se cambiará el estado del curso. ¿Continuar?")}
+                    confirmText={t("Confirmar")}
+                />
+            )}
+            {actionError && (
+                <Alert type="error" message={actionError} />
+            )}
 
             {canManage && (
                 <>
