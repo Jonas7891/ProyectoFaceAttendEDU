@@ -168,7 +168,7 @@ def test_student_reenrollment_needs_an_approved_case(enroll_client, monkeypatch)
     import asyncio
 
     asyncio.run(_enroll_existing(enroll_client.repository))
-    _cases(monkeypatch, [{"status": "Pending"}])
+    _cases(monkeypatch, [{"updateStatus": "Pending"}])
     response = enroll_client.post("/api/v1/biometric/facial/enroll-image", json=ENROLL_BODY, headers=_auth(STUDENT))
     assert response.status_code == 403
 
@@ -177,7 +177,7 @@ def test_student_reenrollment_with_case_approved_after_template_passes(enroll_cl
     import asyncio
 
     asyncio.run(_enroll_existing(enroll_client.repository))
-    _cases(monkeypatch, [{"status": "Approved", "reviewedAt": "2999-01-01T00:00:00Z"}])
+    _cases(monkeypatch, [{"updateStatus": "Approved", "reviewedAt": "2999-01-01T00:00:00Z"}])
     response = enroll_client.post("/api/v1/biometric/facial/enroll-image", json=ENROLL_BODY, headers=_auth(STUDENT))
     assert response.status_code == 400
 
@@ -186,7 +186,7 @@ def test_student_case_approved_before_template_is_spent(enroll_client, monkeypat
     import asyncio
 
     asyncio.run(_enroll_existing(enroll_client.repository))
-    _cases(monkeypatch, [{"status": "Approved", "reviewedAt": "2000-01-01T00:00:00Z"}])
+    _cases(monkeypatch, [{"updateStatus": "Approved", "reviewedAt": "2000-01-01T00:00:00Z"}])
     response = enroll_client.post("/api/v1/biometric/facial/enroll-image", json=ENROLL_BODY, headers=_auth(STUDENT))
     assert response.status_code == 403
 

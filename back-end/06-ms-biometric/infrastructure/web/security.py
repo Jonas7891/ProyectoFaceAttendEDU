@@ -158,7 +158,10 @@ def _as_utc(moment: datetime) -> datetime:
 
 
 def _approved_after(case: object, enrolled_at: datetime | None) -> bool:
-    if not isinstance(case, dict) or case.get("status") != CASE_APPROVED:
+    if not isinstance(case, dict):
+        return False
+    # configuration answers camelCase `updateStatus`; older mirrors used `status`.
+    if (case.get("updateStatus") or case.get("update_status") or case.get("status")) != CASE_APPROVED:
         return False
     if enrolled_at is None:
         return True
