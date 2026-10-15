@@ -43,7 +43,7 @@ func envOr(key, fallback string) string {
 var sessionIDPattern = regexp.MustCompile(`(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 
 // NotificationPermission maps a request to the permission it needs ("" = any
-// valid session). Alerts are readable by every role; creating or deleting them
+// valid session). Alerts are readable by every role, staff resolves them; creating or deleting them
 // and managing alert types is an administrative action.
 func NotificationPermission(method, path string) string {
 	switch {
@@ -52,7 +52,8 @@ func NotificationPermission(method, path string) string {
 	case method == http.MethodGet:
 		return "notification.alert:read"
 	case method == http.MethodPatch && strings.HasSuffix(path, "/resolve"):
-		return "notification.alert:read"
+		// Resolving an alert is follow-up of an absence: staff only (admin, instructor).
+		return "attendance.record:write"
 	default:
 		return "configuration:manage"
 	}

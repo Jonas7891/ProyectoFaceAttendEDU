@@ -92,3 +92,17 @@ func TestAuthMiddlewareIdentityDown(t *testing.T) {
 	cfg.IdentityURL = "http://127.0.0.1:1"
 	assert.Equal(t, http.StatusServiceUnavailable, call(guardedRouter(cfg), http.MethodGet, "/api/v1/alerts", adminSession))
 }
+
+func TestNotificationPermission(t *testing.T) {
+	cases := []struct{ method, path, want string }{
+		{http.MethodGet, "/api/v1/alerts", "notification.alert:read"},
+		{http.MethodPatch, "/api/v1/alerts/5/resolve", "attendance.record:write"},
+		{http.MethodPost, "/api/v1/alert-types", "configuration:manage"},
+		{http.MethodGet, "/api/v1/quality/x", "configuration:manage"},
+	}
+	for _, c := range cases {
+		if got := NotificationPermission(c.method, c.path); got != c.want {
+			t.Errorf("%s %s = %q, want %q", c.method, c.path, got, c.want)
+		}
+	}
+}
