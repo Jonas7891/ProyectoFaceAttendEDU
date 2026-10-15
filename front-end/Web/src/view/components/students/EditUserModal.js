@@ -9,7 +9,7 @@
 
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
-import { Button, BaseModal, TextInput } from "../common";
+import { Button, AnimatedDropdown, BaseModal, TextInput } from "../common";
 import { useTheme } from "../hooks/useTheme";
 import { useResponsive } from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
@@ -20,7 +20,7 @@ const ROLE_TITLES = {
     admin: "Editar administrador",
 };
 
-export default function EditUserModal({ visible, onClose, onSubmit, user }) {
+export default function EditUserModal({ visible, onClose, onSubmit, user, canChangeRole }) {
     const { theme } = useTheme();
     const { isSmall } = useResponsive();
     const { t } = useTranslation();
@@ -39,10 +39,15 @@ export default function EditUserModal({ visible, onClose, onSubmit, user }) {
                 name: parts[0] ?? "",
                 lastName: parts.slice(1).join(" "),
                 documentNumber: user.documentNumber ?? user.document ?? "",
+                documentType: user.documentType ?? "",
+                bloodType: user.bloodType ?? "",
+                birthDate: user.birthDate ? String(user.birthDate).slice(0, 10) : "",
+                address: user.address ?? "",
                 email: user.email ?? "",
                 phone: user.telefono ?? user.phone ?? "",
                 username: user.username ?? "",
                 status: user.status ?? "active",
+                role: user.userType ?? "student",
             });
             setError(null);
             setShowErrors(false);
@@ -144,6 +149,54 @@ export default function EditUserModal({ visible, onClose, onSubmit, user }) {
                 errorMessage={isEmpty(form?.documentNumber) ? t("Campo requerido") : ""}
             />
 
+            <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
+                <View style={{ flex: 1, marginBottom: 2 }}>
+                    <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.secondary, marginBottom: 6 }}>
+                        {t("Tipo de documento")}
+                    </Text>
+                    <AnimatedDropdown
+                        items={["CC", "TI", "CE", "PP"].map((d) => ({ value: d, label: d, icon: "credit-card" }))}
+                        value={form?.documentType ?? ""}
+                        onSelect={v => setField("documentType", v)}
+                        placeholder={t("Seleccionar tipo")}
+                        triggerHeight={48}
+                    />
+                </View>
+                <View style={{ flex: 1, marginBottom: 2 }}>
+                    <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.secondary, marginBottom: 6 }}>
+                        {t("Tipo de sangre")}
+                    </Text>
+                    <AnimatedDropdown
+                        items={["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((b) => ({ value: b, label: b, icon: "droplet" }))}
+                        value={form?.bloodType ?? ""}
+                        onSelect={v => setField("bloodType", v)}
+                        placeholder={t("Seleccionar tipo")}
+                        triggerHeight={48}
+                    />
+                </View>
+            </View>
+
+            <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
+                <View style={{ flex: 1 }}>
+                    <TextInput
+                        label={t("Nacimiento (AAAA-MM-DD)")}
+                        value={form?.birthDate ?? ""}
+                        onChangeText={v => setField("birthDate", v)}
+                        placeholder={t("Ej: 2005-03-14")}
+                        error={showErrors && !!String(form?.birthDate ?? "").trim() && !/^\d{4}-\d{2}-\d{2}$/.test(String(form?.birthDate).trim())}
+                        errorMessage={t("Formato AAAA-MM-DD")}
+                    />
+                </View>
+                <View style={{ flex: 1 }}>
+                    <TextInput
+                        label={t("Dirección")}
+                        value={form?.address ?? ""}
+                        onChangeText={v => setField("address", v)}
+                        placeholder={t("Ej: Calle 10 # 5-20")}
+                    />
+                </View>
+            </View>
+
             <TextInput
                 label={t("Correo electrónico") + " *"}
                 value={form?.email ?? ""}
@@ -175,8 +228,7 @@ export default function EditUserModal({ visible, onClose, onSubmit, user }) {
             <View style={{ marginBottom: 4 }}>
                 <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.secondary, marginBottom: 6 }}>
                     {t("Estado")}
-                </Text>
-                <View style={{ flexDirection: "row", gap: 8 }}>
+                </Text>                <View style={{ flexDirection: "row", gap: 8 }}>
                     {[
                         { value: "active", label: t("Activo") },
                         { value: "inactive", label: t("Inactivo") },
@@ -213,6 +265,52 @@ export default function EditUserModal({ visible, onClose, onSubmit, user }) {
                     ))}
                 </View>
             </View>
+
+            {canChangeRole && (
+                <View style={{ marginBottom: 4, marginTop: 12 }}>
+                    <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.secondary, marginBottom: 6 }}>
+                        {t("Rol (solo Super Admin)")}
+                    </Text>
+                    <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+                        {[
+                            { value: "student", label: t("Estudiante") },
+                            { value: "teacher", label: t("Docente") },
+                            { value: "admin", label: t("Administrador") },
+                            { value: "superadmin", label: t("Super Administrador") },
+                        ].map((s) => (
+                            <TouchableOpacity
+                                key={s.value}
+                                onPress={() => setField("role", s.value)}
+                                style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    paddingVertical: 10,
+                                    paddingHorizontal: 14,
+                                    borderRadius: 14,
+                                    borderWidth: 1.5,
+                                    borderColor: form?.role === s.value
+                                        ? c.brand.primary
+                                        : c.border.primary,
+                                    backgroundColor: form?.role === s.value
+                                        ? c.brand.primaryLight
+                                        : c.background.app,
+                                }}
+                            >
+                                <Text style={{
+                                    fontSize: 13,
+                                    fontWeight: "600",
+                                    color: form?.role === s.value
+                                        ? c.brand.primary
+                                        : c.text.secondary,
+                                }}>
+                                    {s.label}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
+            )}
         </BaseModal>
     );
 }

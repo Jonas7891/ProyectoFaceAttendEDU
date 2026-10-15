@@ -111,6 +111,10 @@ async function usersFromApi() {
             name: fullName(person) || user.username,
             email: person?.email ?? "",
             documentNumber: person?.documentNumber ?? "",
+            documentType: person?.documentType ?? "",
+            bloodType: person?.bloodType ?? "",
+            birthDate: person?.birthDate ? String(person.birthDate).slice(0, 10) : "",
+            address: person?.address ?? "",
             phone: person?.phone ?? "",
             role,
             code: user.username, // no hay "code" en el backend

@@ -158,6 +158,12 @@ async function studentsFromApi() {
                 hasFacial: false,
                 hasFingerprint: false,
                 document: person?.documentNumber ?? "",
+                documentNumber: person?.documentNumber ?? "",
+                documentType: person?.documentType ?? "",
+                bloodType: person?.bloodType ?? "",
+                birthDate: person?.birthDate ? String(person.birthDate).slice(0, 10) : "",
+                address: person?.address ?? "",
+                phone: person?.phone ?? "",
                 ficha: cohort?.code ?? "",
                 personId: actor.personId,
             };

@@ -11,6 +11,11 @@ export const EMPTY_FORM = {
     course: "",
     role: "student",
     documentNumber: "",
+    documentType: "",
+    bloodType: "",
+    birthDate: "",
+    address: "",
+    phone: "",
     password: "",
     schoolId: "",
     cohortId: "",
@@ -29,6 +34,9 @@ export function validateStudentForm(form) {
     // documentNumber, POST /users exige password de 8-100 chars).
     if (!String(form.documentNumber ?? "").trim()) return "Completa todos los campos";
     if (String(form.password ?? "").length < 8) return "La contraseña debe tener al menos 8 caracteres";
+    if (String(form.birthDate ?? "").trim() && !/^\d{4}-\d{2}-\d{2}$/.test(String(form.birthDate).trim())) {
+        return "La fecha de nacimiento debe tener formato AAAA-MM-DD";
+    }
     // El programa/ficha solo aplica a estudiantes (el formulario de
     // docente/administrador ni siquiera lo muestra).
     if (form.role === "student" && !form.course.trim()) return "Completa todos los campos";
@@ -87,6 +95,7 @@ export function useStudentsViewModel() {
                     password: String(form.password ?? ""),
                     courseCode: form.course.trim(),
                     cohortId: String(form.cohortId ?? "").trim() || null,
+                    details: form,
                 });
             } catch (e) {
                 return e?.message || "No se pudo registrar el estudiante en el backend";

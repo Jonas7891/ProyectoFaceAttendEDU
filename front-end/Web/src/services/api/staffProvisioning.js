@@ -20,8 +20,11 @@ import { listBlocks, listCohorts, listCourses, listPrograms, personMap, resetRef
 
 // Nombres de rol aceptados (ES actuales + legados EN): los IDs
 // autoincrementales dependen del seed, nunca se hardcodean.
+// "Super Administrador" queda FUERA a propósito: el alta por UI nunca
+// otorga el rol global (solo se asigna desde la matriz existente o por
+// cambio de rol de un super, HU-IAM-010).
 const ROLE_ALIASES = {
-    admin: new Set(["administrador", "super administrador", "super_admin", "school_admin"]),
+    admin: new Set(["administrador", "school admin"]),
     teacher: new Set(["instructor"]),
     student: new Set(["aprendiz", "student"]),
 };
@@ -54,6 +57,30 @@ function splitName(fullName) {
 function usernameFromEmail(email) {
     const prefix = String(email ?? "").split("@")[0] ?? "";
     return prefix.toLowerCase().trim();
+}
+
+// Dominios cerrados del modelo (AGENTS.md §2.5): solo estos valores
+// viajan al backend; cualquier otro se omite para no violar los CHECK.
+export const DOCUMENT_TYPES = ["CC", "TI", "CE", "PP"];
+export const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+
+/**
+ * Campos opcionales de persona (PersonDto): solo los valores válidos
+ * y no vacíos se incluyen en el cuerpo.
+ */
+export function personDetails(details = {}) {
+    const out = {};
+    const documentType = String(details.documentType ?? "").trim().toUpperCase();
+    if (DOCUMENT_TYPES.includes(documentType)) out.documentType = documentType;
+    const bloodType = String(details.bloodType ?? "").trim().toUpperCase();
+    if (BLOOD_TYPES.includes(bloodType)) out.bloodType = bloodType;
+    const birthDate = String(details.birthDate ?? "").trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) out.birthDate = birthDate;
+    const address = String(details.address ?? "").trim();
+    if (address) out.address = address;
+    const phone = String(details.phone ?? "").trim();
+    if (phone) out.phone = phone;
+    return out;
 }
 
 /**
@@ -157,6 +184,7 @@ export async function provisionStaff({
     password,
     role,
     schoolId = null,
+    details = {},
 }) {
     const { name: firstName, lastName } = splitName(name);
     await assertPersonUnique({ documentNumber, email });
@@ -166,6 +194,7 @@ export async function provisionStaff({
         lastName,
         email: String(email).trim().toLowerCase(),
         status: true,
+        ...personDetails(details),
     });
     const personId = person?.personId ?? person?.person_id ?? null;
     if (!personId) throw new Error("Person creation returned no id");
@@ -246,6 +275,7 @@ export async function provisionStudent({
     password,
     courseCode,
     cohortId = null,
+    details = {},
 }) {
     const cohorts = await cohortsForCourseCode(courseCode);
     if (cohorts.length === 0) {
@@ -269,6 +299,7 @@ export async function provisionStudent({
         lastName,
         email: String(email).trim().toLowerCase(),
         status: true,
+        ...personDetails(details),
     });
     const personId = person?.personId ?? person?.person_id ?? null;
     if (!personId) throw new Error("Person creation returned no id");

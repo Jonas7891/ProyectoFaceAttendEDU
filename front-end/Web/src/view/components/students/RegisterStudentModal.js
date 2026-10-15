@@ -455,6 +455,74 @@ export default function RegisterStudentModal({
                     </View>
                 )}
 
+                {/* Datos adicionales de la persona (opcionales, PersonDto) */}
+                {form.role && (
+                    <View style={{ gap: 0 }}>
+                        <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
+                            <View style={{ flex: 1, marginBottom: 2 }}>
+                                <Text style={{
+                                    fontSize: 14,
+                                    fontWeight: "600",
+                                    color: c.text.secondary,
+                                    marginBottom: 6,
+                                }}>
+                                    {t("Tipo de documento")}
+                                </Text>
+                                <AnimatedDropdown
+                                    items={["CC", "TI", "CE", "PP"].map((d) => ({ value: d, label: d, icon: "credit-card" }))}
+                                    value={form.documentType}
+                                    onSelect={v => setField("documentType", v)}
+                                    placeholder={t("Seleccionar tipo")}
+                                    triggerHeight={48}
+                                />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <TextInput
+                                    label={t("Teléfono")}
+                                    value={form.phone}
+                                    onChangeText={v => setField("phone", v)}
+                                    placeholder={t("Ej: 3001234567")}
+                                />
+                            </View>
+                        </View>
+                        <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
+                            <View style={{ flex: 1, marginBottom: 2 }}>
+                                <Text style={{
+                                    fontSize: 14,
+                                    fontWeight: "600",
+                                    color: c.text.secondary,
+                                    marginBottom: 6,
+                                }}>
+                                    {t("Tipo de sangre")}
+                                </Text>
+                                <AnimatedDropdown
+                                    items={["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((b) => ({ value: b, label: b, icon: "droplet" }))}
+                                    value={form.bloodType}
+                                    onSelect={v => setField("bloodType", v)}
+                                    placeholder={t("Seleccionar tipo")}
+                                    triggerHeight={48}
+                                />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <TextInput
+                                    label={t("Nacimiento (AAAA-MM-DD)")}
+                                    value={form.birthDate}
+                                    onChangeText={v => setField("birthDate", v)}
+                                    placeholder={t("Ej: 2005-03-14")}
+                                    error={showErrors && !!String(form.birthDate ?? "").trim() && !/^\d{4}-\d{2}-\d{2}$/.test(String(form.birthDate).trim())}
+                                    errorMessage={t("Formato AAAA-MM-DD")}
+                                />
+                            </View>
+                        </View>
+                        <TextInput
+                            label={t("Dirección")}
+                            value={form.address}
+                            onChangeText={v => setField("address", v)}
+                            placeholder={t("Ej: Calle 10 # 5-20")}
+                        />
+                    </View>
+                )}
+
                 {/* Sede del docente/administrador (vínculo a sede vía actor) */}
                 {(form.role === "admin" || form.role === "teacher") && (
                     <View style={{ marginBottom: 2 }}>

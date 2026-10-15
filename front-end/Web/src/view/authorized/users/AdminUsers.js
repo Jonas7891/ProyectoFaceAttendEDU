@@ -11,9 +11,10 @@
 //  Los componentes reutilizables están en /sections/
 // ============================================================
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { View, ScrollView, Text } from "react-native";
-import { useAttendanceColor, Button } from "../../components/common";
+import { useAttendanceColor, Button, Alert } from "../../components/common";
+import { ConfirmModal } from "../../components/common/modals/ConfirmModal";
 import { useTheme } from "../../components/hooks/useTheme";
 import { useResponsive } from "../../components/hooks/useResponsive";
 import { useUsersViewModel } from "../../../viewmodels/useUsersViewModel";
@@ -53,6 +54,40 @@ export function AdminUsers({ section, vm: vmProp }) {
     const roleFilter = roleFilterFromSection || roleFilterFromDropdown;
     
     const canManage = permissions.canManageStudents;
+    const canToggleStatus = permissions.canToggleUserStatus ?? canManage;
+    const canDelete = permissions.canDeleteUser ?? false;
+    const canChangeRole = permissions.canChangeUserRole ?? false;
+
+    async function handleEditSubmit(form) {
+        const err = await vm.updateUserDetails(vm.selected, form);
+        if (err) return err;
+        if (canChangeRole && form?.role && form.role !== vm.selected?.userType) {
+            return await vm.changeUserRole(vm.selected, form.role);
+        }
+        return null;
+    }
+
+    // Confirmación de acciones destructivas (HU-IAM-007/008): el modal
+    // de detalle pide la acción, aquí se confirma y ejecuta.
+    const [pending, setPending] = useState(null);
+    const [busy, setBusy] = useState(false);
+    const [actionError, setActionError] = useState(null);
+
+    async function confirmPending() {
+        if (!pending?.user) return;
+        setBusy(true);
+        setActionError(null);
+        const err =
+            pending.type === "delete"
+                ? await vm.removeUser?.(pending.user)
+                : await vm.toggleUserStatus?.(pending.user, pending.nextActive);
+        setBusy(false);
+        if (err) {
+            setActionError(err);
+            return;
+        }
+        setPending(null);
+    }
 
     // Configuración de columnas para el filtro avanzado
     const filterColumns = useMemo(() => [
@@ -178,14 +213,49 @@ export function AdminUsers({ section, vm: vmProp }) {
                 onEdit={vm.openEditModal}
                 canManage={canManage}
                 canRegisterFace={permissions.canRegisterFace}
+                canToggleStatus={canToggleStatus}
+                canDeleteUser={canDelete}
+                onToggleStatus={(u) =>
+                    setPending({
+                        type: "toggle",
+                        user: u,
+                        nextActive: (u?.status ?? "active") !== "active",
+                    })
+                }
+                onRemove={(u) => setPending({ type: "delete", user: u })}
             />
+
+            <ConfirmModal
+                visible={pending != null}
+                onClose={() => (busy ? null : setPending(null))}
+                onConfirm={confirmPending}
+                loading={busy}
+                variant="danger"
+                title={
+                    pending?.type === "delete" ? t("Eliminar usuario") : t("Cambiar estado")
+                }
+                message={
+                    pending?.type === "delete"
+                        ? t("Se desactivará al usuario (borrado lógico, sin DELETE físico). ¿Continuar?")
+                        : pending?.nextActive
+                          ? t("Se activará al usuario. ¿Continuar?")
+                          : t("Se desactivará al usuario. ¿Continuar?")
+                }
+                confirmText={pending?.type === "delete" ? t("Eliminar") : t("Confirmar")}
+            />
+            {actionError && (
+                <View style={{ marginHorizontal: 24, marginBottom: 12 }}>
+                    <Alert type="error" message={actionError} />
+                </View>
+            )}
 
             {canManage && (
                 <EditUserModal
                     visible={vm.showEditModal}
                     onClose={vm.closeEditModal}
-                    onSubmit={(form) => vm.updateUserDetails(vm.selected, form)}
+                    onSubmit={handleEditSubmit}
                     user={vm.selected}
+                    canChangeRole={canChangeRole}
                 />
             )}
 

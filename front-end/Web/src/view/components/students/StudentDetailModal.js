@@ -9,6 +9,7 @@ import { View, Text, ScrollView, TouchableOpacity, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Badge, Avatar, Button, ProgressBar, useAttendanceColor, ATTENDANCE_THRESHOLDS } from "../common";
 import { useTheme }       from "../hooks/useTheme";
+import { useResponsive }  from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../../../context/AppDataContext";
 
@@ -19,8 +20,13 @@ export default function StudentDetailModal({
     onEdit,
     canManage,
     canRegisterFace,
+    canToggleStatus,
+    canDeleteUser,
+    onToggleStatus,
+    onRemove,
 }) {
     const { theme } = useTheme();
+    const { isSmall } = useResponsive();
     const { t }     = useTranslation();
     const c         = theme.colors;
     const { courses } = useAppData();
@@ -60,8 +66,9 @@ export default function StudentDetailModal({
                     <View style={{
                         backgroundColor: c.background.surface,
                         borderRadius: 14,
-                        width: 520,
-                        maxHeight: "90%",
+                        width: isSmall ? "94%" : 680,
+                        minHeight: isSmall ? undefined : 480,
+                        maxHeight: "92%",
                         overflow: "hidden",
                         shadowColor: "#000",
                         shadowOpacity: 0.15,
@@ -83,7 +90,9 @@ export default function StudentDetailModal({
                                     {student.name}
                                 </Text>
                                 <Text style={{ fontSize: 13, color: c.text.secondary, marginTop: 2 }}>
-                                    {student.code}
+                                    {[student.code, student.username && student.username !== student.code ? `@${student.username}` : null]
+                                        .filter(Boolean)
+                                        .join(" · ")}
                                 </Text>
                                 <View style={{ marginTop: 6 }}>
                                     <Badge variant={student.status === "active" ? "success" : "default"}>
@@ -101,21 +110,40 @@ export default function StudentDetailModal({
                             <View style={{ gap: 10, marginBottom: 16 }}>
                                 {[
                                     { label: t("Correo"), value: student.email, icon: "mail" },
+                                    {
+                                        label: t("Documento"),
+                                        value: [student.documentType, student.documentNumber || student.document]
+                                            .filter(Boolean)
+                                            .join(" "),
+                                        icon: "credit-card",
+                                    },
+                                    { label: t("Teléfono"), value: student.phone || student.telefono, icon: "phone" },
+                                    { label: t("Nacimiento"), value: student.birthDate, icon: "calendar" },
+                                    { label: t("Sangre"), value: student.bloodType, icon: "droplet" },
+                                    { label: t("Dirección"), value: student.address, icon: "map-pin" },
+                                    { label: t("Usuario"), value: student.username, icon: "at-sign" },
                                     ...(isStudent
                                         ? [
                                             { label: t("Programa"), value: courseName, icon: "book-open" },
+                                            {
+                                                label: t("Ficha"),
+                                                value: student.ficha || student.cohortId,
+                                                icon: "users",
+                                            },
                                             { label: t("Semestre"), value: student.grade, icon: "trending-up" },
                                         ]
                                         : [{ label: t("Rol"), value: student.grade, icon: "briefcase" }]),
-                                ].map(({ label, value, icon }) => (
-                                    <View key={label} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                                        <Feather name={icon} size={16} color={c.text.secondary} />
-                                        <Text style={{ fontSize: 13, color: c.text.secondary, width: 80 }}>{label}</Text>
-                                        <Text style={{ fontSize: 14, fontWeight: "500", color: c.text.primary, flex: 1 }}>
-                                            {value}
-                                        </Text>
-                                    </View>
-                                ))}
+                                ]
+                                    .filter(({ value }) => value != null && String(value).trim() !== "")
+                                    .map(({ label, value, icon }) => (
+                                        <View key={label} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                                            <Feather name={icon} size={16} color={c.text.secondary} />
+                                            <Text style={{ fontSize: 13, color: c.text.secondary, width: 80 }}>{label}</Text>
+                                            <Text style={{ fontSize: 14, fontWeight: "500", color: c.text.primary, flex: 1 }}>
+                                                {value}
+                                            </Text>
+                                        </View>
+                                    ))}
                             </View>
 
                             {/* Bloque de asistencia — solo estudiantes tienen esta métrica */}
@@ -221,8 +249,29 @@ export default function StudentDetailModal({
                             flexDirection: "row",
                             gap: 10,
                             justifyContent: "flex-end",
+                            flexWrap: "wrap",
                         }}>
                             <Button variant="ghost" onPress={onClose}>{t("Cerrar")}</Button>
+                            {/* Activar/Desactivar (HU-IAM-007) */}
+                            {(canToggleStatus ?? canManage) && (
+                                <Button
+                                    variant="outline"
+                                    onPress={() => onToggleStatus?.(student)}
+                                >
+                                    {(student?.status ?? "active") === "active"
+                                        ? t("Desactivar")
+                                        : t("Activar")}
+                                </Button>
+                            )}
+                            {/* Eliminar lógico (HU-IAM-008, solo Super Admin) */}
+                            {canDeleteUser && (
+                                <Button
+                                    variant="danger"
+                                    onPress={() => onRemove?.(student)}
+                                >
+                                    {t("Eliminar")}
+                                </Button>
+                            )}
                             {/* Editar solo para quienes pueden gestionar */}
                             {canManage && (
                                 <Button

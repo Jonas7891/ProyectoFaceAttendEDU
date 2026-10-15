@@ -20,7 +20,9 @@ import { useAppData } from "../context/AppDataContext";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { authApi } from "../services/api/authApi";
-import { provisionStaff, provisionStudent, cohortsForCourseCode, importStudents as bulkImportStudents } from "../services/api/staffProvisioning";
+import { authorizationApi } from "../services/api/authorizationApi";
+import { provisionStaff, provisionStudent, cohortsForCourseCode, importStudents as bulkImportStudents, personDetails } from "../services/api/staffProvisioning";
+import { userByPersonMap } from "../services/api/referenceData";
 
 // Usuarios pintados por página (la vista de Usuarios pagina en el cliente
 // para no cargar miles de filas de golpe en el DOM).
@@ -34,6 +36,12 @@ export const USER_TYPES = {
     ADMIN: "admin",
     ALL: "all",
 };
+
+function isUuid(value) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        String(value ?? "")
+    );
+}
 
 export const USER_TYPE_LABELS = {
     [USER_TYPES.STUDENT]: "Estudiante",
@@ -51,6 +59,11 @@ export const EMPTY_USER_FORM = {
     course: "",
     role: USER_TYPES.STUDENT,
     documentNumber: "",
+    documentType: "",
+    bloodType: "",
+    birthDate: "",
+    address: "",
+    phone: "",
     password: "",
     schoolId: "",
     cohortId: "",
@@ -137,6 +150,10 @@ export function validateUserForm(form) {
     // documentNumber, POST /users exige password de 8-100 chars).
     if (!String(form.documentNumber ?? "").trim()) return "El documento es requerido";
     if (String(form.password ?? "").length < 8) return "La contraseña debe tener al menos 8 caracteres";
+    // Campos opcionales de persona (PersonDto): formato fecha si se informa.
+    if (String(form.birthDate ?? "").trim() && !/^\d{4}-\d{2}-\d{2}$/.test(String(form.birthDate).trim())) {
+        return "La fecha de nacimiento debe tener formato AAAA-MM-DD";
+    }
 
     // Validación adicional para estudiantes
     if (form.role === USER_TYPES.STUDENT && !form.course.trim()) {
@@ -461,6 +478,7 @@ export function useUsersViewModel(
                         password: String(form.password ?? ""),
                         courseCode: form.course.trim(),
                         cohortId: String(form.cohortId ?? "").trim() || null,
+                        details: form,
                     });
                 } catch (e) {
                     return e?.message || "No se pudo registrar el estudiante en el backend";
@@ -492,6 +510,7 @@ export function useUsersViewModel(
                     password: String(form.password ?? ""),
                     role: form.role === USER_TYPES.TEACHER ? "teacher" : "admin",
                     schoolId: String(form.schoolId ?? "").trim() || user?.schoolId,
+                    details: form,
                 });
             } catch (e) {
                 return e?.message || "No se pudo registrar el usuario en el backend";
@@ -529,11 +548,28 @@ export function useUsersViewModel(
         [appData]
     );
 
+    // OJO: las filas de estudiante traen id = academic_actor_id (numérico),
+    // no el UUID de app_user: el userId real se resuelve por persona.
+    const resolveUserId = useCallback(async (target) => {
+        if (!target?.personId) return null;
+        if (isUuid(target?.id)) return target.id;
+        if (target?.userType && target.userType !== USER_TYPES.STUDENT) return target.id ?? null;
+        try {
+            const byPerson = await userByPersonMap();
+            const linked = byPerson.get(target.personId);
+            return linked?.userId ?? linked?.user_id ?? null;
+        } catch {
+            return null;
+        }
+    }, []);
+
     // Edición real: PUT /persons/{id} + PUT /users/{id} (+ PATCH de
-    // estado si cambió). Sin personId/userId no hay a quién actualizar.
+    // estado si cambió). Resuelve el UUID de app_user igual que el toggle.
     const updateUserDetails = useCallback(
         async (target, form) => {
-            if (!target?.personId || !target?.id) return "Falta el vínculo con el backend";
+            if (!target?.personId) return "Falta el vínculo con el backend";
+            const userId = await resolveUserId(target);
+            if (!userId) return "Falta el vínculo con el backend";
             if (!String(form?.name ?? "").trim() || !String(form?.lastName ?? "").trim()) {
                 return "El nombre y el apellido son requeridos";
             }
@@ -550,12 +586,13 @@ export function useUsersViewModel(
                     lastName: String(form.lastName).trim(),
                     email: String(form.email).trim().toLowerCase(),
                     phone: String(form.phone ?? "").trim() || null,
+                    ...personDetails(form),
                 });
-                await authApi.updateUser(target.id, {
+                await authApi.updateUser(userId, {
                     username: String(form.username).trim(),
                 });
                 if (nextActive !== wasActive) {
-                    await authApi.setUserStatus(target.id, nextActive);
+                    await authApi.setUserStatus(userId, nextActive);
                     await authApi.setPersonStatus(target.personId, nextActive).catch(() => {});
                 }
             } catch (e) {
@@ -583,7 +620,65 @@ export function useUsersViewModel(
             }
             return null;
         },
-        [appData, selected]
+        [appData, selected, resolveUserId]
+    );
+
+    // Cambio de rol (HU-IAM-010, FR 4.6, solo Super Admin en UI):
+    // resuelve los role_id del backend por nombre y mueve al usuario
+    // del rol anterior al nuevo vía 02-ms-authorization. Incluye
+    // "superadmin" para que el rol global sea otorgable sin tocar la DB.
+    const changeUserRole = useCallback(
+        async (target, nextUserType) => {
+            if (!target?.personId) return "Falta el vínculo con el backend";
+            const userId = await resolveUserId(target);
+            if (!userId) return "Falta el vínculo con el backend";
+            if (![USER_TYPES.STUDENT, USER_TYPES.TEACHER, USER_TYPES.ADMIN, "superadmin"].includes(nextUserType)) {
+                return "Rol no válido";
+            }
+            if ((target.userType || USER_TYPES.STUDENT) === nextUserType) return null;
+            const candidates = {
+                [USER_TYPES.STUDENT]: ["APRENDIZ", "STUDENT", "ESTUDIANTE"],
+                [USER_TYPES.TEACHER]: ["INSTRUCTOR", "DOCENTE", "TEACHER"],
+                [USER_TYPES.ADMIN]: ["ADMINISTRADOR", "SCHOOL_ADMIN", "ADMIN", "RECTOR", "COORDINATOR"],
+                superadmin: ["SUPER_ADMINISTRADOR", "SUPER_ADMIN"],
+            };
+            const norm = (v) => String(v ?? "").trim().replace(/\s+/g, "_").toUpperCase();
+            const pickId = (roles, names) => {
+                const list = Array.isArray(roles) ? roles : roles?.data ?? [];
+                for (const want of names) {
+                    const found = list.find((r) => norm(r.roleName ?? r.role_name) === want);
+                    if (found) return found.roleId ?? found.role_id ?? found.id;
+                }
+                return null;
+            };
+            try {
+                const [allRoles, current] = await Promise.all([
+                    authorizationApi.listRoles(),
+                    authorizationApi.userRoles(userId),
+                ]);
+                const currentList = Array.isArray(current) ? current : current?.data ?? [];
+                const prevNames = candidates[target.userType || USER_TYPES.STUDENT];
+                const prev = currentList.find((r) => prevNames.includes(norm(r.roleName ?? r.role_name)));
+                const prevId = prev ? (prev.roleId ?? prev.role_id ?? prev.id) : null;
+                const nextId = pickId(allRoles, candidates[nextUserType]);
+                if (nextId == null) return "El rol no existe en el backend";
+                await authorizationApi.assignRole(userId, nextId);
+                if (prevId != null && prevId !== nextId) {
+                    await authorizationApi.removeRole(userId, prevId).catch(() => {});
+                }
+            } catch (e) {
+                return e?.message || "No se pudo cambiar el rol en el backend";
+            }
+            appData.patchStaff(target.userType || USER_TYPES.STUDENT, target.id, {
+                userType: nextUserType,
+            });
+            if (selected?.id === target.id) {
+                setSelected((prev) => (prev ? { ...prev, userType: nextUserType } : prev));
+            }
+            await appData.reloadUsers().catch(() => {});
+            return null;
+        },
+        [appData, selected, resolveUserId]
     );
 
     function selectUser(user) {
@@ -593,6 +688,47 @@ export function useUsersViewModel(
     function clearSelection() {
         setSelected(null);
     }
+
+    // Activar/desactivar real (HU-IAM-007): PATCH /users/{id}/status +
+    // PATCH /persons/{id}/status. Soft-delete universal: jamás borrado físico.
+    const toggleUserStatus = useCallback(
+        async (target, nextActive) => {
+            const userId = await resolveUserId(target);
+            if (!userId) {
+                return target?.userType === USER_TYPES.STUDENT
+                    ? "El estudiante no tiene usuario vinculado"
+                    : "Falta el vínculo con el backend";
+            }
+            try {
+                await authApi.setUserStatus(userId, nextActive);
+                await authApi.setPersonStatus(target.personId, nextActive).catch(() => {});
+            } catch (e) {
+                return e?.message || "No se pudo cambiar el estado en el backend";
+            }
+            appData.patchStaff(target.userType || USER_TYPES.STUDENT, target.id, {
+                status: nextActive ? "active" : "inactive",
+            });
+            if (selected?.id === target.id) {
+                setSelected((prev) =>
+                    prev ? { ...prev, status: nextActive ? "active" : "inactive" } : prev
+                );
+            }
+            return null;
+        },
+        [appData, selected, resolveUserId]
+    );
+
+    // Eliminar lógico (HU-IAM-008): desactivar (mismo alcance que el toggle).
+    // Sin DELETE físico (AGENTS.md soft-delete).
+    const removeUser = useCallback(
+        async (target) => {
+            const err = await toggleUserStatus(target, false);
+            if (err) return err;
+            if (selected?.id === target?.id) setSelected(null);
+            return null;
+        },
+        [toggleUserStatus, selected]
+    );
 
     // ── Funciones de filtrado avanzado ─────────────────────────
 
@@ -699,6 +835,9 @@ export function useUsersViewModel(
         registerUser,
         importUsers,
         updateUserDetails,
+        toggleUserStatus,
+        removeUser,
+        changeUserRole,
         cohortsForCourse: cohortsForCourseCode,
     };
 }
