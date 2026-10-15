@@ -1,4 +1,5 @@
 import { request, GET, POST, ApiError, onSessionExpired } from '../apiClient';
+import i18n from '../../utils/i18n';
 
 jest.mock('../../storage/TokenStorage', () => ({
   getToken: jest.fn(async () => 'session-token'),
@@ -40,7 +41,11 @@ describe('request — comportamiento existente', () => {
     const off = onSessionExpired(handler);
     global.fetch.mockResolvedValue(respond(401, { message: 'Invalid or expired session' }));
 
-    await expect(request({ method: GET, url: 'api/v1/courses' })).rejects.toThrow('Invalid or expired session');
+    await expect(request({ method: GET, url: 'api/v1/courses' })).rejects.toMatchObject({
+      status: 401,
+      detail: 'Invalid or expired session',
+      message: i18n.t('httpErrors.401'),
+    });
     await expect(request({ method: GET, url: 'api/v1/courses' })).rejects.toBeInstanceOf(ApiError);
 
     expect(handler).toHaveBeenCalledTimes(1);
@@ -52,9 +57,10 @@ describe('request — comportamiento existente', () => {
     const off = onSessionExpired(handler);
     global.fetch.mockResolvedValue(respond(401, { message: 'Credenciales inválidas' }));
 
-    await expect(request({ method: POST, url: 'api/v1/auth/login', data: {}, requiresAuth: false })).rejects.toThrow(
-      'Credenciales inválidas',
-    );
+    await expect(request({ method: POST, url: 'api/v1/auth/login', data: {}, requiresAuth: false })).rejects.toMatchObject({
+      status: 401,
+      detail: 'Credenciales inválidas',
+    });
 
     expect(handler).not.toHaveBeenCalled();
     off();
@@ -69,7 +75,7 @@ describe('request — respuestas del servicio de biometría (FastAPI)', () => {
     const off = onSessionExpired(handler);
     global.fetch.mockResolvedValue(respond(401, { message: 'Invalid or expired session' }));
 
-    await expect(request({ method: POST, url: faceUrl, data: {} })).rejects.toThrow('Invalid or expired session');
+    await expect(request({ method: POST, url: faceUrl, data: {} })).rejects.toMatchObject({ detail: 'Invalid or expired session' });
 
     expect(handler).toHaveBeenCalledTimes(1);
     off();
@@ -107,5 +113,14 @@ describe('request — respuestas del servicio de biometría (FastAPI)', () => {
     );
 
     await expect(request({ method: GET, url: 'api/v1/courses', timeoutMs: 20 })).rejects.toMatchObject({ status: 408 });
+  });
+
+  test('sin conexión responde estado 0 con el mensaje de red traducido', async () => {
+    global.fetch.mockRejectedValue(new TypeError('Network request failed'));
+
+    await expect(request({ method: GET, url: 'api/v1/courses' })).rejects.toMatchObject({
+      status: 0,
+      message: i18n.t('httpErrors.network'),
+    });
   });
 });

@@ -1,15 +1,21 @@
 import { getToken } from '../storage/TokenStorage';
 import ENV from '../config/env';
+import { httpErrorMessage, noSessionMessage, timeoutMessage } from './httpErrors';
 
 const BASE_URL = ENV.API_BASE_URL;
 const TIMEOUT = ENV.API_TIMEOUT;
 
+/**
+ * message: texto traducido para mostrar al usuario (httpErrors.*).
+ * detail: texto técnico del backend, para logs y casos puntuales.
+ */
 class ApiError extends Error {
-  constructor(status, message, data) {
+  constructor(status, message, data, detail = null) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.data = data;
+    this.detail = detail;
   }
 }
 
@@ -22,7 +28,7 @@ async function buildHeaders(requiresAuth) {
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   } else if (requiresAuth) {
-    throw new ApiError(401, 'Sin sesión: inicia sesión de nuevo', null);
+    throw new ApiError(401, noSessionMessage(), null);
   }
 
   return headers;
@@ -59,15 +65,15 @@ function isCredentialFlow(url) {
   return url.includes('/api/v1/auth/');
 }
 
-/** FastAPI devuelve { detail: string | [{loc, msg}] } en lugar de { message }. */
-function readErrorMessage(body, status) {
+/** Texto técnico del backend. FastAPI usa { detail: string | [{loc, msg}] } en lugar de { message }. */
+function readErrorDetail(body) {
   if (body?.message) return body.message;
   const detail = body?.detail;
   if (typeof detail === 'string' && detail) return detail;
   if (Array.isArray(detail) && detail.length) {
-    return detail.map((d) => `${(d?.loc ?? []).join('.') || 'campo'}: ${d?.msg ?? ''}`).join('; ');
+    return detail.map((d) => `${(d?.loc ?? []).join('.') || 'field'}: ${d?.msg ?? ''}`).join('; ');
   }
-  return `Error ${status}`;
+  return null;
 }
 
 function notifySessionExpired() {
@@ -239,7 +245,8 @@ async function performRequest({ method, url, data = null, params = null, require
       if (response.status === 401 && !isCredentialFlow(fullUrl)) {
         notifySessionExpired();
       }
-      throw new ApiError(response.status, readErrorMessage(result, response.status), result);
+      const detail = readErrorDetail(result);
+      throw new ApiError(response.status, httpErrorMessage(response.status, detail), result, detail);
     }
 
     // Respuesta válida: rearma el aviso de sesión caducada para el próximo login.
@@ -249,30 +256,13 @@ async function performRequest({ method, url, data = null, params = null, require
     clearTimeout(timeoutId);
 
     if (error.name === 'AbortError') {
-      throw new ApiError(
-        408,
-        `La petición tardó demasiado (timeout). Verifica que el backend responda en ${BASE_URL}`,
-        null,
-      );
+      throw new ApiError(408, timeoutMessage(), null, `timeout calling ${BASE_URL}`);
     }
     if (error instanceof ApiError) throw error;
 
-    // fetch failed / Network request failed / timed out en iOS (Promise.swift:56):
-    // el gateway Kong (:8080) está caído o el host es inalcanzable desde el
-    // dispositivo. Mensaje accionable en vez del genérico 'fetch failed'.
-    const raw = error.message || 'Error de conexión';
-    const isConnectivity = /fetch failed|network request failed|timed out|timeout|abort|connection refused|failed to connect/i.test(
-      raw,
-    );
-    if (isConnectivity) {
-      throw new ApiError(
-        0,
-        `No se pudo conectar al servidor en ${BASE_URL}. Revisa que el backend (Kong :8080) esté corriendo y que el dispositivo esté en la misma red.`,
-        null,
-      );
-    }
-
-    throw new ApiError(0, raw, null);
+    // fetch failed / Network request failed / timed out en iOS: el gateway
+    // Kong (:8080) está caído o el host es inalcanzable desde el dispositivo.
+    throw new ApiError(0, httpErrorMessage(0), null, `${error.message || 'network error'} (${BASE_URL})`);
   }
 }
 

@@ -253,7 +253,7 @@ describe('FaceAuthService (biometría vía /api/v1/biometric, fusionado en ms-bi
 
     await expect(FaceAuthService.identifyFace({ imageBase64: 'img', challengeToken: 'tok' })).rejects.toMatchObject({
       status: 404,
-      message: 'no match found',
+      detail: 'no match found',
     });
   });
 });
