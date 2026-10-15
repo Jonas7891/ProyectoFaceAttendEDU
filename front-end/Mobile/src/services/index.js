@@ -31,8 +31,6 @@ export { BiometricCaseService } from './BiometricCaseService';
 export { AlertService } from './AlertService';
 export { AlertTypeService } from './AlertTypeService';
 
-export { AuditService } from './AuditService';
-export { ErrorLogService } from './ErrorLogService';
 
 export { QualityService } from './QualityService';
 export { FaceAuthService } from './FaceAuthService';

@@ -130,10 +130,8 @@ function canonicalizePath(path) {
   const [head, ...rest] = clean.split('/');
   const mapped = LEGACY_ENDPOINT_MAP[head];
   if (mapped) return [mapped, ...rest].join('/');
-  // Sin mapeo (blood_type, document_type, language, audit_log,
-  // error_log, attendance_report, user_role sin user_id):
-  // prefijar /api/v1 para que el 404 venga del gateway
-  // y evidencie el faltante de backend.
+  // Sin mapeo (p. ej. user_role sin user_id): prefijar /api/v1 para que
+  // el 404 venga del gateway y evidencie el faltante de backend.
   return `api/v1/${clean}`;
 }
 
