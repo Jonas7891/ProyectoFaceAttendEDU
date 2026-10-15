@@ -46,9 +46,9 @@ Atomic permissions with bounded-context prefix (`context.resource:action`). Assi
 | 11 | `configuration:manage` | Manage configuration |
 | 12 | `notification.alert:read` | View alerts |
 
-**File:** `02-ms-authorization-db/02-dml/002-seed-permission-table.yaml`
+**Files:** `02-ms-authorization-db/02-dml/002-seed-permission-table.yaml` (1–12) + `008-justification-request-permission.yaml` (13)
 
-### Role × permission matrix (enforced by `004-unify-mobile-roles.yaml` and `007-split-super-admin-role.yaml`)
+### Role × permission matrix (enforced by `004-unify-mobile-roles.yaml`, `007-split-super-admin-role.yaml` and `008-justification-request-permission.yaml`)
 
 | Permission | Super Administrador | Administrador | Instructor | Aprendiz |
 |---------|:-------------------:|:-------------:|:----------:|:--------:|
@@ -157,7 +157,7 @@ Alert types with `severity` and `channel` for `AlertsConfigContext` mapping.
 | Domain | Catalog table | Records | Seed file |
 |---------|---------------|:---------:|--------------|
 | Authorization | `role` | 4 | `02-ms-authorization-db/02-dml/001-seed-role-table.yaml` + `004-unify-mobile-roles.yaml` + `007-split-super-admin-role.yaml` |
-| Authorization | `permission` | 12 | `02-ms-authorization-db/02-dml/002-seed-permission-table.yaml` |
+| Authorization | `permission` | 13 | `02-ms-authorization-db/02-dml/002-seed-permission-table.yaml` + `008-justification-request-permission.yaml` |
 | Academic | `academic_actor_type` | 2 | `03-ms-academic-db/02-dml/001-seed-academic-actor-type-table.yaml` |
 | Attendance | `justification_type` | 3 | `05-ms-attendance-db/02-dml/001-seed-justification-type-table.yaml` |
 | Configuration | `security_configuration` | 3 | `07-ms-configuration-db/02-dml/001-seed-security-configuration-table.yaml` |
