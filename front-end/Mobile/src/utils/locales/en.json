@@ -396,7 +396,15 @@
     "title": "News",
     "content": "Imagine you have to use an app to register your attendance with your face. First, the system shows a box on the screen so you know exactly where to put your face. As you adjust, it turns green to let you know you're ready.\n\nIt's important to be in a well-lit place. Once your face looks good, the system asks for a small gesture, like blinking or moving your head a little, to make sure it's not a photo or something fake.\n\nThe best part is that the scan doesn't take long, just about two or three seconds, and immediately a clear message appears on the screen saying whether the attendance was recorded or if there was a problem. Everything is designed to be quick and easy: open the app, press the button to go to the Facial Scan section, position yourself in the box, blink, and within seconds your attendance is saved.",
     "creationDate": "Creation date",
-    "unknownDate": "##/##/####"
+    "unknownDate": "##/##/####",
+    "alertsTitle": "Alerts and news",
+    "alert": "Alert",
+    "loadError": "News could not be loaded. Tap to retry.",
+    "resolveError": "The alert could not be resolved.",
+    "empty": "There is no news for now.",
+    "resolved": "Resolved",
+    "open": "Open",
+    "resolve": "Resolve"
   },
   "history": {
     "title": "History",

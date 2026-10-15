@@ -396,7 +396,15 @@
     "title": "Novidades",
     "content": "Imagine que você precisa usar um aplicativo para registrar sua presença com o rosto. Primeiro, o sistema mostra uma caixa na tela para você saber exatamente onde colocar o rosto. Conforme você se ajusta, fica verde para informar que está pronto.\n\nÉ importante estar em um local bem iluminado. Quando o rosto estiver bem visível, o sistema pede um pequeno gesto, como piscar ou mover levemente a cabeça, para garantir que não é uma foto ou algo falso.\n\nO melhor é que a leitura não demora muito, apenas cerca de dois ou três segundos, e imediatamente aparece uma mensagem clara na tela dizendo se a presença foi registrada ou se houve algum problema. Tudo é projetado para ser rápido e simples: abra o aplicativo, pressione o botão para ir à seção de Escaneamento Facial, posicione-se no quadro, pisque e em poucos segundos sua presença estará registrada.",
     "creationDate": "Data de criação",
-    "unknownDate": "##/##/####"
+    "unknownDate": "##/##/####",
+    "alertsTitle": "Alertas e novidades",
+    "alert": "Alerta",
+    "loadError": "Não foi possível carregar as novidades. Toque para tentar de novo.",
+    "resolveError": "Não foi possível resolver o alerta.",
+    "empty": "Não há novidades no momento.",
+    "resolved": "Resolvido",
+    "open": "Pendente",
+    "resolve": "Resolver"
   },
   "history": {
     "title": "Histórico",

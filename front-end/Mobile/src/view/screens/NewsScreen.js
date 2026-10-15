@@ -1,90 +1,75 @@
 import React from 'react';
-import {Image, Platform, SafeAreaView, Text, View,} from 'react-native';
+import {ActivityIndicator, SafeAreaView, Text, TouchableOpacity, View} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import BottomBar from '../components/common/NavigationBar';
 import ScrollViewWrapper from '../components/common/ScrollView';
 import CustomTabs from '../components/common/CustomTabs';
-import Separador from '../components/common/Separador';
 import styles from './Styles/NewsScreen/Style';
 import {useTheme} from '../components/common/ThemeContext';
 import {useNewsViewModel} from '../../viewmodels/useNewsViewModel';
 
 export default function NewsScreen() {
-    const { t } = useTranslation();
-    const { colors, theme } = useTheme();
+    const {t, i18n} = useTranslation();
+    const {colors} = useTheme();
+    const {userRole, updateKey, alerts, loading, error, resolvingId, canResolve, resolve, reload} = useNewsViewModel();
 
-    const { userRole, updateKey } = useNewsViewModel();
+    const formatDate = (iso) => (iso ? new Date(iso).toLocaleString(i18n.language) : '—');
 
     return (
-        <SafeAreaView
-            style={[
-                styles.safeArea,
-                { backgroundColor: colors.background }
-            ]}
-            key={`${updateKey}`}
-        >
+        <SafeAreaView style={[styles.safeArea, {backgroundColor: colors.background}]} key={`${updateKey}`}>
             <ScrollViewWrapper>
-                <View style={[styles.container, { marginHorizontal: 10 }]}>
-                    <CustomTabs userRole={userRole} />
+                <View style={[styles.container, {marginHorizontal: 10}]}>
+                    <CustomTabs userRole={userRole}/>
 
-                    <View style={{ marginLeft: 25, marginRight: 25 }}>
-                        <Image
-                            source={require('../../assets/images/persona.png')}
-                            style={{
-                                width: '100%',
-                                height: 200,
-                                marginTop: 40,
-                                borderRadius: 10
-                            }}
-                        />
-                    </View>
+                    <Text style={{fontSize: 20, fontWeight: 'bold', marginTop: 24, marginHorizontal: 15, color: colors.text}}>
+                        {t('news.alertsTitle')}
+                    </Text>
 
-                    <View>
-                        <Text
-                            style={{
-                                fontSize: 18,
-                                fontWeight: 'bold',
-                                marginTop: 30,
-                                color: theme === 'dark' ? colors.primary : '#000000'
-                            }}
-                        >
-                            {t('news.title')}
-                        </Text>
+                    {loading ? (
+                        <ActivityIndicator style={{marginTop: 30}} size="large" color={colors.primary}/>
+                    ) : (
+                        <View style={{marginHorizontal: 15, marginTop: 12}}>
+                            {!!error && (
+                                <TouchableOpacity onPress={reload} accessibilityRole="button">
+                                    <Text style={{color: colors.danger, marginBottom: 10}}>{error}</Text>
+                                </TouchableOpacity>
+                            )}
+                            {alerts.length === 0 && !error && (
+                                <Text style={{color: colors.textSecondary, textAlign: 'center', marginTop: 30}}>{t('news.empty')}</Text>
+                            )}
+                            {alerts.map((alert) => (
+                                <View key={alert.id} style={{
+                                    backgroundColor: colors.card, borderRadius: 12, padding: 14, marginBottom: 10,
+                                    borderLeftWidth: 4, borderLeftColor: alert.resolved ? colors.success : colors.warning,
+                                }}>
+                                    <Text style={{color: colors.text, fontWeight: 'bold'}}>{alert.title}</Text>
+                                    {!!alert.person && <Text style={{color: colors.text, marginTop: 4}}>{alert.person}</Text>}
+                                    <Text style={{color: colors.textSecondary, marginTop: 4}}>{formatDate(alert.raisedAt)}</Text>
+                                    <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8}}>
+                                        <Text style={{color: alert.resolved ? colors.success : colors.warning, fontWeight: '600'}}>
+                                            {alert.resolved ? t('news.resolved') : t('news.open')}
+                                        </Text>
+                                        {canResolve && !alert.resolved && (
+                                            resolvingId === alert.id
+                                                ? <ActivityIndicator color={colors.primary}/>
+                                                : (
+                                                    <TouchableOpacity onPress={() => resolve(alert.id)} accessibilityRole="button"
+                                                                      style={{paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, borderColor: colors.primary}}>
+                                                        <Text style={{color: colors.primary}}>{t('news.resolve')}</Text>
+                                                    </TouchableOpacity>
+                                                )
+                                        )}
+                                    </View>
+                                </View>
+                            ))}
+                        </View>
+                    )}
 
-                        <Text
-                            style={{
-                                fontSize: 18,
-                                fontWeight: '300',
-                                marginTop: 15,
-                                color: colors.textSecondary
-                            }}
-                        >
-                            {t('news.creationDate')}: {t('news.unknownDate')}
-                        </Text>
-                    </View>
-
-                    <View style={{ marginTop: 15 }}>
-                        <Separador />
-                    </View>
-
-                    <View style={{ marginHorizontal: Platform.OS === 'android' ? 10 : 0 }}>
-                        <Text
-                            style={{
-                                fontSize: 15,
-                                marginTop: 15,
-                                textAlign: 'justify',
-                                color: colors.text
-                            }}
-                        >
-                            {t('news.content')}
-                        </Text>
-                    </View>
-
-                    <View style={styles.bottomSpace} />
+                    <View style={styles.bottomSpace}/>
                 </View>
             </ScrollViewWrapper>
 
-            <BottomBar />
+            <BottomBar/>
         </SafeAreaView>
     );
 }

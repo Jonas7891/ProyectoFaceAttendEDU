@@ -396,7 +396,15 @@
     "title": "Actualités",
     "content": "Imaginez que vous deviez utiliser une application pour enregistrer votre présence avec votre visage. Le système affiche d'abord un cadre à l'écran pour vous aider à positionner votre visage. Lorsqu'il devient vert, vous êtes prêt.\n\nPlacez-vous dans un endroit bien éclairé. Le système vous demande ensuite un petit geste, comme cligner des yeux ou bouger légèrement la tête, afin de vérifier qu'il ne s'agit pas d'une photo.\n\nLe scan ne dure que deux ou trois secondes. Un message indique si la présence a été enregistrée ou si un problème est survenu. Ouvrez l'application, accédez au scan facial, positionnez-vous dans le cadre, clignez des yeux et votre présence est enregistrée.",
     "creationDate": "Date de création",
-    "unknownDate": "##/##/####"
+    "unknownDate": "##/##/####",
+    "alertsTitle": "Alertes et actualités",
+    "alert": "Alerte",
+    "loadError": "Impossible de charger les actualités. Touchez pour réessayer.",
+    "resolveError": "Impossible de résoudre l’alerte.",
+    "empty": "Aucune actualité pour le moment.",
+    "resolved": "Résolue",
+    "open": "En attente",
+    "resolve": "Résoudre"
   },
   "history": {
     "title": "Historique",
