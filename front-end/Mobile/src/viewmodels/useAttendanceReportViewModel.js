@@ -6,7 +6,6 @@ import {request, GET} from '../api/apiClient';
 import {backendGet} from '../api/backend';
 import ENV from '../config/env';
 import {getCurrentUserRole} from '../services/UserService';
-import {getInstructorScope} from '../services/teachingScope';
 
 const SUMMARY_MAX_IDS = 300; // tope de /attendance-records/summary
 
@@ -41,15 +40,15 @@ export function useAttendanceReportViewModel() {
                 // Conteos agregados en SQL vía /summary: descargar la tabla
                 // entera y enriquecer actor por actor no terminaba nunca en el
                 // dispositivo con volumen real.
-                // El instructor solo ve a los aprendices de sus fichas; el
-                // administrador, a toda la institución (aprendices e instructores).
+                // El administrador ve toda la institución (aprendices e
+                // instructores); el instructor, solo los aprendices que /summary
+                // le devuelve (05-attendance acota por sus fichas).
                 const isAdmin = (await getCurrentUserRole()) === 'Administrador';
                 setCanSeeTeachers(isAdmin);
-                const scope = isAdmin ? null : await getInstructorScope();
                 const actorsRaw = (await backendGet(ENV.ACADEMIC_BASE_URL, 'api/v1/academic-actors', { limit: 2000 }, { useCache: true })) ?? [];
-                const actors = (Array.isArray(actorsRaw) ? actorsRaw : [])
+                let actors = (Array.isArray(actorsRaw) ? actorsRaw : [])
                     .filter((a) => a.academic_actor_id != null)
-                    .filter((a) => !scope || (a.actor_type_id === 1 && scope.actorIds.has(String(a.academic_actor_id))));
+                    .filter((a) => isAdmin || a.actor_type_id === 1);
                 const ids = actors.map((a) => a.academic_actor_id);
                 const summary = {};
                 for (let i = 0; i < ids.length; i += SUMMARY_MAX_IDS) {
@@ -62,6 +61,8 @@ export function useAttendanceReportViewModel() {
                         }));
                     } catch {}
                 }
+
+                if (!isAdmin) actors = actors.filter((a) => summary[String(a.academic_actor_id)]);
 
                 const perActor = actors.map((actor) => {
                     const s = (summary && summary[String(actor.academic_actor_id)]) || {};

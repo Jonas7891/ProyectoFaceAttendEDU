@@ -25,7 +25,7 @@ export function useNewsViewModel() {
             const role = await getCurrentUserRole();
             setUserRole(role);
             if (role) await loadThemeForRole(role);
-            const scoped = await loadScopedAlerts(role);
+            const scoped = await loadScopedAlerts();
             setAlerts(scoped.map((a) => ({...a, title: a.title || t('news.alert')})));
         } catch (e) {
             console.error('Error cargando novedades:', e);

@@ -2,7 +2,6 @@ import {useCallback, useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {getCurrentUserRole, getCurrentUser} from '../services/UserService';
 import {ActorService} from '../services/ActorService';
-import {getInstructorScope} from '../services/teachingScope';
 import {normalizeBackendRole} from '../utils/getHighestRole';
 import {JustificationService, getJustificationTypeMap, getAcademicActorMap, getAttendanceRecordCached, getPersonCached, mapConcurrent} from '../services/JustificationService';
 
@@ -79,7 +78,6 @@ export const usePendingJustificationViewModel = () => {
                 return;
             }
             let records;
-            let scope = null;
             if (normalizedRole === USER_ROLE.STUDENT) {
                 const user = await getCurrentUser();
                 const actors = await ActorService.getByPerson(user?.personId);
@@ -96,13 +94,12 @@ export const usePendingJustificationViewModel = () => {
                 // Para teachers: solo Pending + Approved, pedidas en paralelo.
                 // Antes se descargaba TODO (getAll) y se filtraba en el
                 // dispositivo, lo que colgaba la pantalla con volumen.
-                const [pending, approved, teaching] = await Promise.all([
+                // El servicio ya devuelve solo las de los aprendices de sus fichas.
+                const [pending, approved] = await Promise.all([
                     JustificationService.getByStatus('Pending'),
                     JustificationService.getByStatus('Approved'),
-                    getInstructorScope(),
                 ]);
                 records = [...pending, ...approved];
-                scope = teaching;
             } else {
                 // ADMIN: traer todas
                 records = await JustificationService.getAll();
@@ -130,7 +127,6 @@ export const usePendingJustificationViewModel = () => {
 
                 return {
                     id: String(jd.justification_id),
-                    sessionId: String(ar?.class_session_id),
                     role: actor.actor_type_id === 1 ? USER_ROLE.STUDENT : USER_ROLE.TEACHER,
                     userName: `${person?.name || ''} ${person?.last_name || ''}`.trim(),
                     userCode: actor.actor_code || '—',
@@ -145,8 +141,7 @@ export const usePendingJustificationViewModel = () => {
                 };
             });
 
-            // El instructor solo revisa justificaciones de las sesiones que dicta.
-            setJustifications(scope ? enriched.filter((j) => scope.sessionIds.has(j.sessionId)) : enriched);
+            setJustifications(enriched);
         } catch (error) {
             console.error('Error fetching justifications:', error);
             setJustifications([]);

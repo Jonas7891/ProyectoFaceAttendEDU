@@ -66,9 +66,9 @@ async function getCourseNameForRecord(record) {
 
 // Últimas alertas con el mismo alcance por rol que Novedades (antes cualquier
 // rol veía las de toda la institución con nombres).
-async function fetchRecentNovedades(t, role) {
+async function fetchRecentNovedades(t) {
   try {
-    return (await loadScopedAlerts(role)).slice(0, 5).map((a) => ({
+    return (await loadScopedAlerts()).slice(0, 5).map((a) => ({
       id: a.id,
       titulo: a.title,
       descripcion: a.person,
@@ -303,7 +303,7 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                 }
 
                 try {
-                    setNovedades(await fetchRecentNovedades(t, userRole));
+                    setNovedades(await fetchRecentNovedades(t));
                 } catch (sectionError) {
                     console.error('Error fetching dashboard news section:', sectionError);
                 }
