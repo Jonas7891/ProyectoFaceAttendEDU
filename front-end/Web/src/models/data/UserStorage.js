@@ -110,6 +110,8 @@ async function usersFromApi() {
             id: user.userId,
             name: fullName(person) || user.username,
             email: person?.email ?? "",
+            documentNumber: person?.documentNumber ?? "",
+            phone: person?.phone ?? "",
             role,
             code: user.username, // no hay "code" en el backend
             department: null, // no expuesto por el backend

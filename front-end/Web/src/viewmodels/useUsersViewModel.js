@@ -20,7 +20,7 @@ import { useAppData } from "../context/AppDataContext";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { authApi } from "../services/api/authApi";
-import { provisionStaff, provisionStudent, cohortsForCourseCode } from "../services/api/staffProvisioning";
+import { provisionStaff, provisionStudent, cohortsForCourseCode, importStudents as bulkImportStudents } from "../services/api/staffProvisioning";
 
 // Usuarios pintados por página (la vista de Usuarios pagina en el cliente
 // para no cargar miles de filas de golpe en el DOM).
@@ -497,14 +497,11 @@ export function useUsersViewModel(
                 return e?.message || "No se pudo registrar el usuario en el backend";
             }
 
-            // Espejo local para que la fila aparezca sin recargar.
-            await appData.addUser({
-                name: form.name.trim(),
-                code: form.code.trim(),
-                email: form.email.trim(),
-                role: form.role,
-                status: form.status,
-            });
+            // Se trae la lista real del backend en vez de fabricar una fila
+            // local: un espejo local con el "código" del formulario (que no
+            // es el username real, ver provisionStaff) quedaba como fila
+            // duplicada para siempre frente a la que luego trae loadUsers().
+            await appData.reloadUsers();
 
             return null;
         },
@@ -515,7 +512,15 @@ export function useUsersViewModel(
         async (drafts, userType = USER_TYPES.STUDENT) => {
             // Delegar al método correspondiente según el tipo
             if (userType === USER_TYPES.STUDENT) {
-                return appData.importStudents(drafts);
+                // Alta real en el backend por fila (persona + actor + matrícula +
+                // usuario + rol). Antes esto solo guardaba filas falsas en
+                // AsyncStorage (appData.importStudents): "importación exitosa"
+                // sin crear nada en el backend.
+                const result = await bulkImportStudents(drafts);
+                // Refleja en la UI lo que sí se creó de verdad (sin esto los
+                // estudiantes importados no aparecían hasta recargar la página).
+                if (result.success > 0) await appData.reloadStudents?.();
+                return result;
             }
             // Sin CSV con documento/contraseña no hay alta masiva de
             // docentes/administradores: error explícito, nunca éxito falso.

@@ -314,7 +314,7 @@ export default function RegisterStudentModal({
             icon: "shield",
             buttonLabel: t("Registrar administrador"),
             successMessage: t("Administrador registrado correctamente"),
-            codeLabel: t("Código de usuario"),
+            codeLabel: t("Código de administrador"),
             codePlaceholder: t("Ej: ADMIN001"),
             programLabel: t("Área"),
             programPlaceholder: t("Ej: Administración General"),

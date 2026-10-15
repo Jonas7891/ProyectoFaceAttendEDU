@@ -16,7 +16,7 @@
 import { authApi } from "./authApi";
 import { academicApi } from "./academicApi";
 import { authorizationApi } from "./authorizationApi";
-import { listBlocks, listCohorts, listCourses, listPrograms, personMap } from "./referenceData";
+import { listBlocks, listCohorts, listCourses, listPrograms, personMap, resetReferenceData } from "./referenceData";
 
 // Nombres de rol aceptados (ES actuales + legados EN): los IDs
 // autoincrementales dependen del seed, nunca se hardcodean.
@@ -187,9 +187,10 @@ export async function provisionStaff({
             actorId = actor?.academicActorId ?? actor?.academic_actor_id ?? null;
         }
 
+        const requestedUsername = usernameFromEmail(email);
         const user = await authApi.createUser({
             personId,
-            username: usernameFromEmail(email),
+            username: requestedUsername,
             password,
             authenticationType: "Local",
         });
@@ -202,7 +203,16 @@ export async function provisionStaff({
             await authorizationApi.assignRole(userId, roleId);
         }
 
-        return { personId, userId };
+        // listActors()/personMap()/userByPersonMap() de referenceData.js se
+        // memorizan por sesión: sin esto, loadUsers() seguiría devolviendo
+        // la lista de antes de crear esta persona.
+        resetReferenceData();
+
+        // El username real es el que confirma el backend, no el campo "código"
+        // del formulario (que nunca se envía como username): el espejo local
+        // debe usar este valor o la fila queda duplicada frente a la que
+        // trae el siguiente loadUsers().
+        return { personId, userId, username: user?.username ?? requestedUsername };
     } catch (err) {
         try {
             if (actorId != null) await academicApi.deleteActor(actorId);
@@ -300,6 +310,7 @@ export async function provisionStudent({
             await authorizationApi.assignRole(userId, roleId);
         }
 
+        resetReferenceData();
         return { personId, userId, actorId, cohortId: target.cohortId };
     } catch (err) {
         try {
@@ -313,4 +324,47 @@ export async function provisionStudent({
         } catch {}
         throw err;
     }
+}
+
+// Contraseña temporal para altas masivas: la plantilla CSV no trae una
+// columna de contraseña (no tiene sentido pedirle a un admin que escriba
+// contraseñas en texto plano en un archivo), así que todos los estudiantes
+// importados quedan con esta y deben cambiarla al ingresar.
+const BULK_IMPORT_DEFAULT_PASSWORD = "Estudiante123!";
+
+/**
+ * Importación masiva de estudiantes: un provisionStudent() por fila, sin
+ * detenerse ante fallos individuales (igual que importCourses en
+ * courseCreation.js). La plantilla no trae documentNumber/password, así
+ * que se usan valores por defecto salvo que la fila los traiga.
+ * @returns {{ success: number, errors: Array<{ student: string, reason: string }> }}
+ */
+export async function importStudents(drafts) {
+    let success = 0;
+    const errors = [];
+    for (const draft of drafts ?? []) {
+        const name = String(draft?.name ?? "").trim();
+        const code = String(draft?.code ?? "").trim();
+        const email = String(draft?.email ?? "").trim();
+        const course = String(draft?.course ?? "").trim();
+        const label = name || code || email || "Estudiante desconocido";
+        if (!name || !code || !email || !course) {
+            errors.push({ student: label, reason: "Nombre, código, correo y curso son requeridos" });
+            continue;
+        }
+        try {
+            await provisionStudent({
+                name,
+                code,
+                email,
+                documentNumber: String(draft?.documentNumber ?? code).trim(),
+                password: String(draft?.password ?? BULK_IMPORT_DEFAULT_PASSWORD).trim(),
+                courseCode: course,
+            });
+            success += 1;
+        } catch (e) {
+            errors.push({ student: label, reason: e?.message || "El backend rechazó el estudiante" });
+        }
+    }
+    return { success, errors };
 }

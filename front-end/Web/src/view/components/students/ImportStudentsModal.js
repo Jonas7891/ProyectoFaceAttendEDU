@@ -181,19 +181,19 @@ export default function ImportStudentsModal({
     const { t }       = useTranslation();
     const c           = theme.colors;
 
-    const [step,        setStep]        = useState("idle");
-    const [fileName,    setFileName]    = useState(null);
-    const [preview,     setPreview]     = useState([]);
-    const [parseErrors, setParseErrors] = useState(0);
-    const [imported,    setImported]    = useState(0);
-    const [errorMsg,    setErrorMsg]    = useState(null);
+    const [step,         setStep]         = useState("idle");
+    const [fileName,     setFileName]     = useState(null);
+    const [preview,      setPreview]      = useState([]);
+    const [parseErrors,  setParseErrors]  = useState(0);
+    const [importResult, setImportResult] = useState({ success: 0, errors: [] });
+    const [errorMsg,     setErrorMsg]     = useState(null);
 
     const handleClose = () => {
         setStep("idle");
         setFileName(null);
         setPreview([]);
         setParseErrors(0);
-        setImported(0);
+        setImportResult({ success: 0, errors: [] });
         setErrorMsg(null);
         onClose();
     };
@@ -217,8 +217,10 @@ export default function ImportStudentsModal({
     const handleImport = async () => {
         setStep("importing");
         try {
-            const count = await onImport(preview);
-            setImported(count);
+            // onImport ahora devuelve { success, errors } (alta real en el
+            // backend, fila por fila): un fallo individual no detiene el resto.
+            const result = await onImport(preview);
+            setImportResult(result ?? { success: 0, errors: [] });
             setStep("done");
         } catch {
             setErrorMsg(t("Error al importar los estudiantes"));
@@ -487,23 +489,67 @@ export default function ImportStudentsModal({
 
                         {/* ── STEP: done ── */}
                         {step === "done" && (
-                            <View style={{ alignItems: "center", padding: 24, gap: 14 }}>
-                                <View style={{
-                                    width: 64,
-                                    height: 64,
-                                    borderRadius: 14,
-                                    backgroundColor: c.status.successLight,
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}>
-                                    <Feather name="check-circle" size={32} color={c.status.success} />
+                            <View style={{ gap: 14 }}>
+                                <View style={{ alignItems: "center", padding: 24, gap: 14 }}>
+                                    <View style={{
+                                        width: 64,
+                                        height: 64,
+                                        borderRadius: 14,
+                                        backgroundColor: importResult.errors.length > 0
+                                            ? c.status.errorLight || c.status.error + "20"
+                                            : c.status.successLight,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                    }}>
+                                        <Feather
+                                            name={importResult.errors.length > 0 ? "alert-circle" : "check-circle"}
+                                            size={32}
+                                            color={importResult.errors.length > 0 ? c.status.error : c.status.success}
+                                        />
+                                    </View>
+                                    <Text style={{ fontSize: 16, fontWeight: "700", color: c.text.primary }}>
+                                        {importResult.errors.length > 0
+                                            ? t("Importación completada con errores")
+                                            : t("¡Importación exitosa!")}
+                                    </Text>
+                                    <Text style={{ fontSize: 14, color: c.text.secondary, textAlign: "center" }}>
+                                        {importResult.success} {t("estudiantes agregados al sistema")}
+                                    </Text>
+                                    {importResult.success > 0 && (
+                                        <Text style={{ fontSize: 12, color: c.text.tertiary, textAlign: "center" }}>
+                                            {t("Contraseña temporal para todos")}: Estudiante123!
+                                        </Text>
+                                    )}
                                 </View>
-                                <Text style={{ fontSize: 16, fontWeight: "700", color: c.text.primary }}>
-                                    {t("¡Importación exitosa!")}
-                                </Text>
-                                <Text style={{ fontSize: 14, color: c.text.secondary, textAlign: "center" }}>
-                                    {imported} {t("estudiantes agregados al sistema")}
-                                </Text>
+
+                                {importResult.errors.length > 0 && (
+                                    <View>
+                                        <Text style={{ fontSize: 13, fontWeight: "600", color: c.text.primary, marginBottom: 8 }}>
+                                            {t("Estudiantes con errores")}:
+                                        </Text>
+                                        <View style={{ gap: 8 }}>
+                                            {importResult.errors.map((err, i) => (
+                                                <View
+                                                    key={i}
+                                                    style={{
+                                                        backgroundColor: c.background.app,
+                                                        borderLeftWidth: 3,
+                                                        borderLeftColor: c.status.error,
+                                                        borderRadius: 8,
+                                                        padding: 10,
+                                                    }}
+                                                >
+                                                    <Text style={{ fontSize: 13, fontWeight: "600", color: c.text.primary }}>
+                                                        {err.student}
+                                                    </Text>
+                                                    <Text style={{ fontSize: 12, color: c.text.secondary, marginTop: 2 }}>
+                                                        {err.reason}
+                                                    </Text>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    </View>
+                                )}
                             </View>
                         )}
 

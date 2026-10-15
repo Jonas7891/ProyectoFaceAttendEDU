@@ -38,7 +38,7 @@ export default function EditUserModal({ visible, onClose, onSubmit, user }) {
             setForm({
                 name: parts[0] ?? "",
                 lastName: parts.slice(1).join(" "),
-                documentNumber: user.document ?? "",
+                documentNumber: user.documentNumber ?? user.document ?? "",
                 email: user.email ?? "",
                 phone: user.telefono ?? user.phone ?? "",
                 username: user.username ?? "",
