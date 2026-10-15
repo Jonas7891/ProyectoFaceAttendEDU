@@ -772,7 +772,16 @@
     "searchTeacher": "Search teacher",
     "activateQuestion": "Reactivate this user?",
     "deactivateQuestion": "Deactivate this user? You can reactivate them later.",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "lastName": "Last name",
+    "documentNumber": "Document number",
+    "phone": "Phone",
+    "username": "Username",
+    "initialPassword": "Initial password",
+    "role": "Role",
+    "documentRequired": "The document number is required.",
+    "usernameRequired": "The username is required.",
+    "saveError": "The user could not be saved."
   },
   "schoolConfig": {
     "title": "School Configuration",

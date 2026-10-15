@@ -21,8 +21,11 @@ import {useCustomAlert} from '../components/common/useCustomAlert';
 import CustomAlert from '../components/common/CustomAlert';
 import BackButton from '../components/common/BackButton';
 import PrimaryButton from '../components/auth/PrimaryButton';
-import {useManageUsersViewModel} from '../../viewmodels/useManageUsersViewModel';
+import {ROLE_OPTIONS, useManageUsersViewModel} from '../../viewmodels/useManageUsersViewModel';
 import {validateEmail} from '../../utils/validators';
+import {areAllRequirementsMet, validatePasswordRequirements} from '../../utils/passwordValidator';
+
+const ROLE_LABEL_KEYS = {Aprendiz: 'userRoles.student', Instructor: 'userRoles.teacher', Administrador: 'userRoles.administrator'};
 
 export default function ManageUsersScreen({navigation, userRole, onLogout}) {
     const {t} = useTranslation();
@@ -34,29 +37,22 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
         students,
         teachers,
         updateKey,
-        searchStudents,
-        searchTeachers,
-        addStudentById,
+        createUser,
         updateStudent,
         deleteStudent,
-        addTeacher,
         updateTeacher,
         deleteTeacher,
     } = useManageUsersViewModel(userRole === 'Administrador');
 
+    const emptyForm = (role) => ({
+        name: '', lastName: '', documentNumber: '', email: '', telefono: '', username: '', password: '', role,
+    });
     const [tab, setTab] = useState('students');
     const [modalVisible, setModalVisible] = useState(false);
     const [modalMode, setModalMode] = useState(null);
     const [editing, setEditing] = useState(null);
-    const [form, setForm] = useState({
-        nombre: '',
-        email: '',
-        grado: '',
-        telefono: '',
-        materia: '',
-    });
-    const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState([]);
+    const [saving, setSaving] = useState(false);
+    const [form, setForm] = useState(emptyForm('Aprendiz'));
 
     useEffect(() => {
         if (userRole && userRole !== 'Administrador') {
@@ -70,16 +66,14 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
 
     const openAdd = () => {
         setEditing(null);
-        setForm({nombre: '', email: '', grado: '', telefono: '', materia: ''});
-        setSearchQuery('');
-        setSearchResults([]);
-        setModalMode('searchAdd');
+        setForm(emptyForm(tab === 'students' ? 'Aprendiz' : 'Instructor'));
+        setModalMode('add');
         setModalVisible(true);
     };
 
     const openEdit = (item) => {
         setEditing(item);
-        setForm({...item});
+        setForm({...emptyForm(item.role), ...item, password: ''});
         setModalMode('edit');
         setModalVisible(true);
     };
@@ -98,24 +92,45 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
         }
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         Keyboard.dismiss();
-        if (!form.nombre) {
+        if (!form.name.trim() || !form.lastName.trim()) {
             showError(t('manageUsers.validation'), t('manageUsers.nameRequired'));
+            return;
+        }
+        if (!form.documentNumber.trim()) {
+            showError(t('manageUsers.validation'), t('manageUsers.documentRequired'));
             return;
         }
         if (form.email && !validateEmail(form.email)) {
             showError(t('manageUsers.validation'), t('manageUsers.invalidEmail'));
             return;
         }
-        if (modalMode === 'edit') {
-            if (tab === 'students') {
-                updateStudent({...editing, ...form});
-            } else {
-                updateTeacher({...editing, ...form});
+        if (modalMode === 'add') {
+            if (!form.username.trim()) {
+                showError(t('manageUsers.validation'), t('manageUsers.usernameRequired'));
+                return;
+            }
+            if (!areAllRequirementsMet(validatePasswordRequirements(form.password))) {
+                showError(t('manageUsers.validation'), t('profile.passwordModal.errorPolicy'));
+                return;
             }
         }
-        closeModal();
+        setSaving(true);
+        try {
+            if (modalMode === 'add') {
+                await createUser(form);
+            } else if (tab === 'students') {
+                await updateStudent({...editing, ...form});
+            } else {
+                await updateTeacher({...editing, ...form});
+            }
+            closeModal();
+        } catch (error) {
+            showError(t('common.error'), error?.message || t('manageUsers.saveError'));
+        } finally {
+            setSaving(false);
+        }
     };
 
     const confirmToggleStatus = (id, isActive) => {
@@ -126,15 +141,6 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                 tab === 'students' ? deleteStudent(id) : deleteTeacher(id);
             }
         );
-    };
-
-    const handleSearch = (text) => {
-        setSearchQuery(text);
-        if (tab === 'students') {
-            setSearchResults(searchStudents(text));
-        } else {
-            setSearchResults(searchTeachers ? searchTeachers(text) : []);
-        }
     };
 
     const handleBack = () => navigation.goBack();
@@ -151,9 +157,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                     {item.nombre}
                 </Text>
                 <Text style={[styles.manageUsersItemMeta, {color: colors.textSecondary}]} numberOfLines={1}>
-                    {tab === 'students'
-                        ? `${item.grado || ''} • ${item.email || ''}`
-                        : `${item.materia || ''} • ${item.email || ''}`}
+                    {`${item.role || ''} • ${item.email || item.username || ''}`}
                     {inactive ? ` • ${t('manageUsers.inactive')}` : ''}
                 </Text>
             </TouchableOpacity>
@@ -179,87 +183,6 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
         );
     };
 
-    const renderSearchAddContent = () => (
-        <>
-            <View style={[styles.manageUsersSheetHandle, {backgroundColor: colors.border}]}/>
-
-            <Text style={[styles.manageUsersModalTitle, {color: colors.text}]}>
-                {tab === 'students'
-                    ? t('manageUsers.searchStudent')
-                    : t('manageUsers.searchTeacher')}
-            </Text>
-            <View style={[styles.manageUsersDivider, {backgroundColor: colors.border}]}/>
-
-            <TextInput
-                placeholder={
-                    tab === 'students'
-                        ? t('manageUsers.enterStudentName')
-                        : t('manageUsers.enterTeacherName')
-                }
-                placeholderTextColor={colors.modalInputPlaceholder}
-                style={[styles.manageUsersInput, {
-                    color: colors.text,
-                    backgroundColor: colors.modalInputBackground,
-                    borderColor: colors.modalBorder,
-                }]}
-                value={searchQuery}
-                onChangeText={handleSearch}
-                autoFocus={true}
-            />
-
-            <View style={styles.manageUsersResultsList}>
-                {searchResults.length > 0 ? searchResults.map((item) => (
-                    <TouchableOpacity
-                        key={item.id}
-                        style={[styles.manageUsersSearchItem, {borderColor: colors.border}]}
-                        onPress={() => {
-                            if (tab === 'students') {
-                                addStudentById(item.id);
-                            } else {
-                                addTeacher(item);
-                            }
-                            closeModal();
-                        }}
-                    >
-                        <View style={{flex: 1}}>
-                            <Text style={[styles.manageUsersSearchItemName, {color: colors.text}]}>
-                                {item.nombre}
-                            </Text>
-                            <Text style={[styles.manageUsersSearchItemMeta, {color: colors.textSecondary}]}>
-                                {tab === 'students'
-                                    ? `${item.grado} • ${item.email}`
-                                    : `${item.materia} • ${item.email}`}
-                            </Text>
-                        </View>
-                        <Text style={[styles.manageUsersAddButtonText, {color: colors.primary}]}>
-                            {t('common.add')}
-                        </Text>
-                    </TouchableOpacity>
-                )) : (
-                    <View style={styles.manageUsersEmptySearch}>
-                        <Text style={[styles.manageUsersEmptySearchText, {color: colors.textSecondary}]}>
-                            {t('manageUsers.enterNameToSearch')}
-                        </Text>
-                    </View>
-                )}
-            </View>
-
-            <View style={styles.manageUsersModalActions}>
-                <TouchableOpacity
-                    style={[styles.manageUsersCancelButton, {
-                        backgroundColor: colors.primary,
-                        borderColor: colors.primary,
-                    }]}
-                    onPress={closeModal}
-                >
-                    <Text style={styles.manageUsersCancelButtonText}>
-                        {t('common.cancel')}
-                    </Text>
-                </TouchableOpacity>
-            </View>
-        </>
-    );
-
     const renderEditContent = () => (
         <>
             <View style={[styles.manageUsersSheetHandle, {backgroundColor: colors.border}]}/>
@@ -269,77 +192,63 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
             </Text>
             <View style={[styles.manageUsersDivider, {backgroundColor: colors.border}]}/>
 
-            <Text style={[styles.manageUsersFieldLabel, {color: colors.text}]}>
-                {t('common.name')}
-            </Text>
-            <TextInput
-                placeholder={t('common.name')}
-                placeholderTextColor={colors.modalInputPlaceholder}
-                style={[styles.manageUsersInput, {
-                    color: colors.text,
-                    backgroundColor: colors.modalInputBackground,
-                    borderColor: colors.modalBorder,
-                }]}
-                value={form.nombre}
-                onChangeText={(text) => setForm((f) => ({...f, nombre: text}))}
-            />
-
-            <Text style={[styles.manageUsersFieldLabel, {color: colors.text}]}>
-                {t('common.email')}
-            </Text>
-            <TextInput
-                placeholder={t('common.email')}
-                placeholderTextColor={colors.modalInputPlaceholder}
-                style={[styles.manageUsersInput, {
-                    color: colors.text,
-                    backgroundColor: colors.modalInputBackground,
-                    borderColor: colors.modalBorder,
-                }]}
-                value={form.email}
-                onChangeText={(text) => setForm((f) => ({...f, email: text}))}
-                keyboardType="email-address"
-            />
-
-            {tab === 'students' ? (
-                <>
-                    <Text style={[styles.manageUsersFieldLabel, {color: colors.text}]}>
-                        {t('manageUsers.grade')}
-                    </Text>
+            {[
+                {key: 'name', label: t('common.name')},
+                {key: 'lastName', label: t('manageUsers.lastName')},
+                {key: 'documentNumber', label: t('manageUsers.documentNumber')},
+                {key: 'email', label: t('common.email'), keyboardType: 'email-address'},
+                {key: 'telefono', label: t('manageUsers.phone'), keyboardType: 'phone-pad'},
+                ...(editing ? [] : [
+                    {key: 'username', label: t('manageUsers.username')},
+                    {key: 'password', label: t('manageUsers.initialPassword'), secure: true},
+                ]),
+            ].map((field) => (
+                <View key={field.key}>
+                    <Text style={[styles.manageUsersFieldLabel, {color: colors.text}]}>{field.label}</Text>
                     <TextInput
-                        placeholder={t('manageUsers.grade')}
+                        placeholder={field.label}
+                        accessibilityLabel={field.label}
                         placeholderTextColor={colors.modalInputPlaceholder}
                         style={[styles.manageUsersInput, {
                             color: colors.text,
                             backgroundColor: colors.modalInputBackground,
                             borderColor: colors.modalBorder,
                         }]}
-                        value={form.grado}
-                        onChangeText={(text) => setForm((f) => ({...f, grado: text}))}
+                        value={String(form[field.key] ?? '')}
+                        onChangeText={(text) => setForm((f) => ({...f, [field.key]: text}))}
+                        keyboardType={field.keyboardType || 'default'}
+                        secureTextEntry={!!field.secure}
+                        autoCapitalize={field.key === 'name' || field.key === 'lastName' ? 'words' : 'none'}
                     />
-                </>
-            ) : (
-                <>
-                    <Text style={[styles.manageUsersFieldLabel, {color: colors.text}]}>
-                        {t('manageUsers.subject')}
-                    </Text>
-                    <TextInput
-                        placeholder={t('manageUsers.subject')}
-                        placeholderTextColor={colors.modalInputPlaceholder}
-                        style={[styles.manageUsersInput, {
-                            color: colors.text,
-                            backgroundColor: colors.modalInputBackground,
-                            borderColor: colors.modalBorder,
-                        }]}
-                        value={form.materia}
-                        onChangeText={(text) => setForm((f) => ({...f, materia: text}))}
-                    />
-                </>
-            )}
+                </View>
+            ))}
+
+            <Text style={[styles.manageUsersFieldLabel, {color: colors.text}]}>{t('manageUsers.role')}</Text>
+            <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 8}} accessibilityRole="radiogroup">
+                {ROLE_OPTIONS.map((role) => {
+                    const selected = form.role === role;
+                    return (
+                        <TouchableOpacity
+                            key={role}
+                            onPress={() => setForm((f) => ({...f, role}))}
+                            accessibilityRole="radio"
+                            accessibilityState={{selected}}
+                            style={{
+                                paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1,
+                                borderColor: colors.primary, backgroundColor: selected ? colors.primary : 'transparent',
+                            }}
+                        >
+                            <Text style={{color: selected ? colors.modalButtonText : colors.primary}}>{t(ROLE_LABEL_KEYS[role])}</Text>
+                        </TouchableOpacity>
+                    );
+                })}
+            </View>
 
             <View style={styles.manageUsersModalActions}>
                 <TouchableOpacity
                     style={styles.secondaryButton}
                     onPress={handleSave}
+                    disabled={saving}
                 >
                     <Text
                         style={[
@@ -451,7 +360,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                                 showsVerticalScrollIndicator={true}
                                 bounces={false}
                             >
-                                {modalMode === 'searchAdd' ? renderSearchAddContent() : renderEditContent()}
+                                {renderEditContent()}
                             </ScrollView>
                         </View>
                     </KeyboardAvoidingView>

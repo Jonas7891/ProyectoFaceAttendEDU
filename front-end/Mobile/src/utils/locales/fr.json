@@ -772,7 +772,16 @@
     "searchTeacher": "Rechercher un enseignant",
     "activateQuestion": "Réactiver cet utilisateur ?",
     "deactivateQuestion": "Désactiver cet utilisateur ? Vous pourrez le réactiver plus tard.",
-    "inactive": "Inactif"
+    "inactive": "Inactif",
+    "lastName": "Nom",
+    "documentNumber": "Numéro de document",
+    "phone": "Téléphone",
+    "username": "Nom d’utilisateur",
+    "initialPassword": "Mot de passe initial",
+    "role": "Rôle",
+    "documentRequired": "Le numéro de document est obligatoire.",
+    "usernameRequired": "Le nom d’utilisateur est obligatoire.",
+    "saveError": "Impossible d’enregistrer l’utilisateur."
   },
   "schoolConfig": {
     "title": "Configuration de l'école",

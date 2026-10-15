@@ -772,7 +772,16 @@
     "searchTeacher": "Buscar docente",
     "activateQuestion": "¿Reactivar este usuario?",
     "deactivateQuestion": "¿Desactivar este usuario? Podrás reactivarlo después.",
-    "inactive": "Inactivo"
+    "inactive": "Inactivo",
+    "lastName": "Apellidos",
+    "documentNumber": "Número de documento",
+    "phone": "Teléfono",
+    "username": "Usuario",
+    "initialPassword": "Contraseña inicial",
+    "role": "Rol",
+    "documentRequired": "El número de documento es obligatorio.",
+    "usernameRequired": "El usuario es obligatorio.",
+    "saveError": "No se pudo guardar el usuario."
   },
   "schoolConfig": {
     "title": "Configuración del Colegio",

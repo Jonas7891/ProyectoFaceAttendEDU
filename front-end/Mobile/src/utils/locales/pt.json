@@ -772,7 +772,16 @@
     "searchTeacher": "Buscar professor",
     "activateQuestion": "Reativar este usuário?",
     "deactivateQuestion": "Desativar este usuário? Você poderá reativá-lo depois.",
-    "inactive": "Inativo"
+    "inactive": "Inativo",
+    "lastName": "Sobrenome",
+    "documentNumber": "Número do documento",
+    "phone": "Telefone",
+    "username": "Usuário",
+    "initialPassword": "Senha inicial",
+    "role": "Função",
+    "documentRequired": "O número do documento é obrigatório.",
+    "usernameRequired": "O usuário é obrigatório.",
+    "saveError": "Não foi possível salvar o usuário."
   },
   "schoolConfig": {
     "title": "Configuração da escola",
