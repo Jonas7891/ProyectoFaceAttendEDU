@@ -715,7 +715,8 @@
       "saving": "Guardando...",
       "successMessage": "Contraseña actualizada correctamente",
       "successTitle": "Contraseña actualizada",
-      "title": "Cambiar contraseña"
+      "title": "Cambiar contraseña",
+      "errorPolicy": "Usa 8 o más caracteres con mayúscula, minúscula, número y símbolo, sin secuencias ni repeticiones."
     },
     "pendingJustifications": "Justificaciones",
     "phone": "Teléfono",

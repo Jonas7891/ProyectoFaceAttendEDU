@@ -716,7 +716,8 @@
       "saving": "Saving...",
       "successMessage": "Password updated successfully",
       "successTitle": "Password updated",
-      "title": "Change password"
+      "title": "Change password",
+      "errorPolicy": "Use 8+ characters with an uppercase letter, a lowercase letter, a number and a symbol, without sequences or repeats."
     },
     "pendingJustifications": "Pending justifications",
     "phone": "Phone",

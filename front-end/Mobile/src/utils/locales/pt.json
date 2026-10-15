@@ -716,7 +716,8 @@
       "saving": "Salvando...",
       "successMessage": "Senha atualizada com sucesso",
       "successTitle": "Senha atualizada",
-      "title": "Alterar senha"
+      "title": "Alterar senha",
+      "errorPolicy": "Use 8 ou mais caracteres com maiúscula, minúscula, número e símbolo, sem sequências ou repetições."
     },
     "pendingJustifications": "Justificativas pendentes",
     "phone": "Telefone",

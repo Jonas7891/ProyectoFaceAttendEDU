@@ -716,7 +716,8 @@
       "saving": "Enregistrement...",
       "successMessage": "Mot de passe mis à jour avec succès",
       "successTitle": "Mot de passe mis à jour",
-      "title": "Modifier le mot de passe"
+      "title": "Modifier le mot de passe",
+      "errorPolicy": "Utilisez au moins 8 caractères avec majuscule, minuscule, chiffre et symbole, sans suites ni répétitions."
     },
     "pendingJustifications": "Justifications en attente",
     "phone": "Téléphone",

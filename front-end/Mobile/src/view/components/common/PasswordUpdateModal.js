@@ -16,6 +16,8 @@ import {useTranslation} from 'react-i18next';
 import {useTheme} from './ThemeContext';
 import PrimaryButton from '../auth/PrimaryButton';
 import stylesCommon from './style/Style';
+import {PasswordService} from '../../../services/passwordService';
+import {areAllRequirementsMet, validatePasswordRequirements} from '../../../utils/passwordValidator';
 
 export default function PasswordUpdateModal() {
     const { t } = useTranslation();
@@ -56,13 +58,13 @@ export default function PasswordUpdateModal() {
             setPasswordError(t('profile.passwordModal.errorMatch', 'Las contraseñas no coinciden'));
             return;
         }
-        if (newPassword.length < 6) {
-            setPasswordError(t('profile.passwordModal.errorLength', 'Mínimo 6 caracteres'));
+        if (!areAllRequirementsMet(validatePasswordRequirements(newPassword))) {
+            setPasswordError(t('profile.passwordModal.errorPolicy'));
             return;
         }
         try {
             setPasswordLoading(true);
-            await new Promise((resolve) => setTimeout(resolve, 600));
+            await PasswordService.changePassword(currentPassword, newPassword);
             setPasswordLoading(false);
             Alert.alert(
                 t('profile.passwordModal.successTitle', 'Contraseña actualizada'),
@@ -71,7 +73,7 @@ export default function PasswordUpdateModal() {
             closePasswordModal();
         } catch (error) {
             setPasswordLoading(false);
-            setPasswordError(t('profile.passwordModal.errorGeneric', 'No se pudo actualizar. Intenta de nuevo.'));
+            setPasswordError(error?.message || t('profile.passwordModal.errorGeneric', 'No se pudo actualizar. Intenta de nuevo.'));
         }
     };
 
