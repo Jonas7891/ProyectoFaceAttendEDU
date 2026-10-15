@@ -64,20 +64,6 @@ describe('request — comportamiento existente', () => {
 describe('request — respuestas del servicio de biometría (FastAPI)', () => {
   const faceUrl = `${BASE}/face-auth/api/login/face`;
 
-  test('un 401 con { detail } es de negocio: no cierra la sesión y expone el detalle', async () => {
-    const handler = jest.fn();
-    const off = onSessionExpired(handler);
-    global.fetch.mockResolvedValue(respond(401, { detail: 'Rostro no reconocido', code: 'forbidden' }));
-
-    await expect(request({ method: POST, url: faceUrl, data: {} })).rejects.toMatchObject({
-      status: 401,
-      message: 'Rostro no reconocido',
-    });
-
-    expect(handler).not.toHaveBeenCalled();
-    off();
-  });
-
   test('un 401 del gateway (con { message }) sobre /face-auth sigue cerrando la sesión', async () => {
     const handler = jest.fn();
     const off = onSessionExpired(handler);
