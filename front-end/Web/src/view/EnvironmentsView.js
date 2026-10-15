@@ -197,6 +197,7 @@ export default function EnvironmentsView() {
                     onAddSchedule={() => vm.openAddSchedule(vm.selected.id)}
                     onEditSchedule={(schedule) => vm.openEditSchedule(vm.selected.id, schedule)}
                     onDeleteSchedule={(scheduleId) => vm.removeSchedule(vm.selected.id, scheduleId)}
+                    canManage={permissions.canManageEnvironments}
                 />
             )}
 
