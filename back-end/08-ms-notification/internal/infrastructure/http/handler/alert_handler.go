@@ -90,7 +90,14 @@ func (h *AlertHandler) List(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"alerts": list})
+	// Outside the caller's actor scope an alert does not exist for them.
+	visible := list[:0]
+	for _, a := range list {
+		if actorAllowed(c, a.AcademicActorID) {
+			visible = append(visible, a)
+		}
+	}
+	c.JSON(http.StatusOK, gin.H{"alerts": visible})
 }
 
 func (h *AlertHandler) Get(c *gin.Context) {
@@ -105,6 +112,10 @@ func (h *AlertHandler) Get(c *gin.Context) {
 		handleDomainError(c, err)
 		return
 	}
+	if !actorAllowed(c, alert.AcademicActorID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: outside your scope"})
+		return
+	}
 	c.JSON(http.StatusOK, alert)
 }
 
@@ -113,6 +124,15 @@ func (h *AlertHandler) Resolve(c *gin.Context) {
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+	current, err := h.lister.Get(c.Request.Context(), id)
+	if err != nil {
+		handleDomainError(c, err)
+		return
+	}
+	if !actorAllowed(c, current.AcademicActorID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: outside your scope"})
 		return
 	}
 	alert, err := h.resolver.Resolve(c.Request.Context(), id)

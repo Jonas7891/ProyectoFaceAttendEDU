@@ -19,15 +19,21 @@ import (
 type AuthConfig struct {
 	IdentityURL      string
 	AuthorizationURL string
-	Disabled         bool
-	Client           *http.Client
+	// AcademicURL/SchedulingURL resolve the actor scope of alert reads; empty
+	// (as in unit tests of the bare guard) skips the scope.
+	AcademicURL   string
+	SchedulingURL string
+	Disabled      bool
+	Client        *http.Client
 }
 
-// AuthConfigFromEnv reads IDENTITY_URL, AUTHORIZATION_URL and AUTH_ENABLED.
+// AuthConfigFromEnv reads IDENTITY_URL, AUTHORIZATION_URL, ACADEMIC_URL, SCHEDULING_URL and AUTH_ENABLED.
 func AuthConfigFromEnv() AuthConfig {
 	return AuthConfig{
 		IdentityURL:      envOr("IDENTITY_URL", "http://localhost:8081"),
 		AuthorizationURL: envOr("AUTHORIZATION_URL", "http://localhost:8082"),
+		AcademicURL:      envOr("ACADEMIC_URL", "http://localhost:8083"),
+		SchedulingURL:    envOr("SCHEDULING_URL", "http://localhost:8084"),
 		Disabled:         strings.EqualFold(os.Getenv("AUTH_ENABLED"), "false"),
 		Client:           &http.Client{Timeout: 4 * time.Second},
 	}
@@ -112,6 +118,16 @@ func AuthMiddleware(cfg AuthConfig, rule func(method, path string) string) gin.H
 			if status != http.StatusOK || !result.Allowed {
 				abort(c, http.StatusForbidden, "Forbidden: requires "+permission)
 				return
+			}
+		}
+		if cfg.AcademicURL != "" && isAlertPath(path) {
+			scope, err := resolveActorScope(c.Request.Context(), cfg, session.UserID, token)
+			if err != nil {
+				abort(c, http.StatusServiceUnavailable, "Cannot resolve actor scope")
+				return
+			}
+			if scope != nil {
+				c.Set(actorScopeKey, scope)
 			}
 		}
 		c.Set("userID", session.UserID)
