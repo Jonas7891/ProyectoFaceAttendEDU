@@ -1,5 +1,6 @@
 package com.faceattend_edu.identity_service.adapter.in.web.controller;
 
+import com.faceattend_edu.identity_service.application.port.in.ChangePasswordUseCase;
 import com.faceattend_edu.identity_service.application.port.in.RequestPasswordRecoveryUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ResetPasswordUseCase;
 import com.faceattend_edu.identity_service.application.port.in.VerifyRecoveryCodeUseCase;
@@ -40,6 +41,9 @@ class PasswordRecoveryControllerTest {
     private VerifyRecoveryCodeUseCase verifyRecoveryCodeUseCase;
     @MockitoBean
     private ResetPasswordUseCase resetPasswordUseCase;
+
+    @MockitoBean
+    private ChangePasswordUseCase changePasswordUseCase;
 
     private static final String EMAIL = "carolina.mendoza@example.com";
 

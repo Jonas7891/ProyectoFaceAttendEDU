@@ -54,7 +54,7 @@ public class ResetPasswordUseCaseImpl implements ResetPasswordUseCase {
 
         // La política se valida ANTES de consumir el reto: una contraseña mal
         // formada no debe obligar al usuario a repetir todo el flujo.
-        validateAgainstPolicy(password);
+        validateAgainstPolicy(password, listPasswordPoliciesPort.listPolicies());
 
         // Uso único: el reto se gasta aquí, y solo existe reto si /verify-code
         // lo marcó como verificado. Un reset sin verificar devuelve siempre 401,
@@ -84,8 +84,8 @@ public class ResetPasswordUseCaseImpl implements ResetPasswordUseCase {
      * La política vigente es la autoridad (seed: 8-20, mayúsculas, números y
      * símbolos). Si no hay política cargada solo se exige longitud mínima.
      */
-    private void validateAgainstPolicy(String password) {
-        PasswordPolicy policy = listPasswordPoliciesPort.listPolicies().stream()
+    static void validateAgainstPolicy(String password, List<PasswordPolicy> policies) {
+        PasswordPolicy policy = policies.stream()
                 .filter(p -> p != null)
                 .findFirst()
                 .orElse(null);

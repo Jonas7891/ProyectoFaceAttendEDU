@@ -32,4 +32,9 @@ class AuthTokenFilterTest {
         assertEquals("identity.person:write", AuthTokenFilter.requiredPermission("PUT", "/api/v1/persons/" + ME, ME));
         assertEquals("identity.person:write", AuthTokenFilter.requiredPermission("POST", "/api/v1/users", ME));
     }
+
+    @Test
+    void changingOwnPasswordNeedsOnlyASession() {
+        assertEquals(null, AuthTokenFilter.requiredPermission("POST", "/api/v1/auth/change-password", ME));
+    }
 }
