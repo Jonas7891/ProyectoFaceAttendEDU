@@ -236,18 +236,23 @@ export function AppDataProvider({ children }) {
         setActiveSchool(user.schoolId ?? null);
 
         let cancelled = false;
+        // loadStudents() va aparte: agrega la asistencia de CADA estudiante en
+        // lotes de 200 (attendanceSummaryFor) y con miles de estudiantes puede
+        // tardar bastante o saturar la cola de conexiones del navegador. Antes
+        // viajaba en el mismo Promise.allSettled que usuarios/ambientes/fichas/
+        // cursos, así que Admins y Profesores —que no usan `students` para nada—
+        // se quedaban en "Cargando..." indefinidamente esperando esa asistencia.
         // allSettled en vez de all: si UNA carga falla (p. ej. /cohorts), las
         // demás (usuarios, ambientes, cursos...) sí se muestran; antes un solo
         // rechazo descartaba todo y el Inicio del docente quedaba vacío.
         Promise.allSettled([
-            loadStudents(),
             loadUsers(),
             loadEnvironments(),
             loadFichas(),
             loadCourses(),
         ]).then((results) => {
             if (cancelled) return;
-            const [s, u, e, f, c] = results.map((r) =>
+            const [u, e, f, c] = results.map((r) =>
                 r.status === "fulfilled" ? r.value : []
             );
             const failed = results.filter((r) => r.status === "rejected");
@@ -258,15 +263,27 @@ export function AppDataProvider({ children }) {
             } else {
                 setLoadError(null);
             }
-            setStudents(s);
             setUsers(u);
             setEnvironments(e);
             setFichas(f);
             setCourses(c);
             setIsLoading(false);
 
-            // Carga progresiva de usuarios (efecto persiana)
-            startProgressiveUserLoading(s, c, u);
+            // Carga progresiva de usuarios (efecto persiana): profesores y
+            // administradores ya pueden revelarse sin esperar a `students`.
+            startProgressiveUserLoading([], c, u);
+
+            loadStudents()
+                .then((s) => {
+                    if (cancelled) return;
+                    setStudents(s);
+                    startProgressiveUserLoading(s, c, u);
+                })
+                .catch((err) => {
+                    if (cancelled) return;
+                    console.error("[FaceAttend] AppDataContext: carga de estudiantes fallida —", err?.message);
+                    setLoadError((prev) => prev ?? err?.message ?? "error desconocido");
+                });
         });
 
         return () => {
@@ -309,6 +326,16 @@ export function AppDataProvider({ children }) {
     }, [loadedStudents, courses]);
 
     // ── Students ──────────────────────────────────────────
+
+    // Trae la lista real de estudiantes del backend. Igual que
+    // reloadUsersFn/reloadCoursesFn: tras una alta masiva (importStudents)
+    // la fila real no aparece hasta esto, porque no hay espejo local que
+    // la muestre de inmediato.
+    const reloadStudentsFn = useCallback(async () => {
+        const fresh = await loadStudents();
+        setStudents(fresh);
+        startProgressiveUserLoading(fresh, courses, users);
+    }, [courses, users, startProgressiveUserLoading]);
 
     const addStudentFn = useCallback(
         async (draft) => {
@@ -402,6 +429,17 @@ export function AppDataProvider({ children }) {
         },
         [users]
     );
+
+    // Trae la lista real de usuarios desde el backend. A diferencia de
+    // addUserFn (que fabrica una fila local), esta es la fuente de verdad:
+    // se usa tras dar de alta un docente/admin en el backend (provisionStaff)
+    // para que la fila que aparece sea la real (mismo username que confirmó
+    // el backend) y no un duplicado que persiste para siempre en AsyncStorage.
+    const reloadUsersFn = useCallback(async () => {
+        const freshUsers = await loadUsers();
+        setUsers(freshUsers);
+        startProgressiveUserLoading(students, courses, freshUsers);
+    }, [students, courses, startProgressiveUserLoading]);
 
     const updateUserFn = useCallback(
         async (id, patch) => {
@@ -514,6 +552,14 @@ export function AppDataProvider({ children }) {
         [courses]
     );
 
+    // Trae la lista real de cursos del backend. Igual que reloadUsersFn:
+    // un espejo local fabricado tras crear el curso quedaba duplicado para
+    // siempre junto al que luego trae loadCourses() desde la API.
+    const reloadCoursesFn = useCallback(async () => {
+        const fresh = await loadCourses();
+        setCourses(fresh);
+    }, []);
+
     const updateCourseFn = useCallback(
         async (id, patch) => {
             const updated = await storageUpdateCourse(courses, id, patch);
@@ -540,6 +586,7 @@ export function AppDataProvider({ children }) {
             students: loadedStudents, // Usuarios cargados progresivamente
             addStudent: addStudentFn,
             importStudents: importStudentsFn,
+            reloadStudents: reloadStudentsFn,
             updateStudent: updateStudentFn,
             removeStudent: removeStudentFn,
 
@@ -550,6 +597,7 @@ export function AppDataProvider({ children }) {
 
             users,
             addUser: addUserFn,
+            reloadUsers: reloadUsersFn,
             updateUser: updateUserFn,
             removeUser: removeUserFn,
             patchStaff: patchStaffFn,
@@ -570,6 +618,7 @@ export function AppDataProvider({ children }) {
 
             courses: enrichedCourses, // Cursos enriquecidos con período calculado
             addCourse: addCourseFn,
+            reloadCourses: reloadCoursesFn,
             updateCourse: updateCourseFn,
             removeCourse: removeCourseFn,
         }),
@@ -582,11 +631,13 @@ export function AppDataProvider({ children }) {
             loadedAdmins,
             addStudentFn,
             importStudentsFn,
+            reloadStudentsFn,
             updateStudentFn,
             removeStudentFn,
             programs,
             users,
             addUserFn,
+            reloadUsersFn,
             updateUserFn,
             removeUserFn,
             patchStaffFn,
@@ -603,6 +654,7 @@ export function AppDataProvider({ children }) {
             removeFichaFn,
             enrichedCourses,
             addCourseFn,
+            reloadCoursesFn,
             updateCourseFn,
             removeCourseFn,
         ]
