@@ -3,7 +3,7 @@ import { toSnakeDeep } from '../api/backend';
 import AuthResponse from '../models/identity/AuthResponse';
 import AuthRequest from '../models/identity/AuthRequest';
 import AppUser from '../models/identity/AppUser';
-import { saveToken } from '../storage/TokenStorage';
+import { saveToken } from '../view/storage/TokenStorage';
 import { VerificationService } from './verificationService';
 import { PasswordService } from './passwordService';
 import i18n from '../utils/i18n';

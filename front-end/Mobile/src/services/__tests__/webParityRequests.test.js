@@ -21,7 +21,7 @@ import {
   AcademicConfigService,
 } from '../index';
 
-jest.mock('../../storage/TokenStorage', () => ({
+jest.mock('../../view/storage/TokenStorage', () => ({
   getToken: jest.fn(async () => 'session-token'),
   saveToken: jest.fn(),
 }));

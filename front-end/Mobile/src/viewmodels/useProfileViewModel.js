@@ -11,7 +11,7 @@ import {PeriodService} from '../services/PeriodService';
 import {backendGet} from '../api/backend';
 import ENV from '../config/env';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
-import {removeToken} from '../storage/TokenStorage';
+import {removeToken} from '../view/storage/TokenStorage';
 
 export function useProfileViewModel({ onLogout } = {}) {
     const navigation = useNavigation();
