@@ -19,7 +19,7 @@
 import React from "react";
 import { useRoute } from "@react-navigation/native";
 import UsersView from "../UsersView";
-import { NotAuthorized, AUTH_EXCEPTION_TYPES } from "../authorized/NotAuthorized";
+import { NotAuthorized, AUTH_EXCEPTION_TYPES } from "../NotAuthorized";
 import { useRolePermissions } from "../../viewmodels/useRolePermissions";
 
 export default function UsersScreen() {

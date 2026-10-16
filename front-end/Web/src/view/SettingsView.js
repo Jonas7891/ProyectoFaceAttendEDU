@@ -92,7 +92,7 @@ export default function SettingsView({ section = "appearance" }) {
         }, 2500);
     }
 
-    function handleSave() {
+    async function handleSave() {
         // Ejecutar la función de guardado del componente hijo
         if (saveConfigRef.current) {
             // El guardado puede ser asíncrono (réplica en el backend):

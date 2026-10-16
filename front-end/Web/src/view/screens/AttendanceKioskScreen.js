@@ -9,7 +9,7 @@
 
 import React from "react";
 import AttendanceKioskView from "../AttendanceKioskView";
-import { NotAuthorized, AUTH_EXCEPTION_TYPES } from "../authorized/NotAuthorized";
+import { NotAuthorized, AUTH_EXCEPTION_TYPES } from "../NotAuthorized";
 import { useRolePermissions } from "../../viewmodels/useRolePermissions";
 
 export default function AttendanceKioskScreen() {

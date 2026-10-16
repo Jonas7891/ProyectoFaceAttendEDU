@@ -18,7 +18,7 @@
 import React from "react";
 import { useRoute } from "@react-navigation/native";
 import ReportsView from "../ReportsView";
-import { NotAuthorized, AUTH_EXCEPTION_TYPES } from "../authorized/NotAuthorized";
+import { NotAuthorized, AUTH_EXCEPTION_TYPES } from "../NotAuthorized";
 import { useRolePermissions } from "../../viewmodels/useRolePermissions";
 
 export default function ReportsScreen() {

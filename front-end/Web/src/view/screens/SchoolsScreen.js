@@ -16,7 +16,7 @@
 
 import React from "react";
 import SchoolsView from "../SchoolsView";
-import { NotAuthorized, AUTH_EXCEPTION_TYPES } from "../authorized/NotAuthorized";
+import { NotAuthorized, AUTH_EXCEPTION_TYPES } from "../NotAuthorized";
 import { useRolePermissions } from "../../viewmodels/useRolePermissions";
 
 export default function SchoolsScreen() {
