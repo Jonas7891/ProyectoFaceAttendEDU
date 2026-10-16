@@ -6,7 +6,7 @@ description: Use when designing or consuming a REST endpoint across FaceAttend-E
 # Convenciones de API y autenticación
 
 ## Overview
-Todo el tráfico cruza Kong (`99-api-gateway`, puerto 8080). La autenticación real **NO es JWT**: es un `sessionId` UUID opaco emitido por `01-ms-identity`, enviado como `Authorization: Bearer <sessionId>`, validado en el edge por Kong (`pre-function` de introspección contra identity, una llamada por request, sin caché) y revalidado + RBAC en cada uno de los 9 servicios.
+Todo el tráfico cruza Kong (`99-api-gateway`, puerto 8000). La autenticación real **NO es JWT**: es un `sessionId` UUID opaco emitido por `01-ms-identity`, enviado como `Authorization: Bearer <sessionId>`, validado en el edge por Kong (`pre-function` de introspección contra identity, una llamada por request, sin caché) y revalidado + RBAC en cada uno de los 9 servicios.
 
 **Advertencia de documentación contradictoria:** `fae-docs/12-ux-ui/README.md` afirma erróneamente "JWT issued via Kong gateway" / "Kong JWT". Es incorrecto — confirmado contra código real en `fae-docs/07-api/authentication.md` y `fae-docs/05-architecture/overview.md` (Kong no tiene plugin `jwt` ni consumers). **Nunca implementes JWT para este proyecto**; usa siempre el patrón sessionId opaco.
 
@@ -30,7 +30,7 @@ Vas a crear un endpoint nuevo, consumirlo desde frontend, o decidir cómo pagina
 
 ## Verificación
 ```bash
-curl -i http://localhost:8080/api/v1/<recurso>   # via Kong
+curl -i http://localhost:8000/api/v1/<recurso>   # via Kong
 ```
 Confirma manualmente: código de estado, header `Authorization` requerido, forma real de paginación/error contra `fae-docs/07-api/*.md` y el código del servicio, no contra supuestos.
 

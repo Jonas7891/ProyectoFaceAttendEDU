@@ -5,14 +5,14 @@
 //  en Expo, horneada en el bundle estático). Si no se fijó una
 //  URL explícita, se infiere del host con el que se cargó la
 //  página (mismo patrón que Mobile en src/config/env.js): abrir
-//  http://10.0.0.5:8090 asume Kong en http://10.0.0.5:8080. Así
+//  http://10.0.0.5:8090 asume Kong en http://10.0.0.5:8000. Así
 //  un cambio de IP de LAN no exige reconstruir la imagen Docker.
 //
 //  Caso especial: VS Code Dev Tunnels (*.devtunnels.ms) no exponen el
 //  puerto como "host:puerto" — cada puerto forwardeado tiene su propio
 //  subdominio "<id>-<puerto>.<region>.devtunnels.ms", y solo existe si
 //  se forwardeó ese puerto explícitamente en el panel de Ports. Pedirle
-//  al usuario que forwardee también el puerto de Kong (8080) — con el
+//  al usuario que forwardee también el puerto de Kong (8000) — con el
 //  mismo nivel de visibilidad que 8090, o las peticiones quedan bloqueadas
 //  igual — era un error fácil de cometer y la causa real de fallos "no
 //  carga nada" bajo devtunnels. Se evita del todo quedándose en el mismo

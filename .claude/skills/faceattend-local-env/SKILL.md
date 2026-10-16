@@ -51,7 +51,7 @@ Requieren el stack arriba.
 docker exec -it faceattend-postgres psql -U postgres -d faceattend_db
 \dn
 \dt academic.*
-curl http://localhost:8080/api/v1/persons   # via Kong
+curl http://localhost:8000/api/v1/persons   # via Kong
 ```
 Para la verificación completa de integridad del modelo (FKs cross-schema prohibidas, bloque de auditoría en todas las tablas) usa las queries de AGENTS.md §9 — no las dupliques aquí.
 

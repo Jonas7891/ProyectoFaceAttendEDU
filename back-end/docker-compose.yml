@@ -504,7 +504,7 @@ services:
 
   # ──────────────────────────────────────────────────────────────
   # API Gateway — Kong OSS 3.6 DB-less + Redis (ADR-007, ADR-005 §10)
-  # 99 gateway 8080 proxy / 8001 admin
+  # 99 gateway 8000 proxy / 8001 admin
   # ──────────────────────────────────────────────────────────────
   kong-gateway:
     image: kong:3.6
@@ -548,7 +548,7 @@ services:
       # Lets the pre-function token check call identity through resty.http.
       KONG_UNTRUSTED_LUA_SANDBOX_REQUIRES: resty.http
     ports:
-      - "0.0.0.0:${KONG_PROXY_PORT:-8080}:8000"
+      - "0.0.0.0:${KONG_PROXY_PORT:-8000}:8000"
       - "${BIND_IP:-127.0.0.1}:${KONG_ADMIN_PORT:-8001}:8001"
     volumes:
       - ./99-api-gateway/kong/kong.yml:/kong/kong.yml:ro
@@ -565,7 +565,7 @@ services:
   # Frontend web lives in FULL/docker-compose.yml (presentation concern,
   # context ./front-end/Web). It is intentionally NOT defined here.
 networks:
-  # edge â€” browser tier: frontend-web <-> Kong proxy (:8080).
+  # edge â€” browser tier: frontend-web <-> Kong proxy (:8000).
   faceattend-edge:
     driver: bridge
   # app â€” service tier: Kong <-> microservices <-> Redis.
