@@ -103,8 +103,6 @@ services:
     mem_limit: 1g
     cpus: "1.0"
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
       kafka:
@@ -113,9 +111,9 @@ services:
       ms-notification:
         condition: service_started
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}?stringtype=unspecified
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_DATASOURCE_URL: ${NEON_JDBC_URL:-jdbc:postgresql://postgres:5432/faceattend_db?stringtype=unspecified}
+      SPRING_DATASOURCE_USERNAME: ${NEON_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD:-postgres}
       SPRING_DATASOURCE_HIKARI_SCHEMA: identity
       SPRING_DATA_REDIS_HOST: redis
       FACEATTEND_RECOVERY_STORE: redis
@@ -152,16 +150,14 @@ services:
     mem_limit: 1g
     cpus: "1.0"
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
       kafka:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_DATASOURCE_URL: ${NEON_JDBC_URL:-jdbc:postgresql://postgres:5432/faceattend_db}
+      SPRING_DATASOURCE_USERNAME: ${NEON_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD:-postgres}
       SPRING_DATASOURCE_HIKARI_SCHEMA: authorization
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_LIQUIBASE_ENABLED: "false"
@@ -193,14 +189,12 @@ services:
     mem_limit: 1g
     cpus: "1.0"
     depends_on:
-      postgres:
-        condition: service_healthy
       kafka:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}?stringtype=unspecified
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_DATASOURCE_URL: ${NEON_JDBC_URL:-jdbc:postgresql://postgres:5432/faceattend_db?stringtype=unspecified}
+      SPRING_DATASOURCE_USERNAME: ${NEON_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD:-postgres}
       SPRING_DATASOURCE_HIKARI_SCHEMA: scheduling
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_LIQUIBASE_ENABLED: "false"
