@@ -40,19 +40,25 @@ function inferApiBaseUrl(): string {
 
 /** Base del API Gateway Kong. Sin slash final. */
 export function getApiBaseUrl(): string {
-    // Intenta leer de:
+    // Intenta leer de (en orden de precedencia):
     // 1. Variable global inyectada en runtime (window.__FACEATTEND_API_URL__)
-    // 2. Variable de entorno de build (EXPO_PUBLIC_API_URL)
-    // 3. Fallback a inferApiBaseUrl()
+    // 2. Variable de entorno baked en build time (EXPO_PUBLIC_API_URL, compilada por Expo)
+    // 3. Meta tag en HTML (si se inyectó server-side)
+    // 4. Fallback a inferApiBaseUrl()
+
     const globalUrl = (globalThis as any).__FACEATTEND_API_URL__?.trim();
     if (globalUrl) return globalUrl.endsWith("/") ? globalUrl.slice(0, -1) : globalUrl;
 
-    const nodeEnv = (
-        globalThis as { process?: { env?: Record<string, string | undefined> } }
-    ).process?.env;
-    const explicit = nodeEnv?.EXPO_PUBLIC_API_URL?.trim();
-    if (explicit) return explicit.endsWith("/") ? explicit.slice(0, -1) : explicit;
+    // Buscar en meta tag como fallback (por si Expo no inyectó la variable)
+    if (typeof document !== "undefined") {
+        const metaTag = document.querySelector('meta[name="api-base-url"]');
+        if (metaTag?.getAttribute("content")) {
+            const content = metaTag.getAttribute("content")!.trim();
+            return content.endsWith("/") ? content.slice(0, -1) : content;
+        }
+    }
 
+    // Fallback a inferencia del URL basado en el hostname
     const base = inferApiBaseUrl();
     return base.endsWith("/") ? base.slice(0, -1) : base;
 }
