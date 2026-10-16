@@ -112,6 +112,47 @@ export async function assertPersonUnique({ documentNumber, email }) {
 }
 
 /**
+ * Marca las filas cuyo correo o documento ya existe en el padrón de
+ * personas: re-importar un archivo ya importado no debe verse como un
+ * fallo fila por fila ("ya existe una persona con ese número de
+ * documento"), sino como un simple "ya está en el sistema" que se omite.
+ * El documento efectivo es documentNumber || code (mismo criterio con
+ * que provisionStudent crea la persona).
+ */
+export function markExistingStudents(rows, persons) {
+    const emails = new Set();
+    const docs = new Set();
+    for (const person of persons ?? []) {
+        const mail = String(person?.email ?? "").trim().toLowerCase();
+        const doc = String(person?.documentNumber ?? person?.document_number ?? "").trim();
+        if (mail) emails.add(mail);
+        if (doc) docs.add(doc);
+    }
+    return (rows ?? []).map((row) => {
+        const mail = String(row?.email ?? "").trim().toLowerCase();
+        const doc = String(row?.documentNumber || row?.code || "").trim();
+        const existing = Boolean((mail && emails.has(mail)) || (doc && docs.has(doc)));
+        return existing ? { ...row, existing: true } : row;
+    });
+}
+
+/**
+ * Versión contra el backend (personMap memoizado, sin llamada extra si
+ * el padrón ya está cargado). Si el padrón no está disponible no se
+ * marca nada: el backend sigue siendo la autoridad en unicidad.
+ */
+export async function findExistingStudents(rows) {
+    let persons;
+    try {
+        persons = await personMap();
+    } catch {
+        return rows ?? [];
+    }
+    if (!persons || typeof persons.values !== "function") return rows ?? [];
+    return markExistingStudents(rows, persons.values());
+}
+
+/**
  * Fichas vigentes que imparten un curso (por código), con su sede.
  * Vacío si el curso no existe en el backend.
  */

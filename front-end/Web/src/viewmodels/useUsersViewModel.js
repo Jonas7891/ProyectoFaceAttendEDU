@@ -21,7 +21,7 @@ import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { authApi } from "../services/api/authApi";
 import { authorizationApi } from "../services/api/authorizationApi";
-import { provisionStaff, provisionStudent, cohortsForCourseCode, importStudents as bulkImportStudents, personDetails } from "../services/api/staffProvisioning";
+import { provisionStaff, provisionStudent, cohortsForCourseCode, importStudents as bulkImportStudents, personDetails, findExistingStudents } from "../services/api/staffProvisioning";
 import { userByPersonMap } from "../services/api/referenceData";
 
 // Usuarios pintados por página (la vista de Usuarios pagina en el cliente
@@ -862,5 +862,6 @@ export function useUsersViewModel(
         removeUser,
         changeUserRole,
         cohortsForCourse: cohortsForCourseCode,
+        findExistingStudents,
     };
 }

@@ -276,6 +276,7 @@ export function AdminUsers({ section, vm: vmProp }) {
                     onImport={vm.importUsers}
                     courses={vm.importCourseOptions}
                     getCohortsForCourse={vm.cohortsForCourse}
+                    findExistingStudents={vm.findExistingStudents}
                 />
             )}
         </ScrollView>

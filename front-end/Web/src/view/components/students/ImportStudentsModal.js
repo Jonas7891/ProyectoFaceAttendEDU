@@ -15,6 +15,10 @@
 //  completarse con documentNumber). Las filas sin course se matriculan en
 //  el par "Curso destino" + "Ficha destino" (cada curso suele tener varias
 //  fichas activas); grade no lo consume el backend.
+//
+//  Las filas cuyo correo o documento ya existen en el sistema se marcan
+//  "ya existe" en la vista previa y se omiten al importar (re-importar un
+//  archivo ya importado no debe verse como un fallo fila por fila).
 // ============================================================
 
 import React, { useState, useEffect } from "react";
@@ -87,6 +91,7 @@ const NO_COHORTS = async () => [];
 export default function ImportStudentsModal({
     visible, onClose, onImport, courses = [],
     getCohortsForCourse = NO_COHORTS,
+    findExistingStudents = null,
 }) {
     const { theme }   = useTheme();
     const { isSmall } = useResponsive();
@@ -156,7 +161,15 @@ export default function ImportStudentsModal({
             setStep("error");
             return;
         }
-        setPreview(rows);
+        // Marca filas cuyo correo/documento ya existe en el sistema: se
+        // omiten al importar en vez de fallar una por una con "ya existe
+        // una persona con ese número de documento". Sin checker (o si
+        // falla) el backend sigue siendo la autoridad.
+        let marked = rows;
+        if (findExistingStudents) {
+            try { marked = await findExistingStudents(rows); } catch { marked = rows; }
+        }
+        setPreview(marked);
         setStep("preview");
         setErrorMsg(null);
     };
@@ -167,7 +180,9 @@ export default function ImportStudentsModal({
             // Las filas sin course (o con el curso destino) se matriculan en
             // el par Curso+Ficha elegido; las filas con curso propio distinto
             // conservan el suyo y resuelven su cohorte sin ficha asignada.
-            const drafts = preview.map((r) => {
+            // Las filas marcadas "ya existe" no viajan: el backend las
+            // rechazaría por unicidad y solo ensuciarían el resultado.
+            const drafts = importable.map((r) => {
                 const course = r.course || targetCourse;
                 const useTarget = course !== "" && course === targetCourse && targetCohort !== "";
                 return { ...r, course, cohortId: useTarget ? targetCohort : null };
@@ -189,6 +204,11 @@ export default function ImportStudentsModal({
     const needsTarget = targetCourse !== ""
         && preview.some((r) => !r.course || r.course === targetCourse);
     const missingCohort = needsTarget && (cohortsLoading || targetCohort === "");
+
+    // Filas realmente importables: las marcadas "ya existe" (correo o
+    // documento ya en el sistema) se omiten y no cuentan para el botón.
+    const importable = preview.filter((r) => !r.existing);
+    const existingCount = preview.length - importable.length;
 
     // Selectores Curso/Ficha destino: se pintan en idle y en preview para
     // poder corregir el destino sin perder el archivo ya cargado.
@@ -422,7 +442,8 @@ export default function ImportStudentsModal({
                                             {fileName}
                                         </Text>
                                         <Text style={{ fontSize: 13, color: c.status.success, marginTop: 2 }}>
-                                            {preview.length} {t("estudiantes listos para importar")}
+                                            {importable.length} {t("estudiantes listos para importar")}
+                                            {existingCount > 0 && ` • ${existingCount} ${t("ya existentes (se omitirán)")}`}
                                             {parseErrors > 0 && ` • ${parseErrors} ${t("filas con errores omitidas")}`}
                                         </Text>
                                     </View>
@@ -444,6 +465,24 @@ export default function ImportStudentsModal({
                                         <Text style={{ fontSize: 13, color: c.status.warning, flex: 1 }}>
                                             {parseErrors} {t("filas con errores omitidas")}
                                             {". "}{t("Verifica que tengan name, code (o documentNumber) y email")}
+                                        </Text>
+                                    </View>
+                                )}
+
+                                {existingCount > 0 && (
+                                    <View style={{
+                                        backgroundColor: c.status.warningLight,
+                                        borderRadius: 14,
+                                        padding: 12,
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        gap: 8,
+                                    }}>
+                                        <Feather name="user-check" size={16} color={c.status.warning} />
+                                        <Text style={{ fontSize: 13, color: c.status.warning, flex: 1 }}>
+                                            {importable.length === 0
+                                                ? t("Todos los estudiantes del archivo ya están en el sistema: no hay nada que importar")
+                                                : `${existingCount} ${t("estudiantes ya están en el sistema (correo o documento): se omitirán al importar")}`}
                                         </Text>
                                     </View>
                                 )}
@@ -482,6 +521,7 @@ export default function ImportStudentsModal({
                                                 paddingHorizontal: 10,
                                                 borderBottomWidth: 1,
                                                 borderBottomColor: c.border.primary,
+                                                backgroundColor: row.existing ? c.status.warningLight : "transparent",
                                             }}>
                                                 {[
                                                     { v: row.name, w: 160 },
@@ -489,12 +529,14 @@ export default function ImportStudentsModal({
                                                     { v: row.email, w: 160 },
                                                     { v: row.course, w: 160 },
                                                     { v: row.grade, w: 90 },
-                                                    { v: row.status, w: 90 },
-                                                ].map(({ v, w }, j) => (
+                                                    row.existing
+                                                        ? { v: t("ya existe"), w: 90, warn: true }
+                                                        : { v: row.status, w: 90 },
+                                                ].map(({ v, w, warn }, j) => (
                                                     <Text key={j} style={{
                                                         width: w,
                                                         fontSize: 13,
-                                                        color: c.text.primary,
+                                                        color: warn ? c.status.warning : c.text.primary,
                                                     }} numberOfLines={1}>
                                                         {v}
                                                     </Text>
@@ -622,9 +664,9 @@ export default function ImportStudentsModal({
                             {step === "done" ? t("Cerrar") : t("Cancelar")}
                         </Button>
                         {step === "preview" && (
-                            <Button variant="primary" disabled={missingCohort} onPress={handleImport}>
+                            <Button variant="primary" disabled={missingCohort || importable.length === 0} onPress={handleImport}>
                                 <Feather name="upload" size={14} color={c.brand.textOnPrimary} />
-                                {"  "}{t("Importar")} {preview.length} {t("estudiantes")}
+                                {"  "}{t("Importar")} {importable.length} {t("estudiantes")}
                             </Button>
                         )}
                         {step === "idle" && (

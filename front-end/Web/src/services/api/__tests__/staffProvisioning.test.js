@@ -33,7 +33,7 @@ import { authApi } from "../authApi";
 import { academicApi } from "../academicApi";
 import { authorizationApi } from "../authorizationApi";
 import { listBlocks, listCohorts, listCourses, listPrograms, personMap } from "../referenceData";
-import { assertPersonUnique, cohortsForCourseCode, provisionStaff, provisionStudent } from "../staffProvisioning";
+import { assertPersonUnique, cohortsForCourseCode, findExistingStudents, markExistingStudents, provisionStaff, provisionStudent } from "../staffProvisioning";
 
 const base = {
     name: "Ana García López",
@@ -216,4 +216,45 @@ test("student: compensates enrollment, actor and person on user failure", async 
     expect(academicApi.deleteEnrollment).toHaveBeenCalledWith(701);
     expect(academicApi.deleteActor).toHaveBeenCalledWith(601);
     expect(authApi.deletePerson).toHaveBeenCalledWith("person-1");
+});
+
+describe("markExistingStudents", () => {
+    const roster = new Map([
+        ["p-1", { personId: "p-1", documentNumber: "1015407712", email: "justin@ejemplo.com" }],
+        ["p-2", { personId: "p-2", documentNumber: "999", email: null }],
+    ]);
+
+    test("marca por correo (case-insensitive) y por documento efectivo", () => {
+        const rows = [
+            { name: "A", code: "C1", email: "JUSTIN@EJEMPLO.COM", documentNumber: "" },
+            { name: "B", code: "999", email: "b@nuevo.com" },
+            { name: "C", code: "C3", email: "c@nuevo.com", documentNumber: "123" },
+        ];
+        const out = markExistingStudents(rows, roster.values());
+        expect(out[0].existing).toBe(true);  // correo ya registrado
+        expect(out[1].existing).toBe(true);  // code como documento efectivo
+        expect(out[2].existing).toBeUndefined(); // fila nueva intacta
+        expect(out).toHaveLength(3);          // nunca descarta filas
+    });
+
+    test("padrón vacío no marca nada", () => {
+        const rows = [{ name: "A", code: "1", email: "a@b.com" }];
+        expect(markExistingStudents(rows, new Map().values())[0].existing).toBeUndefined();
+    });
+});
+
+describe("findExistingStudents", () => {
+    test("consulta el padrón y marca los duplicados", async () => {
+        personMap.mockResolvedValue(
+            new Map([["p-1", { personId: "p-1", documentNumber: "1", email: "a@b.com" }]])
+        );
+        const out = await findExistingStudents([{ name: "A", code: "2", email: "a@b.com" }]);
+        expect(out[0].existing).toBe(true);
+    });
+
+    test("si el padrón no carga no se marca nada (el backend es la autoridad)", async () => {
+        personMap.mockRejectedValueOnce(new Error("offline"));
+        const rows = [{ name: "A", code: "2", email: "a@b.com" }];
+        await expect(findExistingStudents(rows)).resolves.toEqual(rows);
+    });
 });
