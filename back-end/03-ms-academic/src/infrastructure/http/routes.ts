@@ -62,6 +62,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     code: z.string().min(1).max(50),
     name: z.string().min(1).max(255),
     cityId: z.number().int().default(1),
+    cityName: z.string().max(100).optional(),
     address: z.string().max(255).optional(),
     phone: z.string().max(50).optional(),
     email: z.string().email().max(255).optional(),

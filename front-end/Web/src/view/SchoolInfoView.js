@@ -12,6 +12,7 @@ import { View, Text, ScrollView, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import {
     Alert,
+    AnimatedDropdown,
     Badge,
     BaseModal,
     Button,
@@ -26,6 +27,7 @@ import { useTheme } from "./components/hooks/useTheme";
 import { useResponsive } from "./components/hooks/useResponsive";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useSchoolInfoViewModel } from "../viewmodels/useSchoolInfoViewModel";
+import { useCityOptions } from "../viewmodels/useCityOptions";
 
 function InfoField({ label, value, icon }) {
     const { theme } = useTheme();
@@ -164,8 +166,8 @@ export default function SchoolInfoView({ embedded = false }) {
                             <InfoField label={t("Código")} value={vm.school.code} icon="hash" />
                             <InfoField label={t("Dirección")} value={vm.school.address} icon="map" />
                             <InfoField
-                                label={t("Ciudad (ID)")}
-                                value={vm.school.cityId ?? vm.school.city_id ?? null}
+                                label={t("Ciudad")}
+                                value={vm.school.cityName ?? null}
                                 icon="map-pin"
                             />
                             <InfoField label={t("Teléfono")} value={vm.school.phone} icon="phone" />
@@ -223,6 +225,9 @@ export default function SchoolInfoView({ embedded = false }) {
 }
 
 function EditModal({ vm, t }) {
+    const { theme } = useTheme();
+    const c = theme.colors;
+    const cityItems = useCityOptions();
     return (
         <BaseModal
             visible={vm.editOpen}
@@ -268,12 +273,28 @@ function EditModal({ vm, t }) {
                     value={vm.form.address}
                     onChangeText={(v) => vm.setField("address", v)}
                 />
-                <TextInput
-                    label={t("Ciudad (ID catálogo externo)")}
-                    value={String(vm.form.cityId ?? "")}
-                    onChangeText={(v) => vm.setField("cityId", v.replace(/[^\d]/g, ""))}
-                    placeholder={t("Ej: 1")}
-                />
+                <View>
+                    <Text
+                        style={{
+                            fontSize: 14,
+                            fontWeight: "600",
+                            color: c.text.secondary,
+                            marginBottom: 6,
+                        }}
+                    >
+                        {t("Ciudad")}
+                    </Text>
+                    <AnimatedDropdown
+                        items={cityItems}
+                        value={vm.form.cityName}
+                        onSelect={(v) => vm.setField("cityName", v)}
+                        placeholder={t("Seleccionar ciudad")}
+                        triggerIcon="map-pin"
+                        searchable
+                        searchPlaceholder={t("Buscar ciudad...")}
+                        triggerHeight={48}
+                    />
+                </View>
                 <TextInput
                     label={t("Teléfono")}
                     type="phone"
