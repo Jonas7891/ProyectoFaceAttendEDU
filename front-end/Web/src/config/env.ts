@@ -40,11 +40,20 @@ function inferApiBaseUrl(): string {
 
 /** Base del API Gateway Kong. Sin slash final. */
 export function getApiBaseUrl(): string {
+    // Intenta leer de:
+    // 1. Variable global inyectada en runtime (window.__FACEATTEND_API_URL__)
+    // 2. Variable de entorno de build (EXPO_PUBLIC_API_URL)
+    // 3. Fallback a inferApiBaseUrl()
+    const globalUrl = (globalThis as any).__FACEATTEND_API_URL__?.trim();
+    if (globalUrl) return globalUrl.endsWith("/") ? globalUrl.slice(0, -1) : globalUrl;
+
     const nodeEnv = (
         globalThis as { process?: { env?: Record<string, string | undefined> } }
     ).process?.env;
     const explicit = nodeEnv?.EXPO_PUBLIC_API_URL?.trim();
-    const base = explicit || inferApiBaseUrl();
+    if (explicit) return explicit.endsWith("/") ? explicit.slice(0, -1) : explicit;
+
+    const base = inferApiBaseUrl();
     return base.endsWith("/") ? base.slice(0, -1) : base;
 }
 

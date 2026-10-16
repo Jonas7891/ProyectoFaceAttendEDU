@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build || echo 'No build script found'",
+  "buildCommand": "EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL npm run build",
   "outputDirectory": "dist",
   "framework": null,
   "env": {
