@@ -58,13 +58,18 @@ func resolveActorScope(ctx context.Context, cfg AuthConfig, userID, token string
 		AcademicActorID int64  `json:"academicActorId"`
 		PersonID        string `json:"personId"`
 	}
-	if _, err := getJSONStrict(ctx, cfg, cfg.AcademicURL+"/api/v1/academic-actors?limit=2000", token, &actors); err != nil {
+	if user.PersonID == "" {
+		return map[int64]bool{}, nil
+	}
+	// ?personId= filtra en academic: el listado con ?limit se corta en 100 filas y el actor
+	// del llamante quedaba fuera (el instructor veía un alcance vacío).
+	if _, err := getJSONStrict(ctx, cfg, cfg.AcademicURL+"/api/v1/academic-actors?personId="+url.QueryEscape(user.PersonID), token, &actors); err != nil {
 		return nil, err
 	}
 	scope := map[int64]bool{}
 	var own []int64
 	for _, a := range actors {
-		if user.PersonID != "" && strings.EqualFold(a.PersonID, user.PersonID) {
+		if strings.EqualFold(a.PersonID, user.PersonID) {
 			scope[a.AcademicActorID] = true
 			own = append(own, a.AcademicActorID)
 		}
