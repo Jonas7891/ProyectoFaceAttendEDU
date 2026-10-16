@@ -24,7 +24,7 @@
 //  (ver apiClient).
 // ============================================================
 
-const GATEWAY_PORT = 8080;
+const GATEWAY_PORT = 8000;
 const DEV_TUNNEL_HOST = /^.+-\d+\.[^.]+\.devtunnels\.ms$/i;
 
 // Este valor es reemplazado por Expo durante el build si EXPO_PUBLIC_API_URL está definida
