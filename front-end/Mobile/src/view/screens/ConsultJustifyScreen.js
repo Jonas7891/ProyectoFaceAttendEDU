@@ -1,3 +1,4 @@
+import BackButton from '../components/common/BackButton';
 import React, {useMemo} from 'react';
 import {
     FlatList,
@@ -52,7 +53,7 @@ export default function ValidJustificationsScreen() {
             <View style={styles.cardHeader}>
                 <Text style={[styles.cardDate, { color: colors.text }]}>{item.fecha}</Text>
                 <View style={[styles.statusBadge, { backgroundColor: getEstadoColor(item.estado) }]}>
-                    <Text style={[styles.statusText, { color: colors.onPrimary }]}>{item.estado}</Text>
+                    <Text style={[styles.statusText, { color: colors.onPrimary }]}>{t(`attendance.${item.estado}`)}</Text>
                 </View>
             </View>
             <Text style={[styles.cardReason, { color: colors.textSecondary }]}>{item.motivo}</Text>
@@ -67,7 +68,7 @@ export default function ValidJustificationsScreen() {
                     <Text style={[styles.cardTime, { color: colors.textSecondary }]}>{item.hora}</Text>
                 </View>
                 <View style={[styles.statusBadge, { backgroundColor: getEstadoColor(item.estado) }]}>
-                    <Text style={[styles.statusText, { color: colors.onPrimary }]}>{item.estado}</Text>
+                    <Text style={[styles.statusText, { color: colors.onPrimary }]}>{t(`attendance.${item.estado}`)}</Text>
                 </View>
             </View>
             <Text style={[styles.cardReason, { color: colors.textSecondary }]}>{item.motivo}</Text>
@@ -91,18 +92,7 @@ export default function ValidJustificationsScreen() {
                 >
                     <View style={styles.containerValidJustifications}>
                         <View style={styles.headerTopRowValidJustifications}>
-                            <TouchableOpacity
-                                onPress={handleBack}
-                                activeOpacity={0.7}
-                                accessibilityRole="button"
-                                accessibilityLabel={t('common.back')}
-                                style={{ padding: 6 }}
-                            >
-                                <Image
-                                    source={require('../../assets/images/flecha-volver.png')}
-                                    style={[styles.headerBackImageValidJustifications, { tintColor: colors.text }]}
-                                />
-                            </TouchableOpacity>
+                            <BackButton onPress={handleBack} />
                             <View style={{ flex: 1 }}>
                                 <Text style={[styles.mainTitleValidJustifications, { color: colors.text }]}>
                                     {t('consultJustify.mainTitle')}

@@ -1,7 +1,7 @@
 import { request, GET, POST, ApiError, onSessionExpired } from '../apiClient';
 import i18n from '../../utils/i18n';
 
-jest.mock('../../storage/TokenStorage', () => ({
+jest.mock('../../view/storage/TokenStorage', () => ({
   getToken: jest.fn(async () => 'session-token'),
 }));
 

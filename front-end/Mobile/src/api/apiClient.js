@@ -1,4 +1,4 @@
-import { getToken } from '../storage/TokenStorage';
+import { getToken } from '../view/storage/TokenStorage';
 import ENV from '../config/env';
 import { httpErrorMessage, noSessionMessage, timeoutMessage } from './httpErrors';
 

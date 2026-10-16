@@ -3,7 +3,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '../utils/i18n';
-import {getToken, removeToken} from '../storage/TokenStorage';
+import {getToken, removeToken} from '../view/storage/TokenStorage';
 import {onSessionExpired, request} from '../api/apiClient';
 import {useUser} from '../utils/UserContext';
 import HomesScreen from '../view/screens/login/Login';
@@ -133,7 +133,7 @@ export default function App() {
     const handleLogout = async () => {
         try {
             try {
-                const { getToken } = require('../storage/TokenStorage');
+                const { getToken } = require('../view/storage/TokenStorage');
                 const { AuthService } = require('../services/AuthService');
                 const sessionId = await getToken();
                 await AuthService.logout(sessionId);
