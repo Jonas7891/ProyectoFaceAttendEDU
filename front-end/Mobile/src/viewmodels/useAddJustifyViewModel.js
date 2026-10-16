@@ -8,6 +8,7 @@ import {backendGet} from '../api/backend';
 import ENV from '../config/env';
 import {getCurrentUser} from '../services/UserService';
 import {ActorService} from '../services/ActorService';
+import {SUPPORT_FILE_MIME_TYPES, validateSupportFile} from '../utils/validators';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^(\d{1,2}):(\d{2})\s*([AaPp][Mm])$/;
@@ -51,10 +52,21 @@ export function useAddJustificationViewModel() {
 
     const pickFile = async () => {
         const result = await DocumentPicker.getDocumentAsync({
-            type: ['application/pdf', 'image/*', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+            type: SUPPORT_FILE_MIME_TYPES,
             copyToCacheDirectory: true,
         });
-        if (!result.canceled) setSelectedFile(result.assets[0]);
+        if (result.canceled) return;
+        const file = result.assets[0];
+        const problem = validateSupportFile(file);
+        if (problem) {
+            setAlertData({
+                message: t(problem === 'size' ? 'justify.fileTooLarge' : 'justify.invalidFileFormat'),
+                type: 'warning',
+                timestamp: Date.now(),
+            });
+            return;
+        }
+        setSelectedFile(file);
     };
 
     // Navegación hacia atrás
