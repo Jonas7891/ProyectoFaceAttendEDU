@@ -10,10 +10,13 @@
 //  arrastrar el árbol de componentes (barrel ../common).
 //
 //  Columnas esperadas (en cualquier orden, case-insensitive):
-//    name | code | email | course | grade | attendance | hasFacial |
-//    hasFingerprint | status
+//    name | code | email | course | grade | documentNumber | password |
+//    attendance | hasFacial | hasFingerprint | status
 //
-//  Las columnas mínimas requeridas son: name, code, email, course, grade.
+//  Las columnas mínimas requeridas son: name, code y email (code puede
+//  completarse con documentNumber). course/grade NO se exigen aquí: si la
+//  fila no trae curso, el modal aplica el "Curso destino" seleccionado
+//  (provisionStudent necesita curso → cohorte → sede para matricular).
 // ============================================================
 
 import { parseImportFileGrid } from "../common/importFileParser";
@@ -57,6 +60,17 @@ const ALIAS = {
     // status
     status: "status",
     estado: "status",
+    // documentNumber
+    documentnumber: "documentNumber",
+    documento: "documentNumber",
+    "numero de documento": "documentNumber",
+    "número de documento": "documentNumber",
+    cedula: "documentNumber",
+    "cédula": "documentNumber",
+    // password
+    password: "password",
+    clave: "password",
+    contraseña: "password",
 };
 
 function normalizeHeader(h) {
@@ -81,13 +95,18 @@ function rowToStudent(headers, cells) {
             obj[key] = val;
         }
     });
-    if (!obj.name || !obj.code || !obj.email || !obj.course || !obj.grade) return null;
+    // El código puede completarse con el documento (mismo criterio auto-gen
+    // del formulario); sin ninguno de los dos no hay fila importable.
+    const code = obj.code || obj.documentNumber || "";
+    if (!obj.name || !code || !obj.email) return null;
     return {
         name: obj.name,
-        code: obj.code,
+        code,
         email: obj.email,
-        course: obj.course,
-        grade: obj.grade,
+        course: obj.course ?? "",
+        grade: obj.grade ?? "",
+        documentNumber: obj.documentNumber ?? "",
+        password: obj.password ?? "",
         attendance: obj.attendance ?? 100,
         hasFacial: obj.hasFacial ?? false,
         hasFingerprint: obj.hasFingerprint ?? false,

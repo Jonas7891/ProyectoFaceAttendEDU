@@ -8,18 +8,22 @@
 //  español).
 //
 //  Columnas esperadas (en cualquier orden, case-insensitive):
-//    name | code | email | course | grade | attendance | status
+//    name | code | email | course | grade | documentNumber | password |
+//    attendance | hasFacial | hasFingerprint | status
 //
-//  Las columnas mínimas requeridas son: name, code, email, course, grade.
+//  Las columnas mínimas requeridas son: name, code y email (code puede
+//  completarse con documentNumber). Las filas sin course se matriculan en
+//  el par "Curso destino" + "Ficha destino" (cada curso suele tener varias
+//  fichas activas); grade no lo consume el backend.
 // ============================================================
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Modal, View, Text, ScrollView, TouchableOpacity,
     ActivityIndicator, Platform,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Button, Badge } from "../common";
+import { AnimatedDropdown, Button, Badge } from "../common";
 import { useTheme }       from "../hooks/useTheme";
 import { useResponsive }  from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
@@ -76,8 +80,13 @@ function pickFile() {
 
 // ── Componente principal ──────────────────────────────────
 
+// Identidad estable para la cascada curso → ficha (si se declarara inline
+// como default, el useEffect de carga se dispararía en cada render).
+const NO_COHORTS = async () => [];
+
 export default function ImportStudentsModal({
-    visible, onClose, onImport,
+    visible, onClose, onImport, courses = [],
+    getCohortsForCourse = NO_COHORTS,
 }) {
     const { theme }   = useTheme();
     const { isSmall } = useResponsive();
@@ -90,6 +99,40 @@ export default function ImportStudentsModal({
     const [parseErrors,  setParseErrors]  = useState(0);
     const [importResult, setImportResult] = useState({ success: 0, errors: [] });
     const [errorMsg,     setErrorMsg]     = useState(null);
+    const [targetCourse, setTargetCourse]  = useState("");
+    const [targetCohort,  setTargetCohort]  = useState("");
+    const [cohortOptions, setCohortOptions] = useState([]);
+    const [cohortsLoading, setCohortsLoading] = useState(false);
+
+    // Cascada Curso destino → Ficha destino: provisionStudent exige una sola
+    // cohorte y cada curso suele tener varias fichas activas; con una única
+    // ficha se preselecciona sola.
+    useEffect(() => {
+        let alive = true;
+        setCohortOptions([]);
+        setTargetCohort("");
+        if (!targetCourse) {
+            setCohortsLoading(false);
+            return () => { alive = false; };
+        }
+        setCohortsLoading(true);
+        Promise.resolve(getCohortsForCourse(targetCourse))
+            .then((list) => {
+                if (!alive) return;
+                const opts = (Array.isArray(list) ? list : [])
+                    .map((cohort) => ({
+                        value: String(cohort?.cohortId ?? ""),
+                        label: String(cohort?.code || cohort?.cohortId || ""),
+                        icon: "users",
+                    }))
+                    .filter((opt) => opt.value);
+                setCohortOptions(opts);
+                if (opts.length === 1) setTargetCohort(opts[0].value);
+            })
+            .catch(() => {})
+            .finally(() => { if (alive) setCohortsLoading(false); });
+        return () => { alive = false; };
+    }, [targetCourse, getCohortsForCourse]);
 
     const handleClose = () => {
         setStep("idle");
@@ -98,6 +141,7 @@ export default function ImportStudentsModal({
         setParseErrors(0);
         setImportResult({ success: 0, errors: [] });
         setErrorMsg(null);
+        setTargetCourse("");
         onClose();
     };
 
@@ -120,9 +164,17 @@ export default function ImportStudentsModal({
     const handleImport = async () => {
         setStep("importing");
         try {
+            // Las filas sin course (o con el curso destino) se matriculan en
+            // el par Curso+Ficha elegido; las filas con curso propio distinto
+            // conservan el suyo y resuelven su cohorte sin ficha asignada.
+            const drafts = preview.map((r) => {
+                const course = r.course || targetCourse;
+                const useTarget = course !== "" && course === targetCourse && targetCohort !== "";
+                return { ...r, course, cohortId: useTarget ? targetCohort : null };
+            });
             // onImport ahora devuelve { success, errors } (alta real en el
             // backend, fila por fila): un fallo individual no detiene el resto.
-            const result = await onImport(preview);
+            const result = await onImport(drafts);
             setImportResult(result ?? { success: 0, errors: [] });
             setStep("done");
         } catch {
@@ -130,6 +182,67 @@ export default function ImportStudentsModal({
             setStep("error");
         }
     };
+
+    // Si hay filas que usarán el curso destino y aún no está resuelta su
+    // ficha (o sigue cargando), el import fallaría en todas con "Select the
+    // student cohort": se bloquea el botón con el aviso junto a los selectores.
+    const needsTarget = targetCourse !== ""
+        && preview.some((r) => !r.course || r.course === targetCourse);
+    const missingCohort = needsTarget && (cohortsLoading || targetCohort === "");
+
+    // Selectores Curso/Ficha destino: se pintan en idle y en preview para
+    // poder corregir el destino sin perder el archivo ya cargado.
+    const targetSelectors = (
+        <View style={{ gap: 6 }}>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: c.text.primary }}>
+                {t("Curso destino")}{" "}
+                <Text style={{ fontWeight: "400", color: c.text.secondary }}>
+                    — {t("para filas sin curso")} ({t("Opcional")})
+                </Text>
+            </Text>
+            <AnimatedDropdown
+                items={courses}
+                value={targetCourse}
+                onSelect={setTargetCourse}
+                placeholder={t("Sin curso destino")}
+                triggerIcon="book-open"
+                searchable
+                searchPlaceholder={t("Buscar curso...")}
+            />
+            {targetCourse !== "" && (
+                <View style={{ gap: 6 }}>
+                    <Text style={{ fontSize: 13, fontWeight: "600", color: c.text.primary }}>
+                        {t("Ficha destino")}{" "}
+                        <Text style={{ fontWeight: "400", color: c.text.secondary }}>
+                            — {t("se elige sola si solo hay una")}
+                        </Text>
+                    </Text>
+                    {cohortsLoading ? (
+                        <ActivityIndicator size="small" color={c.brand.primary} />
+                    ) : cohortOptions.length === 0 ? (
+                        <Text style={{ fontSize: 12, color: c.status.error }}>
+                            {t("El curso no tiene fichas activas")}
+                        </Text>
+                    ) : (
+                        <AnimatedDropdown
+                            items={cohortOptions}
+                            value={targetCohort}
+                            onSelect={setTargetCohort}
+                            placeholder={t("Selecciona la ficha destino")}
+                            triggerIcon="users"
+                            searchable={cohortOptions.length > 6}
+                            searchPlaceholder={t("Buscar ficha...")}
+                        />
+                    )}
+                    {!cohortsLoading && cohortOptions.length > 1 && targetCohort === "" && (
+                        <Text style={{ fontSize: 12, color: c.status.warning }}>
+                            {t("Selecciona la ficha destino")}
+                        </Text>
+                    )}
+                </View>
+            )}
+        </View>
+    );
 
     if (!visible) return null;
 
@@ -223,6 +336,9 @@ export default function ImportStudentsModal({
                                     </Text>
                                 </TouchableOpacity>
 
+                                {/* Curso + Ficha destino: fallback para filas sin course */}
+                                {targetSelectors}
+
                                 {/* Plantilla */}
                                 <View style={{
                                     backgroundColor: c.background.app,
@@ -263,7 +379,7 @@ export default function ImportStudentsModal({
                                         {t("Columnas requeridas")}
                                     </Text>
                                     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-                                        {["name", "code", "email", "course", "grade"].map((col) => (
+                                        {["name", "code", "email"].map((col) => (
                                             <Badge key={col} variant="primary">{col}</Badge>
                                         ))}
                                     </View>
@@ -272,7 +388,14 @@ export default function ImportStudentsModal({
                                         color: c.text.secondary,
                                         marginTop: 8,
                                     }}>
-                                        {t("Columnas opcionales")}{": attendance, hasFacial, hasFingerprint, status"}
+                                        {t("Columnas opcionales")}{": course, grade, documentNumber, password, attendance, hasFacial, hasFingerprint, status"}
+                                    </Text>
+                                    <Text style={{
+                                        fontSize: 12,
+                                        color: c.text.secondary,
+                                        marginTop: 4,
+                                    }}>
+                                        {t("Las filas sin course se matriculan en el Curso y Ficha destino; sin code se usa documentNumber")}
                                     </Text>
                                 </View>
                             </View>
@@ -281,6 +404,9 @@ export default function ImportStudentsModal({
                         {/* ── STEP: preview ── */}
                         {step === "preview" && (
                             <View style={{ gap: 14 }}>
+                                {/* Destino de matrícula (mismos selectores que en idle) */}
+                                {targetSelectors}
+
                                 {/* Resumen */}
                                 <View style={{
                                     backgroundColor: c.status.successLight,
@@ -317,7 +443,7 @@ export default function ImportStudentsModal({
                                         <Feather name="alert-triangle" size={16} color={c.status.warning} />
                                         <Text style={{ fontSize: 13, color: c.status.warning, flex: 1 }}>
                                             {parseErrors} {t("filas con errores omitidas")}
-                                            {". "}{t("Verifica que tengan name, code, email, course y grade")}
+                                            {". "}{t("Verifica que tengan name, code (o documentNumber) y email")}
                                         </Text>
                                     </View>
                                 )}
@@ -496,7 +622,7 @@ export default function ImportStudentsModal({
                             {step === "done" ? t("Cerrar") : t("Cancelar")}
                         </Button>
                         {step === "preview" && (
-                            <Button variant="primary" onPress={handleImport}>
+                            <Button variant="primary" disabled={missingCohort} onPress={handleImport}>
                                 <Feather name="upload" size={14} color={c.brand.textOnPrimary} />
                                 {"  "}{t("Importar")} {preview.length} {t("estudiantes")}
                             </Button>

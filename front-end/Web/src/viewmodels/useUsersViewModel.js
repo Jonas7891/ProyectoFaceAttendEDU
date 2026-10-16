@@ -318,6 +318,23 @@ export function useUsersViewModel(
         ];
     }, [appData.courses, myCourseIds, t]);
 
+    // ── Cursos para el "Curso destino" de la importación CSV ────
+    // El valor es el courseCode (provisionStudent resuelve la cohorte por
+    // código); mismo filtro de alcance que courseOptions. Las filas del
+    // archivo sin columna course se matriculan en este curso.
+    const importCourseOptions = useMemo(
+        () =>
+            (appData.courses || [])
+                .filter((course) => !myCourseIds || myCourseIds.includes(course.id))
+                .map((course) => ({
+                    value: String(course.code ?? ""),
+                    label: `${course.code} — ${course.name}`,
+                    icon: "book-open",
+                }))
+                .filter((opt) => opt.value),
+        [appData.courses, myCourseIds]
+    );
+
     // ── Filtros de tipo de usuario ────────────────────────────
     
     const userTypeFilters = useMemo(() => [
@@ -538,7 +555,12 @@ export function useUsersViewModel(
                 const result = await bulkImportStudents(drafts);
                 // Refleja en la UI lo que sí se creó de verdad (sin esto los
                 // estudiantes importados no aparecían hasta recargar la página).
-                if (result.success > 0) await appData.reloadStudents?.();
+                // Con try/catch: si la recarga falla (p. ej. 429 del rate-limit
+                // al terminar una tanda grande), el resultado de la importación
+                // no se pierde detrás de un "Error al importar" genérico.
+                if (result.success > 0) {
+                    try { await appData.reloadStudents?.(); } catch { /* el usuario puede recargar a mano */ }
+                }
                 return result;
             }
             // Sin CSV con documento/contraseña no hay alta masiva de
@@ -785,6 +807,7 @@ export function useUsersViewModel(
         pageSize: USERS_PAGE_SIZE,
         setPage,
         courseOptions,
+        importCourseOptions,
         userTypeFilters,
         statusFilters,
         selected,

@@ -1,9 +1,10 @@
 // ============================================================
 //  Tests del parser de ImportStudentsModal (importStudentsParser)
-//  Cubre los 3 formatos que fallaban en "Importar estudiantes":
+//  Cubre los formatos que fallaban en "Importar estudiantes":
 //  - CSV con "," (happy path)
 //  - CSV con ";" + BOM UTF-8 (export de Excel en español)
 //  - .xlsx binario (SheetJS)
+//  - Plantilla real sin course/grade y con documentNumber/password
 // ============================================================
 
 import { parseFileContent } from "../importStudentsParser";
@@ -88,5 +89,59 @@ describe("ImportStudentsModal — parseFileContent", () => {
         const result = parseFileContent("estudiantes.csv", csv);
         expect(result.rows).toHaveLength(1);
         expect(result.errors).toBe(0);
+    });
+
+    // Formato real de plantilla: ";" con course/grade vacíos, más las
+    // columnas documentNumber/password y estado en español ("Pendiente
+    // de validar" no es "inactive" ⇒ active).
+    test("plantilla real: course/grade vacíos, con documentNumber y password", () => {
+        const headers = [
+            "name", "code", "email", "course", "grade", "documentNumber",
+            "password", "attendance", "status", "hasFacial", "hasFingerprint",
+        ];
+        const csv = "\uFEFF" + [
+            headers.join(";"),
+            "JUSTIN BAHAMON;1015407712;justin@ejemplo.com;;;1015407712;;;Pendiente de validar;No;No",
+        ].join("\r\n");
+        const result = parseFileContent("plantilla_estudiantes.csv", csv);
+        expect(result.errors).toBe(0);
+        expect(result.rows).toHaveLength(1);
+        expect(result.rows[0]).toMatchObject({
+            name: "JUSTIN BAHAMON",
+            code: "1015407712",
+            email: "justin@ejemplo.com",
+            course: "",
+            grade: "",
+            documentNumber: "1015407712",
+            password: "",
+            status: "active",
+            hasFacial: false,
+            hasFingerprint: false,
+        });
+    });
+
+    test("code vacío se completa con documentNumber y se respeta password", () => {
+        const csv = [
+            "name,email,documentNumber,password",
+            "Ana García,ana@mail.com,12345,ClaveFila123!",
+        ].join("\n");
+        const result = parseFileContent("estudiantes.csv", csv);
+        expect(result.errors).toBe(0);
+        expect(result.rows).toHaveLength(1);
+        expect(result.rows[0]).toMatchObject({
+            code: "12345",
+            documentNumber: "12345",
+            password: "ClaveFila123!",
+        });
+    });
+
+    test("fila sin identidad (sin code ni documentNumber) cuenta como error", () => {
+        const csv = [
+            "name,email",
+            "Ana García,ana@mail.com",
+        ].join("\n");
+        const result = parseFileContent("estudiantes.csv", csv);
+        expect(result.rows).toHaveLength(0);
+        expect(result.errors).toBe(1);
     });
 });

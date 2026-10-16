@@ -276,6 +276,7 @@ export async function provisionStudent({
     courseCode,
     cohortId = null,
     details = {},
+    resetCache = true,
 }) {
     const cohorts = await cohortsForCourseCode(courseCode);
     if (cohorts.length === 0) {
@@ -341,7 +342,11 @@ export async function provisionStudent({
             await authorizationApi.assignRole(userId, roleId);
         }
 
-        resetReferenceData();
+        // La importación masiva pasa resetCache=false: resetear la caché de
+        // referencia en CADA fila recargaba persons/courses/cohorts por
+        // estudiante y reventaba el rate-limit de Kong (60 req/min en
+        // identity) a mitad de la tanda, dejando altas a medias.
+        if (resetCache) resetReferenceData();
         return { personId, userId, actorId, cohortId: target.cohortId };
     } catch (err) {
         try {
@@ -363,17 +368,37 @@ export async function provisionStudent({
 // importados quedan con esta y deben cambiarla al ingresar.
 const BULK_IMPORT_DEFAULT_PASSWORD = "Estudiante123!";
 
+// Errores conocidos de provisionStudent traducidos al usuario.
+function importErrorReason(e) {
+    const msg = e?.message || "";
+    if (msg === "Select the student cohort") {
+        return "El curso tiene varias fichas activas: usa el Curso y la Ficha destino";
+    }
+    if (msg === "The course has no active cohorts in the backend") {
+        return "El curso no tiene fichas activas en el backend";
+    }
+    if (msg === "The selected cohort is not valid for the course") {
+        return "La ficha seleccionada no pertenece a ese curso";
+    }
+    if (e?.status === 429 || /429|Too Many/i.test(msg)) {
+        return "El gateway limitó las peticiones (429): espera un minuto y reintenta la fila";
+    }
+    return msg || "El backend rechazó el estudiante";
+}
+
 /**
  * Importación masiva de estudiantes: un provisionStudent() por fila, sin
  * detenerse ante fallos individuales (igual que importCourses en
- * courseCreation.js). La plantilla no trae documentNumber/password, así
- * que se usan valores por defecto salvo que la fila los traiga.
+ * courseCreation.js). documentNumber/password pueden venir del archivo; si
+ * la fila los trae vacíos se usan code y una contraseña por defecto.
  * @returns {{ success: number, errors: Array<{ student: string, reason: string }> }}
  */
 export async function importStudents(drafts) {
     let success = 0;
     const errors = [];
-    for (const draft of drafts ?? []) {
+    const rows = drafts ?? [];
+    for (let i = 0; i < rows.length; i += 1) {
+        const draft = rows[i];
         const name = String(draft?.name ?? "").trim();
         const code = String(draft?.code ?? "").trim();
         const email = String(draft?.email ?? "").trim();
@@ -388,14 +413,26 @@ export async function importStudents(drafts) {
                 name,
                 code,
                 email,
-                documentNumber: String(draft?.documentNumber ?? code).trim(),
-                password: String(draft?.password ?? BULK_IMPORT_DEFAULT_PASSWORD).trim(),
+                // "||" y no "??": el parser puede traer cadenas vacías, y una
+                // persona sin documento no existe en el modelo (NOT NULL).
+                documentNumber: String(draft?.documentNumber || code).trim(),
+                password: String(draft?.password || BULK_IMPORT_DEFAULT_PASSWORD).trim(),
                 courseCode: course,
+                // Par Curso+Ficha elegido en el modal (filas sin course o con
+                // el mismo curso destino); null ⇒ provisión auto-resuelve.
+                cohortId: draft?.cohortId ?? null,
+                // La caché de referencia se surte UNA vez para toda la tanda.
+                resetCache: false,
             });
             success += 1;
         } catch (e) {
-            errors.push({ student: label, reason: e?.message || "El backend rechazó el estudiante" });
+            errors.push({ student: label, reason: importErrorReason(e) });
         }
+        // Pausa entre filas: cada estudiante cuesta 3 llamadas a identity y
+        // el rate-limit del gateway es 60 req/min; sin este ritmo la tanda
+        // reventaba el límite a mitad de importación (429) y dejaba alumnos
+        // creados a medias (persona/actor sin usuario).
+        if (i < rows.length - 1) await new Promise((r) => setTimeout(r, 2600));
     }
     return { success, errors };
 }

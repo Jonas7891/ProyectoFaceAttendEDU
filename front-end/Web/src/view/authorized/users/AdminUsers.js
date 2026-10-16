@@ -274,6 +274,8 @@ export function AdminUsers({ section, vm: vmProp }) {
                     visible={vm.showImportModal}
                     onClose={vm.closeImportModal}
                     onImport={vm.importUsers}
+                    courses={vm.importCourseOptions}
+                    getCohortsForCourse={vm.cohortsForCourse}
                 />
             )}
         </ScrollView>
