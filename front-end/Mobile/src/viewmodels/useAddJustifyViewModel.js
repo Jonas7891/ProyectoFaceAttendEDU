@@ -3,13 +3,13 @@ import {useTranslation} from 'react-i18next';
 import {useNavigation} from '@react-navigation/native';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 import * as DocumentPicker from 'expo-document-picker';
-import {JustificationService} from '../services/JustificationService';
+import {JustificationService, mapConcurrent} from '../services/JustificationService';
 import {backendGet} from '../api/backend';
 import ENV from '../config/env';
 import {getCurrentUser} from '../services/UserService';
 import {ActorService} from '../services/ActorService';
 import {SUPPORT_FILE_MIME_TYPES, validateSupportFile} from '../utils/validators';
-import {eligibleRecords} from '../utils/justificationEligibility';
+import {byRecordDateDesc, eligibleRecords} from '../utils/justificationEligibility';
 import {useCustomAlert} from '../view/components/common/useCustomAlert';
 
 export function useAddJustificationViewModel() {
@@ -43,7 +43,14 @@ export function useAddJustificationViewModel() {
                         JustificationService.getAll(),
                     ])
                     : [[], []];
-                if (active) setRecords(eligibleRecords(attendance, justifications));
+                // La fecha real de cada registro es la de su sesión de clase.
+                const pending = await mapConcurrent(eligibleRecords(attendance, justifications), async (record) => {
+                    const [session] = record.class_session_id
+                        ? await backendGet(ENV.SCHEDULING_BASE_URL, `api/v1/class-sessions/${record.class_session_id}`).catch(() => [])
+                        : [];
+                    return {...record, session_date: session?.session_date ?? null};
+                });
+                if (active) setRecords(pending.sort(byRecordDateDesc));
             } catch {
                 if (active) showError(t('common.error'), t('justify.loadRecordsError'));
             } finally {

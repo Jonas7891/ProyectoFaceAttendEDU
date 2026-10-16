@@ -6,6 +6,10 @@ export function eligibleRecords(records = [], justifications = []) {
     const justified = new Set(justifications.map((j) => String(j.attendanceRecordId)));
     return records
         .filter((r) => JUSTIFIABLE_STATUSES.includes(r.attendance_status))
-        .filter((r) => !justified.has(String(r.attendance_record_id)))
-        .sort((a, b) => String(b.captured_at || '').localeCompare(String(a.captured_at || '')));
+        .filter((r) => !justified.has(String(r.attendance_record_id)));
 }
+
+// Una inasistencia no tiene captured_at (nadie marcó): su fecha es la de la sesión de clase.
+export const recordDate = (record) => String(record.session_date || record.captured_at || '').slice(0, 10);
+
+export const byRecordDateDesc = (a, b) => recordDate(b).localeCompare(recordDate(a));

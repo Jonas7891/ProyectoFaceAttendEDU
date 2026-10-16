@@ -18,6 +18,7 @@ import CustomAlert from '../components/common/CustomAlert';
 import {createAddJustifyStyles} from './Styles/AddJustifyScreen/Style';
 import {useTheme} from '../components/common/ThemeContext';
 import {useAddJustificationViewModel} from '../../viewmodels/useAddJustifyViewModel';
+import {recordDate} from '../../utils/justificationEligibility';
 
 export default function AddJustification() {
   const { t } = useTranslation();
@@ -81,7 +82,7 @@ export default function AddJustification() {
                   <View style={{ gap: 8, marginBottom: 20 }} accessibilityRole="radiogroup">
                     {records.map((record) => {
                       const selected = record.attendance_record_id === selectedRecordId;
-                      const label = `${String(record.captured_at || '').slice(0, 10)} · ${
+                      const label = `${recordDate(record) || '—'} · ${
                           record.attendance_status === 'Late' ? t('justify.delayType') : t('justify.absenceType')}`;
                       return (
                           <TouchableOpacity
