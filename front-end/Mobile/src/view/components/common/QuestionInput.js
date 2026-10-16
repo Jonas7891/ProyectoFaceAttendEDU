@@ -1,7 +1,7 @@
-import React, {forwardRef} from 'react';
+import React, {forwardRef, useMemo} from 'react';
 import {Text, TextInput, View,} from 'react-native';
 import {useTheme} from './ThemeContext';
-import stylescommon from './style/Style';
+import {createCommonStyles} from './style/Style';
 
 export const QuestionInput = forwardRef(({ 
     placeholder, 
@@ -10,7 +10,8 @@ export const QuestionInput = forwardRef(({
     keyboardType = "default",
     hint 
 }, ref) => {
-    const { colors, theme } = useTheme();
+    const { colors } = useTheme();
+    const stylescommon = useMemo(() => createCommonStyles(colors), [colors]);
 
     return (
         <View>

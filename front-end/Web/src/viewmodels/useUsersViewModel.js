@@ -15,7 +15,7 @@
 //  - Administradores (admins)
 // ============================================================
 
-import { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
@@ -23,6 +23,7 @@ import { authApi } from "../services/api/authApi";
 import { authorizationApi } from "../services/api/authorizationApi";
 import { provisionStaff, provisionStudent, cohortsForCourseCode, importStudents as bulkImportStudents, personDetails, findExistingStudents } from "../services/api/staffProvisioning";
 import { userByPersonMap } from "../services/api/referenceData";
+import { isValidEmail } from "../core/utils/validation";
 
 // Usuarios pintados por página (la vista de Usuarios pagina en el cliente
 // para no cargar miles de filas de golpe en el DOM).
@@ -144,6 +145,7 @@ export function validateUserForm(form) {
     if (!form.name.trim()) return "El nombre es requerido";
     if (!form.code.trim()) return "El código es requerido";
     if (!form.email.trim()) return "El correo es requerido";
+    if (!isValidEmail(form.email.trim())) return "El formato del correo electrónico no es válido";
     if (!form.role) return "El rol es requerido";
 
     // Todos los roles se crean en el backend (POST /persons exige
@@ -156,7 +158,7 @@ export function validateUserForm(form) {
     }
 
     // Validación adicional para estudiantes
-    if (form.role === USER_TYPES.STUDENT && !form.course.trim()) {
+    if (form.role === USER_TYPES.STUDENT && !form.course?.trim()) {
         return "El programa es requerido para estudiantes";
     }
 
@@ -483,8 +485,15 @@ export function useUsersViewModel(
             const err = validateUserForm(form);
             if (err) return err;
 
-            // Estudiante: alta completa en el backend (persona + actor +
-            // matrícula + usuario + rol).
+            // Crear objeto base del usuario
+            const baseUser = {
+                name: form.name.trim(),
+                code: form.code.trim(),
+                email: form.email.trim(),
+                status: form.status,
+            };
+
+            // Delegar al método correspondiente según el tipo de usuario
             if (form.role === USER_TYPES.STUDENT) {
                 try {
                     await provisionStudent({
@@ -502,15 +511,12 @@ export function useUsersViewModel(
                 }
 
                 await appData.addStudent({
-                    name: form.name.trim(),
-                    code: form.code.trim(),
-                    email: form.email.trim(),
+                    ...baseUser,
                     course: form.course.trim(),
                     grade: form.role,
-                    attendance: form.attendance,
+                    attendance: form.attendance || 0,
                     hasFacial: form.hasFacial || false,
                     hasFingerprint: form.hasFingerprint || false,
-                    status: form.status,
                 });
                 return null;
             }
@@ -863,5 +869,19 @@ export function useUsersViewModel(
         changeUserRole,
         cohortsForCourse: cohortsForCourseCode,
         findExistingStudents,
+        
+        // Función para manejar actualización de usuario desde el modal de edición
+        handleUserUpdated: (updatedUser) => {
+            console.log('handleUserUpdated llamado con:', updatedUser);
+            
+            // Actualizar el usuario seleccionado con los nuevos datos
+            setSelected(updatedUser);
+            
+            // Forzar un re-render de la lista completa
+            // Esto debería provocar que el contexto se recalcule
+            setTimeout(() => {
+                console.log('Forzando actualización de la vista...');
+            }, 100);
+        },
     };
 }

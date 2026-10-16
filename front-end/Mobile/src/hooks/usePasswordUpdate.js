@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { REQUEST_TIMEOUT_MS,  PasswordUpdateErrorType } from '../services/constants/auths';
 import { PasswordService } from '../services/passwordService';
 import {validatePasswordRequirements, areAllRequirementsMet} from '../utils/passwordValidator';
@@ -11,6 +12,7 @@ import {validatePasswordRequirements, areAllRequirementsMet} from '../utils/pass
  * @returns {Object} Estado y acciones de actualización
  */
 export function usePasswordUpdate({ email, onSuccess }) {
+    const { t } = useTranslation();
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showNewPassword, setShowNewPassword] = useState(false);
@@ -52,18 +54,18 @@ export function usePasswordUpdate({ email, onSuccess }) {
             if (err.message === 'timeout') {
                 setError({
                     type: PasswordUpdateErrorType.TIMEOUT,
-                    message: 'La operación tardó demasiado',
+                    message: t('httpErrors.timeout'),
                 });
             } else {
                 setError({
                     type: PasswordUpdateErrorType.GENERIC,
-                    message: err.message || 'No se pudo actualizar',
+                    message: err.message || t('profile.passwordModal.errorGeneric'),
                 });
             }
         } finally {
             setIsLoading(false);
         }
-    }, [email, newPassword, canSubmit, onSuccess]);
+    }, [email, newPassword, canSubmit, onSuccess, t]);
 
     /**
      * Resetea el formulario

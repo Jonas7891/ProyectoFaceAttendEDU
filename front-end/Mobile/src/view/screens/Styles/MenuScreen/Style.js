@@ -1,7 +1,7 @@
 import {StyleSheet} from 'react-native';
 import {appFontFamily, normalizeTypography} from '../../../../utils/typography';
 
-const styles = StyleSheet.create(normalizeTypography({
+export const createMenuStyles = (colors) => StyleSheet.create(normalizeTypography({
 ScrollView: {
         flex: 1,
     },
@@ -49,7 +49,7 @@ menuScrollContent: {
 
 safeAreaWhite: {
         flex: 1,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: colors.backgroundWhite,
     },
 
 sectionTitleMenu: {
@@ -57,7 +57,7 @@ sectionTitleMenu: {
         fontFamily: appFontFamily,
         textAlign: "justify",
         marginBottom: 15,
-        color: "#000000",
+        color: colors.text,
         fontWeight: '600',
         marginTop: 15,
         alignSelf: "left",
@@ -68,8 +68,7 @@ userText: {
         textAlign: "center",
         marginTop: 8,
         marginBottom: 15,
-        color: "#000000",
+        color: colors.text,
     },
 }));
 
-export default styles;

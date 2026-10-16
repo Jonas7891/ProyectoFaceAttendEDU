@@ -3,12 +3,14 @@ import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 import {backendGet} from '../api/backend';
 import ENV from '../config/env';
 import {PersonService} from '../services/PersonService';
-import {UserService, getCurrentUser} from '../services/UserService';
-import {ActorService} from '../services/ActorService';
-import {SchoolService} from '../services/SchoolService';
-import {StaffService} from '../services/StaffService';
+import {UserService} from '../services/UserService';
 import Person from '../models/identity/Person';
 import AppUser from '../models/identity/AppUser';
+import {SchoolService} from '../services/SchoolService';
+import {changeRole, createAccount} from '../services/userProvisioning';
+
+export const ROLE_OPTIONS = ['Aprendiz', 'Instructor', 'Administrador'];
+const USERS_PAGE_SIZE = 100;
 
 function unwrap(data) {
   if (data && Array.isArray(data.value)) return data.value;
@@ -20,7 +22,6 @@ function unwrap(data) {
 export function useManageUsersViewModel(enabled = true) {
   const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
-  const [schools, setSchools] = useState([]);
   const [loading, setLoading] = useState(true);
   const updateKey = useLanguageRefresh();
 
@@ -29,8 +30,13 @@ export function useManageUsersViewModel(enabled = true) {
       setLoading(true);
       // Contratos gateway Kong: GET /api/v1/users?page=&limit=, GET
       // /api/v1/users/{id}/roles -> [{roleId, roleName}], GET /api/v1/persons/{id}.
-      const usersData = await backendGet(ENV.API_BASE_URL, 'api/v1/users', {page: 1, limit: 50});
-      const users = unwrap(usersData);
+      // Todas las páginas: antes solo se pedían las primeras 50 cuentas.
+      const users = [];
+      for (let page = 1; ; page++) {
+        const batch = unwrap(await backendGet(ENV.API_BASE_URL, 'api/v1/users', {page, limit: USERS_PAGE_SIZE}));
+        users.push(...batch);
+        if (batch.length < USERS_PAGE_SIZE) break;
+      }
 
       // Enriquecer por lotes acotados: 50 usuarios x 2 peticiones en un solo
       // Promise.all saturaban el gateway (rate-limit) y dejaban roles y
@@ -41,13 +47,13 @@ export function useManageUsersViewModel(enabled = true) {
         const chunk = await Promise.all(users.slice(i, i + ENRICH_CHUNK_SIZE).map(async (u) => {
         const uid = u.user_id || u.userId;
         const pid = u.person_id || u.personId;
-        let roleNames = [];
+        let roles = [];
         try {
-          const roles = unwrap(await backendGet(ENV.API_BASE_URL, `api/v1/users/${uid}/roles`));
-          roleNames = roles.map(r => r.roleName || r.role_name).filter(Boolean);
+          roles = unwrap(await backendGet(ENV.API_BASE_URL, `api/v1/users/${uid}/roles`));
         } catch {
-          roleNames = [];
+          roles = [];
         }
+        const roleNames = roles.map(r => r.role_name).filter(Boolean);
         let person = {};
         if (pid) {
           try {
@@ -65,11 +71,15 @@ export function useManageUsersViewModel(enabled = true) {
           // guardado de edición respondía 400 siempre.
           documentNumber: person.document_number || person.documentNumber || null,
           nombre: `${person.name || ''} ${person.last_name || person.lastName || ''}`.trim(),
+          name: person.name || '',
+          lastName: person.last_name || '',
           email: person.email || '',
           telefono: person.phone || '',
           username: u.username,
           status: u.status,
+          roles,
           roleNames,
+          role: ROLE_OPTIONS.find((r) => roleNames.includes(r)) || roleNames[0] || null,
         };
         }));
         entries.push(...chunk);
@@ -77,30 +87,14 @@ export function useManageUsersViewModel(enabled = true) {
 
       const isStudent = (e) => e.roleNames.some(n => String(n).toLowerCase() === 'aprendiz');
       const isTeacher = (e) => e.roleNames.some(n => ['instructor', 'administrador'].includes(String(n).toLowerCase()));
-      setStudents(entries.filter(isStudent).map(e => ({...e, grado: '—'})));
-      setTeachers(entries.filter(e => !isStudent(e) && isTeacher(e)).map(e => ({...e, materia: '—'})));
+      setStudents(entries.filter(isStudent));
+      setTeachers(entries.filter(e => !isStudent(e) && isTeacher(e)));
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
       setLoading(false);
     }
   }, []);
-
-  // Sedes para el vínculo del administrador (actor ADMIN).
-  const loadSchools = useCallback(async () => {
-    try {
-      const list = await SchoolService.getAll().catch(() => []);
-      setSchools(Array.isArray(list) ? list : []);
-    } catch {
-      setSchools([]);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (enabled) {
-      loadSchools();
-    }
-  }, [enabled, loadSchools]);
 
   useEffect(() => {
     // Solo Administrador puede listar/gestionar usuarios: evita la petición
@@ -125,12 +119,11 @@ export function useManageUsersViewModel(enabled = true) {
   }, [teachers]);
 
   const persistPerson = useCallback(async (item) => {
-    const nameParts = String(item.nombre || '').trim().split(/\s+/);
     const person = await PersonService.update(item.personId, new Person({
       person_id: item.personId,
       document_number: item.documentNumber,
-      name: nameParts.shift() || '',
-      last_name: nameParts.join(' '),
+      name: item.name.trim(),
+      last_name: item.lastName.trim(),
       email: item.email || null,
       phone: item.telefono || null,
     }));
@@ -139,13 +132,34 @@ export function useManageUsersViewModel(enabled = true) {
       person_id: item.personId,
       status: item.status,
     }));
-    return {...item, nombre: person?.fullName || item.nombre};
+    if (item.role && !item.roleNames.includes(item.role)) {
+      await changeRole({userId: item.userId || item.id, personId: item.personId, currentRoles: item.roles, roleName: item.role});
+    }
+    return {...item, nombre: person?.fullName || `${item.name} ${item.lastName}`.trim()};
   }, []);
 
+  // Alta real (persona + usuario + rol + actor); recarga para que la cuenta
+  // aparezca en la pestaña que corresponde a su rol.
+  const createUser = useCallback(async (form) => {
+    await createAccount({
+      name: form.name.trim(),
+      lastName: form.lastName.trim(),
+      documentNumber: form.documentNumber.trim(),
+      email: form.email.trim() || null,
+      phone: form.telefono.trim() || null,
+      username: form.username.trim(),
+      password: form.password,
+      roleName: form.role,
+      schoolId: await SchoolService.getCurrentSchoolId(),
+    });
+    await fetchUsers();
+  }, [fetchUsers]);
+
+  // Tras editar se recarga: un cambio de rol mueve la cuenta de pestaña.
   const updateStudent = useCallback(async (student) => {
-    const updated = await persistPerson(student);
-    setStudents(prev => prev.map(s => (s.id === student.id ? updated : s)));
-  }, [persistPerson]);
+    await persistPerson(student);
+    await fetchUsers();
+  }, [persistPerson, fetchUsers]);
 
   // El backend no tiene DELETE físico (modelo: borrado lógico vía status,
   // AGENTS.md §2.2): desactivar cambia status=false en usuario y persona y
@@ -166,42 +180,10 @@ export function useManageUsersViewModel(enabled = true) {
     setStudents(prev => prev.map(s => (s.id === id ? updated : s)));
   }, [students, setActiveStatus]);
 
-  // Alta real de personal (docente/administrador): persona + usuario +
-  // rol (+ actor: INSTRUCTOR en docentes, ADMIN vinculado a sede en
-  // administradores). La sede del formulario manda; el actor propio o la
-  // sede única son respaldo.
-  const createStaff = useCallback(async ({nombre, documento, email, telefono, password, role, schoolId}) => {
-    let targetSchoolId = schoolId ?? null;
-    if (targetSchoolId == null) {
-      try {
-        const me = await getCurrentUser();
-        if (me?.personId) {
-          const actors = await ActorService.getByPerson(me.personId);
-          targetSchoolId = actors?.[0]?.schoolId ?? null;
-        }
-      } catch {}
-    }
-    if (targetSchoolId == null && (role === 'teacher' || role === 'admin')) {
-      const schools = await SchoolService.getAll().catch(() => []);
-      if (schools.length === 1) targetSchoolId = schools[0]?.schoolId ?? null;
-    }
-    await StaffService.createStaff({
-      name: nombre,
-      code: documento,
-      documentNumber: documento,
-      email,
-      phone: telefono || null,
-      password,
-      role,
-      schoolId: targetSchoolId,
-    });
-    await fetchUsers();
-  }, [fetchUsers]);
-
   const updateTeacher = useCallback(async (teacher) => {
-    const updated = await persistPerson(teacher);
-    setTeachers(prev => prev.map(t => (t.id === teacher.id ? updated : t)));
-  }, [persistPerson]);
+    await persistPerson(teacher);
+    await fetchUsers();
+  }, [persistPerson, fetchUsers]);
 
   const deleteTeacher = useCallback(async (id) => {
     const teacher = teachers.find(item => item.id === id);
@@ -215,12 +197,11 @@ export function useManageUsersViewModel(enabled = true) {
     allStudents: students,
     students,
     teachers,
-    schools,
     loading,
     updateKey,
     searchStudents,
     searchTeachers,
-    createStaff,
+    createUser,
     updateStudent,
     deleteStudent,
     updateTeacher,

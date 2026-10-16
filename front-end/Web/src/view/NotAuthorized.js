@@ -20,8 +20,8 @@ import React, { useState, useEffect } from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet, Animated } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { useTheme } from "../components/hooks/useTheme";
-import { useTranslation } from "../../core/utils/i18n/hooks/useTranslation";
+import { useTheme } from "./components/hooks/useTheme";
+import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 
 /**
  * Tipos de excepciones de autorización
@@ -92,7 +92,7 @@ export function NotAuthorized({
                     icon: "clock",
                     iconColor: c.status.warning,
                     title: t("Sesión caducada"),
-                    message: t("Tu sesión ha expirado. Inicia sesión nuevamente."),
+                    message: t("Tu sesión expiró por inactividad. Por seguridad, debes iniciar sesión nuevamente."),
                 };
             
             case AUTH_EXCEPTION_TYPES.NO_ROLE:
@@ -136,11 +136,8 @@ export function NotAuthorized({
             // Usar callback personalizado si se proporciona
             onRedirect();
         } else {
-            // Por defecto, navegar a login usando React Navigation
-            navigation.reset({
-                index: 0,
-                routes: [{ name: 'FaceAttendEDU-Login' }],
-            });
+            // Navegar a login sin destruir el stack - usar navigate en lugar de reset
+            navigation.navigate('FaceAttendEDU-Login');
         }
     };
 
@@ -148,7 +145,7 @@ export function NotAuthorized({
         <View style={styles.container}>
             {/* Logo de fondo - MÁS GRANDE Y VISIBLE */}
             <Image
-                source={require("../../assets/images/logoFaceAttend.png")}
+                source={require("../assets/images/logoFaceAttend.svg")}
                 style={styles.backgroundLogo}
                 resizeMode="contain"
             />

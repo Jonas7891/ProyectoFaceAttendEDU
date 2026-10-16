@@ -23,6 +23,8 @@ import { useAppData } from "../context/AppDataContext";
 import { useEnvironmentsViewModel } from "../viewmodels/useEnvironmentsViewModel";
 import { useRolePermissions } from "../viewmodels/useRolePermissions";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
+import { usePushNotification } from "./components/common/feedback/PushNotification";
+import { getInstitutionConfig } from "../core/config/institutionConfig";
 import {
     EnvironmentCard,
     EnvironmentDetailModal,
@@ -56,6 +58,7 @@ export default function EnvironmentsView() {
         (cohortId) => cohortCodeById.get(cohortId) ?? cohortCodeById.get(Number(cohortId)) ?? null,
         [cohortCodeById]
     );
+    const pushNotification = usePushNotification();
 
     if (vm.isLoading) {
         return (
@@ -67,6 +70,76 @@ export default function EnvironmentsView() {
 
     const totalSchedules = vm.environments.reduce((acc, env) => acc + env.schedules.length, 0);
     const withoutSchedules = vm.environments.filter((env) => env.schedules.length === 0).length;
+
+    // Función para eliminar ambiente con notificación push
+    const handleDeleteEnvironment = async (environmentId) => {
+        const config = getInstitutionConfig();
+        
+        try {
+            await vm.removeEnvironment(environmentId);
+            
+            // Mostrar notificación de éxito
+            if (config.pushNotifications) {
+                pushNotification.success(
+                    t("Ambiente eliminado"),
+                    t("El ambiente ha sido eliminado correctamente"),
+                    {
+                        source: "environments-view",
+                        priority: "normal",
+                        duration: 3000,
+                    }
+                );
+            }
+        } catch (_error) {
+            // Mostrar notificación de error
+            if (config.pushNotifications) {
+                pushNotification.error(
+                    t("Error al eliminar"),
+                    t("No se pudo eliminar el ambiente. Intenta nuevamente."),
+                    {
+                        source: "environments-view",
+                        priority: "high",
+                        duration: 5000,
+                    }
+                );
+            }
+        }
+    };
+
+    // Función para eliminar horario con notificación push
+    const handleDeleteSchedule = async (envId, scheduleId) => {
+        const config = getInstitutionConfig();
+        
+        try {
+            await vm.removeSchedule(envId, scheduleId);
+            
+            // Mostrar notificación de éxito
+            if (config.pushNotifications) {
+                pushNotification.success(
+                    t("Horario eliminado"),
+                    t("El horario ha sido eliminado del ambiente"),
+                    {
+                        source: "environments-view",
+                        priority: "normal",
+                        duration: 3000,
+                    }
+                );
+            }
+        } catch (_error) {
+            // Mostrar notificación de error
+            if (config.pushNotifications) {
+                pushNotification.error(
+                    t("Error al eliminar"),
+                    t("No se pudo eliminar el horario. Intenta nuevamente."),
+                    {
+                        source: "environments-view",
+                        priority: "high",
+                        duration: 5000,
+                    }
+                );
+            }
+        }
+    };
 
     // Subtitle dinámico con estadísticas
     const pageSubtitle = vm.isLoading
@@ -222,7 +295,7 @@ export default function EnvironmentsView() {
                     environment={vm.selected}
                     onClose={vm.clearSelection}
                     onEdit={() => vm.openEditModal(vm.selected)}
-                    onDelete={() => vm.removeEnvironment(vm.selected.id)}
+                    onDelete={() => handleDeleteEnvironment(vm.selected.id)}
                     onAddSchedule={() => vm.openAddSchedule(vm.selected.id)}
                     onEditSchedule={(schedule) => vm.openEditSchedule(vm.selected.id, schedule)}
                     onDeleteSchedule={(scheduleId) => vm.removeSchedule(vm.selected.id, scheduleId)}

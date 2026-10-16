@@ -1,12 +1,14 @@
-import {useCallback, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useRoute} from '@react-navigation/native';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 import {JustificationService} from '../services/JustificationService';
 
 export function useAddValidJustificationViewModel() {
     const navigation = useNavigation();
     const {t} = useTranslation();
+    // Con { typeToEdit } (desde el catálogo de tipos) el formulario edita en vez de crear.
+    const editing = useRoute().params?.typeToEdit || null;
 
     const [type, setType] = useState('');
     const [description, setDescription] = useState('');
@@ -39,6 +41,15 @@ export function useAddValidJustificationViewModel() {
         { id: 'otro', label: t('admin.typeOther'), icon: '📝', description: t('admin.typeOtherDesc') || 'Otro tipo de justificación' },
     ], [t]);
 
+    useEffect(() => {
+        if (!editing) return;
+        setType(editing.type);
+        setDescription(editing.description);
+        setRequiresDocument(editing.requiresDocument);
+        // La categoría es solo de la interfaz (el backend no la guarda).
+        setCategory((current) => current || categories[categories.length - 1].label);
+    }, [editing, categories]);
+
     const handleBack = useCallback(() => navigation.goBack(), [navigation]);
 
     const handleSave = useCallback(async () => {
@@ -49,19 +60,24 @@ export function useAddValidJustificationViewModel() {
 
         setIsSaving(true);
         try {
-            await JustificationService.createType({
+            const payload = {
                 name: type.trim(),
                 description: description.trim(),
                 requiresAttachment: requiresDocument,
-            });
+            };
+            if (editing) {
+                await JustificationService.updateType(editing.id, payload);
+            } else {
+                await JustificationService.createType(payload);
+            }
 
-            setAlertData({ message: t('admin.justificationCreated'), type: 'success', timestamp: Date.now() });
+            setAlertData({ message: t(editing ? 'admin.justificationUpdated' : 'admin.justificationCreated'), type: 'success', timestamp: Date.now() });
         } catch (error) {
-            setAlertData({ message: t('admin.errorCreating'), type: 'error', timestamp: Date.now() });
+            setAlertData({ message: error?.message || t('admin.errorCreating'), type: 'error', timestamp: Date.now() });
         } finally {
             setIsSaving(false);
         }
-    }, [type, description, category, requiresDocument, t]);
+    }, [type, description, category, requiresDocument, editing, t]);
 
     const selectedCategory = useMemo(() => categories.find(c => c.label === category), [categories, category]);
     const selectedType = useMemo(() => types.find(tp => tp.label === type), [types, type]);
@@ -70,6 +86,6 @@ export function useAddValidJustificationViewModel() {
         type, setType, description, setDescription, category, setCategory,
         requiresDocument, setRequiresDocument, isSaving, updateKey,
         categories, types, selectedCategory, selectedType,
-        handleBack, handleSave, alertData, clearAlert,
+        handleBack, handleSave, alertData, clearAlert, isEditing: !!editing,
     };
 }

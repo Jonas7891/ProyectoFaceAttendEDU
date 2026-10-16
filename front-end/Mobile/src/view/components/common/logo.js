@@ -1,15 +1,20 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {Image, View} from "react-native";
-import styleAuth from "./style/Style";
+import {useTranslation} from "react-i18next";
+import {useTheme} from "./ThemeContext";
+import {createCommonStyles} from "./style/Style";
 
 export default function CustomLogo({
   source,
   size = "medium",
   customSize,
   rounded = true,
-  backgroundColor = "#000000",
+  backgroundColor,
   marginBottom = 20,
 }) {
+  const {t} = useTranslation();
+  const {colors} = useTheme();
+  const styleAuth = useMemo(() => createCommonStyles(colors), [colors]);
 
   const getSize = () => {
     if (customSize) return customSize;
@@ -38,7 +43,7 @@ export default function CustomLogo({
           width: dimensions.width,
           height: dimensions.height,
           borderRadius: rounded ? dimensions.width / 2 : 0,
-          backgroundColor,
+          backgroundColor: backgroundColor ?? colors.text,
           marginBottom,
         },
       ]}
@@ -46,7 +51,7 @@ export default function CustomLogo({
       <Image
         style={styleAuth.image}
         source={source || require("../../../assets/images/logoFaceAttend.png")}
-        accessibilityLabel="Logo de FaceAttend"
+        accessibilityLabel={t('common.logoLabel')}
         resizeMode="cover"
       />
     </View>

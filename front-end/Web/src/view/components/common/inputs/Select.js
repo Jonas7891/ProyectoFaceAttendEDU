@@ -96,6 +96,7 @@ export function Select({
   customIcon,
   noResultsText = "Sin resultados",
   style,
+  buttonStyle,
 }) {
   const { theme } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
@@ -185,6 +186,7 @@ export function Select({
               ? theme.colors.background.hover
               : theme.colors.background.surface,
           },
+          buttonStyle, // Permite sobrescribir height desde fuera
         ]}
         disabled={disabled}
       >

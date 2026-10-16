@@ -1,14 +1,15 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import {Image, TouchableOpacity, View} from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useNavigation, useRoute} from "@react-navigation/native";
 import {useTheme} from './ThemeContext';
-import stylescommon from "./style/Style";
+import {createCommonStyles} from "./style/Style";
 
 export default function BottomBar({ onPressSettings, onPressProfile, onPressSearch, screenNames = {} }) {
   const navigation = useNavigation();
   const route = useRoute();
   const { colors, theme, loadThemeForRole } = useTheme();
+  const stylescommon = useMemo(() => createCommonStyles(colors), [colors]);
 
   const [selected, setSelected] = useState(null);
   const [userRole, setUserRole] = useState(null);
@@ -63,11 +64,11 @@ export default function BottomBar({ onPressSettings, onPressProfile, onPressSear
     }
   ];
 
-  // REGLA: oscuro → íconos blancos, claro → íconos negros
-  // El color activo siempre usa colors.primary (azul) en ambos temas.
+  // Íconos inactivos en colors.text (claro en oscuro, oscuro en claro).
+  // El activo usa colors.primary en ambos temas.
   const getIconTint = (key) => {
     if (selected === key) return colors.primary;
-    return theme === 'dark' ? '#FFFFFF' : '#000000';
+    return colors.text;
   };
 
   return (

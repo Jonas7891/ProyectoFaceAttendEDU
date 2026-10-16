@@ -1,63 +1,34 @@
 import {useCallback, useEffect, useState} from 'react';
-import {backendGet} from '../api/backend';
-import ENV from '../config/env';
 import {EnvironmentService} from '../services/EnvironmentService';
-import {ActorService} from '../services/ActorService';
 import {SchoolService} from '../services/SchoolService';
-import {getCurrentUser} from '../services/UserService';
+import Environment from '../models/scheduling/Environment';
 
-function unwrap(data) {
-  if (data && Array.isArray(data.value)) return data.value;
-  if (Array.isArray(data)) return data;
-  if (data && typeof data === 'object') return [data];
-  return [];
-}
-
-function toMapped(r) {
-  const id = r.environment_id ?? r.environmentId ?? r.id;
-  return {
-    id,
-    nombre: r.name || r.code || '—',
-    ubicacion: r.code || '—',
-    capacidad: r.capacity || 0,
-    tipo: 'Aula',
-    status: r.status,
-    schoolId: r.school_id ?? r.schoolId ?? null,
-  };
-}
-
-// Sede del administrador (decisión de producto): actor propio primero,
-// sede única como respaldo; sin sede no hay alta en el backend.
-async function resolveSchoolId() {
-  try {
-    const me = await getCurrentUser();
-    if (me?.personId) {
-      const actors = await ActorService.getByPerson(me.personId);
-      const schoolId = actors?.[0]?.schoolId ?? null;
-      if (schoolId != null) return schoolId;
-    }
-  } catch {}
-  const schools = await SchoolService.getAll().catch(() => []);
-  if (schools.length === 1 && schools[0]?.schoolId != null) return schools[0].schoolId;
-  throw new Error('Sin sede: no se puede gestionar ambientes');
-}
+const toItem = (env) => ({
+    id: String(env.environmentId),
+    nombre: env.name || env.code || '—',
+    ubicacion: env.code || '—',
+    capacidad: env.capacity || 0,
+    status: env.status,
+});
 
 export function useManageEnvironmentViewModel(enabled = true) {
     const [ambientes, setAmbientes] = useState([]);
+    const [schoolId, setSchoolId] = useState(null);
     const [updateKey, setUpdateKey] = useState(0);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [saving, setSaving] = useState(false);
 
     const fetchEnvironments = useCallback(async () => {
         try {
             setLoading(true);
-            setError(null);
-            const data = await backendGet(ENV.ACADEMIC_BASE_URL, 'api/v1/environments', {_limit: 100});
-            setAmbientes(unwrap(data).map(toMapped));
+            const currentSchoolId = await SchoolService.getCurrentSchoolId();
+            setSchoolId(currentSchoolId);
+            const list = currentSchoolId
+                ? await EnvironmentService.getBySchool(currentSchoolId)
+                : await EnvironmentService.getAll();
+            setAmbientes(list.filter(Boolean).map(toItem));
+            setUpdateKey((k) => k + 1);
         } catch (error) {
             console.error('Error fetching environments:', error);
-            setError(error?.message || 'No se pudieron cargar los ambientes');
         } finally {
             setLoading(false);
         }
@@ -86,84 +57,33 @@ export function useManageEnvironmentViewModel(enabled = true) {
         [ambientes]
     );
 
-    const addAmbiente = useCallback(async (nuevoAmbiente) => {
-        setSaving(true);
-        setError(null);
-        try {
-            const schoolId = await resolveSchoolId();
-            const capacity = nuevoAmbiente.capacidad ? Number(nuevoAmbiente.capacidad) : 30;
-            if (!Number.isInteger(capacity) || capacity <= 0) {
-                throw new Error('Capacidad inválida');
-            }
-            const created = await EnvironmentService.create({
-                schoolId,
-                code: nuevoAmbiente.ubicacion,
-                name: nuevoAmbiente.nombre,
-                capacity,
-                status: true,
-            });
-            const ambiente = toMapped({
-                environment_id: created?.environmentId,
-                school_id: schoolId,
-                code: nuevoAmbiente.ubicacion,
-                name: nuevoAmbiente.nombre,
-                capacity,
-                status: true,
-            });
-            setAmbientes((prev) => [...prev, ambiente]);
-            setUpdateKey((k) => k + 1);
-            return ambiente;
-        } catch (e) {
-            setError(e?.message || 'No se pudo crear el ambiente');
-            throw e;
-        } finally {
-            setSaving(false);
-        }
-    }, []);
+    const toModel = (form, base = {}) => new Environment({
+        school_id: base.schoolId ?? schoolId,
+        code: form.ubicacion.trim(),
+        name: form.nombre.trim(),
+        capacity: Number(form.capacidad),
+        status: base.status ?? true,
+    });
 
-    const updateAmbiente = useCallback(async (ambienteActualizado) => {
-        setSaving(true);
-        setError(null);
-        try {
-            const capacity = ambienteActualizado.capacidad ? Number(ambienteActualizado.capacidad) : null;
-            await EnvironmentService.update(ambienteActualizado.id, {
-                code: ambienteActualizado.ubicacion,
-                name: ambienteActualizado.nombre,
-                capacity,
-            });
-            setAmbientes((prev) =>
-                prev.map((a) =>
-                    a.id === ambienteActualizado.id
-                        ? { ...a, ...ambienteActualizado, capacidad: capacity }
-                        : a
-                )
-            );
-            setUpdateKey((k) => k + 1);
-        } catch (e) {
-            setError(e?.message || 'No se pudo actualizar el ambiente');
-            throw e;
-        } finally {
-            setSaving(false);
-        }
-    }, []);
+    // Las tres operaciones lanzan el error del backend para que la pantalla lo muestre.
+    const addAmbiente = useCallback(async (form) => {
+        if (!schoolId) throw new Error('missing school');
+        await EnvironmentService.create(toModel(form));
+        await fetchEnvironments();
+    }, [schoolId, fetchEnvironments]);
+
+    const updateAmbiente = useCallback(async (form) => {
+        await EnvironmentService.update(form.id, toModel(form, {status: form.status}));
+        await fetchEnvironments();
+    }, [schoolId, fetchEnvironments]);
 
     const deleteAmbiente = useCallback(async (id) => {
-        setSaving(true);
-        setError(null);
-        try {
-            await EnvironmentService.delete(id);
-            setAmbientes((prev) => prev.filter((a) => a.id !== id));
-            setUpdateKey((k) => k + 1);
-        } catch (e) {
-            setError(e?.message || 'No se pudo eliminar el ambiente');
-            throw e;
-        } finally {
-            setSaving(false);
-        }
-    }, []);
+        await EnvironmentService.delete(id);
+        await fetchEnvironments();
+    }, [fetchEnvironments]);
 
     return {
-        ambientes, updateKey, loading, error, saving,
+        ambientes, updateKey, loading,
         searchAmbientes, addAmbiente, updateAmbiente, deleteAmbiente,
         refresh: fetchEnvironments,
     };

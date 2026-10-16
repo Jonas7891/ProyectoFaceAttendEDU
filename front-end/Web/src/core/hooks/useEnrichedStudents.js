@@ -10,10 +10,11 @@
 //  ✓ Se integra transparentemente con el contexto AppData
 // ============================================================
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useAppData } from '../../context/AppDataContext';
 import { getStudentPeriodFromData } from '../utils/studentPeriodCalculator';
 import { getConfiguredAcademicPeriodType } from '../constants/academicPeriods';
+import { onInstitutionConfigChange } from '../config/institutionConfig';
 
 /**
  * Hook que enriquece los estudiantes con información calculada dinámicamente
@@ -35,8 +36,20 @@ import { getConfiguredAcademicPeriodType } from '../constants/academicPeriods';
 export function useEnrichedStudents() {
     const { students: rawStudents, courses, isLoading } = useAppData();
     
-    // Obtener el tipo de período académico configurado
-    const periodType = useMemo(() => getConfiguredAcademicPeriodType(), []);
+    // Estado para el tipo de período académico (reactivo a cambios en Settings)
+    const [periodType, setPeriodType] = useState(() => getConfiguredAcademicPeriodType());
+    
+    // Escuchar cambios en la configuración institucional
+    useEffect(() => {
+        const cleanup = onInstitutionConfigChange((newConfig) => {
+            // Actualizar el tipo de período si cambió
+            if (newConfig.academicPeriodType && newConfig.academicPeriodType !== periodType) {
+                setPeriodType(newConfig.academicPeriodType);
+            }
+        });
+        
+        return cleanup;
+    }, [periodType]);
     
     // Enriquecer estudiantes con información de período calculada
     const enrichedStudents = useMemo(() => {

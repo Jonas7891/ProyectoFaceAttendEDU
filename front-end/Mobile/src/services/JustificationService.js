@@ -1,4 +1,4 @@
-import { request, GET, POST, PATCH, DELETE } from '../api/apiClient';
+import { request, GET, POST, PUT, PATCH, DELETE } from '../api/apiClient';
 import { backendGet, toSnakeDeep } from '../api/backend';
 import ENV from '../config/env';
 import Justification from '../models/attendance/Justification';
@@ -91,6 +91,17 @@ export const JustificationService = {
     });
     return toSnakeDeep(data);
   },
+
+  updateType: async (id, { name, description = null, requiresAttachment = false }) => {
+    const data = await request({
+      method: PUT,
+      url: `${BASE()}${TYPES_ENDPOINT}/${id}`,
+      data: { name, description, requiresAttachment },
+    });
+    return toSnakeDeep(data);
+  },
+
+  deleteType: async (id) => request({ method: DELETE, url: `${BASE()}${TYPES_ENDPOINT}/${id}` }),
 
   createDocument: async ({ justificationId, fileName, storageUri, mimeType, sizeBytes }) => {
     const data = await request({

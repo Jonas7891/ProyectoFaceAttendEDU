@@ -1,4 +1,4 @@
-﻿import React, {useRef, useState} from 'react';
+﻿import React, {useMemo, useRef, useState} from 'react';
 import {Keyboard, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from './ThemeContext';
@@ -7,13 +7,14 @@ import {RHSelector} from './RHSelector';
 import {QuestionInput} from './QuestionInput';
 import {DatePickerInput} from './DatePickerInput';
 import {ProgressBar} from './ProgressBar';
-import stylescommon from './style/Style';
+import {createCommonStyles} from './style/Style';
 import CustomAlert from './CustomAlert';
 import {useCustomAlert} from './useCustomAlert';
 
 export const QuestionnaireModal = ({ visible, onClose, onSuccess }) => {
     const { t } = useTranslation();
     const { colors } = useTheme();
+    const stylescommon = useMemo(() => createCommonStyles(colors), [colors]);
     const [step, setStep] = useState(1);
     const [answers, setAnswers] = useState({});
     const [selectedDocument, setSelectedDocument] = useState(null);

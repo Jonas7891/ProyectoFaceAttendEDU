@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {
     Keyboard,
     KeyboardAvoidingView,
@@ -16,13 +16,14 @@ import {useTheme} from './ThemeContext';
 import {useCustomAlert} from './useCustomAlert';
 import CustomAlert from './CustomAlert';
 import PrimaryButton from '../auth/PrimaryButton';
-import stylesCommon from './style/Style';
+import {createCommonStyles} from './style/Style';
 import {PersonService} from '../../../services/PersonService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ProfileUpdateModal({ userInfo = {}, personId = null, onSaved = null }) {
     const { t } = useTranslation();
     const { colors } = useTheme();
+    const stylesCommon = useMemo(() => createCommonStyles(colors), [colors]);
     const { alertConfig, hideAlert, showSuccess, showError } = useCustomAlert();
 
     const [isProfileModalVisible, setProfileModalVisible] = useState(false);
@@ -170,7 +171,7 @@ export default function ProfileUpdateModal({ userInfo = {}, personId = null, onS
                                     stylesCommon.passwordModalCard,
                                     {
                                         backgroundColor: colors.card,
-                                        borderColor: colors.border ?? colors.textSecondary + '50',
+                                        borderColor: colors.border,
                                     },
                                 ]}>
                                     <Text style={[stylesCommon.passwordModalTitle, { color: colors.text }]}>
@@ -182,7 +183,7 @@ export default function ProfileUpdateModal({ userInfo = {}, personId = null, onS
 
                                     <View style={[
                                         stylesCommon.passwordModalDivider,
-                                        { backgroundColor: colors.border ?? colors.textSecondary + '30' },
+                                        { backgroundColor: colors.border },
                                     ]} />
 
                                     {/* Inputs */}
@@ -190,7 +191,7 @@ export default function ProfileUpdateModal({ userInfo = {}, personId = null, onS
                                         Electronico</Text>
                                     <TextInput
                                         style={[stylesCommon.passwordModalInput, {
-                                            borderColor: colors.border ?? colors.textSecondary + '50',
+                                            borderColor: colors.border,
                                             color: colors.text,
                                             backgroundColor: colors.background,
                                         }]}
@@ -203,7 +204,7 @@ export default function ProfileUpdateModal({ userInfo = {}, personId = null, onS
                                         numero Telefonico</Text>
                                     <TextInput
                                         style={[stylesCommon.passwordModalInput, {
-                                            borderColor: colors.border ?? colors.textSecondary + '50',
+                                            borderColor: colors.border,
                                             color: colors.text,
                                             backgroundColor: colors.background,
                                         }]}
@@ -218,11 +219,11 @@ export default function ProfileUpdateModal({ userInfo = {}, personId = null, onS
                                         <View style={[
                                             stylesCommon.passwordModalErrorRow,
                                             {
-                                                backgroundColor: (colors.danger || '#ff0000') + '12',
-                                                borderColor: (colors.danger || '#ff0000') + '35',
+                                                backgroundColor: (colors.danger) + '12',
+                                                borderColor: (colors.danger) + '35',
                                             },
                                         ]}>
-                                            <Text style={[stylesCommon.passwordModalError, { color: colors.danger || '#ff0000' }]}>
+                                            <Text style={[stylesCommon.passwordModalError, { color: colors.danger }]}>
                                                 {profileError}
                                             </Text>
                                         </View>

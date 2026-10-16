@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Animated, View, TextInput } from 'react-native';
-import styleAuth from './style/Style';
+import { createAuthStyles } from './style/Style';
 
 /**
  * Componente de input de código con 6 cajitas separadas
@@ -15,6 +15,7 @@ export function CodeInput({
                               disabled
                           }) {
     const shakeAnim = useRef(new Animated.Value(0)).current;
+    const styleAuth = useMemo(() => createAuthStyles(colors), [colors]);
 
     useEffect(() => {
         if (error) {
@@ -81,10 +82,10 @@ export function CodeInput({
                                 {
                                     backgroundColor: colors.inputBackground,
                                     borderColor: error
-                                        ? (colors.error ?? '#E53E3E')
+                                        ? colors.danger
                                         : hasValue
-                                            ? (colors.primary ?? '#3B82F6')
-                                            : (colors.border ?? colors.separator),
+                                            ? colors.primary
+                                            : colors.border,
                                     color: colors.text,
                                     borderWidth: 2,
                                 },

@@ -37,6 +37,25 @@ import {
 import { useSignupViewModel } from "../viewmodels/useAuthViewModel";
 import { useTranslation }     from "../core/utils/i18n/hooks/useTranslation";
 import { useAutoSlideOnContent } from "./components/hooks/useAutoSlideOnContent";
+import { titleCase } from "../core/utils/formatting";
+
+/**
+ * Filtra el texto para permitir solo letras y espacios manteniendo acentos
+ */
+const filterLettersAndSpaces = (text) => {
+    if (!text) return '';
+    // Permite letras con acentos, espacios, ñ, ü, etc.
+    return text.replace(/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑç\s]/g, '');
+};
+
+/**
+ * Formatea el nombre: filtra caracteres no válidos y capitaliza usando titleCase
+ */
+const formatName = (text) => {
+    if (!text) return '';
+    const filtered = filterLettersAndSpaces(text);
+    return titleCase(filtered);
+};
 
 
 export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLanding }) {
@@ -85,6 +104,12 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLandi
         }
     );
     
+    // Handler para cuando el usuario cambie el nombre de usuario (con formateo)
+    const handleUsernameChange = (text) => {
+        const formatted = formatName(text);
+        vm.setUsername(formatted);
+    };
+    
     // Handler para cuando el usuario cambie la contraseña
     const handlePasswordChange = (text) => {
         vm.setPassword(text);
@@ -109,7 +134,7 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLandi
                 label={t("Usuario")}
                 placeholder={t("Tu nombre de usuario")}
                 value={vm.username}
-                onChangeText={vm.setUsername}
+                onChangeText={handleUsernameChange}
                 onBlur={() => vm.handleBlur('username')}
                 onKeyPress={handleKeyPress}
                 leftIcon={<Feather name="user" size={20} color={c.text.secondary} />}
@@ -231,7 +256,7 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLandi
             
             <View style={{ zIndex: 1, alignItems: "center", maxWidth: 440, paddingHorizontal: 32 }}>
                 <Image
-                    source={require("../assets/images/logoFaceAttend.png")}
+                    source={require("../assets/images/logoFaceAttend.svg")}
                     style={{ width: 250, height: 100, marginBottom: 32 }}
                     resizeMode="contain"
                 />

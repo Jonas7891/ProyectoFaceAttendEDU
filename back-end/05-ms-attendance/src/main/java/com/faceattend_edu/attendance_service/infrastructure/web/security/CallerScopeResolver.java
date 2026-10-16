@@ -1,0 +1,101 @@
+package com.faceattend_edu.attendance_service.infrastructure.web.security;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * Actores académicos cuyos registros puede ver quien llama. Administrador: todos
+ * ({@code null}). Instructor: los suyos y los aprendices activos de las fichas
+ * donde dicta. Aprendiz: solo los suyos. Se calcula con el bearer del llamante
+ * (identity → academic → scheduling) y se cachea 60 s. Duplicado intencional por
+ * MS, igual que AuthTokenFilter (01-ms-identity tiene su par para personas).
+ */
+@Component
+public class CallerScopeResolver {
+
+    static final Set<String> ADMIN_ROLES = Set.of("Administrador", "Super Administrador");
+    private static final long TTL_MS = 60_000;
+
+    private record Cached(Set<Long> actorIds, long expiresAt) {}
+
+    private final RestTemplate restTemplate;
+    private final Map<String, Cached> cache = new ConcurrentHashMap<>();
+
+    @Value("${faceattend.auth.identity-url:http://localhost:8081}")
+    private String identityUrl;
+
+    @Value("${faceattend.auth.academic-url:http://localhost:8083}")
+    private String academicUrl;
+
+    @Value("${faceattend.auth.scheduling-url:http://localhost:8084}")
+    private String schedulingUrl;
+
+    public CallerScopeResolver() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(3000);
+        factory.setReadTimeout(5000);
+        this.restTemplate = new RestTemplate(factory);
+    }
+
+    /**
+     * @return {@code null} sin restricción (administrador) o el conjunto de actores visibles.
+     * @throws RuntimeException si identity/academic/scheduling no responden (el filtro responde 503).
+     */
+    public Set<Long> resolve(String userId, List<String> roles, String token) {
+        if (roles.stream().anyMatch(ADMIN_ROLES::contains)) return null;
+        Cached hit = cache.get(userId);
+        if (hit != null && hit.expiresAt() > System.currentTimeMillis()) return hit.actorIds();
+
+        Map<?, ?> user = getMap(identityUrl + "/api/v1/users/" + userId, token);
+        String personId = user == null ? null : String.valueOf(user.get("personId"));
+        Set<Long> actors = new HashSet<>();
+        for (Map<?, ?> actor : getList(academicUrl + "/api/v1/academic-actors?limit=2000", token)) {
+            if (personId != null && personId.equalsIgnoreCase(String.valueOf(actor.get("personId")))) {
+                actors.add(toLong(actor.get("academicActorId")));
+            }
+        }
+        Set<Long> visible = new HashSet<>(actors);
+        for (Long actorId : actors) {
+            for (Map<?, ?> block : getList(schedulingUrl + "/api/v1/schedule-blocks?instructorActorId=" + actorId, token)) {
+                for (Map<?, ?> enrollment : getList(academicUrl + "/api/v1/cohorts/" + block.get("cohortId") + "/enrollments", token)) {
+                    if ("Active".equals(enrollment.get("enrollmentStatus"))) visible.add(toLong(enrollment.get("academicActorId")));
+                }
+            }
+        }
+        visible.remove(null);
+        Set<Long> scope = Set.copyOf(visible);
+        cache.put(userId, new Cached(scope, System.currentTimeMillis() + TTL_MS));
+        return scope;
+    }
+
+    private static Long toLong(Object value) {
+        return value instanceof Number n ? n.longValue() : null;
+    }
+
+    private HttpEntity<Void> auth(String token) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        return new HttpEntity<>(headers);
+    }
+
+    protected Map<?, ?> getMap(String url, String token) {
+        return restTemplate.exchange(url, HttpMethod.GET, auth(token), Map.class).getBody();
+    }
+
+    @SuppressWarnings("unchecked")
+    protected List<Map<?, ?>> getList(String url, String token) {
+        List<Map<?, ?>> body = restTemplate.exchange(url, HttpMethod.GET, auth(token), List.class).getBody();
+        return body == null ? List.of() : body;
+    }
+}

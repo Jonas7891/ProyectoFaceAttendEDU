@@ -82,7 +82,7 @@ export function ColorPresetSelector({ visionMode, customColors, selectedSemantic
                             }}
                         >
                             <Text style={{
-                                fontSize: 11,
+                                fontSize: 12,
                                 fontWeight: active ? "600" : "400",
                                 color: active ? c.brand.primary : c.text.secondary,
                             }}>

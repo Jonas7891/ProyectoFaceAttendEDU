@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {
     FlatList,
     Image,
@@ -13,13 +13,14 @@ import {
 import {useTranslation} from 'react-i18next';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import Separador from '../components/common/Separador';
-import styles from './Styles/ConsultJustifyScreen/Style';
+import {createConsultJustifyStyles} from './Styles/ConsultJustifyScreen/Style';
 import {useTheme} from '../components/common/ThemeContext';
 import {useValidJustificationsViewModel} from '../../viewmodels/useConsultJustifyViewModel';
 
 export default function ValidJustificationsScreen() {
     const { t } = useTranslation();
     const { colors } = useTheme();
+    const styles = useMemo(() => createConsultJustifyStyles(colors), [colors]);
 
     const {
         activeSection,
@@ -51,7 +52,7 @@ export default function ValidJustificationsScreen() {
             <View style={styles.cardHeader}>
                 <Text style={[styles.cardDate, { color: colors.text }]}>{item.fecha}</Text>
                 <View style={[styles.statusBadge, { backgroundColor: getEstadoColor(item.estado) }]}>
-                    <Text style={[styles.statusText, { color: '#FFFFFF' }]}>{item.estado}</Text>
+                    <Text style={[styles.statusText, { color: colors.onPrimary }]}>{item.estado}</Text>
                 </View>
             </View>
             <Text style={[styles.cardReason, { color: colors.textSecondary }]}>{item.motivo}</Text>
@@ -66,7 +67,7 @@ export default function ValidJustificationsScreen() {
                     <Text style={[styles.cardTime, { color: colors.textSecondary }]}>{item.hora}</Text>
                 </View>
                 <View style={[styles.statusBadge, { backgroundColor: getEstadoColor(item.estado) }]}>
-                    <Text style={[styles.statusText, { color: '#FFFFFF' }]}>{item.estado}</Text>
+                    <Text style={[styles.statusText, { color: colors.onPrimary }]}>{item.estado}</Text>
                 </View>
             </View>
             <Text style={[styles.cardReason, { color: colors.textSecondary }]}>{item.motivo}</Text>
@@ -144,7 +145,7 @@ export default function ValidJustificationsScreen() {
                                         styles.sectionTabText,
                                         {
                                             color:
-                                                activeSection === 'inasistencias' ? '#FFFFFF' : colors.textSecondary,
+                                                activeSection === 'inasistencias' ? colors.onPrimary : colors.textSecondary,
                                             fontWeight: activeSection === 'inasistencias' ? '700' : '500',
                                         },
                                     ]}
@@ -169,7 +170,7 @@ export default function ValidJustificationsScreen() {
                                         styles.sectionTabText,
                                         {
                                             color:
-                                                activeSection === 'retardos' ? '#FFFFFF' : colors.textSecondary,
+                                                activeSection === 'retardos' ? colors.onPrimary : colors.textSecondary,
                                             fontWeight: activeSection === 'retardos' ? '700' : '500',
                                         },
                                     ]}

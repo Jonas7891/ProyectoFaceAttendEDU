@@ -17,4 +17,13 @@ export const PasswordService = {
       requiresAuth: false,
     });
   },
+
+  // Cambio desde el perfil: identity toma el usuario de la sesión y exige la contraseña actual.
+  changePassword: async (currentPassword, newPassword) => {
+    return request({
+      method: POST,
+      url: 'api/v1/auth/change-password',
+      data: { currentPassword, newPassword },
+    });
+  },
 };

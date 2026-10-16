@@ -2,6 +2,8 @@ package com.faceattend_edu.attendance_service.infrastructure.web.controller;
 
 import com.faceattend_edu.attendance_service.domain.exception.EntityNotFoundException;
 import com.faceattend_edu.attendance_service.domain.model.SupportingDocument;
+import com.faceattend_edu.attendance_service.domain.port.in.GetAttendanceRecordUseCase;
+import com.faceattend_edu.attendance_service.domain.port.in.GetJustificationUseCase;
 import com.faceattend_edu.attendance_service.domain.port.in.CreateSupportingDocumentUseCase;
 import com.faceattend_edu.attendance_service.domain.port.in.DeleteSupportingDocumentUseCase;
 import com.faceattend_edu.attendance_service.domain.port.in.GetSupportingDocumentUseCase;
@@ -52,6 +54,10 @@ class SupportingDocumentControllerTest {
     private ListSupportingDocumentsUseCase listUseCase;
     @MockitoBean
     private DeleteSupportingDocumentUseCase deleteUseCase;
+    @MockitoBean
+    private GetJustificationUseCase justificationUseCase;
+    @MockitoBean
+    private GetAttendanceRecordUseCase recordUseCase;
 
     private SupportingDocument document(Long id, Long justificationId, String fileName) {
         SupportingDocument d = new SupportingDocument();

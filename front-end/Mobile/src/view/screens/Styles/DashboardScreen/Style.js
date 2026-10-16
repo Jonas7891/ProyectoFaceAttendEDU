@@ -1,10 +1,11 @@
 import {StyleSheet} from 'react-native';
 import {normalizeTypography} from '../../../../utils/typography';
 
-const styles = StyleSheet.create(normalizeTypography({
+// Estilos del dashboard. Todo color sale de los tokens del tema; usar con createDashboardStyles(colors).
+export const createDashboardStyles = (colors) => StyleSheet.create(normalizeTypography({
 actionDescription: {
         fontSize: 11,
-        color: "#666666",
+        color: colors.textSecondary,
         textAlign: "center",
     },
 
@@ -20,7 +21,7 @@ actionIcon: {
 actionTitle: {
         fontSize: 14,
         fontWeight: "600",
-        color: "#000000",
+        color: colors.text,
         textAlign: "center",
         marginBottom: 4,
     },
@@ -28,12 +29,12 @@ actionTitle: {
 adminName: {
         fontSize: 24,
         fontWeight: "bold",
-        color: "#000000",
+        color: colors.text,
         marginBottom: 4,
     },
 
 attendanceIndicator: {
-        backgroundColor: "#FFFFFF",
+        backgroundColor: colors.card,
         borderRadius: 12,
         padding: 15,
         marginBottom: 20,
@@ -60,12 +61,12 @@ dataBar: {
 
 date: {
         fontSize: 12,
-        color: "#999999",
+        color: colors.textMuted,
     },
 
 greeting: {
         fontSize: 14,
-        color: "#666666",
+        color: colors.textSecondary,
         marginBottom: 4,
     },
 
@@ -90,7 +91,7 @@ indicatorHeader: {
 
 indicatorText: {
         fontSize: 12,
-        color: "#666666",
+        color: colors.textSecondary,
     },
 
 leftContent: {
@@ -99,7 +100,7 @@ leftContent: {
 
 novedadCard: {
         flexDirection: "row",
-        backgroundColor: "#FFFFFF",
+        backgroundColor: colors.card,
         borderRadius: 10,
         padding: 12,
         marginBottom: 8,
@@ -116,7 +117,7 @@ novedadContent: {
 
 novedadDescripcion: {
         fontSize: 12,
-        color: "#666666",
+        color: colors.textSecondary,
         marginBottom: 4,
     },
 
@@ -131,13 +132,13 @@ novedadIcon: {
 
 novedadTiempo: {
         fontSize: 10,
-        color: "#999999",
+        color: colors.textMuted,
     },
 
 novedadTitle: {
         fontSize: 14,
         fontWeight: "600",
-        color: "#000000",
+        color: colors.text,
         marginBottom: 2,
     },
 
@@ -148,12 +149,12 @@ novedadesSection: {
 percentageText: {
         fontSize: 20,
         fontWeight: "bold",
-        color: "#4CAF50",
+        color: colors.success,
     },
 
 progressBar: {
         height: 8,
-        backgroundColor: "#E0E0E0",
+        backgroundColor: colors.progressBackground,
         borderRadius: 4,
         overflow: "hidden",
         marginBottom: 8,
@@ -161,13 +162,13 @@ progressBar: {
 
 progressFill: {
         height: "100%",
-        backgroundColor: "#4CAF50",
+        backgroundColor: colors.success,
         borderRadius: 4,
     },
 
 quickActionCard: {
         width: "48%",
-        backgroundColor: "#FFFFFF",
+        backgroundColor: colors.card,
         borderRadius: 12,
         padding: 15,
         marginBottom: 12,
@@ -194,7 +195,7 @@ recentItem: {
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        backgroundColor: "#FFFFFF",
+        backgroundColor: colors.card,
         borderRadius: 10,
         padding: 12,
         marginBottom: 8,
@@ -208,7 +209,7 @@ recentItem: {
 recentName: {
         fontSize: 17,
         fontWeight: "500",
-        color: "#000000",
+        color: colors.text,
     },
 
 recentSection: {
@@ -217,13 +218,13 @@ recentSection: {
 
 recentTime: {
         fontSize: 15,
-        color: "#999999",
+        color: colors.textMuted,
         marginTop: 2,
     },
 
 safeArea: {
         flex: 1,
-        backgroundColor: "#F5F5F5",
+        backgroundColor: colors.background,
     },
 
 sectionHeader: {
@@ -236,21 +237,21 @@ sectionHeader: {
 sectionTitle: {
         fontSize: 18,
         fontWeight: "600",
-        color: "#000000",
+        color: colors.text,
         marginBottom: 15,
     },
 
 sectionTitleAdmin: {
         fontSize: 18,
         fontWeight: "bold",
-        color: "#333",
+        color: colors.text,
         marginBottom: 6,
         paddingLeft: 4,
     },
 
 seeAllText: {
         fontSize: 12,
-        color: "#4CAF50",
+        color: colors.primary,
         fontWeight: "500",
     },
 
@@ -265,5 +266,3 @@ statusText: {
         fontWeight: "500",
     },
 }));
-
-export default styles;

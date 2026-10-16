@@ -23,9 +23,11 @@ export function useAppearanceSettingsViewModel() {
     const {
         theme,
         accentColor,
+        paletteMode,
         setThemeForRole,
         loadThemeForRole,
         setAccentForRole,
+        setPaletteForRole,
     } = useTheme();
 
     // ── Tema ─────────────────────────────────────────────────
@@ -41,7 +43,7 @@ export function useAppearanceSettingsViewModel() {
     const verdict    = evaluateColor(currentHex);
 
     // ── Modo de visión ────────────────────────────────────────
-    const [visionMode, setVisionMode] = useState(DEFAULT_VISION_MODE);
+    const [visionMode, setVisionMode] = useState(paletteMode ?? DEFAULT_VISION_MODE);
 
     // ── UI ────────────────────────────────────────────────────
     const [isLoading, setIsLoading] = useState(false);
@@ -86,6 +88,9 @@ export function useAppearanceSettingsViewModel() {
         }
     }, [accentColor]);
 
+    // Sincronizar la paleta (modo de visión) cuando cambia en el contexto
+    useEffect(() => { setVisionMode(paletteMode); }, [paletteMode]);
+
     // ── Aplicar HSL → preview ────────────────────────────────
     function applyHSL(h, s, l) {
         setHue(Math.round(h));
@@ -118,13 +123,18 @@ export function useAppearanceSettingsViewModel() {
                 });
                 return;
             }
-            // Persiste y propaga tema + acento a todo el app
+            // Persiste y propaga tema + paleta + acento a todo el app
             await setThemeForRole(role, selectedTheme);
             await setAccentForRole(role, currentHex);
+            const paletteSaved = await setPaletteForRole(role, visionMode);
 
-            setAlertData({
+            setAlertData(paletteSaved ? {
                 message: 'settings.appearanceSaved',
                 type: 'success',
+                timestamp: Date.now(),
+            } : {
+                message: 'settings.errorSavingAppearance',
+                type: 'error',
                 timestamp: Date.now(),
             });
         } catch (e) {
@@ -137,7 +147,7 @@ export function useAppearanceSettingsViewModel() {
         } finally {
             setIsLoading(false);
         }
-    }, [selectedTheme, currentHex, setThemeForRole, setAccentForRole]);
+    }, [selectedTheme, currentHex, visionMode, setThemeForRole, setAccentForRole, setPaletteForRole]);
 
     const handleBack = useCallback(() => navigation.goBack(), [navigation]);
 

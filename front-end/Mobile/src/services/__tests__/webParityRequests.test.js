@@ -253,7 +253,7 @@ describe('FaceAuthService (biometría vía /api/v1/biometric, fusionado en ms-bi
 
     await expect(FaceAuthService.identifyFace({ imageBase64: 'img', challengeToken: 'tok' })).rejects.toMatchObject({
       status: 404,
-      message: 'no match found',
+      detail: 'no match found',
     });
   });
 });
@@ -343,14 +343,35 @@ describe('las peticiones existentes no cambian', () => {
     expect(lastCall()).toMatchObject({ method: 'PUT', url: `${BASE}/api/v1/class-sessions/1` });
   });
 
-  test('AlertService.resolve y BiometricCaseService.approve siguen usando PUT', async () => {
+  test('AlertService.resolve sigue usando PUT', async () => {
     mockResponse({});
 
     await AlertService.resolve(4);
     expect(lastCall()).toMatchObject({ method: 'PUT', url: `${BASE}/api/v1/alerts/4` });
+  });
+
+  // El PUT con llaves snake era un no-op en 07 (zod las descarta): aprobar va por /review.
+  test('BiometricCaseService.approve usa el PATCH de revisión', async () => {
+    mockResponse({ caseId: 'c-1', updateStatus: 'Approved' });
 
     await BiometricCaseService.approve('c-1', 'u-1');
-    expect(lastCall()).toMatchObject({ method: 'PUT', url: `${BASE}/api/v1/biometric-update-cases/c-1` });
+    expect(lastCall()).toMatchObject({
+      method: 'PATCH',
+      url: `${BASE}/api/v1/biometric-update-cases/c-1/review`,
+      body: { updateStatus: 'Approved', reviewedBy: 'u-1' },
+    });
+  });
+
+  test('BiometricCaseService.requestFacialUpdate envía el cuerpo camelCase', async () => {
+    mockResponse({ caseId: 'c-2', personId: 'p-1', updateStatus: 'Pending' });
+
+    const created = await BiometricCaseService.requestFacialUpdate('p-1', 'Cambio de apariencia');
+    expect(lastCall()).toMatchObject({
+      method: 'POST',
+      url: `${BASE}/api/v1/biometric-update-cases`,
+      body: { personId: 'p-1', biometricType: 'FACIAL', reason: 'Cambio de apariencia' },
+    });
+    expect(created).toMatchObject({ caseId: 'c-2', updateStatus: 'Pending' });
   });
 
   test('CourseService.getByProgram sigue usando el filtro legacy por query', async () => {

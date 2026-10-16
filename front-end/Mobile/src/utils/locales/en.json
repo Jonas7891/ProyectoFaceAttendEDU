@@ -37,7 +37,9 @@
     "send": "Send",
     "retry": "Retry",
     "activate": "Activate",
-    "deactivate": "Deactivate"
+    "deactivate": "Deactivate",
+    "logoLabel": "FaceAttend logo",
+    "logoPlaceholder": "logo"
   },
   "login": {
     "title": "Login",
@@ -56,7 +58,8 @@
     "acceptTerms": "Accept the terms and conditions",
     "forgotPassword": "Forgot password?",
     "showPassword": "Show password",
-    "hidePassword": "Hide password"
+    "hidePassword": "Hide password",
+    "errorTitle": "Could not log in"
   },
   "tabs": {
     "home": "Home",
@@ -219,7 +222,26 @@
       "usePhoto": "Use photo",
       "title": "Facial Registration",
       "alreadyRegistered": "Your facial parameters are already registered."
-    }
+    },
+    "loadError": "Your requests could not be loaded.",
+    "requestInstructions": "To change your registered face, send a request. Once a reviewer approves it you can register your new face.",
+    "latestRequest": "Your latest request",
+    "status": {
+      "pending": "Pending review",
+      "inReview": "In review",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "reviewNotes": "Notes: {{notes}}",
+    "updateFaceNow": "Register my new face",
+    "newRequest": "New request",
+    "reasonLabel": "Reason for the change",
+    "reasonPlaceholder": "E.g. change in appearance, recognition often fails…",
+    "reasonTooShort": "Write at least {{min}} characters.",
+    "sendRequest": "Send request",
+    "requestSentTitle": "Request sent",
+    "requestSentMsg": "You will see the result here once it is reviewed.",
+    "requestError": "The request could not be sent."
   },
   "takePhoto": {
     "title": "Photo for Initial Facial Recognition",
@@ -239,7 +261,19 @@
     "cameraQualityDescription": "Another reason for system failures is the lighting of the place, the camera quality, or the angle at which the device is placed for scanning.",
     "backToMenu": "Back",
     "returningToMenu": "Returning to Menu...",
-    "success": "Success"
+    "success": "Success",
+    "questionnaireFirstTitle": "Questionnaire first",
+    "questionnaireFirstMessage": "Answer the verification questionnaire before updating your face.",
+    "verifiedMessage": "Identity verified. Now update your face.",
+    "verifyFailedTitle": "Verification failed",
+    "verifyFailedMessage": "The answers do not match your registered data. Attempts left: {{remaining}}.",
+    "verifyErrorTitle": "Verification error",
+    "verifyErrorMessage": "Your data could not be retrieved. Please try again.",
+    "lockedTitle": "Verification locked",
+    "lockedMessage": "You exceeded the number of attempts. Contact an administrator to update your face.",
+    "verifying": "Verifying answers...",
+    "verifiedBadge": "Verified",
+    "lockedHint": "Available after verifying the questionnaire"
   },
   "dashboard": {
     "greeting": "Good day",
@@ -279,7 +313,9 @@
     "news": "News",
     "newsDesc": "Catch up on recent notices",
     "schoolConfig": "School site",
-    "schoolConfigDesc": "Your site data and configuration"
+    "schoolConfigDesc": "Your site data and configuration",
+    "justifications": "Justifications",
+    "justificationsDesc": "Review justifications and their types"
   },
   "consultJustify": {
     "mainTitle": "Approved Justifications",
@@ -363,7 +399,15 @@
     "title": "News",
     "content": "Imagine you have to use an app to register your attendance with your face. First, the system shows a box on the screen so you know exactly where to put your face. As you adjust, it turns green to let you know you're ready.\n\nIt's important to be in a well-lit place. Once your face looks good, the system asks for a small gesture, like blinking or moving your head a little, to make sure it's not a photo or something fake.\n\nThe best part is that the scan doesn't take long, just about two or three seconds, and immediately a clear message appears on the screen saying whether the attendance was recorded or if there was a problem. Everything is designed to be quick and easy: open the app, press the button to go to the Facial Scan section, position yourself in the box, blink, and within seconds your attendance is saved.",
     "creationDate": "Creation date",
-    "unknownDate": "##/##/####"
+    "unknownDate": "##/##/####",
+    "alertsTitle": "Alerts and news",
+    "alert": "Alert",
+    "loadError": "News could not be loaded. Tap to retry.",
+    "resolveError": "The alert could not be resolved.",
+    "empty": "There is no news for now.",
+    "resolved": "Resolved",
+    "open": "Open",
+    "resolve": "Resolve"
   },
   "history": {
     "title": "History",
@@ -374,7 +418,7 @@
   },
   "registerModal": {
     "title": "Personal Account Request",
-    "description": "If you do not have a created account, you must request one from the administrator.",
+    "description": "If you do not have an account, request one from your institution's administrator.",
     "close": "Close"
   },
   "termsModal": {
@@ -633,7 +677,11 @@
     "justificationCreated": "Justification created successfully.",
     "errorCreating": "An error occurred while saving. Please try again.",
     "selectCategory": "Select a category...",
-    "selectType": "Select a type..."
+    "selectType": "Select a type...",
+    "justificationUpdated": "Justification type updated.",
+    "newJustificationType": "New justification type",
+    "editJustificationType": "Edit justification type",
+    "updateJustification": "Save changes"
   },
   "justifications": {
     "validList": "Valid Justifications",
@@ -642,7 +690,11 @@
     "items": "justifications",
     "noJustifications": "No justifications registered",
     "noJustificationsDesc": "Valid justifications will appear here when added by the administrator",
-    "loadError": "Could not load justifications"
+    "loadError": "Could not load justifications",
+    "typesTitle": "Justification types",
+    "deleteTypeTitle": "Delete type",
+    "deleteTypeQuestion": "Delete the type “{{name}}”?",
+    "deleteTypeError": "The type could not be deleted; it may already be in use."
   },
   "profile": {
     "personalInfo": "Personal Information",
@@ -683,7 +735,8 @@
       "saving": "Saving...",
       "successMessage": "Password updated successfully",
       "successTitle": "Password updated",
-      "title": "Change password"
+      "title": "Change password",
+      "errorPolicy": "Use 8+ characters with an uppercase letter, a lowercase letter, a number and a symbol, without sequences or repeats."
     },
     "pendingJustifications": "Pending justifications",
     "phone": "Phone",
@@ -734,15 +787,22 @@
     "activateQuestion": "Reactivate this user?",
     "deactivateQuestion": "Deactivate this user? You can reactivate them later.",
     "inactive": "Inactive",
-    "newUser": "New user",
-    "document": "Document",
-    "documentRequired": "Document is required",
-    "password": "Password",
-    "passwordMin": "Minimum 8 characters",
+    "lastName": "Last name",
+    "documentNumber": "Document number",
+    "phone": "Phone",
+    "username": "Username",
+    "initialPassword": "Initial password",
     "role": "Role",
-    "createError": "Could not create the user",
-    "school": "School",
-    "schoolRequired": "Select the administrator school"
+    "documentRequired": "The document number is required.",
+    "usernameRequired": "The username is required.",
+    "saveError": "The user could not be saved.",
+    "roleNotFound": "The role \"{{role}}\" does not exist in the role catalog.",
+    "steps": {
+      "person": "person",
+      "user": "user",
+      "role": "role",
+      "actor": "academic actor"
+    }
   },
   "schoolConfig": {
     "title": "School Configuration",
@@ -867,10 +927,12 @@
       "warning": "AT LIMIT"
     },
     "absenceLabel": "Absences\n(limit {{limit}})",
-    "latenessLabel": "Lateness\n(limit {{limit}})"
-    ,"reportSent": "The report was sent successfully."
-    ,"reportError": "The report could not be sent."
-    ,"confirmGeneral": "A report will be generated for {{count}} people. Continue?"
+    "latenessLabel": "Lateness\n(limit {{limit}})",
+    "reportSent": "The report was sent successfully.",
+    "reportError": "The report could not be sent.",
+    "confirmGeneral": "A report will be generated for {{count}} people. Continue?",
+    "absenceShort": "{{count}} absences",
+    "latenessShort": "{{count}} late arrivals"
   },
   "validation": {
     "title": "Incomplete fields",
@@ -931,7 +993,11 @@
     "errorTimeout": "The request took too long. Check your connection and try again.",
     "errorGeneric": "An error occurred. Try again.",
     "errorRateLimit": "You must wait {{seconds}} seconds before retrying.",
-    "successMessage": "Code sent successfully. Redirecting..."
+    "successMessage": "Code sent successfully. Redirecting...",
+    "sending": "Sending code",
+    "sendA11y": "Send recovery code",
+    "emailHint": "Enter your email to receive the recovery code",
+    "waitSeconds": "Wait {{seconds}} seconds"
   },
   "passwordUpdate": {
     "title": "New password",
@@ -953,7 +1019,11 @@
     "successTitle": "Password updated!",
     "successMessage": "Your password was reset successfully. You can now log in.",
     "goToLogin": "Go to login",
-    "discardMessage": "If you leave, you will lose the password you entered."
+    "discardMessage": "If you leave, you will lose the password you entered.",
+    "a11yRequirementsHint": "Must have at least 8 characters, with uppercase, lowercase, numbers and special characters.",
+    "a11yShowConfirmation": "Show confirmation",
+    "a11yHideConfirmation": "Hide confirmation",
+    "a11yCancel": "Cancel and discard changes"
   },
   "verifyCode": {
     "title": "Check your email",
@@ -964,7 +1034,15 @@
     "resendButton": "Resend code",
     "errorInvalid": "Incorrect code. Attempts remaining: {{attempts}}",
     "errorExpired": "The code has expired. Request a new one.",
-    "errorNoCode": "There is no active code. Go back and request a new one."
+    "errorNoCode": "There is no active code. Go back and request a new one.",
+    "errorLocked": "Too many failed attempts. Wait {{seconds}} seconds before trying again.",
+    "verifying": "Verifying code",
+    "verifyA11y": "Verify recovery code",
+    "resendA11y": "Resend verification code",
+    "resendIn": "Resend code in {{seconds}} seconds",
+    "resentTitle": "Code resent",
+    "resentMessage": "Check your email for the new code.",
+    "resendError": "The code could not be resent."
   },
   "manageAmbientes": {
     "title": "Environment management",
@@ -988,30 +1066,134 @@
     "capacityInvalid": "Capacity must be a number greater than 0.",
     "confirm": "Confirm",
     "deleteQuestion": "Are you sure you want to delete this environment?",
-    "saveError": "Could not save the environment.",
-    "deleteError": "Could not delete the environment."
+    "saveError": "The environment could not be saved.",
+    "deleteError": "The environment could not be deleted."
   },
   "registerFace": {
     "title": "Face registration",
-    "subtitleReady": "Place your face inside the oval and press the button to start.",
+    "subtitleReview": "Review the photo. If you are satisfied, save it; otherwise, retake it.",
+    "subtitleReady": "Place your face inside the oval and press the button when you are ready.",
     "subtitleStarting": "Starting camera...",
-    "subtitleCapturing": "Follow the on-screen instructions.",
     "permissionText": "Camera access is required to register your face.",
     "allowCamera": "Allow camera",
-    "startRegistration": "Start registration",
-    "registering": "Registering...",
+    "saveFace": "Save face",
+    "saving": "Saving...",
+    "retake": "Retake",
+    "captureFace": "Capture face",
     "startingCamera": "Starting camera...",
     "cameraErrorTitle": "Camera error",
     "cameraErrorMsg": "Could not start the camera. Try again.",
+    "captureErrorTitle": "Capture error",
+    "captureErrorMsg": "Could not take the photo. Try again.",
     "saveSuccessTitle": "Successful registration",
-    "saveSuccessMsg": "Your face was successfully registered in the system.",
+    "saveSuccessMsg": "Your face was successfully registered on this device.",
     "saveErrorTitle": "Save error",
-    "saveErrorMsg": "A problem occurred while saving your facial record.",
-    "gestureBlink": "Blink once",
-    "gestureTurn": "Slowly turn your head",
-    "gestureOpenMouth": "Open and close your mouth",
-    "gestureDefault": "Follow the instruction",
-    "gestureProgress": "Gesture {{done}} of {{total}}",
-    "retrySameGesture": "(repeat the gesture)"
+    "saveErrorMsg": "A problem occurred while saving your facial record."
+  },
+  "faceCapture": {
+    "blink": "Blink once",
+    "turn": "Slowly turn your head",
+    "openMouth": "Open and close your mouth",
+    "followInstruction": "Follow the instruction",
+    "repeatGesture": "repeat the gesture",
+    "repeatSameGesture": "Repeat the same gesture.",
+    "cameraNotReady": "The camera is not ready yet",
+    "missingPerson": "The person to register was not found. Please sign in again.",
+    "registerIntro": "We will ask you for {{count}} gestures to register your face.",
+    "registering": "Registering face...",
+    "registered": "Face registered",
+    "genericError": "The face could not be registered. Please try again.",
+    "currentInstruction": "CURRENT INSTRUCTION",
+    "gestureProgress": "Gesture {{current}} of {{total}}",
+    "registerButton": "Register face ({{count}} gestures)",
+    "updateButton": "Update face ({{count}} gestures)",
+    "updateTitle": "Update face",
+    "cameraReady": "Camera ready. You can now register your face."
+  },
+  "userDetail": {
+    "title": "User details",
+    "active": "Active",
+    "inactive": "Inactive",
+    "personalInfo": "Personal information",
+    "email": "Email",
+    "phone": "Phone",
+    "document": "Document",
+    "username": "Username",
+    "program": "Program",
+    "cohort": "Cohort",
+    "attendance": "Attendance",
+    "attendanceOk": "Meets the required minimum ({{min}}%)",
+    "attendanceLow": "⚠ Below the required minimum ({{min}}%)",
+    "noAttendance": "No attendance records",
+    "attendanceCounts": "Present {{present}} · Late {{late}} · Absent {{absent}} · Justified {{justified}}",
+    "biometrics": "Biometric recognition",
+    "biometricsRegistered": "Biometrics registered",
+    "missingFingerprint": "Fingerprint not registered",
+    "missingFace": "Face not registered",
+    "noBiometrics": "No biometric record",
+    "biometricsUnavailable": "Biometrics could not be retrieved",
+    "face": "Face",
+    "fingerprint": "Fingerprint",
+    "registered": "Registered",
+    "pending": "Pending",
+    "registerFace": "Register face",
+    "updateFace": "Update face",
+    "loading": "Loading information..."
+  },
+  "biometricCases": {
+    "title": "Face requests",
+    "menuDesc": "Review requested face changes",
+    "loadError": "The requests could not be loaded.",
+    "reviewError": "The review could not be saved.",
+    "requestedAt": "Requested on {{date}}",
+    "approve": "Approve",
+    "reject": "Reject",
+    "confirmApprove": "Approve this request? The person will be able to register a new face once.",
+    "confirmReject": "Reject this request?",
+    "empty": "There are no pending requests."
+  },
+  "httpErrors": {
+    "204": "The operation was completed, but the server returned no data.",
+    "300": "The request has several possible answers and none could be chosen.",
+    "301": "This service has moved permanently. Please update the app.",
+    "302": "This service has moved temporarily. Try again in a few minutes.",
+    "304": "Nothing has changed since the last request.",
+    "307": "This service has moved temporarily. Please try again.",
+    "308": "This service has moved permanently. Please update the app.",
+    "400": "The data sent is not valid. Check the information and try again.",
+    "401": "Your session has expired or is not valid. Please log in again.",
+    "403": "Your role is not allowed to perform this action.",
+    "404": "The requested information was not found; it may have been deleted.",
+    "405": "The server does not allow this action.",
+    "408": "The server took too long to respond. Check your connection and try again.",
+    "409": "The operation conflicts with existing data (for example, a duplicate record).",
+    "410": "The requested information is no longer available.",
+    "413": "The file or data sent is too large.",
+    "415": "The file or data format is not supported.",
+    "422": "Some data does not meet the required rules. Review it and try again.",
+    "423": "The resource is temporarily locked. Try again later.",
+    "429": "You made too many requests in a row. Wait a moment and try again.",
+    "500": "An internal server error occurred. Please try again later.",
+    "501": "This feature is not available on the server yet.",
+    "502": "The server could not communicate with another service. Try again in a few minutes.",
+    "503": "The service is unavailable right now (it may be under maintenance). Try again later.",
+    "504": "An internal service took too long to respond. Try again in a few minutes.",
+    "network": "Cannot reach the server. Check your internet connection and that the server is available, then try again.",
+    "timeout": "The server took too long to respond. Check your connection and try again.",
+    "noSession": "There is no active session. Please log in again.",
+    "unknown": "An unexpected error occurred. Please try again.",
+    "2xx": "The server responded, but without the expected information. Please try again.",
+    "3xx": "The server redirected the request to another address. Check the app configuration.",
+    "4xx": "The request could not be processed. Check the data and try again.",
+    "5xx": "The server had a problem. Please try again later."
+  },
+  "authErrors": {
+    "accountDisabled": "Your account is inactive or locked. Contact your institution's administrator.",
+    "rolesUnavailable": "Your roles could not be checked on the server. Try again in a few minutes.",
+    "roleWithoutPermissions": "Your role has no permission to use the app. Contact the administrator.",
+    "noRoles": "Your user has no role assigned. Contact your institution's administrator.",
+    "sessionNotCreated": "The server could not create your session. Please try again.",
+    "sessionNotSaved": "The session could not be saved on this device. Check the available storage and try again.",
+    "sessionNotRenewable": "Your session cannot be renewed. Please log in again."
   }
 }

@@ -1,8 +1,9 @@
-import { request, GET, POST, PUT, PATCH, DELETE } from '../api/apiClient';
+import { request, GET, POST, PATCH, DELETE } from '../api/apiClient';
 import { toSnakeDeep } from '../api/backend';
 import BiometricUpdateCase from '../models/configuration/BiometricUpdateCase';
 
-const ENDPOINT = 'biometric_update_case';
+// Casos RN-29 en 07-ms-configuration (camelCase). Quien no revisa solo ve los suyos.
+const ENDPOINT = 'api/v1/biometric-update-cases';
 
 function unwrap(data) {
   if (data && Array.isArray(data.value)) return data.value;
@@ -11,97 +12,56 @@ function unwrap(data) {
   return [];
 }
 
-function unwrapFirst(data) {
-  const arr = unwrap(data);
-  return arr.length > 0 ? arr[0] : null;
-}
+const fromRow = (row) => BiometricUpdateCase.fromApi(toSnakeDeep(row));
+const newestFirst = (a, b) => String(b.requestedAt || '').localeCompare(String(a.requestedAt || ''));
 
 export const BiometricCaseService = {
   getAll: async (params = {}) => {
-    const data = await request({ method: GET, url: ENDPOINT, params, requiresAuth: false });
-    return unwrap(data).map(BiometricUpdateCase.fromApi);
+    const data = await request({ method: GET, url: ENDPOINT, params });
+    return unwrap(data).map(fromRow).sort(newestFirst);
   },
 
   getById: async (id) => {
-    const data = await request({ method: GET, url: `${ENDPOINT}/${id}`, requiresAuth: false });
-    return BiometricUpdateCase.fromApi(data);
+    const data = await request({ method: GET, url: `${ENDPOINT}/${id}` });
+    return fromRow(data);
   },
 
   getByPerson: async (personId) => {
-    const data = await request({ method: GET, url: ENDPOINT, params: { person_id: personId }, requiresAuth: false });
-    return unwrap(data).map(BiometricUpdateCase.fromApi);
+    const data = await request({ method: GET, url: `api/v1/persons/${personId}/biometric-cases` });
+    return unwrap(data).map(fromRow).sort(newestFirst);
   },
 
   getPending: async () => {
-    const data = await request({ method: GET, url: ENDPOINT, params: { update_status: 'Pending' }, requiresAuth: false });
-    return unwrap(data).map(BiometricUpdateCase.fromApi);
+    const data = await request({ method: GET, url: ENDPOINT, params: { status: 'Pending' } });
+    return unwrap(data).map(fromRow).sort(newestFirst);
   },
 
-  getPendingByPerson: async (personId) => {
-    const data = await request({ method: GET, url: ENDPOINT, params: { person_id: personId, update_status: 'Pending' }, requiresAuth: false });
-    return unwrap(data).map(BiometricUpdateCase.fromApi);
+  /** Solicitud facial del propio usuario (biometric.case:request). */
+  requestFacialUpdate: async (personId, reason) => {
+    const data = await request({ method: POST, url: ENDPOINT, data: { personId, biometricType: 'FACIAL', reason } });
+    return fromRow(data);
   },
 
-  create: async (caseData) => {
-    // ms-configuration (zod) habla camelCase y exige personId (uuid),
-    // biometricType (FACIAL|FINGERPRINT) y reason: el toApi en snake
-    // respondía 400. Los null se omiten.
-    const c = caseData ?? {};
-    const body = {
-      personId: c.personId ?? c.person_id,
-      biometricType: c.biometricType ?? c.biometric_type,
-      fingerNumber: c.fingerNumber ?? c.finger_number,
-      currentEmbeddingRef: c.currentEmbeddingRef ?? c.current_embedding_ref,
-      reason: c.reason,
-      requestedBy: c.requestedBy ?? c.requested_by,
-    };
-    Object.keys(body).forEach((k) => (body[k] === null || body[k] === undefined) && delete body[k]);
-    const data = await request({ method: POST, url: ENDPOINT, data: body, requiresAuth: false });
-    return BiometricUpdateCase.fromApi(toSnakeDeep(data));
-  },
-
-  update: async (id, caseData) => {
-    const data = await request({ method: PUT, url: `${ENDPOINT}/${id}`, data: caseData.toApi(), requiresAuth: false });
-    return BiometricUpdateCase.fromApi(data);
-  },
-
-  approve: async (id, reviewerId, notes = null) => {
-    const data = await request({
-      method: PUT,
-      url: `${ENDPOINT}/${id}`,
-      data: { reviewed_by: reviewerId, update_status: 'Approved', resolution_notes: notes },
-      requiresAuth: false,
-    });
-    return BiometricUpdateCase.fromApi(data);
-  },
-
-  reject: async (id, reviewerId, notes = null) => {
-    const data = await request({
-      method: PUT,
-      url: `${ENDPOINT}/${id}`,
-      data: { reviewed_by: reviewerId, update_status: 'Rejected', resolution_notes: notes },
-      requiresAuth: false,
-    });
-    return BiometricUpdateCase.fromApi(data);
-  },
-
-  // PATCH /api/v1/biometric-update-cases/:id/review — revisión dedicada del backend:
-  // { updateStatus: In_Review | Approved | Rejected, reviewedBy?, resolutionNotes? }.
+  // PATCH /review: { updateStatus: In_Review | Approved | Rejected, reviewedBy?, resolutionNotes? }.
+  // El backend fija reviewedAt y rechaza revisar la solicitud propia.
   review: async (id, { updateStatus, reviewedBy, resolutionNotes }) => {
     const data = await request({
       method: PATCH,
-      url: `api/v1/biometric-update-cases/${id}/review`,
+      url: `${ENDPOINT}/${id}/review`,
       data: {
         updateStatus,
         ...(reviewedBy ? { reviewedBy } : {}),
-        ...(resolutionNotes !== undefined && resolutionNotes !== null ? { resolutionNotes } : {}),
+        ...(resolutionNotes ? { resolutionNotes } : {}),
       },
-      requiresAuth: false,
     });
-    return BiometricUpdateCase.fromApi(toSnakeDeep(data));
+    return fromRow(data);
   },
 
+  approve: (id, reviewedBy, resolutionNotes) => BiometricCaseService.review(id, { updateStatus: 'Approved', reviewedBy, resolutionNotes }),
+
+  reject: (id, reviewedBy, resolutionNotes) => BiometricCaseService.review(id, { updateStatus: 'Rejected', reviewedBy, resolutionNotes }),
+
   delete: async (id) => {
-    return request({ method: DELETE, url: `${ENDPOINT}/${id}`, requiresAuth: false });
+    return request({ method: DELETE, url: `${ENDPOINT}/${id}` });
   },
 };

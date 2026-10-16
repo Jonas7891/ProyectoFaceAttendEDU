@@ -144,22 +144,22 @@ export function evaluateColor(hex) {
 
     // Score
     let score;
-    let scoreColor;
+    let scoreTone;
     if (contrastVsWhite >= 4.5 && satPct >= 15 && lumPct >= 20 && lumPct <= 78) {
-        score = 'excelente';   scoreColor = '#10B981';
+        score = 'excelente';   scoreTone = 'success';
     } else if (contrastVsWhite >= 3 && satPct >= 10 && lumPct >= 18 && lumPct <= 82) {
-        score = 'bueno';       scoreColor = '#10B981';
+        score = 'bueno';       scoreTone = 'success';
     } else if (contrastVsWhite >= 2.5 || contrastVsBlack >= 4.5) {
-        score = 'aceptable';   scoreColor = '#F59E0B';
+        score = 'aceptable';   scoreTone = 'warning';
     } else if (lumPct > 80 || lumPct < 15) {
-        score = 'precaución';  scoreColor = '#F59E0B';
+        score = 'precaución';  scoreTone = 'warning';
     } else {
-        score = 'problemático'; scoreColor = '#EF4444';
+        score = 'problemático'; scoreTone = 'danger';
     }
 
     return {
         score,
-        scoreColor,
+        scoreTone,
         readability,
         vibe,
         uiFit,

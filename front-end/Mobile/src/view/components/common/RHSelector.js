@@ -1,13 +1,14 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {Text, TouchableOpacity, View,} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from './ThemeContext';
 import {BloodTypeService, DEFAULT_BLOOD_TYPES} from '../../../services/BloodTypeService';
-import stylescommon from './style/Style';
+import {createCommonStyles} from './style/Style';
 
 export const RHSelector = ({ selectedRH, onSelect }) => {
     const { t } = useTranslation();
     const { colors } = useTheme();
+    const stylescommon = useMemo(() => createCommonStyles(colors), [colors]);
     const [bloodTypes, setBloodTypes] = useState(DEFAULT_BLOOD_TYPES);
 
     useEffect(() => {

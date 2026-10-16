@@ -74,47 +74,45 @@ function adjustColorForContrast(colorHex, backgroundHex, minContrast = 4.5) {
 }
 
 /**
- * Ajusta un color para que mantenga una apariencia visual equivalente
- * en diferentes temas (claro/oscuro), preservando la percepción de color
+ * Ajusta un color SOLO si es blanco/negro extremo y no tiene contraste con el fondo.
+ * Para el resto de colores (azul, verde, rojo, etc.) NO hace ningún cambio.
  * 
  * @param {string} colorHex - Color elegido por el usuario
  * @param {string} backgroundHex - Fondo actual
  * @param {boolean} isDark - Si es tema oscuro
- * @returns {string} Color ajustado
+ * @returns {string} Color ajustado (o sin cambios si no es blanco/negro)
  */
 function adaptColorForTheme(colorHex, backgroundHex, isDark) {
     const color = tinycolor(colorHex);
     const background = tinycolor(backgroundHex);
     
-    // Primero verificar si ya tiene contraste suficiente
+    // Verificar si ya tiene contraste suficiente
     const currentContrast = tinycolor.readability(color, background);
     if (currentContrast >= 4.5) {
-        return colorHex;
+        return colorHex; // Ya tiene buen contraste, no tocar
     }
     
-    // Obtener luminosidad del fondo
-    const bgLuminance = background.getLuminance();
-    
-    // Determinar si el color original es claro u oscuro
-    const colorLuminance = color.getLuminance();
-    const isColorLight = colorLuminance > 0.5;
-    
-    // En temas oscuros, hacer colores más claros
-    // En temas claros, hacer colores más oscuros
-    // Pero solo si es necesario para contraste
+    // Obtener saturación del color
     const hsl = color.toHsl();
     
+    // ── REGLA CLAVE: Solo ajustar si es un color desaturado (gris/blanco/negro) ──
+    // Si tiene saturación significativa (> 0.15 = 15%), es un color cromático
+    // Los colores cromáticos (azul, verde, rojo, etc.) NO se tocan
+    if (hsl.s > 0.15) {
+        return colorHex; // Es un color con saturación, dejarlo como está
+    }
+    
+    // ── Solo llegamos aquí si es blanco/negro/gris Y no tiene contraste ──
+    
     if (isDark) {
-        // Tema oscuro: incrementar luminosidad manteniendo matiz
-        // Si el color es muy oscuro, hacerlo más claro y vibrante
-        if (hsl.l < 0.8) {
-            hsl.l = Math.max(hsl.l, 0.85); // Mínimo 70% lightness en tema oscuro (más brillante)
+        // Tema oscuro: si el color gris/negro es muy oscuro, aclararlo
+        if (hsl.l < 0.7) {
+            hsl.l = 0.85; // Hacer más claro
         }
     } else {
-        // Tema claro: decrementar luminosidad si es muy claro
-        // Si el color es muy claro, hacerlo más oscuro
+        // Tema claro: si el color gris/blanco es muy claro, oscurecerlo
         if (hsl.l > 0.5) {
-            hsl.l = Math.min(hsl.l, 0.45); // Máximo 45% lightness en tema claro
+            hsl.l = 0.25; // Hacer más oscuro
         }
     }
     
@@ -144,22 +142,31 @@ export function generateTheme(accentColorOrColors, mode) {
     const accent = tinycolor(accentHex);
     const isDark = mode === "dark";
 
+    // Fondo global (DEBE definirse PRIMERO antes de adaptColorForTheme)
+    const appBackground = isDark ? "#0F172A" : "#F8FAFC";
+    const surfaceBackground = isDark ? "#1E293B" : "#FFFFFF";
+
     // Colores semánticos personalizados (si se proporcionan)
     const customColors = isSimpleAccent ? {} : accentColorOrColors;
     
-    // Usar colores personalizados o valores por defecto
-    const successColor = customColors.success || "#10B981";
-    const warningColor = customColors.warning || "#F59E0B";
-    const errorColor = customColors.error || "#EF4444";
+    // IMPORTANTE: Los colores DEBEN venir completos desde presets.js (no hay fallbacks aquí)
+    // Si algún color falta, es un error de arquitectura en la capa superior
+    const successColorBase = customColors.success;
+    const warningColorBase = customColors.warning;
+    const errorColorBase = customColors.error;
+    const fontColorBase = customColors.text;
+    
+    // ── Colores semánticos ajustados para contraste con fondo global ──
+    // IMPORTANTE: Evita colores blancos/negros sobre fondos del mismo tono
+    // preservando el matiz y la percepción visual del color
+    const successColor = adaptColorForTheme(successColorBase, appBackground, isDark);
+    const warningColor = adaptColorForTheme(warningColorBase, appBackground, isDark);
+    const errorColor = adaptColorForTheme(errorColorBase, appBackground, isDark);
     
     // Fuentes: color base elegido por el usuario (única fuente de verdad para texto general)
-    // Si el usuario personalizó el color (customColors.text), usarlo
-    // Si no, usar el default correspondiente al tema actual
-    const fontColorBase = customColors.text || (isDark ? "#F1F5F9" : "#0F172A");
-
-    // Fondo global
-    const appBackground = isDark ? "#0F172A" : "#F8FAFC";
-    const surfaceBackground = isDark ? "#1E293B" : "#FFFFFF";
+    // Si no existe fontColorBase, usar el default del tema actual como último recurso
+    // (esto solo debería pasar en modos de compatibilidad legacy)
+    const fontColorBaseSafe = fontColorBase || (isDark ? "#F1F5F9" : "#0F172A");
     
     // ── Color primario ajustado para contraste con fondo (igual que Fuentes) ──
     // IMPORTANTE: Evita primario blanco sobre fondo blanco o primario negro sobre fondo negro
@@ -170,19 +177,8 @@ export function generateTheme(accentColorOrColors, mode) {
     // ── Color de texto principal (ajustado para contraste con fondo) ──
     // IMPORTANTE: Este ajuste garantiza que el color elegido se vea bien en AMBOS temas
     // preservando el matiz y la percepción visual del color
-    const fontColorEffective = adaptColorForTheme(fontColorBase, appBackground, isDark);
+    const fontColorEffective = adaptColorForTheme(fontColorBaseSafe, appBackground, isDark);
     
-    // Generar variante light del color primario (usando el ajustado)
-    const primaryLight = isDark
-        ? accentEffective.clone().lighten(8).setAlpha(0.18).toRgbString()
-        : accentEffective.clone().lighten(30).toHexString();
-
-    const primaryDark = isDark
-        ? accentEffective.clone().lighten(10).toHexString()
-        : accentEffective.clone().darken(10).toHexString();
-
-    const focusColor = accentEffective.toHexString();
-
     // ── Fondos derivados para badges semánticos ──
     // Generan un fondo más claro/oscuro que contraste con el color semántico usado como texto
     function generateLightBackground(semanticColor) {
@@ -199,6 +195,17 @@ export function generateTheme(accentColorOrColors, mode) {
     const successLight = generateLightBackground(successColor);
     const warningLight = generateLightBackground(warningColor);
     const errorLight = generateLightBackground(errorColor);
+
+    // Generar variante light del color primario (usando el ajustado)
+    const primaryLight = isDark
+        ? accentEffective.clone().lighten(8).setAlpha(0.18).toRgbString()
+        : accentEffective.clone().lighten(30).toHexString();
+
+    const primaryDark = isDark
+        ? accentEffective.clone().lighten(10).toHexString()
+        : accentEffective.clone().darken(10).toHexString();
+
+    const focusColor = accentEffective.toHexString();
 
     // ── Textos sobre fondos sólidos con color (botones primarios) ──
     // INDEPENDIENTES del slot Fuentes y del slot semántico
@@ -219,8 +226,8 @@ export function generateTheme(accentColorOrColors, mode) {
         mode,
         colors: {
             // Color de fuente base (almacenado y efectivo)
-            font: fontColorEffective,     // Para texto sobre fondo global
-            fontBase: fontColorBase,      // Original elegido por usuario (NO cambiar)
+            font: fontColorEffective,      // Para texto sobre fondo global
+            fontBase: fontColorBaseSafe,   // Original elegido por usuario (NO cambiar)
             
             brand: {
                 primary:      accentEffective.toHexString(),  // Color ajustado con contraste
@@ -250,14 +257,17 @@ export function generateTheme(accentColorOrColors, mode) {
             },
             status: {
                 success:      successColor,
+                successBase:  successColorBase,       // Original elegido (NO cambiar)
                 successLight: successLight,
                 successDark:  tinycolor(successColor).darken(20).toHexString(),
                 successText:  textOnSuccess,
                 warning:      warningColor,
+                warningBase:  warningColorBase,       // Original elegido (NO cambiar)
                 warningLight: warningLight,
                 warningDark:  tinycolor(warningColor).darken(20).toHexString(),
                 warningText:  textOnWarning,
                 error:        errorColor,
+                errorBase:    errorColorBase,         // Original elegido (NO cambiar)
                 errorLight:   errorLight,
                 errorDark:    tinycolor(errorColor).darken(20).toHexString(),
                 errorText:    textOnError,

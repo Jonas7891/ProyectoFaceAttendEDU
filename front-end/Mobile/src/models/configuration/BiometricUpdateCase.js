@@ -41,16 +41,6 @@ export default class BiometricUpdateCase extends BaseModel {
     return this.biometricType === 'FINGERPRINT';
   }
 
-  get statusColor() {
-    const colors = {
-      Pending: '#FF9800',
-      In_Review: '#2196F3',
-      Approved: '#2da351',
-      Rejected: '#ff0000',
-    };
-    return colors[this.updateStatus] || '#999999';
-  }
-
   static fromApi(data) {
     if (!data) return null;
     return new BiometricUpdateCase(data);

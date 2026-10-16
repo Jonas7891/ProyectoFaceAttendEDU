@@ -15,6 +15,7 @@ from __future__ import annotations
 import logging
 import re
 import time
+from datetime import datetime, timezone
 from urllib.parse import quote
 
 import httpx
@@ -96,6 +97,13 @@ async def _get_json(url: str, token: str) -> tuple[int, dict | None]:
         response = await client.get(url, headers={"Authorization": f"Bearer {token}"})
     body = response.json() if response.status_code == 200 else None
     return response.status_code, body if isinstance(body, dict) else None
+
+
+async def _get_list(url: str, token: str) -> list:
+    async with httpx.AsyncClient(timeout=_TIMEOUT_SECONDS) as client:
+        response = await client.get(url, headers={"Authorization": f"Bearer {token}"})
+    body = response.json() if response.status_code == 200 else None
+    return body if isinstance(body, list) else []
 
 
 def _bearer(request: Request) -> str:
@@ -182,6 +190,69 @@ def require_permission(permission: str | None):
             raise HTTPException(exc.status_code, exc.detail) from exc
 
     return dependency
+
+
+STAFF_PERMISSION = "attendance.record:write"
+CASE_APPROVED = "Approved"
+
+
+def _as_utc(moment: datetime) -> datetime:
+    return moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)
+
+
+def _approved_after(case: object, enrolled_at: datetime | None) -> bool:
+    if not isinstance(case, dict):
+        return False
+    # configuration answers camelCase `updateStatus`; older mirrors used `status`.
+    if (case.get("updateStatus") or case.get("update_status") or case.get("status")) != CASE_APPROVED:
+        return False
+    if enrolled_at is None:
+        return True
+    reviewed = case.get("reviewedAt") or case.get("reviewed_at")
+    try:
+        return _as_utc(datetime.fromisoformat(str(reviewed).replace("Z", "+00:00"))) > _as_utc(enrolled_at)
+    except ValueError:
+        return False
+
+
+async def ensure_can_enroll(request: Request, person_id: str, enrolled_at: datetime | None, has_template: bool) -> None:
+    """Who may store a facial template for `person_id`.
+
+    Staff (attendance.record:write) enrolls anyone. Everyone else only their own
+    person: the first registration is free, and replacing an existing template
+    needs a biometric update case approved after that template (RN-29), so each
+    approval is good for one re-enrollment.
+    """
+    settings = get_settings()
+    if not settings.auth_enabled:
+        return
+    token = _bearer(request)
+    user_id = str(getattr(request.state, "user_id", "") or "")
+    try:
+        code, result = await _get_json(
+            f"{settings.authorization_url}/api/v1/auth/evaluate"
+            f"?userId={quote(user_id)}&permission={quote(STAFF_PERMISSION)}",
+            token,
+        )
+        if code == 200 and result and result.get("allowed") is True:
+            return
+        code, user = await _get_json(f"{settings.identity_url}/api/v1/users/{quote(user_id)}", token)
+        if code != 200 or not user or str(user.get("personId")) != person_id:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "You can only enroll your own face")
+        if not has_template:
+            return
+        cases = await _get_list(
+            f"{settings.configuration_url}/api/v1/persons/{quote(person_id)}/biometric-cases", token
+        )
+    except httpx.HTTPError:
+        logger.warning("identity/authorization/configuration unreachable while checking enrollment")
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Cannot verify enrollment rights")
+    if any(_approved_after(case, enrolled_at) for case in cases):
+        return
+    raise HTTPException(
+        status.HTTP_403_FORBIDDEN,
+        "Replacing a registered face requires an approved biometric update case (RN-29)",
+    )
 
 
 async def authenticate_websocket(websocket: WebSocket, permission: str | None) -> str | None:

@@ -42,7 +42,7 @@ export const DatePickerInput = ({ value, onChange, placeholder, hint }) => {
                 style={[
                     styles.triggerButton,
                     {
-                        borderColor: colors.border ?? colors.textSecondary + '60',
+                        borderColor: colors.border,
                         backgroundColor: colors.background,
                     },
                 ]}
@@ -78,8 +78,8 @@ export const DatePickerInput = ({ value, onChange, placeholder, hint }) => {
                     style={[
                         styles.iosCard,
                         {
-                            backgroundColor: colors.card ?? colors.background,
-                            borderColor: colors.border ?? colors.textSecondary + '40',
+                            backgroundColor: colors.card,
+                            borderColor: colors.border,
                         },
                     ]}
                 >
@@ -94,10 +94,10 @@ export const DatePickerInput = ({ value, onChange, placeholder, hint }) => {
                         locale="es-CO"
                     />
                     <TouchableOpacity
-                        style={[styles.iosConfirmButton, { backgroundColor: colors.primary ?? '#000' }]}
+                        style={[styles.iosConfirmButton, { backgroundColor: colors.primary }]}
                         onPress={confirmIOS}
                     >
-                        <Text style={[styles.iosConfirmText, { color: colors.buttonText ?? '#fff' }]}>
+                        <Text style={[styles.iosConfirmText, { color: colors.onPrimary }]}>
                             Confirmar
                         </Text>
                     </TouchableOpacity>

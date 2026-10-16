@@ -1,13 +1,14 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {Text, TouchableOpacity, View,} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from './ThemeContext';
 import {DocumentTypeService, DEFAULT_DOCUMENT_TYPES} from '../../../services/DocumentTypeService';
-import stylescommon from './style/Style';
+import {createCommonStyles} from './style/Style';
 
 export const DocumentSelector = ({ selectedDocument, onSelect }) => {
     const { t } = useTranslation();
     const { colors } = useTheme();
+    const stylescommon = useMemo(() => createCommonStyles(colors), [colors]);
     const [documentTypes, setDocumentTypes] = useState(DEFAULT_DOCUMENT_TYPES);
 
     useEffect(() => {

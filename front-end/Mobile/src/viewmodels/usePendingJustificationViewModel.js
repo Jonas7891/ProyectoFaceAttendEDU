@@ -1,7 +1,9 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
+import {useTheme} from '../view/components/common/ThemeContext';
 import {getCurrentUserRole, getCurrentUser} from '../services/UserService';
 import {ActorService} from '../services/ActorService';
+import {normalizeBackendRole} from '../utils/getHighestRole';
 import {JustificationService, getJustificationTypeMap, getAcademicActorMap, getAttendanceRecordCached, getPersonCached, mapConcurrent} from '../services/JustificationService';
 
 function unwrap(data) {
@@ -31,10 +33,10 @@ export const JUSTIFICATION_STATUS_INTERNAL = {
 export const getInitials = (name = '') =>
     name.split(' ').slice(0, 2).map((w) => w[0]?.toUpperCase() ?? '').join('');
 
-const AVATAR_COLORS = ['#2563EB', '#7C3AED', '#DB2777', '#059669', '#D97706', '#DC2626'];
-export const getAvatarColor = (name = '') => {
-    const index = name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % AVATAR_COLORS.length;
-    return AVATAR_COLORS[index];
+// palette: paleta categórica del tema (colors.categorical); el índice es estable por nombre.
+export const getAvatarColor = (name = '', palette) => {
+    const index = name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % palette.length;
+    return palette[index];
 };
 
 export const getFileIcon = (mime = '') => {
@@ -44,15 +46,9 @@ export const getFileIcon = (mime = '') => {
     return '📎';
 };
 
-const normalizeRole = (role = '') => {
-    const r = String(role).toLowerCase();
-    if (r.includes('admin')) return USER_ROLE.ADMIN;
-    if (r.includes('docen') || r.includes('profesor') || r.includes('teacher') || r.includes('instructor'))
-        return USER_ROLE.TEACHER;
-    if (r.includes('estud') || r.includes('student') || r.includes('aprendiz')) return USER_ROLE.STUDENT;
-    // Sin fallback silencioso: rol desconocido o ausente bloquea el acceso.
-    return null;
-};
+// Mismo mapper que el login (getHighestRole); rol desconocido o ausente bloquea el acceso.
+const ROLE_KEYS = {Administrador: USER_ROLE.ADMIN, Instructor: USER_ROLE.TEACHER, Aprendiz: USER_ROLE.STUDENT};
+const normalizeRole = (role) => ROLE_KEYS[normalizeBackendRole(role)] ?? null;
 
 const getLocaleForLanguage = (lang) => {
     const localeMap = { es: 'es-CO', en: 'en-US', fr: 'fr-FR', pt: 'pt-BR' };
@@ -61,6 +57,7 @@ const getLocaleForLanguage = (lang) => {
 
 export const usePendingJustificationViewModel = () => {
     const {t, i18n} = useTranslation();
+    const {colors} = useTheme();
     const currentLocale = getLocaleForLanguage(i18n.language);
 
     const [justifications, setJustifications] = useState([]);
@@ -99,6 +96,7 @@ export const usePendingJustificationViewModel = () => {
                 // Para teachers: solo Pending + Approved, pedidas en paralelo.
                 // Antes se descargaba TODO (getAll) y se filtraba en el
                 // dispositivo, lo que colgaba la pantalla con volumen.
+                // El servicio ya devuelve solo las de los aprendices de sus fichas.
                 const [pending, approved] = await Promise.all([
                     JustificationService.getByStatus('Pending'),
                     JustificationService.getByStatus('Approved'),
@@ -203,25 +201,27 @@ export const usePendingJustificationViewModel = () => {
     const openDetail = useCallback((item) => { setSelectedItem(item); setModalVisible(true); }, []);
     const closeDetail = useCallback(() => { setModalVisible(false); setTimeout(() => setSelectedItem(null), 300); }, []);
 
+    const canReview = userRole === USER_ROLE.ADMIN || userRole === USER_ROLE.TEACHER;
+
     const approveJustification = useCallback(async (id) => {
-        if (userRole === USER_ROLE.STUDENT) return;
+        if (!canReview) return;
         const reviewer = await getCurrentUser();
         const updated = await JustificationService.approve(id, reviewer?.userId);
         if (updated) {
             setJustifications((prev) => prev.map((j) => j.id === id ? {...j, status: JUSTIFICATION_STATUS_INTERNAL.APPROVED} : j));
             closeDetail();
         }
-    }, [closeDetail, userRole]);
+    }, [closeDetail, canReview]);
 
     const rejectJustification = useCallback(async (id) => {
-        if (userRole === USER_ROLE.STUDENT) return;
+        if (!canReview) return;
         const reviewer = await getCurrentUser();
         const updated = await JustificationService.reject(id, reviewer?.userId);
         if (updated) {
             setJustifications((prev) => prev.map((j) => j.id === id ? {...j, status: JUSTIFICATION_STATUS_INTERNAL.REJECTED} : j));
             closeDetail();
         }
-    }, [closeDetail, userRole]);
+    }, [closeDetail, canReview]);
 
     const counts = useMemo(() => {
         if (userRole === USER_ROLE.TEACHER) {
@@ -251,13 +251,17 @@ export const usePendingJustificationViewModel = () => {
         type === JUSTIFICATION_TYPE.ABSENCE ? t('justificationType.absence') : t('justificationType.late'), [t]);
 
     const getTypeColors = useCallback((type) =>
-        type === JUSTIFICATION_TYPE.ABSENCE ? {bg: '#FEF3C7', text: '#92400E'} : {bg: '#DBEAFE', text: '#1E40AF'}, []);
+        type === JUSTIFICATION_TYPE.ABSENCE
+            ? {bg: colors.statusTarde, text: colors.statusTextTarde}
+            : {bg: colors.badgeBackground, text: colors.badgeText}, [colors]);
 
     const getRoleLabel = useCallback((role) =>
         role === USER_ROLE.STUDENT ? t('userRole.student') : t('userRole.teacher'), [t]);
 
     const getRoleColors = useCallback((role) =>
-        role === USER_ROLE.STUDENT ? {bg: '#F3E8FF', text: '#6B21A8'} : {bg: '#DCFCE7', text: '#14532D'}, []);
+        role === USER_ROLE.STUDENT
+            ? {bg: colors.categoryBackground, text: colors.categoryText}
+            : {bg: colors.statusPresente, text: colors.statusTextPresente}, [colors]);
 
     return {
         filtered, selectedItem, counts, activeFilter, userRole, loading, error, reload,

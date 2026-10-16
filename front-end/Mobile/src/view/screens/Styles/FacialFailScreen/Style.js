@@ -1,7 +1,7 @@
 import {Platform, StyleSheet} from 'react-native';
 import {normalizeTypography} from '../../../../utils/typography';
 
-const styles = StyleSheet.create(normalizeTypography({
+export const createFacialFailStyles = (colors) => StyleSheet.create(normalizeTypography({
 buttonContainer: {
         marginBottom: Platform.OS === 'ios' ? 60 : 130,
         marginHorizontal: 20
@@ -79,7 +79,7 @@ recommendationsTitle: {
 
 safeAreaFacialFail: {
         flex: 1,
-        backgroundColor: "#F5F5F5",
+        backgroundColor: colors.background,
         marginTop: Platform.OS === 'android' ? 25 : 0
     },
 
@@ -96,4 +96,3 @@ subtitle: {
     },
 }));
 
-export default styles;
