@@ -1,12 +1,15 @@
 package com.faceattend_edu.identity_service.adapter.in.web.controller;
 
 import com.faceattend_edu.identity_service.adapter.in.web.dto.AuthStatusDto;
+import com.faceattend_edu.identity_service.adapter.in.web.dto.ChangePasswordRequest;
 import com.faceattend_edu.identity_service.adapter.in.web.dto.ForgotPasswordRequest;
 import com.faceattend_edu.identity_service.adapter.in.web.dto.ResetPasswordRequest;
 import com.faceattend_edu.identity_service.adapter.in.web.dto.VerifyCodeRequest;
+import com.faceattend_edu.identity_service.application.port.in.ChangePasswordUseCase;
 import com.faceattend_edu.identity_service.application.port.in.RequestPasswordRecoveryUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ResetPasswordUseCase;
 import com.faceattend_edu.identity_service.application.port.in.VerifyRecoveryCodeUseCase;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +17,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
 
 /**
  * Recuperación de contraseña en tres pasos (rutas ya consumidas por el front
@@ -27,6 +32,9 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <p>Los tres son públicos (como login/logout): no hay sesión todavía. La
  * autorización la da el reto verificado que vive en el almacén en memoria.</p>
+ *
+ * <p>POST /change-password es el cambio desde el perfil: exige sesión y la
+ * contraseña actual; el usuario sale de la sesión, nunca del cuerpo.</p>
  */
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -36,6 +44,7 @@ public class PasswordRecoveryController {
     private final RequestPasswordRecoveryUseCase requestPasswordRecoveryUseCase;
     private final VerifyRecoveryCodeUseCase verifyRecoveryCodeUseCase;
     private final ResetPasswordUseCase resetPasswordUseCase;
+    private final ChangePasswordUseCase changePasswordUseCase;
 
     @PostMapping("/forgot-password")
     public ResponseEntity<AuthStatusDto> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
@@ -53,6 +62,15 @@ public class PasswordRecoveryController {
     @PostMapping("/reset-password")
     public ResponseEntity<AuthStatusDto> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         resetPasswordUseCase.resetPassword(request.getEmail(), request.getPassword());
+        return ResponseEntity.ok(AuthStatusDto.updated());
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<AuthStatusDto> changePassword(@Valid @RequestBody ChangePasswordRequest request,
+                                                        HttpServletRequest http) {
+        UUID userId = UUID.fromString(String.valueOf(http.getAttribute("X-User-Id")));
+        UUID sessionId = UUID.fromString(http.getHeader("Authorization").substring(7).trim());
+        changePasswordUseCase.changePassword(userId, sessionId, request.getCurrentPassword(), request.getNewPassword());
         return ResponseEntity.ok(AuthStatusDto.updated());
     }
 }

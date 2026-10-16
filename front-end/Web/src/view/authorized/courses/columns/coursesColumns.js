@@ -18,6 +18,7 @@ import React from "react";
 import { View, Text } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Badge, ProgressBar } from "../../../components/common";
+import { useAttendanceColor } from "../../../components/common/badges/StatusBadge";
 
 // ── Constantes ────────────────────────────────────────────
 
@@ -27,13 +28,19 @@ const LAYOUT = {
     iconSize: 16,
 };
 
-// ── Función helper para color de asistencia ───────────────
+// ── Componente para renderizar asistencia con color dinámico ──
 
-function getAttendanceColor(attendance, colors) {
-    if (attendance >= 90) return colors.status.success;
-    if (attendance >= 80) return colors.brand.primary;
-    if (attendance >= 70) return colors.status.warning;
-    return colors.status.error;
+function AttendanceCell({ attendance }) {
+    const attColor = useAttendanceColor(attendance || 0);
+    
+    return (
+        <View style={{ width: "100%", maxWidth: 120, alignItems: "center", gap: 4 }}>
+            <Text style={{ fontSize: 13, fontWeight: "700", color: attColor }}>
+                {attendance || 0}%
+            </Text>
+            <ProgressBar value={attendance || 0} color={attColor} height={5} />
+        </View>
+    );
 }
 
 // ── Definición de columnas ────────────────────────────────
@@ -181,18 +188,7 @@ export const COLUMNS = [
         label: "Asistencia",
         flex: 1.3,
         align: "center",
-        render: (course, { c }) => {
-            const attColor = getAttendanceColor(course.avgAttendance || 0, c);
-            
-            return (
-                <View style={{ width: "100%", maxWidth: 120, alignItems: "center", gap: 4 }}>
-                    <Text style={{ fontSize: 13, fontWeight: "700", color: attColor }}>
-                        {course.avgAttendance || 0}%
-                    </Text>
-                    <ProgressBar value={course.avgAttendance || 0} color={attColor} height={5} />
-                </View>
-            );
-        },
+        render: (course) => <AttendanceCell attendance={course.avgAttendance} />,
     },
     {
         id: "status",
@@ -231,7 +227,9 @@ export const COLUMNS = [
 export function createCompactRowConfig({ showStatus = true }) {
     return {
         render: (course, { t, c }) => {
-            const attColor = getAttendanceColor(course.avgAttendance || 0, c);
+            // Hook para color dinámico - necesita ser llamado dentro del render
+            // eslint-disable-next-line react-hooks/rules-of-hooks
+            const attColor = useAttendanceColor(course.avgAttendance || 0);
             
             return (
                 <>

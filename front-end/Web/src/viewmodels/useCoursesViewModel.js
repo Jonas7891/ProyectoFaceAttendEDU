@@ -13,6 +13,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
+import { getAttendanceThresholds, getAtRiskStudents } from "../models/data/userDerivedData";
 import { useAuth } from "../context/AuthContext";
 import { createCourse, updateCourse, deleteCourse as deleteCourseApi, importCourses as bulkImportCourses } from "../services/api/courseCreation";
 
@@ -24,7 +25,6 @@ export const EMPTY_COURSE_FORM = {
     programId: "",
     creditHours: "",
     schedule: "mañana",
-    room: "",
     startDate: "",
     endDate: "",
 };
@@ -43,7 +43,6 @@ export function parseCreditHours(value) {
 }
 
 export function validateCourseForm(form) {
-    if (!form.code.trim()) return "El código es requerido";
     if (!form.name.trim()) return "El nombre es requerido";
     // El backend exige program_id (FK NOT NULL) para crear el curso.
     if (!String(form.programId ?? "").trim()) return "El programa es requerido";
@@ -53,6 +52,8 @@ export function validateCourseForm(form) {
         return "Los créditos deben ser un número entre 0 y 32767";
     }
 
+    if (!form.code.trim()) return "El código es requerido";
+    
     return null;
 }
 
@@ -333,23 +334,62 @@ export function useCoursesViewModel() {
     }, [myCourses, myCourseIds, appData.students]);
 
     // ── Estadísticas derivadas ─────────────────────────────────
+    
+    const totalStudents = useMemo(() => {
+        // Contar estudiantes REALES que están en alguno de estos cursos
+        // En lugar del campo hardcodeado 'students'
+        const courseCodes = new Set(courses.map(course => course.code));
+        const students = appData.students || [];
+        
+        return students.filter(student => 
+            student.status === "active" && 
+            courseCodes.has(student.course)
+        ).length;
+    }, [courses, appData.students]);
 
-    const totalStudents = useMemo(() =>
-        courses.reduce((a, x) => a + x.students, 0),
-        [courses]
-    );
+    const avgAttendance = useMemo(() => {
+        if (courses.length === 0) return 0;
+        
+        // Calcular asistencia promedio REAL basada en estudiantes
+        const students = appData.students || [];
+        const courseCodes = new Set(courses.map(course => course.code));
+        
+        const courseStudents = students.filter(student => 
+            student.status === "active" && 
+            courseCodes.has(student.course)
+        );
+        
+        if (courseStudents.length === 0) return 0;
+        
+        const totalAttendance = courseStudents.reduce((sum, student) => 
+            sum + (student.attendance || 0), 0
+        );
+        
+        return Math.round(totalAttendance / courseStudents.length);
+    }, [courses, appData.students]);
 
-    const avgAttendance = useMemo(
-        () => courses.length === 0
-            ? 0
-            : Math.round(courses.reduce((a, x) => a + x.avgAttendance, 0) / courses.length),
-        [courses]
-    );
-
-    const alertCount = useMemo(() => 
-        courses.filter((x) => x.avgAttendance < 80).length, 
-        [courses]
-    );
+    const alertCount = useMemo(() => {
+        // Usar la MISMA lógica que getAtRiskStudents para ser consistente
+        const students = appData.students || [];
+        const courseCodes = new Set(courses.map(course => course.code));
+        
+        const courseStudents = students.filter(student => 
+            student.status === "active" && 
+            courseCodes.has(student.course)
+        );
+        
+        const thresholds = getAttendanceThresholds();
+        const config = {
+            minAttendance: thresholds.minAttendance,
+            daysUntilSanction: 30, // Por defecto, debería venir de config
+            consecutiveDaysForSanction: thresholds.consecutiveDaysForSanction
+        };
+        
+        // Usar getAtRiskStudents con los estudiantes de estos cursos
+        const atRiskStudents = getAtRiskStudents(courseStudents, config.minAttendance);
+        
+        return atRiskStudents.length;
+    }, [courses, appData.students]);
     
     const stats = useMemo(() => {
         const total = courses.length;

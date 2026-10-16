@@ -4,6 +4,124 @@
 //  Las ViewModels importan desde aquí, nunca las Views directamente.
 // ============================================================
 
+// ── Utilidad: Calcular fecha de última asistencia simulada ──
+// Esta función crea una distribución realista de días sin asistir
+// que respeta los umbrales configurables del sistema
+function getSimulatedLastAttendance(attendanceRate) {
+    const today = new Date();
+    let daysAgo = 0;
+    
+    // Distribución realista basada en porcentaje de asistencia
+    // Los estudiantes con baja asistencia tienen más probabilidad de
+    // tener días recientes sin asistir, pero con variedad
+    if (attendanceRate >= 95) {
+        daysAgo = 0; // Hoy (asistencia excelente)
+    } else if (attendanceRate >= 90) {
+        daysAgo = Math.random() < 0.7 ? 0 : 1; // 70% hoy, 30% hace 1 día
+    } else if (attendanceRate >= 85) {
+        daysAgo = Math.floor(Math.random() * 2); // 0-1 días
+    } else if (attendanceRate >= 80) {
+        daysAgo = Math.floor(Math.random() * 2) + 1; // 1-2 días
+    } else if (attendanceRate >= 75) {
+        daysAgo = Math.floor(Math.random() * 3) + 1; // 1-3 días
+    } else if (attendanceRate >= 70) {
+        daysAgo = Math.floor(Math.random() * 3) + 2; // 2-4 días
+    } else if (attendanceRate >= 65) {
+        daysAgo = Math.floor(Math.random() * 4) + 2; // 2-5 días
+    } else if (attendanceRate >= 60) {
+        daysAgo = Math.floor(Math.random() * 4) + 3; // 3-6 días
+    } else if (attendanceRate >= 55) {
+        daysAgo = Math.floor(Math.random() * 5) + 4; // 4-8 días
+    } else {
+        // Muy baja asistencia: distribución amplia
+        daysAgo = Math.floor(Math.random() * 7) + 5; // 5-11 días
+    }
+    
+    const lastDate = new Date(today);
+    lastDate.setDate(lastDate.getDate() - daysAgo);
+    return lastDate.toISOString().split('T')[0]; // YYYY-MM-DD
+}
+
+// ── Utilidad: Generar historial de asistencia simulado ──
+// Genera un historial realista que incluye rachas de ausencias consecutivas
+function generateAttendanceHistory(attendanceRate, totalClasses = 45) {
+    const history = [];
+    const today = new Date();
+    const attendedClasses = Math.round((attendanceRate / 100) * totalClasses);
+    const missedClasses = totalClasses - attendedClasses;
+    
+    // Determinar si debe tener ausencias consecutivas recientes
+    // Estudiantes con baja asistencia tienen mayor probabilidad de rachas
+    const hasRecentAbsenceStreak = attendanceRate < 75 && Math.random() < 0.6;
+    const streakLength = hasRecentAbsenceStreak 
+        ? Math.min(Math.floor(Math.random() * 4) + 2, 5) // 2-5 días
+        : 0;
+    
+    let remainingAbsences = missedClasses;
+    
+    // Generar historial retrocediendo desde hoy
+    for (let i = totalClasses - 1; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - (totalClasses - i - 1) * 2); // Clases cada 2 días
+        
+        let present = true;
+        
+        // Generar racha de ausencias recientes si aplica
+        if (hasRecentAbsenceStreak && i >= totalClasses - streakLength) {
+            present = false;
+            remainingAbsences--;
+        } else {
+            // Distribuir ausencias aleatoriamente en el resto del historial
+            const remainingSlots = i + 1;
+            const probabilityOfAbsence = remainingSlots > 0 
+                ? Math.min(remainingAbsences / remainingSlots, 0.4) // Max 40% probabilidad
+                : 0;
+            
+            if (remainingAbsences > 0 && Math.random() < probabilityOfAbsence) {
+                present = false;
+                remainingAbsences--;
+            }
+        }
+        
+        // Determinar tardanzas (solo si asistió)
+        const late = present && Math.random() < 0.08; // 8% de tardanzas
+        
+        // Simular horas de entrada y salida realistas
+        let checkInTime = null;
+        let checkOutTime = null;
+        
+        if (present) {
+            // Hora de entrada: 7:00-9:00 para jornada mañana, 13:00-15:00 para tarde
+            const baseCheckIn = Math.random() < 0.5 ? 8 : 14; // 50% mañana, 50% tarde
+            const checkInMinutes = late 
+                ? Math.floor(Math.random() * 30) + 10 // 10-40 min tarde si late=true
+                : Math.floor(Math.random() * 15); // 0-15 min variación normal
+            
+            const checkInHour = baseCheckIn + Math.floor(checkInMinutes / 60);
+            const checkInMin = checkInMinutes % 60;
+            checkInTime = `${checkInHour.toString().padStart(2, '0')}:${checkInMin.toString().padStart(2, '0')}`;
+            
+            // Hora de salida: 2-4 horas después de la entrada
+            const duration = Math.floor(Math.random() * 120) + 120; // 120-240 min (2-4 horas)
+            const totalMinutes = checkInHour * 60 + checkInMin + duration;
+            const checkOutHour = Math.floor(totalMinutes / 60);
+            const checkOutMin = totalMinutes % 60;
+            checkOutTime = `${checkOutHour.toString().padStart(2, '0')}:${checkOutMin.toString().padStart(2, '0')}`;
+        }
+        
+        history.push({
+            date: date.toISOString().split('T')[0],
+            present,
+            late,
+            checkInTime,   // Hora real de entrada (ej: "08:05", "14:23")
+            checkOutTime,  // Hora real de salida (ej: "10:30", "17:45")
+        });
+    }
+    
+    // Asegurar que el historial esté ordenado cronológicamente (más antiguo → más reciente)
+    return history.sort((a, b) => new Date(a.date) - new Date(b.date));
+}
+
 export const mockStudents = [
     {
         id: "1",
@@ -13,6 +131,8 @@ export const mockStudents = [
         course: "AED-401", // Algoritmos y Estructuras de Datos (curso con código)
         grade: null, // Será calculado dinámicamente
         attendance: 92,
+        lastAttendanceDate: getSimulatedLastAttendance(92),
+        attendanceHistory: generateAttendanceHistory(92),
         status: "active",
         hasFacial: true,
         hasFingerprint: true,
@@ -25,6 +145,8 @@ export const mockStudents = [
         course: "AED-401", // Algoritmos y Estructuras de Datos
         grade: null, // Será calculado dinámicamente
         attendance: 88,
+        lastAttendanceDate: getSimulatedLastAttendance(88),
+        attendanceHistory: generateAttendanceHistory(88),
         status: "active",
         hasFacial: true,
         hasFingerprint: true,
@@ -37,6 +159,8 @@ export const mockStudents = [
         course: "MAT-201", // Cálculo Diferencial
         grade: null, // Será calculado dinámicamente
         attendance: 95,
+        lastAttendanceDate: getSimulatedLastAttendance(95),
+        attendanceHistory: generateAttendanceHistory(95),
         status: "active",
         hasFacial: true,
         hasFingerprint: false, // Solo tiene facial
@@ -49,6 +173,8 @@ export const mockStudents = [
         course: "FIS-101", // Física I
         grade: null, // Será calculado dinámicamente
         attendance: 75,
+        lastAttendanceDate: getSimulatedLastAttendance(75),
+        attendanceHistory: generateAttendanceHistory(75),
         status: "active",
         hasFacial: false,
         hasFingerprint: false, // No tiene ninguno
@@ -61,6 +187,8 @@ export const mockStudents = [
         course: "POO-301", // Programación Orientada a Objetos
         grade: null, // Será calculado dinámicamente
         attendance: 60,
+        lastAttendanceDate: getSimulatedLastAttendance(60),
+        attendanceHistory: generateAttendanceHistory(60),
         status: "inactive",
         hasFacial: true,
         hasFingerprint: true,
@@ -73,6 +201,8 @@ export const mockStudents = [
         course: "BD-401", // Bases de Datos
         grade: null, // Será calculado dinámicamente
         attendance: 85,
+        lastAttendanceDate: getSimulatedLastAttendance(85),
+        attendanceHistory: generateAttendanceHistory(85),
         status: "active",
         hasFacial: true,
         hasFingerprint: true,
@@ -85,6 +215,8 @@ export const mockStudents = [
         course: "AED-401", // Algoritmos y Estructuras de Datos
         grade: null, // Será calculado dinámicamente
         attendance: 91,
+        lastAttendanceDate: getSimulatedLastAttendance(91),
+        attendanceHistory: generateAttendanceHistory(91),
         status: "active",
         hasFacial: false,
         hasFingerprint: true, // Solo tiene huella
@@ -97,6 +229,8 @@ export const mockStudents = [
         course: "PD-101", // Pizzas de Datos
         grade: null, // Será calculado dinámicamente
         attendance: 78,
+        lastAttendanceDate: getSimulatedLastAttendance(78),
+        attendanceHistory: generateAttendanceHistory(78),
         status: "active",
         hasFacial: false,
         hasFingerprint: false,
@@ -110,6 +244,8 @@ export const mockStudents = [
         course: "PD-101", // Pizzas de Datos
         grade: null, // Será calculado dinámicamente
         attendance: 68,
+        lastAttendanceDate: getSimulatedLastAttendance(68),
+        attendanceHistory: generateAttendanceHistory(68),
         status: "active",
         hasFacial: true,
         hasFingerprint: true,
@@ -122,6 +258,8 @@ export const mockStudents = [
         course: "FIS-101", // Física I
         grade: null, // Será calculado dinámicamente
         attendance: 73,
+        lastAttendanceDate: getSimulatedLastAttendance(73),
+        attendanceHistory: generateAttendanceHistory(73),
         status: "active",
         hasFacial: true,
         hasFingerprint: false,
@@ -134,6 +272,8 @@ export const mockStudents = [
         course: "MAT-201", // Cálculo Diferencial
         grade: null, // Será calculado dinámicamente
         attendance: 97.5,
+        lastAttendanceDate: getSimulatedLastAttendance(97.5),
+        attendanceHistory: generateAttendanceHistory(97.5),
         status: "active",
         hasFacial: true,
         hasFingerprint: true,
@@ -146,6 +286,8 @@ export const mockStudents = [
         course: "BD-401", // Bases de Datos
         grade: null, // Será calculado dinámicamente
         attendance: 96.7,
+        lastAttendanceDate: getSimulatedLastAttendance(96.7),
+        attendanceHistory: generateAttendanceHistory(96.7),
         status: "active",
         hasFacial: true,
         hasFingerprint: true,
@@ -159,6 +301,8 @@ export const mockStudents = [
         course: "AED-401", // Algoritmos y Estructuras de Datos
         grade: null, // Será calculado dinámicamente
         attendance: 94,
+        lastAttendanceDate: getSimulatedLastAttendance(94),
+        attendanceHistory: generateAttendanceHistory(94),
         status: "active",
         hasFacial: true,
         hasFingerprint: true,
@@ -171,6 +315,8 @@ export const mockStudents = [
         course: "POO-301", // Programación Orientada a Objetos
         grade: null, // Será calculado dinámicamente
         attendance: 89,
+        lastAttendanceDate: getSimulatedLastAttendance(89),
+        attendanceHistory: generateAttendanceHistory(89),
         status: "active",
         hasFacial: false,
         hasFingerprint: true,
@@ -183,6 +329,8 @@ export const mockStudents = [
         course: "MAT-201", // Cálculo Diferencial
         grade: null, // Será calculado dinámicamente
         attendance: 55,
+        lastAttendanceDate: getSimulatedLastAttendance(55),
+        attendanceHistory: generateAttendanceHistory(55),
         status: "active",
         hasFacial: false,
         hasFingerprint: false,
@@ -195,6 +343,8 @@ export const mockStudents = [
         course: "FIS-101", // Física I
         grade: null, // Será calculado dinámicamente
         attendance: 82,
+        lastAttendanceDate: getSimulatedLastAttendance(82),
+        attendanceHistory: generateAttendanceHistory(82),
         status: "active",
         hasFacial: true,
         hasFingerprint: true,
@@ -207,6 +357,8 @@ export const mockStudents = [
         course: "PD-101", // Pizzas de Datos
         grade: null, // Será calculado dinámicamente
         attendance: 98,
+        lastAttendanceDate: getSimulatedLastAttendance(98),
+        attendanceHistory: generateAttendanceHistory(98),
         status: "active",
         hasFacial: true,
         hasFingerprint: true,
@@ -219,6 +371,8 @@ export const mockStudents = [
         course: "FIS-101", // Física I
         grade: null, // Será calculado dinámicamente
         attendance: 65,
+        lastAttendanceDate: getSimulatedLastAttendance(65),
+        attendanceHistory: generateAttendanceHistory(65),
         status: "active",
         hasFacial: true,
         hasFingerprint: false,
@@ -231,6 +385,8 @@ export const mockStudents = [
         course: "MAT-201", // Cálculo Diferencial
         grade: null, // Será calculado dinámicamente
         attendance: 93,
+        lastAttendanceDate: getSimulatedLastAttendance(93),
+        attendanceHistory: generateAttendanceHistory(93),
         status: "active",
         hasFacial: true,
         hasFingerprint: true,
@@ -243,6 +399,8 @@ export const mockStudents = [
         course: "BD-401", // Bases de Datos
         grade: null, // Será calculado dinámicamente
         attendance: 71,
+        lastAttendanceDate: getSimulatedLastAttendance(71),
+        attendanceHistory: generateAttendanceHistory(71),
         status: "active",
         hasFacial: false,
         hasFingerprint: false,
@@ -291,7 +449,7 @@ export const mockCourses = [
         startDate: "2026-01-15",
         endDate: "2026-06-30",
         semester: "2024-2",
-        avgAttendance: 78,
+        avgAttendance: 65, // Cambiado de 78 a 65 para probar alertas
         status: "active",
         color: "#F59E0B",
     },
@@ -306,7 +464,7 @@ export const mockCourses = [
         startDate: "2025-07-01",
         endDate: "2027-01-15",
         semester: "2024-2",
-        avgAttendance: 85,
+        avgAttendance: 55, // Cambiado de 85 a 55 para probar alertas críticas
         status: "active",
         color: "#8B5CF6",
     },
@@ -844,7 +1002,6 @@ export const mockAppUsers = [
         email: "admin@uni.edu",
         role: "admin",
         code: "ADM001",
-        department: "TI",
         status: "active",
     },
     {

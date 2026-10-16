@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -16,7 +16,7 @@ import {
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
-import styles from './Styles/SchoolConfigurationScreen/Style';
+import {createSchoolConfigStyles} from './Styles/SchoolConfigurationScreen/Style';
 import BackButton from '../components/common/BackButton';
 import {useSchoolConfigurationViewModel} from "../../viewmodels/useSchoolConfigurationViewModel";
 import {useTheme} from '../../view/components/common/ThemeContext';
@@ -40,6 +40,7 @@ const FormField = ({
                        validationKey,
                    }) => {
     const { colors } = useTheme();
+    const styles = useMemo(() => createSchoolConfigStyles(colors), [colors]);
     const {t} = useTranslation();
     const fieldKey = validationKey || label.toLowerCase().replace(/\s+/g, '_');
     const hasError = validationErrors[fieldKey];
@@ -99,6 +100,7 @@ const FormField = ({
 
 const ToggleRow = ({ label, description, value, onValueChange }) => {
     const { colors, isDark } = useTheme();
+    const styles = useMemo(() => createSchoolConfigStyles(colors), [colors]);
 
     return (
         <View style={styles.toggleRowSchoolConfig}>
@@ -134,6 +136,7 @@ const ToggleRow = ({ label, description, value, onValueChange }) => {
 
 const SchoolConfigurationScreen = ({ navigation }) => {
     const { colors, isDark, toggleTheme } = useTheme();
+    const styles = useMemo(() => createSchoolConfigStyles(colors), [colors]);
     const { t } = useTranslation();
 
     const { isAdmin, isStudent, isTeacher } = useUser();
@@ -213,7 +216,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                         {/* ── Tarjeta resumen ── */}
                         <View style={[styles.schoolInfoCardSchoolConfig, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
                             <View style={styles.schoolLogoContainerSchoolConfig}>
-                                <Text style={{ color: colors.textSecondary }}>logo</Text>
+                                <Text style={{ color: colors.textSecondary }}>{t('common.logoPlaceholder')}</Text>
                             </View>
                             <Text style={[styles.schoolNameSchoolConfig, { color: colors.text }]}>
                                 {generalInfo?.name}

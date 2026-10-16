@@ -14,7 +14,7 @@ export { SessionTimeInput }       from "./security/SessionTimeInput";
 
 // notifications
 export { EmailAlertToggle, WeeklyReportToggle, AtRiskAlertToggle, DailySummaryToggle } from "./notifications/NotificationToggles";
-export { PushNotificationToggle } from "./notifications/PushNotificationConfig";
+export { PushNotificationToggle, PushNotificationLimit } from "./notifications/PushNotificationConfig";
 
 // general
 export { InstitutionInfo }        from "./general/InstitutionInfo";

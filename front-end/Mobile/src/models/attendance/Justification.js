@@ -25,15 +25,6 @@ export default class Justification extends BaseModel {
     return this.reviewStatus === 'Rejected';
   }
 
-  get statusColor() {
-    const colors = {
-      Pending: '#FF9800',
-      Approved: '#2da351',
-      Rejected: '#ff0000',
-    };
-    return colors[this.reviewStatus] || '#999999';
-  }
-
   static fromApi(data) {
     if (!data) return null;
     return new Justification(data);

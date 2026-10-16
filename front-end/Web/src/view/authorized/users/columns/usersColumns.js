@@ -98,6 +98,7 @@ export const COLUMNS = [
         align: "left",
         contentWidth: 150,
         headerOffsetX: -10,
+        visible: ({ roleFilter }) => roleFilter !== "admin",
         render: (user, { c, courses }) => {
             // Buscar el curso por código o nombre
             const course = courses?.find(
@@ -120,6 +121,7 @@ export const COLUMNS = [
         label: "Asistencia",
         flex: 1.1,
         align: "center",
+        visible: ({ roleFilter }) => roleFilter !== "admin",
         render: (user, { attColor }) => (
             <View style={{ width: "100%", maxWidth: 110, alignItems: "center", gap: 4 }}>
                 <Text style={{ fontSize: 13, fontWeight: "700", color: attColor }}>
@@ -134,7 +136,7 @@ export const COLUMNS = [
         label: "Biometría",
         flex: 1,
         align: "center",
-        visible: ({ canManage }) => canManage,
+        visible: ({ canManage, roleFilter }) => canManage && roleFilter !== "admin",
         render: (user, { t }) => {
             // Calcular estado basado en facial y huella
             const hasFacial = user.hasFacial || false;
@@ -185,9 +187,10 @@ export const COLUMNS = [
  * @param {Object} options - Opciones de configuración
  * @param {boolean} options.showRole - Mostrar badge de rol
  * @param {boolean} options.canManage - Mostrar estado facial
+ * @param {string} options.roleFilter - Filtro de rol actual para determinar qué mostrar
  * @returns {Object} Configuración para UsersTable compactConfig
  */
-export function createCompactRowConfig({ showRole, canManage }) {
+export function createCompactRowConfig({ showRole, canManage, roleFilter }) {
     return {
         render: (user, { t, c, attColor, roleVariant }) => (
             <>
@@ -220,10 +223,16 @@ export function createCompactRowConfig({ showRole, canManage }) {
                             {t(user.typeLabelKey || "Usuario")}
                         </Badge>
                     )}
-                    <Text style={{ fontSize: 12, fontWeight: "700", color: attColor }}>
-                        {user.attendance || 0}%
-                    </Text>
-                    {canManage && (() => {
+                    
+                    {/* Mostrar asistencia solo si no es filtro de admin */}
+                    {roleFilter !== "admin" && (
+                        <Text style={{ fontSize: 12, fontWeight: "700", color: attColor }}>
+                            {user.attendance || 0}%
+                        </Text>
+                    )}
+                    
+                    {/* Mostrar biometría solo si no es filtro de admin y tiene permisos */}
+                    {canManage && roleFilter !== "admin" && (() => {
                         // Calcular estado basado en facial y huella
                         const hasFacial = user.hasFacial || false;
                         const hasFingerprint = user.hasFingerprint || false;
@@ -251,6 +260,13 @@ export function createCompactRowConfig({ showRole, canManage }) {
                             </Badge>
                         );
                     })()}
+                    
+                    {/* Para administradores, mostrar solo el estado si es necesario */}
+                    {roleFilter === "admin" && (
+                        <Badge variant={user.status === "active" ? "success" : "default"}>
+                            {user.status === "active" ? t("Activo") : t("Inactivo")}
+                        </Badge>
+                    )}
                 </View>
             </>
         ),

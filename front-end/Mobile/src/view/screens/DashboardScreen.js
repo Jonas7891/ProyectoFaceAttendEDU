@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {SafeAreaView, Text, TouchableOpacity, View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
@@ -6,7 +6,7 @@ import {useTheme} from '../components/common/ThemeContext';
 import BottomBar from '../components/common/NavigationBar';
 import ScrollViewWrapper from '../components/common/ScrollView';
 import CustomTabs from '../components/common/CustomTabs';
-import styles from './Styles/DashboardScreen/Style';
+import {createDashboardStyles} from './Styles/DashboardScreen/Style';
 import {useDashboardViewModel} from '../../viewmodels/useDashboardViewModel';
 import {useUser} from '../../utils/UserContext';
 
@@ -14,6 +14,7 @@ export default function Dashboard({ onLogout, userRole: propUserRole }) {
     const navigation = useNavigation();
     const { t } = useTranslation();
     const { colors } = useTheme();
+    const styles = useMemo(() => createDashboardStyles(colors), [colors]);
 
     const {isTeacher, isStudent, currentUser} = useUser();
 

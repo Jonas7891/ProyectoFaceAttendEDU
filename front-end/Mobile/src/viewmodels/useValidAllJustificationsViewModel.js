@@ -1,88 +1,57 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useNavigation} from '@react-navigation/native';
 import {useTheme} from '../view/components/common/ThemeContext';
 import {getCurrentUserRole} from "../services/UserService";
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 import {JustificationService} from '../services/JustificationService';
+import {useCustomAlert} from '../view/components/common/useCustomAlert';
 
-function unwrap(data) {
-  if (data && Array.isArray(data.value)) return data.value;
-  if (Array.isArray(data)) return data;
-  if (data && typeof data === 'object') return [data];
-  return [];
-}
+const categoryOf = (name) =>
+    /m[eé]d/i.test(name) ? 'Salud' :
+    /familiar|calamidad/i.test(name) ? 'Familiar' :
+    /representaci[oó]n|institucional|academic/i.test(name) ? 'Académica' : 'General';
 
-const DEFAULT_JUSTIFICATIONS = [
-    { id: "1", type: "Médica", description: "Ausencia por cita médica con especialista", requiresDocument: true, category: "Salud" },
-    { id: "2", type: "Familiar", description: "Ausencia por fallecimiento de familiar directo", requiresDocument: true, category: "Familiar" },
-    { id: "3", type: "Personal", description: "Ausencia por trámite legal inaplazable", requiresDocument: true, category: "Legal" },
-    { id: "4", type: "Académica", description: "Participación en evento académico representando a la institución", requiresDocument: true, category: "Académica" },
-];
-
+// Catálogo de tipos de justificación (05-attendance), administrado por el Administrador.
 export function useJustificationsViewModel() {
     const navigation = useNavigation();
-    const { i18n } = useTranslation();
-    const { loadThemeForRole } = useTheme();
+    const {t} = useTranslation();
+    const {loadThemeForRole} = useTheme();
+    const {alertConfig, hideAlert, showError, showConfirm} = useCustomAlert();
 
     const [justifications, setJustifications] = useState([]);
     const [userRole, setUserRole] = useState(null);
+    const [loading, setLoading] = useState(true);
     const updateKey = useLanguageRefresh();
 
     useEffect(() => {
-        const init = async () => {
-            try {
-                const role = await getCurrentUserRole();
-                setUserRole(role);
-                if (role) await loadThemeForRole(role);
-            } catch (error) {
-                console.error('Error inicializando rol:', error);
-            }
-        };
-        init();
+        getCurrentUserRole().then((role) => {
+            setUserRole(role);
+            if (role) loadThemeForRole(role);
+        }).catch(() => {});
     }, [loadThemeForRole]);
 
     const loadJustifications = useCallback(async () => {
-        // Backend primero: la caché solo respalda sin conexión; los
-        // valores por defecto son último recurso, no la fuente.
-        const mapTypes = (types) => (types ?? []).map(t => {
-            const name = t.name ?? '';
-            return {
-                id: String(t.justificationTypeId ?? t.justification_type_id ?? t.id ?? ''),
-                type: name,
-                description: t.description || '',
-                requiresDocument: t.requiresAttachment ?? t.requires_attachment ?? false,
-                category: /m[eé]d/i.test(name) ? 'Salud' :
-                          /familiar|calamidad/i.test(name) ? 'Familiar' :
-                          /representaci[oó]n|institucional|academic/i.test(name) ? 'Académica' : 'General',
-            };
-        });
+        setLoading(true);
         try {
             const types = await JustificationService.getTypes();
-            if (types.length > 0) {
-                const mapped = mapTypes(types);
-                setJustifications(mapped);
-                await AsyncStorage.setItem('validJustifications', JSON.stringify(mapped));
-                return;
-            }
+            setJustifications(types.map((type) => ({
+                id: String(type.justification_type_id),
+                type: type.name,
+                description: type.description || '',
+                requiresDocument: !!type.requires_attachment,
+                category: categoryOf(type.name || ''),
+            })));
         } catch (error) {
-            console.error('Error al cargar justificaciones del backend:', error);
+            showError(t('common.error'), error?.message || t('justifications.loadError'));
+        } finally {
+            setLoading(false);
         }
-        try {
-            const stored = await AsyncStorage.getItem('validJustifications');
-            if (stored) {
-                setJustifications(JSON.parse(stored));
-                return;
-            }
-        } catch {}
-        setJustifications(DEFAULT_JUSTIFICATIONS);
-    }, []);
+    }, [showError, t]);
 
     useEffect(() => {
         loadJustifications();
-        const unsubscribe = navigation.addListener('focus', loadJustifications);
-        return unsubscribe;
+        return navigation.addListener('focus', loadJustifications);
     }, [navigation, loadJustifications]);
 
     const categories = useMemo(() => [...new Set(justifications.map(j => j.category))], [justifications]);
@@ -91,10 +60,26 @@ export function useJustificationsViewModel() {
         [justifications]
     );
 
+    const editType = useCallback((item) => navigation.navigate('AddValidJustification', {typeToEdit: item}), [navigation]);
+    const createType = useCallback(() => navigation.navigate('AddValidJustification'), [navigation]);
+
+    const deleteType = useCallback((item) => {
+        showConfirm(t('justifications.deleteTypeTitle'), t('justifications.deleteTypeQuestion', {name: item.type}), async () => {
+            try {
+                await JustificationService.deleteType(item.id);
+                setJustifications((prev) => prev.filter((j) => j.id !== item.id));
+            } catch (error) {
+                // 409/400: el tipo ya está referenciado por justificaciones radicadas.
+                showError(t('common.error'), error?.message || t('justifications.deleteTypeError'));
+            }
+        });
+    }, [showConfirm, showError, t]);
+
     const handleBack = useCallback(() => navigation.goBack(), [navigation]);
 
     return {
-        justifications, userRole, updateKey, categories,
-        getJustificationsByCategory, handleBack,
+        justifications, userRole, updateKey, categories, loading,
+        getJustificationsByCategory, handleBack, editType, deleteType, createType,
+        alertConfig, hideAlert,
     };
 }

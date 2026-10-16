@@ -29,7 +29,7 @@ export function SessionTimeInput({ value, onChange, contextHint }) {
                 onChangeText={onChange}
                 style={[inputStyle, { width: 140 }]}
             />
-            <Text style={descStyle}>
+            <Text style={[descStyle, { marginTop: 8 }]}>
                 {t("La sesión se cerrará automáticamente tras este tiempo de inactividad.")}
                 {hint}
             </Text>

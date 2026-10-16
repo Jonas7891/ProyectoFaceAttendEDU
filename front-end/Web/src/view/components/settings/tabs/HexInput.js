@@ -43,7 +43,7 @@ export function HexInput({ value, onChange }) {
                 alignItems: "center",
                 justifyContent: "center",
             }}>
-                <Text style={{ fontSize: 11, color: "rgba(255,255,255,0.7)" }}>
+                <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>
                     #
                 </Text>
             </View>
@@ -56,7 +56,7 @@ export function HexInput({ value, onChange }) {
                 style={{
                     flex: 1,
                     paddingHorizontal: 12,
-                    fontSize: 10,
+                    fontSize: 11,
                     fontWeight: "600",
                     color: c.text.primary,
                     fontFamily: "monospace",

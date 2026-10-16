@@ -1,6 +1,8 @@
 import { request, GET, POST, PUT, DELETE } from '../api/apiClient';
 import { toSnakeDeep } from '../api/backend';
 import School from '../models/academic/School';
+import { ActorService } from './ActorService';
+import { getCurrentUser } from './UserService';
 
 const ENDPOINT = 'school';
 
@@ -59,5 +61,21 @@ export const SchoolService = {
 
   delete: async (id) => {
     return request({ method: DELETE, url: `${ENDPOINT}/${id}`, requiresAuth: false });
+  },
+
+  // Sede del usuario actual: la de su actor académico; sin actor (admin), la
+  // sede con más actores (la principal) y, si no hay actores, la primera.
+  getCurrentSchoolId: async () => {
+    const user = await getCurrentUser();
+    const actors = await ActorService.getByPerson(user?.personId);
+    if (actors?.[0]?.schoolId) return actors[0].schoolId;
+    const counts = {};
+    for (const a of (await ActorService.getAll()) || []) {
+      if (a?.schoolId != null) counts[a.schoolId] = (counts[a.schoolId] || 0) + 1;
+    }
+    const top = Object.entries(counts).sort((x, y) => y[1] - x[1] || Number(x[0]) - Number(y[0]))[0];
+    if (top) return Number(top[0]);
+    const schools = await SchoolService.getAll();
+    return schools?.[0]?.schoolId || null;
   },
 };

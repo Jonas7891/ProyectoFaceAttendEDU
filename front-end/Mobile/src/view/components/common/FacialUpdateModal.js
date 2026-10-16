@@ -1,8 +1,8 @@
-import React, {useState} from 'react';
+import React, {useMemo, useState} from 'react';
 import {Modal, Text, TouchableOpacity, TouchableWithoutFeedback, View,} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from './ThemeContext';
-import stylescommon from './style/Style';
+import {createCommonStyles} from './style/Style';
 import CustomAlert from './CustomAlert';
 import {useCustomAlert} from './useCustomAlert';
 
@@ -18,6 +18,7 @@ const facialChanges = [
 export const FacialUpdateModal = ({visible, onClose, onSuccess}) => {
     const {t} = useTranslation();
     const {colors} = useTheme();
+    const stylescommon = useMemo(() => createCommonStyles(colors), [colors]);
     const [selectedChange, setSelectedChange] = useState(null);
 
     // Hook de alerta personalizada

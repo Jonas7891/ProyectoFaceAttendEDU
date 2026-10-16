@@ -1,4 +1,4 @@
-import React, {forwardRef, useEffect, useRef, useState} from 'react';
+import React, {forwardRef, useEffect, useMemo, useRef, useState} from 'react';
 import {
     Animated,
     Image,
@@ -23,7 +23,7 @@ import TerminosModal from '../../components/common/TerminosModal';
 import ScrollView from '../../components/common/ScrollView';
 import CustomAlert from '../../components/common/CustomAlert';
 import {useCustomAlert} from '../../components/common/useCustomAlert';
-import styles from '../Styles/Login/Style';
+import {createLoginStyles} from '../Styles/Login/Style';
 import {useLoginViewModel} from '../../../viewmodels/useLoginViewModel';
 
 const MAX_FAILED_ATTEMPTS = 3;
@@ -85,24 +85,27 @@ function useLoginAttempts(error, errorTimestamp, showError, hideAlert, t) {
 /**
  * Componente reutilizable: FormInput
  */
-const FormInput = forwardRef(({ label, colors, containerStyle, ...props }, ref) => (
-    <View style={[styles.inputContainer, containerStyle]}>
-        <Text style={[styles.inputTitulo, { color: colors.text }]}>{label}</Text>
-        <TextInput
-            ref={ref}
-            style={[
-                styles.inputEscrito,
-                {
-                    backgroundColor: colors.inputBackground,
-                    borderColor: colors.border ?? colors.separator,
-                    color: colors.text,
-                },
-            ]}
-            placeholderTextColor={colors.textMuted}
-            {...props}
-        />
-    </View>
-));
+const FormInput = forwardRef(({ label, colors, containerStyle, ...props }, ref) => {
+    const styles = useMemo(() => createLoginStyles(colors), [colors]);
+    return (
+        <View style={[styles.inputContainer, containerStyle]}>
+            <Text style={[styles.inputTitulo, { color: colors.text }]}>{label}</Text>
+            <TextInput
+                ref={ref}
+                style={[
+                    styles.inputEscrito,
+                    {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.border,
+                        color: colors.text,
+                    },
+                ]}
+                placeholderTextColor={colors.textMuted}
+                {...props}
+            />
+        </View>
+    );
+});
 
 FormInput.displayName = 'FormInput';
 
@@ -113,6 +116,7 @@ export default function LoginScreen({ onLogin, navigation }) {
     const refreshKey = useLanguageRefresh();
     const { t } = useTranslation();
     const { colors } = useTheme();
+    const styles = useMemo(() => createLoginStyles(colors), [colors]);
     const { alertConfig, hideAlert, showError } = useCustomAlert();
 
     const emailInputRef = useRef(null);
@@ -162,7 +166,6 @@ export default function LoginScreen({ onLogin, navigation }) {
                                         <CustomLogo
                                             size="large"
                                             rounded
-                                            backgroundColor="#000000"
                                             marginBottom={20}
                                         />
                                     </View>
@@ -217,7 +220,7 @@ export default function LoginScreen({ onLogin, navigation }) {
                                                 style={{
                                                     width: 22,
                                                     height: 22,
-                                                    tintColor: colors.textMuted ?? colors.text,
+                                                    tintColor: colors.textMuted,
                                                     opacity: showPassword ? 1 : 0.4,
                                                 }}
                                             />

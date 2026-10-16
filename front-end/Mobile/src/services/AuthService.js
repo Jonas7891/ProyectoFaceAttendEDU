@@ -6,6 +6,14 @@ import AppUser from '../models/identity/AppUser';
 import { saveToken } from '../storage/TokenStorage';
 import { VerificationService } from './verificationService';
 import { PasswordService } from './passwordService';
+import i18n from '../utils/i18n';
+
+/** Error de login con mensaje traducido y un código estable para la lógica. */
+export function authError(code, key) {
+  const error = new Error(i18n.t(key));
+  error.code = code;
+  return error;
+}
 
 const LOGIN_ENDPOINT = 'api/v1/auth/login';
 const LOGOUT_ENDPOINT = 'api/v1/auth/logout';
@@ -90,7 +98,9 @@ async function fetchRoleNames(userId) {
       .map((r) => r.roleName || r.role_name)
       .filter(Boolean);
   } catch (e) {
-    throw new Error('No se pudieron verificar los roles del usuario en el backend');
+    // Un fallo HTTP ya trae su mensaje traducido (red, 5xx…); si no, se explica aquí.
+    if (e?.name === 'ApiError') throw e;
+    throw authError('ROLES_UNAVAILABLE', 'authErrors.rolesUnavailable');
   }
 }
 
@@ -103,7 +113,7 @@ async function evaluatePermission(userId, permission) {
     requiresAuth: true,
   });
   const allowed = data?.allowed ?? data?.[0]?.allowed ?? false;
-  if (!allowed) throw new Error('Rol sin permisos verificados en el backend');
+  if (!allowed) throw authError('ROLE_WITHOUT_PERMISSIONS', 'authErrors.roleWithoutPermissions');
   return true;
 }
 
@@ -120,24 +130,25 @@ export const AuthService = {
     try {
       session = await doLogin(identity, password);
     } catch (err) {
-      if (err && (err.status === 400 || err.status === 401)) throw new Error('Credenciales inválidas');
+      if (err && (err.status === 400 || err.status === 401)) throw authError('INVALID_CREDENTIALS', 'login.invalidCredentials');
+      if (err && err.status === 403) throw authError('ACCOUNT_DISABLED', 'authErrors.accountDisabled');
       throw err;
     }
 
     const sessionId = session?.sessionId || session?.session_id || session?.id;
     const userId = session?.userId || session?.user_id;
-    if (!sessionId || !userId) throw new Error('No se pudo crear la sesión');
+    if (!sessionId || !userId) throw authError('SESSION_NOT_CREATED', 'authErrors.sessionNotCreated');
 
     // Guardar el token ANTES de las llamadas autenticadas (roles, perfil, evaluate).
     const saved = await saveToken(String(sessionId), identity);
-    if (!saved) throw new Error('No se pudo guardar la sesión');
+    if (!saved) throw authError('SESSION_NOT_SAVED', 'authErrors.sessionNotSaved');
 
     // 3. Load roles + profile in parallel (una sola ronda tras guardar el
     // token). Antes eran 3 llamadas secuenciales pesadas que excedían el
     // timeout en dispositivos físicos.
     const [roleNames, profile] = await Promise.all([fetchRoleNames(userId), resolveProfile(userId)]);
     if (!roleNames || roleNames.length === 0) {
-      throw new Error('El usuario no tiene roles asignados en el backend');
+      throw authError('NO_ROLES', 'authErrors.noRoles');
     }
 
     // 3b. Verificar que el rol tenga permisos efectivos.
@@ -179,7 +190,7 @@ export const AuthService = {
 
   refreshToken: async () => {
     // The backend issues opaque session ids without refresh rotation.
-    throw new Error('Sesión no renovable: vuelve a iniciar sesión');
+    throw authError('SESSION_NOT_RENEWABLE', 'authErrors.sessionNotRenewable');
   },
 
   logout: async (sessionId) => {

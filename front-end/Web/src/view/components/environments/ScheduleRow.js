@@ -8,7 +8,7 @@ import { Feather } from "@expo/vector-icons";
 import { Badge } from "../common";
 import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
-import { useDateFormat } from "../../../core/utils/hooks/useDateFormat";
+import { useDateFormat } from "../hooks/useDateFormat";
 
 /**
  * Fila de horario con información y acciones

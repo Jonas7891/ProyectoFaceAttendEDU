@@ -41,15 +41,14 @@ from infrastructure.web.liveness import (
     verify_liveness_challenge,
 )
 from infrastructure.web.match_audit import record_match
-from infrastructure.web.security import require_permission
+from infrastructure.web.security import STAFF_PERMISSION, ensure_can_enroll, require_permission
 from infrastructure.web.schemas.responses import template_response
 
 # Templates are sensitive: only roles that capture attendance (admin, instructor).
-router = APIRouter(
-    prefix="/api/v1/biometric/facial",
-    tags=["facial"],
-    dependencies=[Depends(require_permission("attendance.record:write"))],
-)
+# Every role may pass liveness and enroll its own face (checked in /enroll-image).
+router = APIRouter(prefix="/api/v1/biometric/facial", tags=["facial"])
+STAFF = Depends(require_permission(STAFF_PERMISSION))
+ANY_ROLE = Depends(require_permission("biometric.case:request"))
 
 OPERATION_VERIFY = "VERIFY"
 OPERATION_IDENTIFY = "IDENTIFY"
@@ -123,7 +122,7 @@ async def _best_facial_match(
     return (best, best_score) if matched else (None, best_score)
 
 
-@router.post("/enroll", status_code=status.HTTP_201_CREATED)
+@router.post("/enroll", status_code=status.HTTP_201_CREATED, dependencies=[STAFF])
 async def enroll_facial(
     req: EnrollFacialRequest,
     repository: BiometricRepositoryPort = Depends(get_facial_repository),
@@ -136,7 +135,7 @@ async def enroll_facial(
     return template_response(await repository.enroll(template))
 
 
-@router.get("/liveness-challenge")
+@router.get("/liveness-challenge", dependencies=[ANY_ROLE])
 async def liveness_challenge(
     actions: int = 3,
     secret: str = Depends(get_liveness_secret),
@@ -153,7 +152,7 @@ async def liveness_challenge(
 # GET /{person_id} declared first would swallow GET /liveness-challenge,
 # treating "liveness-challenge" as a person_id. Confirmed by actually hitting
 # this 404 in a real test run before reordering.
-@router.get("/{person_id}")
+@router.get("/{person_id}", dependencies=[STAFF])
 async def get_facial(
     person_id: str,
     repository: BiometricRepositoryPort = Depends(get_facial_repository),
@@ -164,7 +163,7 @@ async def get_facial(
     return template_response(active)
 
 
-@router.get("/{person_id}/history")
+@router.get("/{person_id}/history", dependencies=[STAFF])
 async def facial_history(
     person_id: str,
     repository: BiometricRepositoryPort = Depends(get_facial_repository),
@@ -173,7 +172,7 @@ async def facial_history(
     return {"history": [template_response(template) for template in history]}
 
 
-@router.delete("/{person_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{person_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[STAFF])
 async def delete_facial(
     person_id: str,
     request: Request,
@@ -202,7 +201,7 @@ async def delete_facial(
     return None
 
 
-@router.post("/verify")
+@router.post("/verify", dependencies=[STAFF])
 async def verify_facial(
     req: VerifyFacialRequest,
     request: Request,
@@ -233,7 +232,7 @@ async def verify_facial(
     return {"match": matched, "score": score}
 
 
-@router.post("/identify")
+@router.post("/identify", dependencies=[STAFF])
 async def identify_facial(
     req: IdentifyFacialRequest,
     request: Request,
@@ -260,7 +259,7 @@ async def identify_facial(
     return {"person_id": best.person_id, "score": best_score}
 
 
-@router.post("/liveness-step", dependencies=[Depends(rate_limit("liveness_step"))])
+@router.post("/liveness-step", dependencies=[ANY_ROLE, Depends(rate_limit("liveness_step"))])
 async def liveness_step(
     req: LivenessStepRequest,
     request: Request,
@@ -314,7 +313,9 @@ async def liveness_step(
     return {"challenge_token": next_token, "completed": next_step >= len(actions)}
 
 
-@router.post("/enroll-image", status_code=status.HTTP_201_CREATED, dependencies=[Depends(rate_limit("enroll_face"))])
+@router.post(
+    "/enroll-image", status_code=status.HTTP_201_CREATED, dependencies=[ANY_ROLE, Depends(rate_limit("enroll_face"))]
+)
 async def enroll_facial_image(
     req: EnrollFacialImageRequest,
     request: Request,
@@ -324,6 +325,9 @@ async def enroll_facial_image(
     secret: str = Depends(get_liveness_secret),
     settings: Settings = Depends(get_settings),
 ):
+    # Before consuming the challenge, so a refused caller does not burn it.
+    active = await repository.find_active(req.person_id)
+    await ensure_can_enroll(request, req.person_id, getattr(active, "enrolled_at", None), active is not None)
     try:
         consume_liveness_challenge(secret, req.challenge_token)
         image = decode_image(req.image_base64, settings.max_image_bytes, settings.max_image_pixels)
@@ -361,7 +365,7 @@ async def enroll_facial_image(
     return template_response(template)
 
 
-@router.post("/identify-image", dependencies=[Depends(rate_limit("identify_face"))])
+@router.post("/identify-image", dependencies=[STAFF, Depends(rate_limit("identify_face"))])
 async def identify_facial_image(
     req: IdentifyFacialImageRequest,
     request: Request,

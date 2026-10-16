@@ -1,11 +1,11 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import {Text, TouchableOpacity, View} from "react-native";
 import {useNavigation, useRoute} from "@react-navigation/native";
 import {useTranslation} from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useLanguageRefresh} from '../../../utils/useLanguageRefresh';
 import {useTheme} from './ThemeContext';
-import stylescommon from './style/Style';
+import {createCommonStyles} from './style/Style';
 
 const screens = {
   home: "DashboardScreen",
@@ -23,6 +23,7 @@ export default function CustomTabs({ onChange, userRole, onLogout }) {
   const route = useRoute();
   const { t, i18n } = useTranslation();
   const { colors, theme, loadThemeForRole } = useTheme();
+  const stylescommon = useMemo(() => createCommonStyles(colors), [colors]);
   const [selectedLanguage, setSelectedLanguage] = useState(i18n.language);
   const handleLanguageChange = (newLang) => setSelectedLanguage(newLang);
 
@@ -116,7 +117,7 @@ export default function CustomTabs({ onChange, userRole, onLogout }) {
       return [
         stylescommon.textCustomTabs,
         {
-          color: '#000000',
+          color: colors.text,
           fontWeight: selected === index ? 'bold' : '500',
         }
       ];
@@ -125,7 +126,7 @@ export default function CustomTabs({ onChange, userRole, onLogout }) {
     return [
       stylescommon.textCustomTabs,
       {
-        color: selected === index ? '#ffffff' : colors.text,
+        color: selected === index ? colors.onPrimary : colors.text,
         fontWeight: selected === index ? 'bold' : '500',
       }
     ];

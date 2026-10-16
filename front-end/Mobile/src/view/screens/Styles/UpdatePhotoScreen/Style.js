@@ -1,11 +1,14 @@
 import {Platform, StyleSheet} from 'react-native';
 import {normalizeTypography} from '../../../../utils/typography';
 
-const styles = StyleSheet.create(normalizeTypography({
+// Estilos de actualización de foto. La vista de cámara y sus controles usan tokens de cámara
+// (fijos, sin cambiar con la paleta); los estados y botones usan tokens del tema.
+// Usar con createUpdatePhotoStyles(colors).
+export const createUpdatePhotoStyles = (colors) => StyleSheet.create(normalizeTypography({
 alreadyRegisteredBox: {
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        backgroundColor: colors.success + '1A',
         borderLeftWidth: 3,
-        borderLeftColor: '#10B981',
+        borderLeftColor: colors.success,
         padding: 10,
         borderRadius: 6,
         marginTop: 10,
@@ -23,7 +26,7 @@ backButtonContainerUpdatePhoto: {
 cameraContainer: {
         flex: 1,
         position: 'relative',
-        backgroundColor: '#000',
+        backgroundColor: colors.cameraBackground,
     },
 
 cameraHeader: {
@@ -46,7 +49,7 @@ cameraOverlay: {
     },
 
 cameraTitle: {
-        color: '#fff',
+        color: colors.onCamera,
         fontSize: 24,
         fontWeight: '700',
         textShadowColor: 'rgba(0,0,0,0.7)',
@@ -59,8 +62,8 @@ captureButton: {
         height: 80,
         borderRadius: 40,
         borderWidth: 4,
-        borderColor: '#fff',
-        backgroundColor: 'rgba(0,0,0,0.25)',
+        borderColor: colors.onCamera,
+        backgroundColor: colors.cameraBackground + '40',
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 20,
@@ -71,7 +74,7 @@ captureButtonInner: {
         width: 64,
         height: 64,
         borderRadius: 32,
-        backgroundColor: '#fff',
+        backgroundColor: colors.onCamera,
     },
 
 captureContainer: {
@@ -88,15 +91,15 @@ closeButton: {
         width: 56,
         height: 56,
         borderRadius: 28,
-        backgroundColor: 'rgba(0,0,0,0.55)',
+        backgroundColor: colors.cameraBackground + '8C',
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.45)',
+        borderColor: colors.onCamera + '73',
         justifyContent: 'center',
         alignItems: 'center',
     },
 
 closeButtonText: {
-        color: '#fff',
+        color: colors.onCamera,
         fontSize: 30,
         fontWeight: '700',
     },
@@ -115,9 +118,9 @@ flipButton: {
         width: 56,
         height: 56,
         borderRadius: 28,
-        backgroundColor: 'rgba(0,0,0,0.55)',
+        backgroundColor: colors.cameraBackground + '8C',
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.45)',
+        borderColor: colors.onCamera + '73',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -181,13 +184,13 @@ previewButton: {
     },
 
 previewButtonIcon: {
-        color: '#fff',
+        color: colors.onCamera,
         fontSize: 18,
         fontWeight: '700',
     },
 
 previewButtonText: {
-        color: '#fff',
+        color: colors.onCamera,
         fontSize: 15,
         fontWeight: '600',
         letterSpacing: 0.3,
@@ -215,20 +218,20 @@ previewHeader: {
     },
 
 previewHeaderTitle: {
-        color: '#fff',
+        color: colors.onCamera,
         fontSize: 24,
         fontWeight: '700',
     },
 
 previewOverlay: {
-        backgroundColor: 'rgba(0, 0, 0, 0.32)',
+        backgroundColor: colors.cameraBackground + '52',
         paddingTop: 20,
         paddingBottom: Platform.OS === 'ios' ? 30 : 30,
         paddingHorizontal: 24,
         borderTopLeftRadius: 28,
         borderTopRightRadius: 28,
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.08)',
+        borderColor: colors.onCamera + '14',
         borderBottomWidth: 0,
     },
 
@@ -259,7 +262,7 @@ previewStatusBox: {
     },
 
 previewSubtitle: {
-        color: 'rgba(255, 255, 255, 0.75)',
+        color: colors.onCamera + 'BF',
         fontSize: 14,
         textAlign: 'center',
         marginBottom: 16,
@@ -268,7 +271,7 @@ previewSubtitle: {
     },
 
 previewTitle: {
-        color: '#fff',
+        color: colors.onCamera,
         fontSize: 22,
         fontWeight: '700',
         textAlign: 'center',
@@ -279,24 +282,24 @@ previewTitle: {
 registerButtonIconUpdatePhoto: {
         width: 22,
         height: 22,
-        tintColor: "#fff",
+        tintColor: colors.onPrimary,
         marginRight: 8,
     },
 
 registerButtonSuccessUpdatePhoto: {
-        backgroundColor: "#2da351",
+        backgroundColor: colors.primary,
     },
 
 registerButtonTextUpdatePhoto: {
-        color: "#fff",
+        color: colors.onPrimary,
         fontWeight: "bold",
         fontSize: 16,
     },
 
 retakeButton: {
-        backgroundColor: 'rgba(255, 255, 255, 0.12)',
+        backgroundColor: colors.onCamera + '1F',
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.2)',
+        borderColor: colors.onCamera + '33',
     },
 
 scrollViewContentUpdatePhoto: {
@@ -304,7 +307,7 @@ scrollViewContentUpdatePhoto: {
     },
 
 statusContainer: {
-        backgroundColor: 'rgba(0,0,0,0.6)',
+        backgroundColor: colors.cameraBackground + '99',
         paddingHorizontal: 20,
         paddingVertical: 12,
         borderRadius: 20
@@ -317,11 +320,9 @@ statusOverlay: {
     },
 
 statusTextUpdate: {
-        color: '#fff',
+        color: colors.onCamera,
         fontSize: 15,
         fontWeight: '500',
         textAlign: 'center'
     },
 }));
-
-export default styles;

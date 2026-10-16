@@ -32,7 +32,7 @@ export const linkingConfig = {
         'faceattend://',
     ],
     
-    // Configuración de rutas
+    // Configuración de rutas DESCENTRALIZADAS
     config: {
         screens: {
             // ── Rutas públicas ────────────────────────────────
@@ -41,53 +41,50 @@ export const linkingConfig = {
             'FaceAttendEDU-Register': 'register',
             'FaceAttendEDU-Recovery': 'recovery',
             
-            // ── Rutas autenticadas ────────────────────────────
-            // Nested navigator para rutas protegidas bajo /app
-            'FaceAttendEDU-Dashboard': {
-                path: 'app',
-                screens: {
-                    Dashboard: '',  // /app → Dashboard por defecto
-                    Users: {
-                        path: 'users/:section?',  // /app/users o /app/users/teachers
-                        parse: {
-                            // Parsear el parámetro section desde la URL
-                            section: (section) => section || null,
-                        },
-                        stringify: {
-                            // Convertir el parámetro section a string para la URL
-                            section: (section) => section || '',
-                        },
-                    },
-                    Courses: 'courses',  // /app/courses
-                    Environments: 'environments',  // /app/environments
-                    Reports: 'reports',  // /app/reports
-                    History: 'history',  // /app/history
-                    Justifications: 'justifications',  // /app/justifications
-                    SchoolInfo: 'school-info',  // /app/school-info
-                    Academic: 'academic',  // /app/academic
-                    Contacts: 'contacts',  // /app/contacts
-                    Biometrics: {
-                        // /app/biometrics, /app/biometrics/face-login, /app/biometrics/fingerprint
-                        path: 'biometrics/:section?',
-                        parse: {
-                            section: (section) => section || null,
-                        },
-                        stringify: {
-                            section: (section) => section || '',
-                        },
-                    },
-                    Settings: {
-                        path: 'settings/:section?',  // /app/settings o /app/settings/general
-                        parse: {
-                            // Parsear el parámetro section desde la URL
-                            section: (section) => section || null,
-                        },
-                        stringify: {
-                            // Convertir el parámetro section a string para la URL
-                            section: (section) => section || '',
-                        },
-                    },
+            // ── Rutas autenticadas DIRECTAS ───────────────────
+            Dashboard: 'app',  // /app → Dashboard
+            Users: {
+                path: 'app/users/:section?',  // /app/users o /app/users/teachers
+                parse: {
+                    // Parsear el parámetro section desde la URL
+                    section: (section) => section || null,
                 },
+                stringify: {
+                    // Convertir el parámetro section a string para la URL
+                    section: (section) => section || '',
+                },
+            },
+            Courses: 'app/courses',  // /app/courses
+            Environments: 'app/environments',  // /app/environments
+            Reports: 'app/reports',  // /app/reports
+            Schools: 'app/schools',  // /app/schools (gestión de escuelas)
+            History: 'app/history',  // /app/history
+            Justifications: 'app/justifications',  // /app/justifications
+            SchoolInfo: 'app/school-info',  // /app/school-info
+            Academic: 'app/academic',  // /app/academic
+            Contacts: 'app/contacts',  // /app/contacts
+            Roles: 'app/roles',  // /app/roles (matriz rol x permiso)
+            Alerts: 'app/alerts',  // /app/alerts (bandeja de alertas)
+            AttendanceKiosk: 'app/kiosk',  // /app/kiosk (kiosco de asistencia)
+            Biometrics: {
+                // /app/biometrics, /app/biometrics/face-login, /app/biometrics/fingerprint
+                path: 'app/biometrics/:section?',
+                parse: {
+                    section: (section) => section || null,
+                },
+                stringify: {
+                    section: (section) => section || '',
+                },
+            },
+            Settings: {
+                path: 'app/settings/:section?',  // /app/settings o /app/settings/general
+                parse: {
+                    // Parsear el parámetro section desde la URL
+                    section: (section) => section || null,
+                },
+                stringify: {
+                    // Convertir el parámetro section a string para la URL
+                    section: (section) => section || '',                },
             },
         },
     },
@@ -155,6 +152,10 @@ export function buildUrl(screen, params = {}) {
         'SchoolInfo': '/app/school-info',
         'Academic': '/app/academic',
         'Contacts': '/app/contacts',
+        'Schools': '/app/schools',
+        'Roles': '/app/roles',
+        'Alerts': '/app/alerts',
+        'AttendanceKiosk': '/app/kiosk',
         'Biometrics': params.section ? `/app/biometrics/${params.section}` : '/app/biometrics',
         'Settings': params.section ? `/app/settings/${params.section}` : '/app/settings',
     };

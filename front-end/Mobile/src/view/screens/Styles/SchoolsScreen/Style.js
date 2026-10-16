@@ -1,6 +1,6 @@
 import { Platform, StyleSheet } from "react-native";
 
-export default StyleSheet.create({
+export const createSchoolsStyles = (colors) => StyleSheet.create({
   safeArea: {
     flex: 1,
   },
@@ -59,7 +59,7 @@ export default StyleSheet.create({
   retryText: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: colors.onPrimary,
   },
   schoolCard: {
     borderRadius: 16,

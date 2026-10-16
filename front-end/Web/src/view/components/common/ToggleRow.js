@@ -14,7 +14,7 @@ export function ToggleRow({ label, description, value, onToggle, disabled = fals
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
-            paddingVertical: 12,
+            paddingVertical: 8,
         }}>
             <View style={{ flex: 1, marginRight: 16 }}>
                 <Text style={{

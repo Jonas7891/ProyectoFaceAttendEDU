@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useMemo} from "react";
 import {
   ActivityIndicator,
   Image,
@@ -8,28 +8,29 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import styles from "./Styles/MyCoursesScreen/Style";
+import {createMyCoursesStyles} from "./Styles/MyCoursesScreen/Style";
 import { useMyCoursesViewModel } from "../../viewmodels/useMyCoursesViewModel";
 
 function FichaCard({ ficha, colors, t }) {
+  const styles = useMemo(() => createMyCoursesStyles(colors), [colors]);
   return (
     <View
       style={[
         styles.fichaCard,
-        { backgroundColor: colors.card ?? colors.backgroundWhite, borderColor: colors.separator ?? "#E5E7EB" },
+        { backgroundColor: colors.card, borderColor: colors.separator },
       ]}
     >
       <Text style={[styles.fichaCode, { color: colors.text }]}>{ficha.cohortCode}</Text>
-      <Text style={[styles.fichaMeta, { color: colors.textSecondary ?? colors.textMuted }]}>
+      <Text style={[styles.fichaMeta, { color: colors.textSecondary }]}>
         {t("courses.program")}: {ficha.programName}
       </Text>
       {ficha.enrolledOn ? (
-        <Text style={[styles.fichaMeta, { color: colors.textSecondary ?? colors.textMuted }]}>
+        <Text style={[styles.fichaMeta, { color: colors.textSecondary }]}>
           {t("courses.enrolledOn")}: {String(ficha.enrolledOn).split("T")[0]}
         </Text>
       ) : null}
       {typeof ficha.studentsCount === "number" ? (
-        <Text style={[styles.fichaMeta, { color: colors.textSecondary ?? colors.textMuted }]}>
+        <Text style={[styles.fichaMeta, { color: colors.textSecondary }]}>
           {t("courses.students")}: {ficha.studentsCount}
         </Text>
       ) : null}
@@ -38,19 +39,19 @@ function FichaCard({ ficha, colors, t }) {
         {t("courses.courses")} ({ficha.courses.length})
       </Text>
       {ficha.courses.length === 0 ? (
-        <Text style={[styles.fichaMeta, { color: colors.textSecondary ?? colors.textMuted }]}>
+        <Text style={[styles.fichaMeta, { color: colors.textSecondary }]}>
           {t("courses.noCourses")}
         </Text>
       ) : (
         ficha.courses.map((course, i) => (
           <View
             key={course.courseId ?? `${course.code}-${i}`}
-            style={[styles.courseRow, { borderTopColor: colors.separator ?? "#F0F0F0" }]}
+            style={[styles.courseRow, { borderTopColor: colors.separator }]}
           >
             <Text style={[styles.courseName, { color: colors.text }]} numberOfLines={1}>
               {course.name || "—"}
             </Text>
-            <Text style={[styles.courseCode, { color: colors.textSecondary ?? colors.textMuted }]}>
+            <Text style={[styles.courseCode, { color: colors.textSecondary }]}>
               {course.code || ""}
             </Text>
           </View>
@@ -62,6 +63,7 @@ function FichaCard({ ficha, colors, t }) {
 
 export default function MyCoursesScreen({ navigation }) {
   const { role, loading, error, fichas, reload, colors, t } = useMyCoursesViewModel();
+  const styles = useMemo(() => createMyCoursesStyles(colors), [colors]);
 
   const title = t("courses.title");
   const subtitle =
@@ -86,7 +88,7 @@ export default function MyCoursesScreen({ navigation }) {
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: colors.text }]}>{title}</Text>
         </View>
-        <Text style={[styles.headerSubtitle, { color: colors.textSecondary ?? colors.textMuted }]}>
+        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
           {subtitle}
         </Text>
 

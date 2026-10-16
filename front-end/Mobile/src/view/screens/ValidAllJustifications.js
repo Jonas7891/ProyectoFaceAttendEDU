@@ -1,14 +1,17 @@
-import React from "react";
+import React, {useMemo} from "react";
 import {Platform, SafeAreaView, ScrollView, Text, TouchableOpacity, View} from "react-native";
 import {useTranslation} from "react-i18next";
 import {useTheme} from '../components/common/ThemeContext';
 import BackButton from '../components/common/BackButton';
-import styles from "./Styles/ValidAllJustifications/Style";
+import CustomAlert from '../components/common/CustomAlert';
+import PrimaryButton from '../components/auth/PrimaryButton';
+import {createValidAllJustificationsStyles} from "./Styles/ValidAllJustifications/Style";
 import {useJustificationsViewModel} from '../../viewmodels/useValidAllJustificationsViewModel';
 
 export default function JustificationsScreen() {
     const { t } = useTranslation();
     const { colors } = useTheme();
+    const styles = useMemo(() => createValidAllJustificationsStyles(colors), [colors]);
 
     const {
         justifications,
@@ -16,7 +19,14 @@ export default function JustificationsScreen() {
         categories,
         getJustificationsByCategory,
         handleBack,
+        editType,
+        deleteType,
+        createType,
+        alertConfig,
+        hideAlert,
     } = useJustificationsViewModel();
+
+    const actionButton = (color) => ({paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, borderColor: color});
 
     const renderJustificationItem = (item, index) => (
         <View
@@ -47,6 +57,15 @@ export default function JustificationsScreen() {
                     {item.requiresDocument ? t('admin.requiresDocument') : t('admin.noDocumentRequired')}
                 </Text>
             </View>
+
+            <View style={{flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 10}}>
+                <TouchableOpacity style={actionButton(colors.primary)} onPress={() => editType(item)} accessibilityRole="button">
+                    <Text style={{color: colors.primary}}>{t('common.edit')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={actionButton(colors.danger)} onPress={() => deleteType(item)} accessibilityRole="button">
+                    <Text style={{color: colors.danger}}>{t('common.delete')}</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 
@@ -67,6 +86,8 @@ export default function JustificationsScreen() {
                 </View>
 
                 <View style={[styles.validAllJustificationsSeparator, { backgroundColor: colors.separator }]} />
+
+                <PrimaryButton title={t('admin.addNewJustification')} onPress={createType} />
 
                 <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.validAllJustificationsScrollContent}>
                     {justifications.length > 0 ? (
@@ -99,6 +120,14 @@ export default function JustificationsScreen() {
                     )}
                 </ScrollView>
             </View>
+            <CustomAlert
+                visible={alertConfig.visible}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                buttons={alertConfig.buttons}
+                onClose={hideAlert}
+                type={alertConfig.type}
+            />
         </SafeAreaView>
     );
 }

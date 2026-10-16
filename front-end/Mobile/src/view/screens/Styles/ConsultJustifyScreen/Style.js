@@ -1,7 +1,8 @@
 import {Platform, StyleSheet} from 'react-native';
 import {normalizeTypography} from '../../../../utils/typography';
 
-const styles = StyleSheet.create(normalizeTypography({
+// Estilos de consulta de justificaciones. Todo color sale de los tokens del tema; usar con createConsultJustifyStyles(colors).
+export const createConsultJustifyStyles = (colors) => StyleSheet.create(normalizeTypography({
 ScrollView: {
         flex: 1,
     },
@@ -12,7 +13,7 @@ ScrollViewContent: {
     },
 
 activeSectionTab: {
-        backgroundColor: "#4A90E2",
+        backgroundColor: colors.primary,
         shadowColor: "#000",
         shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.1,
@@ -23,7 +24,7 @@ activeSectionTab: {
 cardDate: {
         fontSize: 14,
         fontWeight: "600",
-        color: "#4A90E2",
+        color: colors.primary,
     },
 
 cardHeader: {
@@ -35,13 +36,13 @@ cardHeader: {
 
 cardReason: {
         fontSize: 14,
-        color: "#444",
+        color: colors.textSecondary,
         lineHeight: 20,
     },
 
 cardTime: {
         fontSize: 14,
-        color: "#666",
+        color: colors.textSecondary,
         fontWeight: "500",
     },
 
@@ -72,18 +73,18 @@ headerTopRowValidJustifications: {
 emptyContainer: {
         padding: 40,
         alignItems: "center",
-        backgroundColor: "#F9F9F9",
+        backgroundColor: colors.categoryBackground,
         borderRadius: 12,
     },
 
 emptyText: {
         fontSize: 14,
-        color: "#999",
+        color: colors.textMuted,
         textAlign: "center",
     },
 
 justificationCard: {
-        backgroundColor: "#FFF",
+        backgroundColor: colors.card,
         borderRadius: 12,
         padding: 16,
         marginBottom: 12,
@@ -93,7 +94,7 @@ justificationCard: {
         shadowRadius: 8,
         elevation: 3,
         borderWidth: 1,
-        borderColor: "#F0F0F0",
+        borderColor: colors.border,
     },
 
 keyboardview: {
@@ -108,14 +109,14 @@ listContainer: {
 mainTitleValidJustifications: {
         fontSize: 24,
         fontWeight: "bold",
-        color: "#1A1A1A",
+        color: colors.text,
         paddingTop: Platform.OS === "android" ? 30 : 10,
         marginBottom: 10,
     },
 
 safeAreaWhite: {
         flex: 1,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: colors.backgroundWhite,
     },
 
 sectionSelector: {
@@ -123,7 +124,7 @@ sectionSelector: {
         marginTop: 20,
         marginBottom: 20,
         borderRadius: 12,
-        backgroundColor: "#F5F5F5",
+        backgroundColor: colors.categoryBackground,
         padding: 4,
     },
 
@@ -137,13 +138,13 @@ sectionTab: {
 sectionTabText: {
         fontSize: 14,
         fontWeight: "600",
-        color: "#666",
+        color: colors.textSecondary,
     },
 
 sectionTitle: {
         fontSize: 18,
         fontWeight: "600",
-        color: "#000000",
+        color: colors.text,
         marginBottom: 15,
     },
 
@@ -161,10 +162,8 @@ statusText: {
 subTitleValidJustifications: {
         fontSize: 16,
         fontWeight: "500",
-        color: "#666",
+        color: colors.textSecondary,
         textAlign: "center",
         marginBottom: 20,
     },
 }));
-
-export default styles;

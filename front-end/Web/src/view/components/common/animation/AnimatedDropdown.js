@@ -221,7 +221,7 @@ export function AnimatedDropdown({
             placeholderTextColor={theme.colors.text.secondary}
             style={{
               flex: 1,
-              fontSize: 13,
+              fontSize: 14,
               color: theme.colors.text.primary,
               paddingVertical: 0,
               paddingHorizontal: 0,
@@ -253,7 +253,7 @@ export function AnimatedDropdown({
       >
         {filteredItems.length === 0 && searchable ? (
           <View style={{ paddingVertical: 20, alignItems: "center" }}>
-            <Text style={{ fontSize: 13, color: theme.colors.text.secondary }}>
+            <Text style={{ fontSize: 14, color: theme.colors.text.secondary }}>
               Sin resultados
             </Text>
           </View>
@@ -525,7 +525,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   label: {
-    fontSize: 13,
+    fontSize: 14,
   },
   modalOverlay: {
     flex: 1,
@@ -552,10 +552,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   itemText: {
-    fontSize: 13,
+    fontSize: 14,
   },
   itemDescription: {
-    fontSize: 11,
+    fontSize: 12,
   },
 });
 

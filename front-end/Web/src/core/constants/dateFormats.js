@@ -6,9 +6,18 @@
  * Formatos de fecha disponibles
  */
 export const DATE_FORMATS = {
-    "DD/MM/YYYY": { label: "DD/MM/YYYY", example: "31/12/2024" },
-    "MM/DD/YYYY": { label: "MM/DD/YYYY", example: "12/31/2024" },
-    "YYYY-MM-DD": { label: "YYYY-MM-DD", example: "2024-12-31" },
+    "DD/MM/YYYY": { 
+        label: "DD/MM/YYYY", 
+        example: `31/12/${new Date().getFullYear()}`
+    },
+    "MM/DD/YYYY": { 
+        label: "MM/DD/YYYY", 
+        example: `12/31/${new Date().getFullYear()}`
+    },
+    "YYYY-MM-DD": { 
+        label: "YYYY-MM-DD", 
+        example: `${new Date().getFullYear()}-12-31`
+    },
 };
 
 export const DEFAULT_DATE_FORMAT = "DD/MM/YYYY";

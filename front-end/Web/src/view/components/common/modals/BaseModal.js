@@ -27,10 +27,14 @@ import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
  * @param {ReactNode} footer - Contenido del footer (botones)
  * @param {number} maxWidth - Ancho máximo del modal
  * @param {string} size - Tamaño: 'sm' | 'md' | 'lg' | 'xl' | 'full'
- * @param {boolean} closeOnBackdrop - Si se cierra al tocar fuera
+ * @param {boolean} closeOnBackdrop - Si se cierra al tocar fuera (default: false)
  * @param {boolean} showCloseButton - Si muestra botón de cerrar
  * @param {boolean} bodyScrollEnabled - Si el body puede hacer scroll (default: true)
  * @param {ReactNode} children - Contenido del modal
+ * 
+ * RECOMENDACIONES DE USO:
+ * - closeOnBackdrop=false (default): Modals de registro/edición, confirmaciones críticas
+ * - closeOnBackdrop=true: Modals de información/detalle, confirmaciones simples
  */
 export function BaseModal({
   visible,
@@ -43,7 +47,7 @@ export function BaseModal({
   footer,
   maxWidth,
   size = "md",
-  closeOnBackdrop = true,
+  closeOnBackdrop = false,
   showCloseButton = true,
   bodyScrollEnabled = true,
   children,
@@ -85,6 +89,7 @@ export function BaseModal({
           ]}
           onPress={closeOnBackdrop ? onClose : undefined}
           activeOpacity={1}
+          disabled={!closeOnBackdrop}
         >
           <TouchableOpacity
             activeOpacity={1}

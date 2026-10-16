@@ -3,12 +3,15 @@ package com.faceattend_edu.identity_service.adapter.in.web.controller;
 import com.faceattend_edu.identity_service.adapter.in.web.dto.PageResponse;
 import com.faceattend_edu.identity_service.adapter.in.web.dto.PersonDto;
 import com.faceattend_edu.identity_service.adapter.in.web.mapper.PersonWebMapper;
+import com.faceattend_edu.identity_service.adapter.in.web.security.AuthTokenFilter;
 import com.faceattend_edu.identity_service.application.port.in.ChangePersonStatusUseCase;
 import com.faceattend_edu.identity_service.application.port.in.CreatePersonUseCase;
 import com.faceattend_edu.identity_service.application.port.in.GetPersonUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ListPersonsUseCase;
 import com.faceattend_edu.identity_service.application.port.in.UpdatePersonUseCase;
+import com.faceattend_edu.identity_service.domain.exception.EntityNotFoundException;
 import com.faceattend_edu.identity_service.domain.model.Person;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +19,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -43,9 +49,27 @@ public class PersonController {
     @GetMapping
     public ResponseEntity<PageResponse<PersonDto>> listPersons(
             @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "20") Integer limit) {
+            @RequestParam(defaultValue = "20") Integer limit,
+            HttpServletRequest request) {
         int safePage = PageResponse.safePage(page);
         int safeLimit = PageResponse.safeLimit(limit);
+        if (request.getAttribute(AuthTokenFilter.PERSON_SCOPE_ATTRIBUTE) instanceof Set<?> scope) {
+            // Quien no es administrador solo lista su alcance (propia, sus aprendices o sus instructores).
+            List<PersonDto> visible = scope.stream()
+                    .map(id -> {
+                        try {
+                            return personWebMapper.toDto(getPersonUseCase.getPerson((UUID) id));
+                        } catch (EntityNotFoundException e) {
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .sorted(Comparator.comparing(PersonDto::getLastName, Comparator.nullsLast(String::compareTo)))
+                    .collect(Collectors.toList());
+            int from = Math.min((safePage - 1) * safeLimit, visible.size());
+            List<PersonDto> pageItems = visible.subList(from, Math.min(from + safeLimit, visible.size()));
+            return ResponseEntity.ok(PageResponse.ofSlice(pageItems, safePage, safeLimit, visible.size()));
+        }
         List<PersonDto> slice = listPersonsUseCase.listPersons(safePage - 1, safeLimit).stream()
                 .map(personWebMapper::toDto)
                 .collect(Collectors.toList());
@@ -59,8 +83,16 @@ public class PersonController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PersonDto> updatePerson(@PathVariable UUID id, @Valid @RequestBody PersonDto personDto) {
+    public ResponseEntity<PersonDto> updatePerson(@PathVariable UUID id, @Valid @RequestBody PersonDto personDto,
+                                                  HttpServletRequest request) {
         personDto.setPersonId(id);
+        if (Boolean.TRUE.equals(request.getAttribute(AuthTokenFilter.SELF_EDIT_ATTRIBUTE))) {
+            // Autoedición: estado y documento de identidad solo los cambia administración.
+            PersonDto current = personWebMapper.toDto(getPersonUseCase.getPerson(id));
+            personDto.setStatus(current.getStatus());
+            personDto.setDocumentNumber(current.getDocumentNumber());
+            personDto.setDocumentType(current.getDocumentType());
+        }
         updatePersonUseCase.updatePerson(id, personWebMapper.toDomain(personDto));
         return ResponseEntity.ok(personWebMapper.toDto(getPersonUseCase.getPerson(id)));
     }

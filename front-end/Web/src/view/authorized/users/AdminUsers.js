@@ -13,6 +13,7 @@
 
 import React, { useMemo, useState } from "react";
 import { View, ScrollView, Text } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { useAttendanceColor, Button, Alert } from "../../components/common";
 import { ConfirmModal } from "../../components/common/modals/ConfirmModal";
 import { useTheme } from "../../components/hooks/useTheme";
@@ -21,11 +22,10 @@ import { useUsersViewModel } from "../../../viewmodels/useUsersViewModel";
 import { useRolePermissions } from "../../../viewmodels/useRolePermissions";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../../../context/AppDataContext";
-import { Feather } from "@expo/vector-icons";
-import RegisterStudentModal from "../../components/students/RegisterStudentModal";
-import EditUserModal from "../../components/students/EditUserModal";
-import ImportStudentsModal from "../../components/students/ImportStudentsModal";
-import StudentDetailModal from "../../components/students/StudentDetailModal";
+import RegisterStudentModal from "../../components/users/RegisterStudentModal";
+import EditUserModal from "../../components/users/EditUserModal";
+import ImportStudentsModal from "../../components/users/ImportStudentsModal";
+import StudentDetailModal from "../../components/users/StudentDetailModal";
 import { UsersFilterBar, UsersTable } from "./sections";
 import { COLUMNS, ROLE_VARIANT, createCompactRowConfig } from "./columns/usersColumns";
 
@@ -41,16 +41,29 @@ export function AdminUsers({ section, vm: vmProp }) {
     const permissions = useRolePermissions();
     const appData = useAppData();
 
+    // Resetear filtro de dropdown cuando cambias de sección
+    React.useEffect(() => {
+        if (section === "all" || !section || section === undefined) {
+            vm.setUserTypeFilter("all");
+        }
+    }, [section]);
+
     // Determinar el filtro de rol: prioritario desde section (sidebar), secundario desde dropdown
     // section: undefined/"all" (todos), "students", "teachers", "admins"
-    const sectionToUserType = {
+    const sectionToUserType = useMemo(() => ({
         students: "student",
         teachers: "teacher",
         admins: "admin",
-    };
+    }), []);
     
-    const roleFilterFromSection = section && section !== "all" ? sectionToUserType[section] : null;
-    const roleFilterFromDropdown = vm.userTypeFilter && vm.userTypeFilter !== "all" ? vm.userTypeFilter : null;
+    const roleFilterFromSection = useMemo(() => {
+        return section && section !== "all" && section !== undefined ? sectionToUserType[section] : null;
+    }, [section, sectionToUserType]);
+    
+    const roleFilterFromDropdown = useMemo(() => {
+        return vm.userTypeFilter && vm.userTypeFilter !== "all" ? vm.userTypeFilter : null;
+    }, [vm.userTypeFilter]);
+    
     const roleFilter = roleFilterFromSection || roleFilterFromDropdown;
     
     const canManage = permissions.canManageStudents;
@@ -103,17 +116,33 @@ export function AdminUsers({ section, vm: vmProp }) {
     const isPaginated = (vm.totalPages ?? 1) > 1;
     
     // Contexto para renderizado de columnas
-    const roleVariant = ROLE_VARIANT[users[0]?.userType] || "default";
-    const renderContext = { t, c, roleVariant, courses: appData.courses };
+    // CORREGIDO: roleVariant debe basarse en el roleFilter, no en el primer usuario
+    const roleVariant = useMemo(() => {
+        if (roleFilter === "student") return ROLE_VARIANT.student;
+        if (roleFilter === "teacher") return ROLE_VARIANT.teacher;
+        if (roleFilter === "admin") return ROLE_VARIANT.admin;
+        return "default";
+    }, [roleFilter]);
+    
+    const renderContext = useMemo(() => ({
+        t,
+        c,
+        roleVariant,
+        courses: appData.courses,
+    }), [t, c, roleVariant, appData.courses]);
     
     // Contexto para visibilidad de columnas
-    const visibilityContext = { roleFilter, canManage };
+    const visibilityContext = useMemo(() => ({
+        roleFilter,
+        canManage,
+    }), [roleFilter, canManage]);
     
     // Configuración de vista compacta móvil
-    const compactConfig = createCompactRowConfig({
+    const compactConfig = useMemo(() => createCompactRowConfig({
         showRole: !roleFilter,
         canManage,
-    });
+        roleFilter,
+    }), [roleFilter, canManage]);
     
     // Mensaje de carga dinámico según la sección
     const getSectionLabel = () => {
@@ -146,6 +175,7 @@ export function AdminUsers({ section, vm: vmProp }) {
 
             {/* Tabla reutilizable */}
             <UsersTable
+                key={`users-table-${section}-${users.length}`}
                 columns={COLUMNS}
                 data={users}
                 onRowPress={(user) => vm.selectUser(user)}
@@ -211,6 +241,7 @@ export function AdminUsers({ section, vm: vmProp }) {
                 student={vm.selected}
                 onClose={vm.clearSelection}
                 onEdit={vm.openEditModal}
+                onUserUpdated={vm.handleUserUpdated}
                 canManage={canManage}
                 canRegisterFace={permissions.canRegisterFace}
                 canToggleStatus={canToggleStatus}

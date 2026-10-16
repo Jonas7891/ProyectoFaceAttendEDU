@@ -1,52 +1,63 @@
-﻿import React from 'react';
+﻿import React, {useMemo} from 'react';
 import {Platform, SafeAreaView, ScrollView, Text, TouchableOpacity, View,} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import BackButton from '../components/common/BackButton';
 import PasswordUpdateModal from '../components/common/PasswordUpdateModal';
 import ProfileUpdateModal from '../components/common/ProfileUpdateModal';
-import styles from './Styles/ProfileScreen/Style';
+import {createProfileStyles} from './Styles/ProfileScreen/Style';
 import {useProfileViewModel} from '../../viewmodels/useProfileViewModel';
 
 /** Fila de información clave → valor */
-const InfoField = ({ label, value, colors }) => (
+const InfoField = ({ label, value, colors }) => {
+    const styles = useMemo(() => createProfileStyles(colors), [colors]);
+    return (
     <View style={[styles.infoFieldContainerProfile, {
         backgroundColor: colors.card,
-        borderColor: colors.border ?? colors.textSecondary + '30',
+        borderColor: colors.border,
         shadowColor: colors.text,
     }]}>
         <Text style={[styles.infoFieldLabelProfile, { color: colors.textSecondary }]}>{label}</Text>
         <Text style={[styles.infoFieldValueProfile, { color: colors.text }]}>{value ?? '—'}</Text>
     </View>
-);
+    );
+};
 
 /** Encabezado de sección con acento de color y badge opcional — ÚNICA definición */
-const SectionTitle = ({ title, colors, badge, badgeLabel }) => (
+const SectionTitle = ({ title, colors, badge, badgeLabel }) => {
+    const styles = useMemo(() => createProfileStyles(colors), [colors]);
+    return (
     <View style={styles.sectionTitleContainer}>
         <View style={[styles.sectionTitleAccentProfile, { backgroundColor: colors.primary }]} />
         <Text style={[styles.sectionTitleMenuProfile, { color: colors.text }]}>{title}</Text>
         {badge !== undefined && badge > 0 ? (
-            <View style={[styles.sectionBadge, { backgroundColor: colors.primary + '20' }]}>
+            <View style={[styles.sectionBadge, { backgroundColor: colors.primaryLight }]}>
                 <Text style={[styles.sectionBadgeText, { color: colors.primary }]}>
                     {badge}{badgeLabel ? ` ${badgeLabel}` : ''}
                 </Text>
             </View>
         ) : null}
     </View>
-);
+    );
+};
 
-const StatItem = ({ label, value, color }) => (
+const StatItem = ({ label, value, color, colors }) => {
+    const styles = useMemo(() => createProfileStyles(colors), [colors]);
+    return (
     <View style={styles.statItemProfile}>
         <Text style={[styles.statValueProfile, { color }]}>{value ?? 0}</Text>
         <Text style={[styles.statLabelProfile, { color }]}>{label}</Text>
     </View>
-);
+    );
+};
 
 /** Tarjeta de curso para estudiante */
-const CourseCard = ({ course, colors }) => (
+const CourseCard = ({ course, colors }) => {
+    const styles = useMemo(() => createProfileStyles(colors), [colors]);
+    return (
     <View style={[styles.infoFieldContainerProfile, {
         backgroundColor: colors.card,
-        borderColor: colors.border ?? colors.textSecondary + '30',
+        borderColor: colors.border,
         shadowColor: colors.text,
     }]}>
         <Text style={[styles.infoFieldLabelProfile, { color: colors.textSecondary }]}>
@@ -56,13 +67,16 @@ const CourseCard = ({ course, colors }) => (
             {course.course_name ?? course.name ?? '—'}
         </Text>
     </View>
-);
+    );
+};
 
 /** Tarjeta de estadísticas de asistencia para estudiante */
-const AttendanceStatsCard = ({ stats, colors, t }) => (
+const AttendanceStatsCard = ({ stats, colors, t }) => {
+    const styles = useMemo(() => createProfileStyles(colors), [colors]);
+    return (
     <View style={[styles.infoFieldContainerProfile, {
         backgroundColor: colors.card,
-        borderColor: colors.border ?? colors.textSecondary + '30',
+        borderColor: colors.border,
         shadowColor: colors.text,
         flexDirection: 'row',
         justifyContent: 'space-around',
@@ -72,31 +86,34 @@ const AttendanceStatsCard = ({ stats, colors, t }) => (
             label={t('profile.present', 'Presentes')}
             value={stats.present}
             color={colors.success}
+            colors={colors}
         />
         <StatItem
             label={t('profile.absent', 'Ausentes')}
             value={stats.absent}
-            color={colors.error ?? '#F44336'}
+            color={colors.danger}
+            colors={colors}
         />
         <StatItem
             label={t('profile.justified', 'Justificadas')}
             value={stats.justified}
-            color={colors.warning ?? '#FF9800'}
+            color={colors.warning}
+            colors={colors}
         />
     </View>
-);
+    );
+};
 
 /** Tarjeta de justificación para estudiante */
 const JustificationCard = ({ item, colors, t }) => {
+    const styles = useMemo(() => createProfileStyles(colors), [colors]);
     const isPending = item?.approval === 'Pending';
-    const statusColor = isPending
-        ? (colors.warning ?? '#FF9800')
-        : (colors.success ?? '#4CAF50');
+    const statusColor = isPending ? colors.warning : colors.success;
 
     return (
         <View style={[styles.infoFieldContainerProfile, {
             backgroundColor: colors.card,
-            borderColor: colors.border ?? colors.textSecondary + '30',
+            borderColor: colors.border,
             shadowColor: colors.text,
         }]}>
             <Text style={[styles.infoFieldLabelProfile, { color: colors.textSecondary }]}>
@@ -115,10 +132,12 @@ const JustificationCard = ({ item, colors, t }) => {
 };
 
 /** Tarjeta de horario para profesor */
-const TeacherScheduleCard = ({ schedule, colors }) => (
+const TeacherScheduleCard = ({ schedule, colors }) => {
+    const styles = useMemo(() => createProfileStyles(colors), [colors]);
+    return (
     <View style={[styles.infoFieldContainerProfile, {
         backgroundColor: colors.card,
-        borderColor: colors.border ?? colors.textSecondary + '30',
+        borderColor: colors.border,
         shadowColor: colors.text,
     }]}>
         <Text style={[styles.infoFieldLabelProfile, { color: colors.textSecondary }]}>
@@ -131,13 +150,16 @@ const TeacherScheduleCard = ({ schedule, colors }) => (
             {schedule.classroom ?? '—'}
         </Text>
     </View>
-);
+    );
+};
 
 /** Tarjeta de asistencia por curso para profesor */
-const TeacherCourseStatCard = ({ courseStat, colors, t }) => (
+const TeacherCourseStatCard = ({ courseStat, colors, t }) => {
+    const styles = useMemo(() => createProfileStyles(colors), [colors]);
+    return (
     <View style={[styles.infoFieldContainerProfile, {
         backgroundColor: colors.card,
-        borderColor: colors.border ?? colors.textSecondary + '30',
+        borderColor: colors.border,
         shadowColor: colors.text,
     }]}>
         <Text style={[styles.infoFieldValueProfile, { color: colors.text }]}>
@@ -148,20 +170,24 @@ const TeacherCourseStatCard = ({ courseStat, colors, t }) => (
                 label={t('profile.present', 'Presentes')}
                 value={courseStat.present}
                 color={colors.success}
+                colors={colors}
             />
             <StatItem
                 label={t('profile.absent', 'Ausentes')}
                 value={courseStat.absent}
-                color={colors.error ?? '#F44336'}
+                color={colors.danger}
+                colors={colors}
             />
             <StatItem
                 label={t('profile.total', 'Total')}
                 value={courseStat.total}
                 color={colors.text}
+                colors={colors}
             />
         </View>
     </View>
-);
+    );
+};
 
 /** Tarjeta de información del colegio para administrador */
 const SchoolInfoCard = ({ schoolInfo, colors, t }) => (
@@ -186,13 +212,14 @@ const SchoolInfoCard = ({ schoolInfo, colors, t }) => (
 
 /** Tarjeta de dispositivo IoT para administrador */
 const DeviceCard = ({ device, colors }) => {
+    const styles = useMemo(() => createProfileStyles(colors), [colors]);
     const isActive = device?.status === 'Active';
-    const statusColor = isActive ? (colors.success ?? '#4CAF50') : (colors.error ?? '#F44336');
+    const statusColor = isActive ? colors.success : colors.danger;
 
     return (
         <View style={[styles.infoFieldContainerProfile, {
             backgroundColor: colors.card,
-            borderColor: colors.border ?? colors.textSecondary + '30',
+            borderColor: colors.border,
             shadowColor: colors.text,
         }]}>
             <Text style={[styles.infoFieldLabelProfile, { color: colors.textSecondary }]}>
@@ -215,6 +242,7 @@ const DeviceCard = ({ device, colors }) => {
 export default function ProfileScreen({ onLogout }) {
     const { t } = useTranslation();
     const { colors, theme } = useTheme();
+    const styles = useMemo(() => createProfileStyles(colors), [colors]);
 
 
     const {
@@ -248,7 +276,7 @@ export default function ProfileScreen({ onLogout }) {
     const avatarColor = isAdmin
         ? colors.primary
         : isTeacher
-            ? (colors.warning ?? '#FF9800')
+            ? colors.warning
             : colors.success;
 
     return (
@@ -271,7 +299,7 @@ export default function ProfileScreen({ onLogout }) {
                     ]}>
                         <View style={[styles.schoolInfoCardSchoolConfig, { marginTop: Platform.OS === 'ios' ? 10 : 25 }]}>
                             <View style={styles.schoolLogoContainerSchoolConfig}>
-                                <Text style={styles.schoolLogoSchoolConfig}>logo</Text>
+                                <Text style={styles.schoolLogoSchoolConfig}>{t('common.logoPlaceholder')}</Text>
                             </View>
                         </View>
 
@@ -281,10 +309,10 @@ export default function ProfileScreen({ onLogout }) {
 
                         <View style={[styles.roleBadgeProfile, {
                             backgroundColor: avatarColor + '15',
-                            borderColor: isDark ? '#FFFFFF' : avatarColor + '40',
+                            borderColor: avatarColor + '40',
                         }]}>
                             <View style={[styles.roleBadgeDotProfile, { backgroundColor: avatarColor }]} />
-                            <Text style={[styles.roleBadgeTextProfile, { color: isDark ? '#FFFFFF' : avatarColor }]}>
+                            <Text style={[styles.roleBadgeTextProfile, { color: avatarColor }]}>
                                 {userInfo?.role ?? t('profile.noRole', 'Sin rol')}
                             </Text>
                         </View>
@@ -443,7 +471,7 @@ export default function ProfileScreen({ onLogout }) {
                         <TouchableOpacity
                             style={[styles.profileSettingsButtonProfile, {
                                 backgroundColor: colors.card,
-                                borderColor:     colors.border ?? colors.textSecondary + '20',
+                                borderColor:     colors.border,
                                 shadowColor:     colors.text,
                             }]}
                             onPress={toggleTheme}
@@ -460,7 +488,7 @@ export default function ProfileScreen({ onLogout }) {
                                 </Text>
                             </View>
                             <View style={[styles.settingsChevronProfile, {
-                                backgroundColor: colors.primary + '15',
+                                backgroundColor: colors.primaryLight,
                             }]}>
                                 <Text style={{ fontSize: 13, color: colors.primary, fontWeight: '700' }}>
                                     {t('settings.changeTheme', 'Cambiar')}
@@ -471,7 +499,7 @@ export default function ProfileScreen({ onLogout }) {
                         <TouchableOpacity
                             style={[styles.profileSettingsButtonProfile, {
                                 backgroundColor: colors.card,
-                                borderColor:     colors.border ?? colors.textSecondary + '20',
+                                borderColor:     colors.border,
                                 shadowColor:     colors.text,
                             }]}
                             activeOpacity={0.75}
@@ -482,7 +510,7 @@ export default function ProfileScreen({ onLogout }) {
                         <TouchableOpacity
                             style={[styles.profileSettingsButtonProfile, {
                                 backgroundColor: colors.card,
-                                borderColor:     colors.border ?? colors.textSecondary + '20',
+                                borderColor:     colors.border,
                                 shadowColor:     colors.text,
                             }]}
                             activeOpacity={0.75}

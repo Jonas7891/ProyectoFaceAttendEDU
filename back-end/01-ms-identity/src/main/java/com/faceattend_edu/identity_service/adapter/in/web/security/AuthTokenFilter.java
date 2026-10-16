@@ -4,8 +4,11 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import com.faceattend_edu.identity_service.application.port.out.LoadUserPort;
+import com.faceattend_edu.identity_service.domain.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -26,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Exige Bearer con sessionId opaco en todo /api/** salvo login/logout/me (bootstrap).
@@ -45,7 +50,20 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             "/health", "/api/v1/health", "/api/health",
             "/actuator/", "/v3/api-docs", "/swagger-ui", "/swagger-ui.html");
 
+    /** Atributo que marca un PUT sobre la propia persona hecho sin identity.person:write. */
+    public static final String SELF_EDIT_ATTRIBUTE = "identity.selfEdit";
+    /** Set<UUID> de personas visibles para quien no es administrador (listado de /persons). */
+    public static final String PERSON_SCOPE_ATTRIBUTE = "identity.personScope";
+
+    private static final Pattern PERSON_ITEM = Pattern.compile("^/api/v1/persons/([0-9a-fA-F-]{36})$");
+    private static final Pattern USER_ITEM = Pattern.compile("^/api/v1/users/([0-9a-fA-F-]{36})$");
+    private static final Pattern USER_SESSIONS = Pattern.compile("^/api/v1/sessions/user/([0-9a-fA-F-]{36})$");
+    private static final String WRITE = "identity.person:write";
+
     private final RestTemplate restTemplate;
+    // Perezoso: los tests @WebMvcTest cargan el filtro sin la capa de persistencia.
+    private final ObjectProvider<LoadUserPort> loadUserPort;
+    private final ObjectProvider<CallerScopeResolver> scopeResolver;
 
     /**
     * Caché positiva de autenticación (TTL corto). Cada request autenticado
@@ -97,7 +115,9 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     @Value("${faceattend.auth.authorization-url:http://localhost:8082}")
     private String authorizationUrl;
 
-    public AuthTokenFilter() {
+    public AuthTokenFilter(ObjectProvider<LoadUserPort> loadUserPort, ObjectProvider<CallerScopeResolver> scopeResolver) {
+        this.loadUserPort = loadUserPort;
+        this.scopeResolver = scopeResolver;
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(3000);
         factory.setReadTimeout(5000);
@@ -155,9 +175,19 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             storeSession(rawToken, caller, roles);
         }
 
-        String required = requiredPermission(request.getMethod());
+        String required = requiredPermission(request.getMethod(), path, caller);
+        // Cada rol edita sus propios datos personales (perfil) sin identity.person:write.
+        if (WRITE.equals(required) && isOwnPerson(request.getMethod(), path, caller)) {
+            required = "identity.person:read";
+            request.setAttribute(SELF_EDIT_ATTRIBUTE, Boolean.TRUE);
+        }
         if (required != null && !cachedEvaluate(rawToken, caller, required)) {
             deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: requires " + required, path);
+            return;
+        }
+
+        if (request.getMethod().equalsIgnoreCase("GET") && path.startsWith("/api/v1/persons")
+                && !applyPersonScope(request, response, path, caller, roles, rawToken)) {
             return;
         }
 
@@ -195,12 +225,62 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         // hasta agotar timeouts y toda petición autenticada terminaría en 401.
         // El UUID es opaco e indivinable (equivale al bearer); el listado POST/DELETE
         // y GET /api/v1/sessions (lista) siguen protegidos.
-        return method.equalsIgnoreCase("GET") && path.startsWith("/api/v1/sessions/");
+        // Solo un segmento: /sessions/user/{id} devuelve session ids (bearer) ajenos.
+        return method.equalsIgnoreCase("GET") && path.startsWith("/api/v1/sessions/")
+                && path.indexOf("/", "/api/v1/sessions/".length()) < 0;
     }
 
-    private String requiredPermission(String method) {
-        if (method.equalsIgnoreCase("GET")) return "identity.person:read";
-        return "identity.person:write";
+    static String requiredPermission(String method, String path, String caller) {
+        // Cambio de la propia contraseña: basta la sesión (la valida el caso de uso).
+        if (method.equalsIgnoreCase("POST") && path.equals("/api/v1/auth/change-password")) return null;
+        if (!method.equalsIgnoreCase("GET")) return WRITE;
+        // Listados completos de cuentas y sesiones: solo administración.
+        if (path.equals("/api/v1/users") || path.equals("/api/v1/sessions")) return WRITE;
+        // Una cuenta ajena solo la consulta administración.
+        Matcher user = USER_ITEM.matcher(path);
+        if (user.matches() && !user.group(1).equalsIgnoreCase(caller)) return WRITE;
+        Matcher own = USER_SESSIONS.matcher(path);
+        if (own.matches() && !own.group(1).equalsIgnoreCase(caller)) return WRITE;
+        return "identity.person:read";
+    }
+
+    /**
+     * Admin ve todas las personas; el resto solo las de su alcance (CallerScopeResolver).
+     * Devuelve false si ya respondió (403/503).
+     */
+    private boolean applyPersonScope(HttpServletRequest request, HttpServletResponse response, String path,
+                                     String caller, List<String> roles, String rawToken) throws IOException {
+        CallerScopeResolver resolver = scopeResolver.getIfAvailable();
+        if (resolver == null) return true;
+        CallerScopeResolver.Scope scope;
+        try {
+            scope = resolver.resolve(caller, roles, rawToken);
+        } catch (RuntimeException e) {
+            log.warn("AuthTokenFilter: person scope for {} failed: {}", caller, e.getMessage());
+            deny(response, HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Cannot resolve person scope", path);
+            return false;
+        }
+        if (scope.all()) return true;
+        Matcher item = PERSON_ITEM.matcher(path);
+        if (item.matches() && !scope.allows(UUID.fromString(item.group(1)))) {
+            deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: person outside your scope", path);
+            return false;
+        }
+        request.setAttribute(PERSON_SCOPE_ATTRIBUTE, scope.personIds());
+        return true;
+    }
+
+    private boolean isOwnPerson(String method, String path, String caller) {
+        Matcher m = PERSON_ITEM.matcher(path);
+        if (!method.equalsIgnoreCase("PUT") || !m.matches()) return false;
+        try {
+            LoadUserPort port = loadUserPort.getIfAvailable();
+            User user = port == null ? null : port.loadUser(UUID.fromString(caller));
+            return user != null && user.getPersonId() != null && user.getPersonId().getPersonId() != null
+                    && user.getPersonId().getPersonId().toString().equalsIgnoreCase(m.group(1));
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 
     private HttpHeaders bearerHeaders(String rawToken) {
@@ -279,7 +359,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         response.setContentType("application/json");
         String safe = message.replace("\"", "'");
         String body = "{\"status\":" + status + ",\"error\":\""
-                + (status == 401 ? "Unauthorized" : "Forbidden") + "\",\"message\":\"" + safe
+                + (status == 401 ? "Unauthorized" : status == 503 ? "Service Unavailable" : "Forbidden") + "\",\"message\":\"" + safe
                 + "\",\"path\":\"" + path.replace("\"", "'") + "\"}";
         response.getWriter().write(body);
     }

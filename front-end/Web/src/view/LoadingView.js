@@ -32,7 +32,7 @@ export function LoadingView({ message = "Cargando..." }) {
         <View style={[styles.container, { backgroundColor: c.background.primary }]}>
             {/* Logo */}
             <Image
-                source={require("../assets/images/logoFaceAttend.png")}
+                source={require("../assets/images/logoFaceAttend.svg")}
                 style={styles.logo}
                 resizeMode="contain"
             />

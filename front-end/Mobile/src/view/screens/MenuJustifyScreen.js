@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {
   Image,
   KeyboardAvoidingView,
@@ -12,7 +12,7 @@ import {
 import {useTranslation} from 'react-i18next';
 import CustomLogo from '../components/common/logo';
 import Separador from '../components/common/Separador';
-import styles from './Styles/MenuJustifyScreen/Style';
+import {createMenuJustifyStyles} from './Styles/MenuJustifyScreen/Style';
 import {useTheme} from '../components/common/ThemeContext';
 import {useMenuJustifyViewModel} from '../../viewmodels/useMenuJustifyViewModel';
 import {useUser} from '../../utils/UserContext';
@@ -20,6 +20,7 @@ import {useUser} from '../../utils/UserContext';
 export default function MenuJustifyScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const styles = useMemo(() => createMenuJustifyStyles(colors), [colors]);
 
   const {isAdmin, isStudent, isTeacher} = useUser();
 
@@ -28,7 +29,8 @@ export default function MenuJustifyScreen() {
     handleBack,
     handleAddOrEditJustify,
     handleValidJustifications,
-    handlePendingJustificationScreen
+    handlePendingJustificationScreen,
+    handleJustificationTypes,
   } = useMenuJustifyViewModel();
 
   const Header = ({ title }) => (
@@ -91,6 +93,9 @@ export default function MenuJustifyScreen() {
 
                 {(isStudent || isTeacher) ? (
                     <>
+                      {isStudent && (
+                        <MenuItem label={t('teacher.newJustification')} onPress={handleAddOrEditJustify} />
+                      )}
                       <MenuItem label={t('consultJustify.mainTitle')} onPress={handleValidJustifications} />
                       <MenuItem label={t('admin.pendingJustifications')} onPress={handlePendingJustificationScreen} />
                     </>
@@ -99,6 +104,7 @@ export default function MenuJustifyScreen() {
                       <MenuItem label={t('admin.validJustifications')} onPress={handleValidJustifications} />
                       <MenuItem label={t('admin.pendingJustifications')} onPress={handlePendingJustificationScreen} />
                       <MenuItem label={t('admin.addNewJustification')} onPress={handleAddOrEditJustify}/>
+                      <MenuItem label={t('justifications.typesTitle')} onPress={handleJustificationTypes}/>
                     </>
                 )}
               </View>

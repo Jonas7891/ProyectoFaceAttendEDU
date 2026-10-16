@@ -1,7 +1,7 @@
 import {StyleSheet} from 'react-native';
 import {normalizeTypography} from '../../../../utils/typography';
 
-const styles = StyleSheet.create(normalizeTypography({
+export const createNewsStyles = (colors) => StyleSheet.create(normalizeTypography({
 bottomSpace: {
         height: 90,
     },
@@ -14,8 +14,7 @@ container: {
 
 safeArea: {
         flex: 1,
-        backgroundColor: "#F5F5F5",
+        backgroundColor: colors.background,
     },
 }));
 
-export default styles;

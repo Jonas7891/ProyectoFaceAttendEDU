@@ -2,6 +2,7 @@ package com.faceattend_edu.attendance_service.infrastructure.web.controller;
 
 import com.faceattend_edu.attendance_service.domain.model.AttendanceReport;
 import com.faceattend_edu.attendance_service.infrastructure.persistence.repository.AttendanceRecordJpaRepository;
+import com.faceattend_edu.attendance_service.infrastructure.web.security.ActorScope;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -57,6 +58,7 @@ public class AttendanceReportController {
                 bySessions, bySessions ? Set.copyOf(classSessionIds) : Set.of(-1L),
                 byActors, byActors ? Set.copyOf(academicActorIds) : Set.of(-1L))
                 .stream()
+                .filter(r -> ActorScope.allows(r.getAcademicActorId()))
                 .map(r -> new AttendanceReport.Row(r.getClassSessionId(), r.getAcademicActorId(), r.getAttendanceStatus(), r.getTotal()))
                 .toList();
         AttendanceReport report = AttendanceReport.from(rows);
