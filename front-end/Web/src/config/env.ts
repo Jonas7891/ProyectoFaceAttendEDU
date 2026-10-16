@@ -27,6 +27,9 @@
 const GATEWAY_PORT = 8080;
 const DEV_TUNNEL_HOST = /^.+-\d+\.[^.]+\.devtunnels\.ms$/i;
 
+// Este valor es reemplazado por Expo durante el build si EXPO_PUBLIC_API_URL está definida
+declare const process: { env: { EXPO_PUBLIC_API_URL?: string } };
+
 function inferApiBaseUrl(): string {
     if (typeof window === "undefined" || !window.location?.hostname) {
         return `http://localhost:${GATEWAY_PORT}`;
@@ -42,21 +45,15 @@ function inferApiBaseUrl(): string {
 export function getApiBaseUrl(): string {
     // Intenta leer de (en orden de precedencia):
     // 1. Variable global inyectada en runtime (window.__FACEATTEND_API_URL__)
-    // 2. Variable de entorno baked en build time (EXPO_PUBLIC_API_URL, compilada por Expo)
-    // 3. Meta tag en HTML (si se inyectó server-side)
-    // 4. Fallback a inferApiBaseUrl()
+    // 2. Variable de entorno baked en build time (EXPO_PUBLIC_API_URL, reemplazada por Expo)
+    // 3. Fallback a inferApiBaseUrl()
 
     const globalUrl = (globalThis as any).__FACEATTEND_API_URL__?.trim();
     if (globalUrl) return globalUrl.endsWith("/") ? globalUrl.slice(0, -1) : globalUrl;
 
-    // Buscar en meta tag como fallback (por si Expo no inyectó la variable)
-    if (typeof document !== "undefined") {
-        const metaTag = document.querySelector('meta[name="api-base-url"]');
-        if (metaTag?.getAttribute("content")) {
-            const content = metaTag.getAttribute("content")!.trim();
-            return content.endsWith("/") ? content.slice(0, -1) : content;
-        }
-    }
+    // EXPO_PUBLIC_API_URL será reemplazada por Expo durante el build
+    const envUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
+    if (envUrl) return envUrl.endsWith("/") ? envUrl.slice(0, -1) : envUrl;
 
     // Fallback a inferencia del URL basado en el hostname
     const base = inferApiBaseUrl();
