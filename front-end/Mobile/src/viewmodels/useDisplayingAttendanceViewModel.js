@@ -85,13 +85,14 @@ async function enrichRecord(record, { locale, t, activePeriod, justificationsByR
 
     const statusMap = { Present: 'presente', Late: 'tarde', Absent: 'ausente', Justified: 'justificado' };
     const justification = justificationsByRecord?.get(String(record.attendance_record_id));
-    const when = record.captured_at || record.created_at || null;
+    // Una inasistencia no tiene captured_at: su fecha es la de la sesión, no created_at (fecha de carga).
+    const when = record.captured_at || null;
     const hora = when ? new Date(when).toLocaleTimeString(locale, {hour: '2-digit', minute: '2-digit'}) : '—';
 
     return {
       id: record.attendance_record_id,
       nombre: `${person.name || ''} ${person.last_name || ''}`.trim() || t('attendance.unknownPerson', {id: record.academic_actor_id}),
-      fecha: when ? when.split('T')[0] : '',
+      fecha: session.session_date || (when ? when.split('T')[0] : ''),
       hora,
       estado: statusMap[record.attendance_status] || 'ausente',
       materia: course.name || course.code || '—',
