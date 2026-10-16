@@ -8,6 +8,7 @@ import {ActorService} from "../services/ActorService";
 import {PeriodService} from "../services/PeriodService";
 import {backendGet} from "../api/backend";
 import ENV from "../config/env";
+import {filterAttendance} from "../utils/attendanceFilters";
 
 function unwrap(data) {
   if (data && Array.isArray(data.value)) return data.value;
@@ -204,14 +205,16 @@ export function useAttendanceViewModel() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [searchText, setSearchText] = useState("");
-    const [selectedDate, setSelectedDate] = useState(null);
+    const [fromDate, setFromDate] = useState(null);
+    const [toDate, setToDate] = useState(null);
+    const [pickerTarget, setPickerTarget] = useState("from");
+    const [statusFilter, setStatusFilter] = useState("");
     const [showPicker, setShowPicker] = useState(false);
     const [showIOSModal, setShowIOSModal] = useState(false);
     const [tempDate, setTempDate] = useState(new Date());
     const [detailItem, setDetailItem] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [teacherData, setTeacherData] = useState([]);
-    const [myAttendance, setMyAttendance] = useState([]);
 
     const fetchAttendance = useCallback(async (role) => {
         try {
@@ -260,7 +263,6 @@ export function useAttendanceViewModel() {
             const enriched = await enrichRecords(records, { locale, t, activePeriod });
 
             setTeacherData(enriched);
-            setMyAttendance(enriched.slice(-10));
         } catch (error) {
             console.error('Error fetching attendance:', error);
             setError(t('attendance.loadError'));
@@ -298,35 +300,38 @@ export function useAttendanceViewModel() {
         init();
     }, [fetchAttendance, loadThemeForRole]);
 
-    const isAdmin = String(userRole || '').toLowerCase() === 'administrador' || String(userRole || '').toLowerCase() === 'admin';
+    const roleLower = String(userRole || '').toLowerCase();
+    const isAdmin = roleLower === 'administrador' || roleLower === 'admin';
+    // El instructor consulta a sus aprendices: mismo listado por persona que el admin (ERF 5.1).
+    const isStaff = isAdmin || roleLower === 'instructor' || roleLower === 'docente' || roleLower === 'teacher';
 
-    const filteredTeachers = teacherData.filter(item =>
-        (!searchText || item.nombre.toLowerCase().includes(searchText.toLowerCase())) &&
-        (!selectedDate || item.fecha === formatDateKey(selectedDate))
-    );
-
-    const filteredMyAttendance = myAttendance.filter(item =>
-        (!selectedDate || item.fecha === formatDateKey(selectedDate))
-    );
-
-    const activeData = isAdmin ? filteredTeachers : filteredMyAttendance;
+    const activeData = filterAttendance(teacherData, {
+        search: isStaff ? searchText : '',
+        from: formatDateKey(fromDate),
+        to: formatDateKey(toDate),
+        status: statusFilter,
+    });
 
     const openDetail = (item) => { setDetailItem(item); setShowDetailModal(true); };
     const closeDetail = () => { setShowDetailModal(false); setDetailItem(null); };
 
-    const handleOpenPicker = () => {
-        setTempDate(selectedDate ?? new Date());
+    const handleOpenPicker = (target) => {
+        setPickerTarget(target);
+        setTempDate((target === "to" ? toDate : fromDate) ?? new Date());
         Platform.OS === "ios" ? setShowIOSModal(true) : setShowPicker(true);
     };
 
     const handleAndroidChange = (event, date) => {
         setShowPicker(false);
-        if (event.type === "set" && date) setSelectedDate(date);
+        if (event.type === "set" && date) setPickedDate(date);
     };
 
+    const setPickedDate = (date) => (pickerTarget === "to" ? setToDate(date) : setFromDate(date));
+
     return {
-        t, locale: resolveLocale(i18n.language), isAdmin, isDark, colors, refreshKey, updateKey,
-        searchText, setSearchText, selectedDate, setSelectedDate,
+        t, locale: resolveLocale(i18n.language), isAdmin, isStaff, isDark, colors, refreshKey, updateKey,
+        searchText, setSearchText, fromDate, setFromDate, toDate, setToDate, setPickedDate,
+        statusFilter, setStatusFilter,
         showPicker, showIOSModal, setShowIOSModal, tempDate, setTempDate,
         activeData, detailItem, showDetailModal, loading, error, retry,
         openDetail, closeDetail, handleOpenPicker, handleAndroidChange,
