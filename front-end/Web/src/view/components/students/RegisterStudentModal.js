@@ -199,14 +199,16 @@ export default function RegisterStudentModal({
     const setField = (key, value) => {
         setForm((prev) => {
             const updated = { ...prev, [key]: value };
-            
+             
             // Auto-generar código estudiantil en dos casos:
             // 1. Cuando se selecciona una ficha/curso Y el rol es "student"
             // 2. Cuando se cambia el rol a "student" Y ya hay una ficha seleccionada
+            // Solo completa si el campo está vacío: el código que el
+            // administrador escribió a mano nunca se sobreescribe.
             const shouldGenerateCode = 
-                (key === "course" && value && updated.role === "student") ||
-                (key === "role" && value === "student" && updated.course);
-            
+                (key === "course" && value && updated.role === "student" && !String(prev.code ?? "").trim()) ||
+                (key === "role" && value === "student" && updated.course && !String(prev.code ?? "").trim());
+             
             if (shouldGenerateCode) {
                 const fichaCode = key === "course" ? value : updated.course;
                 const generatedCode = generateStudentCode(fichaCode);
@@ -214,7 +216,7 @@ export default function RegisterStudentModal({
                     updated.code = generatedCode;
                 }
             }
-            
+             
             return updated;
         });
         if (showErrors) setError(null);
@@ -390,7 +392,7 @@ export default function RegisterStudentModal({
                 )}
 
                 {/* Fila 1 — Nombre y Código */}
-                <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
+                <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12, marginBottom: 18 }}>
                     <View style={{ flex: 1 }}>
                         <TextInput
                             label={t("Nombre completo") + " *"}
@@ -409,8 +411,7 @@ export default function RegisterStudentModal({
                             placeholder={config.codePlaceholder}
                             error={isEmpty(form.code)}
                             errorMessage={isEmpty(form.code) ? t("Campo requerido") : ""}
-                            disabled={form.role === "student"} // Auto-generado para estudiantes
-                            helperText={form.role === "student" && form.code ? t("Generado automáticamente") : ""}
+                            helperText={form.role === "student" && form.code ? t("Sugerido automáticamente — editable") : ""}
                         />
                     </View>
                 </View>
@@ -429,7 +430,7 @@ export default function RegisterStudentModal({
                 {/* Documento y contraseña: el backend los exige para crear
                     persona y usuario en todos los roles */}
                 {form.role && (
-                    <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
+                    <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12, marginBottom: 18 }}>
                         <View style={{ flex: 1 }}>
                             <TextInput
                                 label={t("Número de documento") + " *"}

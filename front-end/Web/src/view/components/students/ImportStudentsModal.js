@@ -2,16 +2,18 @@
 //  FaceAttend EDU — ImportStudentsModal
 //
 //  Modal para importar estudiantes desde CSV o Excel.
-//  Sin dependencias externas: parseo manual de CSV y uso de
-//  la Web FileReader API (disponible en React Native Web).
+//  El parseo vive en ./importStudentsParser (SheetJS para .xlsx,
+//  texto con delimitador detectado para .csv/.tsv — antes solo
+//  leía como texto y fallaba con .xlsx y con ";" del Excel en
+//  español).
 //
 //  Columnas esperadas (en cualquier orden, case-insensitive):
-//    name | code | email | course | grade | attendance | registered | status
+//    name | code | email | course | grade | attendance | status
 //
 //  Las columnas mínimas requeridas son: name, code, email, course, grade.
 // ============================================================
 
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
     Modal, View, Text, ScrollView, TouchableOpacity,
     ActivityIndicator, Platform,
@@ -21,108 +23,7 @@ import { Button, Badge } from "../common";
 import { useTheme }       from "../hooks/useTheme";
 import { useResponsive }  from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
-
-// -- Tipos -------------------------------------------------
-
-
-// ── Helpers de parseo ─────────────────────────────────────
-
-const ALIAS = {
-    // name
-    name: "name",
-    nombre: "name",
-    "nombre completo": "name",
-    // code
-    code: "code",
-    codigo: "code",
-    "código": "code",
-    id: "code",
-    // email
-    email: "email",
-    correo: "email",
-    "correo electrónico": "email",
-    // course
-    course: "course",
-    programa: "course",
-    carrera: "course",
-    // grade
-    grade: "grade",
-    semestre: "grade",
-    grado: "grade",
-    // attendance
-    attendance: "attendance",
-    asistencia: "attendance",
-    // hasFacial
-    hasfacial: "hasFacial",
-    facial: "hasFacial",
-    rostro: "hasFacial",
-    reconocimientofacial: "hasFacial",
-    // hasFingerprint
-    hasfingerprint: "hasFingerprint",
-    huella: "hasFingerprint",
-    huelladactilar: "hasFingerprint",
-    dactilar: "hasFingerprint",
-    fingerprint: "hasFingerprint",
-    // status
-    status: "status",
-    estado: "status",
-};
-
-function normalizeHeader(h) {
-    return ALIAS[h.trim().toLowerCase()] ?? null;
-}
-
-function parseCSV(text) {
-    const lines = text.replace(/\r/g, "").split("\n").filter((l) => l.trim());
-    if (lines.length < 2) return { headers: [], rows: [] };
-    const split = (line) =>
-        line.split(",").map((c) => c.trim().replace(/^"|"$/g, ""));
-    return { headers: split(lines[0]), rows: lines.slice(1).map(split) };
-}
-
-function rowToStudent(headers, cells) {
-    const obj = {};
-    headers.forEach((h, i) => {
-        const key = normalizeHeader(h);
-        if (!key) return;
-        const val = (cells[i] ?? "").trim();
-        if (key === "attendance") {
-            obj.attendance = Math.min(100, Math.max(0, parseInt(val, 10) || 100));
-        } else if (key === "hasFacial") {
-            obj.hasFacial = val === "true" || val === "1" || val === "sí" || val === "si" || val === "yes";
-        } else if (key === "hasFingerprint") {
-            obj.hasFingerprint = val === "true" || val === "1" || val === "sí" || val === "si" || val === "yes";
-        } else if (key === "status") {
-            obj.status = val === "inactive" || val === "inactivo" ? "inactive" : "active";
-        } else {
-            obj[key] = val;
-        }
-    });
-    if (!obj.name || !obj.code || !obj.email || !obj.course || !obj.grade) return null;
-    return {
-        name: obj.name,
-        code: obj.code,
-        email: obj.email,
-        course: obj.course,
-        grade: obj.grade,
-        attendance: obj.attendance ?? 100,
-        hasFacial: obj.hasFacial ?? false,
-        hasFingerprint: obj.hasFingerprint ?? false,
-        status: obj.status ?? "active",
-    };
-}
-
-function parseFileContent(text) {
-    const { headers, rows } = parseCSV(text);
-    let errors = 0;
-    const parsed = [];
-    rows.forEach((cells) => {
-        const r = rowToStudent(headers, cells);
-        if (r) parsed.push(r);
-        else errors++;
-    });
-    return { rows: parsed, errors };
-}
+import { parseFileContent } from "./importStudentsParser";
 
 // ── Template CSV descargable ──────────────────────────────
 
@@ -162,10 +63,12 @@ function pickFile() {
             }
             const reader = new FileReader();
             reader.onload = (evt) => {
-                resolve({ name: file.name, content: evt.target?.result ?? "" });
+                resolve({ name: file.name, buffer: evt.target?.result });
             };
             reader.onerror = () => resolve(null);
-            reader.readAsText(file, "utf-8");
+            // ArrayBuffer para todos: los .xlsx son ZIP binarios y leerlos
+            // como texto produce basura que el parser CSV descartaba.
+            reader.readAsArrayBuffer(file);
         };
         input.click();
     });
@@ -201,7 +104,7 @@ export default function ImportStudentsModal({
     const handlePickFile = async () => {
         const result = await pickFile();
         if (!result) return;
-        const { rows, errors } = parseFileContent(result.content);
+        const { rows, errors } = parseFileContent(result.name, result.buffer);
         setFileName(result.name);
         setParseErrors(errors);
         if (rows.length === 0) {
