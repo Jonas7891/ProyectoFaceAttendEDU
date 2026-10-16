@@ -83,19 +83,19 @@ const AttendanceStatsCard = ({ stats, colors, t }) => {
         paddingVertical: 12,
     }]}>
         <StatItem
-            label={t('profile.present', 'Presentes')}
+            label={t('profile.present')}
             value={stats.present}
             color={colors.success}
             colors={colors}
         />
         <StatItem
-            label={t('profile.absent', 'Ausentes')}
+            label={t('profile.absent')}
             value={stats.absent}
             color={colors.danger}
             colors={colors}
         />
         <StatItem
-            label={t('profile.justified', 'Justificadas')}
+            label={t('profile.justified')}
             value={stats.justified}
             color={colors.warning}
             colors={colors}
@@ -124,8 +124,8 @@ const JustificationCard = ({ item, colors, t }) => {
             </Text>
             <Text style={[styles.infoFieldLabelProfile, { color: statusColor, marginTop: 4 }]}>
                 {isPending
-                    ? t('profile.pending', 'Pendiente')
-                    : t('profile.approved', 'Aprobada')}
+                    ? t('profile.pending')
+                    : t('profile.approved')}
             </Text>
         </View>
     );
@@ -167,19 +167,19 @@ const TeacherCourseStatCard = ({ courseStat, colors, t }) => {
         </Text>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
             <StatItem
-                label={t('profile.present', 'Presentes')}
+                label={t('profile.present')}
                 value={courseStat.present}
                 color={colors.success}
                 colors={colors}
             />
             <StatItem
-                label={t('profile.absent', 'Ausentes')}
+                label={t('profile.absent')}
                 value={courseStat.absent}
                 color={colors.danger}
                 colors={colors}
             />
             <StatItem
-                label={t('profile.total', 'Total')}
+                label={t('profile.total')}
                 value={courseStat.total}
                 color={colors.text}
                 colors={colors}
@@ -193,17 +193,17 @@ const TeacherCourseStatCard = ({ courseStat, colors, t }) => {
 const SchoolInfoCard = ({ schoolInfo, colors, t }) => (
     <View>
         <InfoField
-            label={t('profile.schoolName', 'Nombre')}
+            label={t('profile.schoolName')}
             value={schoolInfo?.name}
             colors={colors}
         />
         <InfoField
-            label={t('profile.activePeriod', 'Período activo')}
+            label={t('profile.activePeriod')}
             value={schoolInfo?.activePeriod}
             colors={colors}
         />
         <InfoField
-            label={t('profile.address', 'Dirección')}
+            label={t('profile.address')}
             value={schoolInfo?.address}
             colors={colors}
         />
@@ -304,7 +304,7 @@ export default function ProfileScreen({ onLogout }) {
                         </View>
 
                         <Text style={[styles.userNameProfile, { color: colors.text }]}>
-                            {userInfo?.name ?? t('profile.noName', 'Sin nombre')}
+                            {userInfo?.name ?? t('profile.noName')}
                         </Text>
 
                         <View style={[styles.roleBadgeProfile, {
@@ -313,22 +313,22 @@ export default function ProfileScreen({ onLogout }) {
                         }]}>
                             <View style={[styles.roleBadgeDotProfile, { backgroundColor: avatarColor }]} />
                             <Text style={[styles.roleBadgeTextProfile, { color: avatarColor }]}>
-                                {userInfo?.role ?? t('profile.noRole', 'Sin rol')}
+                                {userInfo?.role ?? t('profile.noRole')}
                             </Text>
                         </View>
                     </View>
 
                     {/* ══ INFORMACIÓN PERSONAL ══ */}
                     <SectionTitle
-                        title={t('profile.personalInfo', 'Información personal')}
+                        title={t('profile.personalInfo')}
                         colors={colors}
                     />
-                    <InfoField label={t('profile.email',      'Correo electrónico')} value={userInfo?.email}          colors={colors} />
-                    <InfoField label={t('profile.phone',      'Teléfono')}           value={userInfo?.phone}          colors={colors} />
-                    <InfoField label={t('profile.employeeId', 'Documento')}          value={userInfo?.employeeId}     colors={colors} />
-                    <InfoField label={t('profile.actorCode',  'Código')}             value={userInfo?.actorCode}      colors={colors} />
-                    <InfoField label={t('profile.joinDate',   'Fecha de ingreso')}   value={userInfo?.joinDate}       colors={colors} />
-                    <InfoField label={t('profile.school',     'Colegio')}            value={userInfo?.school}         colors={colors} />
+                    <InfoField label={t('profile.email')} value={userInfo?.email}          colors={colors} />
+                    <InfoField label={t('profile.phone')}           value={userInfo?.phone}          colors={colors} />
+                    <InfoField label={t('profile.employeeId')}          value={userInfo?.employeeId}     colors={colors} />
+                    <InfoField label={t('profile.actorCode')}             value={userInfo?.actorCode}      colors={colors} />
+                    <InfoField label={t('profile.joinDate')}   value={userInfo?.joinDate}       colors={colors} />
+                    <InfoField label={t('profile.school')}            value={userInfo?.school}         colors={colors} />
 
                     {/* ══ SECCIÓN ESTUDIANTE ══ */}
                     {isStudent && (
@@ -337,7 +337,7 @@ export default function ProfileScreen({ onLogout }) {
                             {courses?.length > 0 && (
                                 <>
                                     <SectionTitle
-                                        title={t('profile.enrolledCourses', 'Cursos matriculados')}
+                                        title={t('profile.enrolledCourses')}
                                         colors={colors}
                                         badge={courses.length}
                                     />
@@ -355,7 +355,7 @@ export default function ProfileScreen({ onLogout }) {
                             {attendanceStats && (
                                 <>
                                     <SectionTitle
-                                        title={t('profile.attendanceStats', 'Estadísticas de asistencia')}
+                                        title={t('profile.attendanceStats')}
                                         colors={colors}
                                     />
                                     <AttendanceStatsCard stats={attendanceStats} colors={colors} t={t} />
@@ -366,7 +366,7 @@ export default function ProfileScreen({ onLogout }) {
                             {justifications?.length > 0 && (
                                 <>
                                     <SectionTitle
-                                        title={t('profile.pendingJustifications', 'Justificaciones')}
+                                        title={t('profile.pendingJustifications')}
                                         colors={colors}
                                         badge={justifications.filter((j) => j?.approval === 'Pending').length}
                                     />
@@ -390,10 +390,10 @@ export default function ProfileScreen({ onLogout }) {
                             {teacherSchedules?.length > 0 && (
                                 <>
                                     <SectionTitle
-                                        title={t('profile.teacherSchedule', 'Mi horario')}
+                                        title={t('profile.teacherSchedule')}
                                         colors={colors}
                                         badge={teacherSchedules.length}
-                                        badgeLabel={t('profile.classes', 'clases')}
+                                        badgeLabel={t('profile.classes')}
                                     />
                                     {teacherSchedules.map((sch) => (
                                         <TeacherScheduleCard
@@ -409,7 +409,7 @@ export default function ProfileScreen({ onLogout }) {
                             {teacherCourseStats?.length > 0 && (
                                 <>
                                     <SectionTitle
-                                        title={t('profile.courseAttendance', 'Asistencia por curso')}
+                                        title={t('profile.courseAttendance')}
                                         colors={colors}
                                     />
                                     {teacherCourseStats.map((stat) => (
@@ -432,7 +432,7 @@ export default function ProfileScreen({ onLogout }) {
                             {schoolInfo && (
                                 <>
                                     <SectionTitle
-                                        title={t('profile.schoolInfo', 'Información del colegio')}
+                                        title={t('profile.schoolInfo')}
                                         colors={colors}
                                     />
                                     <SchoolInfoCard schoolInfo={schoolInfo} colors={colors} t={t} />
@@ -443,10 +443,10 @@ export default function ProfileScreen({ onLogout }) {
                             {iotDevices?.length > 0 && (
                                 <>
                                     <SectionTitle
-                                        title={t('profile.iotDevices', 'Dispositivos IoT')}
+                                        title={t('profile.iotDevices')}
                                         colors={colors}
                                         badge={iotDevices.filter((d) => d?.status === 'Active').length}
-                                        badgeLabel={t('profile.active', 'activos')}
+                                        badgeLabel={t('profile.active')}
                                     />
                                     {iotDevices.map((device) => (
                                         <DeviceCard
@@ -463,7 +463,7 @@ export default function ProfileScreen({ onLogout }) {
                     {/* ══ CONFIGURACIÓN RÁPIDA ══ */}
                     <View style={{ marginTop: 25 }}>
                         <SectionTitle
-                            title={t('profile.quickSettings', 'Configuración rápida')}
+                            title={t('profile.quickSettings')}
                             colors={colors}
                         />
 
@@ -479,19 +479,19 @@ export default function ProfileScreen({ onLogout }) {
                         >
                             <View style={{ flex: 1, marginLeft: 12 }}>
                                 <Text style={[styles.profileSettingsTitleProfile, { color: colors.text }]}>
-                                    {t('settings.theme', 'Tema')}
+                                    {t('settings.theme')}
                                 </Text>
                                 <Text style={[styles.profileSettingsSubtitleProfile, { color: colors.textSecondary }]}>
                                     {isDark
-                                        ? t('settings.darkTheme', 'Tema oscuro activo')
-                                        : t('settings.lightTheme', 'Tema claro activo')}
+                                        ? t('settings.darkTheme')
+                                        : t('settings.lightTheme')}
                                 </Text>
                             </View>
                             <View style={[styles.settingsChevronProfile, {
                                 backgroundColor: colors.primaryLight,
                             }]}>
                                 <Text style={{ fontSize: 13, color: colors.primary, fontWeight: '700' }}>
-                                    {t('settings.changeTheme', 'Cambiar')}
+                                    {t('settings.changeTheme')}
                                 </Text>
                             </View>
                         </TouchableOpacity>

@@ -52,7 +52,7 @@ export default function ValidJustificationsScreen() {
             <View style={styles.cardHeader}>
                 <Text style={[styles.cardDate, { color: colors.text }]}>{item.fecha}</Text>
                 <View style={[styles.statusBadge, { backgroundColor: getEstadoColor(item.estado) }]}>
-                    <Text style={[styles.statusText, { color: colors.onPrimary }]}>{item.estado}</Text>
+                    <Text style={[styles.statusText, { color: colors.onPrimary }]}>{t(`attendance.${item.estado}`)}</Text>
                 </View>
             </View>
             <Text style={[styles.cardReason, { color: colors.textSecondary }]}>{item.motivo}</Text>
@@ -67,7 +67,7 @@ export default function ValidJustificationsScreen() {
                     <Text style={[styles.cardTime, { color: colors.textSecondary }]}>{item.hora}</Text>
                 </View>
                 <View style={[styles.statusBadge, { backgroundColor: getEstadoColor(item.estado) }]}>
-                    <Text style={[styles.statusText, { color: colors.onPrimary }]}>{item.estado}</Text>
+                    <Text style={[styles.statusText, { color: colors.onPrimary }]}>{t(`attendance.${item.estado}`)}</Text>
                 </View>
             </View>
             <Text style={[styles.cardReason, { color: colors.textSecondary }]}>{item.motivo}</Text>
