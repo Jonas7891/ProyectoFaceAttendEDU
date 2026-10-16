@@ -1,0 +1,10 @@
+{
+  "buildCommand": "cd front-end/Web && EXPO_PUBLIC_API_URL='http://ec2-32-199-154-193.compute-1.amazonaws.com:8000' npm run build",
+  "outputDirectory": "front-end/Web/dist",
+  "framework": null,
+  "monorepos": [
+    {
+      "path": "front-end/Web"
+    }
+  ]
+}
