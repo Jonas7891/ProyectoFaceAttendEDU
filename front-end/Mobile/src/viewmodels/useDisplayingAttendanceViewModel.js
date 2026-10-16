@@ -6,6 +6,7 @@ import {useTheme} from "../view/components/common/ThemeContext";
 import {getCurrentUserRole, getCurrentUser} from "../services/UserService";
 import {ActorService} from "../services/ActorService";
 import {PeriodService} from "../services/PeriodService";
+import {JustificationService} from "../services/JustificationService";
 import {backendGet} from "../api/backend";
 import ENV from "../config/env";
 import {filterAttendance} from "../utils/attendanceFilters";
@@ -34,7 +35,7 @@ async function safe(promise) {
 const RECENT_LIMIT = 50;
 const ENRICH_CHUNK_SIZE = 10;
 
-async function enrichRecord(record, { locale, t, activePeriod }) {
+async function enrichRecord(record, { locale, t, activePeriod, justificationsByRecord }) {
   try {
     const [sessionData, actorData] = await Promise.all([
       record.class_session_id
@@ -82,7 +83,8 @@ async function enrichRecord(record, { locale, t, activePeriod }) {
       }
     }
 
-    const statusMap = { Present: 'presente', Late: 'tarde', Absent: 'ausente' };
+    const statusMap = { Present: 'presente', Late: 'tarde', Absent: 'ausente', Justified: 'justificado' };
+    const justification = justificationsByRecord?.get(String(record.attendance_record_id));
     const when = record.captured_at || record.created_at || null;
     const hora = when ? new Date(when).toLocaleTimeString(locale, {hour: '2-digit', minute: '2-digit'}) : '—';
 
@@ -102,6 +104,12 @@ async function enrichRecord(record, { locale, t, activePeriod }) {
       periodo_inicio: activePeriod?.startsOn || '—',
       periodo_fin: activePeriod?.endsOn || '—',
       docente: docenteName,
+      // ERF 7.4: estado de la justificación asociada al registro, si existe.
+      justificacion: justification ? {
+        estado: justification.reviewStatus,
+        texto: justification.reason || '—',
+        revisado_en: justification.reviewedAt ? String(justification.reviewedAt).split('T')[0] : '—',
+      } : null,
     };
   } catch (e) {
     return null;
@@ -260,7 +268,11 @@ export function useAttendanceViewModel() {
                     : (await PeriodService.getAll({is_active: true}))[0] || null;
             } catch (e) {}
 
-            const enriched = await enrichRecords(records, { locale, t, activePeriod });
+            // El backend acota las justificaciones al alcance del usuario; si fallan, el histórico sigue sin ellas.
+            const justifications = await safe(JustificationService.getAll()) ?? [];
+            const justificationsByRecord = new Map(justifications.map((j) => [String(j.attendanceRecordId), j]));
+
+            const enriched = await enrichRecords(records, { locale, t, activePeriod, justificationsByRecord });
 
             setTeacherData(enriched);
         } catch (error) {

@@ -111,6 +111,15 @@ function TeacherDetailModal({item, visible, onClose, colors, t, isDark}) {
                                colors={colors}/>
                     <DetailRow label={t("attendance.schedule")}
                                value={`${item.hora_inicio} – ${item.hora_fin}`} colors={colors}/>
+                    {/* ERF 7.4: estado de la justificación del retardo o la inasistencia */}
+                    {item.estado !== "presente" && (
+                        <DetailRow label={t("attendance.approvalStatus")}
+                                   value={item.justificacion
+                                       ? t(approvalTokens(colors, item.justificacion.estado).label)
+                                       : t("attendance.noJustification")}
+                                   valueColor={item.justificacion ? approvalTokens(colors, item.justificacion.estado).color : colors.textMuted}
+                                   colors={colors}/>
+                    )}
 
                     {/* Materia */}
                     <SectionLabel text={t("attendance.sectionCourse")} colors={colors}/>
@@ -246,8 +255,6 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
 
                             <DetailRow label={t("attendance.justificationText")}
                                        value={item.justificacion.texto} colors={colors}/>
-                            <DetailRow label={t("attendance.reviewedBy")}
-                                       value={item.justificacion.revisado_por} colors={colors}/>
                             <DetailRow label={t("attendance.reviewedAt")}
                                        value={item.justificacion.revisado_en} colors={colors}/>
                         </>
