@@ -20,7 +20,8 @@ const SEARCH_HEIGHT = 56;
 
 /**
  * Dropdown animado reutilizable
- * Se posiciona automáticamente debajo del trigger
+ * Se posiciona debajo del trigger; si no cabe en el viewport se
+ * despliega hacia arriba (dropUp).
  * 
  * @param {Array} items - Items: [{ value, label, icon?, description?, prefix? }]
  * @param {*} value - Valor seleccionado

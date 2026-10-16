@@ -78,4 +78,15 @@ describe("ImportStudentsModal — parseFileContent", () => {
         expect(result.rows).toHaveLength(1);
         expect(result.errors).toBe(1);
     });
+
+    test("líneas con # son comentarios (la plantilla trae una nota) y no cuentan como error", () => {
+        const csv = [
+            HEADERS.join(","),
+            "Ana García,EST-1001,ana@mail.com,ADSI,3",
+            "# Nota: código = códigoCurso + 00 + nnn",
+        ].join("\n");
+        const result = parseFileContent("estudiantes.csv", csv);
+        expect(result.rows).toHaveLength(1);
+        expect(result.errors).toBe(0);
+    });
 });

@@ -28,9 +28,9 @@ import { parseFileContent } from "./importStudentsParser";
 // ── Template CSV descargable ──────────────────────────────
 
 const CSV_TEMPLATE =
-    "name,code,email,course,grade,attendance,registered,status\n" +
-    "Ana García López,AED-401001,a.garcia@uni.edu,AED-401,3er semestre,95,false,active\n" +
-    "Carlos Pérez,AED-401002,c.perez@uni.edu,AED-401,2do semestre,88,true,active\n" +
+    "name,code,email,course,grade,attendance,status\n" +
+    "Ana García López,AED-401001,a.garcia@uni.edu,AED-401,3er semestre,95,active\n" +
+    "Carlos Pérez,AED-401002,c.perez@uni.edu,AED-401,2do semestre,88,active\n" +
     "# Nota: código = códigoCurso + 00 + nnn (ej: AED-401001, AED-401020, etc.)\n";
 
 function downloadTemplate() {
@@ -272,7 +272,7 @@ export default function ImportStudentsModal({
                                         color: c.text.secondary,
                                         marginTop: 8,
                                     }}>
-                                        {t("Columnas opcionales")}{": attendance, registered, status"}
+                                        {t("Columnas opcionales")}{": attendance, hasFacial, hasFingerprint, status"}
                                     </Text>
                                 </View>
                             </View>

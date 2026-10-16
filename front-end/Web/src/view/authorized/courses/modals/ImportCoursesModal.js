@@ -7,12 +7,18 @@
 //  2. Se parsea y muestra preview
 //  3. Usuario confirma importación
 //  4. Se procesan los registros y se muestran resultados
+//
+//  El parseo del archivo (SheetJS para .xlsx, delimitador
+//  detectado para .csv — antes solo leía como texto con ","
+//  fijo, y fallaba con .xlsx y con ";" del Excel en español)
+//  vive en components/common/importFileParser.
 // ============================================================
 
 import React, { useState } from "react";
 import { View, Text, ScrollView, ActivityIndicator, Platform } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Button, BaseModal, Badge } from "../../../components/common";
+import { parseFileContent } from "./importCoursesParser";
 import { useTheme } from "../../../components/hooks/useTheme";
 import { useResponsive } from "../../../components/hooks/useResponsive";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
@@ -25,53 +31,6 @@ const IMPORT_STATES = {
     PROCESSING: "processing",
     COMPLETE: "complete",
 };
-
-// ── Parseo de CSV (sin dependencias externas) ─────────────
-// Columnas esperadas (cualquier orden, case-insensitive):
-//   code | name | program (+ opcionales: schedule, room, instructor)
-
-const ALIAS = {
-    code: "code",
-    codigo: "code",
-    "código": "code",
-    id: "code",
-    name: "name",
-    nombre: "name",
-    curso: "name",
-    program: "program",
-    programa: "program",
-    carrera: "program",
-    schedule: "schedule",
-    horario: "schedule",
-    jornada: "schedule",
-    room: "room",
-    salon: "room",
-    "salón": "room",
-    aula: "room",
-    ambiente: "room",
-    instructor: "instructor",
-    docente: "instructor",
-    profesor: "instructor",
-};
-
-function parseCSV(text) {
-    const lines = text.replace(/\r/g, "").split("\n").filter((l) => l.trim());
-    if (lines.length < 2) return { headers: [], rows: [] };
-    const split = (line) =>
-        line.split(",").map((c) => c.trim().replace(/^"|"$/g, ""));
-    return { headers: split(lines[0]), rows: lines.slice(1).map(split) };
-}
-
-function rowToCourse(headers, cells) {
-    const obj = {};
-    headers.forEach((h, i) => {
-        const key = ALIAS[h.trim().toLowerCase()];
-        if (!key) return;
-        obj[key] = (cells[i] ?? "").trim();
-    });
-    if (!obj.code || !obj.name || !obj.program) return null;
-    return obj;
-}
 
 const CSV_TEMPLATE =
     "code,name,program,schedule,room\n" +
@@ -97,7 +56,7 @@ function pickFile() {
         }
         const input = document.createElement("input");
         input.type = "file";
-        input.accept = ".csv,.tsv,.txt";
+        input.accept = ".csv,.xlsx,.xls,.tsv,.txt";
         input.onchange = (e) => {
             const file = e.target?.files?.[0];
             if (!file) {
@@ -105,9 +64,13 @@ function pickFile() {
                 return;
             }
             const reader = new FileReader();
-            reader.onload = (evt) => resolve(String(evt.target?.result ?? ""));
+            reader.onload = (evt) => {
+                resolve({ name: file.name, buffer: evt.target?.result });
+            };
             reader.onerror = () => resolve(null);
-            reader.readAsText(file);
+            // ArrayBuffer para todos: los .xlsx son ZIP binarios y leerlos
+            // como texto produce basura que el parser CSV descartaba.
+            reader.readAsArrayBuffer(file);
         };
         input.click();
     });
@@ -128,19 +91,14 @@ export default function ImportCoursesModal({ visible, onClose, onImport }) {
 
     const handleFileSelect = async () => {
         setFileError(null);
-        const text = await pickFile();
-        if (!text) return;
-        const { headers, rows } = parseCSV(text);
-        const parsed = [];
-        for (const cells of rows) {
-            const draft = rowToCourse(headers, cells);
-            if (draft) parsed.push(draft);
-        }
-        if (parsed.length === 0) {
+        const result = await pickFile();
+        if (!result) return;
+        const { rows } = parseFileContent(result.name, result.buffer);
+        if (rows.length === 0) {
             setFileError(t("El archivo no contiene cursos válidos (columnas: código, nombre, programa)"));
             return;
         }
-        setDrafts(parsed);
+        setDrafts(rows);
         setState(IMPORT_STATES.PREVIEW);
     };
 
@@ -218,7 +176,7 @@ export default function ImportCoursesModal({ visible, onClose, onImport }) {
                         }}
                     >
                         {t(
-                            "El archivo debe contener las columnas: código, nombre, programa, instructor, semestre"
+                            "El archivo debe contener las columnas: código, nombre y programa (opcionales: horario, aula, instructor)"
                         )}
                     </Text>
                     <Button variant="ghost" onPress={downloadTemplate}>
