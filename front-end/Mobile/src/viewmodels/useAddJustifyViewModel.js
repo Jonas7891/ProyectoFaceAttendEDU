@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useNavigation} from '@react-navigation/native';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
@@ -9,46 +9,50 @@ import ENV from '../config/env';
 import {getCurrentUser} from '../services/UserService';
 import {ActorService} from '../services/ActorService';
 import {SUPPORT_FILE_MIME_TYPES, validateSupportFile} from '../utils/validators';
-
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const TIME_RE = /^(\d{1,2}):(\d{2})\s*([AaPp][Mm])$/;
-
-/** "HH:MM AM/PM" (el formato del placeholder) -> "HH:MM" 24h, o null si no es válido. */
-function to24Hour(timeStr) {
-    const match = TIME_RE.exec(String(timeStr || '').trim());
-    if (!match) return null;
-    let hours = parseInt(match[1], 10);
-    const minutes = parseInt(match[2], 10);
-    if (hours < 1 || hours > 12 || minutes > 59) return null;
-    const isPM = match[3].toUpperCase() === 'PM';
-    if (hours === 12) hours = isPM ? 12 : 0;
-    else if (isPM) hours += 12;
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-}
+import {eligibleRecords} from '../utils/justificationEligibility';
+import {useCustomAlert} from '../view/components/common/useCustomAlert';
 
 export function useAddJustificationViewModel() {
     const navigation = useNavigation();
     const {t} = useTranslation();
+    const {alertConfig, hideAlert, showSuccess, showError, showWarning} = useCustomAlert();
 
     // Estados del formulario
-    const [justificationType, setJustificationType] = useState('inasistencia');
+    const [records, setRecords] = useState([]);
+    const [recordsLoading, setRecordsLoading] = useState(true);
+    const [selectedRecordId, setSelectedRecordId] = useState(null);
     const [description, setDescription] = useState('');
     const [selectedFile, setSelectedFile] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [date, setDate] = useState('');
-    const [time, setTime] = useState('');
-
-    const [alertData, setAlertData] = useState({
-        message: null,
-        type: 'warning',
-        timestamp: 0,
-    });
 
     // Idioma: usar hook universal
     const updateKey = useLanguageRefresh();
 
-    // Limpiar alerta
-    const clearAlert = () => setAlertData({message: null, type: 'warning', timestamp: 0});
+    // HU-JUS-001 AC1: inasistencias y retardos propios aún sin justificar.
+    // El backend acota registros y justificaciones a los actores del usuario.
+    useEffect(() => {
+        let active = true;
+        (async () => {
+            try {
+                const user = await getCurrentUser();
+                const actors = await ActorService.getByPerson(user?.personId);
+                const actor = actors?.[0];
+                const [attendance, justifications] = actor
+                    ? await Promise.all([
+                        backendGet(ENV.ATTENDANCE_BASE_URL, 'api/v1/attendance-records', {academicActorId: actor.academicActorId}),
+                        JustificationService.getAll(),
+                    ])
+                    : [[], []];
+                if (active) setRecords(eligibleRecords(attendance, justifications));
+            } catch {
+                if (active) showError(t('common.error'), t('justify.loadRecordsError'));
+            } finally {
+                if (active) setRecordsLoading(false);
+            }
+        })();
+        return () => { active = false; };
+        // Solo al montar: showError cambia en cada render (useCustomAlert no lo memoiza de forma estable).
+    }, []);
 
     const pickFile = async () => {
         const result = await DocumentPicker.getDocumentAsync({
@@ -59,11 +63,7 @@ export function useAddJustificationViewModel() {
         const file = result.assets[0];
         const problem = validateSupportFile(file);
         if (problem) {
-            setAlertData({
-                message: t(problem === 'size' ? 'justify.fileTooLarge' : 'justify.invalidFileFormat'),
-                type: 'warning',
-                timestamp: Date.now(),
-            });
+            showWarning(t('justify.title'), t(problem === 'size' ? 'justify.fileTooLarge' : 'justify.invalidFileFormat'));
             return;
         }
         setSelectedFile(file);
@@ -74,99 +74,39 @@ export function useAddJustificationViewModel() {
 
     // Envío del formulario
     const handleSubmit = async () => {
-        // Validaciones
+        const record = records.find((r) => r.attendance_record_id === selectedRecordId);
+        if (!record) {
+            showWarning(t('justify.title'), t('justify.selectRecordError'));
+            return;
+        }
         if (!description.trim()) {
-            setAlertData({
-                message: t('justify.enterReason'),
-                type: 'warning',
-                timestamp: Date.now(),
-            });
+            showWarning(t('justify.title'), t('justify.enterReason'));
             return;
-        }
-        if (!date) {
-            setAlertData({
-                message: t('justify.selectDate'),
-                type: 'warning',
-                timestamp: Date.now(),
-            });
-            return;
-        }
-        if (!DATE_RE.test(date.trim()) || Number.isNaN(new Date(date).getTime())) {
-            setAlertData({
-                message: t('justify.invalidDateFormat'),
-                type: 'warning',
-                timestamp: Date.now(),
-            });
-            return;
-        }
-        let time24h = null;
-        if (justificationType === 'retardo') {
-            if (!time) {
-                setAlertData({
-                    message: t('justify.missingTimeError'),
-                    type: 'warning',
-                    timestamp: Date.now(),
-                });
-                return;
-            }
-            time24h = to24Hour(time);
-            if (!time24h) {
-                setAlertData({
-                    message: t('justify.invalidTimeFormat'),
-                    type: 'warning',
-                    timestamp: Date.now(),
-                });
-                return;
-            }
         }
         if (!selectedFile) {
-            setAlertData({
-                message: t('justify.missingAttachmentError'),
-                type: 'warning',
-                timestamp: Date.now(),
-            });
+            showWarning(t('justify.title'), t('justify.missingAttachmentError'));
             return;
         }
 
         setIsLoading(true);
         try {
-            const user = await getCurrentUser();
-            const actors = await ActorService.getByPerson(user?.personId);
-            const actor = actors?.[0];
-            // Backend: GET /api/v1/attendance-records?academicActorId= (camelCase).
-            const ATT = ENV.ATTENDANCE_BASE_URL;
-            const attendanceData = actor
-                ? await backendGet(ATT, 'api/v1/attendance-records', {academicActorId: actor.academicActorId})
-                : [];
-            const attendanceRecords = attendanceData?.value || attendanceData || [];
-            const attendanceRecord = attendanceRecords.find(record => record.captured_at?.startsWith(date));
-            if (!attendanceRecord) {
-                setAlertData({
-                    message: t('justify.noRecordForDate'),
-                    type: 'warning',
-                    timestamp: Date.now(),
-                });
-                return;
-            }
-            const typeData = await backendGet(ATT, 'api/v1/justification-types', {});
+            const isLate = record.attendance_status === 'Late';
+            const typeData = await backendGet(ENV.ATTENDANCE_BASE_URL, 'api/v1/justification-types', {});
             const types = typeData?.value || typeData || [];
             const type = types.find(item => {
                 const name = String(item.name || '').toLowerCase();
-                return justificationType === 'retardo' ? name.includes('ret') || name.includes('late') : name.includes('inas') || name.includes('absen');
+                return isLate ? name.includes('ret') || name.includes('late') : name.includes('inas') || name.includes('absen');
             }) || types[0];
 
             const created = await JustificationService.create({
-                attendanceRecordId: attendanceRecord?.attendance_record_id || null,
+                attendanceRecordId: record.attendance_record_id,
                 justificationTypeId: type?.justification_type_id || null,
                 reason: description.trim(),
-                submittedAt: new Date(`${date}T${time24h || '00:00'}`).toISOString(),
-                reviewStatus: 'Pending',
-                attachment: selectedFile ? {name: selectedFile.name, uri: selectedFile.uri, mime_type: selectedFile.mimeType} : null,
             });
             // El soporte es obligatorio para aprobar (RN-33): se registra como
             // documento de la justificación recién creada, igual que en web.
             const justificationId = created?.justificationId;
-            if (justificationId && selectedFile) {
+            if (justificationId) {
                 const ext = String(selectedFile.name?.split('.').pop() || 'bin').toLowerCase();
                 const now = new Date();
                 const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -178,41 +118,28 @@ export function useAddJustificationViewModel() {
                     sizeBytes: selectedFile.size || 1,
                 });
             }
-            setAlertData({
-                message: t('justify.successMessage'),
-                type: 'success',
-                timestamp: Date.now(),
-                // La pantalla detectará el tipo 'success' y cerrará después
-            });
+            showSuccess(t('common.success'), t('justify.successMessage'), handleBack);
         } catch (error) {
-            setAlertData({
-                message: t('justify.submitError'),
-                type: 'error',
-                timestamp: Date.now(),
-            });
+            showError(t('common.error'), t('justify.submitError'));
         } finally {
             setIsLoading(false);
         }
     };
 
     return {
-        justificationType,
-        setJustificationType,
+        records,
+        recordsLoading,
+        selectedRecordId,
+        setSelectedRecordId,
         description,
         setDescription,
         selectedFile,
-        setSelectedFile,
-        date,
-        setDate,
-        time,
-        setTime,
         pickFile,
         isLoading,
         updateKey,
         handleBack,
         handleSubmit,
-        // Manejo de alertas
-        alertData,
-        clearAlert,
+        alertConfig,
+        hideAlert,
     };
 }
