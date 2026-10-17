@@ -3,9 +3,11 @@ package com.faceattend_edu.attendance_service.application.usecase;
 import com.faceattend_edu.attendance_service.domain.exception.DuplicateEntityException;
 import com.faceattend_edu.attendance_service.domain.exception.EntityNotFoundException;
 import com.faceattend_edu.attendance_service.domain.exception.ValidationException;
+import com.faceattend_edu.attendance_service.domain.model.AttendanceRecord;
 import com.faceattend_edu.attendance_service.domain.model.Justification;
 import com.faceattend_edu.attendance_service.domain.model.JustificationType;
 import com.faceattend_edu.attendance_service.domain.model.SupportingDocument;
+import com.faceattend_edu.attendance_service.domain.port.out.AttendanceRecordRepository;
 import com.faceattend_edu.attendance_service.domain.port.out.JustificationRepository;
 import com.faceattend_edu.attendance_service.domain.port.out.JustificationTypeRepository;
 import com.faceattend_edu.attendance_service.domain.port.out.SupportingDocumentRepository;
@@ -13,6 +15,7 @@ import com.faceattend_edu.attendance_service.infrastructure.messaging.DomainEven
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -24,7 +27,10 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -39,6 +45,7 @@ class JustificationReviewTest {
     @Mock JustificationRepository repository;
     @Mock JustificationTypeRepository typeRepository;
     @Mock SupportingDocumentRepository documentRepository;
+    @Mock AttendanceRecordRepository recordRepository;
     @Mock DomainEventPublisher eventPublisher;
 
     private CreateJustificationUseCaseImpl create;
@@ -47,7 +54,7 @@ class JustificationReviewTest {
     @BeforeEach
     void setUp() {
         create = new CreateJustificationUseCaseImpl(repository, eventPublisher);
-        review = new ReviewJustificationUseCaseImpl(repository, typeRepository, documentRepository);
+        review = new ReviewJustificationUseCaseImpl(repository, typeRepository, documentRepository, recordRepository, eventPublisher);
         lenient().when(repository.save(any(Justification.class))).thenAnswer(call -> call.getArgument(0));
     }
 
@@ -197,5 +204,33 @@ class JustificationReviewTest {
         assertThrows(ValidationException.class, () -> review.review(ID, "Rejected", UUID.randomUUID(), null));
         assertThrows(ValidationException.class, () -> review.review(ID, "Approved", UUID.randomUUID(), null));
         verify(repository, never()).save(any());
+    }
+
+    @Test
+    void aReviewPublishesJustificationReviewedForTheApprentice() {
+        AttendanceRecord record = new AttendanceRecord();
+        record.setAttendanceRecordId(RECORD);
+        record.setAcademicActorId(77L);
+        when(repository.findById(ID)).thenReturn(Optional.of(pending()));
+        when(recordRepository.findById(RECORD)).thenReturn(Optional.of(record));
+
+        Justification result = review.review(ID, "Rejected", UUID.randomUUID(), "Document unreadable");
+
+        ArgumentCaptor<String> payload = ArgumentCaptor.forClass(String.class);
+        verify(eventPublisher).publishAfterCommit(eq("attendance.justification.events"), eq(String.valueOf(ID)), payload.capture());
+        assertTrue(payload.getValue().contains("\"eventType\":\"JustificationReviewed\""));
+        assertTrue(payload.getValue().contains("\"academicActorId\":77"));
+        assertTrue(payload.getValue().contains("\"status\":\"Rejected\""));
+        assertTrue(payload.getValue().contains("\"reviewedAt\":\"" + result.getReviewedAt() + "\""));
+    }
+
+    @Test
+    void aFailedReviewPublishesNothing() {
+        Justification resolved = pending();
+        resolved.setReviewStatus("Approved");
+        when(repository.findById(ID)).thenReturn(Optional.of(resolved));
+
+        assertThrows(ValidationException.class, () -> review.review(ID, "Rejected", UUID.randomUUID(), null));
+        verify(eventPublisher, never()).publishAfterCommit(anyString(), anyString(), anyString());
     }
 }

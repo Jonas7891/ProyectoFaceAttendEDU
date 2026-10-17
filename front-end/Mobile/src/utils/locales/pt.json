@@ -360,7 +360,11 @@
     "showing": "Mostrando",
     "result_one": "resultado",
     "result_other": "resultados",
-    "result": "resultado"
+    "result": "resultado",
+    "statusRejected": "Rejeitada",
+    "rejectionReason": "Motivo da rejeição",
+    "reviewerNotes": "Comentário do revisor",
+    "noReviewerNotes": "O revisor não deixou comentário."
   },
   "justify": {
     "title": "Configuração de Justificativas",
@@ -407,7 +411,16 @@
     "empty": "Não há novidades no momento.",
     "resolved": "Resolvido",
     "open": "Pendente",
-    "resolve": "Resolver"
+    "resolve": "Resolver",
+    "alertTypes": {
+      "ATTENDANCE_ABSENTEEISM": "Faltas recorrentes",
+      "ATTENDANCE_TARDINESS": "Atrasos repetidos",
+      "ATTENDANCE_LOW": "Frequência baixa",
+      "JUSTIFICATION_PENDING": "Justificativa pendente de revisão",
+      "BIOMETRIC_UPDATE": "Solicitação de atualização biométrica",
+      "JUSTIFICATION_APPROVED": "Sua justificativa foi aprovada",
+      "JUSTIFICATION_REJECTED": "Sua justificativa foi rejeitada"
+    }
   },
   "history": {
     "title": "Histórico",

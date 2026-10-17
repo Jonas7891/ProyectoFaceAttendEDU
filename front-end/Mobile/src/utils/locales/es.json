@@ -360,7 +360,11 @@
     "reasonLabel": "Motivo",
     "reject": "Rechazar",
     "time": "Hora",
-    "timeLabel": "Hora"
+    "timeLabel": "Hora",
+    "statusRejected": "Rechazada",
+    "rejectionReason": "Motivo del rechazo",
+    "reviewerNotes": "Comentario del revisor",
+    "noReviewerNotes": "El revisor no dejó comentario."
   },
   "justify": {
     "title": "Configuración de Justificaciones",
@@ -407,7 +411,16 @@
     "empty": "No hay novedades por ahora.",
     "resolved": "Resuelta",
     "open": "Pendiente",
-    "resolve": "Resolver"
+    "resolve": "Resolver",
+    "alertTypes": {
+      "ATTENDANCE_ABSENTEEISM": "Inasistencia recurrente",
+      "ATTENDANCE_TARDINESS": "Retardos repetidos",
+      "ATTENDANCE_LOW": "Asistencia baja",
+      "JUSTIFICATION_PENDING": "Justificación pendiente de revisión",
+      "BIOMETRIC_UPDATE": "Solicitud de actualización biométrica",
+      "JUSTIFICATION_APPROVED": "Tu justificación fue aprobada",
+      "JUSTIFICATION_REJECTED": "Tu justificación fue rechazada"
+    }
   },
   "history": {
     "title": "Historial",
