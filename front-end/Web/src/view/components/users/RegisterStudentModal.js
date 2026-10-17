@@ -10,13 +10,14 @@ import {
     View, Text, TouchableOpacity, ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Button, AnimatedDropdown, BaseModal, TextInput } from "../common";
+import { Button, AnimatedDropdown, BaseModal, TextInput, PasswordInput } from "../common";
 import { useTheme }               from "../hooks/useTheme";
 import { useResponsive }          from "../hooks/useResponsive";
 import { useTranslation }         from "../../../core/utils/i18n/hooks/useTranslation";
 import { useAppData }             from "../../../context/AppDataContext";
 import { useAuth }                from "../../../context/AuthContext";
 import { academicApi }            from "../../../services/api/academicApi";
+import { listActors }             from "../../../services/api/referenceData";
 import FaceRegistrationModal      from "./FaceRegistrationModal";
 import {
     EMPTY_FORM,
@@ -30,6 +31,21 @@ const ROLE_ITEMS = [
     { value: "teacher", label: "Docente",       description: "Teacher",  icon: "book-open" },
     { value: "student", label: "Estudiante",    description: "Student",  icon: "user"      },
 ];
+
+// ── Autogeneración de código de docente ──────────────────
+// Correlativo "DOC-{sede}-NNN" (p. ej. DOC-ICT-041) a partir de los códigos
+// ya existentes de la sede. El campo queda deshabilitado en el formulario.
+function nextTeacherCode(actors, schoolShort) {
+    const prefix = `DOC-${schoolShort}-`;
+    let max = 0;
+    for (const a of actors) {
+        const code = String(a?.actorCode ?? "");
+        if (!code.startsWith(prefix)) continue;
+        const n = parseInt(code.slice(prefix.length), 10);
+        if (!Number.isNaN(n) && n > max) max = n;
+    }
+    return `${prefix}${String(max + 1).padStart(3, "0")}`;
+}
 
 // ── Componente principal ─────────────────────────────────
 
@@ -46,6 +62,9 @@ export default function RegisterStudentModal({
     const c           = theme.colors;
     const appData     = useAppData();
     const { user }    = useAuth();
+    // Admin de sede: su user.schoolId viene de su academic_actor y acota todo.
+    // Super Admin (schoolId nulo) conserva la vista global y elige sede libre.
+    const isScopedAdmin = user?.schoolId != null;
 
     const [form,          setForm]          = useState({ ...EMPTY_FORM, role: initialRole || "" });
     const [error,         setError]         = useState(null);
@@ -155,6 +174,29 @@ export default function RegisterStudentModal({
             cancelled = true;
         };
     }, [visible]);
+
+    // Autogenerar el código del docente según su sede. El campo queda
+    // deshabilitado: el sistema asigna el correlativo DOC-{sede}-NNN.
+    React.useEffect(() => {
+        if (!visible || form.role !== "teacher") return;
+        const schoolId = String(form.schoolId ?? "");
+        if (!schoolId) return;
+        let cancelled = false;
+        listActors().then(
+            (actors) => {
+                if (cancelled) return;
+                const school = schoolItems.find((s) => s.value === schoolId);
+                const schoolShort = String(school?.description ?? "").split("-")[0] || "SED";
+                const instructors = (Array.isArray(actors) ? actors : []).filter(
+                    (a) => Number(a?.actorTypeId ?? a?.actor_type_id) === 2
+                        && String(a?.schoolId ?? a?.school_id) === schoolId
+                );
+                setForm((prev) => ({ ...prev, code: nextTeacherCode(instructors, schoolShort) }));
+            },
+            () => {}
+        );
+        return () => { cancelled = true; };
+    }, [visible, form.role, form.schoolId, schoolItems]);
 
     // Sincronizar el rol del formulario cuando cambia initialRole (solo si el modal se abre de nuevo)
     React.useEffect(() => {
@@ -289,9 +331,9 @@ export default function RegisterStudentModal({
             buttonLabel: t("Registrar estudiante"),
             successMessage: t("Estudiante registrado correctamente"),
             codeLabel: t("Código estudiantil"),
-            codePlaceholder: t("Ej: AED-401001"),
-            programLabel: t("Programa"),
-            programPlaceholder: t("Ej: Ingeniería de Sistemas"),
+            codePlaceholder: t("Se genera automáticamente"),
+            programLabel: t("Ficha/Curso"),
+            programPlaceholder: t("Seleccionar ficha/curso"),
             showProgram: true,
             showFaceRegistration: true,
             rolePlaceholder: null,
@@ -303,9 +345,9 @@ export default function RegisterStudentModal({
             buttonLabel: t("Registrar docente"),
             successMessage: t("Docente registrado correctamente"),
             codeLabel: t("Código docente"),
-            codePlaceholder: t("Ej: PROF001"),
-            programLabel: t("Departamento"),
-            programPlaceholder: t("Ej: Ingeniería de Software"),
+            codePlaceholder: t("Se genera automáticamente"),
+            programLabel: t("Ficha/Curso asignado"),
+            programPlaceholder: t("Seleccionar ficha/curso"),
             showProgram: true,
             showFaceRegistration: true,
             rolePlaceholder: null,
@@ -409,9 +451,10 @@ export default function RegisterStudentModal({
                             value={form.code}
                             onChangeText={v => setField("code", v)}
                             placeholder={config.codePlaceholder}
+                            disabled={form.role === "student" || form.role === "teacher"}
                             error={isEmpty(form.code)}
                             errorMessage={isEmpty(form.code) ? t("Campo requerido") : ""}
-                            helperText={form.role === "student" && form.code ? t("Sugerido automáticamente — editable") : ""}
+                            helperText={(form.role === "student" || form.role === "teacher") ? t("Se genera automáticamente") : ""}
                         />
                     </View>
                 </View>
@@ -442,12 +485,11 @@ export default function RegisterStudentModal({
                             />
                         </View>
                         <View style={{ flex: 1 }}>
-                            <TextInput
+                            <PasswordInput
                                 label={t("Contraseña temporal") + " *"}
                                 value={form.password}
                                 onChangeText={v => setField("password", v)}
                                 placeholder={t("Mínimo 8 caracteres")}
-                                type="password"
                                 error={showErrors && String(form.password ?? "").length < 8}
                                 errorMessage={showErrors && String(form.password ?? "").length < 8 ? t("Mínimo 8 caracteres") : ""}
                                 helperText={t("El usuario deberá cambiarla al ingresar")}
@@ -540,12 +582,18 @@ export default function RegisterStudentModal({
                             value={form.schoolId}
                             onSelect={v => setField("schoolId", v)}
                             placeholder={t("Seleccionar sede")}
-                            searchable={true}
+                            searchable={!isScopedAdmin}
                             searchPlaceholder={t("Buscar...")}
                             triggerIcon="map-pin"
+                            disabled={isScopedAdmin}
                             error={showErrors && !form.schoolId}
                             triggerHeight={48}
                         />
+                        {isScopedAdmin && (
+                            <Text style={{ fontSize: 12, color: c.text.secondary, marginTop: 4 }}>
+                                {t("Solo puedes crear usuarios en tu sede.")}
+                            </Text>
+                        )}
                         {schoolsError && (
                             <Text style={{ fontSize: 12, color: c.status.error, marginTop: 4 }}>
                                 {schoolsError}
