@@ -54,6 +54,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
     private final RestTemplate restTemplate;
     private final ObjectProvider<CallerScopeResolver> scopeResolver;
+    private final ObjectProvider<CallerSchoolResolver> schoolResolver;
 
     /**
     * Caché positiva de autenticación (TTL corto). Cada request autenticado
@@ -105,8 +106,9 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     @Value("${faceattend.auth.authorization-url:http://localhost:8082}")
     private String authorizationUrl;
 
-    public AuthTokenFilter(ObjectProvider<CallerScopeResolver> scopeResolver) {
+    public AuthTokenFilter(ObjectProvider<CallerScopeResolver> scopeResolver, ObjectProvider<CallerSchoolResolver> schoolResolver) {
         this.scopeResolver = scopeResolver;
+        this.schoolResolver = schoolResolver;
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(3000);
         factory.setReadTimeout(5000);
@@ -170,19 +172,37 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Quien no es administrador solo ve los registros de su alcance (ActorScope).
-        // El catálogo de tipos de justificación es común a todos.
-        CallerScopeResolver resolver = scopeResolver.getIfAvailable();
-        if (resolver != null && !path.startsWith("/api/v1/justification-types")) {
-            Set<Long> scope;
-            try {
-                scope = resolver.resolve(caller, roles, rawToken);
-            } catch (RuntimeException e) {
-                log.warn("AuthTokenFilter: actor scope for {} failed: {}", caller, e.getMessage());
-                deny(response, HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Cannot resolve actor scope", path);
-                return;
+        if (path.startsWith("/api/v1/justification-types")) {
+            // El catálogo de tipos no es "común a todos": los globales (school_id
+            // NULL) sí lo son, pero los propios de una sede solo los ve/gestiona
+            // esa sede (y Super Administrador). CallerScopeResolver no sirve aquí
+            // porque resuelve actores, no la sede propia del llamante.
+            CallerSchoolResolver resolver = schoolResolver.getIfAvailable();
+            if (resolver != null) {
+                CallerSchoolResolver.CallerSchool callerSchool;
+                try {
+                    callerSchool = resolver.resolve(caller, roles, rawToken);
+                } catch (RuntimeException e) {
+                    log.warn("AuthTokenFilter: caller school for {} failed: {}", caller, e.getMessage());
+                    deny(response, HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Cannot resolve caller school", path);
+                    return;
+                }
+                request.setAttribute(CallerSchoolContext.ATTRIBUTE, callerSchool);
             }
-            if (scope != null) request.setAttribute(ActorScope.ATTRIBUTE, scope);
+        } else {
+            // Quien no es administrador solo ve los registros de su alcance (ActorScope).
+            CallerScopeResolver resolver = scopeResolver.getIfAvailable();
+            if (resolver != null) {
+                Set<Long> scope;
+                try {
+                    scope = resolver.resolve(caller, roles, rawToken);
+                } catch (RuntimeException e) {
+                    log.warn("AuthTokenFilter: actor scope for {} failed: {}", caller, e.getMessage());
+                    deny(response, HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Cannot resolve actor scope", path);
+                    return;
+                }
+                if (scope != null) request.setAttribute(ActorScope.ATTRIBUTE, scope);
+            }
         }
 
         request.setAttribute("X-User-Id", caller);
