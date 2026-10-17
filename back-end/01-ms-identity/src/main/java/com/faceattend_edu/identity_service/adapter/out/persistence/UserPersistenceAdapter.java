@@ -57,16 +57,17 @@ public class UserPersistenceAdapter implements LoadUserPort, SaveUserPort, Updat
 
     // Sorted by the primary key: without a deterministic order Postgres may repeat or skip
     // rows between pages, so a client walking every page would not see the table exactly once.
+    // Soft-deleted users are excluded (findAllActive) per the model's soft-delete rule.
     @Override
     public List<User> listUsers(int pageIndex, int limit) {
-        return repository.findAll(PageRequest.of(pageIndex, limit, Sort.by("userId")))
+        return repository.findAllActive(PageRequest.of(pageIndex, limit, Sort.by("userId")))
                 .map(mapper::toDomain)
                 .getContent();
     }
 
     @Override
     public long countUsers() {
-        return repository.count();
+        return repository.countActive();
     }
 
     @Override
