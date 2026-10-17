@@ -53,9 +53,17 @@ class JustificationReviewTest {
 
     @BeforeEach
     void setUp() {
-        create = new CreateJustificationUseCaseImpl(repository, eventPublisher);
+        create = new CreateJustificationUseCaseImpl(repository, recordRepository, eventPublisher);
         review = new ReviewJustificationUseCaseImpl(repository, typeRepository, documentRepository, recordRepository, eventPublisher);
         lenient().when(repository.save(any(Justification.class))).thenAnswer(call -> call.getArgument(0));
+        lenient().when(recordRepository.findById(RECORD)).thenReturn(Optional.of(record("Absent")));
+    }
+
+    private AttendanceRecord record(String status) {
+        AttendanceRecord r = new AttendanceRecord();
+        r.setAttendanceRecordId(RECORD);
+        r.setAttendanceStatus(status);
+        return r;
     }
 
     private Justification pending() {
@@ -96,6 +104,30 @@ class JustificationReviewTest {
         when(repository.save(input)).thenThrow(new DataIntegrityViolationException("uq_justification_record"));
 
         assertThrows(DuplicateEntityException.class, () -> create.create(input));
+    }
+
+    @Test
+    void aLateArrivalCanBeJustified() {
+        when(recordRepository.findById(RECORD)).thenReturn(Optional.of(record("Late")));
+        when(repository.findByAttendanceRecordId(RECORD)).thenReturn(Optional.empty());
+
+        assertEquals("Pending", create.create(pending()).getReviewStatus());
+    }
+
+    @Test
+    void aPresentRecordCannotBeJustified() {
+        when(recordRepository.findById(RECORD)).thenReturn(Optional.of(record("Present")));
+
+        assertThrows(ValidationException.class, () -> create.create(pending()));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void justifyingAMissingRecordIsNotFound() {
+        when(recordRepository.findById(RECORD)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> create.create(pending()));
+        verify(repository, never()).save(any());
     }
 
     @Test
