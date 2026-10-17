@@ -20,11 +20,13 @@ export async function loadScopedAlerts() {
   ]);
   // Título en el idioma de la app por código del tipo; el nombre del catálogo (inglés) es el respaldo.
   const typeName = Object.fromEntries(types.map((at) => [at.alert_type_id, i18n.t(`news.alertTypes.${at.code}`, { defaultValue: at.name })]));
+  const typeCode = Object.fromEntries(types.map((at) => [at.alert_type_id, at.code]));
   const alerts = await Promise.all(raw.filter((a) => a?.alert_id != null).map(async (a) => {
     const person = await getPersonCached(actorMap[String(a.academic_actor_id)]?.person_id);
     return {
       id: a.alert_id,
       title: typeName[a.alert_type_id] || '',
+      code: typeCode[a.alert_type_id] || null,
       person: `${person?.name || ''} ${person?.last_name || ''}`.trim(),
       raisedAt: a.raised_at,
       resolved: !!a.resolved_at,

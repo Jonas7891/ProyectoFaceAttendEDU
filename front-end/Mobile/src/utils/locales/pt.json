@@ -360,7 +360,11 @@
     "showing": "Mostrando",
     "result_one": "resultado",
     "result_other": "resultados",
-    "result": "resultado"
+    "result": "resultado",
+    "statusRejected": "Rejeitada",
+    "rejectionReason": "Motivo da rejeição",
+    "reviewerNotes": "Comentário do revisor",
+    "noReviewerNotes": "O revisor não deixou comentário."
   },
   "justify": {
     "title": "Configuração de Justificativas",

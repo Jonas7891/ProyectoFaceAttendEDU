@@ -360,7 +360,11 @@
     "showing": "Showing",
     "result_one": "result",
     "result_other": "results",
-    "result": "result"
+    "result": "result",
+    "statusRejected": "Rejected",
+    "rejectionReason": "Reason for rejection",
+    "reviewerNotes": "Reviewer comment",
+    "noReviewerNotes": "The reviewer left no comment."
   },
   "justify": {
     "title": "Justification Configuration",

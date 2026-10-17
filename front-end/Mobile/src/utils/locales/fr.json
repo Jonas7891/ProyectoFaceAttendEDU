@@ -360,7 +360,11 @@
     "showing": "Affichage",
     "result_one": "résultat",
     "result_other": "résultats",
-    "result": "résultat"
+    "result": "résultat",
+    "statusRejected": "Refusée",
+    "rejectionReason": "Motif du refus",
+    "reviewerNotes": "Commentaire du réviseur",
+    "noReviewerNotes": "Le réviseur n’a laissé aucun commentaire."
   },
   "justify": {
     "title": "Configuration des justifications",

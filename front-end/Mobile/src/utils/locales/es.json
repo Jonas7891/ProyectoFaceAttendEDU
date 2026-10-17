@@ -360,7 +360,11 @@
     "reasonLabel": "Motivo",
     "reject": "Rechazar",
     "time": "Hora",
-    "timeLabel": "Hora"
+    "timeLabel": "Hora",
+    "statusRejected": "Rechazada",
+    "rejectionReason": "Motivo del rechazo",
+    "reviewerNotes": "Comentario del revisor",
+    "noReviewerNotes": "El revisor no dejó comentario."
   },
   "justify": {
     "title": "Configuración de Justificaciones",

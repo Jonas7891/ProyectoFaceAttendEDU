@@ -28,6 +28,7 @@ test('traduce el tipo por código y usa el nombre del catálogo si no hay traduc
 
   expect(alerts.map((a) => a.title)).toEqual(['Tu justificación fue rechazada', 'Something new']);
   expect(alerts[0].person).toBe('Ana Ruiz');
+  expect(alerts.map((a) => a.code)).toEqual(['JUSTIFICATION_REJECTED', 'SOMETHING_NEW']);
 });
 
 test('sigue el idioma elegido', async () => {
