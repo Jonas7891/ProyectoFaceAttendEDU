@@ -135,7 +135,6 @@ export default function ScheduleModal({
             setCourseNameInput(""); // Limpiar input de nombre
         }
         setCohortOptions([]);
-        setError(null);
         setShowErrors(false);
         setSaving(false);
     }, [visible, editing]);
