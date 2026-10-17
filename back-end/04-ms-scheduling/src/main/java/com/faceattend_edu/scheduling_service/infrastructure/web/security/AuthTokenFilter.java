@@ -27,6 +27,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import com.faceattend_edu.scheduling_service.infrastructure.web.security.CallerSchoolResolver.CallerSchool;
+import org.springframework.beans.factory.ObjectProvider;
+
 /**
  * Exige Bearer con sessionId opaco de identity en todo /api/** (salud/docs públicos).
  * Valida la sesión contra identity, resuelve roles y evalúa el permiso requerido
@@ -50,6 +53,11 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             "/actuator/", "/v3/api-docs", "/swagger-ui", "/swagger-ui.html");
 
     private final RestTemplate restTemplate;
+    // Perezoso: los tests @WebMvcTest cargan el filtro sin la capa de persistencia.
+    private final ObjectProvider<CallerSchoolResolver> schoolResolver;
+
+    /** Atributo con el CallerSchool resuelto, para que los controladores lo lean (CallerSchoolContext). */
+    public static final String CALLER_SCHOOL_ATTRIBUTE = "scheduling.callerSchool";
 
     /**
     * Caché positiva de autenticación (TTL corto). Cada request autenticado
@@ -101,7 +109,8 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     @Value("${faceattend.auth.authorization-url:http://localhost:8082}")
     private String authorizationUrl;
 
-    public AuthTokenFilter() {
+    public AuthTokenFilter(ObjectProvider<CallerSchoolResolver> schoolResolver) {
+        this.schoolResolver = schoolResolver;
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(3000);
         factory.setReadTimeout(5000);
@@ -163,6 +172,22 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         if (required != null && !cachedEvaluate(rawToken, caller, required)) {
             deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: requires " + required, path);
             return;
+        }
+
+        // Environments/bloques/sesiones trazan a una sede (directa o vía environment);
+        // Administrador (sede propia) y Super Administrador (todas) se distinguen aquí,
+        // nunca por lo que el cliente declare en query/body.
+        CallerSchoolResolver resolver = schoolResolver.getIfAvailable();
+        if (resolver != null) {
+            CallerSchool callerSchool;
+            try {
+                callerSchool = resolver.resolve(caller, roles, rawToken);
+            } catch (RuntimeException e) {
+                log.warn("AuthTokenFilter: caller school for {} failed: {}", caller, e.getMessage());
+                deny(response, HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Cannot resolve caller school", path);
+                return;
+            }
+            request.setAttribute(CALLER_SCHOOL_ATTRIBUTE, callerSchool);
         }
 
         request.setAttribute("X-User-Id", caller);
@@ -270,7 +295,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         response.setContentType("application/json");
         String safe = message.replace("\"", "'");
         String body = "{\"status\":" + status + ",\"error\":\""
-                + (status == 401 ? "Unauthorized" : "Forbidden") + "\",\"message\":\"" + safe
+                + (status == 401 ? "Unauthorized" : status == 503 ? "Service Unavailable" : "Forbidden") + "\",\"message\":\"" + safe
                 + "\",\"path\":\"" + path.replace("\"", "'") + "\"}";
         response.getWriter().write(body);
     }
