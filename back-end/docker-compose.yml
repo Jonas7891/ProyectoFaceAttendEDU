@@ -326,6 +326,8 @@ services:
       # Session + RBAC guard: sessions come from identity, permissions from authorization.
       IDENTITY_URL: http://ms-identity:8081
       AUTHORIZATION_URL: http://ms-authorization:8082
+      # Biometric case scope (caseScope.ts): school of the caller, via academic_actor.
+      ACADEMIC_URL: http://ms-academic:8083
       KAFKA_BROKERS: kafka:29092
       NODE_ENV: production
     ports:
