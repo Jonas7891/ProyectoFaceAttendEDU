@@ -54,6 +54,9 @@ func RunJustificationConsumer(ctx context.Context, brokers []string, h resultHan
 		Brokers: brokers,
 		GroupID: groupID,
 		Topic:   JustificationTopic,
+		// The topic is created by Attendance's first publish, which can happen after this
+		// service starts: without watching, the group never gets a partition assigned.
+		WatchPartitionChanges: true,
 	})
 	defer reader.Close()
 	log.Printf("justification consumer listening on %s", JustificationTopic)
