@@ -17,6 +17,17 @@ import { createPeriod } from "../services/api/fichaCreation";
 import { resetReferenceData } from "../services/api/referenceData";
 import { getActiveSchool, listCohorts, listCourses, listPrograms, optional } from "../services/api/referenceData";
 
+// Suma un mes calendario a una fecha ISO (AAAA-MM-DD), respetando el último
+// día del mes destino (31 de enero → 28/29 de febrero). Se usa para exigir una
+// duración mínima de un mes en el período académico.
+function addOneMonth(isoDate) {
+    const [y, m, d] = isoDate.split("-").map(Number);
+    // m (0-based) ya apunta al mes siguiente al original.
+    const daysInTarget = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+    const day = Math.min(d, daysInTarget);
+    return new Date(Date.UTC(y, m, day)).toISOString().slice(0, 10);
+}
+
 export function useAcademicViewModel() {
     const { user } = useAuth();
     const appData = useAppData();
@@ -202,6 +213,27 @@ export function useAcademicViewModel() {
                 return "Las fechas deben tener formato AAAA-MM-DD";
             }
             if (from >= to) return "El inicio debe ser anterior al fin";
+
+            // Reglas razonables de negocio:
+            // 1) Un período nuevo no puede iniciar en el pasado.
+            // 2) Duración mínima de un mes calendario.
+            // 3) No solaparse con otro período activo de la misma sede.
+            const todayIso = new Date().toISOString().slice(0, 10);
+            if (academicPeriodId == null && from < todayIso) {
+                return "El período nuevo no puede iniciar en el pasado";
+            }
+            if (to < addOneMonth(from)) {
+                return "El período debe durar al menos un mes";
+            }
+            const overlaps = (periods ?? []).some(
+                (p) =>
+                    p?.academicPeriodId !== academicPeriodId &&
+                    p?.isActive &&
+                    from < String(p?.endsOn ?? "") &&
+                    to > String(p?.startsOn ?? "")
+            );
+            if (overlaps) return "Se solapa con otro período activo de la sede";
+
             try {
                 if (academicPeriodId == null) {
                     if (schoolId == null) return "Falta la sede";
@@ -225,7 +257,7 @@ export function useAcademicViewModel() {
             await load();
             return null;
         },
-        [schoolId, load]
+        [schoolId, periods, load]
     );
 
     return {
