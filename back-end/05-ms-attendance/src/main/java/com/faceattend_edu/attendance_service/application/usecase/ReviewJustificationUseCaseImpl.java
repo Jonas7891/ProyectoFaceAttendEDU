@@ -43,6 +43,10 @@ public class ReviewJustificationUseCaseImpl implements ReviewJustificationUseCas
         if (!"Pending".equals(j.getReviewStatus())) {
             throw new ValidationException("Justification already " + j.getReviewStatus() + "; a resolved justification cannot be reviewed again");
         }
+        // ERF 6.2: el aprendiz debe saber por qué se rechazó.
+        if ("Rejected".equals(reviewStatus) && (resolutionNotes == null || resolutionNotes.isBlank())) {
+            throw new ValidationException("resolutionNotes is required to reject a justification");
+        }
         if ("Approved".equals(reviewStatus) && requiresAttachment(j) && documentRepository.findByJustificationId(id).isEmpty()) {
             throw new ValidationException("This justification type requires at least one supporting document before it can be approved");
         }

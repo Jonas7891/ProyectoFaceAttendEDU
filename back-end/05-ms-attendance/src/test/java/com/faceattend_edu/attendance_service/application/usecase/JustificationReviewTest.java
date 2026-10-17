@@ -131,6 +131,23 @@ class JustificationReviewTest {
     }
 
     @Test
+    void rejectingNeedsAResolutionComment() {
+        when(repository.findById(ID)).thenReturn(Optional.of(pending()));
+
+        assertThrows(ValidationException.class, () -> review.review(ID, "Rejected", UUID.randomUUID(), null));
+        assertThrows(ValidationException.class, () -> review.review(ID, "Rejected", UUID.randomUUID(), "   "));
+        verify(repository, never()).save(any());
+        verify(eventPublisher, never()).publishAfterCommit(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void approvingNeedsNoComment() {
+        when(repository.findById(ID)).thenReturn(Optional.of(pending()));
+
+        assertEquals("Approved", review.review(ID, "Approved", UUID.randomUUID(), "  ").getReviewStatus());
+    }
+
+    @Test
     void aReviewCannotGoBackToPending() {
         when(repository.findById(ID)).thenReturn(Optional.of(pending()));
 
