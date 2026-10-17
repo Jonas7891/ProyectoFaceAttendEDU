@@ -407,7 +407,16 @@
     "empty": "There is no news for now.",
     "resolved": "Resolved",
     "open": "Open",
-    "resolve": "Resolve"
+    "resolve": "Resolve",
+    "alertTypes": {
+      "ATTENDANCE_ABSENTEEISM": "Recurrent absenteeism",
+      "ATTENDANCE_TARDINESS": "Repeated tardiness",
+      "ATTENDANCE_LOW": "Low attendance rate",
+      "JUSTIFICATION_PENDING": "Justification pending review",
+      "BIOMETRIC_UPDATE": "Biometric update request",
+      "JUSTIFICATION_APPROVED": "Your justification was approved",
+      "JUSTIFICATION_REJECTED": "Your justification was rejected"
+    }
   },
   "history": {
     "title": "History",

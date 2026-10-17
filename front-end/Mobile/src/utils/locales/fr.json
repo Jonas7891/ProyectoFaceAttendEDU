@@ -407,7 +407,16 @@
     "empty": "Aucune actualité pour le moment.",
     "resolved": "Résolue",
     "open": "En attente",
-    "resolve": "Résoudre"
+    "resolve": "Résoudre",
+    "alertTypes": {
+      "ATTENDANCE_ABSENTEEISM": "Absences récurrentes",
+      "ATTENDANCE_TARDINESS": "Retards répétés",
+      "ATTENDANCE_LOW": "Taux de présence faible",
+      "JUSTIFICATION_PENDING": "Justificatif en attente de révision",
+      "BIOMETRIC_UPDATE": "Demande de mise à jour biométrique",
+      "JUSTIFICATION_APPROVED": "Votre justificatif a été approuvé",
+      "JUSTIFICATION_REJECTED": "Votre justificatif a été refusé"
+    }
   },
   "history": {
     "title": "Historique",

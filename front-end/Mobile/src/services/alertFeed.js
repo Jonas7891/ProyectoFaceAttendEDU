@@ -1,5 +1,6 @@
 import { backendGet } from '../api/backend';
 import ENV from '../config/env';
+import i18n from '../utils/i18n';
 import { getAcademicActorMap, getPersonCached } from './JustificationService';
 
 const ALERTS_LIMIT = 200;
@@ -17,7 +18,8 @@ export async function loadScopedAlerts() {
     backendGet(ENV.NOTIFY_BASE_URL, 'api/v1/alert-types').catch(() => []),
     getAcademicActorMap(),
   ]);
-  const typeName = Object.fromEntries(types.map((at) => [at.alert_type_id, at.name]));
+  // Título en el idioma de la app por código del tipo; el nombre del catálogo (inglés) es el respaldo.
+  const typeName = Object.fromEntries(types.map((at) => [at.alert_type_id, i18n.t(`news.alertTypes.${at.code}`, { defaultValue: at.name })]));
   const alerts = await Promise.all(raw.filter((a) => a?.alert_id != null).map(async (a) => {
     const person = await getPersonCached(actorMap[String(a.academic_actor_id)]?.person_id);
     return {
