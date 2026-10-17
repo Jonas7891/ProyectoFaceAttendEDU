@@ -49,6 +49,16 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
     private static final Pattern USER_ROLES_PATH = Pattern.compile(".*/users/([^/]+)/roles.*");
 
+    /** POST/DELETE on a user's own role assignment — grants or revokes what a user IS. */
+    private static final Pattern ROLE_ASSIGNMENT_PATH = Pattern.compile("^(/api/v1)?/users/[^/]+/roles(/\\d+)?$");
+    /** Any write on the role catalog itself, including a role's permission set. */
+    private static final Pattern ROLE_CATALOG_WRITE_PATH = Pattern.compile("^(/api/v1)?/roles(/.*)?$");
+    /** Any write on the permission catalog — what a permission even means. */
+    private static final Pattern PERMISSION_CATALOG_WRITE_PATH = Pattern.compile("^(/api/v1)?/permissions(/.*)?$");
+
+    /** Role name reserved for the unrestricted, school-less administrator. */
+    static final String SUPER_ADMIN_ROLE = "Super Administrador";
+
     private final RestTemplate restTemplate;
 
     /**
@@ -159,6 +169,16 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             storeSession(rawToken, caller, roles);
         }
 
+        // RBAC-on-RBAC (HU-IAM-003/010): who a user IS and what a role CAN do are
+        // platform-level decisions. `configuration:manage` alone would let a
+        // school Administrador (who also holds it) grant themselves or anyone
+        // else the Super Administrador role, or rewrite the permission matrix —
+        // so these writes require the role itself, not just the permission.
+        if (requiresSuperAdminRole(request.getMethod(), path) && !roles.contains(SUPER_ADMIN_ROLE)) {
+            deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: requires " + SUPER_ADMIN_ROLE, path);
+            return;
+        }
+
         String required = requiredPermission(request.getMethod(), path, request, caller);
         if (required != null && !cachedEvaluate(rawToken, caller, required)) {
             deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: requires " + required, path);
@@ -176,6 +196,19 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         } finally {
             SecurityContextHolder.clearContext();
         }
+    }
+
+    /**
+     * Whether this write changes who a user IS (role assignment) or what a role
+     * or permission CAN do (the RBAC catalog itself). Reserved for Super
+     * Administrador: `configuration:manage` is held by a school Administrador
+     * too, and the RBAC catalog is not scoped per school.
+     */
+    static boolean requiresSuperAdminRole(String method, String path) {
+        if (method.equalsIgnoreCase("GET")) return false;
+        return ROLE_ASSIGNMENT_PATH.matcher(path).matches()
+                || ROLE_CATALOG_WRITE_PATH.matcher(path).matches()
+                || PERMISSION_CATALOG_WRITE_PATH.matcher(path).matches();
     }
 
     /**
