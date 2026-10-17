@@ -9,10 +9,12 @@
 
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { Button, AnimatedDropdown, BaseModal, TextInput } from "../common";
 import { useTheme } from "../hooks/useTheme";
 import { useResponsive } from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
+import { listSchools } from "../../../services/api/referenceData";
 
 const ROLE_TITLES = {
     student: "Editar estudiante",
@@ -30,6 +32,7 @@ export default function EditUserModal({ visible, onClose, onSubmit, user, canCha
     const [error, setError] = useState(null);
     const [saving, setSaving] = useState(false);
     const [showErrors, setShowErrors] = useState(false);
+    const [schoolName, setSchoolName] = useState("");
 
     // Cargar datos al abrir (una sola vez por apertura).
     React.useEffect(() => {
@@ -54,6 +57,26 @@ export default function EditUserModal({ visible, onClose, onSubmit, user, canCha
             setSaving(false);
         }
     }, [visible, user]);
+
+    // El backend no expone PATCH sobre academic_actor, así que Sede y Código se
+    // muestran solo lectura; aquí se resuelve el nombre de la sede para mostrarlo.
+    React.useEffect(() => {
+        if (!visible || !user?.schoolId) {
+            setSchoolName("");
+            return;
+        }
+        let cancelled = false;
+        listSchools().then(
+            (schools) => {
+                if (cancelled) return;
+                const found = (Array.isArray(schools) ? schools : [])
+                    .find((s) => String(s?.schoolId) === String(user.schoolId));
+                setSchoolName(found?.name ?? "");
+            },
+            () => {}
+        );
+        return () => { cancelled = true; };
+    }, [visible, user?.schoolId]);
 
     if (!visible) return null;
 
@@ -223,6 +246,47 @@ export default function EditUserModal({ visible, onClose, onSubmit, user, canCha
                         errorMessage={isEmpty(form?.username) ? t("Campo requerido") : ""}
                     />
                 </View>
+            </View>
+
+            {/* Vínculo académico (solo lectura): el backend no expone PATCH sobre
+                academic_actor, así que código/sede/ficha se muestran, no se editan. */}
+            <View style={{ marginBottom: 4 }}>
+                <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.secondary, marginBottom: 6 }}>
+                    {t("Vínculo académico")}
+                </Text>
+                <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
+                    {[
+                        { label: t("Código"), value: user?.actorCode || "—", icon: "hash" },
+                        { label: t("Sede"), value: schoolName || "—", icon: "map-pin" },
+                        { label: t("Ficha/Curso asignado"), value: user?.course || "—", icon: "book-open" },
+                    ].map((f) => (
+                        <View key={f.label} style={{ flex: 1, marginBottom: isSmall ? 10 : 0 }}>
+                            <Text style={{ fontSize: 12, color: c.text.tertiary, marginBottom: 4 }}>
+                                {f.label}
+                            </Text>
+                            <View style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 8,
+                                borderWidth: 1,
+                                borderColor: c.border.primary,
+                                borderRadius: 14,
+                                paddingHorizontal: 12,
+                                minHeight: 48,
+                                backgroundColor: c.background.app,
+                            }}>
+                                <Feather name={f.icon} size={16} color={c.text.tertiary} />
+                                <Text style={{ fontSize: 14, color: c.text.primary, flex: 1 }} numberOfLines={1}>
+                                    {f.value}
+                                </Text>
+                                <Feather name="lock" size={14} color={c.text.tertiary} />
+                            </View>
+                        </View>
+                    ))}
+                </View>
+                <Text style={{ fontSize: 12, color: c.text.tertiary, marginTop: 2 }}>
+                    {t("Se gestiona al crear el usuario; no es editable aquí.")}
+                </Text>
             </View>
 
             <View style={{ marginBottom: 4 }}>
