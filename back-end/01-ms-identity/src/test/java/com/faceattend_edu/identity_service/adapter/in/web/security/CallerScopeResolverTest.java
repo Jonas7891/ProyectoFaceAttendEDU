@@ -22,7 +22,7 @@ class CallerScopeResolverTest {
 
     /** Actores: 1 instructor (TEACHER), 2 aprendiz (STUDENT, ficha 7), 3 aprendiz de otra ficha, 4 otro instructor. */
     private static final Map<String, List<Map<?, ?>>> BACKEND = Map.of(
-            "/api/v1/academic-actors?limit=2000", List.of(
+            "/api/v1/academic-actors", List.of(
                     Map.of("academicActorId", 1, "personId", TEACHER.toString()),
                     Map.of("academicActorId", 2, "personId", STUDENT.toString()),
                     Map.of("academicActorId", 3, "personId", OTHER_STUDENT.toString()),

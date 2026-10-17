@@ -73,9 +73,8 @@ class ActorScopeTest {
     void instructorScopeIsOwnActorsPlusActiveStudentsOfTaughtCohorts() {
         Map<String, Object> backend = Map.of(
                 "/api/v1/users/u-1", Map.of("personId", "p-1"),
-                "/api/v1/academic-actors?limit=2000", List.of(
-                        Map.of("academicActorId", 1, "personId", "p-1"),
-                        Map.of("academicActorId", 2, "personId", "p-2")),
+                // Solo ?personId= trae el actor del instructor (el listado con ?limit se corta en 100).
+                "/api/v1/academic-actors?personId=p-1", List.of(Map.of("academicActorId", 1, "personId", "p-1")),
                 "/api/v1/schedule-blocks?instructorActorId=1", List.of(Map.of("cohortId", 7)),
                 "/api/v1/cohorts/7/enrollments", List.of(
                         Map.of("academicActorId", 2, "enrollmentStatus", "Active"),

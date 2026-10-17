@@ -76,7 +76,9 @@ public class CallerScopeResolver {
 
         Map<String, String> personByActor = new HashMap<>();
         Set<String> ownActors = new HashSet<>();
-        for (Map<?, ?> actor : getList(academicUrl + "/api/v1/academic-actors?limit=2000", token)) {
+        // Sin ?limit academic devuelve todos los actores; con ?limit se cortaba en 100 y el mapa
+        // actor -> persona quedaba incompleto (el instructor no encontraba su actor ni a sus aprendices).
+        for (Map<?, ?> actor : getList(academicUrl + "/api/v1/academic-actors", token)) {
             String actorId = String.valueOf(actor.get("academicActorId"));
             String personId = String.valueOf(actor.get("personId"));
             personByActor.put(actorId, personId);
