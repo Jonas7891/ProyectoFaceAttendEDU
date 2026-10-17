@@ -192,6 +192,142 @@ def require_permission(permission: str | None):
     return dependency
 
 
+# ── Caller/person school scope (update-request endpoints) ──────────────────
+#
+# `biometric.case:request` is held by every role (SEEDS.md) and
+# `biometric.case:review` by Administrador/Instructor/Super Administrador —
+# neither permission alone says WHICH person/school the caller may touch.
+# Resolved the same way as the Java/TS CallerSchoolResolvers: Super
+# Administrador is unrestricted; everyone else is confined to their own
+# school, via their own academic_actor — never trusted from the request.
+
+SUPER_ADMIN_ROLE = "Super Administrador"
+_SCHOOL_CACHE_TTL_SECONDS = 30.0
+# user_id -> ((is_super_admin, school_id), expira_en_monotonic)
+_caller_school_cache: dict[str, tuple[tuple[bool, str | None], float]] = {}
+
+
+async def _resolve_roles(user_id: str, token: str) -> list[str]:
+    settings = get_settings()
+    try:
+        role_dicts = await _get_list(
+            f"{settings.authorization_url}/api/v1/users/{quote(user_id)}/roles", token
+        )
+    except httpx.HTTPError:
+        logger.warning("authorization unreachable while resolving roles")
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Cannot verify roles")
+    return [str(r["roleName"]) for r in role_dicts if isinstance(r, dict) and r.get("roleName")]
+
+
+async def resolve_person_school(person_id: str, token: str) -> str | None:
+    """The school of `person_id`, via their academic_actor — None with no actor."""
+    settings = get_settings()
+    try:
+        actors = await _get_list(
+            f"{settings.academic_url}/api/v1/academic-actors?personId={quote(person_id)}", token
+        )
+    except httpx.HTTPError:
+        logger.warning("academic unreachable while resolving a person's school")
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Cannot resolve the person's school")
+    for actor in actors:
+        if isinstance(actor, dict) and actor.get("schoolId") is not None:
+            return str(actor["schoolId"])
+    return None
+
+
+async def resolve_caller_school(user_id: str, token: str) -> tuple[bool, str | None]:
+    """(is_super_admin, school_id) for `user_id` — fails secure to (False, None)
+    for a caller without an academic_actor, never "sees everything"."""
+    cached = _cache_get(_caller_school_cache, user_id)
+    if cached is not None:
+        return cached
+
+    roles = await _resolve_roles(user_id, token)
+    if SUPER_ADMIN_ROLE in roles:
+        result: tuple[bool, str | None] = (True, None)
+        _cache_store(_caller_school_cache, user_id, result)
+        return result
+
+    settings = get_settings()
+    try:
+        code, user = await _get_json(f"{settings.identity_url}/api/v1/users/{quote(user_id)}", token)
+    except httpx.HTTPError:
+        logger.warning("identity unreachable while resolving the caller's person")
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Cannot resolve the user person")
+    person_id = str(user["personId"]) if code == 200 and user and user.get("personId") else None
+    school_id = await resolve_person_school(person_id, token) if person_id else None
+    result = (False, school_id)
+    _cache_store(_caller_school_cache, user_id, result)
+    return result
+
+
+async def ensure_can_touch_person(request: Request, person_id: str) -> None:
+    """Who may request/list biometric update cases FOR `person_id`.
+
+    Anyone may always touch their own. A reviewer (Administrador/Instructor/
+    Super Administrador) may also touch anyone in their own school — never
+    another school's. A plain requester (Aprendiz) without the review
+    permission may only ever touch themselves.
+    """
+    settings = get_settings()
+    if not settings.auth_enabled:
+        return
+    token = _bearer(request)
+    user_id = str(getattr(request.state, "user_id", "") or "")
+
+    try:
+        code, user = await _get_json(f"{settings.identity_url}/api/v1/users/{quote(user_id)}", token)
+    except httpx.HTTPError:
+        logger.warning("identity unreachable while checking person scope")
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Cannot verify the caller")
+    own_person_id = str(user["personId"]) if code == 200 and user and user.get("personId") else None
+    if own_person_id is not None and own_person_id == person_id:
+        return
+
+    is_super_admin, caller_school = await resolve_caller_school(user_id, token)
+    if is_super_admin:
+        return
+    if caller_school is None:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "You can only request an update for your own biometric data")
+
+    code, result = await _get_json(
+        f"{settings.authorization_url}/api/v1/auth/evaluate"
+        f"?userId={quote(user_id)}&permission={quote('biometric.case:review')}",
+        token,
+    )
+    is_reviewer = code == 200 and bool(result) and result.get("allowed") is True
+    if not is_reviewer:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "You can only request an update for your own biometric data")
+
+    target_school = await resolve_person_school(person_id, token)
+    if target_school != caller_school:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "You can only manage biometric data within your own school")
+
+
+async def ensure_can_touch_case_person(request: Request, case_person_id: str) -> None:
+    """Who may review/delete a biometric update case belonging to `case_person_id`.
+
+    Reached only by a `biometric.case:review` holder already (route dependency),
+    so this only narrows Administrador/Instructor to their own school; Super
+    Administrador is unrestricted.
+    """
+    settings = get_settings()
+    if not settings.auth_enabled:
+        return
+    token = _bearer(request)
+    user_id = str(getattr(request.state, "user_id", "") or "")
+
+    is_super_admin, caller_school = await resolve_caller_school(user_id, token)
+    if is_super_admin:
+        return
+    if caller_school is None:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "You can only manage biometric data within your own school")
+
+    target_school = await resolve_person_school(case_person_id, token)
+    if target_school != caller_school:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "You can only manage biometric data within your own school")
+
+
 STAFF_PERMISSION = "attendance.record:write"
 CASE_APPROVED = "Approved"
 
