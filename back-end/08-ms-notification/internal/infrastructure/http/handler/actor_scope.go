@@ -13,13 +13,18 @@ import (
 )
 
 // Actor scope of the caller, same rule as the Java services (05-attendance
-// CallerScopeResolver): admins see every alert (nil scope); everyone else sees
-// the alerts of their own academic actors plus, for instructors, the active
-// students of the cohorts they teach. Cached 60 s per user.
+// CallerScopeResolver): Super Administrador sees every alert (nil scope, no
+// school of its own); Administrador sees only the alerts of actors in its own
+// school; everyone else sees the alerts of their own academic actors plus,
+// for instructors, the active students of the cohorts they teach. Cached 60 s
+// per user.
 
 const actorScopeKey = "actorScope"
 
-var adminRoles = map[string]bool{"Administrador": true, "Super Administrador": true}
+const (
+	superAdminRole  = "Super Administrador"
+	schoolAdminRole = "Administrador"
+)
 
 type cachedScope struct {
 	actors    map[int64]bool
@@ -39,10 +44,18 @@ func resolveActorScope(ctx context.Context, cfg AuthConfig, userID, token string
 	if _, err := getJSONStrict(ctx, cfg, cfg.AuthorizationURL+"/api/v1/users/"+url.PathEscape(userID)+"/roles", token, &roles); err != nil {
 		return nil, err
 	}
+	isSuperAdmin := false
+	isSchoolAdmin := false
 	for _, r := range roles {
-		if adminRoles[r.RoleName] {
-			return nil, nil
+		switch r.RoleName {
+		case superAdminRole:
+			isSuperAdmin = true
+		case schoolAdminRole:
+			isSchoolAdmin = true
 		}
+	}
+	if isSuperAdmin {
+		return nil, nil
 	}
 	if hit, ok := scopeCache.Load(userID); ok && hit.(cachedScope).expiresAt.After(time.Now()) {
 		return hit.(cachedScope).actors, nil
@@ -57,6 +70,7 @@ func resolveActorScope(ctx context.Context, cfg AuthConfig, userID, token string
 	var actors []struct {
 		AcademicActorID int64  `json:"academicActorId"`
 		PersonID        string `json:"personId"`
+		SchoolID        *int64 `json:"schoolId"`
 	}
 	if _, err := getJSONStrict(ctx, cfg, cfg.AcademicURL+"/api/v1/academic-actors?limit=2000", token, &actors); err != nil {
 		return nil, err
@@ -69,6 +83,32 @@ func resolveActorScope(ctx context.Context, cfg AuthConfig, userID, token string
 			own = append(own, a.AcademicActorID)
 		}
 	}
+
+	if isSchoolAdmin {
+		// Administrador de sede: solo los actores de su propia sede, nunca los
+		// de otras instituciones (a diferencia de Super Administrador = nil).
+		ownSchools := map[int64]bool{}
+		for _, a := range actors {
+			if scope[a.AcademicActorID] && a.SchoolID != nil {
+				ownSchools[*a.SchoolID] = true
+			}
+		}
+		adminScope := map[int64]bool{}
+		if len(ownSchools) > 0 {
+			for _, a := range actors {
+				if a.SchoolID != nil && ownSchools[*a.SchoolID] {
+					adminScope[a.AcademicActorID] = true
+				}
+			}
+		} else {
+			// Sin sede propia (no debería ocurrir para un Administrador): falla
+			// seguro, solo sus propios actores en vez de caer a "ver todo".
+			adminScope = scope
+		}
+		scopeCache.Store(userID, cachedScope{actors: adminScope, expiresAt: time.Now().Add(time.Minute)})
+		return adminScope, nil
+	}
+
 	for _, actorID := range own {
 		var blocks []struct {
 			CohortID int64 `json:"cohortId"`
