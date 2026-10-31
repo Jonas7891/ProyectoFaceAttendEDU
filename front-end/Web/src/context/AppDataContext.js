@@ -63,6 +63,7 @@ import { getConfiguredAcademicPeriodType } from "../core/constants/academicPerio
 import { getStudentPeriodFromData } from "../core/utils/studentPeriodCalculator";
 import { onInstitutionConfigChange } from "../core/config/institutionConfig";
 import { hasSuperAdminRole } from "../core/utils/backendRoles";
+import { flagsFromSummary, withBiometricFlags } from "../core/utils/biometricFlags";
 
 // ── Filas de personal (docentes / administradores) ─────────
 // Los usuarios vienen de la API con role admin|teacher|student;
@@ -314,25 +315,8 @@ export function AppDataProvider({ children }) {
         // Las filas nacen con hasFacial/hasFingerprint en false; lo registrado vive en
         // ms-biometric, así que sin esto la lista vuelve a "Pendiente" al recargar.
         // Si el rol no puede consultarlo (403) o falla, las filas quedan como están.
-        const biometricFlags = biometricCaptureApi
-            .summaryAll()
-            .then((r) => ({
-                face: new Set((r?.face_person_ids ?? []).map(String)),
-                fingerprint: new Set((r?.fingerprint_person_ids ?? []).map(String)),
-            }))
-            .catch(() => null);
-        const withBiometrics = (rows, flags) =>
-            !flags
-                ? rows
-                : rows.map((row) =>
-                      row.personId == null
-                          ? row
-                          : {
-                                ...row,
-                                hasFacial: flags.face.has(String(row.personId)),
-                                hasFingerprint: flags.fingerprint.has(String(row.personId)),
-                            }
-                  );
+        const biometricFlags = biometricCaptureApi.summaryAll().then(flagsFromSummary).catch(() => null);
+        const withBiometrics = withBiometricFlags;
 
         void Promise.allSettled([
             canListUsers ? loadUsers({ includeUnassigned: hasSuperAdminRole(user?.roles) }) : Promise.resolve([]),
@@ -424,7 +408,13 @@ export function AppDataProvider({ children }) {
     // la fila real no aparece hasta esto, porque no hay espejo local que
     // la muestre de inmediato.
     const reloadStudentsFn = useCallback(async () => {
-        const fresh = await loadStudents();
+        // Los indicadores de biometría también se aplican aquí: sin ellos la recarga dejaría a todos los
+        // estudiantes en "Pendiente" hasta recargar la página.
+        const [loaded, flags] = await Promise.all([
+            loadStudents(),
+            biometricCaptureApi.summaryAll().then(flagsFromSummary).catch(() => null),
+        ]);
+        const fresh = withBiometricFlags(loaded, flags);
         setStudents(fresh);
         startProgressiveUserLoading(fresh, courses, users);
     }, [courses, users, startProgressiveUserLoading]);
