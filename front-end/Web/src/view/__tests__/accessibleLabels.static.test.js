@@ -1,3 +1,4 @@
+/* global __dirname, test, expect */
 // AUD-18: todo control táctil sin texto visible (icono solo) debe llevar accessibilityLabel.
 // Recorre el código de src/view con el parser de Babel, sin renderizar.
 const fs = require("fs");
