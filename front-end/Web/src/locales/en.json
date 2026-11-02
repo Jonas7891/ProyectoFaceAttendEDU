@@ -1973,5 +1973,11 @@
   "Carga la autorización firmada del acudiente desde el detalle del estudiante antes de capturar su biometría.": "Upload the guardian's signed authorization from the student detail before capturing their biometrics.",
   "Los términos de un menor los registra el administrador de la sede con el acudiente presente, desde el detalle del estudiante.": "A minor's terms are recorded by the campus administrator with the guardian present, from the student detail.",
   "Registro previo pendiente": "Prior registration pending",
-  "Verificar de nuevo": "Check again"
+  "Verificar de nuevo": "Check again",
+  "Eliminar horario": "Delete schedule",
+  "Eliminar ambiente": "Delete room",
+  "Se eliminará el horario del ambiente. ¿Continuar?": "The schedule will be removed from the room. Continue?",
+  "Se eliminará el ambiente. ¿Continuar?": "The room will be deleted. Continue?",
+  "No se puede eliminar un ambiente que tiene horarios asignados": "A room that has assigned schedules cannot be deleted",
+  "No se puede eliminar el horario porque tiene sesiones asociadas": "The schedule cannot be deleted because it has associated sessions"
 }
