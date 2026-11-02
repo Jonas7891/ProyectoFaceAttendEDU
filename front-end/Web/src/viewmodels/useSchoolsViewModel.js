@@ -15,6 +15,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../context/AppDataContext";
+import { averageAttendance } from "../models/data/userDerivedData";
 import { useRolePermissions } from "./useRolePermissions";
 import { academicApi } from "../services/api";
 import { isValidEmail, isValidPhone, normalizePhone } from "../core/utils/validation";
@@ -106,8 +107,12 @@ export function useSchoolsViewModel() {
                 { total: 0, active: 0, atRisk: 0, attendanceSum: 0 };
             entry.total += 1;
             if (s.status === "active") entry.active += 1;
-            if (s.attendance < ATTENDANCE_THRESHOLD) entry.atRisk += 1;
-            entry.attendanceSum += s.attendance || 0;
+            // Solo cuentan los alumnos con registros (attendance null = sin datos).
+            if (Number.isFinite(s.attendance)) {
+                if (s.attendance < ATTENDANCE_THRESHOLD) entry.atRisk += 1;
+                entry.attendanceSum += s.attendance;
+                entry.rated = (entry.rated ?? 0) + 1;
+            }
             bySchool.set(key, entry);
         }
         return { bySchool, unassigned };
@@ -126,8 +131,8 @@ export function useSchoolsViewModel() {
                     active: entry?.active ?? 0,
                     atRisk: entry?.atRisk ?? 0,
                     avgAttendance:
-                        entry && entry.total
-                            ? Math.round(entry.attendanceSum / entry.total)
+                        entry && entry.rated
+                            ? Math.round(entry.attendanceSum / entry.rated)
                             : null,
                 };
             }),
@@ -148,12 +153,7 @@ export function useSchoolsViewModel() {
     const stats = useMemo(() => {
         const activeSchools = schoolRows.filter((s) => s.status).length;
         const withAttendance = students.filter((s) => s.status === "active");
-        const avgAttendance = withAttendance.length
-            ? Math.round(
-                  withAttendance.reduce((sum, s) => sum + (s.attendance || 0), 0) /
-                      withAttendance.length
-              )
-            : 0;
+        const avgAttendance = averageAttendance(withAttendance) ?? 0;
         return { total: schoolRows.length, activeSchools, avgAttendance };
     }, [schoolRows, students]);
 

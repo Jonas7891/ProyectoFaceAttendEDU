@@ -7,7 +7,7 @@
 //  - section="historicos": Historial completo de asistencias
 // ============================================================
 
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo } from "react";
 import { View, ScrollView, Text, TouchableOpacity, Animated } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { PageHeader, IconButton, Card, Loader, EmptyState } from "../../components/common";
@@ -16,9 +16,9 @@ import { useTheme } from "../../components/hooks/useTheme";
 import { getTextOnColor } from "../../../core/theme/generateTheme";
 import { useResponsive } from "../../components/hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
-import { useRolePermissions } from "../../../viewmodels/useRolePermissions";
 import { useAttendanceColor } from "../../components/common/badges/StatusBadge";
-import { getAtRiskStudents } from "../../../models/data/userDerivedData";
+import { getAtRiskStudents, studentsInTeacherScope } from "../../../models/data/userDerivedData";
+import { useAuth } from "../../../context/AuthContext";
 import { getInstitutionConfig } from "../../../core/config/institutionConfig";
 import { useAppData } from "../../../context/AppDataContext";
 import { HistoricosSection } from "./sections";
@@ -168,18 +168,22 @@ export function AdminReports({ section, courseFilter }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
     const appData = useAppData();
+    const { user } = useAuth();
     const c = theme.colors;
 
     // Estado y animación para el botón de recargar
     const [isReloading, setIsReloading] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
-    const rotateAnim = useRef(new Animated.Value(0)).current;
-    
+    const [rotateAnim] = useState(() => new Animated.Value(0));
+
     // Crear interpolación una sola vez
-    const rotateInterpolation = rotateAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['0deg', '360deg']
-    });
+    const rotateInterpolation = useMemo(
+        () => rotateAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['0deg', '360deg']
+        }),
+        [rotateAnim]
+    );
 
     // ── IMPORTANTE: Todos los hooks deben estar ANTES de cualquier return early ──
     
@@ -190,7 +194,13 @@ export function AdminReports({ section, courseFilter }) {
     // Lógica de estudiantes en riesgo (se calcula siempre para respetar reglas de hooks)
     const studentsData = useMemo(() => {
         const config = getInstitutionConfig();
-        const atRiskStudents = getAtRiskStudents(appData.students, config.minAttendance);
+        // El instructor solo ve riesgo de sus alumnos (matriculados en sus cursos);
+        // el administrador, toda la sede.
+        const scopedStudents =
+            user?.role === "teacher"
+                ? studentsInTeacherScope(appData.students, appData.courses, user.academicActorId)
+                : appData.students;
+        const atRiskStudents = getAtRiskStudents(scopedStudents, config.minAttendance);
         
         const pendingStudents = atRiskStudents;
         
@@ -223,7 +233,7 @@ export function AdminReports({ section, courseFilter }) {
             isLoading: appData.isLoading,
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [appData.students, appData.isLoading, refreshTrigger]); // refreshTrigger fuerza recálculo
+    }, [appData.students, appData.courses, appData.isLoading, user, refreshTrigger]); // refreshTrigger fuerza recálculo
 
     // ── Handlers (ANTES de cualquier return) ──────────────
     
@@ -431,9 +441,6 @@ export function AdminReports({ section, courseFilter }) {
                             </Animated.View>
                         )}
                     />
-                }
-            />
-                    )
                 }
             />
 

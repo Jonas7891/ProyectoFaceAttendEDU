@@ -255,7 +255,7 @@ function UserCompactRow({ user, onPress, isLast, compactConfig, renderContext, u
                     </View>
                     <View style={{ alignItems: "flex-end", gap: 4 }}>
                         <Text style={{ fontSize: 12, fontWeight: "700", color: attColor }}>
-                            {user.attendance || 0}%
+                            {user.attendance == null ? "—" : `${user.attendance}%`}
                         </Text>
                     </View>
                 </>

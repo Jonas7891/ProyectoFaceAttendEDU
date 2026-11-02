@@ -36,7 +36,11 @@ function StudentRow({ student, isLast, onPress, c }) {
             marker={<Text style={{ fontSize: 10 }}>{isPerfect ? "⭐" : "✓"}</Text>}
             badgeVariant={isExcellent ? "success" : "warning"}
             subtitle={student.fichaName}
-            stats={<StudentStat icon="trending-up" color={attColor} c={c}>{student.streak}</StudentStat>}
+            stats={
+                student.streak ? (
+                    <StudentStat icon="trending-up" color={attColor} c={c}>{student.streak}</StudentStat>
+                ) : null
+            }
         />
     );
 }

@@ -119,13 +119,13 @@ function FichaRow({ ficha, index, mode, totalFichas, isLast, onPress, c, t }) {
                     color: barColor,
                     marginLeft: 8,
                 }}>
-                    {ficha.avgAttendance.toFixed(1)}%
+                    {ficha.avgAttendance == null ? t("Sin datos") : `${ficha.avgAttendance.toFixed(1)}%`}
                 </Text>
             </View>
 
             {/* Barra de progreso con color dinámico */}
             <ProgressBar
-                value={ficha.avgAttendance}
+                value={ficha.avgAttendance ?? 0}
                 color={barColor}
                 size="md"
             />
@@ -188,9 +188,13 @@ export function TopPerformingGroups({
     const c = theme.colors;
 
     // Ordenar fichas según el modo
+    // Los cursos sin promedio (sin registros) van siempre al final.
     const sortedFichas = [...fichas].sort((a, b) => {
-        return mode === "top" 
-            ? b.avgAttendance - a.avgAttendance 
+        const aMissing = a.avgAttendance == null;
+        const bMissing = b.avgAttendance == null;
+        if (aMissing || bMissing) return Number(aMissing) - Number(bMissing);
+        return mode === "top"
+            ? b.avgAttendance - a.avgAttendance
             : a.avgAttendance - b.avgAttendance;
     });
 
