@@ -15,8 +15,8 @@ import { Alert, BaseModal, Button } from "../common";
 import { FaceModule, FingerprintModule } from "../biometrics";
 import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
-import { useBiometricsViewModel } from "../../../viewmodels/useBiometricsViewModel";
-import BiometricConsentPrompt from "../privacy/BiometricConsentPrompt";
+import { useBiometricsViewModel, useClearErrorStatusOnChange } from "../../../viewmodels/useBiometricsViewModel";
+import BiometricConsentPrompt, { useCanRecordBiometricConsent } from "../privacy/BiometricConsentPrompt";
 import TermsPendingNotice from "../privacy/TermsPendingNotice";
 
 const STATUS_ALERT_TYPE = { info: "info", ok: "success", error: "error" };
@@ -27,12 +27,14 @@ function EnrollmentBody({ person, wantFace, wantFingerprint, onClose, onFinished
     const c = theme.colors;
     const vm = useBiometricsViewModel();
     const { setPerson } = vm;
+    const canRecordConsent = useCanRecordBiometricConsent();
 
     const sections = [
         ...(wantFace ? [{ id: "face", label: t("Rostro"), icon: "user-check" }] : []),
         ...(wantFingerprint ? [{ id: "fingerprint", label: t("Huella dactilar"), icon: "target" }] : []),
     ];
     const [section, setSection] = useState(sections[0]?.id);
+    useClearErrorStatusOnChange(section, vm);
 
     useEffect(() => {
         setPerson({ personId: person.personId, name: person.name });
@@ -119,7 +121,7 @@ function EnrollmentBody({ person, wantFace, wantFingerprint, onClose, onFinished
                     />
                 )}
                 {!vm.termsPending && vm.biometricAuthorized === false && (
-                    <BiometricConsentPrompt personName={person.name} onAuthorize={vm.authorizeBiometrics} busy={vm.busy} />
+                    <BiometricConsentPrompt personName={person.name} onAuthorize={vm.authorizeBiometrics} busy={vm.busy} canRegister={canRecordConsent} />
                 )}
                 {!vm.termsPending && vm.biometricAuthorized === true && section === "face" && (
                     <FaceModule vm={vm} mode="register" />

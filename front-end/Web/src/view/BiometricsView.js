@@ -17,7 +17,7 @@ import { View, ScrollView, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { PageHeader, Card, Alert, Button, Badge } from "./components/common";
 import { FaceModule, FingerprintModule, BiometricDirectory, PersonAutocomplete } from "./components/biometrics";
-import BiometricConsentPrompt from "./components/privacy/BiometricConsentPrompt";
+import BiometricConsentPrompt, { useCanRecordBiometricConsent } from "./components/privacy/BiometricConsentPrompt";
 import TermsPendingNotice from "./components/privacy/TermsPendingNotice";
 import { useTheme } from "./components/hooks/useTheme";
 import { useResponsive } from "./components/hooks/useResponsive";
@@ -25,6 +25,7 @@ import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { DESIGN_TOKENS } from "../core/config/theme.config";
 import {
     useBiometricsViewModel,
+    useClearErrorStatusOnChange,
     normalizeBiometricSection,
 } from "../viewmodels/useBiometricsViewModel";
 
@@ -90,7 +91,9 @@ export default function BiometricsView({ section: sectionParam, onSectionChange 
     const { t } = useTranslation();
     const c = theme.colors;
     const vm = useBiometricsViewModel();
+    const canRecordConsent = useCanRecordBiometricConsent();
     const section = normalizeBiometricSection(sectionParam);
+    useClearErrorStatusOnChange(section, vm);
 
     const tabs = [
         { key: "face-register", label: t("Registro facial"), icon: "user-plus" },
@@ -210,6 +213,7 @@ export default function BiometricsView({ section: sectionParam, onSectionChange 
                                         personName={vm.person.name}
                                         onAuthorize={vm.authorizeBiometrics}
                                         busy={vm.busy}
+                                        canRegister={canRecordConsent}
                                     />
                                 ) : section === "fingerprint" ? (
                                     <FingerprintModule vm={vm} />
