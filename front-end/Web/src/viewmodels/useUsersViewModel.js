@@ -813,10 +813,11 @@ export function useUsersViewModel(
         [patchStatusLocally, resolveUserId]
     );
 
-    // Eliminar lógico (HU-IAM-008, AUD-74): desactiva y luego DELETE del actor
-    // académico (borrado lógico del servidor: llena deleted_at/deleted_by).
-    // identity no expone DELETE de usuario/persona, así que la cuenta solo queda
-    // inactiva; un administrador sin actor solo puede desactivarse.
+    // Eliminar lógico (HU-IAM-008, AUD-74): desactiva, DELETE del actor académico y
+    // DELETE /users/{id} de identity (borrado lógico del servidor: llena
+    // deleted_at/deleted_by, cierra sus sesiones y retira sus roles). El actor va
+    // antes: si academic lo rechaza (p. ej. matrículas) la cuenta no se toca.
+    // La persona (identity.person) solo queda inactiva: su documento sigue ocupado.
     const removeUser = useCallback(
         async (target) => {
             const err = await toggleUserStatus(target, false);
@@ -828,12 +829,22 @@ export function useUsersViewModel(
                 } catch (e) {
                     return `Se desactivó, pero no se pudo eliminar: ${e?.message || "error del servidor"}`;
                 }
+            }
+            const userId = await resolveUserId(target);
+            if (userId) {
+                try {
+                    await authApi.deleteUser(userId);
+                } catch (e) {
+                    return `Se desactivó, pero no se pudo eliminar la cuenta: ${e?.message || "error del servidor"}`;
+                }
+            }
+            if (actorId != null || userId) {
                 try { await appData.reloadUsers?.(); } catch { /* la lista se refresca al recargar */ }
             }
             if (selected?.id === target?.id) setSelected(null);
             return null;
         },
-        [toggleUserStatus, selected, appData]
+        [toggleUserStatus, resolveUserId, selected, appData]
     );
 
     // Acción en lote (activate | deactivate | delete) sobre varios usuarios:
