@@ -179,7 +179,7 @@ export function TeacherCourses({ vm: vmProp }) {
     const statCards = [
         { label: t("Mis cursos"), value: vm.myStats.total, color: c.brand.primary, icon: "book-open" },
         { label: t("Mis estudiantes"), value: vm.myStats.totalStudents, color: c.status.success, icon: "users" },
-        { label: t("Asistencia prom."), value: `${vm.myStats.avgAttendance}%`, color: c.brand.primary, icon: "percent" },
+        { label: t("Asistencia prom."), value: vm.myStats.avgAttendance == null ? t("Sin datos") : `${vm.myStats.avgAttendance}%`, color: c.brand.primary, icon: "percent" },
         { label: t("Con alerta"), value: vm.myStats.alertCount, color: c.status.warning, icon: "alert-triangle" },
     ];
 

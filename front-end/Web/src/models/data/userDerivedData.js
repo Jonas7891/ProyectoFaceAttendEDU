@@ -28,6 +28,21 @@ export function getAttendanceThresholds() {
 }
 
 /**
+ * Promedio de asistencia de un grupo, solo con los alumnos que tienen registros
+ * (attendance numérico). Si ninguno tiene registros devuelve null ("Sin datos"):
+ * un alumno sin registros no cuenta como 0 % ni arrastra el promedio.
+ * @param {Array} students
+ * @returns {number|null}
+ */
+export function averageAttendance(students) {
+    const rates = (students || [])
+        .map((student) => student?.attendance)
+        .filter((rate) => Number.isFinite(rate));
+    if (rates.length === 0) return null;
+    return Math.round(rates.reduce((sum, rate) => sum + rate, 0) / rates.length);
+}
+
+/**
  * Calcula la lista de estudiantes en riesgo desde la lista de estudiantes
  * USA CONFIGURACIÓN DINÁMICA Y DATOS TEMPORALES REALES
  * 

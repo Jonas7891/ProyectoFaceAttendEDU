@@ -1,6 +1,6 @@
 // AUD-36 / AUD-46: Dashboard y Reportes inventaban "45 faltas", "45 días" y marcaban "en riesgo"
 // a alumnos sin ningún registro de asistencia. Aquí solo cuentan los datos reales del alumno.
-import { getAtRiskStudents, getPerfectAttendanceStudents } from "../userDerivedData";
+import { averageAttendance, getAtRiskStudents, getPerfectAttendanceStudents } from "../userDerivedData";
 
 const student = (id, extra) => ({
     id: String(id),
@@ -31,6 +31,17 @@ describe("getAtRiskStudents", () => {
         const [row] = getAtRiskStudents([student(3, { attendance: 50 })], 80);
         expect(row.totalAbsences).toBeNull();
         expect(row.lateCount).toBeNull();
+    });
+});
+
+describe("averageAttendance", () => {
+    it("promedia solo a quienes tienen registros", () => {
+        expect(averageAttendance([{ attendance: 100 }, { attendance: null }, { attendance: 50 }])).toBe(75);
+    });
+
+    it("sin ningún alumno con registros devuelve null, no 0", () => {
+        expect(averageAttendance([{ attendance: null }, {}])).toBeNull();
+        expect(averageAttendance([])).toBeNull();
     });
 });
 

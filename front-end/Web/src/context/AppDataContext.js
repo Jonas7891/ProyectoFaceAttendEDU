@@ -73,7 +73,7 @@ function toStaffRow(user) {
     return {
         ...user,
         grade: user.role === "admin" ? "Administrador" : "Docente",
-        attendance: 0, // pendiente de la fase de consulta
+        attendance: null, // el personal no tiene % de asistencia: "—", no 0
         hasFacial: false,
         hasFingerprint: false,
     };
@@ -400,18 +400,22 @@ export function AppDataProvider({ children }) {
             const key = course ? String(course.id) : s.course;
 
             if (!map.has(key)) {
-                map.set(key, { attendance: [], active: 0, code: course?.code ?? s.course, name: course?.name ?? s.course });
+                map.set(key, { attendance: [], count: 0, active: 0, code: course?.code ?? s.course, name: course?.name ?? s.course });
             }
             const entry = map.get(key);
-            entry.attendance.push(s.attendance);
+            // Solo alumnos con registros: null no es 0 % y no baja el promedio.
+            if (Number.isFinite(s.attendance)) entry.attendance.push(s.attendance);
+            entry.count += 1;
             if (s.status === "active") entry.active += 1;
         }
         return Array.from(map.values())
-            .map(({ attendance, active, code, name }) => ({
+            .map(({ attendance, count, active, code, name }) => ({
                 name,
                 code, // Incluir el código del curso
-                studentCount: attendance.length,
-                avgAttendance: Math.round(attendance.reduce((a, b) => a + b, 0) / attendance.length),
+                studentCount: count,
+                avgAttendance: attendance.length
+                    ? Math.round(attendance.reduce((a, b) => a + b, 0) / attendance.length)
+                    : null,
                 activeCount: active,
             }))
             .sort((a, b) => a.name.localeCompare(b.name));

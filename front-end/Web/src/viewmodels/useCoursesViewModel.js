@@ -13,7 +13,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
-import { getAttendanceThresholds, getAtRiskStudents } from "../models/data/userDerivedData";
+import { averageAttendance, getAttendanceThresholds, getAtRiskStudents } from "../models/data/userDerivedData";
 import { useAuth } from "../context/AuthContext";
 import { createCourse, updateCourse, deleteCourse as deleteCourseApi, importCourses as bulkImportCourses } from "../services/api/courseCreation";
 
@@ -314,7 +314,7 @@ export function useCoursesViewModel() {
         // duplica cuando dos cursos comparten la misma ficha.
         const mine = new Set(myCourseIds.map(String));
         const seen = new Set();
-        let attSum = 0;
+        const counted = [];
         for (const s of appData.students || []) {
             const ids = Array.isArray(s.courseIds) ? s.courseIds.map(String) : [];
             const match = ids.length
@@ -324,14 +324,22 @@ export function useCoursesViewModel() {
             const key = s.personId ?? s.id;
             if (seen.has(key)) continue;
             seen.add(key);
-            attSum += s.attendance || 0;
+            counted.push(s);
         }
         const totalStudents = seen.size;
-        const avgAttendance =
-            totalStudents === 0 ? 0 : Math.round(attSum / totalStudents);
-        const alertCount = myCourses.filter((x) => (x.avgAttendance || 0) < 80).length;
+        // El alumno ve SU asistencia (no la de sus compañeros de ficha); el
+        // instructor, el promedio de los alumnos que tienen registros. Sin
+        // registros: null ("Sin datos"), nunca 0.
+        const own =
+            user?.role === "student"
+                ? counted.filter((s) => s.personId && s.personId === user.personId)
+                : counted;
+        const avgAttendance = averageAttendance(own);
+        const alertCount = myCourses.filter(
+            (x) => Number.isFinite(x.avgAttendance) && x.avgAttendance > 0 && x.avgAttendance < 80
+        ).length;
         return { total: myCourses.length, totalStudents, avgAttendance, alertCount };
-    }, [myCourses, myCourseIds, appData.students]);
+    }, [myCourses, myCourseIds, appData.students, user]);
 
     // ── Estadísticas derivadas ─────────────────────────────────
     
@@ -359,13 +367,7 @@ export function useCoursesViewModel() {
             courseCodes.has(student.course)
         );
         
-        if (courseStudents.length === 0) return 0;
-        
-        const totalAttendance = courseStudents.reduce((sum, student) => 
-            sum + (student.attendance || 0), 0
-        );
-        
-        return Math.round(totalAttendance / courseStudents.length);
+        return averageAttendance(courseStudents) ?? 0;
     }, [courses, appData.students]);
 
     const alertCount = useMemo(() => {
