@@ -1973,5 +1973,11 @@
   "Carga la autorización firmada del acudiente desde el detalle del estudiante antes de capturar su biometría.": "Téléversez l'autorisation signée du tuteur depuis le détail de l'étudiant avant de capturer sa biométrie.",
   "Los términos de un menor los registra el administrador de la sede con el acudiente presente, desde el detalle del estudiante.": "Les conditions d'un mineur sont enregistrées par l'administrateur du site en présence du tuteur, depuis le détail de l'étudiant.",
   "Registro previo pendiente": "Inscription préalable en attente",
-  "Verificar de nuevo": "Vérifier à nouveau"
+  "Verificar de nuevo": "Vérifier à nouveau",
+  "Eliminar horario": "Supprimer l'horaire",
+  "Eliminar ambiente": "Supprimer l'environnement",
+  "Se eliminará el horario del ambiente. ¿Continuar?": "L'horaire sera retiré de l'environnement. Continuer ?",
+  "Se eliminará el ambiente. ¿Continuar?": "L'environnement sera supprimé. Continuer ?",
+  "No se puede eliminar un ambiente que tiene horarios asignados": "Impossible de supprimer un environnement qui a des horaires attribués",
+  "No se puede eliminar el horario porque tiene sesiones asociadas": "Impossible de supprimer l'horaire car il a des séances associées"
 }
