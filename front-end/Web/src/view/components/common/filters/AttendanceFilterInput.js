@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Animated } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 import { AnimatedDropdown } from "../animation";
 
@@ -30,6 +31,7 @@ export function AttendanceFilterInput({
     style,
 }) {
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const c = theme.colors;
     
     const [inputValue, setInputValue] = useState("");
@@ -186,7 +188,11 @@ export function AttendanceFilterInput({
                             ]}
                             placeholderTextColor={c.text.secondary}
                         />
-                        <TouchableOpacity onPress={() => handleToggle(true)}>
+                        <TouchableOpacity
+                            onPress={() => handleToggle(true)}
+                            accessibilityRole="button"
+                            accessibilityLabel={t("Mostrar opciones")}
+                        >
                             <Animated.View
                                 style={{
                                     transform: [

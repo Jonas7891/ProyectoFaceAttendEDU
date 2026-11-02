@@ -62,6 +62,7 @@ export function ExportConfigModal({ visible, onClose, onExport, selectedCount })
             <TouchableOpacity
                 activeOpacity={1}
                 onPress={onClose}
+                accessibilityLabel={t("Cerrar")}
                 style={{
                     flex: 1,
                     backgroundColor: "rgba(0, 0, 0, 0.5)",
@@ -114,6 +115,8 @@ export function ExportConfigModal({ visible, onClose, onExport, selectedCount })
                             </View>
                             <TouchableOpacity
                                 onPress={onClose}
+                                accessibilityRole="button"
+                                accessibilityLabel={t("Cerrar")}
                                 style={{
                                     width: 32,
                                     height: 32,

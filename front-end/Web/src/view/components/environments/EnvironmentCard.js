@@ -67,7 +67,11 @@ export function EnvironmentCard({ environment, onPress, cohortCodeOf }) {
     };
 
     return (
-        <TouchableOpacity onPress={onPress} style={{ flex: 1, minWidth: 260 }}>
+        <TouchableOpacity
+            onPress={onPress}
+            style={{ flex: 1, minWidth: 260 }}
+            accessibilityLabel={t("Ver detalle de {{name}}", { name: environment.name || environment.number })}
+        >
             <Card padding={0} style={{ overflow: "hidden", height: "100%" }}>
                 {/* Accent bar */}
                 <View style={{ height: 6, backgroundColor: c.brand.primary }} />

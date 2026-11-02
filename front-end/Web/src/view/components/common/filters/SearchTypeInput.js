@@ -145,6 +145,8 @@ export function SearchTypeInput({
                     {/* Chevron para abrir dropdown */}
                     <TouchableOpacity 
                         onPress={() => handleToggle(true)}
+                        accessibilityRole="button"
+                        accessibilityLabel={t("Mostrar opciones")}
                         style={{ paddingRight: 4 }}
                     >
                         <Animated.View

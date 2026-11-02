@@ -91,6 +91,8 @@ export function PasswordPolicyModal({ visible, onClose, onResetPassword }) {
                         </View>
                         <TouchableOpacity
                             onPress={onClose}
+                            accessibilityRole="button"
+                            accessibilityLabel={t("Cerrar")}
                             style={{
                                 padding: 4,
                             }}

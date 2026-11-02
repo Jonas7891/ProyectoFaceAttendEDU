@@ -152,6 +152,7 @@ export default function StudentDetailModal({
                     padding: 24,
                 }}
                 onPress={onClose}
+                accessibilityLabel={t("Cerrar")}
                 activeOpacity={1}
             >
                 <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
@@ -192,7 +193,11 @@ export default function StudentDetailModal({
                                     </Badge>
                                 </View>
                             </View>
-                            <TouchableOpacity onPress={onClose}>
+                            <TouchableOpacity
+                                onPress={onClose}
+                                accessibilityRole="button"
+                                accessibilityLabel={t("Cerrar")}
+                            >
                                 <Feather name="x" size={18} color={c.text.secondary} />
                             </TouchableOpacity>
                         </View>

@@ -24,7 +24,7 @@ export function AuthFooterLink({ prompt, linkLabel, onPress }) {
             <Text style={{ fontSize: 14, color: c.text.secondary }}>
                 {prompt}
             </Text>
-            <TouchableOpacity onPress={onPress}>
+            <TouchableOpacity onPress={onPress} accessibilityRole="button">
                 <Text style={{
                     fontSize: 14,
                     color: c.brand.primary,
