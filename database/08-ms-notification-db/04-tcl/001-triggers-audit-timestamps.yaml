@@ -84,3 +84,22 @@ databaseChangeLog:
       rollback:
         - sql:
             sql: DROP TRIGGER IF EXISTS trg_notification_log_audit_timestamps ON notification.notification_log;
+
+  - changeSet:
+      id: notif-009-create-trigger-device-token
+      author: Andres Gutierrez
+      comment: >-
+        AUD-33: device_token now has row_version (notif-008), so it gets the same audit trigger as the other
+        notification tables. The service keeps writing created_at/updated_at; the trigger overrides updated_at
+        and bumps row_version on every UPDATE. Idempotent (DROP IF EXISTS before CREATE).
+      changes:
+        - sql:
+            sql: |
+              DROP TRIGGER IF EXISTS trg_device_token_audit_timestamps ON notification.device_token;
+              CREATE TRIGGER trg_device_token_audit_timestamps
+              BEFORE INSERT OR UPDATE ON notification.device_token
+              FOR EACH ROW
+              EXECUTE FUNCTION notification.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_device_token_audit_timestamps ON notification.device_token;
