@@ -16,12 +16,16 @@ const P_ADMIN1 = '11111111-1111-4111-8111-111111111111';
 const P_ADMIN2 = '22222222-2222-4222-8222-222222222222';
 const P_STUDENT1 = '33333333-3333-4333-8333-333333333333';
 const P_STUDENT2 = '44444444-4444-4444-8444-444444444444';
+const P_TEACHER1 = '66666666-6666-4666-8666-666666666666';
+const P_STUDENT3 = '77777777-7777-4777-8777-777777777777';
 
 const USERS: Record<string, { roles: string[]; personId?: string }> = {
   super: { roles: ['Super Administrador'] },
   admin1: { roles: ['Administrador'], personId: P_ADMIN1 },
   admin2: { roles: ['Administrador'], personId: P_ADMIN2 },
   orphan: { roles: ['Aprendiz'] },
+  student1: { roles: ['Aprendiz'], personId: P_STUDENT1 },
+  teacher1: { roles: ['Instructor'], personId: P_TEACHER1 },
 };
 
 let app: FastifyInstance;
@@ -457,5 +461,71 @@ describe('enrollments', () => {
     expect((await call('admin1', 'PUT', `/api/v1/enrollments/${ids.e1}`, { enrolledOn: '2026-02-01', cohortId: ids.c1, academicActorId: ids.st1 })).json().enrolledOn).toBe('2026-02-01');
     expect((await call('admin1', 'DELETE', `/api/v1/enrollments/${ids.e2}`)).statusCode).toBe(404);
     expect((await call('admin1', 'DELETE', '/api/v1/enrollments/999')).statusCode).toBe(404);
+  });
+});
+
+describe('student scope (AUD-53): an Aprendiz only reads its own actor and enrollments', () => {
+  let st3: number;
+  let teacher: number;
+  let e3: number;
+
+  beforeEach(async () => {
+    // A classmate of student1 in the same cohort and school, plus an instructor.
+    st3 = (await repos.actors.create({ personId: P_STUDENT3, actorTypeId: 1, schoolId: ids.s1, actorCode: 'E3', startedOn: '2026-01-01', status: true } as any)).academicActorId;
+    teacher = (await repos.actors.create({ personId: P_TEACHER1, actorTypeId: 2, schoolId: ids.s1, actorCode: 'D1', startedOn: '2026-01-01', status: true } as any)).academicActorId;
+    e3 = (await repos.enrollments.create({ academicActorId: st3, cohortId: ids.c1, enrolledOn: '2026-01-10', enrollmentStatus: 'Active' } as any)).enrollmentId;
+  });
+
+  it('GET /academic-actors returns only the student own actor; the instructor still sees the school', async () => {
+    const own = (await call('student1', 'GET', '/api/v1/academic-actors')).json();
+    expect(own.map((a: any) => a.academicActorId)).toEqual([ids.st1]);
+    const staff = (await call('teacher1', 'GET', '/api/v1/academic-actors')).json();
+    expect(staff).toHaveLength(4);
+    expect(staff.every((a: any) => a.schoolId === ids.s1)).toBe(true);
+    expect(staff.map((a: any) => a.academicActorId)).toEqual(expect.arrayContaining([ids.st1, st3, teacher]));
+  });
+
+  it('?personId= of someone else answers nothing to a student, its own still resolves', async () => {
+    expect((await call('student1', 'GET', `/api/v1/academic-actors?personId=${P_STUDENT3}`)).json()).toEqual([]);
+    expect((await call('student1', 'GET', `/api/v1/academic-actors?personId=${P_STUDENT1}`)).json()).toHaveLength(1);
+  });
+
+  it('GET /schools/:id/actors returns only the student own actor; the instructor sees the school', async () => {
+    const own = (await call('student1', 'GET', `/api/v1/schools/${ids.s1}/actors`)).json();
+    expect(own.map((a: any) => a.academicActorId)).toEqual([ids.st1]);
+    expect((await call('student1', 'GET', `/api/v1/schools/${ids.s1}/actors?limit=5`)).headers['x-total-count']).toBe('1');
+    expect((await call('teacher1', 'GET', `/api/v1/schools/${ids.s1}/actors`)).json()).toHaveLength(4);
+  });
+
+  it('GET /academic-actors/:id hides other actors from a student', async () => {
+    expect((await call('student1', 'GET', `/api/v1/academic-actors/${st3}`)).statusCode).toBe(404);
+    expect((await call('student1', 'GET', `/api/v1/academic-actors/${ids.st1}`)).statusCode).toBe(200);
+    expect((await call('teacher1', 'GET', `/api/v1/academic-actors/${st3}`)).statusCode).toBe(200);
+  });
+
+  it('GET /enrollments returns only the student own enrollments; the instructor sees the school', async () => {
+    const own = (await call('student1', 'GET', '/api/v1/enrollments')).json();
+    expect(own.map((e: any) => e.enrollmentId)).toEqual([ids.e1]);
+    expect((await call('teacher1', 'GET', '/api/v1/enrollments')).json().map((e: any) => e.enrollmentId).sort()).toEqual([ids.e1, e3].sort());
+  });
+
+  it('GET /enrollments honours ?academicActorId= (student: own only; staff: that actor)', async () => {
+    expect((await call('student1', 'GET', `/api/v1/enrollments?academicActorId=${st3}`)).json()).toEqual([]);
+    expect((await call('student1', 'GET', `/api/v1/enrollments?academicActorId=${ids.st1}`)).json()).toHaveLength(1);
+    expect((await call('teacher1', 'GET', `/api/v1/enrollments?academicActorId=${st3}`)).json().map((e: any) => e.enrollmentId)).toEqual([e3]);
+    expect((await call('admin1', 'GET', `/api/v1/enrollments?academicActorId=${ids.st2}`)).json()).toEqual([]);
+    expect((await call('super', 'GET', `/api/v1/enrollments?academicActorId=${ids.st2}`)).json().map((e: any) => e.enrollmentId)).toEqual([ids.e2]);
+  });
+
+  it('GET /cohorts/:id/enrollments returns only the student own enrollment; the instructor sees the cohort', async () => {
+    expect((await call('student1', 'GET', `/api/v1/cohorts/${ids.c1}/enrollments`)).json().map((e: any) => e.enrollmentId)).toEqual([ids.e1]);
+    expect((await call('teacher1', 'GET', `/api/v1/cohorts/${ids.c1}/enrollments`)).json()).toHaveLength(2);
+  });
+
+  it('GET /academic-actors/:id/enrollments and /enrollments/:id refuse another actor to a student', async () => {
+    expect((await call('student1', 'GET', `/api/v1/academic-actors/${st3}/enrollments`)).statusCode).toBe(403);
+    expect((await call('student1', 'GET', `/api/v1/academic-actors/${ids.st1}/enrollments`)).json()).toHaveLength(1);
+    expect((await call('student1', 'GET', `/api/v1/enrollments/${e3}`)).statusCode).toBe(404);
+    expect((await call('student1', 'GET', `/api/v1/enrollments/${ids.e1}`)).statusCode).toBe(200);
   });
 });

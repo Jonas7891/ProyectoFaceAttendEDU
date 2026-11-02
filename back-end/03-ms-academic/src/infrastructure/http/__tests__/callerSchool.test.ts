@@ -31,7 +31,7 @@ describe('createCallerSchoolResolver (03-ms-academic)', () => {
 
     const result = await resolve(reqFor('admin-1'));
 
-    expect(result).toEqual({ isSuperAdmin: true, schoolId: null });
+    expect(result).toEqual({ isSuperAdmin: true, schoolId: null, ownPersonId: null, selfOnly: false });
     expect(repos.actors.findByPerson).not.toHaveBeenCalled();
   });
 
@@ -44,7 +44,16 @@ describe('createCallerSchoolResolver (03-ms-academic)', () => {
 
     const result = await resolve(reqFor('admin-2'));
 
-    expect(result).toEqual({ isSuperAdmin: false, schoolId: 100 });
+    expect(result).toEqual({ isSuperAdmin: false, schoolId: 100, ownPersonId: 'p-1', selfOnly: false });
+  });
+
+  it('marks an Aprendiz (or a caller without a staff role) as selfOnly, staff roles are not', async () => {
+    mockGetJson
+      .mockResolvedValueOnce({ status: 200, body: [{ roleName: 'Aprendiz' }] })
+      .mockResolvedValueOnce({ status: 200, body: { personId: 'p-9' } });
+    const resolve = createCallerSchoolResolver(reposWithActors([{ schoolId: 100, personId: 'p-9' }]));
+
+    expect(await resolve(reqFor('student-1'))).toEqual({ isSuperAdmin: false, schoolId: 100, ownPersonId: 'p-9', selfOnly: true });
   });
 
   it('fails secure (schoolId: null) for a caller without an academic_actor, never "see everything"', async () => {
@@ -56,7 +65,7 @@ describe('createCallerSchoolResolver (03-ms-academic)', () => {
 
     const result = await resolve(reqFor('teacher-1'));
 
-    expect(result).toEqual({ isSuperAdmin: false, schoolId: null });
+    expect(result).toEqual({ isSuperAdmin: false, schoolId: null, ownPersonId: 'p-2', selfOnly: false });
   });
 
   it('caches a positive result within the TTL, so a second call skips the HTTP round-trips', async () => {
@@ -85,8 +94,8 @@ describe('createCallerSchoolResolver (03-ms-academic)', () => {
 
 describe('mayDeleteCourse', () => {
   it('allows only the unrestricted caller', () => {
-    expect(mayDeleteCourse({ isSuperAdmin: true, schoolId: null })).toBe(true);
-    expect(mayDeleteCourse({ isSuperAdmin: false, schoolId: 1 })).toBe(false);
-    expect(mayDeleteCourse({ isSuperAdmin: false, schoolId: null })).toBe(false);
+    expect(mayDeleteCourse({ isSuperAdmin: true, schoolId: null, ownPersonId: null, selfOnly: false })).toBe(true);
+    expect(mayDeleteCourse({ isSuperAdmin: false, schoolId: 1, ownPersonId: 'p', selfOnly: false })).toBe(false);
+    expect(mayDeleteCourse({ isSuperAdmin: false, schoolId: null, ownPersonId: null, selfOnly: false })).toBe(false);
   });
 });
