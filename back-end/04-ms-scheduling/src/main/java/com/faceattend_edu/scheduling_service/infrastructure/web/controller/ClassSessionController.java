@@ -1,6 +1,7 @@
 package com.faceattend_edu.scheduling_service.infrastructure.web.controller;
 
 import com.faceattend_edu.scheduling_service.domain.exception.EntityNotFoundException;
+import com.faceattend_edu.scheduling_service.domain.exception.ValidationException;
 import com.faceattend_edu.scheduling_service.domain.model.ClassSession;
 import com.faceattend_edu.scheduling_service.domain.model.Environment;
 import com.faceattend_edu.scheduling_service.domain.model.ScheduleBlock;
@@ -16,6 +17,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -70,8 +72,10 @@ public class ClassSessionController {
     }
 
     /**
-     * Opening, closing or cancelling a class is its instructor's job (or an administrator
-     * of the school's): another instructor of the same school must not run someone else's class.
+     * Any write on a class session is its instructor's job (or an administrator of the school's):
+     * another instructor of the same school must not create, move, edit, delete, open, close or
+     * cancel someone else's class. Answers 403: requireAccess runs first and already hides the
+     * sessions of other schools behind a 404.
      */
     private void requireRunsClass(ClassSession session) {
         if (!CallerSchoolContext.restricted() || CallerSchoolContext.isSchoolAdmin()) return;
@@ -79,7 +83,21 @@ public class ClassSessionController {
         ScheduleBlock block = session.getScheduleBlockId() == null ? null
                 : getScheduleBlockUseCase.getById(session.getScheduleBlockId());
         if (own == null || block == null || !own.equals(block.getInstructorActorId())) {
-            throw new CallerSchoolContext.ScopeForbiddenException();
+            throw new CallerSchoolContext.NotClassInstructorException();
+        }
+    }
+
+    /**
+     * Running a class (open, close, cancel) is strictly its instructor's act: the caller's own
+     * academic actor must be schedule_block.instructor_actor_id. No exemption for Administrador or
+     * Super Administrador, who do not act on behalf of the instructor (closed_by must be truthful).
+     */
+    private void requireIsClassInstructor(ClassSession session) {
+        Long own = CallerSchoolContext.ownActorId();
+        ScheduleBlock block = session.getScheduleBlockId() == null ? null
+                : getScheduleBlockUseCase.getById(session.getScheduleBlockId());
+        if (own == null || block == null || !own.equals(block.getInstructorActorId())) {
+            throw new CallerSchoolContext.NotClassInstructorException();
         }
     }
 
@@ -110,6 +128,16 @@ public class ClassSessionController {
     public ResponseEntity<ClassSessionResponse> create(@Valid @RequestBody CreateClassSessionRequest req) {
         ClassSession domain = mapper.toDomain(req);
         requireAccess(domain);
+        requireRunsClass(domain);
+        // A session is born Open and its opener is whoever creates it: neither the status nor
+        // opened_by/opened_at come from the client (AUD-67). A Closed/Cancelled birth would leave
+        // closed_by NULL (AUD-27); /close and /cancel are the only way to move on.
+        if (!domain.isOpen()) {
+            throw new ValidationException("A class session is created Open; use /close or /cancel to change its status");
+        }
+        Long caller = CallerSchoolContext.ownActorId();
+        domain.setOpenedBy(caller);
+        domain.setOpenedAt(caller == null ? null : Instant.now());
         ClassSession created = createUseCase.create(domain);
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponse(created));
     }
@@ -125,8 +153,16 @@ public class ClassSessionController {
     public ResponseEntity<ClassSessionResponse> update(@PathVariable Long id, @Valid @RequestBody UpdateClassSessionRequest req) {
         ClassSession found = getUseCase.getById(id);
         requireAccess(found);
+        requireRunsClass(found);
         ClassSession patch = mapper.toDomain(req);
-        if (patch.getScheduleBlockId() != null) requireAccess(patch);
+        if (patch.getScheduleBlockId() != null) {
+            requireAccess(patch);
+            requireRunsClass(patch);
+        }
+        // The status moves only through /open, /close and /cancel, which stamp the acting actor.
+        if (patch.getSessionStatus() != null && !patch.getSessionStatus().equals(found.getSessionStatus())) {
+            throw new ValidationException("sessionStatus cannot be changed with PUT; use /open, /close or /cancel");
+        }
         ClassSession updated = updateUseCase.update(id, patch);
         return ResponseEntity.ok(mapper.toResponse(updated));
     }
@@ -135,6 +171,7 @@ public class ClassSessionController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         ClassSession found = getUseCase.getById(id);
         requireAccess(found);
+        requireRunsClass(found);
         deleteUseCase.delete(id);
         return ResponseEntity.noContent().build();
     }
@@ -143,7 +180,7 @@ public class ClassSessionController {
     public ResponseEntity<ClassSessionResponse> open(@PathVariable Long id) {
         ClassSession found = getUseCase.getById(id);
         requireAccess(found);
-        requireRunsClass(found);
+        requireIsClassInstructor(found);
         // openedBy nunca viene del cliente (se podía falsificar): es el propio
         // academic_actor de quien llama, resuelto por el filtro de autenticación.
         ClassSession opened = openUseCase.open(id, CallerSchoolContext.ownActorId());
@@ -154,7 +191,7 @@ public class ClassSessionController {
     public ResponseEntity<ClassSessionResponse> close(@PathVariable Long id) {
         ClassSession found = getUseCase.getById(id);
         requireAccess(found);
-        requireRunsClass(found);
+        requireIsClassInstructor(found);
         // closedBy: mismo criterio que open() — nunca confiar en el cliente.
         ClassSession closed = closeUseCase.close(id, CallerSchoolContext.ownActorId());
         return ResponseEntity.ok(mapper.toResponse(closed));
@@ -164,7 +201,7 @@ public class ClassSessionController {
     public ResponseEntity<ClassSessionResponse> cancel(@PathVariable Long id) {
         ClassSession found = getUseCase.getById(id);
         requireAccess(found);
-        requireRunsClass(found);
+        requireIsClassInstructor(found);
         ClassSession cancelled = cancelUseCase.cancel(id);
         return ResponseEntity.ok(mapper.toResponse(cancelled));
     }
