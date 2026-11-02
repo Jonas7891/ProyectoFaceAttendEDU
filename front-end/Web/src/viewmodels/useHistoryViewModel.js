@@ -227,6 +227,10 @@ export function useHistoryViewModel() {
                 }
             }
 
+            // Solo ids de actor numéricos: una fila local (s_…) o sin id se omite en vez de pedir
+            // /academic-actors/NaN/attendance.
+            targets = targets.filter((s) => s.id !== "" && Number.isInteger(Number(s.id)) && Number(s.id) > 0);
+
             if (targets.length === 0) {
                 setJoined([]);
                 setHasQueried(true);
