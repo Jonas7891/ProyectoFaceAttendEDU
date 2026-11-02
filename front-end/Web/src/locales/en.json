@@ -620,6 +620,8 @@
   "El teléfono no es válido": "The phone number is not valid",
   "El teléfono no es válido (10 a 15 dígitos).": "The phone number is not valid (10 to 15 digits).",
   "El tiempo de sesión es global de la plataforma: lo define el Super Administrador. Tu cambio solo se aplica en este navegador.": "Session time is platform-wide: the Super Administrator sets it. Your change only applies in this browser.",
+  "El tiempo de sesión es global de la plataforma: lo define el Super Administrador y aquí solo puedes consultarlo.": "Session time is platform-wide: the Super Administrator sets it and you can only view it here.",
+  "Tipo global: solo lectura": "Global type: read only",
   "El usuario es requerido": "The username is required",
   "Elegir otro archivo": "Choose another file",
   "Elige el tema base de la interfaz. Afecta fondos, textos y superficies de todo el programa.": "Choose the base theme of the interface. It affects backgrounds, text and surfaces throughout the program.",

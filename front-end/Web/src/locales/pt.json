@@ -620,6 +620,8 @@
   "El teléfono no es válido": "O telefone não é válido",
   "El teléfono no es válido (10 a 15 dígitos).": "O telefone não é válido (10 a 15 dígitos).",
   "El tiempo de sesión es global de la plataforma: lo define el Super Administrador. Tu cambio solo se aplica en este navegador.": "O tempo de sessão é global da plataforma: é definido pelo Super Administrador. Sua alteração só se aplica neste navegador.",
+  "El tiempo de sesión es global de la plataforma: lo define el Super Administrador y aquí solo puedes consultarlo.": "O tempo de sessão é global da plataforma: o Super Administrador o define e aqui você só pode consultá-lo.",
+  "Tipo global: solo lectura": "Tipo global: somente leitura",
   "El usuario es requerido": "O usuário é obrigatório",
   "Elegir otro archivo": "Escolher outro arquivo",
   "Elige el tema base de la interfaz. Afecta fondos, textos y superficies de todo el programa.": "Escolha o tema base da interface. Afeta fundos, textos e superfícies de todo o programa.",

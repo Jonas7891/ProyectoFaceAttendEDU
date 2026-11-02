@@ -19,7 +19,7 @@ import { useTheme } from "./components/hooks/useTheme";
 import { generateTheme } from "../core/theme/generateTheme";
 import { useResponsive } from "./components/hooks/useResponsive";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
-import { useRolePermissions } from "../viewmodels/useRolePermissions";
+import { useRolePermissions, resolveSettingsSection } from "../viewmodels/useRolePermissions";
 import { useAutomaticPeriodAdvance } from "./components/hooks/useAutomaticPeriodAdvance";
 import { useAuth } from "../context/AuthContext";
 import { pushInstitutionConfig } from "../services/api/settingsPersistence";
@@ -29,11 +29,13 @@ import { AdminSettings, TeacherSettings, StudentSettings } from "./authorized/se
 import SchoolInfoView from "./SchoolInfoView";
 import ContactsView from "./ContactsView";
 
-export default function SettingsView({ section = "appearance" }) {
+export default function SettingsView({ section: requestedSection }) {
     const { isSmall } = useResponsive();
     const { theme, mode, accentColor, setAccentColor } = useTheme();
     const { t } = useTranslation();
     const permissions = useRolePermissions();
+    // Una sección que el rol no ve en la barra lateral tampoco se abre por URL (AUD-49).
+    const section = resolveSettingsSection(permissions, requestedSection);
     const c = theme.colors;
 
     // Verificación automática de períodos expirados: solo la hace el administrador de una
