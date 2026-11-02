@@ -23,11 +23,14 @@ public class UpdatePersonUseCaseImpl implements UpdatePersonUseCase {
     @Transactional
     public void updatePerson(UUID personId, Person incoming) {
         Person existing = loadPersonPort.loadPerson(personId);
-        if (existing == null) throw new EntityNotFoundException("Person", personId);
+        if (existing == null || existing.getDeletedAt() != null) throw new EntityNotFoundException("Person", personId);
 
         incoming.setPersonId(personId);
         incoming.setCreatedAt(existing.getCreatedAt());
         incoming.setCreatedBy(existing.getCreatedBy());
+        incoming.setUpdatedBy(existing.getUpdatedBy());
+        incoming.setDeletedAt(existing.getDeletedAt());
+        incoming.setDeletedBy(existing.getDeletedBy());
         incoming.setRowVersion(existing.getRowVersion());
         if (incoming.getStatus() == null) incoming.setStatus(existing.getStatus());
 

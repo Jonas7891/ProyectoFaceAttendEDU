@@ -315,6 +315,26 @@ class UserControllerTest {
         }
 
         @Test
+        @DisplayName("givenDeletedAccount_whenUpdateOrChangeStatus_thenReturn404")
+        void givenDeletedAccount_whenUpdateOrChangeStatus_thenReturn404() throws Exception {
+            // El caso de uso trata una cuenta borrada como inexistente (AUD-23).
+            org.mockito.Mockito.doThrow(new EntityNotFoundException("User", userId))
+                    .when(updateUserUseCase).updateUser(any(User.class));
+            org.mockito.Mockito.doThrow(new EntityNotFoundException("User", userId))
+                    .when(changeUserStatusUseCase).changeStatus(userId, true);
+
+            mockMvc.perform(put("/api/v1/users/" + userId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"personId":"%s","username":"carolina.mendoza","authenticationType":"Local","status":true}"""
+                                    .formatted(personId)))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.error").value("NOT_FOUND"));
+            mockMvc.perform(patch("/api/v1/users/" + userId + "/status").param("status", "true"))
+                    .andExpect(status().isNotFound());
+        }
+
+        @Test
         @DisplayName("givenExistingId_whenActivateUser_thenReturn204")
         void givenExistingId_whenActivateUser_thenReturn204() throws Exception {
             // Act & Assert
