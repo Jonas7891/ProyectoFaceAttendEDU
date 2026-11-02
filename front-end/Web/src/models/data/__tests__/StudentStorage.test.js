@@ -50,6 +50,24 @@ describe("mergeLocalStudents", () => {
         expect(rows.map((r) => r.id)).toEqual(["1"]);
     });
 
+    // AUD-37 (b): los espejos guardados por la versión anterior no tienen personId, así que seguían
+    // saliendo como un "fantasma" junto a la fila real del mismo alumno.
+    it("quita el espejo local sin personId cuyo correo ya viene del backend", () => {
+        const rows = mergeLocalStudents(
+            [{ ...api(1, "p1"), email: "Ana@Uni.edu" }],
+            [local(5, undefined, { email: "ana@uni.edu " })]
+        );
+        expect(rows.map((r) => r.id)).toEqual(["1"]);
+    });
+
+    it("conserva el espejo sin personId si su correo es distinto o está vacío", () => {
+        const rows = mergeLocalStudents(
+            [{ ...api(1, "p1"), email: "ana@uni.edu" }],
+            [local(5, undefined, { email: "otra@uni.edu" }), local(6, undefined, { email: "" })]
+        );
+        expect(rows.map((r) => r.id)).toEqual(["1", "s_5", "s_6"]);
+    });
+
     it("sin filas locales devuelve la lista del backend tal cual", () => {
         const fromApi = [api(1, "p1")];
         expect(mergeLocalStudents(fromApi, [])).toEqual(fromApi);
@@ -97,5 +115,38 @@ describe("loadStudents: porcentaje de asistencia propio", () => {
         expect(rows.get("2").attendanceRecords).toBe(10);
         expect(rows.get("2").absences).toBe(4);
         expect(rows.get("2").lateCount).toBe(1);
+    });
+});
+
+// AUD-37 (a): el formulario «Editar» parte de la fila recargada del backend; si esa fila no trae
+// documento, usuario, teléfono y sede, abre con campos obligatorios vacíos.
+describe("loadStudents: la fila real trae todo lo que pide el formulario de edición", () => {
+    it("incluye documento, usuario, teléfono, sede, ficha y curso", async () => {
+        ref.actorTypeMap.mockResolvedValue(new Map([[1, { actorTypeId: 1, code: "STUDENT" }]]));
+        ref.listActors.mockResolvedValue([actor(5)]);
+        ref.personMap.mockResolvedValue(
+            new Map([["p5", { name: "Ana", lastName: "Pérez", documentType: "CC", documentNumber: "1020", phone: "3001112233", email: "ana@uni.edu" }]])
+        );
+        ref.listEnrollments.mockResolvedValue([{ academicActorId: 5, cohortId: 54, enrollmentStatus: "Active" }]);
+        ref.cohortMap.mockResolvedValue(new Map([[54, { code: "FICHA-54" }]]));
+        ref.listBlocks.mockResolvedValue([{ cohortId: 54, courseId: 147 }]);
+        ref.courseMap.mockResolvedValue(new Map([[147, { code: "BD-1" }]]));
+        ref.userByPersonMap.mockResolvedValue(new Map([["p5", { username: "ana.perez" }]]));
+        ref.attendanceSummaryFor.mockResolvedValue(new Map());
+
+        const [row] = await loadStudents();
+
+        expect(row).toEqual(
+            expect.objectContaining({
+                documentNumber: "1020",
+                documentType: "CC",
+                username: "ana.perez",
+                phone: "3001112233",
+                schoolId: "1",
+                ficha: "FICHA-54",
+                cohortId: "54",
+                course: "BD-1",
+            })
+        );
     });
 });

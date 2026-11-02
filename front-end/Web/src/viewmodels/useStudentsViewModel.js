@@ -143,17 +143,13 @@ export function useStudentsViewModel() {
                 return e?.message || "No se pudo registrar el estudiante en el backend";
             }
 
-            await appData.addStudent({
-                name: form.name.trim(),
-                code: form.code.trim(),
-                email: form.email.trim(),
-                course: form.course.trim(),
-                grade: form.role,
-                attendance: form.attendance,
-                hasFacial: form.hasFacial || false,
-                hasFingerprint: form.hasFingerprint || false,
-                status: form.status,
-            });
+            // Lista real del backend en vez de un espejo local parcial (sin documento, usuario ni
+            // sede) que además duplicaba al estudiante. Si la recarga falla el alta ya está hecha.
+            try {
+                await appData.reloadStudents?.();
+            } catch {
+                /* el usuario puede recargar a mano */
+            }
             return credentialsNotice(form, provisioned);
         },
         [appData]
