@@ -120,3 +120,58 @@ describe('alert routes — scope filtering', () => {
     expect(await alerts.list()).toHaveLength(0);
   });
 });
+
+describe('alert routes — writes stay inside the caller scope (AUD-66)', () => {
+  const type = { alertTypeId: 1, code: 'X', severity: 'INFO', channel: 'DASHBOARD' };
+
+  it('POST /api/v1/alerts rejects an actor outside the caller scope and persists nothing', async () => {
+    const app = Fastify();
+    const alerts = fakeAlertRepo();
+    jest.spyOn(actorScope, 'resolveActorScope').mockResolvedValue(new Set([1]));
+    await registerNotificationRoutes(app, { alerts: alerts as any, alertTypes: fakeAlertTypeRepo(type) });
+    const res = await app.inject({ method: 'POST', url: '/api/v1/alerts', payload: { academicActorId: 2, alertTypeId: 1 } });
+    expect(res.statusCode).toBe(403);
+    expect(await alerts.list()).toHaveLength(0);
+  });
+
+  it('POST /alerts still creates an alert for an actor of the own school', async () => {
+    const app = Fastify();
+    const alerts = fakeAlertRepo();
+    jest.spyOn(actorScope, 'resolveActorScope').mockResolvedValue(new Set([1]));
+    await registerNotificationRoutes(app, { alerts: alerts as any, alertTypes: fakeAlertTypeRepo(type) });
+    const res = await app.inject({ method: 'POST', url: '/alerts', payload: { academicActorId: 1, alertTypeId: 1 } });
+    expect(res.statusCode).toBe(201);
+    expect(await alerts.list()).toHaveLength(1);
+  });
+
+  it('DELETE /api/v1/alerts/:id refuses an alert of another school and keeps it', async () => {
+    const app = Fastify();
+    const alerts = fakeAlertRepo();
+    await alerts.create({ academicActorId: 2, alertTypeId: 1 });
+    jest.spyOn(actorScope, 'resolveActorScope').mockResolvedValue(new Set([1]));
+    await registerNotificationRoutes(app, { alerts: alerts as any, alertTypes: fakeAlertTypeRepo(type) });
+    const res = await app.inject({ method: 'DELETE', url: '/api/v1/alerts/1' });
+    expect(res.statusCode).toBe(403);
+    expect(await alerts.list()).toHaveLength(1);
+  });
+
+  it('DELETE still removes an alert of the own school and 404s a missing one', async () => {
+    const app = Fastify();
+    const alerts = fakeAlertRepo();
+    await alerts.create({ academicActorId: 1, alertTypeId: 1 });
+    jest.spyOn(actorScope, 'resolveActorScope').mockResolvedValue(new Set([1]));
+    await registerNotificationRoutes(app, { alerts: alerts as any, alertTypes: fakeAlertTypeRepo(type) });
+    expect((await app.inject({ method: 'DELETE', url: '/api/v1/alerts/1' })).statusCode).toBe(204);
+    expect((await app.inject({ method: 'DELETE', url: '/api/v1/alerts/1' })).statusCode).toBe(404);
+  });
+
+  it('DELETE answers the scope status when the scope cannot be resolved and keeps the alert', async () => {
+    const app = Fastify();
+    const alerts = fakeAlertRepo();
+    await alerts.create({ academicActorId: 1, alertTypeId: 1 });
+    jest.spyOn(actorScope, 'resolveActorScope').mockRejectedValue(new actorScope.ScopeError(503, 'down'));
+    await registerNotificationRoutes(app, { alerts: alerts as any, alertTypes: fakeAlertTypeRepo(type) });
+    expect((await app.inject({ method: 'DELETE', url: '/api/v1/alerts/1' })).statusCode).toBe(503);
+    expect(await alerts.list()).toHaveLength(1);
+  });
+});
