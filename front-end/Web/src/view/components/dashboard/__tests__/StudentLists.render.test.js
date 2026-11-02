@@ -63,6 +63,20 @@ describe("dashboard student lists render", () => {
         expect(render(<PerfectAttendanceList students={[]} />).toJSON()).toMatchSnapshot();
     });
 
+    // AUD-36: sin conteo real de faltas / sesiones la fila no pinta "null faltas" ni inventa un número.
+    test("rows without real counts omit the absence and streak stats", () => {
+        const flat = (node) =>
+            node == null ? [] : typeof node === "string" ? [node] : Array.isArray(node) ? node.flatMap(flat) : flat(node.children);
+        const risk = render(
+            <AtRiskStudentsList students={[student(7, { attendanceRate: 50, totalAbsences: null })]} />,
+        ).toJSON();
+        expect(flat(risk).join(" ")).not.toMatch(/faltas|null|45/);
+        const perfect = render(
+            <PerfectAttendanceList students={[student(8, { attendanceRate: 100, streak: null })]} />,
+        ).toJSON();
+        expect(flat(perfect).join(" ")).not.toMatch(/null|45/);
+    });
+
     test("rows report the pressed student; the footer opens the filtered users list", () => {
         const onStudentPress = jest.fn();
         const navigation = { navigate: jest.fn() };

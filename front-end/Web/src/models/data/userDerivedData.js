@@ -49,11 +49,12 @@ export function getAtRiskStudents(students, minAttendanceThreshold = 80) {
     
     // Primero calculamos TODOS los datos para todos los estudiantes activos
     const studentsWithRiskData = students
-        .filter(student => student.status === "active")
+        // Sin ningún registro de asistencia (attendance null) no hay porcentaje que
+        // evaluar: no es "0 %" ni riesgo, es "sin datos".
+        .filter(student => student.status === "active" && student.attendance != null)
         .map(student => {
-            const attendance = student.attendance || 0;
+            const attendance = student.attendance;
             const attendanceRate = Math.max(0, Math.min(100, attendance));
-            const absenceRate = 100 - attendanceRate;
             
             // ══════════════════════════════════════════════════════
             // CÁLCULO REAL DE DÍAS DESDE ÚLTIMA ASISTENCIA
@@ -99,16 +100,19 @@ export function getAtRiskStudents(students, minAttendanceThreshold = 80) {
             // ══════════════════════════════════════════════════════
             // CÁLCULO DE ESTADÍSTICAS
             // ══════════════════════════════════════════════════════
-            const estimatedTotalClasses = student.attendanceHistory?.length || 45;
-            const totalAbsences = Math.round((absenceRate / 100) * estimatedTotalClasses);
-            
-            // Contar tardanzas del historial si existe
-            let lateCount = 0;
-            if (student.attendanceHistory) {
-                lateCount = student.attendanceHistory.filter(r => r.late).length;
-            } else {
-                lateCount = Math.round(totalAbsences * 0.15); // Estimación: 15%
-            }
+            // Faltas y tardanzas: solo cifras reales (conteos del backend o historial).
+            // Si no hay ninguna fuente, null: no se estima sobre un total supuesto.
+            const history = Array.isArray(student.attendanceHistory) ? student.attendanceHistory : null;
+            const totalAbsences = Number.isFinite(student.absences)
+                ? student.absences
+                : history
+                ? history.filter(r => !r.present).length
+                : null;
+            const lateCount = Number.isFinite(student.lateCount)
+                ? student.lateCount
+                : history
+                ? history.filter(r => r.late).length
+                : null;
             
             // ══════════════════════════════════════════════════════
             // DÍAS HASTA SANCIÓN (LÓGICA REAL)
@@ -220,22 +224,26 @@ export function getPerfectAttendanceStudents(students, minAttendanceThreshold = 
     
     return students
         .filter(student => {
-            const attendance = student.attendance || 0;
+            // Sin registros (attendance null) no hay asistencia que destacar.
+            if (student.attendance == null) return false;
             const isActive = student.status === "active";
-            return isActive && attendance >= perfectThreshold;
+            return isActive && student.attendance >= perfectThreshold;
         })
-        .map(student => ({
-            id: `pas_${student.id}`,
-            studentId: student.id,
-            name: student.name,
-            code: student.code,
-            ficha: student.ficha || "N/A",
-            fichaName: student.course || "N/A",
-            attendanceRate: student.attendance || 0,
-            totalClasses: 45, // Estimado
-            consecutivePerfect: Math.round((student.attendance || 0) * 0.45),
-            streak: `${Math.round((student.attendance || 0) * 0.45)} días`,
-        }))
+        .map(student => {
+            // Sesiones realmente registradas del alumno; sin conteo, sin racha.
+            const sessions = Number.isFinite(student.attendanceRecords) ? student.attendanceRecords : null;
+            return {
+                id: `pas_${student.id}`,
+                studentId: student.id,
+                name: student.name,
+                code: student.code,
+                ficha: student.ficha || "N/A",
+                fichaName: student.course || "N/A",
+                attendanceRate: student.attendance,
+                totalClasses: sessions,
+                streak: sessions == null ? null : `${sessions} ${sessions === 1 ? "sesión" : "sesiones"}`,
+            };
+        })
         .sort((a, b) => b.attendanceRate - a.attendanceRate); // Mayor a menor
 }
 

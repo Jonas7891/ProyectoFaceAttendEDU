@@ -50,9 +50,11 @@ export function StudentStat({ icon, color, c, children }) {
 export function AbsenceStats({ student, c, t }) {
     return (
         <>
-            <StudentStat icon="x-circle" color={c.status.danger} c={c}>
-                {student.totalAbsences} {t("faltas")}
-            </StudentStat>
+            {student.totalAbsences != null && (
+                <StudentStat icon="x-circle" color={c.status.danger} c={c}>
+                    {student.totalAbsences} {t("faltas")}
+                </StudentStat>
+            )}
             {student.consecutiveAbsences > 0 && (
                 <StudentStat icon="repeat" color={c.status.warning} c={c}>
                     {student.consecutiveAbsences} {t("seguidas")}
