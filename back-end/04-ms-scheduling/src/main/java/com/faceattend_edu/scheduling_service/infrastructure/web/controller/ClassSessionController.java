@@ -1,5 +1,6 @@
 package com.faceattend_edu.scheduling_service.infrastructure.web.controller;
 
+import com.faceattend_edu.scheduling_service.domain.exception.EntityNotFoundException;
 import com.faceattend_edu.scheduling_service.domain.model.ClassSession;
 import com.faceattend_edu.scheduling_service.domain.model.Environment;
 import com.faceattend_edu.scheduling_service.domain.model.ScheduleBlock;
@@ -10,6 +11,7 @@ import com.faceattend_edu.scheduling_service.infrastructure.web.mapper.ClassSess
 import com.faceattend_edu.scheduling_service.infrastructure.web.security.CallerSchoolContext;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping({"/api/v1/class-sessions", "/class-sessions"})
 @RequiredArgsConstructor
@@ -44,6 +47,21 @@ public class ClassSessionController {
         if (block.getEnvironmentId() == null) return null;
         Environment environment = getEnvironmentUseCase.getById(block.getEnvironmentId());
         return environment.getSchoolId();
+    }
+
+    /**
+     * Listing variant of {@link #schoolOf}: a session whose schedule_block (or its environment) was
+     * soft-deleted resolves to no school, so a restricted caller's listing omits it instead of
+     * failing the whole response with 404 (AUD-35). Logs ids only, no personal data.
+     */
+    private Integer schoolOfOrNull(ClassSession session) {
+        try {
+            return schoolOf(session);
+        } catch (EntityNotFoundException e) {
+            log.warn("Omitting orphan class_session {} from listing: its schedule_block or environment no longer exists",
+                    session.getClassSessionId());
+            return null;
+        }
     }
 
     /** Skips the two-hop schedule_block/environment lookup entirely for an unrestricted caller. */
@@ -83,7 +101,7 @@ public class ClassSessionController {
                 .filter(s -> sessionStatus == null || sessionStatus.equalsIgnoreCase(s.getSessionStatus()))
                 // Sin sede propia (restricted && ownSchoolId == null): falla seguro, nada.
                 .filter(s -> !restricted || (ownSchoolId != null
-                        && ownSchoolId.equals(schoolByBlock.computeIfAbsent(s.getScheduleBlockId(), id -> schoolOf(s)))))
+                        && ownSchoolId.equals(schoolByBlock.computeIfAbsent(s.getScheduleBlockId(), id -> schoolOfOrNull(s)))))
                 .map(mapper::toResponse).collect(Collectors.toList());
         return Paging.slice(list, limit, offset);
     }

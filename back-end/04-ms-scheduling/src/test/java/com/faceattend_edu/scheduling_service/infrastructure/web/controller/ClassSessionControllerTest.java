@@ -13,7 +13,11 @@ import com.faceattend_edu.scheduling_service.domain.port.in.GetScheduleBlockUseC
 import com.faceattend_edu.scheduling_service.domain.port.in.ListClassSessionsUseCase;
 import com.faceattend_edu.scheduling_service.domain.port.in.OpenClassSessionUseCase;
 import com.faceattend_edu.scheduling_service.domain.port.in.UpdateClassSessionUseCase;
+import com.faceattend_edu.scheduling_service.domain.model.Environment;
+import com.faceattend_edu.scheduling_service.domain.model.ScheduleBlock;
 import com.faceattend_edu.scheduling_service.infrastructure.web.mapper.ClassSessionWebMapper;
+import com.faceattend_edu.scheduling_service.infrastructure.web.security.AuthTokenFilter;
+import com.faceattend_edu.scheduling_service.infrastructure.web.security.CallerSchoolResolver.CallerSchool;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -133,6 +137,38 @@ class ClassSessionControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(1))
                     .andExpect(jsonPath("$[0].classSessionId").value(2));
+        }
+    }
+
+    @Nested
+    @DisplayName("GET /api/v1/class-sessions with an orphan session (AUD-35)")
+    class OrphanSessionListTests {
+
+        @Test
+        @DisplayName("givenSessionWhoseBlockIsSoftDeleted_whenSchoolScopedCallerLists_thenOkAndOrphanIsOmitted")
+        void givenSessionWhoseBlockIsSoftDeleted_whenSchoolScopedCallerLists_thenOkAndOrphanIsOmitted() throws Exception {
+            ClassSession healthy = withStatus(openSession, "Open");
+            healthy.setClassSessionId(1L);
+            healthy.setScheduleBlockId(100L);
+            ClassSession orphan = withStatus(openSession, "Open");
+            orphan.setClassSessionId(2L);
+            orphan.setScheduleBlockId(291L);
+            when(listUseCase.list()).thenReturn(List.of(orphan, healthy));
+
+            ScheduleBlock block = new ScheduleBlock();
+            block.setScheduleBlockId(100L);
+            block.setEnvironmentId(10);
+            Environment environment = new Environment();
+            environment.setSchoolId(1);
+            when(getScheduleBlockUseCase.getById(100L)).thenReturn(block);
+            when(getScheduleBlockUseCase.getById(291L)).thenThrow(new EntityNotFoundException("ScheduleBlock", 291L));
+            when(getEnvironmentUseCase.getById(10)).thenReturn(environment);
+
+            mockMvc.perform(get("/api/v1/class-sessions")
+                            .requestAttr(AuthTokenFilter.CALLER_SCHOOL_ATTRIBUTE, new CallerSchool(false, 1, 5L)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(1))
+                    .andExpect(jsonPath("$[0].classSessionId").value(1));
         }
     }
 
