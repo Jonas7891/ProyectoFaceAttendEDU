@@ -1983,5 +1983,10 @@
   "Se eliminará el horario del ambiente. ¿Continuar?": "O horário será removido do ambiente. Continuar?",
   "Se eliminará el ambiente. ¿Continuar?": "O ambiente será excluído. Continuar?",
   "No se puede eliminar un ambiente que tiene horarios asignados": "Não é possível excluir um ambiente que tem horários atribuídos",
-  "No se puede eliminar el horario porque tiene sesiones asociadas": "Não é possível excluir o horário porque tem sessões associadas"
+  "No se puede eliminar el horario porque tiene sesiones asociadas": "Não é possível excluir o horário porque tem sessões associadas",
+  "Actualizando...": "Atualizando...",
+  "Actualizado hace un momento": "Atualizado agora mesmo",
+  "No se pudo actualizar": "Não foi possível atualizar",
+  "Filtros limpiados": "Filtros limpos",
+  "Más": "Mais"
 }

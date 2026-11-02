@@ -9,7 +9,6 @@ export { VisionModeTabs } from "./VisionModeTabs";
 export { ColorPresetSelector } from "./ColorPresetSelector";
 export { HSLSliders } from "./HSLSliders";
 export { ColorPickerPanel } from "./ColorPickerPanel";
-export { HexInputSection } from "./HexInputSection";
 export { ColorEvaluator } from "./ColorEvaluator";
 export { StatsRow } from "./StatsRow";
 export { SecurityMeter } from "./SecurityMeter";

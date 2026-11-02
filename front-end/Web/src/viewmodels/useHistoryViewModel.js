@@ -204,9 +204,10 @@ export function useHistoryViewModel() {
     const resetFilters = useCallback(() => {
         setFilters({ period: "all", status: "", cohortId: "", personId: "", environmentId: "", instructorId: "" });
         setPage(0);
-        setNotice(null);
         setError(null);
-    }, []);
+        // Confirmación visible aunque los filtros ya estuvieran vacíos (AUD-06).
+        setNotice(t("Filtros limpiados"));
+    }, [t]);
 
     // ── Consulta (AC1..AC9) ──────────────────────────────────
     const runQuery = useCallback(async () => {
