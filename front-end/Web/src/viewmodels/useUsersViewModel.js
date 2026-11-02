@@ -20,6 +20,7 @@ import { useAppData } from "../context/AppDataContext";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { authApi } from "../services/api/authApi";
+import { academicApi } from "../services/api/academicApi";
 import { authorizationApi } from "../services/api/authorizationApi";
 import { provisionStaff, provisionStudent, credentialsNotice, cohortsForCourseCode, importStudents as bulkImportStudents, personDetails, findExistingStudents, documentTypesForRole } from "../services/api/staffProvisioning";
 import { userByPersonMap } from "../services/api/referenceData";
@@ -755,45 +756,84 @@ export function useUsersViewModel(
         setSelected(null);
     }
 
-    // Activar/desactivar real (HU-IAM-007): PATCH /users/{id}/status +
-    // PATCH /persons/{id}/status. Soft-delete universal: jamás borrado físico.
+    // Actor académico de la fila: en estudiantes el id de la fila ES el
+    // academic_actor_id; docentes/administradores traen actorId (null sin actor).
+    const actorIdOf = (target) => {
+        const raw = target?.userType === USER_TYPES.STUDENT || !target?.userType
+            ? target?.id
+            : target?.actorId;
+        const n = Number(raw);
+        return Number.isInteger(n) && n > 0 && !isUuid(raw) ? n : null;
+    };
+
+    const patchStatusLocally = useCallback((target, nextActive) => {
+        appData.patchStaff(target.userType || USER_TYPES.STUDENT, target.id, {
+            status: nextActive ? "active" : "inactive",
+        });
+        if (selected?.id === target.id) {
+            setSelected((prev) =>
+                prev ? { ...prev, status: nextActive ? "active" : "inactive" } : prev
+            );
+        }
+    }, [appData, selected]);
+
+    // Activar/desactivar real (HU-IAM-007, AUD-77): PATCH /users/{id}/status +
+    // PATCH /persons/{id}/status + PATCH /academic-actors/{id}/status. Soft-delete
+    // universal: jamás borrado físico. Si falla el actor, se revierte el usuario
+    // y se devuelve el error (la UI no declara éxito a medias).
     const toggleUserStatus = useCallback(
         async (target, nextActive) => {
             const userId = await resolveUserId(target);
-            if (!userId) {
+            const actorId = actorIdOf(target);
+            if (!userId && actorId == null) {
                 return target?.userType === USER_TYPES.STUDENT
                     ? "El estudiante no tiene usuario vinculado"
                     : "Falta el vínculo con el backend";
             }
+            let userChanged = false;
             try {
-                await authApi.setUserStatus(userId, nextActive);
-                await authApi.setPersonStatus(target.personId, nextActive).catch(() => {});
+                if (userId) {
+                    await authApi.setUserStatus(userId, nextActive);
+                    userChanged = true;
+                    await authApi.setPersonStatus(target.personId, nextActive).catch(() => {});
+                }
+                if (actorId != null) {
+                    await academicApi.setActorStatus(actorId, nextActive);
+                }
             } catch (e) {
+                if (userChanged && actorId != null) {
+                    await authApi.setUserStatus(userId, !nextActive).catch(() => {});
+                    await authApi.setPersonStatus(target.personId, !nextActive).catch(() => {});
+                }
                 return e?.message || "No se pudo cambiar el estado en el backend";
             }
-            appData.patchStaff(target.userType || USER_TYPES.STUDENT, target.id, {
-                status: nextActive ? "active" : "inactive",
-            });
-            if (selected?.id === target.id) {
-                setSelected((prev) =>
-                    prev ? { ...prev, status: nextActive ? "active" : "inactive" } : prev
-                );
-            }
+            patchStatusLocally(target, nextActive);
             return null;
         },
-        [appData, selected, resolveUserId]
+        [patchStatusLocally, resolveUserId]
     );
 
-    // Eliminar lógico (HU-IAM-008): desactivar (mismo alcance que el toggle).
-    // Sin DELETE físico (AGENTS.md soft-delete).
+    // Eliminar lógico (HU-IAM-008, AUD-74): desactiva y luego DELETE del actor
+    // académico (borrado lógico del servidor: llena deleted_at/deleted_by).
+    // identity no expone DELETE de usuario/persona, así que la cuenta solo queda
+    // inactiva; un administrador sin actor solo puede desactivarse.
     const removeUser = useCallback(
         async (target) => {
             const err = await toggleUserStatus(target, false);
             if (err) return err;
+            const actorId = actorIdOf(target);
+            if (actorId != null) {
+                try {
+                    await academicApi.deleteActor(actorId);
+                } catch (e) {
+                    return `Se desactivó, pero no se pudo eliminar: ${e?.message || "error del servidor"}`;
+                }
+                try { await appData.reloadUsers?.(); } catch { /* la lista se refresca al recargar */ }
+            }
             if (selected?.id === target?.id) setSelected(null);
             return null;
         },
-        [toggleUserStatus, selected]
+        [toggleUserStatus, selected, appData]
     );
 
     // Acción en lote (activate | deactivate | delete) sobre varios usuarios:
