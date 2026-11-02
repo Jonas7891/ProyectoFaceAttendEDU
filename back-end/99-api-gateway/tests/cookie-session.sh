@@ -60,6 +60,15 @@ check "…permite X-Requested-With y X-Session-Mode" yes "$(echo "$P" | grep -i 
 check "…con credenciales" true "$(echo "$P" | grep -i '^access-control-allow-credentials' | tr -d '\r' | awk '{print tolower($2)}')"
 P2=$(curl -si -X OPTIONS "$B/auth/login" -H "Origin: $EVIL" -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: x-requested-with')
 check "preflight desde un origen ajeno: sin Allow-Origin" no "$(echo "$P2" | grep -qi '^access-control-allow-origin' && echo yes || echo no)"
+# 14b. CORS del alta pública de sede (AUD-19): la web manda las mismas cabeceras y credenciales que en el resto
+P3=$(curl -si -X OPTIONS "$B/onboarding/schools" -H "Origin: $O" -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: content-type,x-requested-with,x-session-mode')
+check "preflight de /onboarding/schools desde el origen permitido: 2xx" yes "$(echo "$P3" | head -1 | grep -Eq ' 20[0-9]' && echo yes || echo no)"
+check "…permite X-Requested-With y X-Session-Mode" yes "$(echo "$P3" | grep -i '^access-control-allow-headers' | grep -qi 'x-requested-with' && echo "$P3" | grep -i '^access-control-allow-headers' | grep -qi 'x-session-mode' && echo yes || echo no)"
+check "…con credenciales" true "$(echo "$P3" | grep -i '^access-control-allow-credentials' | tr -d '\r' | awk '{print tolower($2)}')"
+P4=$(curl -si -X OPTIONS "$B/onboarding/schools" -H "Origin: $O" -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: content-type,x-evil-header')
+check "…una cabecera arbitraria no se permite" no "$(echo "$P4" | grep -i '^access-control-allow-headers' | grep -qi 'x-evil-header' && echo yes || echo no)"
+P5=$(curl -si -X OPTIONS "$B/onboarding/schools" -H "Origin: $EVIL" -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: content-type,x-requested-with')
+check "preflight de /onboarding/schools desde un origen ajeno: sin Allow-Origin" no "$(echo "$P5" | grep -qi '^access-control-allow-origin' && echo yes || echo no)"
 # 15. logout por cookie y efecto inmediato
 L=$(curl -si -X POST "$B/auth/logout" "${WEB[@]}" -H "Cookie: fae_session=$SID")
 check "logout por cookie: 204" 204 "$(echo "$L" | head -1 | awk '{print $2}')"
