@@ -752,6 +752,7 @@
   "Falta facial": "Visage manquant",
   "Falta huella": "Empreinte manquante",
   "Falta la autorización de datos biométricos": "L'autorisation des données biométriques est manquante",
+  "el titular debe autorizar el tratamiento de sus datos biométricos en el sistema. Mientras no exista una autorización vigente no se puede registrar su biometría. Pídele que la otorgue o que un administrador la registre con su firma en la sede.": "le titulaire doit autoriser le traitement de ses données biométriques dans le système. Tant qu'aucune autorisation valide n'existe, ses données biométriques ne peuvent pas être enregistrées. Demandez-lui de l'accorder ou qu'un administrateur l'enregistre avec sa signature à l'établissement.",
   "Falta la ficha": "Le groupe est manquant",
   "Falta la sede": "Le site est manquant",
   "Falta registro de huella dactilar": "Enregistrement d'empreinte digitale manquant",

@@ -752,6 +752,7 @@
   "Falta facial": "Face missing",
   "Falta huella": "Fingerprint missing",
   "Falta la autorización de datos biométricos": "Biometric data authorization is missing",
+  "el titular debe autorizar el tratamiento de sus datos biométricos en el sistema. Mientras no exista una autorización vigente no se puede registrar su biometría. Pídele que la otorgue o que un administrador la registre con su firma en la sede.": "the holder must authorize the processing of their biometric data in the system. Until a valid authorization exists their biometrics cannot be registered. Ask them to grant it, or ask an administrator to record it with their signature at the school.",
   "Falta la ficha": "The cohort is missing",
   "Falta la sede": "The campus is missing",
   "Falta registro de huella dactilar": "Fingerprint registration missing",
