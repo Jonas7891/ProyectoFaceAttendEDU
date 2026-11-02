@@ -51,6 +51,10 @@ faceattend:
     authorization-url: http://localhost:8082
     # start_date + esto = expiración de la sesión (seed: session_timeout_minutes=480).
     session-timeout-minutes: 480
+    # Barrido que cierra las sesiones Active vencidas que nadie vuelve a presentar (AUD-72).
+    session-expiry-job:
+      enabled: true
+      interval-minutes: 15
   recovery:
     # memory (default, per process) | redis (survives restarts, shared across replicas).
     store: memory

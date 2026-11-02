@@ -4,6 +4,7 @@ import com.faceattend_edu.identity_service.adapter.out.persistence.crypto.Sessio
 import com.faceattend_edu.identity_service.adapter.out.persistence.entity.UserSessionJpaEntity;
 import com.faceattend_edu.identity_service.adapter.out.persistence.mapper.UserSessionPersistenceMapper;
 import com.faceattend_edu.identity_service.adapter.out.persistence.repository.UserSessionJpaRepository;
+import com.faceattend_edu.identity_service.application.port.out.ExpireSessionsPort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserSessionPort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserSessionsPort;
 import com.faceattend_edu.identity_service.application.port.out.ListUserSessionsPort;
@@ -11,7 +12,9 @@ import com.faceattend_edu.identity_service.application.port.out.SaveUserSessionP
 import com.faceattend_edu.identity_service.application.port.out.UpdateUserSessionPort;
 import com.faceattend_edu.identity_service.domain.model.UserSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,7 +23,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class UserSessionPersistenceAdapter implements LoadUserSessionPort, LoadUserSessionsPort, SaveUserSessionPort, UpdateUserSessionPort, ListUserSessionsPort {
+public class UserSessionPersistenceAdapter implements LoadUserSessionPort, LoadUserSessionsPort, SaveUserSessionPort, UpdateUserSessionPort, ListUserSessionsPort, ExpireSessionsPort {
 
     private final UserSessionJpaRepository repository;
     private final UserSessionPersistenceMapper mapper;
@@ -67,5 +70,14 @@ public class UserSessionPersistenceAdapter implements LoadUserSessionPort, LoadU
     public int closeSessionIfActive(UUID sessionId, LocalDateTime closedAt) {
         return repository.closeIfActive(SessionTokenHasher.hash(sessionId), closedAt,
                 UserSession.STATUS_ACTIVE, UserSession.STATUS_CLOSED);
+    }
+
+    @Override
+    @Transactional
+    public int closeActiveStartedBefore(LocalDateTime startedBefore, LocalDateTime closedAt, int batchSize) {
+        List<UUID> ids = repository.findActiveIdsStartedBefore(startedBefore, UserSession.STATUS_ACTIVE,
+                PageRequest.of(0, batchSize));
+        if (ids.isEmpty()) return 0;
+        return repository.closeActiveByIds(ids, closedAt, UserSession.STATUS_ACTIVE, UserSession.STATUS_CLOSED);
     }
 }
