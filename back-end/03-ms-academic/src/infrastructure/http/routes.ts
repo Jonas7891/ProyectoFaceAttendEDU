@@ -138,15 +138,20 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
   // Creating/editing a school is a platform-level action (frontend's
   // canManageSchools: isSuperAdmin) — configuration:manage alone would let
   // any school Administrador touch OTHER schools, not just configure its own.
-  async function requireSuperAdminForSchool(req: any, reply: any): Promise<boolean> {
+  async function requireSuperAdmin(req: any, reply: any, message: string): Promise<boolean> {
     const caller = await callerSchoolOf(req, reply);
     if (!caller) return false;
     if (!caller.isSuperAdmin) {
-      reply.code(403).send({ error: 'Forbidden', message: 'Only Super Administrador manages schools', timestamp: new Date().toISOString() });
+      reply.code(403).send({ error: 'Forbidden', message, timestamp: new Date().toISOString() });
       return false;
     }
     return true;
   }
+  const requireSuperAdminForSchool = (req: any, reply: any) =>
+    requireSuperAdmin(req, reply, 'Only Super Administrador manages schools');
+  // Actor types are a platform-wide catalogue (no school column): reading is open, writing is not.
+  const requireSuperAdminForActorType = (req: any, reply: any) =>
+    requireSuperAdmin(req, reply, 'Only Super Administrador manages the actor-type catalogue');
 
   app.post('/api/v1/schools', async (req, reply) => {
     const parsed = schoolBody.safeParse((req as any).body);
@@ -577,6 +582,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
   app.post('/api/v1/actor-types', async (req, reply) => {
     const parsed = actorTypeBody.safeParse((req as any).body);
     if (!parsed.success) return send400(reply, 'Invalid actor-type payload', parsed.error.flatten());
+    if (!(await requireSuperAdminForActorType(req, reply))) return reply;
     // Un code retirado sigue ocupando el UNIQUE, así que crearlo de nuevo daba 409
     // para siempre. Si existe borrado, se revive en vez de rechazar.
     const revived = await repos.actorTypes.restoreByCode(parsed.data.code, parsed.data.name);
@@ -598,11 +604,13 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     if (!id) return reply.code(404).send({ error: 'NotFound' });
     const parsed = patchSchema(actorTypeBody).safeParse((req as any).body);
     if (!parsed.success) return send400(reply, 'Invalid actor-type payload', parsed.error.flatten());
+    if (!(await requireSuperAdminForActorType(req, reply))) return reply;
     const updated = await repos.actorTypes.update(id, parsed.data);
     if (!updated) return reply.code(404).send({ error: 'NotFound' });
     return updated;
   });
   app.delete('/api/v1/actor-types/:id', async (req, reply) => {
+    if (!(await requireSuperAdminForActorType(req, reply))) return reply;
     const id = parseId((req.params as any).id);
     if (!id || !(await repos.actorTypes.softDelete(id))) return reply.code(404).send({ error: 'NotFound' });
     return reply.code(204).send();
