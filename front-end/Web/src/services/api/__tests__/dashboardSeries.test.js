@@ -89,6 +89,62 @@ test("student scope buckets their own records by date", async () => {
     expect(fetchAllPages).toHaveBeenCalled();
 });
 
+// AUD-52: el único registro del alumno (Justified, MANUAL) llega sin captured_at; se descartaba y
+// la semana quedaba vacía con tasa 0 % mientras la tarjeta decía 100 %. Se ubica por la fecha de
+// su sesión.
+test("student record without capturedAt falls back to its session date", async () => {
+    listBlocks.mockResolvedValue([{ scheduleBlockId: 501, courseId: 12, cohortId: 53, instructorActorId: 601 }]);
+    fetchAllPages.mockResolvedValue([{ classSessionId: 1240, scheduleBlockId: 501, sessionDate: "2026-10-27" }]);
+    attendanceApi.recordsByActor.mockResolvedValue([
+        { attendanceRecordId: 80922, classSessionId: 1240, attendanceStatus: "Justified", capturedAt: null },
+    ]);
+
+    const { daily, weekly } = await dashboardSeries({ role: "student", academicActorId: 1908, cohortId: 53 });
+
+    expect(daily).toEqual([{ date: "2026-10-27", day: "Mar", present: 1, late: 0, absent: 0 }]);
+    expect(weekly).toHaveLength(1);
+    expect(weekly[0].rate).toBe(100);
+});
+
+test("student series keeps the most recent days, not the oldest", async () => {
+    fetchAllPages.mockResolvedValue([]);
+    attendanceApi.recordsByActor.mockResolvedValue(
+        Array.from({ length: 35 }, (_, i) => ({
+            attendanceRecordId: i + 1,
+            attendanceStatus: "Present",
+            capturedAt: `${isoDaysAgo(i + 1)}T08:00:00Z`,
+        }))
+    );
+
+    const { daily } = await dashboardSeries({ role: "student", academicActorId: 1 });
+
+    expect(daily).toHaveLength(30);
+    expect(daily[daily.length - 1].date).toBe(isoDaysAgo(1));
+});
+
+test("a record with neither capturedAt nor a known session is not plotted", async () => {
+    fetchAllPages.mockResolvedValue([]);
+    attendanceApi.recordsByActor.mockResolvedValue([
+        { attendanceRecordId: 1, classSessionId: 999, attendanceStatus: "Present", capturedAt: null },
+    ]);
+
+    const { daily } = await dashboardSeries({ role: "student", academicActorId: 1 });
+
+    expect(daily).toEqual([]);
+});
+
+// La fila «Sem N» del selector del dashboard numera desde el 1 de enero (semanas de 7 días); la
+// serie debe usar la misma numeración o los datos caen en otra fila.
+test("week labels use the same numbering as the dashboard week selector", async () => {
+    fetchAllPages.mockResolvedValue([{ classSessionId: 1, scheduleBlockId: 501, sessionDate: "2026-10-27" }]);
+    attendanceApi.recordsBySession.mockResolvedValue([{ attendanceRecordId: 1, attendanceStatus: "Present" }]);
+
+    const { weekly } = await dashboardSeries({ role: "admin" });
+
+    // 27-oct-2026 = día 300 del año → floor(299 / 7) + 1 = 43
+    expect(weekly[0].week).toBe("Sem 43");
+});
+
 test("recent activity joins actor, person and course", async () => {
     fetchAllPages.mockResolvedValue([
         { classSessionId: 1, scheduleBlockId: 501, sessionDate: isoDaysAgo(0) },
