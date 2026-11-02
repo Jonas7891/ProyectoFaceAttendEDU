@@ -98,8 +98,6 @@ export function StudentSettings({ section, onSave, onDiscard, onDiscardColors, o
         security: (
             <RoleSecuritySettings
                 sessionTime={config.sessionTime}
-                sessionTimeReadOnly
-                onSessionTimeChange={(value) => updateConfig("sessionTime", value)}
                 shortSessionHint={t(" Sesión muy corta — deberás iniciar sesión con frecuencia.")}
                 normalSessionHint={t(" Tiempo razonable para uso normal.")}
             />

@@ -27,7 +27,7 @@ export function useSettingsActions({ onSave, save, onDiscard, discard }) {
  * @param {string} normalSessionHint - ayuda para sesiones de 16 a 120 min
  * @param {Array} notices - avisos antes de las opciones (opcional)
  */
-export function RoleSecuritySettings({ sessionTime, onSessionTimeChange, shortSessionHint, normalSessionHint, notices = [], sessionTimeReadOnly = false }) {
+export function RoleSecuritySettings({ sessionTime, onSessionTimeChange, shortSessionHint, normalSessionHint, notices = [], sessionTimeReadOnly = true }) {
     const { t } = useTranslation();
     return (
         <SecuritySettings
