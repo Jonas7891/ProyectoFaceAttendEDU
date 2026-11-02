@@ -183,6 +183,44 @@ describe('biometric update cases', () => {
     expect(finger.json().message).toBe('fingerNumber required for FINGERPRINT');
   });
 
+  it('AUD-68: requestedBy is always the session user, whatever the body says', async () => {
+    const forged = await call('admin1', 'POST', '/api/v1/biometric-update-cases', { ...facial('student1'), requestedBy: USERS.student1.id });
+    expect(forged.statusCode).toBe(201);
+    expect(forged.json().requestedBy).toBe(USERS.admin1.id);
+    const mine = await call('student1', 'POST', '/api/v1/biometric-update-cases', { ...facial('student1'), requestedBy: USERS.admin2.id });
+    expect(mine.json().requestedBy).toBe(USERS.student1.id);
+  });
+
+  it('AUD-68: the generic PUT cannot touch status, reviewer or requester', async () => {
+    const id = (await call('admin1', 'POST', '/api/v1/biometric-update-cases', facial('admin1'))).json().caseId;
+    for (const patch of [
+      { updateStatus: 'Approved' },
+      { reviewedBy: USERS.admin2.id },
+      { reviewedAt: new Date().toISOString() },
+      { resolutionNotes: 'self approved' },
+      { requestedBy: USERS.admin2.id },
+      { requestedAt: '2020-01-01T00:00:00.000Z' },
+    ]) {
+      const res = await call('admin1', 'PUT', `/api/v1/biometric-update-cases/${id}`, patch);
+      expect(res.statusCode).toBe(400);
+    }
+    const after = (await call('admin1', 'GET', `/api/v1/biometric-update-cases/${id}`)).json();
+    expect(after).toMatchObject({ updateStatus: 'Pending', requestedBy: USERS.admin1.id });
+    expect(after.reviewedBy).toBeUndefined();
+    expect((await call('admin1', 'PUT', `/api/v1/biometric-update-cases/${id}`, { reason: 'otro motivo' })).json().reason).toBe('otro motivo');
+  });
+
+  it('AUD-68: the reviewer is the session user, not the one in the body, and RN-29 holds', async () => {
+    const own = (await call('admin1', 'POST', '/api/v1/biometric-update-cases', facial('admin1'))).json().caseId;
+    const self = await call('admin1', 'PATCH', `/api/v1/biometric-update-cases/${own}/review`, { updateStatus: 'Approved', reviewedBy: USERS.admin2.id });
+    expect(self.statusCode).toBe(403);
+    const other = (await call('student1', 'POST', '/api/v1/biometric-update-cases', facial('student1'))).json().caseId;
+    const ok = await call('admin1', 'PATCH', `/api/v1/biometric-update-cases/${other}/review`, { updateStatus: 'Approved', reviewedBy: USERS.admin2.id });
+    expect(ok.statusCode).toBe(200);
+    expect(ok.json().reviewedBy).toBe(USERS.admin1.id);
+    expect((await call('admin1', 'GET', `/api/v1/biometric-update-cases/${own}`)).json().updateStatus).toBe('Pending');
+  });
+
   it('a user without a person cannot request anything', async () => {
     const res = await call('ghost', 'POST', '/api/v1/biometric-update-cases', facial('student1'));
     expect(res.statusCode).toBe(403);
