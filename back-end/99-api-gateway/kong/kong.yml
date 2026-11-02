@@ -76,7 +76,11 @@ services:
         config:
           origins: ["__CORS_ORIGINS__"]
           methods: [POST, OPTIONS]
-          headers: [Content-Type]
+          # La web (modo cookie) manda estas cabeceras y credentials:"include" en todas sus peticiones,
+          # también en el alta pública: sin ellas el preflight falla y el POST no sale (AUD-19). La ruta
+          # sigue sin sesión (la cookie no llega a identity) y los orígenes son los mismos.
+          headers: [Authorization, Content-Type, X-Requested-With, X-Session-Mode]
+          credentials: true
       - name: rate-limiting
         config:
           minute: 5
