@@ -535,17 +535,17 @@ export function useUsersViewModel(
                     return e?.message || "No se pudo registrar el estudiante en el backend";
                 }
 
-                await appData.addStudent({
-                    ...baseUser,
-                    course: form.course.trim(),
-                    grade: form.role,
-                    attendance: form.attendance || 0,
-                    personId: provisioned?.personId ?? null,
-                    // La biometría se captura al terminar el alta (BiometricEnrollmentModal):
-                    // hasta entonces no hay nada registrado.
-                    hasFacial: false,
-                    hasFingerprint: false,
-                });
+                // Se trae la lista real del backend en vez de guardar una fila espejo local: el espejo
+                // (id s_…) quedaba en el navegador para siempre y, junto a la fila real, el estudiante
+                // salía duplicado. La biometría se captura al terminar el alta (BiometricEnrollmentModal):
+                // hasta entonces la fila real nace sin nada registrado.
+                // Con try/catch: si la recarga falla (p. ej. 429 del rate-limit), el alta ya está hecha y
+                // no debe verse como un error; la fila aparece al recargar la página.
+                try {
+                    await appData.reloadStudents?.();
+                } catch {
+                    /* el usuario puede recargar a mano */
+                }
                 return registrationResult(form, provisioned);
             }
 

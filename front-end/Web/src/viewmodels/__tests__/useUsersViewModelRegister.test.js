@@ -4,6 +4,7 @@ import { create, act } from "react-test-renderer";
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 const mockAddStudent = jest.fn();
+const mockReloadStudents = jest.fn();
 const mockPatchBiometrics = jest.fn();
 
 jest.mock("../../context/AppDataContext", () => ({
@@ -16,6 +17,7 @@ jest.mock("../../context/AppDataContext", () => ({
         addStudent: mockAddStudent,
         patchBiometrics: mockPatchBiometrics,
         reloadUsers: jest.fn(),
+        reloadStudents: mockReloadStudents,
     }),
 }));
 jest.mock("../../context/AuthContext", () => ({
@@ -79,15 +81,27 @@ test("registerUser returns the new personId and which biometrics were requested"
     expect(result).toEqual({ credentialsEmail: "SENT", personId: "p-9", wantFace: true, wantFingerprint: false });
 });
 
-test("the local student row starts without biometrics until they are really captured", async () => {
+test("a registered student comes back from the backend list, never as a local mirror row", async () => {
+    mockReloadStudents.mockResolvedValue(undefined);
     const getVm = renderVm();
     await act(async () => {
         await getVm().registerUser({ ...studentForm, hasFacial: true, hasFingerprint: true });
     });
 
-    expect(mockAddStudent).toHaveBeenCalledWith(
-        expect.objectContaining({ personId: "p-9", hasFacial: false, hasFingerprint: false })
-    );
+    // Un espejo local (id s_…) se guardaba en el navegador y, junto a la fila real, duplicaba al estudiante.
+    expect(mockAddStudent).not.toHaveBeenCalled();
+    expect(mockReloadStudents).toHaveBeenCalledTimes(1);
+});
+
+test("a failed refresh of the list does not turn a successful registration into an error", async () => {
+    mockReloadStudents.mockRejectedValue(new Error("429"));
+    const getVm = renderVm();
+    let result;
+    await act(async () => {
+        result = await getVm().registerUser(studentForm);
+    });
+
+    expect(result).toEqual(expect.objectContaining({ personId: "p-9" }));
 });
 
 test("markBiometrics forwards the captured flags for that person", () => {

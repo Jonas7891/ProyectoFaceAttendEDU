@@ -184,13 +184,27 @@ async function studentsFromApi() {
 }
 
 /**
+ * Une las filas del backend con las locales. Una fila local cuya persona ya viene del backend se
+ * descarta: es el espejo que las altas de la pantalla dejaban guardado en el navegador y, junto a la
+ * fila real, el estudiante salía duplicado para siempre. Las locales sin personId o de alguien que el
+ * backend no devuelve se conservan.
+ */
+export function mergeLocalStudents(apiRows, localRows) {
+    const fromApi = new Set(apiRows.map((row) => row.personId).filter(Boolean).map((id) => String(id).toLowerCase()));
+    return [
+        ...apiRows,
+        ...localRows.filter((row) => !row.personId || !fromApi.has(String(row.personId).toLowerCase())),
+    ];
+}
+
+/**
  * Carga todos los estudiantes: API primero, mocks como respaldo,
  * fusionados con las altas hechas localmente en la UI.
  */
 export async function loadStudents() {
     const local = await localStudents();
     try {
-        return [...(await studentsFromApi()), ...local];
+        return mergeLocalStudents(await studentsFromApi(), local);
     } catch (error) {
         if (API_MODE === "mock") {
             console.warn("[FaceAttend] loadStudents: API no disponible, uso mock —", error?.message);
