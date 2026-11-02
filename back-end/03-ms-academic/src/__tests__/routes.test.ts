@@ -334,6 +334,18 @@ describe('actor types', () => {
     expect((await call('super', 'DELETE', `/api/v1/actor-types/${id}`)).statusCode).toBe(404);
   });
 
+  it('a school Administrador cannot write the global actor-type catalogue', async () => {
+    const created = (await call('super', 'POST', '/api/v1/actor-types', { code: 'TUTOR', name: 'Tutor' })).json();
+    const id = created.actorTypeId;
+    expect((await call('admin1', 'POST', '/api/v1/actor-types', { code: 'X', name: 'X' })).statusCode).toBe(403);
+    expect((await call('admin1', 'PUT', `/api/v1/actor-types/${id}`, { name: 'Hack' })).statusCode).toBe(403);
+    expect((await call('admin1', 'DELETE', `/api/v1/actor-types/${id}`)).statusCode).toBe(403);
+    // Untouched, and still readable by the Administrador.
+    const read = await call('admin1', 'GET', `/api/v1/actor-types/${id}`);
+    expect(read.statusCode).toBe(200);
+    expect(read.json().name).toBe('Tutor');
+  });
+
   it('re-creating a deleted code brings the same type back instead of a duplicate', async () => {
     const first = (await call('super', 'POST', '/api/v1/actor-types', { code: 'TUTOR', name: 'Tutor' })).json();
     await call('super', 'DELETE', `/api/v1/actor-types/${first.actorTypeId}`);

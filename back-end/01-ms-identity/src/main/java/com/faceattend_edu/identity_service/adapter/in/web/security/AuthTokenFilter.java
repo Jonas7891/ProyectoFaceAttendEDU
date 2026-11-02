@@ -104,6 +104,13 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             return;
         }
 
+        // One password policy for the whole platform: a school administrator reads it
+        // (identity.person:read) but must not rewrite it for every other school.
+        if (platformConfigWrite(request.getMethod(), path) && !roles.contains(SUPER_ADMIN_ROLE)) {
+            deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: requires " + SUPER_ADMIN_ROLE, path);
+            return;
+        }
+
         String required = requiredPermission(request.getMethod(), path, caller);
         // Cada rol edita sus propios datos personales (perfil) sin identity.person:write.
         if (WRITE.equals(required) && isOwnPerson(request.getMethod(), path, caller)) {
@@ -181,6 +188,12 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         if (path.equals("/api/v1/sessions")) return true;
         Matcher own = USER_SESSIONS.matcher(path);
         return own.matches() && !own.group(1).equalsIgnoreCase(caller);
+    }
+
+    /** Writes to the platform-wide password policy (POST/PUT /password-policies...). */
+    static boolean platformConfigWrite(String method, String path) {
+        if (method.equalsIgnoreCase("GET") || method.equalsIgnoreCase("HEAD") || method.equalsIgnoreCase("OPTIONS")) return false;
+        return path.equals("/api/v1/password-policies") || path.startsWith("/api/v1/password-policies/");
     }
 
     static String requiredPermission(String method, String path, String caller) {

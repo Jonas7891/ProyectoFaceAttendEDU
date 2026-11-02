@@ -79,6 +79,22 @@ function scopeOf(req: any, reply: any): Promise<Set<number> | null | undefined> 
   return resolveOrReply(reply, () => resolveActorScope(req));
 }
 
+/**
+ * Alert types are a platform-wide catalogue (no school column), so writing
+ * them is a Super Administrador action; an Administrador only reads them.
+ * `resolveActorScope` answers `null` exactly for Super Administrador.
+ * Resolves true when allowed; otherwise it has already answered the request.
+ */
+async function requireSuperAdmin(req: any, reply: any): Promise<boolean> {
+  const scope = await scopeOf(req, reply);
+  if (scope === undefined) return false;
+  if (scope !== null) {
+    reply.code(403).send({ error: 'Forbidden', message: 'Only Super Administrador manages the alert-type catalogue', timestamp: new Date().toISOString() });
+    return false;
+  }
+  return true;
+}
+
 const createAlertBody = z.object({
   academicActorId: z.number().int().positive(),
   alertTypeId: z.number().int().positive(),
@@ -105,6 +121,12 @@ export async function registerNotificationRoutes(
 
       const alertType = await repos.alertTypes.findById(parsed.data.alertTypeId);
       if (!alertType) return notFound(reply);
+
+      // The target actor must be inside the caller's scope (own school for an
+      // Administrador), the same rule the reads and `resolve` apply.
+      const scope = await scopeOf(req, reply);
+      if (scope === undefined) return reply;
+      if (!actorAllowed(scope, parsed.data.academicActorId)) return forbidden(reply);
 
       const created = await repos.alerts.create({
         academicActorId: parsed.data.academicActorId,
@@ -185,7 +207,13 @@ export async function registerNotificationRoutes(
 
     app.delete(`${base}/:id`, async (req, reply) => {
       const id = parseId((req.params as any).id);
-      if (!id || !(await repos.alerts.softDelete(id))) return notFound(reply);
+      if (!id) return notFound(reply);
+      const current = await repos.alerts.findById(id);
+      if (!current) return notFound(reply);
+      const scope = await scopeOf(req, reply);
+      if (scope === undefined) return reply;
+      if (!actorAllowed(scope, current.academicActorId)) return forbidden(reply);
+      if (!(await repos.alerts.softDelete(id))) return notFound(reply);
       return reply.code(204).send();
     });
   }
@@ -198,6 +226,7 @@ export async function registerNotificationRoutes(
     app.post(base, async (req, reply) => {
       const parsed = createAlertTypeBody.safeParse((req as any).body);
       if (!parsed.success) return send400(reply, 'Invalid alert type payload', parsed.error.flatten());
+      if (!(await requireSuperAdmin(req, reply))) return reply;
       const created = await repos.alertTypes.create(parsed.data as any);
       return reply.code(201).send(created);
     });
@@ -221,12 +250,14 @@ export async function registerNotificationRoutes(
       if (!id) return send400(reply, 'invalid id');
       const parsed = updateAlertTypeBody.safeParse((req as any).body);
       if (!parsed.success) return send400(reply, 'Invalid alert type payload', parsed.error.flatten());
+      if (!(await requireSuperAdmin(req, reply))) return reply;
       const updated = await repos.alertTypes.update(id, parsed.data as any);
       if (!updated) return notFound(reply);
       return reply.send(updated);
     });
 
     app.delete(`${base}/:id`, async (req, reply) => {
+      if (!(await requireSuperAdmin(req, reply))) return reply;
       const id = parseId((req.params as any).id);
       if (!id || !(await repos.alertTypes.softDelete(id))) return notFound(reply);
       return reply.code(204).send();
