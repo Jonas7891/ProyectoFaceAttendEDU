@@ -71,7 +71,7 @@ class ChangePasswordUseCaseImplTest {
         policy.setRequiresSymbols(true);
 
         useCase = new ChangePasswordUseCaseImpl(
-                id -> user, u -> saved = u, hash, () -> List.of(policy),
+                id -> user, u -> saved = u, hash, new ValidatePasswordPolicyUseCaseImpl(() -> List.of(policy)),
                 token -> token.equals(currentToken) ? current : null,
                 id -> List.of(current, other), sessionUpdate, new DomainEventPublisher(null));
     }
