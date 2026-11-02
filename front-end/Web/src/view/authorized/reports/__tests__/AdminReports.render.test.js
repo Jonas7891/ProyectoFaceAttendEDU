@@ -74,6 +74,21 @@ describe("AdminReports at-risk view render", () => {
         expect(render(<AdminReports />).toJSON()).toMatchSnapshot();
     });
 
+    // AUD-41: restos de JSX tras el PageHeader se pintaban como texto suelto.
+    test("no JSX leftovers are rendered as loose text", () => {
+        mockAtRisk.push(...ROWS);
+        mockStudents.push(...ROWS.map((r) => ({ id: r.studentId })));
+        const texts = [];
+        const walk = (node) => {
+            if (node == null) return;
+            if (typeof node === "string") texts.push(node);
+            else if (Array.isArray(node)) node.forEach(walk);
+            else walk(node.children);
+        };
+        walk(render(<AdminReports />).toJSON());
+        expect(texts.filter((text) => /[}>]/.test(text))).toEqual([]);
+    });
+
     test("empty state", () => {
         expect(render(<AdminReports />).toJSON()).toMatchSnapshot();
     });

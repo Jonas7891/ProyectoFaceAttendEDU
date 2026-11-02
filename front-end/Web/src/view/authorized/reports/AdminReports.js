@@ -433,9 +433,6 @@ export function AdminReports({ section, courseFilter }) {
                     />
                 }
             />
-                    )
-                }
-            />
 
             <ScrollView
                 contentContainerStyle={{

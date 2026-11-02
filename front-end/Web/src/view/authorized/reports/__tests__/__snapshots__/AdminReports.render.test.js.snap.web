@@ -129,7 +129,6 @@ exports[`AdminReports at-risk view render empty state 1`] = `
       </button>
     </div>
   </div>
-  ) } /&gt;
   <div
     className="css-view-g5y9jx r-WebkitOverflowScrolling-150rngu r-flexDirection-eqz5dr r-flexGrow-16y2uox r-flexShrink-1wbh5a2 r-overflowX-11yh6sk r-overflowY-1rnoaur r-transform-agouwx r-scrollbarWidth-2eszeu"
     dir={null}
@@ -339,7 +338,6 @@ exports[`AdminReports at-risk view render every risk message and row style 1`] =
       </button>
     </div>
   </div>
-  ) } /&gt;
   <div
     className="css-view-g5y9jx r-WebkitOverflowScrolling-150rngu r-flexDirection-eqz5dr r-flexGrow-16y2uox r-flexShrink-1wbh5a2 r-overflowX-11yh6sk r-overflowY-1rnoaur r-transform-agouwx r-scrollbarWidth-2eszeu"
     dir={null}
