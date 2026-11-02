@@ -144,7 +144,9 @@ export function useCoursesViewModel() {
     const [search, setSearch] = useState("");
     const [instructorFilter, setInstructorFilter] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
-    const [selected, setSelected] = useState(null);
+    const [selectedRaw, setSelected] = useState(null);
+    // AUD-61: por defecto no se listan los cursos inactivos (desactivados).
+    const [showInactive, setShowInactive] = useState(false);
     const [showRegisterModal, setShowRegisterModal] = useState(false);
     const [showImportModal, setShowImportModal] = useState(false);
     const [editingCourse, setEditingCourse] = useState(null);
@@ -173,6 +175,13 @@ export function useCoursesViewModel() {
         return appData.courses || [];
     }, [appData.isLoading, appData.courses]);
 
+    // El detalle sigue a la lista refrescada: tras desactivar/activar o editar,
+    // el modal muestra el estado actual y no la copia tomada al abrirlo (AUD-61).
+    const selected = useMemo(
+        () => (selectedRaw == null ? null : courses.find((c) => c.id === selectedRaw.id) ?? selectedRaw),
+        [courses, selectedRaw]
+    );
+
     // ── Instructores únicos para filtro ────────────────────────
     
     const instructors = useMemo(() => {
@@ -195,9 +204,21 @@ export function useCoursesViewModel() {
 
     // ── Cursos filtrados ───────────────────────────────────────
     
+    const includeInactive =
+        showInactive ||
+        statusFilter === "inactive" ||
+        (advancedFilter.column === "status" && advancedFilter.value === "inactive");
+
+    const visibleCourseCount = useMemo(
+        () => (includeInactive ? courses.length : courses.filter((c) => c.status !== "inactive").length),
+        [courses, includeInactive]
+    );
+
     const filtered = useMemo(
         () => {
             let result = courses.filter((course) => {
+                if (!includeInactive && course.status === "inactive") return false;
+
                 // Filtro de búsqueda por nombre o código
                 const matchSearch = !search ||
                     course.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -277,7 +298,7 @@ export function useCoursesViewModel() {
             
             return result;
         },
-        [courses, search, instructorFilter, statusFilter, advancedFilter]
+        [courses, search, instructorFilter, statusFilter, advancedFilter, includeInactive]
     );
 
     // ── Alcance por rol: "mis fichas" (teacher) / "mi ficha" (student) ──
@@ -595,6 +616,9 @@ export function useCoursesViewModel() {
         instructors,
         statusFilters,
         selected,
+        showInactive,
+        setShowInactive,
+        visibleCourseCount,
         stats,
         
         // Estado de carga
