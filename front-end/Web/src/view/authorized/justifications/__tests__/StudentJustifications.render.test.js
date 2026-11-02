@@ -9,7 +9,6 @@ import { JustificationDetailModal } from "../JustificationDetailModal";
 // Icon fonts cannot load under jest.
 jest.mock("@expo/vector-icons", () => ({ Feather: (props) => `Feather:${props.name}` }));
 jest.mock("../../../../core/utils/i18n/hooks/useTranslation", () => ({ useTranslation: () => ({ t: (s) => s }) }));
-
 // BaseModal portals into react-dom, which react-test-renderer cannot host.
 jest.mock("../../../components/common", () => ({
     ...jest.requireActual("../../../components/common"),
@@ -18,23 +17,26 @@ jest.mock("../../../components/common", () => ({
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
-const METRICS = { frame: { x: 0, y: 0, width: 1280, height: 800 }, insets: { top: 0, left: 0, right: 0, bottom: 0 } };
+const inset = { top: 0, left: 0, right: 0, bottom: 0 };
+const Providers = ({ children }) => (
+    <SafeAreaProvider initialMetrics={{ frame: { x: 0, y: 0, width: 1280, height: 800 }, insets: inset }}>
+        <ThemeProvider>
+            <ResponsiveProvider>{children}</ResponsiveProvider>
+        </ThemeProvider>
+    </SafeAreaProvider>
+);
 
-function render(element) {
-    let root;
+let root;
+const mount = (element) => {
     act(() => {
-        root = create(
-            <SafeAreaProvider initialMetrics={METRICS}>
-                <ThemeProvider><ResponsiveProvider>{element}</ResponsiveProvider></ThemeProvider>
-            </SafeAreaProvider>,
-        );
+        root = create(<Providers>{element}</Providers>);
     });
-    return root;
-}
-
-const texts = (root) =>
-    root.root.findAll((n) => typeof n.type === "string" && n.children.some((c) => typeof c === "string"))
+};
+const texts = () =>
+    root.root
+        .findAll((n) => typeof n.type === "string" && n.children.some((c) => typeof c === "string"))
         .map((n) => n.children.filter((c) => typeof c === "string").join(""));
+const byLabel = (label) => root.root.findAll((n) => n.props.accessibilityLabel === label);
 
 // La 312 de AUD-54: sin sesión resuelta no hay fecha de clase.
 const ITEM = {
@@ -45,58 +47,61 @@ const ITEM = {
     reviewStatus: "Approved",
     date: "",
 };
+const DOC = { supportingDocumentId: 9, fileName: "cita.pdf", mimeType: "application/pdf", sizeBytes: 2048 };
 
-const baseVm = (over = {}) => ({
-    listTab: "mine",
-    setListTab: jest.fn(),
-    myJustifications: [ITEM],
-    eligibleRecords: [],
-    typeNameOf: () => "Medical leave",
-    askWithdraw: jest.fn(),
-    openDetail: jest.fn(),
-    ...over,
-});
+describe("student justification cards", () => {
+    let vm;
+    const mountCards = (items = [ITEM]) => mount(<StudentJustifications vm={{ ...vm, myJustifications: items }} />);
 
-test("card without session date titles itself with the justification type and the submission date, not a dash (AUD-54)", () => {
-    const root = render(<StudentJustifications vm={baseVm()} />);
-    const all = texts(root);
-    expect(all).not.toContain("—");
-    expect(all.some((x) => x.includes("Medical leave") && x.includes("20/10/2026"))).toBe(true);
-});
+    beforeEach(() => {
+        vm = {
+            listTab: "mine",
+            setListTab: jest.fn(),
+            eligibleRecords: [],
+            typeNameOf: () => "Medical leave",
+            askWithdraw: jest.fn(),
+            openDetail: jest.fn(),
+        };
+    });
 
-test("card with a session date keeps the date as its title", () => {
-    const root = render(<StudentJustifications vm={baseVm({ myJustifications: [{ ...ITEM, date: "2026-10-19" }] })} />);
-    expect(texts(root)).toContain("19/10/2026");
-});
+    test("without session date the title is the type and the submission date, not a dash (AUD-54)", () => {
+        mountCards();
+        expect(texts()).not.toContain("—");
+        expect(texts().some((x) => x.includes("Medical leave") && x.includes("20/10/2026"))).toBe(true);
+    });
 
-test("the student can open the detail of an approved justification (AUD-54)", () => {
-    const vm = baseVm();
-    const root = render(<StudentJustifications vm={vm} />);
-    const open = root.root.findAll((n) => n.props.accessibilityLabel === "Ver detalle");
-    expect(open.length).toBeGreaterThan(0);
-    act(() => open[0].props.onPress());
-    expect(vm.openDetail).toHaveBeenCalledWith(ITEM);
+    test("with a session date the date stays as the title", () => {
+        mountCards([{ ...ITEM, date: "2026-10-19" }]);
+        expect(texts()).toContain("19/10/2026");
+    });
+
+    test("the student can open the detail of an approved justification (AUD-54)", () => {
+        mountCards();
+        const open = byLabel("Ver detalle");
+        expect(open.length).toBeGreaterThan(0);
+        act(() => open[0].props.onPress());
+        expect(vm.openDetail).toHaveBeenCalledWith(ITEM);
+    });
 });
 
 test("read-only detail shows the supporting documents but no review actions", () => {
-    const onOpenDocument = jest.fn();
-    const root = render(
+    const noop = () => {};
+    mount(
         <JustificationDetailModal
             row={{ ...ITEM, reviewStatus: "Pending", recordStatus: "Absent" }}
             typeName="Medical leave"
-            documents={[{ supportingDocumentId: 9, fileName: "cita.pdf", mimeType: "application/pdf", sizeBytes: 2048 }]}
+            documents={[DOC]}
             documentsLoading={false}
             notes=""
-            onNotesChange={() => {}}
-            onClose={() => {}}
-            onDecide={() => {}}
-            onOpenDocument={onOpenDocument}
+            onNotesChange={noop}
+            onClose={noop}
+            onDecide={noop}
+            onOpenDocument={noop}
             readOnly
         />,
     );
-    const all = texts(root);
-    expect(all).toContain("cita.pdf");
-    expect(all).not.toContain("Aprobar");
-    expect(all).not.toContain("Rechazar");
-    expect(root.root.findAll((n) => n.props.accessibilityLabel === "Ver documento cita.pdf").length).toBeGreaterThan(0);
+    expect(texts()).toContain("cita.pdf");
+    expect(texts()).not.toContain("Aprobar");
+    expect(texts()).not.toContain("Rechazar");
+    expect(byLabel("Ver documento cita.pdf").length).toBeGreaterThan(0);
 });
