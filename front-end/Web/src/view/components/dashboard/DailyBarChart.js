@@ -27,7 +27,7 @@ function AttendanceRateText({ rate, total }) {
             fontWeight: "700",
             color: total === 0 ? c.text.disabled : status.color,
         }}>
-            {total === 0 ? "0%" : `${rate}%`}
+            {total === 0 ? "—" : `${rate}%`}
         </Text>
     );
 }
