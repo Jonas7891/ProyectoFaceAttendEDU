@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
-import { provisionStudent, credentialsNotice, documentTypesForRole } from "../services/api/staffProvisioning";
+import { documentTypesForRole } from "../services/api/staffProvisioning";
 import { birthDateError, isValidEmail } from "../core/utils/validation";
 
 // ── Tipos de formulario ───────────────────────────────────
@@ -120,41 +120,6 @@ export function useStudentsViewModel() {
         [appData.students, search, courseFilter]
     );
 
-    const registerStudent = useCallback(
-        async (form) => {
-            const err = validateStudentForm(form);
-            if (err) return err;
-
-            let provisioned;
-            try {
-                provisioned = await provisionStudent({
-                    name: form.name.trim(),
-                    code: form.code.trim(),
-                    email: form.email.trim(),
-                    documentNumber: String(form.documentNumber ?? "").trim(),
-                    password: String(form.password ?? ""),
-                    courseCode: form.course.trim(),
-                    cohortId: String(form.cohortId ?? "").trim() || null,
-                    details: form,
-                    sendCredentials: form.sendCredentials !== false,
-                    consent: { privacyAccepted: form.privacyAccepted === true, biometricAccepted: form.biometricAccepted === true },
-                });
-            } catch (e) {
-                return e?.message || "No se pudo registrar el estudiante en el backend";
-            }
-
-            // Lista real del backend en vez de un espejo local parcial (sin documento, usuario ni
-            // sede) que además duplicaba al estudiante. Si la recarga falla el alta ya está hecha.
-            try {
-                await appData.reloadStudents?.();
-            } catch {
-                /* el usuario puede recargar a mano */
-            }
-            return credentialsNotice(form, provisioned);
-        },
-        [appData]
-    );
-
     const importStudents = useCallback(
         async (drafts) => {
             return appData.importStudents(drafts);
@@ -184,7 +149,6 @@ export function useStudentsViewModel() {
         closeRegisterModal: () => setShowRegisterModal(false),
         openImportModal: () => setShowImportModal(true),
         closeImportModal: () => setShowImportModal(false),
-        registerStudent,
         importStudents,
     };
 }

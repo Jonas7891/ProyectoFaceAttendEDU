@@ -10,23 +10,12 @@ let mockCurrent;
 let mockForceRender;
 
 jest.mock("../../context/AppDataContext", () => ({ useAppData: () => mockCurrent }));
-jest.mock("../../services/api/environmentManagement", () => ({
-    backendEnvId: (id) => (Number.isInteger(Number(id)) && Number(id) > 0 ? Number(id) : null),
-    createEnvironment: jest.fn(),
-    deleteEnvironment: jest.fn(),
-    updateEnvironment: jest.fn(),
-}));
-jest.mock("../../services/api/scheduleBlockManagement", () => ({
-    backendScheduleId: (id) => (Number.isInteger(Number(id)) && Number(id) > 0 ? Number(id) : null),
-    cohortsForCourse: jest.fn(),
-    createBlocks: jest.fn(),
-    createdBlockId: jest.fn(),
-    dayLabelToIso: jest.fn(),
-    deleteBlock: jest.fn(),
-    instructorActorForUser: jest.fn(),
-    isoToDayLabel: jest.fn(),
-    replaceBlock: jest.fn(),
-}));
+jest.mock("../../services/api/environmentManagement", () =>
+    require("../../testHelpers/environmentServiceMocks").environmentManagementMock()
+);
+jest.mock("../../services/api/scheduleBlockManagement", () =>
+    require("../../testHelpers/environmentServiceMocks").scheduleBlockManagementMock()
+);
 
 import { useEnvironmentsViewModel } from "../useEnvironmentsViewModel";
 import { deleteBlock } from "../../services/api/scheduleBlockManagement";
