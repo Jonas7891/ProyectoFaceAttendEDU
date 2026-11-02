@@ -102,7 +102,6 @@ export function TeacherSettings({ section, onSave, onDiscard, onDiscardColors, o
         security: (
             <RoleSecuritySettings
                 sessionTime={config.sessionTime}
-                onSessionTimeChange={(value) => updateConfig("sessionTime", value)}
                 shortSessionHint={t(" Sesión muy corta — el usuario deberá iniciar sesión con frecuencia.")}
                 normalSessionHint={t(" Tiempo razonable para uso normal en aula.")}
             />

@@ -89,6 +89,8 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
     const { currentLanguage, t } = useTranslation();
     const { user } = useAuth();
     const { dateFormat } = useDateFormat(); // Forzar re-render cuando cambie el formato
+    // La seguridad global solo la persiste el Super Admin; para el resto es solo lectura.
+    const canWriteSecurity = hasSuperAdminRole(user?.roles);
 
     // ── Estado no editable (UI temporal) ──────────────────────
     const [showExpirationAlert, setShowExpirationAlert] = useState(true);
@@ -124,7 +126,7 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
             // guardado se reporta como fallido para no mostrar éxito falso.
             try {
                 await pushInstitutionConfig(user?.schoolId ?? null, merged, {
-                    canWriteSecurity: hasSuperAdminRole(user?.roles),
+                    canWriteSecurity,
                 });
                 // Académico debe reflejar el mismo período vigente que Configuración.
                 await syncAcademicPeriodFromSettings(user?.schoolId ?? null, merged);
@@ -351,8 +353,9 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                 onSessionTimeChange={(value) => updateConfig("sessionTime", value)}
                 shortSessionHint={t(" Sesión muy corta — el usuario deberá iniciar sesión con frecuencia.")}
                 normalSessionHint={t(" Tiempo razonable para uso normal en aula.")}
-                notices={user?.schoolId != null ? [
-                    <FutureNotice message={t("El tiempo de sesión es global de la plataforma: lo define el Super Administrador. Tu cambio solo se aplica en este navegador.")} />,
+                sessionTimeReadOnly={!canWriteSecurity}
+                notices={!canWriteSecurity ? [
+                    <FutureNotice message={t("El tiempo de sesión es global de la plataforma: lo define el Super Administrador y aquí solo puedes consultarlo.")} />,
                 ] : []}
             />
         ),
