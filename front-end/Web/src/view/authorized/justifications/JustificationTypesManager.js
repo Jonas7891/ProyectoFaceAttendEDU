@@ -18,6 +18,8 @@ import { useResponsive } from "../../components/hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useAuth } from "../../../context/AuthContext";
 import { attendanceApi } from "../../../services/api/attendanceApi";
+import { useRolePermissions } from "../../../viewmodels/useRolePermissions";
+import { justificationTypeErrorMessage } from "./justificationTypeErrors";
 
 const EMPTY_FORM = { name: "", description: "", requiresAttachment: false, global: false };
 
@@ -29,6 +31,8 @@ export function JustificationTypesManager() {
     const { t } = useTranslation();
     const c = theme.colors;
     const { user } = useAuth();
+    // Los tipos globales (school_id NULL) solo los gestiona el Super Admin (AUD-40).
+    const { canManageGlobalJustificationTypes } = useRolePermissions();
     const { isSmall } = useResponsive();
 
     const [types, setTypes] = useState([]);
@@ -90,7 +94,7 @@ export function JustificationTypesManager() {
             name: form.name.trim(),
             description: form.description.trim() || null,
             requiresAttachment: !!form.requiresAttachment,
-            schoolId: form.global ? null : user?.schoolId ?? null,
+            schoolId: form.global && canManageGlobalJustificationTypes ? null : user?.schoolId ?? null,
         };
         try {
             if (editing) {
@@ -101,7 +105,7 @@ export function JustificationTypesManager() {
             }
         } catch (e) {
             setSaving(false);
-            setFormError(e?.message || t("No se pudo guardar el tipo."));
+            setFormError(t(justificationTypeErrorMessage(e, "No se pudo guardar el tipo.")));
             return;
         }
         setSaving(false);
@@ -118,7 +122,7 @@ export function JustificationTypesManager() {
             setPendingDelete(null);
             load();
         } catch (e) {
-            setError(e?.message || t("No se pudo eliminar el tipo."));
+            setError(t(justificationTypeErrorMessage(e, "No se pudo eliminar el tipo.")));
         } finally {
             setBusy(false);
         }
@@ -273,24 +277,32 @@ export function JustificationTypesManager() {
                                         borderTopColor: c.border.primary,
                                     }}
                                 >
-                                    <View style={{ flex: 1 }}>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onPress={() => openEdit(type)}
-                                            leftIcon={<Feather name="edit-2" size={13} color={c.text.primary} />}
-                                        >
-                                            {t("Editar")}
-                                        </Button>
-                                    </View>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onPress={() => setPendingDelete(type)}
-                                        leftIcon={<Feather name="trash-2" size={14} color={c.status.danger} />}
-                                    >
-                                        {t("Eliminar")}
-                                    </Button>
+                                    {global && !canManageGlobalJustificationTypes ? (
+                                        <Text style={{ fontSize: 12, color: c.text.secondary, flex: 1 }}>
+                                            {t("Tipo global: solo lectura")}
+                                        </Text>
+                                    ) : (
+                                        <>
+                                            <View style={{ flex: 1 }}>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onPress={() => openEdit(type)}
+                                                    leftIcon={<Feather name="edit-2" size={13} color={c.text.primary} />}
+                                                >
+                                                    {t("Editar")}
+                                                </Button>
+                                            </View>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onPress={() => setPendingDelete(type)}
+                                                leftIcon={<Feather name="trash-2" size={14} color={c.status.danger} />}
+                                            >
+                                                {t("Eliminar")}
+                                            </Button>
+                                        </>
+                                    )}
                                 </View>
                             </View>
                         );
@@ -339,6 +351,7 @@ export function JustificationTypesManager() {
                         maxLength={255}
                     />
 
+                    {canManageGlobalJustificationTypes && (
                     <View style={{ gap: 8 }}>
                         <Text style={{ fontSize: 13, fontWeight: "600", color: c.text.secondary }}>{t("Alcance")}</Text>
                         <View style={{ flexDirection: "row", gap: 8 }}>
@@ -375,6 +388,7 @@ export function JustificationTypesManager() {
                             })}
                         </View>
                     </View>
+                    )}
 
                     <Switch
                         label={t("Requiere soporte adjunto")}

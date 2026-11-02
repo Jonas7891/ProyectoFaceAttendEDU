@@ -27,7 +27,7 @@ export function useSettingsActions({ onSave, save, onDiscard, discard }) {
  * @param {string} normalSessionHint - ayuda para sesiones de 16 a 120 min
  * @param {Array} notices - avisos antes de las opciones (opcional)
  */
-export function RoleSecuritySettings({ sessionTime, onSessionTimeChange, shortSessionHint, normalSessionHint, notices = [] }) {
+export function RoleSecuritySettings({ sessionTime, onSessionTimeChange, shortSessionHint, normalSessionHint, notices = [], sessionTimeReadOnly = true }) {
     const { t } = useTranslation();
     return (
         <SecuritySettings
@@ -39,6 +39,7 @@ export function RoleSecuritySettings({ sessionTime, onSessionTimeChange, shortSe
                 <SessionTimeInput
                     value={sessionTime}
                     onChange={onSessionTimeChange}
+                    readOnly={sessionTimeReadOnly}
                     contextHint={(min) =>
                         min > 120 ? t(" ⚠ Sesiones largas aumentan el riesgo si el dispositivo queda desbloqueado.")
                         : min <= 15 ? shortSessionHint
