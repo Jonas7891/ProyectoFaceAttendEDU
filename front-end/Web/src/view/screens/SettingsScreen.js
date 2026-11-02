@@ -6,6 +6,9 @@
 //  Este componente:
 //  ✓ Actúa como punto de entrada para la navegación
 //  ✓ Delega toda la presentación a SettingsView
+//  ✓ Sin guard de rol sobre la pantalla (AUD-15): "settings" está en visibleTabs
+//    de todos los roles (apariencia y notificaciones son propias de cada cuenta).
+//    El acceso fino es por sección, no por pantalla:
 //  ✓ Corrige la URL cuando la sección pedida no está permitida al rol
 //    (/app/settings/security para un docente → /app/settings/appearance)
 //
