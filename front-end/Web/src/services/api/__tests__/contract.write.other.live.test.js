@@ -14,7 +14,7 @@
  *   node verificar-contrato.mjs
  */
 import {
-    LIVE, bootWeb, exec, flushReport, lastWire, lit, loginAs, one, pick, readCredentials, rid, scenario, sql,
+    LIVE, bootWeb, exec, execForSchool, flushReport, lastWire, lit, loginAs, one, pick, readCredentials, rid, scenario, sql,
 } from "../testing/contractHarness";
 
 const run = LIVE ? describe : describe.skip;
@@ -53,7 +53,8 @@ run("contrato web ⇄ endpoint ⇄ BD: escrituras de justificaciones y configura
         exec(`update attendance.justification_type set deleted_at = now() where school_id is null and name like 'CT Global %' and deleted_at is null`);
         created.types.filter(Boolean).forEach((id) =>
             exec(`update attendance.justification_type set deleted_at = now() where justification_type_id = ${Number(id)} and deleted_at is null`));
-        exec(`update configuration.academic_configuration set deleted_at = now() where school_id = ${Number(ownId)} and configuration_name like 'web.min_attendance' and deleted_at is null and created_at > now() - interval '1 hour'`);
+        execForSchool(ownId, (schoolId) =>
+            `update configuration.academic_configuration set deleted_at = now() where school_id = ${schoolId} and configuration_name like 'web.min_attendance' and deleted_at is null and created_at > now() - interval '1 hour'`);
         flushReport("write-other");
         restoreFetch?.();
     });
