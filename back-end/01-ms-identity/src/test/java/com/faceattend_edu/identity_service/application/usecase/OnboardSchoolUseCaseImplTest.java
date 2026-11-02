@@ -11,6 +11,7 @@ import com.faceattend_edu.identity_service.application.port.out.SchoolProvisioni
 import com.faceattend_edu.identity_service.config.OnboardingProperties;
 import com.faceattend_edu.identity_service.domain.exception.DuplicateEntityException;
 import com.faceattend_edu.identity_service.domain.exception.OnboardingUnavailableException;
+import com.faceattend_edu.identity_service.domain.exception.ValidationException;
 import com.faceattend_edu.identity_service.domain.model.Person;
 import com.faceattend_edu.identity_service.domain.model.User;
 import com.faceattend_edu.identity_service.domain.model.UserSession;
@@ -54,6 +55,7 @@ class OnboardSchoolUseCaseImplTest {
     @Mock LoadUserByUsernamePort loadUserByUsernamePort;
     @Mock SchoolProvisioningPort provisioning;
     @Mock com.faceattend_edu.identity_service.application.port.in.ManageConsentUseCase consentUseCase;
+    @Mock com.faceattend_edu.identity_service.application.port.in.ValidatePasswordPolicyUseCase passwordPolicy;
 
     private OnboardingProperties properties;
     private OnboardSchoolUseCaseImpl useCase;
@@ -69,7 +71,7 @@ class OnboardSchoolUseCaseImplTest {
         properties = new OnboardingProperties();
         properties.setServiceUserId(serviceUserId.toString());
         useCase = new OnboardSchoolUseCaseImpl(properties, createUserSessionUseCase, closeUserSessionUseCase,
-                createPersonUseCase, createUserUseCase, changeUserStatusUseCase, loadUserByUsernamePort, provisioning, consentUseCase);
+                createPersonUseCase, createUserUseCase, changeUserStatusUseCase, loadUserByUsernamePort, provisioning, consentUseCase, passwordPolicy);
         org.mockito.Mockito.lenient().when(consentUseCase.currentPolicyVersion()).thenReturn("2026-11");
 
         session = new UserSession();
@@ -109,6 +111,19 @@ class OnboardSchoolUseCaseImplTest {
         assertThatThrownBy(() -> useCase.onboard(SCHOOL, ADMIN)).isInstanceOf(DuplicateEntityException.class);
 
         verifyNoInteractions(createUserSessionUseCase, createPersonUseCase, provisioning);
+    }
+
+    @Test
+    @DisplayName("rejects a password that breaks the policy before opening any session or storing anything (AUD-20)")
+    void rejectsPasswordBreakingThePolicy() {
+        org.mockito.Mockito.doThrow(new ValidationException("Password must contain an uppercase letter"))
+                .when(passwordPolicy).validate("Secret123!");
+
+        assertThatThrownBy(() -> useCase.onboard(SCHOOL, ADMIN))
+                .isInstanceOf(ValidationException.class)
+                .hasMessageNotContaining("Secret123!");
+
+        verifyNoInteractions(createUserSessionUseCase, createPersonUseCase, createUserUseCase, consentUseCase, provisioning);
     }
 
     @Test

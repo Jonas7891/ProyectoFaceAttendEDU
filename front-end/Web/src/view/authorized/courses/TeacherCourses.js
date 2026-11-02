@@ -158,10 +158,9 @@ export function TeacherCourses({ vm: vmProp }) {
         (course) => {
             navigation.navigate("Users", {
                 section: "students",
-                searchQuery: course.code,
+                courseId: course.id,
                 sortBy: "name",
                 sortOrder: "asc",
-                filterColumn: "name",
             });
         },
         [navigation]

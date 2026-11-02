@@ -4,6 +4,8 @@
 // (GET /biometric/summary). La carga inicial y cualquier recarga de la lista deben aplicarlos,
 // o la columna vuelve a "Pendiente" para todos.
 
+import { buildPermissions } from "../../viewmodels/useRolePermissions";
+
 /** Resumen de ms-biometric → conjuntos de personId (texto) con rostro y con huella. */
 export function flagsFromSummary(summary) {
     return {
@@ -24,4 +26,18 @@ export function withBiometricFlags(rows, flags) {
                   hasFingerprint: flags.fingerprint.has(String(row.personId)),
               }
     );
+}
+
+/**
+ * Pide el resumen solo a los roles que tienen el permiso del endpoint
+ * (attendance.record:write: administración e instructor). El aprendiz recibía un 403
+ * en cada carga; sin permiso ni se hace la petición. Un fallo real devuelve null.
+ */
+export async function loadBiometricFlags(role, fetchSummary) {
+    if (!buildPermissions(role).canViewBiometricSummary) return null;
+    try {
+        return flagsFromSummary(await fetchSummary());
+    } catch {
+        return null;
+    }
 }

@@ -236,6 +236,24 @@ describe('academic periods (canonical route and /periods alias)', () => {
     expect((await call('admin1', 'GET', `${base}/${id}`)).statusCode).toBe(404);
   });
 
+  it.each(['/api/v1/academic-periods', '/api/v1/periods'])('%s: rejects inverted, equal or non-date ranges (chk_period_dates) on create and edit', async (base) => {
+    const ok = { schoolId: ids.s1, name: 'rango', startsOn: '2028-01-01', endsOn: '2028-03-31' };
+    for (const bad of [
+      { startsOn: '2028-03-31', endsOn: '2028-01-01' },
+      { startsOn: '2028-01-01', endsOn: '2028-01-01' },
+      { startsOn: 'ayer', endsOn: '2028-01-01' },
+    ]) {
+      const res = await call('admin1', 'POST', base, { ...ok, ...bad });
+      expect(res.statusCode).toBe(400);
+    }
+    const created = await call('admin1', 'POST', base, ok);
+    expect(created.statusCode).toBe(201);
+    const id = created.json().academicPeriodId;
+    expect((await call('admin1', 'PUT', `${base}/${id}`, { endsOn: '2027-12-31' })).statusCode).toBe(400);
+    expect((await call('admin1', 'PUT', `${base}/${id}`, { endsOn: '2028-06-30' })).statusCode).toBe(200);
+    expect((await call('admin1', 'PUT', `${base}/${id}`, { isActive: true })).statusCode).toBe(200);
+  });
+
   it('nested /schools/:id/periods respects the school', async () => {
     const body = { name: '2027-I', startsOn: '2027-01-01', endsOn: '2027-06-30' };
     expect((await call('admin1', 'POST', `/api/v1/schools/${ids.s1}/periods`, body)).statusCode).toBe(201);

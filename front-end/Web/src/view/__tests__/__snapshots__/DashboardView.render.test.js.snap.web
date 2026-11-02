@@ -92,6 +92,7 @@ exports[`DashboardView render admin panel 1`] = `
             "flexDirection": "row",
             "flexWrap": "wrap",
             "gap": "10px",
+            "maxWidth": "100%",
           }
         }
       >
@@ -1144,6 +1145,7 @@ exports[`DashboardView render admin panel on the current week 1`] = `
             "flexDirection": "row",
             "flexWrap": "wrap",
             "gap": "10px",
+            "maxWidth": "100%",
           }
         }
       >
@@ -2158,6 +2160,7 @@ exports[`DashboardView render admin panel while its data loads 1`] = `
             "flexDirection": "row",
             "flexWrap": "wrap",
             "gap": "10px",
+            "maxWidth": "100%",
           }
         }
       >
@@ -2411,6 +2414,7 @@ exports[`DashboardView render student panel 1`] = `
             "flexDirection": "row",
             "flexWrap": "wrap",
             "gap": "10px",
+            "maxWidth": "100%",
           }
         }
       >
@@ -3598,6 +3602,7 @@ exports[`DashboardView render student panel on the current week 1`] = `
             "flexDirection": "row",
             "flexWrap": "wrap",
             "gap": "10px",
+            "maxWidth": "100%",
           }
         }
       >
@@ -4747,6 +4752,7 @@ exports[`DashboardView render student panel while its data loads 1`] = `
             "flexDirection": "row",
             "flexWrap": "wrap",
             "gap": "10px",
+            "maxWidth": "100%",
           }
         }
       >
@@ -5000,6 +5006,7 @@ exports[`DashboardView render teacher panel 1`] = `
             "flexDirection": "row",
             "flexWrap": "wrap",
             "gap": "10px",
+            "maxWidth": "100%",
           }
         }
       >
@@ -5896,6 +5903,7 @@ exports[`DashboardView render teacher panel on the current week 1`] = `
             "flexDirection": "row",
             "flexWrap": "wrap",
             "gap": "10px",
+            "maxWidth": "100%",
           }
         }
       >
@@ -6792,6 +6800,7 @@ exports[`DashboardView render teacher panel while its data loads 1`] = `
             "flexDirection": "row",
             "flexWrap": "wrap",
             "gap": "10px",
+            "maxWidth": "100%",
           }
         }
       >

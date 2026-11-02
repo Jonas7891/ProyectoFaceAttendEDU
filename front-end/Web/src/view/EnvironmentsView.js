@@ -13,10 +13,11 @@
 //  Las acciones de gestión se muestran condicionalmente según useRolePermissions.
 // ============================================================
 
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, ScrollView, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Button, EmptyState, SearchInput, PageHeader } from "./components/common";
+import { ConfirmModal } from "./components/common/modals/ConfirmModal";
 import { useTheme } from "./components/hooks/useTheme";
 import { useResponsive } from "./components/hooks/useResponsive";
 import { useAppData } from "../context/AppDataContext";
@@ -59,6 +60,10 @@ export default function EnvironmentsView() {
         [cohortCodeById]
     );
     const pushNotification = usePushNotification();
+    // Eliminar pide confirmación; el error del servidor se muestra dentro del diálogo.
+    const [pendingDelete, setPendingDelete] = useState(null); // { kind: "environment"|"schedule", envId, scheduleId? }
+    const [deleteBusy, setDeleteBusy] = useState(false);
+    const [deleteError, setDeleteError] = useState(null);
 
     if (vm.isLoading) {
         return (
@@ -71,73 +76,50 @@ export default function EnvironmentsView() {
     const totalSchedules = vm.environments.reduce((acc, env) => acc + env.schedules.length, 0);
     const withoutSchedules = vm.environments.filter((env) => env.schedules.length === 0).length;
 
-    // Función para eliminar ambiente con notificación push
-    const handleDeleteEnvironment = async (environmentId) => {
-        const config = getInstitutionConfig();
-        
-        try {
-            await vm.removeEnvironment(environmentId);
-            
-            // Mostrar notificación de éxito
-            if (config.pushNotifications) {
-                pushNotification.success(
-                    t("Ambiente eliminado"),
-                    t("El ambiente ha sido eliminado correctamente"),
-                    {
-                        source: "environments-view",
-                        priority: "normal",
-                        duration: 3000,
-                    }
-                );
-            }
-        } catch (_error) {
-            // Mostrar notificación de error
-            if (config.pushNotifications) {
-                pushNotification.error(
-                    t("Error al eliminar"),
-                    t("No se pudo eliminar el ambiente. Intenta nuevamente."),
-                    {
-                        source: "environments-view",
-                        priority: "high",
-                        duration: 5000,
-                    }
-                );
-            }
-        }
+    const closeDeleteDialog = () => {
+        if (deleteBusy) return;
+        setPendingDelete(null);
+        setDeleteError(null);
     };
 
-    // Función para eliminar horario con notificación push
-    const handleDeleteSchedule = async (envId, scheduleId) => {
+    // El viewmodel devuelve null si eliminó o el mensaje de error; la lista local solo cambia en éxito.
+    const confirmDelete = async () => {
+        if (!pendingDelete) return;
         const config = getInstitutionConfig();
-        
+        const isEnv = pendingDelete.kind === "environment";
+        setDeleteBusy(true);
+        setDeleteError(null);
+        let err;
         try {
-            await vm.removeSchedule(envId, scheduleId);
-            
-            // Mostrar notificación de éxito
+            err = isEnv
+                ? await vm.removeEnvironment(pendingDelete.envId)
+                : await vm.removeSchedule(pendingDelete.envId, pendingDelete.scheduleId);
+        } catch (_e) {
+            err = isEnv
+                ? t("No se pudo eliminar el ambiente. Intenta nuevamente.")
+                : t("No se pudo eliminar el horario. Intenta nuevamente.");
+        }
+        setDeleteBusy(false);
+        if (err) {
+            setDeleteError(t(err));
             if (config.pushNotifications) {
-                pushNotification.success(
-                    t("Horario eliminado"),
-                    t("El horario ha sido eliminado del ambiente"),
-                    {
-                        source: "environments-view",
-                        priority: "normal",
-                        duration: 3000,
-                    }
-                );
+                pushNotification.error(t("Error al eliminar"), t(err), {
+                    source: "environments-view",
+                    priority: "high",
+                    duration: 5000,
+                });
             }
-        } catch (_error) {
-            // Mostrar notificación de error
-            if (config.pushNotifications) {
-                pushNotification.error(
-                    t("Error al eliminar"),
-                    t("No se pudo eliminar el horario. Intenta nuevamente."),
-                    {
-                        source: "environments-view",
-                        priority: "high",
-                        duration: 5000,
-                    }
-                );
-            }
+            return;
+        }
+        setPendingDelete(null);
+        if (config.pushNotifications) {
+            pushNotification.success(
+                isEnv ? t("Ambiente eliminado") : t("Horario eliminado"),
+                isEnv
+                    ? t("El ambiente ha sido eliminado correctamente")
+                    : t("El horario ha sido eliminado del ambiente"),
+                { source: "environments-view", priority: "normal", duration: 3000 }
+            );
         }
     };
 
@@ -295,13 +277,35 @@ export default function EnvironmentsView() {
                     environment={vm.selected}
                     onClose={vm.clearSelection}
                     onEdit={() => vm.openEditModal(vm.selected)}
-                    onDelete={() => handleDeleteEnvironment(vm.selected.id)}
+                    onDelete={() => {
+                        setDeleteError(null);
+                        setPendingDelete({ kind: "environment", envId: vm.selected.id });
+                    }}
                     onAddSchedule={() => vm.openAddSchedule(vm.selected.id)}
                     onEditSchedule={(schedule) => vm.openEditSchedule(vm.selected.id, schedule)}
-                    onDeleteSchedule={(scheduleId) => vm.removeSchedule(vm.selected.id, scheduleId)}
+                    onDeleteSchedule={(scheduleId) => {
+                        setDeleteError(null);
+                        setPendingDelete({ kind: "schedule", envId: vm.selected.id, scheduleId });
+                    }}
                     canManage={permissions.canManageEnvironments}
                 />
             )}
+
+            <ConfirmModal
+                visible={pendingDelete != null}
+                onClose={closeDeleteDialog}
+                onConfirm={confirmDelete}
+                loading={deleteBusy}
+                variant="danger"
+                title={pendingDelete?.kind === "schedule" ? t("Eliminar horario") : t("Eliminar ambiente")}
+                message={
+                    deleteError ??
+                    (pendingDelete?.kind === "schedule"
+                        ? t("Se eliminará el horario del ambiente. ¿Continuar?")
+                        : t("Se eliminará el ambiente. ¿Continuar?"))
+                }
+                confirmText={t("Eliminar")}
+            />
 
             {/* Modal registro/edición ambiente */}
             <EnvironmentFormModal

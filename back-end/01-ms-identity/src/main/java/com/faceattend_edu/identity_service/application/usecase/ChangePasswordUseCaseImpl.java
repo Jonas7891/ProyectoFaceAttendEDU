@@ -3,7 +3,7 @@ package com.faceattend_edu.identity_service.application.usecase;
 import com.faceattend_edu.identity_service.adapter.out.messaging.DomainEventPublisher;
 import com.faceattend_edu.identity_service.application.port.in.ChangePasswordUseCase;
 import com.faceattend_edu.identity_service.application.port.out.HashPasswordPort;
-import com.faceattend_edu.identity_service.application.port.out.ListPasswordPoliciesPort;
+import com.faceattend_edu.identity_service.application.port.in.ValidatePasswordPolicyUseCase;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserPort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserSessionPort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserSessionsPort;
@@ -27,7 +27,7 @@ public class ChangePasswordUseCaseImpl implements ChangePasswordUseCase {
     private final LoadUserPort loadUserPort;
     private final UpdateUserPort updateUserPort;
     private final HashPasswordPort hashPasswordPort;
-    private final ListPasswordPoliciesPort listPasswordPoliciesPort;
+    private final ValidatePasswordPolicyUseCase validatePasswordPolicy;
     private final LoadUserSessionPort loadUserSessionPort;
     private final LoadUserSessionsPort loadUserSessionsPort;
     private final UpdateUserSessionPort updateUserSessionPort;
@@ -45,7 +45,7 @@ public class ChangePasswordUseCaseImpl implements ChangePasswordUseCase {
         if (hashPasswordPort.matches(password, user.getPasswordHash())) {
             throw new ValidationException("The new password must be different from the current one");
         }
-        ResetPasswordUseCaseImpl.validateAgainstPolicy(password, listPasswordPoliciesPort.listPolicies());
+        validatePasswordPolicy.validate(password);
 
         user.setPasswordHash(hashPasswordPort.hash(password));
         user.setMustChangePassword(false);

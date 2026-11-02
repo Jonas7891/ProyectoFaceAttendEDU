@@ -27,6 +27,23 @@ export function normalizeBiometricSection(section) {
     return BIOMETRIC_SECTIONS.includes(section) ? section : DEFAULT_BIOMETRIC_SECTION;
 }
 
+/**
+ * Al cambiar de pestaña, un error de la anterior (p. ej. cámara denegada) deja de mostrarse:
+ * no aplica a la nueva. Los estados informativos y de éxito se conservan.
+ */
+export function useClearErrorStatusOnChange(key, vm) {
+    const { t } = useTranslation();
+    const { status, setStatus } = vm;
+    const lastKey = useRef(key);
+    useEffect(() => {
+        if (lastKey.current === key) return;
+        lastKey.current = key;
+        if (status?.tone === "error") {
+            setStatus(t("Elige un módulo, selecciona una persona y sigue las instrucciones."), "info");
+        }
+    }, [key, status, setStatus, t]);
+}
+
 export function useBiometricsViewModel() {
     const { t } = useTranslation();
 

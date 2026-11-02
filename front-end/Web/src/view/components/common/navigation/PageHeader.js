@@ -125,7 +125,10 @@ export function PageHeader({
                     flexDirection: "row", 
                     gap: 10, 
                     alignItems: "center",
-                    flexWrap: "wrap" 
+                    flexWrap: "wrap",
+                    // Acotado al ancho del header: sin esto, en 375 px los botones
+                    // desbordan en vez de saltar de línea (AUD-42)
+                    maxWidth: "100%",
                 }}>
                     {actions}
                 </View>
