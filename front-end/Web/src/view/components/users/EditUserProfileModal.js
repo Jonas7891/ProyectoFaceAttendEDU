@@ -216,6 +216,7 @@ export default function EditUserProfileModal({
                     padding: 24,
                 }}
                 onPress={closeOnBackdrop ? onClose : undefined}
+                accessibilityLabel={t("Cerrar")}
                 activeOpacity={1}
                 disabled={!closeOnBackdrop}
             >
@@ -248,7 +249,11 @@ export default function EditUserProfileModal({
                                      t("Editar estudiante")}
                                 </Text>
                             </View>
-                            <TouchableOpacity onPress={onClose}>
+                            <TouchableOpacity
+                                onPress={onClose}
+                                accessibilityRole="button"
+                                accessibilityLabel={t("Cerrar")}
+                            >
                                 <Feather name="x" size={18} color={c.text.secondary} />
                             </TouchableOpacity>
                         </View>

@@ -1980,5 +1980,12 @@
   "Se eliminará el horario del ambiente. ¿Continuar?": "The schedule will be removed from the room. Continue?",
   "Se eliminará el ambiente. ¿Continuar?": "The room will be deleted. Continue?",
   "No se puede eliminar un ambiente que tiene horarios asignados": "A room that has assigned schedules cannot be deleted",
-  "No se puede eliminar el horario porque tiene sesiones asociadas": "The schedule cannot be deleted because it has associated sessions"
+  "No se puede eliminar el horario porque tiene sesiones asociadas": "The schedule cannot be deleted because it has associated sessions",
+  "Mostrar contraseña": "Show password",
+  "Ocultar contraseña": "Hide password",
+  "Ver detalle de {{name}}": "View details of {{name}}",
+  "Seleccionar {{name}}": "Select {{name}}",
+  "Exportar registros seleccionados": "Export selected records",
+  "Color {{name}}": "Color: {{name}}",
+  "Mostrar opciones": "Show options"
 }

@@ -110,6 +110,9 @@ function UserRow({ user, index, isLast, onPress, isExportMode, isSelected, onTog
     
     return (
         <TouchableOpacity
+            accessibilityLabel={isExportMode
+                ? t("Seleccionar {{name}}", { name: user.studentName })
+                : t("Ver detalle de {{name}}", { name: user.studentName })}
             onPress={() => {
                 if (isExportMode) {
                     onToggleSelect(user.id);
@@ -1359,6 +1362,7 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
                     <Button
                         variant="primary"
                         onPress={handleOpenExportModal}
+                        accessibilityLabel={t("Exportar registros seleccionados")}
                         leftIcon={<Feather 
                                     name="download" 
                                     size={24} 

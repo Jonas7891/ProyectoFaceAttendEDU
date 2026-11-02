@@ -1980,5 +1980,12 @@
   "Se eliminará el horario del ambiente. ¿Continuar?": "O horário será removido do ambiente. Continuar?",
   "Se eliminará el ambiente. ¿Continuar?": "O ambiente será excluído. Continuar?",
   "No se puede eliminar un ambiente que tiene horarios asignados": "Não é possível excluir um ambiente que tem horários atribuídos",
-  "No se puede eliminar el horario porque tiene sesiones asociadas": "Não é possível excluir o horário porque tem sessões associadas"
+  "No se puede eliminar el horario porque tiene sesiones asociadas": "Não é possível excluir o horário porque tem sessões associadas",
+  "Mostrar contraseña": "Mostrar senha",
+  "Ocultar contraseña": "Ocultar senha",
+  "Ver detalle de {{name}}": "Ver detalhes de {{name}}",
+  "Seleccionar {{name}}": "Selecionar {{name}}",
+  "Exportar registros seleccionados": "Exportar registros selecionados",
+  "Color {{name}}": "Cor: {{name}}",
+  "Mostrar opciones": "Mostrar opções"
 }

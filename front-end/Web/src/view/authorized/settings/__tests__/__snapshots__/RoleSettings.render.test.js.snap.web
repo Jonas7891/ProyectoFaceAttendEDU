@@ -817,13 +817,15 @@ exports[`role settings render AdminSettings appearance 1`] = `
                   }
                 }
               >
-                <div
+                <button
+                  aria-label="Color {{name}}"
                   className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
                   dir={null}
                   onClick={[Function]}
                   onContextMenu={[Function]}
                   onKeyDown={[Function]}
                   ref={[Function]}
+                  role="button"
                   style={
                     {
                       "alignItems": "center",
@@ -835,7 +837,7 @@ exports[`role settings render AdminSettings appearance 1`] = `
                       "transitionDuration": "0s",
                     }
                   }
-                  tabIndex="0"
+                  type="button"
                 >
                   <div
                     className="css-view-g5y9jx"
@@ -857,14 +859,16 @@ exports[`role settings render AdminSettings appearance 1`] = `
                   >
                     Feather:check:16:#fff
                   </div>
-                </div>
-                <div
+                </button>
+                <button
+                  aria-label="Color {{name}}"
                   className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
                   dir={null}
                   onClick={[Function]}
                   onContextMenu={[Function]}
                   onKeyDown={[Function]}
                   ref={[Function]}
+                  role="button"
                   style={
                     {
                       "alignItems": "center",
@@ -876,15 +880,17 @@ exports[`role settings render AdminSettings appearance 1`] = `
                       "transitionDuration": "0s",
                     }
                   }
-                  tabIndex="0"
+                  type="button"
                 />
-                <div
+                <button
+                  aria-label="Color {{name}}"
                   className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
                   dir={null}
                   onClick={[Function]}
                   onContextMenu={[Function]}
                   onKeyDown={[Function]}
                   ref={[Function]}
+                  role="button"
                   style={
                     {
                       "alignItems": "center",
@@ -896,15 +902,17 @@ exports[`role settings render AdminSettings appearance 1`] = `
                       "transitionDuration": "0s",
                     }
                   }
-                  tabIndex="0"
+                  type="button"
                 />
-                <div
+                <button
+                  aria-label="Color {{name}}"
                   className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
                   dir={null}
                   onClick={[Function]}
                   onContextMenu={[Function]}
                   onKeyDown={[Function]}
                   ref={[Function]}
+                  role="button"
                   style={
                     {
                       "alignItems": "center",
@@ -916,15 +924,17 @@ exports[`role settings render AdminSettings appearance 1`] = `
                       "transitionDuration": "0s",
                     }
                   }
-                  tabIndex="0"
+                  type="button"
                 />
-                <div
+                <button
+                  aria-label="Color {{name}}"
                   className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
                   dir={null}
                   onClick={[Function]}
                   onContextMenu={[Function]}
                   onKeyDown={[Function]}
                   ref={[Function]}
+                  role="button"
                   style={
                     {
                       "alignItems": "center",
@@ -936,7 +946,7 @@ exports[`role settings render AdminSettings appearance 1`] = `
                       "transitionDuration": "0s",
                     }
                   }
-                  tabIndex="0"
+                  type="button"
                 />
               </div>
               <div
@@ -3855,13 +3865,15 @@ exports[`role settings render AdminSettings appearance 2`] = `
                   }
                 }
               >
-                <div
+                <button
+                  aria-label="Color {{name}}"
                   className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
                   dir={null}
                   onClick={[Function]}
                   onContextMenu={[Function]}
                   onKeyDown={[Function]}
                   ref={[Function]}
+                  role="button"
                   style={
                     {
                       "alignItems": "center",
@@ -3873,7 +3885,7 @@ exports[`role settings render AdminSettings appearance 2`] = `
                       "transitionDuration": "0s",
                     }
                   }
-                  tabIndex="0"
+                  type="button"
                 >
                   <div
                     className="css-view-g5y9jx"
@@ -3895,14 +3907,16 @@ exports[`role settings render AdminSettings appearance 2`] = `
                   >
                     Feather:check:16:#fff
                   </div>
-                </div>
-                <div
+                </button>
+                <button
+                  aria-label="Color {{name}}"
                   className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
                   dir={null}
                   onClick={[Function]}
                   onContextMenu={[Function]}
                   onKeyDown={[Function]}
                   ref={[Function]}
+                  role="button"
                   style={
                     {
                       "alignItems": "center",
@@ -3914,15 +3928,17 @@ exports[`role settings render AdminSettings appearance 2`] = `
                       "transitionDuration": "0s",
                     }
                   }
-                  tabIndex="0"
+                  type="button"
                 />
-                <div
+                <button
+                  aria-label="Color {{name}}"
                   className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
                   dir={null}
                   onClick={[Function]}
                   onContextMenu={[Function]}
                   onKeyDown={[Function]}
                   ref={[Function]}
+                  role="button"
                   style={
                     {
                       "alignItems": "center",
@@ -3934,15 +3950,17 @@ exports[`role settings render AdminSettings appearance 2`] = `
                       "transitionDuration": "0s",
                     }
                   }
-                  tabIndex="0"
+                  type="button"
                 />
-                <div
+                <button
+                  aria-label="Color {{name}}"
                   className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
                   dir={null}
                   onClick={[Function]}
                   onContextMenu={[Function]}
                   onKeyDown={[Function]}
                   ref={[Function]}
+                  role="button"
                   style={
                     {
                       "alignItems": "center",
@@ -3954,15 +3972,17 @@ exports[`role settings render AdminSettings appearance 2`] = `
                       "transitionDuration": "0s",
                     }
                   }
-                  tabIndex="0"
+                  type="button"
                 />
-                <div
+                <button
+                  aria-label="Color {{name}}"
                   className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
                   dir={null}
                   onClick={[Function]}
                   onContextMenu={[Function]}
                   onKeyDown={[Function]}
                   ref={[Function]}
+                  role="button"
                   style={
                     {
                       "alignItems": "center",
@@ -3974,7 +3994,7 @@ exports[`role settings render AdminSettings appearance 2`] = `
                       "transitionDuration": "0s",
                     }
                   }
-                  tabIndex="0"
+                  type="button"
                 />
               </div>
               <div
@@ -7962,13 +7982,15 @@ exports[`role settings render StudentSettings appearance 1`] = `
                   }
                 }
               >
-                <div
+                <button
+                  aria-label="Color {{name}}"
                   className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
                   dir={null}
                   onClick={[Function]}
                   onContextMenu={[Function]}
                   onKeyDown={[Function]}
                   ref={[Function]}
+                  role="button"
                   style={
                     {
                       "alignItems": "center",
@@ -7980,7 +8002,7 @@ exports[`role settings render StudentSettings appearance 1`] = `
                       "transitionDuration": "0s",
                     }
                   }
-                  tabIndex="0"
+                  type="button"
                 >
                   <div
                     className="css-view-g5y9jx"
@@ -8002,14 +8024,16 @@ exports[`role settings render StudentSettings appearance 1`] = `
                   >
                     Feather:check:16:#fff
                   </div>
-                </div>
-                <div
+                </button>
+                <button
+                  aria-label="Color {{name}}"
                   className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
                   dir={null}
                   onClick={[Function]}
                   onContextMenu={[Function]}
                   onKeyDown={[Function]}
                   ref={[Function]}
+                  role="button"
                   style={
                     {
                       "alignItems": "center",
@@ -8021,15 +8045,17 @@ exports[`role settings render StudentSettings appearance 1`] = `
                       "transitionDuration": "0s",
                     }
                   }
-                  tabIndex="0"
+                  type="button"
                 />
-                <div
+                <button
+                  aria-label="Color {{name}}"
                   className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
                   dir={null}
                   onClick={[Function]}
                   onContextMenu={[Function]}
                   onKeyDown={[Function]}
                   ref={[Function]}
+                  role="button"
                   style={
                     {
                       "alignItems": "center",
@@ -8041,15 +8067,17 @@ exports[`role settings render StudentSettings appearance 1`] = `
                       "transitionDuration": "0s",
                     }
                   }
-                  tabIndex="0"
+                  type="button"
                 />
-                <div
+                <button
+                  aria-label="Color {{name}}"
                   className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
                   dir={null}
                   onClick={[Function]}
                   onContextMenu={[Function]}
                   onKeyDown={[Function]}
                   ref={[Function]}
+                  role="button"
                   style={
                     {
                       "alignItems": "center",
@@ -8061,15 +8089,17 @@ exports[`role settings render StudentSettings appearance 1`] = `
                       "transitionDuration": "0s",
                     }
                   }
-                  tabIndex="0"
+                  type="button"
                 />
-                <div
+                <button
+                  aria-label="Color {{name}}"
                   className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
                   dir={null}
                   onClick={[Function]}
                   onContextMenu={[Function]}
                   onKeyDown={[Function]}
                   ref={[Function]}
+                  role="button"
                   style={
                     {
                       "alignItems": "center",
@@ -8081,7 +8111,7 @@ exports[`role settings render StudentSettings appearance 1`] = `
                       "transitionDuration": "0s",
                     }
                   }
-                  tabIndex="0"
+                  type="button"
                 />
               </div>
               <div
@@ -12230,13 +12260,15 @@ exports[`role settings render TeacherSettings appearance 1`] = `
                   }
                 }
               >
-                <div
+                <button
+                  aria-label="Color {{name}}"
                   className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
                   dir={null}
                   onClick={[Function]}
                   onContextMenu={[Function]}
                   onKeyDown={[Function]}
                   ref={[Function]}
+                  role="button"
                   style={
                     {
                       "alignItems": "center",
@@ -12248,7 +12280,7 @@ exports[`role settings render TeacherSettings appearance 1`] = `
                       "transitionDuration": "0s",
                     }
                   }
-                  tabIndex="0"
+                  type="button"
                 >
                   <div
                     className="css-view-g5y9jx"
@@ -12270,14 +12302,16 @@ exports[`role settings render TeacherSettings appearance 1`] = `
                   >
                     Feather:check:16:#fff
                   </div>
-                </div>
-                <div
+                </button>
+                <button
+                  aria-label="Color {{name}}"
                   className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
                   dir={null}
                   onClick={[Function]}
                   onContextMenu={[Function]}
                   onKeyDown={[Function]}
                   ref={[Function]}
+                  role="button"
                   style={
                     {
                       "alignItems": "center",
@@ -12289,15 +12323,17 @@ exports[`role settings render TeacherSettings appearance 1`] = `
                       "transitionDuration": "0s",
                     }
                   }
-                  tabIndex="0"
+                  type="button"
                 />
-                <div
+                <button
+                  aria-label="Color {{name}}"
                   className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
                   dir={null}
                   onClick={[Function]}
                   onContextMenu={[Function]}
                   onKeyDown={[Function]}
                   ref={[Function]}
+                  role="button"
                   style={
                     {
                       "alignItems": "center",
@@ -12309,15 +12345,17 @@ exports[`role settings render TeacherSettings appearance 1`] = `
                       "transitionDuration": "0s",
                     }
                   }
-                  tabIndex="0"
+                  type="button"
                 />
-                <div
+                <button
+                  aria-label="Color {{name}}"
                   className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
                   dir={null}
                   onClick={[Function]}
                   onContextMenu={[Function]}
                   onKeyDown={[Function]}
                   ref={[Function]}
+                  role="button"
                   style={
                     {
                       "alignItems": "center",
@@ -12329,15 +12367,17 @@ exports[`role settings render TeacherSettings appearance 1`] = `
                       "transitionDuration": "0s",
                     }
                   }
-                  tabIndex="0"
+                  type="button"
                 />
-                <div
+                <button
+                  aria-label="Color {{name}}"
                   className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
                   dir={null}
                   onClick={[Function]}
                   onContextMenu={[Function]}
                   onKeyDown={[Function]}
                   ref={[Function]}
+                  role="button"
                   style={
                     {
                       "alignItems": "center",
@@ -12349,7 +12389,7 @@ exports[`role settings render TeacherSettings appearance 1`] = `
                       "transitionDuration": "0s",
                     }
                   }
-                  tabIndex="0"
+                  type="button"
                 />
               </div>
               <div
