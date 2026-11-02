@@ -58,6 +58,16 @@ public final class CallerSchoolContext {
     }
 
     /**
+     * 403, not 404: the session is in the caller's own school (its existence is no secret) but
+     * its class belongs to another instructor.
+     */
+    public static class NotClassInstructorException extends RuntimeException {
+        public NotClassInstructorException() {
+            super("Only the instructor of this class or a school administrator can modify its session");
+        }
+    }
+
+    /**
      * 404 instead of 403: an entity outside the caller's school must look
      * exactly like a missing one, never confirm it exists elsewhere.
      */

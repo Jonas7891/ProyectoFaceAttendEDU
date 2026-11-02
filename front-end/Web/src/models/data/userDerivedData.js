@@ -28,6 +28,43 @@ export function getAttendanceThresholds() {
 }
 
 /**
+ * Promedio de asistencia de un grupo, solo con los alumnos que tienen registros
+ * (attendance numérico). Si ninguno tiene registros devuelve null ("Sin datos"):
+ * un alumno sin registros no cuenta como 0 % ni arrastra el promedio.
+ * @param {Array} students
+ * @returns {number|null}
+ */
+export function averageAttendance(students) {
+    const rates = (students || [])
+        .map((student) => student?.attendance)
+        .filter((rate) => Number.isFinite(rate));
+    if (rates.length === 0) return null;
+    return Math.round(rates.reduce((sum, rate) => sum + rate, 0) / rates.length);
+}
+
+/**
+ * Alumnos dentro del alcance de un instructor: matriculados en una ficha que cursa
+ * algún curso suyo (course.instructorActorIds incluye su academic_actor_id). Un alumno
+ * sin matrícula (sin courseIds) o de otro curso queda fuera. Mismo criterio que
+ * «Mis estudiantes» y «Mis cursos».
+ * @param {Array} students
+ * @param {Array} courses
+ * @param {number|string|null} teacherActorId
+ * @returns {Array}
+ */
+export function studentsInTeacherScope(students, courses, teacherActorId) {
+    if (teacherActorId == null) return [];
+    const mine = new Set(
+        (courses || [])
+            .filter((c) => Array.isArray(c.instructorActorIds) && c.instructorActorIds.includes(teacherActorId))
+            .map((c) => String(c.id))
+    );
+    return (students || []).filter(
+        (s) => Array.isArray(s.courseIds) && s.courseIds.some((id) => mine.has(String(id)))
+    );
+}
+
+/**
  * Calcula la lista de estudiantes en riesgo desde la lista de estudiantes
  * USA CONFIGURACIÓN DINÁMICA Y DATOS TEMPORALES REALES
  * 
@@ -49,11 +86,12 @@ export function getAtRiskStudents(students, minAttendanceThreshold = 80) {
     
     // Primero calculamos TODOS los datos para todos los estudiantes activos
     const studentsWithRiskData = students
-        .filter(student => student.status === "active")
+        // Sin ningún registro de asistencia (attendance null) no hay porcentaje que
+        // evaluar: no es "0 %" ni riesgo, es "sin datos".
+        .filter(student => student.status === "active" && student.attendance != null)
         .map(student => {
-            const attendance = student.attendance || 0;
+            const attendance = student.attendance;
             const attendanceRate = Math.max(0, Math.min(100, attendance));
-            const absenceRate = 100 - attendanceRate;
             
             // ══════════════════════════════════════════════════════
             // CÁLCULO REAL DE DÍAS DESDE ÚLTIMA ASISTENCIA
@@ -99,16 +137,19 @@ export function getAtRiskStudents(students, minAttendanceThreshold = 80) {
             // ══════════════════════════════════════════════════════
             // CÁLCULO DE ESTADÍSTICAS
             // ══════════════════════════════════════════════════════
-            const estimatedTotalClasses = student.attendanceHistory?.length || 45;
-            const totalAbsences = Math.round((absenceRate / 100) * estimatedTotalClasses);
-            
-            // Contar tardanzas del historial si existe
-            let lateCount = 0;
-            if (student.attendanceHistory) {
-                lateCount = student.attendanceHistory.filter(r => r.late).length;
-            } else {
-                lateCount = Math.round(totalAbsences * 0.15); // Estimación: 15%
-            }
+            // Faltas y tardanzas: solo cifras reales (conteos del backend o historial).
+            // Si no hay ninguna fuente, null: no se estima sobre un total supuesto.
+            const history = Array.isArray(student.attendanceHistory) ? student.attendanceHistory : null;
+            const totalAbsences = Number.isFinite(student.absences)
+                ? student.absences
+                : history
+                ? history.filter(r => !r.present).length
+                : null;
+            const lateCount = Number.isFinite(student.lateCount)
+                ? student.lateCount
+                : history
+                ? history.filter(r => r.late).length
+                : null;
             
             // ══════════════════════════════════════════════════════
             // DÍAS HASTA SANCIÓN (LÓGICA REAL)
@@ -220,22 +261,26 @@ export function getPerfectAttendanceStudents(students, minAttendanceThreshold = 
     
     return students
         .filter(student => {
-            const attendance = student.attendance || 0;
+            // Sin registros (attendance null) no hay asistencia que destacar.
+            if (student.attendance == null) return false;
             const isActive = student.status === "active";
-            return isActive && attendance >= perfectThreshold;
+            return isActive && student.attendance >= perfectThreshold;
         })
-        .map(student => ({
-            id: `pas_${student.id}`,
-            studentId: student.id,
-            name: student.name,
-            code: student.code,
-            ficha: student.ficha || "N/A",
-            fichaName: student.course || "N/A",
-            attendanceRate: student.attendance || 0,
-            totalClasses: 45, // Estimado
-            consecutivePerfect: Math.round((student.attendance || 0) * 0.45),
-            streak: `${Math.round((student.attendance || 0) * 0.45)} días`,
-        }))
+        .map(student => {
+            // Sesiones realmente registradas del alumno; sin conteo, sin racha.
+            const sessions = Number.isFinite(student.attendanceRecords) ? student.attendanceRecords : null;
+            return {
+                id: `pas_${student.id}`,
+                studentId: student.id,
+                name: student.name,
+                code: student.code,
+                ficha: student.ficha || "N/A",
+                fichaName: student.course || "N/A",
+                attendanceRate: student.attendance,
+                totalClasses: sessions,
+                streak: sessions == null ? null : `${sessions} ${sessions === 1 ? "sesión" : "sesiones"}`,
+            };
+        })
         .sort((a, b) => b.attendanceRate - a.attendanceRate); // Mayor a menor
 }
 

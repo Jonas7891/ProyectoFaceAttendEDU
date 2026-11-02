@@ -118,11 +118,14 @@ async function studentsFromApi() {
         attendanceSummaryFor(students.map((actor) => actor.academicActorId)),
         new Map()
     );
-    // Asistió = no estuvo ausente; la tardanza cuenta como asistencia y la
-    // puntualidad se mide aparte.
+    // Asistencia efectiva sobre las sesiones registradas del propio alumno:
+    // (Present + Late + Justified) / total. Late cuenta como asistencia (la
+    // puntualidad se mide aparte) y Justified también (falta con justificación
+    // aprobada), igual que en FichaStorage y CourseStorage. Sin ningún registro
+    // no hay porcentaje: null ("Sin datos"), nunca 0 ni un valor por defecto.
     const rateOf = (actorId) => {
         const counts = attendance.get(actorId);
-        if (!counts?.total) return 0;
+        if (!counts?.total) return null;
         return Math.round(((counts.present + counts.late + counts.justified) / counts.total) * 100);
     };
 
@@ -158,6 +161,11 @@ async function studentsFromApi() {
                 cohortId: cohortId != null ? String(cohortId) : null,
                 grade: null, // lo rellena AppDataContext con el período del curso
                 attendance: rateOf(actor.academicActorId),
+                // Conteos reales del alumno (0 sin registros): alimentan "faltas" y
+                // "sesiones" en Dashboard y Reportes sin estimarlos.
+                attendanceRecords: attendance.get(actor.academicActorId)?.total ?? 0,
+                absences: attendance.get(actor.academicActorId)?.absent ?? 0,
+                lateCount: attendance.get(actor.academicActorId)?.late ?? 0,
                 status: normalizeStatus(actor.status),
                 hasFacial: false,
                 hasFingerprint: false,

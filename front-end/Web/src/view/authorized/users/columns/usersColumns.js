@@ -144,9 +144,9 @@ export const COLUMNS = [
         render: (user, { attColor }) => (
             <View style={{ width: "100%", maxWidth: 110, alignItems: "center", gap: 4 }}>
                 <Text style={{ fontSize: 13, fontWeight: "700", color: attColor }}>
-                    {user.attendance || 0}%
+                    {user.attendance == null ? "—" : `${user.attendance}%`}
                 </Text>
-                <ProgressBar value={user.attendance || 0} color={attColor} height={5} />
+                <ProgressBar value={user.attendance ?? 0} color={attColor} height={5} />
             </View>
         ),
     },
@@ -246,7 +246,7 @@ export function createCompactRowConfig({ showRole, canManage, roleFilter }) {
                     {/* Mostrar asistencia solo si no es filtro de admin */}
                     {roleFilter !== "admin" && (
                         <Text style={{ fontSize: 12, fontWeight: "700", color: attColor }}>
-                            {user.attendance || 0}%
+                            {user.attendance == null ? "—" : `${user.attendance}%`}
                         </Text>
                     )}
                     
