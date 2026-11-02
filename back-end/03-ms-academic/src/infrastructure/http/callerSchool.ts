@@ -12,6 +12,18 @@ import type { AcademicRepositories } from '../persistence/postgres';
 export interface CallerSchool {
   readonly isSuperAdmin: boolean;
   readonly schoolId: number | null;
+  /**
+   * The caller's own person (identity.person), or `null` when unresolved.
+   * Only meaningful together with `selfOnly`.
+   */
+  readonly ownPersonId: string | null;
+  /**
+   * True for a caller with no staff role (Aprendiz, or no role at all: fail
+   * secure): actor and enrollment reads are narrowed to its own rows, not to
+   * the whole school (AUD-53). Administrador, Instructor and Super
+   * Administrador keep their school scope.
+   */
+  readonly selfOnly: boolean;
 }
 
 /** Thrown when the scope cannot be resolved; the route answers with this status. */
@@ -27,6 +39,7 @@ export function mayDeleteCourse(caller: CallerSchool): boolean {
 }
 
 const SUPER_ADMIN_ROLE = 'Super Administrador';
+const STAFF_ROLES = ['Administrador', 'Instructor'];
 const CACHE_TTL_MS = 30_000;
 
 const cache = new Map<string, { value: CallerSchool; expiresAt: number }>();
@@ -65,7 +78,7 @@ export function createCallerSchoolResolver(repos: AcademicRepositories) {
     }
 
     if (roles.includes(SUPER_ADMIN_ROLE)) {
-      return store(userId, now, { isSuperAdmin: true, schoolId: null });
+      return store(userId, now, { isSuperAdmin: true, schoolId: null, ownPersonId: null, selfOnly: false });
     }
 
     let personId: unknown;
@@ -75,13 +88,14 @@ export function createCallerSchoolResolver(repos: AcademicRepositories) {
     } catch {
       throw new ScopeError(503, 'Cannot resolve the user person');
     }
+    const selfOnly = !roles.some((r) => STAFF_ROLES.includes(r));
     if (typeof personId !== 'string' || !personId) {
-      return store(userId, now, { isSuperAdmin: false, schoolId: null });
+      return store(userId, now, { isSuperAdmin: false, schoolId: null, ownPersonId: null, selfOnly });
     }
 
     const actors = await repos.actors.findByPerson(personId);
     const withSchool = actors.find((a) => a.schoolId != null);
-    return store(userId, now, { isSuperAdmin: false, schoolId: withSchool?.schoolId ?? null });
+    return store(userId, now, { isSuperAdmin: false, schoolId: withSchool?.schoolId ?? null, ownPersonId: personId, selfOnly });
   };
 }
 

@@ -114,6 +114,16 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     return actor?.schoolId ?? null;
   }
 
+  /**
+   * Own academic actors of a caller that may only read itself (Aprendiz, AUD-53):
+   * its actors inside its school. Empty when its person or school is unknown.
+   */
+  async function ownActorsOf(caller: CallerSchool) {
+    if (!caller.ownPersonId || caller.schoolId == null) return [];
+    const mine = await repos.actors.findByPerson(caller.ownPersonId);
+    return mine.filter((a) => a.schoolId === caller.schoolId);
+  }
+
   /** Program ids of a school — the join cohorts/courses need to be scoped by school. */
   /** Resolves a cohort's school — cohorts carry programId, programs carry schoolId. */
   async function schoolOfCohort(cohortId: number | null | undefined): Promise<number | null> {
@@ -665,6 +675,11 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const personId = (req.query as any)?.personId;
     const caller = await callerSchoolOf(req, reply);
     if (!caller) return reply;
+    if (caller.selfOnly) {
+      const own = await ownActorsOf(caller);
+      const asked = typeof personId === 'string' && personId.length > 0 ? personId : null;
+      return pageOfArray(asked && asked !== caller.ownPersonId ? [] : own, req, reply);
+    }
     if (typeof personId === 'string' && personId.length > 0) {
       const all = await repos.actors.findByPerson(personId);
       const scoped = caller.isSuperAdmin ? all : all.filter((a) => a.schoolId === caller.schoolId);
@@ -688,6 +703,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const caller = await callerSchoolOf(req, reply);
     if (!caller) return reply;
     if (!caller.isSuperAdmin && found.schoolId !== caller.schoolId) return notFound(reply);
+    if (caller.selfOnly && found.personId !== caller.ownPersonId) return notFound(reply);
     return found;
   });
   app.put('/api/v1/academic-actors/:id', async (req, reply) => {
@@ -733,6 +749,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const caller = await callerSchoolOf(req, reply);
     if (!caller) return reply;
     if (!caller.isSuperAdmin && schoolId !== caller.schoolId) return forbiddenOtherSchool(reply);
+    if (caller.selfOnly) return pageOfArray(await ownActorsOf(caller), req, reply);
     return pageOf(
       req,
       reply,
@@ -767,6 +784,24 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
   app.get('/api/v1/enrollments', async (req, reply) => {
     const caller = await callerSchoolOf(req, reply);
     if (!caller) return reply;
+    // ?academicActorId= narrows the list (it used to be ignored): the caller's own
+    // scope still applies, so another school's actor yields nothing.
+    const askedActor = parseId((req.query as any)?.academicActorId);
+    if (caller.selfOnly) {
+      const mine = (await ownActorsOf(caller)).map((a) => a.academicActorId);
+      const ids = askedActor == null ? mine : mine.filter((id) => id === askedActor);
+      const own = (await Promise.all(ids.map((id) => repos.enrollments.findByAcademicActor(id)))).flat();
+      return pageOfArray(own, req, reply);
+    }
+    if (askedActor != null) {
+      if (!caller.isSuperAdmin && (await schoolOfActor(askedActor)) !== caller.schoolId) return pageOfArray([], req, reply);
+      return pageOf(
+        req,
+        reply,
+        (page) => repos.enrollments.findByAcademicActor(askedActor, page),
+        () => repos.enrollments.countByAcademicActor(askedActor),
+      );
+    }
     if (caller.isSuperAdmin) {
       return pageOf(req, reply, (page) => repos.enrollments.list(page), () => repos.enrollments.count());
     }
@@ -780,6 +815,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const caller = await callerSchoolOf(req, reply);
     if (!caller) return reply;
     if (!caller.isSuperAdmin && (await schoolOfActor(found.academicActorId)) !== caller.schoolId) return notFound(reply);
+    if (caller.selfOnly && !(await ownActorsOf(caller)).some((a) => a.academicActorId === found.academicActorId)) return notFound(reply);
     return found;
   });
   app.patch('/api/v1/enrollments/:id/status', async (req, reply) => {
@@ -832,6 +868,11 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const caller = await callerSchoolOf(req, reply);
     if (!caller) return reply;
     if (!caller.isSuperAdmin && (await schoolOfCohort(cohortId)) !== caller.schoolId) return forbiddenOtherSchool(reply);
+    if (caller.selfOnly) {
+      const mine = (await ownActorsOf(caller)).map((a) => a.academicActorId);
+      const own = (await Promise.all(mine.map((id) => repos.enrollments.findByAcademicActor(id)))).flat();
+      return pageOfArray(own.filter((e) => e.cohortId === cohortId), req, reply);
+    }
     return pageOf(
       req,
       reply,
@@ -845,6 +886,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const caller = await callerSchoolOf(req, reply);
     if (!caller) return reply;
     if (!caller.isSuperAdmin && (await schoolOfActor(actorId)) !== caller.schoolId) return forbiddenOtherSchool(reply);
+    if (caller.selfOnly && !(await ownActorsOf(caller)).some((a) => a.academicActorId === actorId)) return forbiddenOtherSchool(reply);
     return pageOf(
       req,
       reply,
