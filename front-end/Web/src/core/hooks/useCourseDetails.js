@@ -241,10 +241,9 @@ export function useCourseDetails(course) {
                 if (daysUntil <= 2) {
                     return `Próxima clase con ${instructor}`;
                 }
-                // Si la próxima clase está a más de 2 días
-                else {
-                    return `Última vez con ${instructor}`;
-                }
+                // A más de 2 días es una clase futura, no una «última vez» (AUD-48):
+                // solo el nombre del docente, sin rótulo engañoso.
+                return instructor;
             }
         }
         
