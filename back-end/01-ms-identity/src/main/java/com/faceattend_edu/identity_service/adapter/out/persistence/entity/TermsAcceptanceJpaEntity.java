@@ -3,6 +3,7 @@ package com.faceattend_edu.identity_service.adapter.out.persistence.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.Getter;
@@ -59,4 +60,10 @@ public class TermsAcceptanceJpaEntity {
     @Version
     @Column(name = "row_version", nullable = false)
     private Long rowVersion;
+
+    @PrePersist
+    void startRowVersion() {
+        // Born at 1 like the DDL DEFAULT (AGENTS.md 2.2); left null, Hibernate seeds the version with 0.
+        if (rowVersion == null) rowVersion = 1L;
+    }
 }
