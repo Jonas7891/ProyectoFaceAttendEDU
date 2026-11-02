@@ -2,13 +2,20 @@
 import { request } from "../../api/apiClient";
 import { endpoints } from "../../api/endpoints";
 
+// Un id de actor solo es válido si es un entero positivo: con NaN, undefined o un id local (s_…)
+// la URL salía como /academic-actors/NaN/attendance y el backend respondía 400.
+const isActorId = (id) => id !== null && id !== "" && Number.isInteger(Number(id)) && Number(id) > 0;
+
 export const attendanceApi = {
     listRecords: (p) => request(endpoints.attendance.records, { method: "GET", query: p }),
     createRecord: (b) => request(endpoints.attendance.records, { method: "POST", body: b }),
     getRecord: (id) => request(endpoints.attendance.recordById(id), { method: "GET" }),
     updateRecord: (id, b) => request(endpoints.attendance.recordById(id), { method: "PUT", body: b }),
     deleteRecord: (id) => request(endpoints.attendance.recordById(id), { method: "DELETE" }),
-    recordsByActor: (actorId) => request(endpoints.attendance.actorAttendance(actorId), { method: "GET" }),
+    recordsByActor: (actorId) =>
+        isActorId(actorId)
+            ? request(endpoints.attendance.actorAttendance(actorId), { method: "GET" })
+            : Promise.resolve([]),
     recordsBySession: (sessionId) => request(endpoints.attendance.sessionAttendance(sessionId), { method: "GET" }),
     // Spring acepta la lista como query string separada por comas.
     recordsSummary: (actorIds) =>

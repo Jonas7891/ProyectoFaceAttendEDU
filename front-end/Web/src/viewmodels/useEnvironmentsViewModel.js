@@ -316,8 +316,16 @@ export function useEnvironmentsViewModel() {
     const appData = useAppData();
 
     const [search, setSearch] = useState("");
-    const [selected, setSelected] = useState(null);
+    const [selectedRaw, setSelected] = useState(null);
     const [envModalMode, setEnvModalMode] = useState("none");
+
+    // El ambiente seleccionado se lee SIEMPRE de la lista viva del contexto (por id): una copia
+    // guardada al abrir el detalle dejaba el modal con los horarios anteriores tras guardar o
+    // eliminar uno. Si el ambiente ya no existe en la lista, no queda nada seleccionado.
+    const selected = useMemo(() => {
+        if (!selectedRaw) return null;
+        return (appData.environments || []).find((e) => e.id === selectedRaw.id) ?? null;
+    }, [selectedRaw, appData.environments]);
     const [scheduleModalMode, setScheduleModalMode] = useState("none");
     const [editingSchedule, setEditingSchedule] = useState(null);
     const [scheduleTargetEnvId, setScheduleTargetEnvId] = useState(null);

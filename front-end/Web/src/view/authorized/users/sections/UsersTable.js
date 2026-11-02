@@ -177,6 +177,7 @@ function SelectBox({ user, selection }) {
 }
 
 function UserRow({ user, columns, onPress, isLast, renderContext, useAttendanceColorHook, selection }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const c = theme.colors;
     
@@ -189,6 +190,7 @@ function UserRow({ user, columns, onPress, isLast, renderContext, useAttendanceC
     return (
         <TouchableOpacity
             onPress={() => onPress && onPress(user)}
+            accessibilityLabel={t("Ver detalle de {{name}}", { name: user.name })}
             style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -212,6 +214,7 @@ function UserRow({ user, columns, onPress, isLast, renderContext, useAttendanceC
 // ── Fila compacta (móvil) ─────────────────────────────────
 
 function UserCompactRow({ user, onPress, isLast, compactConfig, renderContext, useAttendanceColorHook, selection }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const c = theme.colors;
     
@@ -224,6 +227,7 @@ function UserCompactRow({ user, onPress, isLast, compactConfig, renderContext, u
     return (
         <TouchableOpacity
             onPress={() => onPress && onPress(user)}
+            accessibilityLabel={t("Ver detalle de {{name}}", { name: user.name })}
             style={{
                 flexDirection: "row",
                 alignItems: "center",

@@ -260,6 +260,7 @@ export default function ImportStudentsModal({
                     padding: isSmall ? 12 : 24,
                 }}
                 onPress={handleClose}
+                accessibilityLabel={t("Cerrar")}
                 activeOpacity={1}
             >
                 <TouchableOpacity
@@ -306,7 +307,11 @@ export default function ImportStudentsModal({
                                 </Text>
                             </View>
                         </View>
-                        <TouchableOpacity onPress={handleClose}>
+                        <TouchableOpacity
+                            onPress={handleClose}
+                            accessibilityRole="button"
+                            accessibilityLabel={t("Cerrar")}
+                        >
                             <Feather name="x" size={20} color={c.text.secondary} />
                         </TouchableOpacity>
                     </View>

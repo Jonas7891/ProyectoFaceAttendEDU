@@ -1,3 +1,4 @@
+/* global jest, describe, test, expect */
 // AUD-51: «Reportes» en la tarjeta del alumno lanzaba TypeError (onReportsPress sin pasar).
 import React from "react";
 import { create, act } from "react-test-renderer";
@@ -6,6 +7,9 @@ import { ResponsiveProvider } from "../../../../context/ResponsiveContext";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 jest.mock("@expo/vector-icons", () => ({ Feather: (props) => `Feather:${props.name}` }));
+jest.mock("../../../../core/utils/i18n/hooks/useTranslation", () => ({
+    useTranslation: () => ({ t: (k, o) => require("../../../../locales").default.t(k, o) }),
+}));
 jest.mock("@react-navigation/native", () => ({ useNavigation: () => ({ navigate: jest.fn() }) }));
 jest.mock("../../../../core/hooks/useCourseDetails", () => ({ useCourseDetails: () => ({}) }));
 jest.mock("../../../../context/AuthContext", () => ({ useAuth: () => ({ user: {} }) }));
@@ -60,4 +64,11 @@ test("an inactive course shows the Inactivo badge; an active one does not", () =
     expect(inactive).toContain("Inactivo");
     const active = textOf(render({ onPress: () => {}, course: { ...course, status: "active" } }).toJSON());
     expect(active).not.toContain("Inactivo");
+});
+
+// AUD-18: la tarjeta es un control táctil sin etiqueta propia; debe nombrar el curso.
+test("the card exposes an accessibilityLabel naming the course", () => {
+    const root = render({ onPress: () => {} });
+    const [card] = root.root.findAll((n) => n.props.accessibilityLabel);
+    expect(card.props.accessibilityLabel).toContain("Bases de Datos");
 });

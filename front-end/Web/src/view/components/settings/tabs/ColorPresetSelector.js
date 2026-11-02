@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { buildPaletteForVision } from "../../../../core/theme/presets";
 
 /**
@@ -15,6 +16,7 @@ import { buildPaletteForVision } from "../../../../core/theme/presets";
  */
 export function ColorPresetSelector({ visionMode, customColors, selectedSemantic, onPresetSelect }) {
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const c = theme.colors;
 
     // Construir paleta dinámica para el modo de visión actual
@@ -41,6 +43,9 @@ export function ColorPresetSelector({ visionMode, customColors, selectedSemantic
                         <TouchableOpacity
                             key={preset.semantic}
                             onPress={() => onPresetSelect(preset)}
+                            accessibilityRole="button"
+                            accessibilityLabel={t("Color {{name}}", { name: preset.label })}
+                            accessibilityState={{ selected: active }}
                             style={{
                                 flex: 1,
                                 backgroundColor: displayColor,
