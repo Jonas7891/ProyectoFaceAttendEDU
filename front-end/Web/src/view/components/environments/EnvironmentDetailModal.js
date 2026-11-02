@@ -109,12 +109,7 @@ export default function EnvironmentDetailModal({
                         lineHeight: 22,
                         fontStyle: environment.description === "Sin descripción" ? "italic" : "normal",
                     }}>
-                        {environment.description === "Sin descripción" ? (
-                            <>
-                                <Text style={{ color: c.status.warning }}>*</Text>
-                                Sin descripción
-                            </>
-                        ) : environment.description}
+                        {environment.description === "Sin descripción" ? t("Sin descripción") : environment.description}
                     </Text>
                 </View>
 
