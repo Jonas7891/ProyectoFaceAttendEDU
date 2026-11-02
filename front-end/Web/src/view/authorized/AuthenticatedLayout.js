@@ -18,9 +18,8 @@
 // ============================================================
 
 import React from "react";
-import { View, Text, TouchableOpacity, ScrollView, Pressable } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 // ── Importación de Layout Components ──────────────────────────
 import { 
@@ -43,6 +42,7 @@ import { useDashboardScreenViewModel } from "../../viewmodels/useDashboardScreen
 import { useTranslation } from "../../core/utils/i18n/hooks/useTranslation";
 import { roleDisplayLabel } from "../../core/utils/backendRoles";
 import { Avatar } from "../components/common";
+import { BottomTabBar } from "../components/common/navigation/BottomTabBar";
 // ── Constantes de mapeo de rutas ────────────────────────────
 const ROUTE_MAP = {
     "dashboard": "Dashboard",
@@ -293,9 +293,6 @@ function PersistentSidebar() {
 // ── Bottom Tabs Component (solo móvil) ───────────────────────
 function BottomTabs() {
     const navigation = useNavigation();
-    const { theme } = useTheme();
-    const insets = useSafeAreaInsets();
-    const c = theme.colors;
     const vm = useDashboardScreenViewModel();
     const { t } = useTranslation();
     
@@ -341,76 +338,28 @@ function BottomTabs() {
         navigation.navigate(routeName, params);
     }, [navigation, setSidebarSelectedTab, setSidebarSelectedSubTab]);
     
-    // NO usar early return - el padre decide si renderizar este componente
-    // Con más tabs que pantallas fijas (Historial, Justificaciones y Sede)
-    // la barra se desplaza horizontalmente.
+    const handleBottomTabPress = (item) => {
+        if (item.optionalNavigation && item.children && item.children.length > 0) {
+            // Navegar al primer hijo si tiene optionalNavigation
+            handleNavigate(item.key, item.children[0].key);
+        } else if (!item.optionalNavigation && item.children && item.children.length > 0 && item.key === "users") {
+            // Para "users", navegar al padre con section: "all"
+            handleNavigate(item.key, "all");
+        } else {
+            // Navegar normalmente sin subTabKey
+            handleNavigate(item.key);
+        }
+    };
+
+    // NO usar early return - el padre decide si renderizar este componente.
+    // Con más ítems de los que caben (AUD-58) los últimos pasan al menú «Más».
     return (
-        <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                backgroundColor: c.background.surface,
-                borderTopWidth: 1,
-                borderTopColor: c.border.primary,
-            }}
-            contentContainerStyle={{
-                flexDirection: "row",
-                paddingTop: 8,
-                paddingBottom: Math.max(8, insets.bottom),
-                minHeight: 52 + insets.bottom,
-            }}
-        >
-            {vm.bottomTabs.map((item) => {
-                const active = currentTabKey === item.key;
-                
-                const handleBottomTabPress = () => {
-                    if (item.optionalNavigation && item.children && item.children.length > 0) {
-                        // Navegar al primer hijo si tiene optionalNavigation
-                        const firstChild = item.children[0];
-                        handleNavigate(item.key, firstChild.key);
-                    } else if (!item.optionalNavigation && item.children && item.children.length > 0 && item.key === "users") {
-                        // Para "users", navegar al padre con section: "all"
-                        handleNavigate(item.key, "all");
-                    } else {
-                        // Navegar normalmente sin subTabKey
-                        handleNavigate(item.key);
-                    }
-                };
-                
-                return (
-                    <TouchableOpacity
-                        key={item.key}
-                        onPress={handleBottomTabPress}
-                        style={{
-                            minWidth: 72,
-                            paddingHorizontal: 6,
-                            alignItems: "center",
-                            paddingTop: 4,
-                            borderTopWidth: active ? 2 : 0,
-                            borderTopColor: c.brand.primary,
-                        }}
-                    >
-                        <Feather
-                            name={item.icon}
-                            size={20}
-                            color={active ? c.brand.primary : c.text.secondary}
-                        />
-                        <Text style={{
-                            fontSize: 11,
-                            marginTop: 2,
-                            color: active ? c.brand.primary : c.text.secondary,
-                            fontWeight: active ? "600" : "400",
-                        }}>
-                            {t(item.label)}
-                        </Text>
-                    </TouchableOpacity>
-                );
-            })}
-        </ScrollView>
+        <BottomTabBar
+            tabs={vm.bottomTabs}
+            activeKey={currentTabKey}
+            onSelect={handleBottomTabPress}
+            t={t}
+        />
     );
 }
 
