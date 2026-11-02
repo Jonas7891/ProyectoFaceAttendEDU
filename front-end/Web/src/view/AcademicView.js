@@ -161,7 +161,7 @@ export default function AcademicView() {
                 }
                 actions={
                     canManage && (
-                        <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+                        <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap", flexShrink: 1 }}>
                             <Button
                                 variant="primary"
                                 size="sm"

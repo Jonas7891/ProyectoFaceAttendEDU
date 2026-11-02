@@ -21,6 +21,7 @@ import { useResponsive } from "./components/hooks/useResponsive";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useRolePermissions } from "../viewmodels/useRolePermissions";
 import { useUsersViewModel } from "../viewmodels/useUsersViewModel";
+import { foundLabel } from "../core/utils/foundLabel";
 import { AdminUsers, TeacherUsers, StudentUsers } from "./authorized/users";
 
 export default function UsersView({ 
@@ -69,11 +70,11 @@ export default function UsersView({
     const actionVerb = permissions.canManageStudents ? t("Gestiona") : t("Consulta");
     const pageSubtitle = vm.isLoading
         ? `${actionVerb} ${t("los usuarios del sistema")} (${t("Cargando")} ${sectionLabel}...)`
-        : `${actionVerb} ${t("los usuarios del sistema")} (${vm.filteredUsers.length} ${
-            vm.filteredUsers.length !== 1 
-                ? `${sectionLabel} ${t("encontrados")}` 
-                : `${sectionLabel.slice(0, -1)} ${t("encontrado")}` // Singular: quita la 's' final
-        })`;
+        : `${actionVerb} ${t("los usuarios del sistema")} (${foundLabel(
+            vm.filteredUsers.length,
+            { singular: getSectionLabelSingular(section), plural: sectionLabel },
+            { found: t("encontrado"), foundPlural: t("encontrados") }
+        )})`;
     
     // Texto dinámico del botón "Nuevo [sección]"
     const newButtonLabel = `${t("Nuevo")} ${getSectionLabelSingular(section)}`;
