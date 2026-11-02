@@ -5,6 +5,7 @@ import com.faceattend_edu.identity_service.application.port.in.CreateUserUseCase
 import com.faceattend_edu.identity_service.application.port.in.ManageConsentUseCase;
 import com.faceattend_edu.identity_service.application.port.in.NotifyUserCredentialsUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ProvisionUserUseCase;
+import com.faceattend_edu.identity_service.application.port.in.ValidatePasswordPolicyUseCase;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserByUsernamePort;
 import com.faceattend_edu.identity_service.application.port.out.RemoveIdentityPort;
 import com.faceattend_edu.identity_service.application.port.out.UserProvisioningPort;
@@ -38,10 +39,12 @@ public class ProvisionUserUseCaseImpl implements ProvisionUserUseCase {
     private final UserProvisioningPort provisioning;
     private final RemoveIdentityPort removeIdentityPort;
     private final ManageConsentUseCase consentUseCase;
+    private final ValidatePasswordPolicyUseCase validatePasswordPolicy;
 
     @Override
     public Result provision(Command command, String token, UUID callerUserId) {
         validate(command);
+        validatePasswordPolicy.validate(command.password());
         if (command.consent() == null) throw new ValidationException("consent is required (Ley 1581)");
         if (!consentUseCase.currentPolicyVersion().equals(command.consent().policyVersion())) {
             throw new ValidationException("consent.policyVersion must be the privacy notice in force ("

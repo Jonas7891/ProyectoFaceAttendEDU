@@ -754,6 +754,7 @@
   "Falta facial": "Visage manquant",
   "Falta huella": "Empreinte manquante",
   "Falta la autorización de datos biométricos": "L'autorisation des données biométriques est manquante",
+  "el titular debe autorizar el tratamiento de sus datos biométricos en el sistema. Mientras no exista una autorización vigente no se puede registrar su biometría. Pídele que la otorgue o que un administrador la registre con su firma en la sede.": "le titulaire doit autoriser le traitement de ses données biométriques dans le système. Tant qu'aucune autorisation valide n'existe, ses données biométriques ne peuvent pas être enregistrées. Demandez-lui de l'accorder ou qu'un administrateur l'enregistre avec sa signature à l'établissement.",
   "Falta la ficha": "Le groupe est manquant",
   "Falta la sede": "Le site est manquant",
   "Falta registro de huella dactilar": "Enregistrement d'empreinte digitale manquant",
@@ -1975,5 +1976,11 @@
   "Carga la autorización firmada del acudiente desde el detalle del estudiante antes de capturar su biometría.": "Téléversez l'autorisation signée du tuteur depuis le détail de l'étudiant avant de capturer sa biométrie.",
   "Los términos de un menor los registra el administrador de la sede con el acudiente presente, desde el detalle del estudiante.": "Les conditions d'un mineur sont enregistrées par l'administrateur du site en présence du tuteur, depuis le détail de l'étudiant.",
   "Registro previo pendiente": "Inscription préalable en attente",
-  "Verificar de nuevo": "Vérifier à nouveau"
+  "Verificar de nuevo": "Vérifier à nouveau",
+  "Eliminar horario": "Supprimer l'horaire",
+  "Eliminar ambiente": "Supprimer l'environnement",
+  "Se eliminará el horario del ambiente. ¿Continuar?": "L'horaire sera retiré de l'environnement. Continuer ?",
+  "Se eliminará el ambiente. ¿Continuar?": "L'environnement sera supprimé. Continuer ?",
+  "No se puede eliminar un ambiente que tiene horarios asignados": "Impossible de supprimer un environnement qui a des horaires attribués",
+  "No se puede eliminar el horario porque tiene sesiones asociadas": "Impossible de supprimer l'horaire car il a des séances associées"
 }

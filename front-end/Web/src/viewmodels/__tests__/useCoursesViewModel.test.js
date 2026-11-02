@@ -74,3 +74,24 @@ describe("myStats.avgAttendance", () => {
         expect(renderVm().myStats.avgAttendance).toBeNull();
     });
 });
+
+// AUD-73: el campo de créditos descartaba el «-» en silencio («-5» se guardaba como 5).
+describe("credits validation", () => {
+    const { sanitizeCreditsInput, validateCourseForm } = require("../useCoursesViewModel");
+    const base = { code: "QBD", name: "Bases", programId: "1", creditHours: "" };
+
+    test("typing keeps the minus sign so the validation can reject it", () => {
+        expect(sanitizeCreditsInput("-5")).toBe("-5");
+        expect(sanitizeCreditsInput("a1b2")).toBe("12");
+    });
+
+    test("a negative credits value is rejected with the 0..32767 message", () => {
+        expect(validateCourseForm({ ...base, creditHours: sanitizeCreditsInput("-5") }))
+            .toBe("Los créditos deben ser un número entre 0 y 32767");
+    });
+
+    test("valid credits and empty credits pass", () => {
+        expect(validateCourseForm({ ...base, creditHours: "5" })).toBeNull();
+        expect(validateCourseForm({ ...base, creditHours: "" })).toBeNull();
+    });
+});

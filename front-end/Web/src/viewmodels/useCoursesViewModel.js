@@ -42,6 +42,15 @@ export function parseCreditHours(value) {
     return n <= 32767 ? n : null;
 }
 
+/**
+ * Saneo del campo de créditos al teclear: conserva el signo "-" para que
+ * validateCourseForm rechace un negativo en vez de descartarlo en silencio
+ * (AUD-73: "-5" se guardaba como 5).
+ */
+export function sanitizeCreditsInput(value) {
+    return String(value ?? "").replace(/[^\d-]/g, "");
+}
+
 export function validateCourseForm(form) {
     if (!form.name.trim()) return "El nombre es requerido";
     // El backend exige program_id (FK NOT NULL) para crear el curso.

@@ -171,6 +171,8 @@ export function buildPermissions(role, schoolId = null, roleNames = []) {
         canEnrollOwnFace: true,
         canEnrollOthersFace: isAdmin || isTeacher,
         canDeleteBiometrics: isAdmin,
+        // GET /biometric/summary exige attendance.record:write (SEEDS.md: admin e instructor)
+        canViewBiometricSummary: isAdmin || isTeacher,
 
         // Cursos (HU-SCH-001, FR 8.1)
         canViewCourses: true,

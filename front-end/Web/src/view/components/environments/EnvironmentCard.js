@@ -95,12 +95,7 @@ export function EnvironmentCard({ environment, onPress, cohortCodeOf }) {
                                 lineHeight: 18,
                                 fontStyle: environment.description === "Sin descripción" ? "italic" : "normal",
                             }} numberOfLines={2}>
-                                {environment.description === "Sin descripción" ? (
-                                    <>
-                                        <Text style={{ color: c.status.warning }}>*</Text>
-                                        Sin descripción
-                                    </>
-                                ) : environment.description}
+                                {environment.description === "Sin descripción" ? t("Sin descripción") : environment.description}
                             </Text>
                         </View>
                         

@@ -26,8 +26,11 @@ jest.mock("../../privacy/TermsPendingNotice", () => {
 jest.mock("../../privacy/BiometricConsentPrompt", () => {
     const React = require("react");
     const { Text } = require("react-native");
-    return ({ personName }) => React.createElement(Text, null, `CONSENT:${personName}`);
+    const mod = ({ personName, canRegister }) => React.createElement(Text, null, `CONSENT:${personName}:${canRegister}`);
+    return { __esModule: true, default: mod, useCanRecordBiometricConsent: () => require("../../../../context/AuthContext").useAuth().user?.role === "admin" };
 });
+let mockRole = "teacher";
+jest.mock("../../../../context/AuthContext", () => ({ useAuth: () => ({ user: { role: mockRole } }) }));
 jest.mock("../../biometrics", () => {
     const React = require("react");
     const { Text } = require("react-native");
@@ -50,8 +53,10 @@ let mockSummary = null;
 let mockAuthorized = true;
 let mockTermsPending = null;
 jest.mock("../../../../viewmodels/useBiometricsViewModel", () => ({
+    useClearErrorStatusOnChange: () => {},
     useBiometricsViewModel: () => ({
         setPerson: mockSetPerson,
+        setStatus: jest.fn(),
         summary: mockSummary,
         busy: false,
         health: "ok",
@@ -145,4 +150,22 @@ test("while terms or guardian are pending the capture is not offered, the pendin
     expect(text(tree)).toContain("PENDING:TERMS");
     expect(text(tree)).not.toContain("FACE:register");
     expect(text(tree)).not.toContain("CONSENT:");
+});
+
+// AUD-50: el docente no puede dar por marcada la autorización del alumno; el administrador sí la registra.
+test("an instructor is not offered the means to record the student's consent", () => {
+    mockAuthorized = false;
+    mockRole = "teacher";
+    const tree = render({ wantFace: true, wantFingerprint: true });
+    mockAuthorized = true;
+    expect(text(tree)).toContain("CONSENT:Ana García:false");
+});
+
+test("an administrator may record the in-person authorization", () => {
+    mockAuthorized = false;
+    mockRole = "admin";
+    const tree = render({ wantFace: true, wantFingerprint: true });
+    mockAuthorized = true;
+    mockRole = "teacher";
+    expect(text(tree)).toContain("CONSENT:Ana García:true");
 });

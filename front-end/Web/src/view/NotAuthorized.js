@@ -23,6 +23,8 @@ import { useNavigation } from "@react-navigation/native";
 import { useTheme } from "./components/hooks/useTheme";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { Button } from "./components/common/buttons";
+import { useAuth } from "../context/AuthContext";
+import { useRolePermissions } from "../viewmodels/useRolePermissions";
 
 /**
  * Tipos de excepciones de autorización
@@ -55,7 +57,14 @@ export function NotAuthorized({
     const { theme } = useTheme();
     const { t } = useTranslation();
     const navigation = useNavigation();
+    const { user } = useAuth();
+    const { visibleTabs } = useRolePermissions();
     const c = theme.colors;
+    // Con sesión viva y un rol con pantallas, "acceso denegado" no es un problema de
+    // autenticación: se vuelve al inicio en vez de invitar a iniciar sesión otra vez.
+    const canGoHome = !!user
+        && type === AUTH_EXCEPTION_TYPES.INSUFFICIENT_PERMISSIONS
+        && Array.isArray(visibleTabs) && visibleTabs.length > 0;
     const [showModal, setShowModal] = useState(false);
     
     // Animación de entrada (slide down from top)
@@ -133,7 +142,9 @@ export function NotAuthorized({
     const config = getModalConfig();
 
     const handleAccept = () => {
-        if (onRedirect) {
+        if (canGoHome) {
+            navigation.navigate("Dashboard");
+        } else if (onRedirect) {
             // Usar callback personalizado si se proporciona
             onRedirect();
         } else {
@@ -196,9 +207,9 @@ export function NotAuthorized({
                                 variant="primary"
                                 size="sm"
                                 onPress={handleAccept}
-                                leftIcon={<Feather name="log-in" size={14} color={c.brand.textOnPrimary} />}
+                                leftIcon={<Feather name={canGoHome ? "home" : "log-in"} size={14} color={c.brand.textOnPrimary} />}
                             >
-                                {t("Iniciar sesión")}
+                                {canGoHome ? t("Volver al inicio") : t("Iniciar sesión")}
                             </Button>
                         </View>
                     </Animated.View>

@@ -316,9 +316,26 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     endsOn: z.string().min(1),
     isActive: z.boolean().default(false),
   });
+  // Mirrors chk_period_dates (starts_on < ends_on) so the client gets a clear 400. The service does not
+  // receive the period type (anual/semestral/trimestral), so a per-type maximum duration is not checked here.
+  const dayOf = (v: unknown): number | null => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(v ?? ''));
+    if (!m) return null;
+    const t = Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    const d = new Date(t);
+    return d.getUTCMonth() === Number(m[2]) - 1 && d.getUTCDate() === Number(m[3]) ? t : null;
+  };
+  const periodDatesError = (startsOn: unknown, endsOn: unknown): string | null => {
+    const s = dayOf(startsOn);
+    const e = dayOf(endsOn);
+    if (s === null || e === null) return 'startsOn and endsOn must be valid dates';
+    return s < e ? null : 'startsOn must be before endsOn';
+  };
   const createPeriod = async (schoolId: number, body: unknown, req: any, reply: any) => {
     const parsed = periodBody.safeParse(body);
     if (!parsed.success) return send400(reply, 'Invalid period payload', parsed.error.flatten());
+    const datesError = periodDatesError(parsed.data.startsOn, parsed.data.endsOn);
+    if (datesError) return send400(reply, datesError);
     const caller = await callerSchoolOf(req, reply);
     if (!caller) return reply;
     if (!caller.isSuperAdmin && schoolId !== caller.schoolId) return forbiddenOtherSchool(reply);
@@ -362,6 +379,10 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
       if (!found) return notFound(reply);
       const parsed = patchSchema(periodBody).safeParse((req as any).body);
       if (!parsed.success) return send400(reply, 'Invalid period payload', parsed.error.flatten());
+      if (parsed.data.startsOn !== undefined || parsed.data.endsOn !== undefined) {
+        const datesError = periodDatesError(parsed.data.startsOn ?? found.startsOn, parsed.data.endsOn ?? found.endsOn);
+        if (datesError) return send400(reply, datesError);
+      }
       const caller = await callerSchoolOf(req, reply);
       if (!caller) return reply;
       if (!caller.isSuperAdmin) {
