@@ -6,7 +6,7 @@
 //  Las altas/ediciones siguen en AsyncStorage (fase de escrituras).
 // ============================================================
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { readLocalRows, writeLocalRows } from "./localCache";
 import { API_MODE } from "../../config/env";
 import { mockEnvironments } from "./mockData";
 import {
@@ -39,8 +39,7 @@ function generateScheduleId() {
 
 async function localEnvironments() {
     try {
-        const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        const parsed = raw ? JSON.parse(raw) : null;
+        const parsed = await readLocalRows(STORAGE_KEY);
         if (!Array.isArray(parsed)) return [];
         return parsed.filter(
             (env) => typeof env?.id === "string" && env.id.startsWith(LOCAL_PREFIX)
@@ -110,7 +109,7 @@ export async function loadEnvironments() {
 
 export async function saveEnvironments(environments) {
     try {
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(environments));
+        await writeLocalRows(STORAGE_KEY, environments);
     } catch (error) { /* fallo silencioso */ }
 }
 

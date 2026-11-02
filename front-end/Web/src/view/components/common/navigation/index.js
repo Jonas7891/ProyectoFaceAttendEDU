@@ -8,3 +8,4 @@ export { Accordion } from './Accordion';
 export { Drawer } from './Drawer';
 export { ThemeToggle } from './ThemeToggle';
 export { LanguageSelector } from './LanguageSelector';
+export { BottomTabBar } from "./BottomTabBar";

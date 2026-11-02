@@ -18,6 +18,7 @@ import { Platform } from "react-native";
 import { getInstitutionConfig } from "../core/config/institutionConfig";
 import { useSessionTimeout } from "../core/hooks/useSessionTimeout";
 import { clearToken, getToken, isCookieMode, saveToken, setUnauthorizedHandler } from "../api/apiClient";
+import { clearDomainCache, setCacheScope } from "../models/data/localCache";
 import { roleNamesFrom, toUiRole } from "../core/utils/backendRoles";
 import { authApi } from "../services/api/authApi";
 import { consentApi } from "../services/api/consentApi";
@@ -352,6 +353,8 @@ export function AuthProvider({ children }) {
     useEffect(() => {
         setUnauthorizedHandler(() => {
             void clearToken();
+            setCacheScope(null);
+            void clearDomainCache();
             void sessionRemove();
             setUser(null);
         });
@@ -620,6 +623,9 @@ export function AuthProvider({ children }) {
             await authApi.logout(token).catch(() => null);
         }
         await clearToken();        await sessionRemove();
+        // AUD-59: los datos de dominio guardados en el navegador son de esta sesión; no deben llegar a la siguiente.
+        setCacheScope(null);
+        await clearDomainCache();
         setUser(null);
     }, [sessionTimeout]);
 

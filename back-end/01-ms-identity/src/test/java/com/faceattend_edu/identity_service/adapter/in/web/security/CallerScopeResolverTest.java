@@ -19,6 +19,7 @@ class CallerScopeResolverTest {
     private static final UUID STUDENT = UUID.fromString("20000000-0000-4000-8000-000000000002");
     private static final UUID OTHER_STUDENT = UUID.fromString("30000000-0000-4000-8000-000000000003");
     private static final UUID OTHER_TEACHER = UUID.fromString("40000000-0000-4000-8000-000000000004");
+    private static final UUID NEW_PERSON = UUID.fromString("70000000-0000-4000-8000-000000000007");
     private static final UUID SCHOOL_ADMIN = UUID.fromString("50000000-0000-4000-8000-000000000005");
 
     /**
@@ -83,6 +84,31 @@ class CallerScopeResolverTest {
     void instructorSeesSelfAndOwnStudentsOnly() {
         CallerScopeResolver.Scope scope = resolverFor(TEACHER).resolve(UUID.randomUUID().toString(), List.of("Instructor"), "t");
         assertThat(scope.personIds()).containsExactlyInAnyOrder(TEACHER, STUDENT);
+    }
+
+    @Test
+    void invalidatedCallerSeesAnActorCreatedWithinTheCacheWindow() {
+        // AUD-69: the admin's scope is cached, then a person is provisioned into the same school.
+        List<Map<?, ?>> actors = new java.util.ArrayList<>(BACKEND.get("/api/v1/academic-actors?limit=100&offset=0"));
+        User user = new User();
+        Person p = new Person();
+        p.setPersonId(SCHOOL_ADMIN);
+        user.setPersonId(p);
+        StaticListableBeanFactory beans = new StaticListableBeanFactory(Map.of("users", (LoadUserPort) id -> user));
+        CallerScopeResolver resolver = new CallerScopeResolver(beans.getBeanProvider(LoadUserPort.class)) {
+            @Override
+            protected List<Map<?, ?>> getList(String url, String token) {
+                return url.contains("/academic-actors?limit=100&offset=0") ? actors : List.of();
+            }
+        };
+        UUID caller = UUID.randomUUID();
+        assertThat(resolver.resolve(caller.toString(), List.of("Administrador"), "t").allows(NEW_PERSON)).isFalse();
+
+        actors.add(Map.of("academicActorId", 9, "personId", NEW_PERSON.toString(), "schoolId", 100));
+        assertThat(resolver.resolve(caller.toString(), List.of("Administrador"), "t").allows(NEW_PERSON)).isFalse(); // still cached
+
+        resolver.invalidate(caller);
+        assertThat(resolver.resolve(caller.toString(), List.of("Administrador"), "t").allows(NEW_PERSON)).isTrue();
     }
 
     @Test

@@ -12,7 +12,7 @@
 //  - startDate / endDate: null (el calculador de períodos devuelve '—')
 // ============================================================
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { readLocalRows, writeLocalRows } from "./localCache";
 import { API_MODE } from "../../config/env";
 import { mockCourses } from "./mockData";
 import { colorAt } from "../../core/constants/dataColors";
@@ -42,8 +42,7 @@ function generateId() {
 
 async function localCourses() {
     try {
-        const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        const parsed = raw ? JSON.parse(raw) : null;
+        const parsed = await readLocalRows(STORAGE_KEY);
         if (!Array.isArray(parsed)) return [];
         return parsed.filter(
             (course) => typeof course?.id === "string" && course.id.startsWith(LOCAL_PREFIX)
@@ -194,7 +193,7 @@ export async function loadCourses() {
 
 export async function saveCourses(courses) {
     try {
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(courses));
+        await writeLocalRows(STORAGE_KEY, courses);
     } catch (error) { /* fallo silencioso */ }
 }
 

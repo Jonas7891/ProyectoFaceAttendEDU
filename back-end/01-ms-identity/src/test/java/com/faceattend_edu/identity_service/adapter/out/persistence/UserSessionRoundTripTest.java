@@ -132,4 +132,36 @@ class UserSessionRoundTripTest {
         assertThat(adapter.closeSessionIfActive(token, LocalDateTime.now())).isEqualTo(1);
         assertThat(adapter.closeSessionIfActive(token, LocalDateTime.now())).isZero();
     }
+
+    @Test
+    @DisplayName("givenOldAndFreshActiveSessions_whenCloseActiveStartedBefore_thenOnlyOldOnesCloseWithinBatch")
+    void closesExpiredActiveSessionsInBatches() {
+        UserSession old1 = new UserSession(); old1.setUserId(toSave.getUserId()); old1.start();
+        UserSession old2 = new UserSession(); old2.setUserId(toSave.getUserId()); old2.start();
+        UUID oldToken1 = adapter.saveUserSession(old1).getSessionId();
+        UUID oldToken2 = adapter.saveUserSession(old2).getSessionId();
+        UUID freshToken = adapter.saveUserSession(toSave).getSessionId();
+        em.flush();
+        LocalDateTime longAgo = LocalDateTime.now().minusHours(10);
+        em.createNativeQuery("update \"identity\".\"user_session\" set \"start_date\" = ?1 where \"session_id\" in (?2, ?3)")
+                .setParameter(1, longAgo)
+                .setParameter(2, SessionTokenHasher.hash(oldToken1))
+                .setParameter(3, SessionTokenHasher.hash(oldToken2))
+                .executeUpdate();
+        em.clear();
+        LocalDateTime cutoff = LocalDateTime.now().minusHours(8);
+        LocalDateTime closedAt = LocalDateTime.now();
+
+        assertThat(adapter.closeActiveStartedBefore(cutoff, closedAt, 1)).isEqualTo(1);
+        assertThat(adapter.closeActiveStartedBefore(cutoff, closedAt, 10)).isEqualTo(1);
+        assertThat(adapter.closeActiveStartedBefore(cutoff, closedAt, 10)).isZero();
+        em.clear();
+
+        UserSession closed = adapter.loadUserSession(oldToken1);
+        assertThat(closed.isActive()).isFalse();
+        assertThat(closed.getSessionStatus()).isEqualTo(UserSession.STATUS_CLOSED);
+        assertThat(closed.getEndDate()).isNotNull();
+        assertThat(adapter.loadUserSession(oldToken2).isActive()).isFalse();
+        assertThat(adapter.loadUserSession(freshToken).isActive()).isTrue();
+    }
 }

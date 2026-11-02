@@ -26,6 +26,15 @@ const RECORD_META = {
     Late: { variant: "warning", icon: "clock", label: "Tardanza" },
 };
 
+// Sin sesión resuelta no hay fecha de clase (AUD-54): el título pasa a ser el
+// tipo de justificación y la fecha de envío, nunca un guion.
+function fallbackTitle(item, typeName, formatDate, t) {
+    const parts = [];
+    if (typeName && typeName !== "—") parts.push(typeName);
+    if (item.submittedAt) parts.push(formatDate(item.submittedAt));
+    return parts.length > 0 ? parts.join(" · ") : t("Justificación");
+}
+
 function SegmentedTabs({ items, active, onChange }) {
     return (
         <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
@@ -152,7 +161,9 @@ export function StudentJustifications({ vm }) {
                                             <Text
                                                 style={{ fontWeight: "700", color: c.text.primary, flex: 1 }}
                                             >
-                                                {item.date ? formatDate(item.date) : "—"}
+                                                {item.date
+                                                    ? formatDate(item.date)
+                                                    : fallbackTitle(item, vm.typeNameOf(item.justificationTypeId), formatDate, t)}
                                             </Text>
                                             <View style={{ flexShrink: 0 }}>
                                                 <Badge variant={meta.variant} size="sm" icon={meta.icon}>
@@ -189,15 +200,26 @@ export function StudentJustifications({ vm }) {
                                             </View>
                                         ) : null}
 
-                                        {item.reviewStatus === "Pending" && (
+                                        <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
                                             <Button
-                                                variant="danger"
+                                                variant="outline"
                                                 size="sm"
-                                                onPress={() => vm.askWithdraw(item)}
+                                                onPress={() => vm.openDetail(item)}
+                                                accessibilityLabel="Ver detalle"
+                                                leftIcon={<Feather name="eye" size={14} color={c.text.primary} />}
                                             >
-                                                {t("Retirar")}
+                                                {t("Ver detalle")}
                                             </Button>
-                                        )}
+                                            {item.reviewStatus === "Pending" && (
+                                                <Button
+                                                    variant="danger"
+                                                    size="sm"
+                                                    onPress={() => vm.askWithdraw(item)}
+                                                >
+                                                    {t("Retirar")}
+                                                </Button>
+                                            )}
+                                        </View>
                                     </View>
                                 </Card>
                             </View>

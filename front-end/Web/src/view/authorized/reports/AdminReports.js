@@ -174,6 +174,8 @@ export function AdminReports({ section, courseFilter }) {
     // Estado y animación para el botón de recargar
     const [isReloading, setIsReloading] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+    // Resultado de la última recarga: da un efecto visible al botón (AUD-06).
+    const [reloadStatus, setReloadStatus] = useState(null); // null | "ok" | "error"
     const [rotateAnim] = useState(() => new Animated.Value(0));
 
     // Crear interpolación una sola vez
@@ -248,12 +250,19 @@ export function AdminReports({ section, courseFilter }) {
         if (isReloading) return; // Prevenir múltiples clicks
         
         setIsReloading(true);
+        setReloadStatus(null);
         rotateAnim.setValue(0);
         
         // Marcar inicio del proceso
         const startTime = Date.now();
         
-        // Forzar recálculo
+        // Volver a pedir los datos al servidor y luego forzar recálculo
+        try {
+            await Promise.all([appData.reloadStudents?.(), appData.reloadCourses?.()]);
+            setReloadStatus("ok");
+        } catch {
+            setReloadStatus("error");
+        }
         setRefreshTrigger(prev => prev + 1);
         
         // Esperar al siguiente frame para que React termine de renderizar
@@ -273,7 +282,7 @@ export function AdminReports({ section, courseFilter }) {
             rotateAnim.setValue(0);
             setIsReloading(false);
         });
-    }, [isReloading, rotateAnim]);
+    }, [isReloading, rotateAnim, appData]);
 
     // ── Determinar qué sección mostrar (DESPUÉS de todos los hooks) ──
     const isHistoricos = section === "historicos";
@@ -423,12 +432,19 @@ export function AdminReports({ section, courseFilter }) {
     const students = studentsData.students;
     const studentCount = students.length;
     const studentLabel = studentCount === 1 ? t("estudiante") : t("estudiantes");
+    const reloadSuffix = isReloading && reloadStatus === null
+        ? ` · ${t("Actualizando...")}`
+        : reloadStatus === "ok"
+            ? ` · ${t("Actualizado hace un momento")}`
+            : reloadStatus === "error"
+                ? ` · ${t("No se pudo actualizar")}`
+                : "";
 
     return (
         <>
             <PageHeader
                 title={t("Reportes")}
-                subtitle={`${studentCount} ${studentLabel} ${t("en riesgo por asistencia")}`}
+                subtitle={`${studentCount} ${studentLabel} ${t("en riesgo por asistencia")}${reloadSuffix}`}
                 actions={
                     <IconButton
                         variant="secondary"
