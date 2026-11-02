@@ -308,6 +308,37 @@ class ClassSessionControllerTest {
     class LifecycleTests {
 
         /** A caller of school 7 whose own actor is `actorId` (as AuthTokenFilter would resolve it). */
+        @BeforeEach
+        void blockTaughtBy41() {
+            blockOfSchool7TaughtBy(41L);
+        }
+
+        @Test
+        @DisplayName("givenAdministratorWithOwnActorWhoIsNotTheInstructor_whenClose_thenReturn403")
+        void givenAdministratorWithOwnActor_whenClose_thenReturn403() throws Exception {
+            for (String verb : List.of("open", "close", "cancel")) {
+                mockMvc.perform(asCaller(verb, 99L, "Administrador")).andExpect(status().isForbidden());
+            }
+            org.mockito.Mockito.verifyNoInteractions(openUseCase, closeUseCase, cancelUseCase);
+        }
+
+        @Test
+        @DisplayName("givenSuperAdministrator_whenClose_thenReturn403")
+        void givenSuperAdministrator_whenClose_thenReturn403() throws Exception {
+            mockMvc.perform(post("/api/v1/class-sessions/5/close")
+                            .requestAttr(AuthTokenFilter.CALLER_SCHOOL_ATTRIBUTE, new CallerSchool(true, null, 99L))
+                            .requestAttr("X-User-Roles", List.of("Super Administrador")))
+                    .andExpect(status().isForbidden());
+            org.mockito.Mockito.verifyNoInteractions(closeUseCase);
+        }
+
+        @Test
+        @DisplayName("givenCallerWithoutResolvedActor_whenClose_thenReturn403")
+        void givenCallerWithoutResolvedActor_whenClose_thenReturn403() throws Exception {
+            mockMvc.perform(post("/api/v1/class-sessions/5/close")).andExpect(status().isForbidden());
+            org.mockito.Mockito.verifyNoInteractions(closeUseCase);
+        }
+
         private void blockOfSchool7TaughtBy(long instructorActorId) {
             com.faceattend_edu.scheduling_service.domain.model.ScheduleBlock block =
                     new com.faceattend_edu.scheduling_service.domain.model.ScheduleBlock();
@@ -342,13 +373,13 @@ class ClassSessionControllerTest {
         }
 
         @Test
-        @DisplayName("givenOwnClassOrSchoolAdmin_whenOpen_thenReturn200")
-        void givenOwnClassOrSchoolAdmin_whenOpen_thenReturn200() throws Exception {
+        @DisplayName("givenOwnClass_whenOpen_thenReturn200AndAdministratorGets403")
+        void givenOwnClass_whenOpen_thenReturn200AndAdministratorGets403() throws Exception {
             blockOfSchool7TaughtBy(41L);
             when(openUseCase.open(org.mockito.ArgumentMatchers.eq(5L), org.mockito.ArgumentMatchers.any())).thenReturn(openSession);
 
             mockMvc.perform(asCaller("open", 41L, "Instructor")).andExpect(status().isOk());
-            mockMvc.perform(asCaller("open", 99L, "Administrador")).andExpect(status().isOk());
+            mockMvc.perform(asCaller("open", 99L, "Administrador")).andExpect(status().isForbidden());
         }
 
         @Test
@@ -357,28 +388,28 @@ class ClassSessionControllerTest {
             // Arrange: openedBy is no longer read from the request body (it was
             // spoofable) — the controller derives it from the caller's own actor,
             // which is null outside the real AuthTokenFilter (addFilters=false here).
-            when(openUseCase.open(5L, null)).thenReturn(openSession);
+            when(openUseCase.open(5L, 41L)).thenReturn(openSession);
 
             // Act & Assert: a body, even with an openedBy, is ignored.
-            mockMvc.perform(post("/api/v1/class-sessions/5/open")
+            mockMvc.perform(asCaller("open", 41L, "Instructor")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"openedBy":77}"""))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.sessionStatus").value("Open"));
 
-            verify(openUseCase).open(5L, null);
+            verify(openUseCase).open(5L, 41L);
         }
 
         @Test
         @DisplayName("givenAlreadyOpenSession_whenOpen_thenReturn400WithExactMessage")
         void givenAlreadyOpenSession_whenOpen_thenReturn400WithExactMessage() throws Exception {
             // Arrange: mensaje EXACTO de OpenClassSessionUseCaseImpl
-            when(openUseCase.open(5L, null))
+            when(openUseCase.open(5L, 41L))
                     .thenThrow(new ValidationException("ClassSession already Open"));
 
             // Act & Assert: sin body -> openedBy null
-            mockMvc.perform(post("/api/v1/class-sessions/5/open"))
+            mockMvc.perform(asCaller("open", 41L, "Instructor"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error").value("ClassSession already Open"));
         }
@@ -387,11 +418,11 @@ class ClassSessionControllerTest {
         @DisplayName("givenMissingSession_whenOpen_thenReturn404")
         void givenMissingSession_whenOpen_thenReturn404() throws Exception {
             // Arrange
-            when(openUseCase.open(999L, null))
+            when(getUseCase.getById(999L))
                     .thenThrow(new EntityNotFoundException("ClassSession", 999L));
 
             // Act & Assert
-            mockMvc.perform(post("/api/v1/class-sessions/999/open"))
+            mockMvc.perform(post("/api/v1/class-sessions/999/open").requestAttr(AuthTokenFilter.CALLER_SCHOOL_ATTRIBUTE, new CallerSchool(false, 7, 41L)).requestAttr("X-User-Roles", List.of("Instructor")))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.error").value("ClassSession not found with identifier=999"));
         }
@@ -403,10 +434,10 @@ class ClassSessionControllerTest {
             // spoofable) — null here outside the real AuthTokenFilter.
             ClassSession closed = withStatus(openSession, "Closed");
             closed.setClosedBy(88L);
-            when(closeUseCase.close(5L, null)).thenReturn(closed);
+            when(closeUseCase.close(5L, 41L)).thenReturn(closed);
 
             // Act & Assert: a body, even with a closedBy, is ignored.
-            mockMvc.perform(post("/api/v1/class-sessions/5/close")
+            mockMvc.perform(asCaller("close", 41L, "Instructor")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"closedBy":88}"""))
@@ -414,18 +445,18 @@ class ClassSessionControllerTest {
                     .andExpect(jsonPath("$.sessionStatus").value("Closed"))
                     .andExpect(jsonPath("$.closedBy").value(88));
 
-            verify(closeUseCase).close(5L, null);
+            verify(closeUseCase).close(5L, 41L);
         }
 
         @Test
         @DisplayName("givenCancelledSession_whenClose_thenReturn400WithExactMessage")
         void givenCancelledSession_whenClose_thenReturn400WithExactMessage() throws Exception {
             // Arrange: mensaje EXACTO de CloseClassSessionUseCaseImpl
-            when(closeUseCase.close(5L, null))
+            when(closeUseCase.close(5L, 41L))
                     .thenThrow(new ValidationException("Cannot close a Cancelled session"));
 
             // Act & Assert
-            mockMvc.perform(post("/api/v1/class-sessions/5/close"))
+            mockMvc.perform(asCaller("close", 41L, "Instructor"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error").value("Cannot close a Cancelled session"));
         }
@@ -437,7 +468,7 @@ class ClassSessionControllerTest {
             when(cancelUseCase.cancel(5L)).thenReturn(withStatus(openSession, "Cancelled"));
 
             // Act & Assert
-            mockMvc.perform(post("/api/v1/class-sessions/5/cancel"))
+            mockMvc.perform(asCaller("cancel", 41L, "Instructor"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.sessionStatus").value("Cancelled"));
 
@@ -452,7 +483,7 @@ class ClassSessionControllerTest {
                     .thenThrow(new ValidationException("Cannot cancel a Closed session"));
 
             // Act & Assert
-            mockMvc.perform(post("/api/v1/class-sessions/5/cancel"))
+            mockMvc.perform(asCaller("cancel", 41L, "Instructor"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error").value("Cannot cancel a Closed session"));
         }
@@ -461,11 +492,11 @@ class ClassSessionControllerTest {
         @DisplayName("givenMissingSession_whenCancel_thenReturn404")
         void givenMissingSession_whenCancel_thenReturn404() throws Exception {
             // Arrange
-            when(cancelUseCase.cancel(999L))
+            when(getUseCase.getById(999L))
                     .thenThrow(new EntityNotFoundException("ClassSession", 999L));
 
             // Act & Assert
-            mockMvc.perform(post("/api/v1/class-sessions/999/cancel"))
+            mockMvc.perform(post("/api/v1/class-sessions/999/cancel").requestAttr(AuthTokenFilter.CALLER_SCHOOL_ATTRIBUTE, new CallerSchool(false, 7, 41L)).requestAttr("X-User-Roles", List.of("Instructor")))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.error").value("ClassSession not found with identifier=999"));
         }

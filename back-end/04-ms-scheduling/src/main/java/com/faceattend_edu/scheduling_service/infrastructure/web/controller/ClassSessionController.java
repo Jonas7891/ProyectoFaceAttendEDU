@@ -87,6 +87,20 @@ public class ClassSessionController {
         }
     }
 
+    /**
+     * Running a class (open, close, cancel) is strictly its instructor's act: the caller's own
+     * academic actor must be schedule_block.instructor_actor_id. No exemption for Administrador or
+     * Super Administrador, who do not act on behalf of the instructor (closed_by must be truthful).
+     */
+    private void requireIsClassInstructor(ClassSession session) {
+        Long own = CallerSchoolContext.ownActorId();
+        ScheduleBlock block = session.getScheduleBlockId() == null ? null
+                : getScheduleBlockUseCase.getById(session.getScheduleBlockId());
+        if (own == null || block == null || !own.equals(block.getInstructorActorId())) {
+            throw new CallerSchoolContext.NotClassInstructorException();
+        }
+    }
+
     @GetMapping
     public ResponseEntity<List<ClassSessionResponse>> list(
             @RequestParam(required = false) Long scheduleBlockId,
@@ -166,7 +180,7 @@ public class ClassSessionController {
     public ResponseEntity<ClassSessionResponse> open(@PathVariable Long id) {
         ClassSession found = getUseCase.getById(id);
         requireAccess(found);
-        requireRunsClass(found);
+        requireIsClassInstructor(found);
         // openedBy nunca viene del cliente (se podía falsificar): es el propio
         // academic_actor de quien llama, resuelto por el filtro de autenticación.
         ClassSession opened = openUseCase.open(id, CallerSchoolContext.ownActorId());
@@ -177,7 +191,7 @@ public class ClassSessionController {
     public ResponseEntity<ClassSessionResponse> close(@PathVariable Long id) {
         ClassSession found = getUseCase.getById(id);
         requireAccess(found);
-        requireRunsClass(found);
+        requireIsClassInstructor(found);
         // closedBy: mismo criterio que open() — nunca confiar en el cliente.
         ClassSession closed = closeUseCase.close(id, CallerSchoolContext.ownActorId());
         return ResponseEntity.ok(mapper.toResponse(closed));
@@ -187,7 +201,7 @@ public class ClassSessionController {
     public ResponseEntity<ClassSessionResponse> cancel(@PathVariable Long id) {
         ClassSession found = getUseCase.getById(id);
         requireAccess(found);
-        requireRunsClass(found);
+        requireIsClassInstructor(found);
         ClassSession cancelled = cancelUseCase.cancel(id);
         return ResponseEntity.ok(mapper.toResponse(cancelled));
     }
