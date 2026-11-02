@@ -48,7 +48,7 @@ class ResetPasswordUseCaseImplTest {
         sessions = new FakeSessions();
         useCase = new ResetPasswordUseCaseImpl(
                 userLookup, recoveryCodes, userUpdate, new FakePasswordHash(),
-                new FakePolicies(), sessions, sessionUpdate, new DomainEventPublisher(null));
+                new ValidatePasswordPolicyUseCaseImpl(new FakePolicies()), sessions, sessionUpdate, new DomainEventPublisher(null));
     }
 
     @Test

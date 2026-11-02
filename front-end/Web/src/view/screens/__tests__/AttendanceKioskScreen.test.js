@@ -6,6 +6,8 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 jest.mock("../../../viewmodels/useRolePermissions", () => ({ useRolePermissions: jest.fn() }));
 jest.mock("@react-navigation/native", () => ({ useNavigation: () => ({}), useRoute: () => ({}) }));
+// NotAuthorized lee la sesión para decidir entre «Volver al inicio» e «Iniciar sesión».
+jest.mock("../../../context/AuthContext", () => ({ useAuth: () => ({ user: null }) }));
 jest.mock("../../../core/utils/i18n/hooks/useTranslation", () => ({
     useTranslation: () => ({ t: (s) => s }),
 }));

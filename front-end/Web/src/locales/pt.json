@@ -752,6 +752,7 @@
   "Falta facial": "Falta rosto",
   "Falta huella": "Falta digital",
   "Falta la autorización de datos biométricos": "Falta a autorização de dados biométricos",
+  "el titular debe autorizar el tratamiento de sus datos biométricos en el sistema. Mientras no exista una autorización vigente no se puede registrar su biometría. Pídele que la otorgue o que un administrador la registre con su firma en la sede.": "o titular deve autorizar o tratamento de seus dados biométricos no sistema. Enquanto não houver autorização vigente, sua biometria não pode ser registrada. Peça que a conceda ou que um administrador a registre com a assinatura dele na sede.",
   "Falta la ficha": "Falta a turma",
   "Falta la sede": "Falta a sede",
   "Falta registro de huella dactilar": "Falta cadastro de impressão digital",
@@ -1973,5 +1974,11 @@
   "Carga la autorización firmada del acudiente desde el detalle del estudiante antes de capturar su biometría.": "Envie a autorização assinada do responsável a partir do detalhe do estudante antes de capturar a biometria.",
   "Los términos de un menor los registra el administrador de la sede con el acudiente presente, desde el detalle del estudiante.": "Os termos de um menor são registrados pelo administrador da sede com o responsável presente, a partir do detalhe do estudante.",
   "Registro previo pendiente": "Cadastro prévio pendente",
-  "Verificar de nuevo": "Verificar novamente"
+  "Verificar de nuevo": "Verificar novamente",
+  "Eliminar horario": "Excluir horário",
+  "Eliminar ambiente": "Excluir ambiente",
+  "Se eliminará el horario del ambiente. ¿Continuar?": "O horário será removido do ambiente. Continuar?",
+  "Se eliminará el ambiente. ¿Continuar?": "O ambiente será excluído. Continuar?",
+  "No se puede eliminar un ambiente que tiene horarios asignados": "Não é possível excluir um ambiente que tem horários atribuídos",
+  "No se puede eliminar el horario porque tiene sesiones asociadas": "Não é possível excluir o horário porque tem sessões associadas"
 }

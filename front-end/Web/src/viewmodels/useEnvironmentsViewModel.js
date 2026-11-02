@@ -52,6 +52,14 @@ export function validateEnvironmentForm(form) {
     return null;
 }
 
+// Mensaje comprensible para un fallo al eliminar; nunca el «Error 409» crudo del cliente HTTP.
+function deleteFailureMessage(e, conflictMessage, fallback) {
+    if (e?.status === 409) return conflictMessage;
+    const msg = typeof e?.message === "string" ? e.message.trim() : "";
+    if (!msg || /^Error \d+$/.test(msg)) return fallback;
+    return msg;
+}
+
 // ID numérico del backend o null si el curso es un alta local.
 function backendCourseId(id) {
     if (id == null || String(id).trim() === "") return null;
@@ -449,7 +457,11 @@ export function useEnvironmentsViewModel() {
                 try {
                     await deleteEnvironment(id);
                 } catch (e) {
-                    return e?.message || "No se pudo eliminar el ambiente en el backend";
+                    return deleteFailureMessage(
+                        e,
+                        "No se puede eliminar un ambiente que tiene horarios asignados",
+                        "No se pudo eliminar el ambiente. Intenta nuevamente."
+                    );
                 }
             }
             await appData.removeEnvironment(id);
@@ -589,7 +601,11 @@ export function useEnvironmentsViewModel() {
                 try {
                     await deleteBlock(scheduleId);
                 } catch (e) {
-                    return e?.message || "No se pudo eliminar el horario en el backend";
+                    return deleteFailureMessage(
+                        e,
+                        "No se puede eliminar el horario porque tiene sesiones asociadas",
+                        "No se pudo eliminar el horario. Intenta nuevamente."
+                    );
                 }
             }
             await appData.removeSchedule(envId, scheduleId);

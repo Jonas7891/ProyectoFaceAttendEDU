@@ -1,6 +1,7 @@
 package com.faceattend_edu.identity_service.application.usecase;
 
 import com.faceattend_edu.identity_service.application.port.in.CreateUserUseCase;
+import com.faceattend_edu.identity_service.application.port.in.ValidatePasswordPolicyUseCase;
 import com.faceattend_edu.identity_service.application.port.out.HashPasswordPort;
 import com.faceattend_edu.identity_service.application.port.out.LoadPersonPort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserByUsernamePort;
@@ -23,6 +24,7 @@ public class CreateUserUseCaseImpl implements CreateUserUseCase {
     private final LoadPersonPort loadPersonPort;
     private final LoadUserByUsernamePort loadUserByUsernamePort;
     private final HashPasswordPort hashPasswordPort;
+    private final ValidatePasswordPolicyUseCase validatePasswordPolicy;
 
     @Override
     @Transactional
@@ -33,6 +35,9 @@ public class CreateUserUseCaseImpl implements CreateUserUseCase {
         if (rawPassword == null || rawPassword.isBlank()) {
             throw new IllegalArgumentException("User.password is required");
         }
+
+        // Every account-creation route (POST /users, provision, onboarding) ends here.
+        validatePasswordPolicy.validate(rawPassword);
 
         UUID personId = user.getPersonId().getPersonId();
         if (loadPersonPort.loadPerson(personId) == null) {

@@ -64,7 +64,7 @@ import { getConfiguredAcademicPeriodType } from "../core/constants/academicPerio
 import { getStudentPeriodFromData } from "../core/utils/studentPeriodCalculator";
 import { onInstitutionConfigChange } from "../core/config/institutionConfig";
 import { hasSuperAdminRole } from "../core/utils/backendRoles";
-import { flagsFromSummary, withBiometricFlags } from "../core/utils/biometricFlags";
+import { loadBiometricFlags, withBiometricFlags } from "../core/utils/biometricFlags";
 
 // ── Filas de personal (docentes / administradores) ─────────
 // Los usuarios vienen de la API con role admin|teacher|student;
@@ -321,7 +321,7 @@ export function AppDataProvider({ children }) {
         // Las filas nacen con hasFacial/hasFingerprint en false; lo registrado vive en
         // ms-biometric, así que sin esto la lista vuelve a "Pendiente" al recargar.
         // Si el rol no puede consultarlo (403) o falla, las filas quedan como están.
-        const biometricFlags = biometricCaptureApi.summaryAll().then(flagsFromSummary).catch(() => null);
+        const biometricFlags = loadBiometricFlags(user?.role, biometricCaptureApi.summaryAll);
         const withBiometrics = withBiometricFlags;
 
         void Promise.allSettled([
@@ -422,7 +422,7 @@ export function AppDataProvider({ children }) {
         // estudiantes en "Pendiente" hasta recargar la página.
         const [loaded, flags] = await Promise.all([
             loadStudents(),
-            biometricCaptureApi.summaryAll().then(flagsFromSummary).catch(() => null),
+            loadBiometricFlags(user?.role, biometricCaptureApi.summaryAll),
         ]);
         const fresh = withBiometricFlags(loaded, flags);
         setStudents(fresh);

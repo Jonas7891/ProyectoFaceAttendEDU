@@ -81,6 +81,7 @@ exports[`AdminReports at-risk view render empty state 1`] = `
           "flexDirection": "row",
           "flexWrap": "wrap",
           "gap": "10px",
+          "maxWidth": "100%",
         }
       }
     >
@@ -290,6 +291,7 @@ exports[`AdminReports at-risk view render every risk message and row style 1`] =
           "flexDirection": "row",
           "flexWrap": "wrap",
           "gap": "10px",
+          "maxWidth": "100%",
         }
       }
     >

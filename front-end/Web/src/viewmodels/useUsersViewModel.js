@@ -198,7 +198,8 @@ export function useUsersViewModel(
     initialSearchQuery = null,
     initialSortBy = null,
     initialSortOrder = null,
-    initialFilterColumn = null
+    initialFilterColumn = null,
+    initialCourseId = null
 ) {
     const appData = useAppData();
     const { user } = useAuth();
@@ -206,7 +207,7 @@ export function useUsersViewModel(
 
     const [search, setSearch] = useState(initialSearchQuery || "");
     const [userTypeFilter, setUserTypeFilter] = useState(USER_TYPES.ALL);
-    const [courseFilter, setCourseFilter] = useState("");
+    const [courseFilter, setCourseFilter] = useState(initialCourseId != null ? String(initialCourseId) : "");
     const [statusFilter, setStatusFilter] = useState("");
     const [selected, setSelected] = useState(null);
     const [showRegisterModal, setShowRegisterModal] = useState(false);

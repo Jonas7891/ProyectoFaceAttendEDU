@@ -35,6 +35,9 @@ const reviewBody = z.object({
   resolutionNotes: z.string().optional(),
 });
 
+/** Case fields the server owns: set on creation or by the review route, never by a generic edit. */
+const REVIEW_ONLY_FIELDS = ['updateStatus', 'requestedBy', 'requestedAt', 'reviewedBy', 'reviewedAt', 'resolutionNotes'];
+
 type Req = FastifyRequest;
 type Reply = FastifyReply;
 
@@ -264,8 +267,8 @@ export async function registerConfigurationRoutes(app: FastifyInstance, repos: C
     if (data.biometricType === 'FINGERPRINT' && !data.fingerNumber) {
       return badRequest(reply, undefined, 'fingerNumber required for FINGERPRINT');
     }
-    // The requester is the authenticated user unless the caller states one.
-    const requestedBy = data.requestedBy ?? ((req as any).userId as string | undefined);
+    // The requester is always the authenticated user; a body value is ignored (RN-29).
+    const requestedBy = (req as any).userId as string | undefined;
     if (!requestedBy || !UUID_RE.test(requestedBy)) {
       return badRequest(reply, undefined, 'requestedBy is required');
     }
@@ -306,7 +309,15 @@ export async function registerConfigurationRoutes(app: FastifyInstance, repos: C
     return found;
   });
   app.put('/api/v1/biometric-update-cases/:id', async (req, reply) => {
-    const parsed = caseBody.partial().safeParse((req as any).body ?? {});
+    // Status, requester and reviewer fields only change through POST / PATCH .../review (RN-29).
+    const rawBody = (req as any).body;
+    if (rawBody && typeof rawBody === 'object') {
+      const forbidden = REVIEW_ONLY_FIELDS.filter((f) => f in rawBody);
+      if (forbidden.length > 0) {
+        return badRequest(reply, { fields: forbidden }, 'Status, requester and reviewer fields cannot be edited here; use the review endpoint');
+      }
+    }
+    const parsed = caseBody.omit({ requestedBy: true }).partial().safeParse(rawBody ?? {});
     if (!parsed.success) return badRequest(reply, parsed.error.flatten());
     const id = String((req.params as any).id);
     const found = UUID_RE.test(id) ? await repos.cases.findById(id) : null;
@@ -321,8 +332,9 @@ export async function registerConfigurationRoutes(app: FastifyInstance, repos: C
     const parsed = reviewBody.safeParse((req as any).body);
     if (!parsed.success) return badRequest(reply, parsed.error.flatten());
     const id = String((req.params as any).id);
-    const reviewer = parsed.data.reviewedBy ?? ((req as any).userId as string | undefined);
+    // The reviewer is the session user; a reviewedBy in the body is ignored.
     const caller = (req as any).userId as string | undefined;
+    const reviewer = caller;
     const found = UUID_RE.test(id) ? await repos.cases.findById(id) : null;
     if (!found) return notFound(reply);
     const scope = await scopeOf(req, reply);

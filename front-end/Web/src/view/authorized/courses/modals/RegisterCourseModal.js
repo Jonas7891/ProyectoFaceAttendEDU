@@ -19,6 +19,7 @@ import { listSchoolPrograms, createProgram } from "../../../../services/api/cour
 import {
     EMPTY_COURSE_FORM,
     validateCourseForm,
+    sanitizeCreditsInput,
 } from "../../../../viewmodels/useCoursesViewModel";
 
 // ── Jornadas disponibles ──────────────────────────────────
@@ -299,7 +300,7 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
                     <TextInput
                         label={t("Créditos")}
                         value={String(form.creditHours ?? "")}
-                        onChangeText={v => setField("creditHours", v.replace(/[^\d]/g, ""))}
+                        onChangeText={v => setField("creditHours", sanitizeCreditsInput(v))}
                         placeholder="3"
                         error={showErrors && String(form.creditHours ?? "").trim() !== "" && (!/^\d+$/.test(String(form.creditHours).trim()) || Number(form.creditHours) > 32767)}
                         errorMessage={t("0 a 32767")}
