@@ -46,27 +46,27 @@ function mount() {
 
 const flush = () => act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
 
-const seed = () => {
+const PREFERENCES = ["@faceattend:theme_mode", "faceattend_language"];
+
+beforeEach(() => {
     mockStore.clear();
     mockStore.set("@faceattend_students", "[]");
     mockStore.set("@faceattend_courses_v2", "[]");
     mockStore.set("@faceattend:theme_mode", "dark");
     mockStore.set("faceattend_language", "es");
-};
-
-test("logout borra los datos de dominio y conserva las preferencias", async () => {
-    seed();
-    const getAuth = mount();
-    await flush();
-    await act(async () => { await getAuth().logout(); });
-    expect([...mockStore.keys()].sort()).toEqual(["@faceattend:theme_mode", "faceattend_language"]);
 });
 
-test("un 401 que purga la sesión también borra los datos de dominio", async () => {
-    seed();
-    mount();
+const ends = {
+    "logout": async (getAuth) => { await act(async () => { await getAuth().logout(); }); },
+    "un 401 que purga la sesión": async () => {
+        const handler = setUnauthorizedHandler.mock.calls.map((c) => c[0]).filter(Boolean).pop();
+        await act(async () => { handler(); await new Promise((resolve) => setTimeout(resolve, 0)); });
+    },
+};
+
+test.each(Object.keys(ends))("%s borra los datos de dominio y conserva las preferencias", async (name) => {
+    const getAuth = mount();
     await flush();
-    const handler = setUnauthorizedHandler.mock.calls.map((c) => c[0]).filter(Boolean).pop();
-    await act(async () => { handler(); await new Promise((resolve) => setTimeout(resolve, 0)); });
-    expect([...mockStore.keys()].sort()).toEqual(["@faceattend:theme_mode", "faceattend_language"]);
+    await ends[name](getAuth);
+    expect([...mockStore.keys()].sort()).toEqual(PREFERENCES);
 });

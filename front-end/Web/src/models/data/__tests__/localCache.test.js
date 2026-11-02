@@ -24,46 +24,36 @@ beforeEach(() => {
 });
 
 describe("localCache: alcance por usuario y sede", () => {
-    it("la sesión que escribe lee sus filas", async () => {
-        setCacheScope({ userId: "u1", schoolId: 84 });
+    const A = { userId: "u1", schoolId: 84 };
+
+    beforeEach(async () => {
+        setCacheScope(A);
         await writeLocalRows(KEY, [{ id: "s_1" }]);
+    });
+
+    it("la sesión que escribe lee sus filas", async () => {
         expect(await readLocalRows(KEY)).toEqual([{ id: "s_1" }]);
     });
 
-    it("otra sede (otro usuario) no ve las filas de la sesión A", async () => {
-        setCacheScope({ userId: "u1", schoolId: 84 });
-        await writeLocalRows(KEY, [{ id: "s_1" }]);
-        setCacheScope({ userId: "u2", schoolId: 82 });
-        expect(await readLocalRows(KEY)).toEqual([]);
-    });
-
-    it("el mismo usuario en otra sede tampoco las ve", async () => {
-        setCacheScope({ userId: "u1", schoolId: 84 });
-        await writeLocalRows(KEY, [{ id: "s_1" }]);
-        setCacheScope({ userId: "u1", schoolId: 82 });
-        expect(await readLocalRows(KEY)).toEqual([]);
-    });
-
-    it("la misma sede con otro usuario no las ve", async () => {
-        setCacheScope({ userId: "u1", schoolId: 84 });
-        await writeLocalRows(KEY, [{ id: "s_1" }]);
-        setCacheScope({ userId: "u3", schoolId: 84 });
+    it.each([
+        ["otra sede (otro usuario)", { userId: "u2", schoolId: 82 }],
+        ["el mismo usuario en otra sede", { userId: "u1", schoolId: 82 }],
+        ["la misma sede con otro usuario", { userId: "u3", schoolId: 84 }],
+    ])("%s no ve las filas de la sesión A", async (_name, other) => {
+        setCacheScope(other);
         expect(await readLocalRows(KEY)).toEqual([]);
     });
 
     it("ignora los datos viejos sin sobre (arreglo plano de versiones anteriores)", async () => {
         mockStore.set(KEY, JSON.stringify([{ id: "s_old", name: "Viejo" }]));
-        setCacheScope({ userId: "u1", schoolId: 84 });
         expect(await readLocalRows(KEY)).toEqual([]);
     });
 
     it("sin sesión no lee ni escribe", async () => {
-        setCacheScope({ userId: "u1", schoolId: 84 });
-        await writeLocalRows(KEY, [{ id: "s_1" }]);
         setCacheScope(null);
         expect(await readLocalRows(KEY)).toEqual([]);
         await writeLocalRows(KEY, [{ id: "s_2" }]);
-        setCacheScope({ userId: "u1", schoolId: 84 });
+        setCacheScope(A);
         expect(await readLocalRows(KEY)).toEqual([{ id: "s_1" }]);
     });
 });
