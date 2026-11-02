@@ -29,13 +29,14 @@ export default function UsersView({
     searchQuery = null,
     sortBy = null,
     sortOrder = null,
-    filterColumn = null 
+    filterColumn = null,
+    courseId = null
 }) {
     const { isSmall } = useResponsive();
     const { theme } = useTheme();
     const { t } = useTranslation();
     const permissions = useRolePermissions();
-    const vm = useUsersViewModel(section, attendanceFilter, searchQuery, sortBy, sortOrder, filterColumn);
+    const vm = useUsersViewModel(section, attendanceFilter, searchQuery, sortBy, sortOrder, filterColumn, courseId);
     const c = theme.colors;
 
     // Helper para obtener el label de la sección
