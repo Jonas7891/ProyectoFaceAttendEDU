@@ -122,6 +122,19 @@ class AuthTokenFilterWriteScopeTest {
     }
 
     @Test
+    void deleteUserOutsideTheSchoolIsForbidden() throws Exception {
+        FilterChain chain = mock(FilterChain.class);
+        assertEquals(403, run("DELETE", "/api/v1/users/" + OTHER_SCHOOL_USER, chain).getStatus());
+        verify(chain, never()).doFilter(any(), any());
+    }
+
+    @Test
+    void deleteUserOutsideTheSchoolNeedsTheWritePermission() {
+        assertEquals("identity.person:write",
+                AuthTokenFilter.requiredPermission("DELETE", "/api/v1/users/" + OTHER_SCHOOL_USER, ADMIN_USER.toString()));
+    }
+
+    @Test
     void putOnPersonInsideTheSchoolPasses() throws Exception {
         FilterChain chain = mock(FilterChain.class);
         MockHttpServletResponse response = run("PUT", "/api/v1/persons/" + SAME_SCHOOL_PERSON, chain);

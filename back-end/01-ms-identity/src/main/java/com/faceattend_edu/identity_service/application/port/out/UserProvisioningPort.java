@@ -22,4 +22,7 @@ public interface UserProvisioningPort {
     void assignRole(String sessionToken, UUID userId, String roleName);
 
     void removeRole(String sessionToken, UUID userId, String roleName);
+
+    /** Names of the roles the account holds in authorization (empty when none). */
+    List<String> listRoleNames(String sessionToken, UUID userId);
 }

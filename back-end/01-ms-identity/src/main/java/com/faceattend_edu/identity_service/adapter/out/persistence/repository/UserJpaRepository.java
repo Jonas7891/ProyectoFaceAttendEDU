@@ -4,9 +4,11 @@ import com.faceattend_edu.identity_service.adapter.out.persistence.entity.UserJp
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -51,4 +53,21 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, UUID> {
                   and p.deletedAt is null
             """)
     List<UserJpaEntity> findByPersonEmail(@Param("emailHash") String emailHash, @Param("email") String email);
+
+    /**
+     * Soft delete in one statement (AGENTS.md 2.2, 6.11). The deleted_at IS NULL guard makes it
+     * apply once: a second call changes nothing and returns 0. row_version is bumped by the DB trigger.
+     */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            update UserJpaEntity u
+               set u.deletedAt = :at,
+                   u.deletedBy = :by,
+                   u.updatedAt = :at,
+                   u.updatedBy = :by,
+                   u.status = false
+             where u.userId = :userId
+               and u.deletedAt is null
+            """)
+    int softDelete(@Param("userId") UUID userId, @Param("by") UUID by, @Param("at") LocalDateTime at);
 }
