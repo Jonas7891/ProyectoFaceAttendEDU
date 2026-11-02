@@ -1,6 +1,11 @@
 // AUD-36 / AUD-46: Dashboard y Reportes inventaban "45 faltas", "45 días" y marcaban "en riesgo"
 // a alumnos sin ningún registro de asistencia. Aquí solo cuentan los datos reales del alumno.
-import { averageAttendance, getAtRiskStudents, getPerfectAttendanceStudents } from "../userDerivedData";
+import {
+    averageAttendance,
+    getAtRiskStudents,
+    getPerfectAttendanceStudents,
+    studentsInTeacherScope,
+} from "../userDerivedData";
 
 const student = (id, extra) => ({
     id: String(id),
@@ -42,6 +47,28 @@ describe("averageAttendance", () => {
     it("sin ningún alumno con registros devuelve null, no 0", () => {
         expect(averageAttendance([{ attendance: null }, {}])).toBeNull();
         expect(averageAttendance([])).toBeNull();
+    });
+});
+
+// AUD-46: Reportes del instructor listaba a un alumno sin matrícula y a un curso que no dicta.
+describe("studentsInTeacherScope", () => {
+    const courses = [
+        { id: "1", code: "QBD", instructorActorIds: [10] },
+        { id: "2", code: "QCA", instructorActorIds: [99] },
+    ];
+
+    it("solo incluye alumnos matriculados en una ficha con un curso del instructor", () => {
+        const students = [
+            student(1, { courseIds: ["1"] }),
+            student(2, { courseIds: ["2"] }),
+            student(3, { courseIds: [] }),
+            student(4, {}),
+        ];
+        expect(studentsInTeacherScope(students, courses, 10).map((s) => s.id)).toEqual(["1"]);
+    });
+
+    it("sin academicActorId no hay alcance", () => {
+        expect(studentsInTeacherScope([student(1, { courseIds: ["1"] })], courses, null)).toEqual([]);
     });
 });
 

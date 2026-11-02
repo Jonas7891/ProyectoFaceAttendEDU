@@ -10,15 +10,22 @@ jest.mock("@expo/vector-icons", () => ({ Feather: (props) => `Feather:${props.na
 jest.mock("../sections", () => ({ HistoricosSection: () => null }));
 
 const mockStudents = [];
+const mockCourses = [];
 jest.mock("../../../../context/AppDataContext", () => ({
-    useAppData: () => ({ students: mockStudents, isLoading: false }),
+    useAppData: () => ({ students: mockStudents, courses: mockCourses, isLoading: false }),
 }));
+const mockAuth = { user: { id: "u-1", role: "admin", academicActorId: 10 } };
+jest.mock("../../../../context/AuthContext", () => ({ useAuth: () => mockAuth }));
 
 // The at-risk rows come straight from the fixture; thresholds stay real.
 const mockAtRisk = [];
+const mockAtRiskInput = { current: null };
 jest.mock("../../../../models/data/userDerivedData", () => ({
     ...jest.requireActual("../../../../models/data/userDerivedData"),
-    getAtRiskStudents: () => mockAtRisk,
+    getAtRiskStudents: (students) => {
+        mockAtRiskInput.current = students;
+        return mockAtRisk;
+    },
 }));
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -65,13 +72,38 @@ const ROWS = [
 describe("AdminReports at-risk view render", () => {
     beforeEach(() => {
         mockStudents.length = 0;
+        mockCourses.length = 0;
         mockAtRisk.length = 0;
+        mockAuth.user = { id: "u-1", role: "admin", academicActorId: 10 };
     });
 
     test("every risk message and row style", () => {
         mockAtRisk.push(...ROWS);
         mockStudents.push(...ROWS.map((r) => ({ id: r.studentId })));
         expect(render(<AdminReports />).toJSON()).toMatchSnapshot();
+    });
+
+    // AUD-46: el instructor solo evalúa riesgo sobre sus alumnos (con matrícula en sus cursos).
+    test("a teacher only gets the students of their own courses", () => {
+        mockAuth.user = { id: "u-1", role: "teacher", academicActorId: 10 };
+        mockCourses.push(
+            { id: "1", code: "QBD", instructorActorIds: [10] },
+            { id: "2", code: "QCA", instructorActorIds: [99] },
+        );
+        mockStudents.push(
+            { id: "1", courseIds: ["1"] },
+            { id: "2", courseIds: ["2"] },
+            { id: "3", courseIds: [] },
+        );
+        render(<AdminReports />);
+        expect(mockAtRiskInput.current.map((s) => s.id)).toEqual(["1"]);
+    });
+
+    test("an admin keeps the whole school", () => {
+        mockAuth.user = { id: "u-9", role: "admin" };
+        mockStudents.push({ id: "1", courseIds: ["1"] }, { id: "3", courseIds: [] });
+        render(<AdminReports />);
+        expect(mockAtRiskInput.current.map((s) => s.id)).toEqual(["1", "3"]);
     });
 
     // AUD-41: restos de JSX tras el PageHeader se pintaban como texto suelto.

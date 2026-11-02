@@ -43,6 +43,28 @@ export function averageAttendance(students) {
 }
 
 /**
+ * Alumnos dentro del alcance de un instructor: matriculados en una ficha que cursa
+ * algún curso suyo (course.instructorActorIds incluye su academic_actor_id). Un alumno
+ * sin matrícula (sin courseIds) o de otro curso queda fuera. Mismo criterio que
+ * «Mis estudiantes» y «Mis cursos».
+ * @param {Array} students
+ * @param {Array} courses
+ * @param {number|string|null} teacherActorId
+ * @returns {Array}
+ */
+export function studentsInTeacherScope(students, courses, teacherActorId) {
+    if (teacherActorId == null) return [];
+    const mine = new Set(
+        (courses || [])
+            .filter((c) => Array.isArray(c.instructorActorIds) && c.instructorActorIds.includes(teacherActorId))
+            .map((c) => String(c.id))
+    );
+    return (students || []).filter(
+        (s) => Array.isArray(s.courseIds) && s.courseIds.some((id) => mine.has(String(id)))
+    );
+}
+
+/**
  * Calcula la lista de estudiantes en riesgo desde la lista de estudiantes
  * USA CONFIGURACIÓN DINÁMICA Y DATOS TEMPORALES REALES
  * 
