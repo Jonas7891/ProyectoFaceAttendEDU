@@ -235,4 +235,35 @@ class ProvisionUserUseCaseImplTest {
 
         verifyNoInteractions(createPerson, createUser, provisioning, removeIdentity);
     }
+
+    private static ProvisionUserUseCase.Command instructorWithEmail() {
+        Person person = new Person();
+        person.setDocumentNumber("2002");
+        person.setName("Luis");
+        person.setLastName("Mora");
+        return new ProvisionUserUseCase.Command(person, "luis.mora", "Temporal-2026", true, "Instructor",
+                new ProvisionUserUseCase.Actor(2, 4L, "DOC-2002", null), CONSENT);
+    }
+
+    @Test
+    @DisplayName("Credentials email not delivered: the account stays and the result says FAILED")
+    void failedCredentialsEmailIsReportedNotHidden() {
+        when(provisioning.createActor(TOKEN, personId, 2, 4L, "DOC-2002")).thenReturn(31L);
+        when(notify.notifyCredentials(userId, "Temporal-2026")).thenReturn(NotifyUserCredentialsUseCase.Status.FAILED);
+
+        ProvisionUserUseCase.Result result = useCase.provision(instructorWithEmail(), TOKEN, ADMIN);
+
+        assertThat(result.credentialsEmail()).isEqualTo("FAILED");
+        assertThat(result.userId()).isEqualTo(userId);
+        verifyNoInteractions(removeIdentity);
+    }
+
+    @Test
+    @DisplayName("Credentials email delivered: the result says SENT")
+    void deliveredCredentialsEmailIsReportedAsSent() {
+        when(provisioning.createActor(TOKEN, personId, 2, 4L, "DOC-2002")).thenReturn(31L);
+        when(notify.notifyCredentials(userId, "Temporal-2026")).thenReturn(NotifyUserCredentialsUseCase.Status.SENT);
+
+        assertThat(useCase.provision(instructorWithEmail(), TOKEN, ADMIN).credentialsEmail()).isEqualTo("SENT");
+    }
 }

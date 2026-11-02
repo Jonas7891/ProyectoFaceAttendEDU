@@ -28,6 +28,10 @@ import {
     validateStudentForm,
 } from "../../../viewmodels/useStudentsViewModel";
 
+// Estados en que el correo con las credenciales no llegó a salir (FAILED / SKIPPED).
+const EMAIL_NOT_SENT = new Set(["FAILED", "SKIPPED"]);
+const EMAIL_WARNING_MS = 9000; // tiempo para leer el aviso antes de cerrar
+
 // ── Roles disponibles ────────────────────────────────────
 
 const ROLE_ITEMS = [
@@ -298,6 +302,8 @@ export default function RegisterStudentModal({
             setError(t(result));
         } else if (result?.personId && (result.wantFace || result.wantFingerprint)) {
             // El usuario ya existe: la biometría se captura ahora con su personId real.
+            // El estado del correo se conserva: al terminar la captura se avisa si no salió.
+            setCredentialsEmail(result.credentialsEmail ?? null);
             setEnrollment({
                 person: { personId: result.personId, name: formToSave.name },
                 wantFace: result.wantFace,
@@ -314,7 +320,7 @@ export default function RegisterStudentModal({
                 setSuccess(false);
                 setCredentialsEmail(null);
                 onClose();
-            }, emailStatus ? 3200 : 900);
+            }, EMAIL_NOT_SENT.has(emailStatus) ? EMAIL_WARNING_MS : emailStatus ? 3200 : 900);
         }
     };
 
@@ -322,6 +328,16 @@ export default function RegisterStudentModal({
         setEnrollment(null);
         setForm(EMPTY_FORM);
         setShowErrors(false);
+        // Si el correo de credenciales no salió, el aviso no puede perderse al cerrar el modal.
+        if (EMAIL_NOT_SENT.has(credentialsEmail)) {
+            setSuccess(true);
+            setTimeout(() => {
+                setSuccess(false);
+                setCredentialsEmail(null);
+                onClose();
+            }, EMAIL_WARNING_MS);
+            return;
+        }
         setSuccess(false);
         setCredentialsEmail(null);
         onClose();
@@ -452,8 +468,28 @@ export default function RegisterStudentModal({
                         <Text style={{ fontSize: 11, color: c.status.success, flex: 1 }}>
                             {config.successMessage}
                             {credentialsEmail === "SENT" ? " — " + t("Las credenciales se enviaron por correo.") : ""}
-                            {credentialsEmail === "FAILED" ? " — " + t("No se pudo enviar el correo: entrega la contraseña por otro medio.") : ""}
-                            {credentialsEmail === "SKIPPED" ? " — " + t("No se envió el correo (sin correo registrado): entrega la contraseña por otro medio.") : ""}
+                        </Text>
+                    </View>
+                )}
+
+                {/* Aviso no bloqueante: la cuenta se creó pero el correo no salió. */}
+                {success && EMAIL_NOT_SENT.has(credentialsEmail) && (
+                    <View
+                        testID="credentials-email-warning"
+                        style={{
+                            backgroundColor: c.status.warningLight || c.status.warning,
+                            borderRadius: 14,
+                            padding: 12,
+                            flexDirection: "row",
+                            gap: 8,
+                            marginBottom: 14,
+                        }}
+                    >
+                        <Feather name="alert-triangle" size={14} color={c.status.warning} />
+                        <Text style={{ fontSize: 12, color: c.text.primary, flex: 1 }}>
+                            {credentialsEmail === "SKIPPED"
+                                ? t("El usuario se creó, pero no se envió el correo con las credenciales porque no tiene correo registrado o está inactivo. Entrégale la contraseña inicial de otra forma.")
+                                : t("El usuario se creó, pero no se pudo enviar el correo con las credenciales. Entrégale la contraseña inicial de otra forma.")}
                         </Text>
                     </View>
                 )}
