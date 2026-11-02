@@ -1,10 +1,5 @@
 // AUD-59: al cerrar sesión (o al caer la sesión por un 401) se borran los datos de dominio
 // @faceattend_* guardados en el navegador, y las preferencias se conservan.
-import React from "react";
-import { create, act } from "react-test-renderer";
-
-globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-
 const mockStore = new Map();
 jest.mock("@react-native-async-storage/async-storage", () => ({
     getItem: jest.fn(async (k) => (mockStore.has(k) ? mockStore.get(k) : null)),
@@ -12,39 +7,14 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
     removeItem: jest.fn(async (k) => { mockStore.delete(k); }),
     getAllKeys: jest.fn(async () => [...mockStore.keys()]),
 }));
-jest.mock("../../api/apiClient", () => ({
-    getToken: jest.fn().mockResolvedValue(null),
-    clearToken: jest.fn().mockResolvedValue(undefined),
-    saveToken: jest.fn().mockResolvedValue(true),
-    setUnauthorizedHandler: jest.fn(),
-    isCookieMode: jest.fn(() => false),
-}));
-jest.mock("../../core/hooks/useSessionTimeout", () => ({
-    useSessionTimeout: () => ({ resetTimer: jest.fn(), clearTimer: jest.fn(), isActive: false }),
-}));
+jest.mock("../../api/apiClient", () => require("../testUtils/authContextTestUtils").apiClientMock());
+jest.mock("../../core/hooks/useSessionTimeout", () => require("../testUtils/authContextTestUtils").sessionTimeoutMock());
 jest.mock("../../services/api/authApi", () => ({ authApi: { logout: jest.fn().mockResolvedValue(null) } }));
 jest.mock("../../services/api/consentApi", () => ({ consentApi: {} }));
 
-import { AuthProvider, useAuth } from "../AuthContext";
+import { act } from "react-test-renderer";
+import { flush, mountAuth as mount } from "../testUtils/authContextTestUtils";
 import { setUnauthorizedHandler } from "../../api/apiClient";
-
-function mount() {
-    let auth;
-    function Probe() {
-        auth = useAuth();
-        return null;
-    }
-    act(() => {
-        create(
-            <AuthProvider>
-                <Probe />
-            </AuthProvider>,
-        );
-    });
-    return () => auth;
-}
-
-const flush = () => act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
 
 const PREFERENCES = ["@faceattend:theme_mode", "faceattend_language"];
 
