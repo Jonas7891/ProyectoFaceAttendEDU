@@ -48,6 +48,7 @@ class ProvisionUserUseCaseImplTest {
     @Mock UserProvisioningPort provisioning;
     @Mock RemoveIdentityPort removeIdentity;
     @Mock com.faceattend_edu.identity_service.application.port.in.ManageConsentUseCase consent;
+    @Mock com.faceattend_edu.identity_service.application.port.in.ValidatePasswordPolicyUseCase passwordPolicy;
     @InjectMocks ProvisionUserUseCaseImpl useCase;
 
     private final UUID personId = UUID.randomUUID();
@@ -218,5 +219,20 @@ class ProvisionUserUseCaseImplTest {
         assertThatThrownBy(() -> useCase.provision(old, TOKEN, ADMIN)).isInstanceOf(ValidationException.class);
         assertThatThrownBy(() -> useCase.provision(none, TOKEN, ADMIN)).isInstanceOf(ValidationException.class);
         verifyNoInteractions(createPerson, provisioning);
+    }
+
+    @Test
+    @DisplayName("A password that breaks the policy is rejected before any row is created (AUD-70)")
+    void weakPasswordIsRejectedBeforeCreatingAnything() {
+        doThrow(new ValidationException("Password must contain an uppercase letter"))
+                .when(passwordPolicy).validate("Temporal-2026-weak");
+        ProvisionUserUseCase.Command command = new ProvisionUserUseCase.Command(apprentice().person(), "ana.rios",
+                "Temporal-2026-weak", false, "Aprendiz", apprentice().actor(), CONSENT);
+
+        assertThatThrownBy(() -> useCase.provision(command, TOKEN, ADMIN))
+                .isInstanceOf(ValidationException.class)
+                .hasMessageNotContaining("Temporal-2026-weak");
+
+        verifyNoInteractions(createPerson, createUser, provisioning, removeIdentity);
     }
 }

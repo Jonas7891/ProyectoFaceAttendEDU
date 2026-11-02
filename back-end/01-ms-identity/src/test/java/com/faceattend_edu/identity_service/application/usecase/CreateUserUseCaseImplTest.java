@@ -6,6 +6,8 @@ import com.faceattend_edu.identity_service.application.port.out.LoadUserByUserna
 import com.faceattend_edu.identity_service.application.port.out.SaveUserPort;
 import com.faceattend_edu.identity_service.domain.exception.DuplicateEntityException;
 import com.faceattend_edu.identity_service.domain.exception.EntityNotFoundException;
+import com.faceattend_edu.identity_service.domain.exception.ValidationException;
+import com.faceattend_edu.identity_service.domain.model.PasswordPolicy;
 import com.faceattend_edu.identity_service.domain.model.Person;
 import com.faceattend_edu.identity_service.domain.model.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,7 +32,7 @@ import static org.mockito.Mockito.when;
 @DisplayName("CreateUserUseCaseImpl unit tests")
 class CreateUserUseCaseImplTest {
 
-    private static final String RAW_PASSWORD = "Secret123";
+    private static final String RAW_PASSWORD = "Secret123!";
     private static final String HASHED = "$2a$10$hashedSecret123";
 
     @Mock SaveUserPort saveUserPort;
@@ -43,7 +46,8 @@ class CreateUserUseCaseImplTest {
     @BeforeEach
     void setUp() {
         useCase = new CreateUserUseCaseImpl(
-                saveUserPort, loadPersonPort, loadUserByUsernamePort, hashPasswordPort);
+                saveUserPort, loadPersonPort, loadUserByUsernamePort, hashPasswordPort,
+                new ValidatePasswordPolicyUseCaseImpl(() -> List.of(seededPolicy())));
         personId = UUID.randomUUID();
     }
 
@@ -163,5 +167,29 @@ class CreateUserUseCaseImplTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("User.authenticationType is not supported");
         verify(saveUserPort, never()).saveUser(any());
+    }
+
+    @Test
+    @DisplayName("givenPasswordBreakingThePolicy_whenCreateUser_thenValidationExceptionAndNothingIsHashedOrSaved")
+    void givenPasswordBreakingThePolicy_whenCreateUser_thenValidationExceptionAndNothingIsHashedOrSaved() {
+        // Arrange: AUD-20 / AUD-70, 'abcdefgh' used to be accepted by every account-creation route
+
+        // Act & Assert
+        assertThatThrownBy(() -> useCase.createUser(userWithPerson(personId), "abcdefgh"))
+                .isInstanceOf(ValidationException.class)
+                .hasMessage("Password must contain an uppercase letter");
+        verify(hashPasswordPort, never()).hash(any());
+        verify(saveUserPort, never()).saveUser(any());
+    }
+
+    private static PasswordPolicy seededPolicy() {
+        PasswordPolicy policy = new PasswordPolicy();
+        policy.setMinLength(8);
+        policy.setMaxLength(20);
+        policy.setRequiresUppercase(true);
+        policy.setRequiresNumbers(true);
+        policy.setRequiresSymbols(true);
+        policy.setExpirationDays(90);
+        return policy;
     }
 }
