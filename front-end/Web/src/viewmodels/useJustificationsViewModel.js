@@ -242,20 +242,35 @@ export function useJustificationsViewModel() {
                     .filter((s) => myBlockIds.has(Number(s.scheduleBlockId)))
                     .map((s) => Number(s.classSessionId))
                     .slice(0, MAX_SCOPE_SESSIONS);
-                // En secuencia para no saturar el servicio de asistencia.
-                const lists = await batched(
-                    sessionIds,
-                    (id) => attendanceApi.recordsBySession(id).catch(() => []),
-                    1
-                );
-                if (!alive) return;
-                const recordById = new Map();
-                for (const record of lists.flat()) {
-                    recordById.set(Number(record.attendanceRecordId), record);
+                if (sessionIds.length === 0) {
+                    // Sin sesiones (lista no disponible o sin bloques con sesión) el
+                    // cruce por sesión no encuentra nada y «Resueltas» quedaba vacía
+                    // (AUD-47): se resuelven las más recientes por registro y el
+                    // filtro de alcance de abajo descarta las ajenas.
+                    const recent = [...justifications]
+                        .sort((a, b) => String(b.submittedAt).localeCompare(String(a.submittedAt)))
+                        .slice(0, MAX_ENRICHED_ITEMS);
+                    const recordList = await batched(recent, (j) =>
+                        attendanceApi.getRecord(Number(j.attendanceRecordId)).catch(() => null)
+                    );
+                    if (!alive) return;
+                    withRecords = recent.map((j, i) => ({ ...j, record: recordList[i] || null }));
+                } else {
+                    // En secuencia para no saturar el servicio de asistencia.
+                    const lists = await batched(
+                        sessionIds,
+                        (id) => attendanceApi.recordsBySession(id).catch(() => []),
+                        1
+                    );
+                    if (!alive) return;
+                    const recordById = new Map();
+                    for (const record of lists.flat()) {
+                        recordById.set(Number(record.attendanceRecordId), record);
+                    }
+                    withRecords = justifications
+                        .filter((j) => recordById.has(Number(j.attendanceRecordId)))
+                        .map((j) => ({ ...j, record: recordById.get(Number(j.attendanceRecordId)) }));
                 }
-                withRecords = justifications
-                    .filter((j) => recordById.has(Number(j.attendanceRecordId)))
-                    .map((j) => ({ ...j, record: recordById.get(Number(j.attendanceRecordId)) }));
             } else {
                 const recordIds = [...new Set(reviewItems.map((j) => Number(j.attendanceRecordId)))];
                 const recordList = await batched(recordIds, (id) =>
