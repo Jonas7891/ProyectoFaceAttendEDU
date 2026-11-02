@@ -6,25 +6,35 @@
 //  Este componente:
 //  ✓ Actúa como punto de entrada para la navegación
 //  ✓ Delega toda la presentación a SettingsView
+//  ✓ Corrige la URL cuando la sección pedida no está permitida al rol
+//    (/app/settings/security para un docente → /app/settings/appearance)
 //
 //  NO debe:
 //  ✗ Contener lógica de negocio
 //  ✗ Renderizar UI directamente (delegado a SettingsView)
-//  ✗ Validar autorización (lo hace AuthenticatedNavigator GLOBALMENTE)
 //
 //  Patrón: Screen = orquestación, View = presentación
 // ============================================================
 
-import React from "react";
-import { useRoute } from "@react-navigation/native";
+import React, { useEffect } from "react";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import SettingsView from "../SettingsView";
+import { useRolePermissions, resolveSettingsSection } from "../../viewmodels/useRolePermissions";
 
 export default function SettingsScreen() {
     const route = useRoute();
-    const section = route.params?.section;
-    
-    // La validación de autorización se hace GLOBALMENTE en AuthenticatedNavigator
-    // Este componente solo se renderiza si el usuario YA está autorizado
-    
-    return <SettingsView section={section} />;
+    const navigation = useNavigation();
+    const permissions = useRolePermissions();
+    const requested = route.params?.section;
+    const allowed = resolveSettingsSection(permissions, requested);
+
+    // Sección sin permiso: se reemplaza en la URL por una permitida. Sin sección
+    // en la ruta no se toca nada (SettingsView usa la de apariencia).
+    useEffect(() => {
+        if (requested && requested !== allowed) {
+            navigation.setParams({ section: allowed });
+        }
+    }, [requested, allowed, navigation]);
+
+    return <SettingsView section={allowed} />;
 }

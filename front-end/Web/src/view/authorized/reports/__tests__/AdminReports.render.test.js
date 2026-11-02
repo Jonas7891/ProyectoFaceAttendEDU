@@ -11,8 +11,16 @@ jest.mock("../sections", () => ({ HistoricosSection: () => null }));
 
 const mockStudents = [];
 const mockCourses = [];
+const mockReloadStudents = jest.fn(() => Promise.resolve());
+const mockReloadCourses = jest.fn(() => Promise.resolve());
 jest.mock("../../../../context/AppDataContext", () => ({
-    useAppData: () => ({ students: mockStudents, courses: mockCourses, isLoading: false }),
+    useAppData: () => ({
+        students: mockStudents,
+        courses: mockCourses,
+        isLoading: false,
+        reloadStudents: mockReloadStudents,
+        reloadCourses: mockReloadCourses,
+    }),
 }));
 const mockAuth = { user: { id: "u-1", role: "admin", academicActorId: 10 } };
 jest.mock("../../../../context/AuthContext", () => ({ useAuth: () => mockAuth }));
@@ -119,6 +127,35 @@ describe("AdminReports at-risk view render", () => {
         };
         walk(render(<AdminReports />).toJSON());
         expect(texts.filter((text) => /[}>]/.test(text))).toEqual([]);
+    });
+
+    // AUD-06: «Recargar» no mostraba ningún efecto; ahora refetch + confirmación visible.
+    test("Recargar refetches the data and says it was updated", async () => {
+        mockAtRisk.push(...ROWS);
+        mockStudents.push(...ROWS.map((r) => ({ id: r.studentId })));
+        const root = render(<AdminReports />);
+        const allText = () => {
+            const texts = [];
+            const walk = (node) => {
+                if (node == null) return;
+                if (typeof node === "string") texts.push(node);
+                else if (Array.isArray(node)) node.forEach(walk);
+                else walk(node.children);
+            };
+            walk(root.toJSON());
+            return texts.join(" ");
+        };
+        expect(allText()).not.toContain("Actualizado hace un momento");
+
+        const button = root.root.findAll((n) => n.props.accessibilityLabel === "Recargar" && n.props.onPress)[0];
+        await act(async () => {
+            await button.props.onPress();
+        });
+
+        expect(mockReloadStudents).toHaveBeenCalledTimes(1);
+        expect(mockReloadCourses).toHaveBeenCalledTimes(1);
+        expect(allText()).toContain("Actualizado hace un momento");
+        act(() => root.unmount());
     });
 
     test("empty state", () => {

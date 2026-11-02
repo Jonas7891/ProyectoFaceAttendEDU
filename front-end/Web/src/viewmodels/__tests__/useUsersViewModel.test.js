@@ -45,7 +45,21 @@ jest.mock("../../services/api/authApi", () => ({
     },
 }));
 
+jest.mock("../../services/api/academicApi", () => ({
+    academicApi: {
+        setActorStatus: jest.fn(),
+        deleteActor: jest.fn(),
+    },
+}));
+
+const mockUserByPerson = jest.fn();
+jest.mock("../../services/api/referenceData", () => ({
+    ...jest.requireActual("../../services/api/referenceData"),
+    userByPersonMap: (...args) => mockUserByPerson(...args),
+}));
+
 import { authApi } from "../../services/api/authApi";
+import { academicApi } from "../../services/api/academicApi";
 import { useUsersViewModel } from "../useUsersViewModel";
 
 function renderVm() {
@@ -250,4 +264,101 @@ test("rejects a TI document and a future birth date for staff edits", async () =
     expect(tiErr).toMatch(/Tipo de documento/);
     expect(dateErr).toMatch(/futura/);
     expect(authApi.updatePerson).not.toHaveBeenCalled();
+});
+
+// AUD-77 / AUD-74: desactivar y eliminar tocan también al actor académico.
+describe("desactivar y eliminar con actor académico", () => {
+    const UUID = "11111111-1111-4111-8111-111111111111";
+    const student = { id: "1913", personId: "p-1", userType: "student", status: "active", name: "Ana" };
+    const teacher = { id: UUID, personId: "p-2", userType: "teacher", status: "active", name: "Beto", actorId: 77 };
+
+    beforeEach(() => {
+        academicApi.setActorStatus.mockResolvedValue({});
+        academicApi.deleteActor.mockResolvedValue(undefined);
+        mockUserByPerson.mockResolvedValue(new Map([["p-1", { userId: UUID }]]));
+    });
+
+    test("desactivar a un estudiante cambia usuario y luego actor", async () => {
+        const getVm = renderVm();
+        let err;
+        await act(async () => {
+            err = await getVm().toggleUserStatus(student, false);
+        });
+        expect(err).toBeNull();
+        expect(authApi.setUserStatus).toHaveBeenCalledWith(UUID, false);
+        expect(academicApi.setActorStatus).toHaveBeenCalledWith(1913, false);
+        expect(authApi.setUserStatus.mock.invocationCallOrder[0]).toBeLessThan(
+            academicApi.setActorStatus.mock.invocationCallOrder[0]
+        );
+        expect(mockPatchStaff).toHaveBeenCalledWith("student", "1913", { status: "inactive" });
+    });
+
+    test("desactivar a un docente usa su actorId", async () => {
+        const getVm = renderVm();
+        await act(async () => {
+            await getVm().toggleUserStatus(teacher, false);
+        });
+        expect(academicApi.setActorStatus).toHaveBeenCalledWith(77, false);
+    });
+
+    test("si el actor falla informa el error, revierte el usuario y no marca éxito", async () => {
+        academicApi.setActorStatus.mockRejectedValueOnce(new Error("actor boom"));
+        const getVm = renderVm();
+        let err;
+        await act(async () => {
+            err = await getVm().toggleUserStatus(student, false);
+        });
+        expect(err).toBe("actor boom");
+        expect(authApi.setUserStatus).toHaveBeenNthCalledWith(1, UUID, false);
+        expect(authApi.setUserStatus).toHaveBeenNthCalledWith(2, UUID, true);
+        expect(mockPatchStaff).not.toHaveBeenCalled();
+    });
+
+    test("estudiante sin usuario vinculado: se desactiva solo el actor", async () => {
+        mockUserByPerson.mockResolvedValue(new Map());
+        const getVm = renderVm();
+        let err;
+        await act(async () => {
+            err = await getVm().toggleUserStatus(student, false);
+        });
+        expect(err).toBeNull();
+        expect(authApi.setUserStatus).not.toHaveBeenCalled();
+        expect(academicApi.setActorStatus).toHaveBeenCalledWith(1913, false);
+    });
+
+    test("eliminar desactiva y luego borra el actor (borrado lógico del servidor)", async () => {
+        const getVm = renderVm();
+        let err;
+        await act(async () => {
+            err = await getVm().removeUser(student);
+        });
+        expect(err).toBeNull();
+        expect(authApi.setUserStatus).toHaveBeenCalledWith(UUID, false);
+        expect(academicApi.setActorStatus).toHaveBeenCalledWith(1913, false);
+        expect(academicApi.deleteActor).toHaveBeenCalledWith(1913);
+        expect(academicApi.setActorStatus.mock.invocationCallOrder[0]).toBeLessThan(
+            academicApi.deleteActor.mock.invocationCallOrder[0]
+        );
+    });
+
+    test("si el DELETE falla muestra el error del servidor", async () => {
+        academicApi.deleteActor.mockRejectedValueOnce(new Error("409 con matrículas"));
+        const getVm = renderVm();
+        let err;
+        await act(async () => {
+            err = await getVm().removeUser(student);
+        });
+        expect(err).toContain("409 con matrículas");
+    });
+
+    test("eliminar un administrador sin actor solo puede desactivar (no hay DELETE de usuario)", async () => {
+        const getVm = renderVm();
+        let err;
+        await act(async () => {
+            err = await getVm().removeUser({ id: "u-1", personId: "p-1", userType: "admin", status: "active" });
+        });
+        expect(err).toBeNull();
+        expect(authApi.setUserStatus).toHaveBeenCalledWith("u-1", false);
+        expect(academicApi.deleteActor).not.toHaveBeenCalled();
+    });
 });

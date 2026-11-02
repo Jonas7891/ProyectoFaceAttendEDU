@@ -18,6 +18,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { biometricCaptureApi } from "../services/api/biometricCaptureApi";
 import { syncInstitutionConfigFromBackend } from "../services/api/settingsPersistence";
 import { resetReferenceData, setActiveSchool, setUsersListAllowed } from "../services/api/referenceData";
+import { clearDomainCache, purgeForeignDomainCache, setCacheScope } from "../models/data/localCache";
 import { useAuth } from "./AuthContext";
 
 import {
@@ -283,6 +284,8 @@ export function AppDataProvider({ children }) {
             // referencia para que el próximo login vuelva a consultar.
             // El estado cargado se reemplaza entero al iniciar sesión.
             resetReferenceData();
+            setCacheScope(null);
+            void clearDomainCache();
             setLoadError(null);
             return undefined;
         }
@@ -290,6 +293,9 @@ export function AppDataProvider({ children }) {
         // La sede del usuario acota todas las cargas de abajo. Debe fijarse ANTES
         // de pedir nada: setActiveSchool limpia la caché si la sede cambió.
         setActiveSchool(user.schoolId ?? null);
+        // AUD-59: las altas locales pertenecen al usuario y la sede de la sesión; lo de otra sesión se descarta.
+        setCacheScope({ userId: user.id, schoolId: user.schoolId ?? null });
+        void purgeForeignDomainCache();
         // Ajustes de la sede (asistencia mínima, reconocimiento, avisos) para todos los roles.
         syncInstitutionConfigFromBackend(user.schoolId ?? null).catch(() => {});
         // /users exige identity.person:write (solo administración): se prohibe

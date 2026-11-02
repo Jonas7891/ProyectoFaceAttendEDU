@@ -124,6 +124,7 @@ export default function JustificationsView() {
                 onClose={vm.closeDetail}
                 onDecide={vm.askDecision}
                 onOpenDocument={vm.openDocument}
+                readOnly={!vm.isReviewer}
             />
 
             <ConfirmModal

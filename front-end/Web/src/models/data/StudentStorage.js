@@ -12,7 +12,7 @@
 //    esta lista; el detalle biométrico es otra petición)
 // ============================================================
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { readLocalRows, writeLocalRows } from "./localCache";
 import { API_MODE } from "../../config/env";
 import { mockStudents } from "./mockData";
 import {
@@ -43,8 +43,7 @@ function generateId() {
 
 async function localStudents() {
     try {
-        const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        const parsed = raw ? JSON.parse(raw) : null;
+        const parsed = await readLocalRows(STORAGE_KEY);
         if (!Array.isArray(parsed)) return [];
         return parsed.filter(
             (student) => typeof student?.id === "string" && student.id.startsWith(LOCAL_PREFIX)
@@ -218,7 +217,7 @@ export async function loadStudents() {
 
 export async function saveStudents(students) {
     try {
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(students));
+        await writeLocalRows(STORAGE_KEY, students);
     } catch (error) {
         // fallo silencioso — la UI ya tiene el estado en memoria
     }

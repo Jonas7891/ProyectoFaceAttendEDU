@@ -75,6 +75,20 @@ export const sql = (query) => JSON.parse(psql(`select coalesce(json_agg(t), '[]'
 export const one = (query) => sql(query)[0] ?? null;
 export const exec = (statement) => { psql(statement, "-q"); };
 
+/**
+ * Ejecuta una limpieza acotada a una sede (`build(schoolId)` arma el SQL). Si el login del admin QA
+ * falló, el id llega como NaN/undefined: se omite y se registra el motivo en vez de mandar
+ * `school_id = NaN` a PostgreSQL. Devuelve true si ejecutó.
+ */
+export function execForSchool(schoolId, build) {
+    if (typeof schoolId !== "number" || !Number.isInteger(schoolId) || schoolId <= 0) {
+        console.warn(`Limpieza SQL omitida: no hay school_id numérico válido (${String(schoolId)}); el login del admin QA probablemente falló.`);
+        return false;
+    }
+    exec(build(schoolId));
+    return true;
+}
+
 // ── fetch con captura ────────────────────────────────────────
 
 // jsdom no trae fetch: este lo sustituye con node:http (solo lo que usa apiClient: status, ok, text).

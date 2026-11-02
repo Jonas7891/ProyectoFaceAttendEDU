@@ -7,4 +7,3 @@ export { default as EditUserModal } from './EditUserModal';
 export { default as ImportStudentsModal } from './ImportStudentsModal';
 export { default as StudentDetailModal } from './StudentDetailModal';
 export { default as BiometricEnrollmentModal } from './BiometricEnrollmentModal';
-export { default as EditUserProfileModal } from './EditUserProfileModal';

@@ -6407,7 +6407,7 @@ exports[`role settings render AdminSettings security 1`] = `
               }
             }
           >
-            El tiempo de sesión es global de la plataforma: lo define el Super Administrador. Tu cambio solo se aplica en este navegador.
+            El tiempo de sesión es global de la plataforma: lo define el Super Administrador y aquí solo puedes consultarlo.
           </div>
         </div>
         <div
@@ -6596,7 +6596,7 @@ exports[`role settings render AdminSettings security 1`] = `
             onFocus={[Function]}
             onKeyDown={[Function]}
             onSelect={[Function]}
-            readOnly={false}
+            readOnly={true}
             ref={[Function]}
             rows={1}
             spellCheck={true}
@@ -6618,6 +6618,7 @@ exports[`role settings render AdminSettings security 1`] = `
                 "color": "rgba(0,0,0,1.00)",
                 "fontSize": "14px",
                 "height": "40px",
+                "opacity": 0.6,
                 "paddingLeft": "16px",
                 "paddingRight": "16px",
                 "width": "140px",
@@ -6932,6 +6933,43 @@ exports[`role settings render AdminSettings security 2`] = `
           ref={[Function]}
           style={
             {
+              "backgroundColor": "rgba(176,212,254,1.00)",
+              "borderBottomLeftRadius": "14px",
+              "borderBottomRightRadius": "14px",
+              "borderTopLeftRadius": "14px",
+              "borderTopRightRadius": "14px",
+              "flexDirection": "row",
+              "gap": "8px",
+              "paddingBottom": "12px",
+              "paddingLeft": "12px",
+              "paddingRight": "12px",
+              "paddingTop": "12px",
+            }
+          }
+        >
+          Feather:info:13:#1983fc
+          <div
+            className="css-text-146c3p1"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "color": "rgba(25,131,252,1.00)",
+                "flex": 1,
+                "fontSize": "12px",
+                "lineHeight": "18px",
+              }
+            }
+          >
+            El tiempo de sesión es global de la plataforma: lo define el Super Administrador y aquí solo puedes consultarlo.
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
               "gap": "8px",
             }
           }
@@ -7112,7 +7150,7 @@ exports[`role settings render AdminSettings security 2`] = `
             onFocus={[Function]}
             onKeyDown={[Function]}
             onSelect={[Function]}
-            readOnly={false}
+            readOnly={true}
             ref={[Function]}
             rows={1}
             spellCheck={true}
@@ -7134,6 +7172,7 @@ exports[`role settings render AdminSettings security 2`] = `
                 "color": "rgba(0,0,0,1.00)",
                 "fontSize": "14px",
                 "height": "40px",
+                "opacity": 0.6,
                 "paddingLeft": "16px",
                 "paddingRight": "16px",
                 "width": "140px",
@@ -11390,7 +11429,7 @@ exports[`role settings render StudentSettings security 1`] = `
             onFocus={[Function]}
             onKeyDown={[Function]}
             onSelect={[Function]}
-            readOnly={false}
+            readOnly={true}
             ref={[Function]}
             rows={1}
             spellCheck={true}
@@ -11412,6 +11451,7 @@ exports[`role settings render StudentSettings security 1`] = `
                 "color": "rgba(0,0,0,1.00)",
                 "fontSize": "14px",
                 "height": "40px",
+                "opacity": 0.6,
                 "paddingLeft": "16px",
                 "paddingRight": "16px",
                 "width": "140px",
@@ -15514,7 +15554,7 @@ exports[`role settings render TeacherSettings security 1`] = `
             onFocus={[Function]}
             onKeyDown={[Function]}
             onSelect={[Function]}
-            readOnly={false}
+            readOnly={true}
             ref={[Function]}
             rows={1}
             spellCheck={true}
@@ -15536,6 +15576,7 @@ exports[`role settings render TeacherSettings security 1`] = `
                 "color": "rgba(0,0,0,1.00)",
                 "fontSize": "14px",
                 "height": "40px",
+                "opacity": 0.6,
                 "paddingLeft": "16px",
                 "paddingRight": "16px",
                 "width": "140px",

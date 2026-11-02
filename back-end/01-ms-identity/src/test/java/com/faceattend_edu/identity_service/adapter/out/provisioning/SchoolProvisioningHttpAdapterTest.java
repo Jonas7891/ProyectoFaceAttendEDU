@@ -58,6 +58,22 @@ class SchoolProvisioningHttpAdapterTest {
         server = MockRestServiceServer.bindTo(rest).build();
     }
 
+    @Test
+    @DisplayName("AUD-60: a rollback DELETE carries no JSON content type (academic answers 400 'Body cannot be empty' otherwise)")
+    void deleteWithoutBodySendsNoContentType() {
+        org.springframework.test.web.client.RequestMatcher noContentType =
+                request -> assertThat(request.getHeaders().getContentType()).isNull();
+        server.expect(requestTo("http://academic/api/v1/academic-actors/30")).andExpect(method(HttpMethod.DELETE))
+                .andExpect(noContentType).andRespond(withSuccess());
+        server.expect(requestTo("http://academic/api/v1/enrollments/50")).andExpect(method(HttpMethod.DELETE))
+                .andExpect(noContentType).andRespond(withSuccess());
+
+        adapter.deleteActor(TOKEN, 30);
+        adapter.deleteEnrollment(TOKEN, 50);
+
+        server.verify();
+    }
+
     private void schools(String json) {
         server.expect(once(), requestTo("http://academic/api/v1/schools")).andExpect(method(HttpMethod.GET))
                 .andExpect(header("Authorization", "Bearer " + TOKEN))
