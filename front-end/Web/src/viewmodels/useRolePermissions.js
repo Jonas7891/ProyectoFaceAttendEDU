@@ -110,6 +110,35 @@ function getVisibleTabs(role, isSuperAdmin) {
     }
 }
 
+// ── Secciones de Configuración por rol ───────────────────────
+// Debe coincidir con los hijos de "settings" en useDashboardScreenViewModel
+// (adminOnly / hideForSuperAdmin): lo que la barra lateral no ofrece tampoco
+// se alcanza escribiendo la URL (/app/settings/<sección>).
+const SETTINGS_DEFAULT_SECTION = "appearance";
+
+function getSettingsSections(role, isSuperAdmin) {
+    const own = ["notifications", "appearance"];
+    switch (role) {
+        case "admin": {
+            const all = ["general", "facial", ...own, "security"];
+            // El Super Admin global no tiene sede propia.
+            return isSuperAdmin ? all : [...all, "schoolInfo", "contacts"];
+        }
+        case "teacher":
+        case "student":
+            return [...own, "schoolInfo", "contacts"];
+        default:
+            return [];
+    }
+}
+
+/** Sección pedida si el rol puede verla; si no, una permitida (apariencia). */
+export function resolveSettingsSection(permissions, section) {
+    const allowed = permissions?.settingsSections ?? [];
+    if (section && allowed.includes(section)) return section;
+    return SETTINGS_DEFAULT_SECTION;
+}
+
 // ── Cálculo de permisos ──────────────────────────────────────
 
 export function buildPermissions(role, schoolId = null, roleNames = []) {
@@ -198,9 +227,14 @@ export function buildPermissions(role, schoolId = null, roleNames = []) {
         canManageConfiguration: isAdmin,
         canManageGeneralSettings: isAdmin,
         canManageFacialConfig: isAdmin,
-        canManageSecurityConfig: isAdmin,
+        // Seguridad global (tiempo de sesión): solo el Super Admin la persiste;
+        // el backend responde 403 al resto (AUD-49).
+        canManageSecurityConfig: isSuperAdmin,
+        settingsSections: getSettingsSections(role, isSuperAdmin),
         canManageNotifications: true,
         canManageJustificationTypes: isAdmin,
+        // Tipos globales (school_id NULL): el backend solo deja al Super Admin (AUD-40).
+        canManageGlobalJustificationTypes: isSuperAdmin,
         // Alertas (notification.alert:read, HU-JUS-003)
         canViewAlerts: true,
         canManageAlerts: isAdmin,
@@ -271,6 +305,8 @@ const GUEST_PERMISSIONS = {
     canManageSecurityConfig: false,
     canManageNotifications: false,
     canManageJustificationTypes: false,
+    canManageGlobalJustificationTypes: false,
+    settingsSections: [],
     canViewAlerts: false,
     canManageAlerts: false,
     canManageRoles: false,
