@@ -65,6 +65,7 @@ export function JustificationDetailModal({
     onClose,
     onDecide,
     onOpenDocument,
+    readOnly = false,
 }) {
     const { theme } = useTheme();
     const c = theme.colors;
@@ -80,7 +81,8 @@ export function JustificationDetailModal({
         icon: "help-circle",
         label: row.recordStatus,
     };
-    const isPending = row.reviewStatus === "Pending";
+    // El alumno consulta su propio expediente: nunca puede evaluarlo.
+    const isPending = row.reviewStatus === "Pending" && !readOnly;
 
     const decide = (nextDecision) => {
         setDecisionError(null);
@@ -97,7 +99,7 @@ export function JustificationDetailModal({
             visible={!!row}
             onClose={onClose}
             title={t("Detalle de la justificación")}
-            subtitle={row.personName || "—"}
+            subtitle={readOnly ? typeName : row.personName || "—"}
             icon="file-text"
             size="lg"
             footer={
@@ -131,9 +133,11 @@ export function JustificationDetailModal({
 
             <View style={{ gap: 14, marginBottom: 16 }}>
                 <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16 }}>
-                    <View style={{ flexBasis: 160, flexGrow: 1 }}>
-                        <Field label={t("Alumno")} value={row.personName} />
-                    </View>
+                    {readOnly ? null : (
+                        <View style={{ flexBasis: 160, flexGrow: 1 }}>
+                            <Field label={t("Alumno")} value={row.personName} />
+                        </View>
+                    )}
                     <View style={{ flexBasis: 130, flexGrow: 1 }}>
                         <Field label={t("Fecha del registro")} value={row.date ? formatDate(row.date) : ""} />
                     </View>
