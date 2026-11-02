@@ -13,7 +13,7 @@
 //  - course: solo docentes, desde los bloques horarios
 // ============================================================
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { readLocalRows, writeLocalRows } from "./localCache";
 import { API_MODE } from "../../config/env";
 import { mockAppUsers } from "./mockData";
 import { roleNamesFrom, toUiRole } from "../../core/utils/backendRoles";
@@ -40,8 +40,7 @@ function generateId() {
 
 async function localUsers() {
     try {
-        const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        const parsed = raw ? JSON.parse(raw) : null;
+        const parsed = await readLocalRows(STORAGE_KEY);
         if (!Array.isArray(parsed)) return [];
         return parsed.filter(
             (user) => typeof user?.id === "string" && user.id.startsWith(LOCAL_PREFIX)
@@ -169,7 +168,7 @@ export async function loadUsers({ includeUnassigned = false } = {}) {
 
 export async function saveUsers(users) {
     try {
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+        await writeLocalRows(STORAGE_KEY, users);
     } catch (error) { /* fallo silencioso */ }
 }
 
