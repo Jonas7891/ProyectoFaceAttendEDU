@@ -40,15 +40,6 @@ export const authApi = {
             : request(endpoints.identity.logout, { method: "POST", headers: { Authorization: `Bearer ${sessionId}` } }),
     /** Sesión en uso (sin su id): usuario, estado y caducidad. Es lo que la web pregunta al cargar en modo cookie. */
     currentSession: () => request(endpoints.identity.currentSession, { method: "GET" }),
-    /** Ticket de un solo uso (30 s) para abrir el WebSocket del kiosco sin exponer la sesión. */
-    wsTicket: () => request(endpoints.identity.wsTicket, { method: "POST" }),
-    me: (identifier) =>
-        request(endpoints.identity.me, {
-            method: "GET",
-            query: String(identifier).includes("@")
-                ? { email: identifier }
-                : { username: identifier },
-        }),
 
     /**
      * Sede del usuario, leida de su academic_actor. Devuelve null si la persona
@@ -90,38 +81,23 @@ export const authApi = {
     // ── Roles y permisos del usuario autenticado ────────
     userRoles: (userId) =>
         request(endpoints.authorization.userRoles(userId), { method: "GET" }),
-    evaluate: (userId, permission) =>
-        request(endpoints.authorization.evaluate, {
-            method: "GET",
-            query: { userId, permission },
-        }),
 
     // ── Personas ────────────────────────────────────────
-    listPersons: (params) => request(endpoints.identity.persons, { method: "GET", query: params }),
     getPerson: (id) => request(endpoints.identity.personById(id), { method: "GET" }),
-    createPerson: (b) => request(endpoints.identity.persons, { method: "POST", body: b }),
     updatePerson: (id, b) => request(endpoints.identity.personById(id), { method: "PUT", body: b }),
     setPersonStatus: (id, status) =>
         request(endpoints.identity.personStatus(id), { method: "PATCH", query: { status } }),
 
     // ── Usuarios ────────────────────────────────────────
-    listUsers: (params) => request(endpoints.identity.users, { method: "GET", query: params }),
     getUser: (id) => request(endpoints.identity.userById(id), { method: "GET" }),
-    getUserByUsername: (username) =>
-        request(endpoints.identity.users, { method: "GET", query: { username } }),
-    createUser: (b) => request(endpoints.identity.users, { method: "POST", body: b }),
     // Alta compuesta en el servidor (persona + usuario + actor + matrícula + rol, con compensación).
     provisionUser: (b) => request(endpoints.identity.usersProvision, { method: "POST", body: b, timeoutMs: 60000 }),
     updateUser: (id, b) => request(endpoints.identity.userById(id), { method: "PUT", body: b }),
-    deleteUser: (id) => request(endpoints.identity.userById(id), { method: "DELETE" }),
     setUserStatus: (id, status) =>
         request(endpoints.identity.userStatus(id), { method: "PATCH", query: { status } }),
 
     // ── Sesiones de usuario ─────────────────────────────
-    listSessions: (params) => request(endpoints.identity.sessions, { method: "GET", query: params }),
     getSession: (id) => request(endpoints.identity.sessionById(id), { method: "GET" }),
-    listSessionsByUser: (userId) =>
-        request(endpoints.identity.sessionsByUser(userId), { method: "GET" }),
 
     // ── Recuperación de contraseña ──────────────────────
     // Paridad con Mobile: Kong enruta /api/v1/auth, pero el backend
@@ -141,8 +117,4 @@ export const authApi = {
             method: "POST",
             body: { email: String(email).toLowerCase().trim(), password },
         }),
-
-    // ── Catálogos y política de contraseñas ─────────────
-    getPasswordPolicies: () =>
-        request(endpoints.identity.passwordPolicies, { method: "GET" }),
 };
