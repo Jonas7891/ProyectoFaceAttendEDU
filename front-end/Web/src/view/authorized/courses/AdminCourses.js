@@ -116,6 +116,7 @@ export function CourseCard({ course, onPress, onStudentsPress, onReportsPress })
                     </View>
                 </View>
 
+                {(onReportsPress || onStudentsPress) && (
                 <View
                     style={{
                         flexDirection: "row",
@@ -123,6 +124,9 @@ export function CourseCard({ course, onPress, onStudentsPress, onReportsPress })
                         borderTopColor: c.border.primary,
                     }}
                 >
+                    {/* Solo cuando el padre define la acción: el estudiante no tiene
+                        acceso a Reportes (AUD-51), así que no la pasa y no se muestra */}
+                    {onReportsPress && (
                     <TouchableOpacity
                         onPress={(e) => {
                             e.stopPropagation(); // Evitar que se dispare el onPress del Card
@@ -142,11 +146,14 @@ export function CourseCard({ course, onPress, onStudentsPress, onReportsPress })
                             {t("Reportes")}
                         </Text>
                     </TouchableOpacity>
+                    )}
                     {/* Solo cuando el padre define la acción (el estudiante ya no
                         consulta a sus compañeros, así que no la pasa) */}
                     {onStudentsPress && (
                         <>
-                            <View style={{ width: 1, backgroundColor: c.border.primary }} />
+                            {onReportsPress && (
+                                <View style={{ width: 1, backgroundColor: c.border.primary }} />
+                            )}
                             <TouchableOpacity
                                 onPress={(e) => {
                                     e.stopPropagation(); // Evitar que se dispare el onPress del Card
@@ -175,6 +182,7 @@ export function CourseCard({ course, onPress, onStudentsPress, onReportsPress })
                         </>
                     )}
                 </View>
+                )}
             </Card>
         </TouchableOpacity>
     );
