@@ -34,6 +34,7 @@ export default function UsersScreen() {
     const sortBy = route.params?.sortBy; // Columna por la que ordenar
     const sortOrder = route.params?.sortOrder; // "asc" | "desc"
     const filterColumn = route.params?.filterColumn; // Columna para filtro avanzado
+    const courseId = route.params?.courseId; // Curso cuyo alumnado se muestra (AUD-48)
     
     // La validación de autorización se hace GLOBALMENTE en AuthenticatedNavigator
     // Este componente solo se renderiza si el usuario YA está autorizado
@@ -46,6 +47,7 @@ export default function UsersScreen() {
             sortBy={sortBy}
             sortOrder={sortOrder}
             filterColumn={filterColumn}
+            courseId={courseId}
         />
     );
 }
