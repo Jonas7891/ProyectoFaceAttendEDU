@@ -290,7 +290,8 @@ public class SchoolProvisioningHttpAdapter implements SchoolProvisioningPort, Us
     private <T> ResponseEntity<T> exchange(HttpMethod method, String url, String token, Object body, Class<T> type) {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        // Academic rejects a JSON content type without a body (400), which broke every rollback DELETE.
+        if (body != null) headers.setContentType(MediaType.APPLICATION_JSON);
         return restTemplate.exchange(url, method, new HttpEntity<>(body, headers), type);
     }
 

@@ -4,6 +4,7 @@ import com.faceattend_edu.identity_service.application.port.in.CreatePersonUseCa
 import com.faceattend_edu.identity_service.application.port.in.CreateUserUseCase;
 import com.faceattend_edu.identity_service.application.port.in.NotifyUserCredentialsUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ProvisionUserUseCase;
+import com.faceattend_edu.identity_service.application.port.out.CallerScopeCachePort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserByUsernamePort;
 import com.faceattend_edu.identity_service.application.port.out.RemoveIdentityPort;
 import com.faceattend_edu.identity_service.application.port.out.UserProvisioningPort;
@@ -28,7 +29,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.InOrder;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -49,6 +52,7 @@ class ProvisionUserUseCaseImplTest {
     @Mock RemoveIdentityPort removeIdentity;
     @Mock com.faceattend_edu.identity_service.application.port.in.ManageConsentUseCase consent;
     @Mock com.faceattend_edu.identity_service.application.port.in.ValidatePasswordPolicyUseCase passwordPolicy;
+    @Mock CallerScopeCachePort callerScopeCache;
     @InjectMocks ProvisionUserUseCaseImpl useCase;
 
     private final UUID personId = UUID.randomUUID();
@@ -105,6 +109,52 @@ class ProvisionUserUseCaseImplTest {
         assertThatThrownBy(() -> useCase.provision(apprentice(), TOKEN, ADMIN)).isInstanceOf(OnboardingUnavailableException.class);
 
         verify(provisioning).removeRole(TOKEN, userId, "Aprendiz");
+        verify(provisioning).deleteEnrollment(TOKEN, 40L);
+        verify(provisioning).deleteActor(TOKEN, 30L);
+        verify(removeIdentity).removeUserAndPerson(userId, personId);
+    }
+
+    @Test
+    @DisplayName("AUD-69: the caller's cached scope is dropped after the actor exists and before the role is requested")
+    void callerScopeIsRefreshedBeforeAssigningTheRole() {
+        when(provisioning.createActor(TOKEN, personId, 1, 4L, "APR-1001")).thenReturn(30L);
+        when(provisioning.createEnrollment(TOKEN, 30L, 9L)).thenReturn(40L);
+
+        useCase.provision(apprentice(), TOKEN, ADMIN);
+
+        InOrder order = inOrder(provisioning, callerScopeCache);
+        order.verify(provisioning).createEnrollment(TOKEN, 30L, 9L);
+        order.verify(callerScopeCache).invalidate(ADMIN);
+        order.verify(provisioning).assignRole(TOKEN, userId, "Aprendiz");
+    }
+
+    @Test
+    @DisplayName("AUD-60: a refused role keeps its status but answers with a stable Spanish message, not the raw one")
+    void roleRejectionHasAStableMessage() {
+        when(provisioning.createActor(TOKEN, personId, 1, 4L, "APR-1001")).thenReturn(30L);
+        when(provisioning.createEnrollment(TOKEN, 30L, 9L)).thenReturn(40L);
+        doThrow(new DownstreamRejectedException(403, "Could not assign the role")).when(provisioning).assignRole(TOKEN, userId, "Aprendiz");
+
+        assertThatThrownBy(() -> useCase.provision(apprentice(), TOKEN, ADMIN))
+                .isInstanceOf(DownstreamRejectedException.class)
+                .hasFieldOrPropertyWithValue("status", 403)
+                .hasMessageContaining("No se pudo asignar el rol")
+                .hasMessageNotContaining("Could not");
+        verify(provisioning).deleteEnrollment(TOKEN, 40L);
+        verify(provisioning).deleteActor(TOKEN, 30L);
+        verify(removeIdentity).removeUserAndPerson(userId, personId);
+    }
+
+    @Test
+    @DisplayName("AUD-60: every compensation step runs even when the role removal is refused")
+    void compensationContinuesWhenRoleRemovalFails() {
+        when(provisioning.createActor(TOKEN, personId, 1, 4L, "APR-1001")).thenReturn(30L);
+        when(provisioning.createEnrollment(TOKEN, 30L, 9L)).thenReturn(40L);
+        doThrow(new DownstreamRejectedException(403, "x")).when(provisioning).assignRole(TOKEN, userId, "Aprendiz");
+        doThrow(new DownstreamRejectedException(403, "x")).when(provisioning).removeRole(TOKEN, userId, "Aprendiz");
+
+        assertThatThrownBy(() -> useCase.provision(apprentice(), TOKEN, ADMIN)).isInstanceOf(DownstreamRejectedException.class);
+
         verify(provisioning).deleteEnrollment(TOKEN, 40L);
         verify(provisioning).deleteActor(TOKEN, 30L);
         verify(removeIdentity).removeUserAndPerson(userId, personId);
