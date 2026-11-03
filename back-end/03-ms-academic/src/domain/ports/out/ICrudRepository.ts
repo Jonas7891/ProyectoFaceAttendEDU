@@ -20,15 +20,22 @@ export interface PageOptions {
  *
  * Soft delete semantics: reads never return rows whose `deleted_at` is set, and
  * `softDelete` stamps `deleted_at` and, on tables with a boolean `status` / `is_active`, turns it off.
+ *
+ * `audit` is the authenticated caller: `create` writes `created_by`, `update` writes
+ * `updated_by` and `softDelete` writes `deleted_by` (AGENTS.md §2.2).
  */
+export interface AuditActor {
+  readonly userId: string;
+}
+
 export interface ICrudRepository<TRecord, TId, TDraft> {
   list(page?: PageOptions): Promise<TRecord[]>;
   count(): Promise<number>;
   findById(id: TId): Promise<TRecord | null>;
   existsById(id: TId): Promise<boolean>;
-  create(draft: TDraft): Promise<TRecord>;
-  update(id: TId, patch: Partial<TDraft>): Promise<TRecord | null>;
-  softDelete(id: TId): Promise<boolean>;
+  create(draft: TDraft, audit?: AuditActor): Promise<TRecord>;
+  update(id: TId, patch: Partial<TDraft>, audit?: AuditActor): Promise<TRecord | null>;
+  softDelete(id: TId, audit?: AuditActor): Promise<boolean>;
 }
 
 /** Audit columns owned by the `fn_audit_timestamps()` trigger. */

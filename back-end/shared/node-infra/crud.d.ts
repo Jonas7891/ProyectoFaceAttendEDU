@@ -36,6 +36,11 @@ export interface Page {
   readonly offset?: number;
 }
 
+/** Authenticated caller stamped on created_by / updated_by / deleted_by. */
+export interface AuditActor {
+  readonly userId: string;
+}
+
 export declare abstract class PostgresCrudRepositoryBase<T extends object> {
   /** Schema-qualified table, e.g. `'academic.school'`. Static code only. */
   protected abstract readonly qualifiedTable: string;
@@ -59,9 +64,9 @@ export declare abstract class PostgresCrudRepositoryBase<T extends object> {
   count(query?: ListQuery): Promise<number>;
   findById(id: unknown): Promise<T | null>;
   existsById(id: unknown): Promise<boolean>;
-  create(input: JsonRecord): Promise<T>;
-  update(id: unknown, patch: JsonRecord): Promise<T | null>;
-  softDelete(id: unknown): Promise<boolean>;
+  create(input: JsonRecord, audit?: AuditActor): Promise<T>;
+  update(id: unknown, patch: JsonRecord, audit?: AuditActor): Promise<T | null>;
+  softDelete(id: unknown, audit?: AuditActor): Promise<boolean>;
 
   protected listWhere(filters: readonly ColumnFilter[], page?: Page): Promise<T[]>;
   protected countWhere(filters: readonly ColumnFilter[]): Promise<number>;

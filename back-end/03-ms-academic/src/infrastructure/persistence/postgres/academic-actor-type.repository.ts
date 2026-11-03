@@ -1,4 +1,5 @@
 import type { AcademicActorType } from '../../../domain/entities/AcademicActorType';
+import type { AuditActor } from '../../../domain/ports/out/ICrudRepository';
 import type { IAcademicActorTypeRepository } from '../../../domain/ports/out/IAcademicActorTypeRepository';
 import { PostgresCrudRepository, type FieldSpec } from './crud.repository';
 import { AUDIT_FIELDS } from './audit.fields';
@@ -24,12 +25,18 @@ export class PostgresAcademicActorTypeRepository
     ...AUDIT_FIELDS,
   ];
 
-  async restoreByCode(code: string, name: string): Promise<AcademicActorType | null> {
+  async restoreByCode(code: string, name: string, audit?: AuditActor): Promise<AcademicActorType | null> {
+    const params: unknown[] = [code, name];
+    let updatedBy = '';
+    if (audit?.userId) {
+      params.push(audit.userId);
+      updatedBy = `, updated_by = $${params.length}::uuid`;
+    }
     const rows = await this.select(
-      `UPDATE ${this.qualifiedTable} SET deleted_at = NULL, deleted_by = NULL, name = $2
+      `UPDATE ${this.qualifiedTable} SET deleted_at = NULL, deleted_by = NULL, name = $2${updatedBy}
          WHERE code = $1 AND deleted_at IS NOT NULL
        RETURNING *`,
-      [code, name],
+      params,
     );
     return rows.length ? this.mapRow(rows[0]) : null;
   }

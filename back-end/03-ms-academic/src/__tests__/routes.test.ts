@@ -459,3 +459,18 @@ describe('enrollments', () => {
     expect((await call('admin1', 'DELETE', '/api/v1/enrollments/999')).statusCode).toBe(404);
   });
 });
+
+describe('audit columns (AUD-62)', () => {
+  it('stamps created_by, updated_by and deleted_by with the session user', async () => {
+    const created = await call('admin1', 'POST', '/api/v1/programs', { schoolId: ids.s1, code: 'AUD', name: 'Auditoria' });
+    expect(created.statusCode).toBe(201);
+    const id = created.json().programId;
+    expect(repos.stores.programs.rows.get(id)).toMatchObject({ createdBy: 'admin1' });
+
+    expect((await call('admin1', 'PUT', `/api/v1/programs/${id}`, { name: 'Auditoria 2' })).statusCode).toBe(200);
+    expect(repos.stores.programs.rows.get(id)).toMatchObject({ updatedBy: 'admin1' });
+
+    expect((await call('admin1', 'DELETE', `/api/v1/programs/${id}`)).statusCode).toBe(204);
+    expect(repos.stores.programs.rows.get(id)).toMatchObject({ deletedBy: 'admin1' });
+  });
+});
