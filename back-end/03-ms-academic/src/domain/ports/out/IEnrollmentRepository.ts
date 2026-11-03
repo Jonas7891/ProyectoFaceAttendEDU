@@ -1,5 +1,5 @@
 import { Enrollment, type EnrollmentRecord } from '../../entities/Enrollment';
-import type { ICrudRepository, Draft, PageOptions } from './ICrudRepository';
+import type { AuditActor, ICrudRepository, Draft, PageOptions } from './ICrudRepository';
 
 export type EnrollmentDraft = Draft<EnrollmentRecord, 'enrollmentId'>;
 
@@ -19,7 +19,7 @@ export interface IEnrollmentRepository extends ICrudRepository<EnrollmentRecord,
   save(e: Enrollment): Promise<void>;
 
   /** Enrolls, or brings back a deleted enrollment of the same actor + cohort (the unique pair counts deleted rows). */
-  createOrRestore(draft: EnrollmentDraft): Promise<EnrollmentRecord>;
+  createOrRestore(draft: EnrollmentDraft, audit?: AuditActor): Promise<EnrollmentRecord>;
 
   findByCohort(cohortId: number, page?: PageOptions): Promise<EnrollmentRecord[]>;
   countByCohort(cohortId: number): Promise<number>;

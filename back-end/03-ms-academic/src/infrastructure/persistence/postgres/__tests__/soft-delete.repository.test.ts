@@ -23,6 +23,7 @@ jest.mock('../../../db/database', () => ({
 const database = require('../../../db/database');
 const mockRunCommand = database.runCommand as jest.Mock;
 const mockWithTransaction = database.withTransaction as jest.Mock;
+const ACTOR = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 
 describe('soft delete turns off the activity flag (AUD-31)', () => {
   beforeEach(() => {
@@ -56,6 +57,32 @@ describe('soft delete turns off the activity flag (AUD-31)', () => {
       `UPDATE ${table} SET deleted_at = NOW() WHERE ${pk} = $1 AND deleted_at IS NULL`,
       [7],
     );
+  });
+
+  it.each(withFlag)('%s: softDelete records deleted_by when the caller is known', async (table, make, pk, flag) => {
+    const repo = make() as unknown as {
+      softDelete(id: number, audit?: { userId: string }): Promise<boolean>;
+    };
+
+    expect(await repo.softDelete(7, { userId: ACTOR })).toBe(true);
+    expect(mockRunCommand).toHaveBeenCalledWith(
+      `UPDATE ${table} SET deleted_at = NOW(), ${flag} = false, deleted_by = $2::uuid WHERE ${pk} = $1 AND deleted_at IS NULL`,
+      [7, ACTOR],
+    );
+  });
+
+  it('school cascade records deleted_by on every row it deletes', async () => {
+    const query = jest.fn().mockResolvedValue({ rowCount: 1 });
+    mockWithTransaction.mockImplementation(async (fn: (c: unknown) => unknown) => fn({ query }));
+
+    expect(await new PostgresSchoolRepository().softDeleteCascade(3, { userId: ACTOR })).toBe(true);
+
+    const updates = query.mock.calls.filter((c) => String(c[0]).startsWith('UPDATE academic.'));
+    expect(updates).toHaveLength(7);
+    for (const [sql, params] of updates) {
+      expect(sql).toContain('deleted_by = $2::uuid');
+      expect(params).toEqual([3, ACTOR]);
+    }
   });
 
   it('school cascade also turns off status / is_active on the children it deletes', async () => {

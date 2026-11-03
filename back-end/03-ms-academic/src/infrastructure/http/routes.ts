@@ -1,7 +1,7 @@
 import { patchSchema } from './patchSchema';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import type { PageOptions } from '../../domain/ports/out/ICrudRepository';
+import type { AuditActor, PageOptions } from '../../domain/ports/out/ICrudRepository';
 import type { AcademicRepositories } from '../persistence/postgres';
 import { createCallerSchoolResolver, mayDeleteCourse, ScopeError as SchoolScopeError, type CallerSchool } from './callerSchool';
 import { ownSchoolEdit } from './schoolEditPolicy';
@@ -24,6 +24,12 @@ import { ownSchoolEdit } from './schoolEditPolicy';
 function parseId(raw: unknown): number | null {
   const n = Number(raw);
   return Number.isInteger(n) && n > 0 ? n : null;
+}
+
+/** Session user set by the shared auth guard, stamped on created_by/updated_by/deleted_by. */
+function auditOf(req: any): AuditActor | undefined {
+  const userId = (req as any)?.userId;
+  return typeof userId === 'string' && userId.length > 0 ? { userId } : undefined;
 }
 
 function send400(reply: any, message: string, details?: unknown) {
@@ -157,7 +163,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const parsed = schoolBody.safeParse((req as any).body);
     if (!parsed.success) return send400(reply, 'Invalid school payload', parsed.error.flatten());
     if (!(await requireSuperAdminForSchool(req, reply))) return reply;
-    const created = await repos.schools.create(parsed.data);
+    const created = await repos.schools.create(parsed.data, auditOf(req));
     return reply.code(201).send(created);
   });
   app.get('/api/v1/schools', async (req, reply) => {
@@ -198,7 +204,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
       }
       changes = edit.changes;
     }
-    const updated = await repos.schools.update(id, changes);
+    const updated = await repos.schools.update(id, changes, auditOf(req));
     if (!updated) return notFound(reply);
     return updated;
   });
@@ -207,14 +213,14 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const parsed = z.object({ status: z.boolean() }).safeParse((req as any).body);
     if (!id || !parsed.success) return send400(reply, 'Invalid status payload');
     if (!(await requireSuperAdminForSchool(req, reply))) return reply;
-    const updated = await repos.schools.update(id, parsed.data);
+    const updated = await repos.schools.update(id, parsed.data, auditOf(req));
     if (!updated) return notFound(reply);
     return updated;
   });
   app.delete('/api/v1/schools/:id', async (req, reply) => {
     const id = parseId((req.params as any).id);
     if (!(await requireSuperAdminForSchool(req, reply))) return reply;
-    if (!id || !(await repos.schools.softDeleteCascade(id))) return notFound(reply);
+    if (!id || !(await repos.schools.softDeleteCascade(id, auditOf(req)))) return notFound(reply);
     return reply.code(204).send();
   });
 
@@ -232,7 +238,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const caller = await callerSchoolOf(req, reply);
     if (!caller) return reply;
     if (!caller.isSuperAdmin && schoolId !== caller.schoolId) return forbiddenOtherSchool(reply);
-    const created = await repos.programs.create({ ...parsed.data, schoolId });
+    const created = await repos.programs.create({ ...parsed.data, schoolId }, auditOf(req));
     return reply.code(201).send(created);
   };
   app.post('/api/v1/schools/:schoolId/programs', async (req, reply) => {
@@ -294,7 +300,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
       if (found.schoolId !== caller.schoolId) return notFound(reply);
       if (parsed.data.schoolId !== undefined && parsed.data.schoolId !== caller.schoolId) return forbiddenOtherSchool(reply);
     }
-    const updated = await repos.programs.update(id as number, parsed.data);
+    const updated = await repos.programs.update(id as number, parsed.data, auditOf(req));
     return updated ?? notFound(reply);
   });
   app.delete('/api/v1/programs/:id', async (req, reply) => {
@@ -304,7 +310,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const caller = await callerSchoolOf(req, reply);
     if (!caller) return reply;
     if (!caller.isSuperAdmin && found.schoolId !== caller.schoolId) return notFound(reply);
-    if (!(await repos.programs.softDelete(id as number))) return notFound(reply);
+    if (!(await repos.programs.softDelete(id as number, auditOf(req)))) return notFound(reply);
     return reply.code(204).send();
   });
 
@@ -340,7 +346,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     if (!caller) return reply;
     if (!caller.isSuperAdmin && schoolId !== caller.schoolId) return forbiddenOtherSchool(reply);
     // `academic_period.school_id` is a real FK: a missing school answers 400.
-    const created = await repos.periods.create({ ...parsed.data, schoolId });
+    const created = await repos.periods.create({ ...parsed.data, schoolId }, auditOf(req));
     return reply.code(201).send(created);
   };
   for (const base of ['/api/v1/academic-periods', '/api/v1/periods']) {
@@ -389,7 +395,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
         if (found.schoolId !== caller.schoolId) return notFound(reply);
         if (parsed.data.schoolId !== undefined && parsed.data.schoolId !== caller.schoolId) return forbiddenOtherSchool(reply);
       }
-      const updated = await repos.periods.update(id as number, parsed.data);
+      const updated = await repos.periods.update(id as number, parsed.data, auditOf(req));
       return updated ?? notFound(reply);
     });
     app.delete(`${base}/:id`, async (req, reply) => {
@@ -399,7 +405,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
       const caller = await callerSchoolOf(req, reply);
       if (!caller) return reply;
       if (!caller.isSuperAdmin && found.schoolId !== caller.schoolId) return notFound(reply);
-      if (!(await repos.periods.softDelete(id as number))) return notFound(reply);
+      if (!(await repos.periods.softDelete(id as number, auditOf(req)))) return notFound(reply);
       return reply.code(204).send();
     });
   }
@@ -440,7 +446,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
       const programSchool = await schoolOfProgram(parsed.data.programId);
       if (programSchool !== caller.schoolId) return forbiddenOtherSchool(reply);
     }
-    const created = await repos.cohorts.create(parsed.data);
+    const created = await repos.cohorts.create(parsed.data, auditOf(req));
     return reply.code(201).send(created);
   });
   app.get('/api/v1/cohorts', async (req, reply) => {
@@ -476,7 +482,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
         if (targetSchool !== caller.schoolId) return forbiddenOtherSchool(reply);
       }
     }
-    const updated = await repos.cohorts.update(id as number, parsed.data);
+    const updated = await repos.cohorts.update(id as number, parsed.data, auditOf(req));
     return updated ?? notFound(reply);
   });
   app.delete('/api/v1/cohorts/:id', async (req, reply) => {
@@ -486,7 +492,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const caller = await callerSchoolOf(req, reply);
     if (!caller) return reply;
     if (!caller.isSuperAdmin && (await schoolOfProgram(found.programId)) !== caller.schoolId) return notFound(reply);
-    if (!(await repos.cohorts.softDelete(id as number))) return notFound(reply);
+    if (!(await repos.cohorts.softDelete(id as number, auditOf(req)))) return notFound(reply);
     return reply.code(204).send();
   });
   app.get('/api/v1/programs/:programId/cohorts', async (req, reply) => {
@@ -519,7 +525,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     if (!caller) return reply;
     if (!caller.isSuperAdmin && (await schoolOfProgram(programId)) !== caller.schoolId) return forbiddenOtherSchool(reply);
     // `course.program_id` is a NOT NULL FK: a missing program answers 400.
-    const created = await repos.courses.create({ ...parsed.data, programId });
+    const created = await repos.courses.create({ ...parsed.data, programId }, auditOf(req));
     return reply.code(201).send(created);
   };
   app.post('/api/v1/programs/:programId/courses', async (req, reply) =>
@@ -564,7 +570,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
         if (targetSchool !== caller.schoolId) return forbiddenOtherSchool(reply);
       }
     }
-    const updated = await repos.courses.update(id as number, parsed.data);
+    const updated = await repos.courses.update(id as number, parsed.data, auditOf(req));
     return updated ?? notFound(reply);
   });
   app.delete('/api/v1/courses/:id', async (req, reply) => {
@@ -577,7 +583,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const id = parseId((req.params as any).id);
     const found = id ? await repos.courses.findById(id) : null;
     if (!found) return notFound(reply);
-    if (!(await repos.courses.softDelete(id as number))) return notFound(reply);
+    if (!(await repos.courses.softDelete(id as number, auditOf(req)))) return notFound(reply);
     return reply.code(204).send();
   });
   app.get('/api/v1/programs/:programId/courses', async (req, reply) => {
@@ -606,9 +612,9 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     if (!(await requireSuperAdminForActorType(req, reply))) return reply;
     // Un code retirado sigue ocupando el UNIQUE, así que crearlo de nuevo daba 409
     // para siempre. Si existe borrado, se revive en vez de rechazar.
-    const revived = await repos.actorTypes.restoreByCode(parsed.data.code, parsed.data.name);
+    const revived = await repos.actorTypes.restoreByCode(parsed.data.code, parsed.data.name, auditOf(req));
     if (revived) return reply.code(201).send(revived);
-    const created = await repos.actorTypes.create(parsed.data);
+    const created = await repos.actorTypes.create(parsed.data, auditOf(req));
     return reply.code(201).send(created);
   });
   app.get('/api/v1/actor-types', async (req, reply) =>
@@ -626,14 +632,14 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const parsed = patchSchema(actorTypeBody).safeParse((req as any).body);
     if (!parsed.success) return send400(reply, 'Invalid actor-type payload', parsed.error.flatten());
     if (!(await requireSuperAdminForActorType(req, reply))) return reply;
-    const updated = await repos.actorTypes.update(id, parsed.data);
+    const updated = await repos.actorTypes.update(id, parsed.data, auditOf(req));
     if (!updated) return reply.code(404).send({ error: 'NotFound' });
     return updated;
   });
   app.delete('/api/v1/actor-types/:id', async (req, reply) => {
     if (!(await requireSuperAdminForActorType(req, reply))) return reply;
     const id = parseId((req.params as any).id);
-    if (!id || !(await repos.actorTypes.softDelete(id))) return reply.code(404).send({ error: 'NotFound' });
+    if (!id || !(await repos.actorTypes.softDelete(id, auditOf(req)))) return reply.code(404).send({ error: 'NotFound' });
     return reply.code(204).send();
   });
 
@@ -655,7 +661,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const caller = await callerSchoolOf(req, reply);
     if (!caller) return reply;
     if (!caller.isSuperAdmin && parsed.data.schoolId !== caller.schoolId) return forbiddenOtherSchool(reply);
-    const created = await repos.actors.create(parsed.data);
+    const created = await repos.actors.create(parsed.data, auditOf(req));
     return reply.code(201).send(created);
   });
   // ?personId= resuelve en una peticion a que sede pertenece quien inicia sesion (o a
@@ -702,7 +708,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
       if (found.schoolId !== caller.schoolId) return notFound(reply);
       if (parsed.data.schoolId !== undefined && parsed.data.schoolId !== caller.schoolId) return forbiddenOtherSchool(reply);
     }
-    const updated = await repos.actors.update(id as number, parsed.data);
+    const updated = await repos.actors.update(id as number, parsed.data, auditOf(req));
     return updated ?? notFound(reply);
   });
   app.patch('/api/v1/academic-actors/:id/status', async (req, reply) => {
@@ -714,7 +720,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const caller = await callerSchoolOf(req, reply);
     if (!caller) return reply;
     if (!caller.isSuperAdmin && found.schoolId !== caller.schoolId) return notFound(reply);
-    const updated = await repos.actors.update(id as number, parsed.data);
+    const updated = await repos.actors.update(id as number, parsed.data, auditOf(req));
     return updated ?? notFound(reply);
   });
   app.delete('/api/v1/academic-actors/:id', async (req, reply) => {
@@ -724,7 +730,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const caller = await callerSchoolOf(req, reply);
     if (!caller) return reply;
     if (!caller.isSuperAdmin && found.schoolId !== caller.schoolId) return notFound(reply);
-    if (!(await repos.actors.softDelete(id as number))) return notFound(reply);
+    if (!(await repos.actors.softDelete(id as number, auditOf(req)))) return notFound(reply);
     return reply.code(204).send();
   });
   app.get('/api/v1/schools/:schoolId/actors', async (req, reply) => {
@@ -761,7 +767,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
       if (actorSchool !== caller.schoolId || cohortSchool !== caller.schoolId) return forbiddenOtherSchool(reply);
     }
     // Re-enrolling someone who was unenrolled brings their old row back (see createOrRestore).
-    const created = await repos.enrollments.createOrRestore(parsed.data);
+    const created = await repos.enrollments.createOrRestore(parsed.data, auditOf(req));
     return reply.code(201).send(created);
   });
   app.get('/api/v1/enrollments', async (req, reply) => {
@@ -793,7 +799,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const caller = await callerSchoolOf(req, reply);
     if (!caller) return reply;
     if (!caller.isSuperAdmin && (await schoolOfActor(found.academicActorId)) !== caller.schoolId) return notFound(reply);
-    const updated = await repos.enrollments.update(id as number, parsed.data);
+    const updated = await repos.enrollments.update(id as number, parsed.data, auditOf(req));
     return updated ?? notFound(reply);
   });
   app.put('/api/v1/enrollments/:id', async (req, reply) => {
@@ -813,7 +819,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
         return forbiddenOtherSchool(reply);
       }
     }
-    const updated = await repos.enrollments.update(id as number, parsed.data);
+    const updated = await repos.enrollments.update(id as number, parsed.data, auditOf(req));
     return updated ?? notFound(reply);
   });
   app.delete('/api/v1/enrollments/:id', async (req, reply) => {
@@ -823,7 +829,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const caller = await callerSchoolOf(req, reply);
     if (!caller) return reply;
     if (!caller.isSuperAdmin && (await schoolOfActor(found.academicActorId)) !== caller.schoolId) return notFound(reply);
-    if (!(await repos.enrollments.softDelete(id as number))) return notFound(reply);
+    if (!(await repos.enrollments.softDelete(id as number, auditOf(req)))) return notFound(reply);
     return reply.code(204).send();
   });
   app.get('/api/v1/cohorts/:cohortId/enrollments', async (req, reply) => {

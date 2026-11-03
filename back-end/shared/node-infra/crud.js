@@ -18,6 +18,11 @@
 
 const { RepositoryError, translateDbError } = require('./errors');
 
+/** Session user id to stamp on the audit columns; ignored when absent. */
+function actorIdOf(audit) {
+  return typeof audit?.userId === 'string' && audit.userId.length > 0 ? audit.userId : undefined;
+}
+
 /**
  * Builds the base class bound to one service's database module. `db.runQuery` and
  * `db.runCommand` are looked up on every call, so a test that mocks the service's
@@ -143,8 +148,11 @@ function definePostgresCrudRepository(db) {
 
     // ── Writes ─────────────────────────────────────────────────────────────
 
-    /** INSERT ... RETURNING of the whitelisted, writable fields present in `input`. */
-    async create(input) {
+    /**
+     * INSERT ... RETURNING of the whitelisted, writable fields present in `input`.
+     * `audit.userId` (the authenticated caller) is stamped on `created_by`.
+     */
+    async create(input, audit) {
       const columns = [];
       const placeholders = [];
       const params = [];
@@ -158,6 +166,12 @@ function definePostgresCrudRepository(db) {
       if (columns.length === 0) {
         throw new RepositoryError(400, 'BadRequest', `No writable fields supplied for ${this.qualifiedTable}`);
       }
+      const actorId = actorIdOf(audit);
+      if (actorId) {
+        columns.push('created_by');
+        params.push(actorId);
+        placeholders.push(`$${params.length}::uuid`);
+      }
       const rows = await this.select(
         `INSERT INTO ${this.qualifiedTable} (${columns.join(', ')}) VALUES (${placeholders.join(', ')}) RETURNING ${this.selectColumns}`,
         params,
@@ -167,9 +181,10 @@ function definePostgresCrudRepository(db) {
 
     /**
      * Partial UPDATE ... RETURNING of a live row; null when it does not exist. An empty
-     * patch is a plain read: no statement moves an audit column.
+     * patch is a plain read: no statement moves an audit column. `audit.userId` is
+     * stamped on `updated_by` when the patch writes at least one business column.
      */
-    async update(id, patch) {
+    async update(id, patch, audit) {
       const sets = [];
       const params = [];
       for (const f of this.fields) {
@@ -177,6 +192,11 @@ function definePostgresCrudRepository(db) {
         if (!(f.field in patch) || patch[f.field] === undefined) continue;
         params.push(f.toParam ? f.toParam(patch[f.field]) : patch[f.field]);
         sets.push(`${f.column} = $${params.length}${f.cast ? `::${f.cast}` : ''}`);
+      }
+      const actorId = actorIdOf(audit);
+      if (sets.length > 0 && actorId) {
+        params.push(actorId);
+        sets.push(`updated_by = $${params.length}::uuid`);
       }
       params.push(id);
       const where = `WHERE ${this.primaryKeyColumn} = ${this.pkPlaceholder(params.length)} AND deleted_at IS NULL`;
@@ -201,15 +221,21 @@ function definePostgresCrudRepository(db) {
     }
 
     /**
-     * Soft delete: stamps deleted_at and turns the activity flag off (the trigger owns
-     * updated_at/row_version). `deleted_by` is not written: the port does not receive the
-     * acting user (AUD-62).
+     * Soft delete: stamps deleted_at, turns the activity flag off and records the acting
+     * user in `deleted_by` when the port receives it (the trigger owns updated_at/row_version).
      */
-    async softDelete(id) {
+    async softDelete(id, audit) {
       const flag = this.softDeleteFlagColumn;
+      const actorId = actorIdOf(audit);
+      const params = [id];
+      let deletedBy = '';
+      if (actorId) {
+        params.push(actorId);
+        deletedBy = `, deleted_by = $${params.length}::uuid`;
+      }
       const affected = await this.execute(
-        `UPDATE ${this.qualifiedTable} SET deleted_at = NOW()${flag ? `, ${flag} = false` : ''} WHERE ${this.primaryKeyColumn} = ${this.pkPlaceholder(1)} AND deleted_at IS NULL`,
-        [id],
+        `UPDATE ${this.qualifiedTable} SET deleted_at = NOW()${flag ? `, ${flag} = false` : ''}${deletedBy} WHERE ${this.primaryKeyColumn} = ${this.pkPlaceholder(1)} AND deleted_at IS NULL`,
+        params,
       );
       return affected > 0;
     }

@@ -1,4 +1,5 @@
 import { Enrollment, type EnrollmentRecord, type EnrollmentStatus } from '../../../domain/entities/Enrollment';
+import type { AuditActor } from '../../../domain/ports/out/ICrudRepository';
 import type { IEnrollmentRepository } from '../../../domain/ports/out/IEnrollmentRepository';
 import type { PageOptions } from '../../../domain/ports/out/ICrudRepository';
 import { PostgresCrudRepository, dateParam, type FieldSpec, type JsonRecord } from './crud.repository';
@@ -58,23 +59,34 @@ export class PostgresEnrollmentRepository
    * changelog applied a plain INSERT works too: this stays as a fallback for databases
    * that have not run that migration yet.
    */
-  async createOrRestore(draft: JsonRecord): Promise<EnrollmentRecord> {
+  async createOrRestore(draft: JsonRecord, audit?: AuditActor): Promise<EnrollmentRecord> {
+    const params: unknown[] = [
+      draft.academicActorId,
+      draft.cohortId,
+      draft.enrollmentStatus ?? 'Active',
+      dateParam(draft.enrolledOn),
+    ];
+    let updatedBy = '';
+    if (audit?.userId) {
+      params.push(audit.userId);
+      updatedBy = `, updated_by = $${params.length}::uuid`;
+    }
     const revived = await this.select<{ enrollment_id: number }>(
       `UPDATE ${this.qualifiedTable}
           SET deleted_at = NULL, deleted_by = NULL,
-              enrollment_status = $3::${ENROLLMENT_STATUS_TYPE}, enrolled_on = $4
+              enrollment_status = $3::${ENROLLMENT_STATUS_TYPE}, enrolled_on = $4${updatedBy}
         WHERE enrollment_id = (
                 SELECT enrollment_id FROM ${this.qualifiedTable}
                  WHERE academic_actor_id = $1 AND cohort_id = $2 AND deleted_at IS NOT NULL
                  ORDER BY enrollment_id DESC LIMIT 1)
         RETURNING enrollment_id`,
-      [draft.academicActorId, draft.cohortId, draft.enrollmentStatus ?? 'Active', dateParam(draft.enrolledOn)],
+      params,
     );
     if (revived.length > 0) {
       const record = await this.findById(revived[0].enrollment_id);
       if (record) return record;
     }
-    return this.create(draft);
+    return this.create(draft, audit);
   }
 
   findByCohort(cohortId: number, page?: PageOptions): Promise<EnrollmentRecord[]> {
