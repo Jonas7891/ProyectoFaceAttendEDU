@@ -21,7 +21,7 @@ public class ChangeUserStatusUseCaseImpl implements ChangeUserStatusUseCase {
     @Override
     public void changeStatus(UUID userId, boolean status) {
         User user = loadUserPort.loadUser(userId);
-        if (user == null) {
+        if (user == null || user.isDeleted()) {
             throw new EntityNotFoundException("User", userId);
         }
         user.setStatus(status);

@@ -92,6 +92,12 @@ public class PersonJpaEntity {
     private long rowVersion;
 
     @PrePersist
+    void onCreate() {
+        refreshHashes();
+        // Born at 1 like the DDL DEFAULT (AGENTS.md 2.2); a new Person defaults to 0 and Hibernate would keep it.
+        if (rowVersion < 1) rowVersion = 1;
+    }
+
     @PreUpdate
     public void refreshHashes() {
         PiiCipher cipher = PiiCipher.current();
