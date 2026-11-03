@@ -188,10 +188,27 @@ function definePostgresCrudRepository(db) {
       return rows.length > 0 ? this.mapRow(rows[0]) : null;
     }
 
-    /** Soft delete: stamps deleted_at (the trigger owns updated_at/row_version). */
+    /**
+     * Activity flag switched off by a soft delete (AGENTS.md §6.11): the boolean `status`
+     * column, or `is_active` (academic_period). A field with an enum `cast` is not that
+     * flag, and tables without either only get `deleted_at`.
+     */
+    get softDeleteFlagColumn() {
+      const flag = this.fields.find(
+        (f) => !f.cast && (f.column === 'status' || f.column === 'is_active'),
+      );
+      return flag ? flag.column : undefined;
+    }
+
+    /**
+     * Soft delete: stamps deleted_at and turns the activity flag off (the trigger owns
+     * updated_at/row_version). `deleted_by` is not written: the port does not receive the
+     * acting user (AUD-62).
+     */
     async softDelete(id) {
+      const flag = this.softDeleteFlagColumn;
       const affected = await this.execute(
-        `UPDATE ${this.qualifiedTable} SET deleted_at = NOW() WHERE ${this.primaryKeyColumn} = ${this.pkPlaceholder(1)} AND deleted_at IS NULL`,
+        `UPDATE ${this.qualifiedTable} SET deleted_at = NOW()${flag ? `, ${flag} = false` : ''} WHERE ${this.primaryKeyColumn} = ${this.pkPlaceholder(1)} AND deleted_at IS NULL`,
         [id],
       );
       return affected > 0;

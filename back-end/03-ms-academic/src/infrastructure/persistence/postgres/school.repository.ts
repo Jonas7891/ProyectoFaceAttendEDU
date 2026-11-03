@@ -53,12 +53,12 @@ export class PostgresSchoolRepository extends PostgresCrudRepository<School> imp
         const cascade = [
           `UPDATE academic.enrollment SET deleted_at = NOW() WHERE deleted_at IS NULL
              AND (cohort_id IN (${cohorts}) OR academic_actor_id IN (${actors}))`,
-          `UPDATE academic.cohort SET deleted_at = NOW() WHERE deleted_at IS NULL AND program_id IN (${programs})`,
-          `UPDATE academic.course SET deleted_at = NOW() WHERE deleted_at IS NULL AND program_id IN (${programs})`,
-          'UPDATE academic.program SET deleted_at = NOW() WHERE deleted_at IS NULL AND school_id = $1',
-          'UPDATE academic.academic_period SET deleted_at = NOW() WHERE deleted_at IS NULL AND school_id = $1',
-          'UPDATE academic.academic_actor SET deleted_at = NOW() WHERE deleted_at IS NULL AND school_id = $1',
-          'UPDATE academic.school SET deleted_at = NOW() WHERE deleted_at IS NULL AND school_id = $1',
+          `UPDATE academic.cohort SET deleted_at = NOW(), status = false WHERE deleted_at IS NULL AND program_id IN (${programs})`,
+          `UPDATE academic.course SET deleted_at = NOW(), status = false WHERE deleted_at IS NULL AND program_id IN (${programs})`,
+          'UPDATE academic.program SET deleted_at = NOW(), status = false WHERE deleted_at IS NULL AND school_id = $1',
+          'UPDATE academic.academic_period SET deleted_at = NOW(), is_active = false WHERE deleted_at IS NULL AND school_id = $1',
+          'UPDATE academic.academic_actor SET deleted_at = NOW(), status = false WHERE deleted_at IS NULL AND school_id = $1',
+          'UPDATE academic.school SET deleted_at = NOW(), status = false WHERE deleted_at IS NULL AND school_id = $1',
         ];
         for (const sql of cascade) await client.query(sql, [id]);
         return true;
