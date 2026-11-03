@@ -145,7 +145,11 @@ export default function LoginView({
                     type="password"
                     leftIcon={<Feather name="lock" size={20} color={c.text.secondary} />}
                     rightIcon={
-                        <TouchableOpacity onPress={vm.togglePassword}>
+                        <TouchableOpacity
+                            onPress={vm.togglePassword}
+                            accessibilityRole="button"
+                            accessibilityLabel={vm.showPassword ? t("Ocultar contraseña") : t("Mostrar contraseña")}
+                        >
                             <Feather name={vm.showPassword ? "eye-off" : "eye"} size={20} color={c.text.secondary} />
                         </TouchableOpacity>
                     }

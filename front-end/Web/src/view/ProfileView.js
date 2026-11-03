@@ -109,7 +109,11 @@ function SecurityCard() {
     };
 
     const eye = (
-        <TouchableOpacity onPress={vm.togglePasswords}>
+        <TouchableOpacity
+            onPress={vm.togglePasswords}
+            accessibilityRole="button"
+            accessibilityLabel={vm.showPasswords ? t("Ocultar contraseña") : t("Mostrar contraseña")}
+        >
             <Feather name={vm.showPasswords ? "eye-off" : "eye"} size={20} color={c.text.secondary} />
         </TouchableOpacity>
     );

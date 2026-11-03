@@ -30,6 +30,8 @@ function FichaRow({ ficha, index, mode, totalFichas, isLast, onPress, c, t }) {
     return (
         <TouchableOpacity
             onPress={() => onPress?.(ficha)}
+            accessibilityRole="button"
+            accessibilityLabel={t("Ver detalle de {{name}}", { name: ficha.name || ficha.code })}
             style={{
                 padding: 16,
                 borderBottomWidth: isLast ? 0 : 1,

@@ -146,6 +146,9 @@ export function ColorPicker({
             <TouchableOpacity
               key={color}
               onPress={() => handleSelect(color)}
+              accessibilityRole="button"
+              accessibilityLabel={t("Color {{name}}", { name: color })}
+              accessibilityState={{ selected: isSelected, disabled: !!disabled }}
               disabled={disabled}
               style={[
                 styles.swatch,

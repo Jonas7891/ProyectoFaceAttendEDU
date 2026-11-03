@@ -11,6 +11,7 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Badge, Avatar, ProgressBar } from "../common";
+import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { getInstitutionConfig } from "../../../core/config/institutionConfig";
 import { getAttendanceThresholds } from "../../../models/data/userDerivedData";
 
@@ -109,9 +110,12 @@ export function StudentAttendanceRow({
     chevronSize = 20,
     children,
 }) {
+    const { t } = useTranslation();
     return (
         <TouchableOpacity
             onPress={onPress}
+            accessibilityRole="button"
+            accessibilityLabel={t("Ver detalle de {{name}}", { name: student.name })}
             style={{
                 flexDirection: "row",
                 alignItems: "center",

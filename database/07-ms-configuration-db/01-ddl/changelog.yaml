@@ -68,3 +68,6 @@ databaseChangeLog:
   - include:
       file: 03-tables/013-partial-unique-indexes.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 03-tables/014-fix-configuration-row-version-default.yaml
+      relativeToChangelogFile: true

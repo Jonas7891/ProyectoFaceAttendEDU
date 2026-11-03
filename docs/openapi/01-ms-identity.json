@@ -2332,6 +2332,28 @@
       }
     },
     "/api/v1/users/{id}": {
+      "delete": {
+        "operationId": "deleteUser",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "user-controller"
+        ]
+      },
       "get": {
         "operationId": "getUser",
         "parameters": [

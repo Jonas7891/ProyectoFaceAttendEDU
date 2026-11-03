@@ -38,6 +38,14 @@ const reviewBody = z.object({
 /** Case fields the server owns: set on creation or by the review route, never by a generic edit. */
 const REVIEW_ONLY_FIELDS = ['updateStatus', 'requestedBy', 'requestedAt', 'reviewedBy', 'reviewedAt', 'resolutionNotes'];
 
+/** Review state machine (AGENTS.md §4.6 / §6.10). Pending may be decided directly: web and mobile do so. */
+const REVIEW_TRANSITIONS: Record<string, readonly string[]> = {
+  Pending: ['In_Review', 'Approved', 'Rejected'],
+  In_Review: ['Approved', 'Rejected'],
+  Approved: [],
+  Rejected: [],
+};
+
 type Req = FastifyRequest;
 type Reply = FastifyReply;
 
@@ -325,7 +333,18 @@ export async function registerConfigurationRoutes(app: FastifyInstance, repos: C
     const scope = await scopeOf(req, reply);
     if (!scope) return reply;
     if (!caseScopeAllows(scope, found.personId)) return notFound(reply);
-    const updated = await repos.cases.update(id, parsed.data);
+    // Reassigning a case needs the same reach over the NEW person as creating one does.
+    if (parsed.data.personId !== undefined && parsed.data.personId !== found.personId && !caseScopeAllows(scope, parsed.data.personId)) {
+      return reply.code(403).send({ error: 'Forbidden', message: 'You cannot reassign a case to a person outside your scope', timestamp: new Date().toISOString() });
+    }
+    // chk_finger_number on the merged result: 1..10 only with FINGERPRINT, NULL with FACIAL.
+    const biometricType = parsed.data.biometricType ?? found.biometricType;
+    const fingerNumber = 'fingerNumber' in parsed.data ? parsed.data.fingerNumber : found.fingerNumber;
+    if (biometricType === 'FINGERPRINT' && !fingerNumber) {
+      return badRequest(reply, undefined, 'fingerNumber required for FINGERPRINT');
+    }
+    const patch = { ...parsed.data, ...(biometricType === 'FACIAL' ? { fingerNumber: null } : {}) };
+    const updated = await repos.cases.update(id, patch);
     return updated ?? notFound(reply);
   });
   app.patch('/api/v1/biometric-update-cases/:id/review', async (req, reply) => {
@@ -344,6 +363,13 @@ export async function registerConfigurationRoutes(app: FastifyInstance, repos: C
     // Separation of duties (RN-29): nobody approves or rejects their own request.
     if (caller && found.requestedBy === caller) {
       return reply.code(403).send({ error: 'Forbidden', message: 'You cannot review your own request', timestamp: new Date().toISOString() });
+    }
+    if (!REVIEW_TRANSITIONS[found.updateStatus]?.includes(parsed.data.updateStatus)) {
+      return reply.code(409).send({
+        error: 'Conflict',
+        message: `A case in ${found.updateStatus} cannot move to ${parsed.data.updateStatus}`,
+        timestamp: new Date().toISOString(),
+      });
     }
     const updated = await repos.cases.update(id, {
       updateStatus: parsed.data.updateStatus,

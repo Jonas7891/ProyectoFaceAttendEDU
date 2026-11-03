@@ -42,6 +42,7 @@ jest.mock("../../services/api/authApi", () => ({
         updateUser: jest.fn(),
         setUserStatus: jest.fn(),
         setPersonStatus: jest.fn(),
+        deleteUser: jest.fn(),
     },
 }));
 
@@ -275,6 +276,7 @@ describe("desactivar y eliminar con actor académico", () => {
     beforeEach(() => {
         academicApi.setActorStatus.mockResolvedValue({});
         academicApi.deleteActor.mockResolvedValue(undefined);
+        authApi.deleteUser.mockResolvedValue(undefined);
         mockUserByPerson.mockResolvedValue(new Map([["p-1", { userId: UUID }]]));
     });
 
@@ -341,6 +343,50 @@ describe("desactivar y eliminar con actor académico", () => {
         );
     });
 
+    test("eliminar borra también la cuenta de identity (DELETE /users/{id}) tras el actor", async () => {
+        const getVm = renderVm();
+        let err;
+        await act(async () => {
+            err = await getVm().removeUser(student);
+        });
+        expect(err).toBeNull();
+        expect(authApi.deleteUser).toHaveBeenCalledWith(UUID);
+        expect(academicApi.deleteActor.mock.invocationCallOrder[0]).toBeLessThan(
+            authApi.deleteUser.mock.invocationCallOrder[0]
+        );
+    });
+
+    test("si el DELETE de la cuenta falla avisa que quedó desactivada pero no eliminada", async () => {
+        authApi.deleteUser.mockRejectedValueOnce(new Error("403 fuera de tu sede"));
+        const getVm = renderVm();
+        let err;
+        await act(async () => {
+            err = await getVm().removeUser(student);
+        });
+        expect(err).toContain("Se desactivó");
+        expect(err).toContain("403 fuera de tu sede");
+    });
+
+    test("si el DELETE del actor falla no se toca la cuenta", async () => {
+        academicApi.deleteActor.mockRejectedValueOnce(new Error("409 con matrículas"));
+        const getVm = renderVm();
+        await act(async () => {
+            await getVm().removeUser(student);
+        });
+        expect(authApi.deleteUser).not.toHaveBeenCalled();
+    });
+
+    test("estudiante sin usuario vinculado: no hay cuenta que borrar", async () => {
+        mockUserByPerson.mockResolvedValue(new Map());
+        const getVm = renderVm();
+        let err;
+        await act(async () => {
+            err = await getVm().removeUser(student);
+        });
+        expect(err).toBeNull();
+        expect(authApi.deleteUser).not.toHaveBeenCalled();
+    });
+
     test("si el DELETE falla muestra el error del servidor", async () => {
         academicApi.deleteActor.mockRejectedValueOnce(new Error("409 con matrículas"));
         const getVm = renderVm();
@@ -351,7 +397,7 @@ describe("desactivar y eliminar con actor académico", () => {
         expect(err).toContain("409 con matrículas");
     });
 
-    test("eliminar un administrador sin actor solo puede desactivar (no hay DELETE de usuario)", async () => {
+    test("eliminar un administrador sin actor borra su cuenta (DELETE /users/{id})", async () => {
         const getVm = renderVm();
         let err;
         await act(async () => {
@@ -359,6 +405,7 @@ describe("desactivar y eliminar con actor académico", () => {
         });
         expect(err).toBeNull();
         expect(authApi.setUserStatus).toHaveBeenCalledWith("u-1", false);
+        expect(authApi.deleteUser).toHaveBeenCalledWith("u-1");
         expect(academicApi.deleteActor).not.toHaveBeenCalled();
     });
 });

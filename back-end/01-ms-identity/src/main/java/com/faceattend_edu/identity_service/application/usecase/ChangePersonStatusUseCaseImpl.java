@@ -23,7 +23,7 @@ public class ChangePersonStatusUseCaseImpl implements ChangePersonStatusUseCase 
     @Transactional
     public void changeStatus(UUID personId, boolean status) {
         Person person = loadPersonPort.loadPerson(personId);
-        if (person == null) throw new EntityNotFoundException("Person", personId);
+        if (person == null || person.getDeletedAt() != null) throw new EntityNotFoundException("Person", personId);
         person.setStatus(status);
         person.setUpdatedAt(LocalDateTime.now());
         updatePersonPort.updatePerson(person);

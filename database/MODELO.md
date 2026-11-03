@@ -243,7 +243,7 @@ instrumento es inmutable, así que no llevan FK.
 - `device_token.academic_actor_id` → `Academic.academic_actor.academic_actor_id` (sin FK)
 - `notification_log.school_id` → `Academic.school.school_id` (sin FK)
 
-**Excepción al bloque de auditoría:** `device_token` solo tiene `created_at`/`updated_at` (sin `deleted_*`, `created_by`/`updated_by` ni `row_version`, y sin trigger `fn_audit_timestamps`); el servicio escribe las marcas y la baja es `revoked_at`. Es la única tabla que no cumple el bloque de 7 columnas; el DBML la refleja tal como está en el DDL.
+**Auditoría de `device_token`:** tiene el bloque completo de 7 columnas (AUD-33) y el trigger `trg_device_token_audit_timestamps` (`notification.fn_audit_timestamps()`) mantiene `updated_at` y `row_version`. La revocación del token sigue siendo `revoked_at` (el token se conserva y nunca recibe push); `deleted_at` es el borrado lógico y las lecturas filtran `deleted_at IS NULL`.
 
 ---
 

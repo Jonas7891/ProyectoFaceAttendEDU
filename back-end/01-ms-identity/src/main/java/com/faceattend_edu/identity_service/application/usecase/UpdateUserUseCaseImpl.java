@@ -26,6 +26,11 @@ public class UpdateUserUseCaseImpl implements UpdateUserUseCase {
             throw new EntityNotFoundException("User", user.getUserId());
         }
 
+        // A soft-deleted account is gone for the API: it must not be edited, let alone brought back by a save.
+        if (existing.isDeleted()) {
+            throw new EntityNotFoundException("User", user.getUserId());
+        }
+
         // The credential is write-only: a partial update keeps the stored hash.
         if (user.getPasswordHash() == null) user.setPasswordHash(existing.getPasswordHash());
         if (user.getPersonId() == null) user.setPersonId(existing.getPersonId());
@@ -36,6 +41,10 @@ public class UpdateUserUseCaseImpl implements UpdateUserUseCase {
         // The flag is managed by credential delivery and password changes, never by a profile update.
         user.setMustChangePassword(existing.isMustChangePassword());
         user.setCreatedAt(existing.getCreatedAt());
+        user.setCreatedBy(existing.getCreatedBy());
+        user.setUpdatedBy(existing.getUpdatedBy());
+        user.setDeletedAt(existing.getDeletedAt());
+        user.setDeletedBy(existing.getDeletedBy());
         user.validate();
         user.setUpdatedAt(LocalDateTime.now());
         updateUserPort.updateUser(user);

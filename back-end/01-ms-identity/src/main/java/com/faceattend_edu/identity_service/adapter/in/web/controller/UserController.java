@@ -12,6 +12,7 @@ import com.faceattend_edu.identity_service.adapter.in.web.security.AuthTokenFilt
 import com.faceattend_edu.identity_service.application.port.in.ActivateUserUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ChangeUserStatusUseCase;
 import com.faceattend_edu.identity_service.application.port.in.CreateUserUseCase;
+import com.faceattend_edu.identity_service.application.port.in.DeleteUserUseCase;
 import com.faceattend_edu.identity_service.application.port.in.GetUserUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ListUsersUseCase;
 import com.faceattend_edu.identity_service.application.port.in.NotifyUserCredentialsUseCase;
@@ -43,6 +44,7 @@ public class UserController {
     private final NotifyUserCredentialsUseCase notifyUserCredentialsUseCase;
     private final UserWebMapper userWebMapper;
     private final ProvisionUserUseCase provisionUserUseCase;
+    private final DeleteUserUseCase deleteUserUseCase;
     private final PersonWebMapper personWebMapper;
 
     @PostMapping
@@ -138,6 +140,23 @@ public class UserController {
     @PatchMapping("/{id}/status")
     public ResponseEntity<Void> changeStatus(@PathVariable UUID id, @RequestParam boolean status) {
         changeUserStatusUseCase.changeStatus(id, status);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Soft delete (AUD-74): fills deleted_at/deleted_by, turns the account off, closes its sessions and
+     * withdraws its roles in authorization with the caller's own session. Permission and school scope
+     * are enforced by AuthTokenFilter (same rule as PUT /users/{id}); nobody deletes their own account.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable UUID id, HttpServletRequest http) {
+        String header = http.getHeader("Authorization");
+        if (header == null || !header.regionMatches(true, 0, "Bearer ", 0, 7)) {
+            throw new UnauthorizedException("Authentication required");
+        }
+        Object caller = http.getAttribute("X-User-Id");
+        if (caller == null) throw new UnauthorizedException("Authentication required");
+        deleteUserUseCase.deleteUser(id, UUID.fromString(String.valueOf(caller)), header.substring(7).trim());
         return ResponseEntity.noContent().build();
     }
 }

@@ -185,14 +185,22 @@ async function studentsFromApi() {
 /**
  * Une las filas del backend con las locales. Una fila local cuya persona ya viene del backend se
  * descarta: es el espejo que las altas de la pantalla dejaban guardado en el navegador y, junto a la
- * fila real, el estudiante salía duplicado para siempre. Las locales sin personId o de alguien que el
- * backend no devuelve se conservan.
+ * fila real, el estudiante salía duplicado para siempre. Los espejos de la versión anterior no
+ * guardaban personId, así que también se descartan los que comparten correo con una fila real (el
+ * correo es único por persona). Las locales sin personId ni correo coincidente, o de alguien que el
+ * backend no devuelve, se conservan.
  */
 export function mergeLocalStudents(apiRows, localRows) {
-    const fromApi = new Set(apiRows.map((row) => row.personId).filter(Boolean).map((id) => String(id).toLowerCase()));
+    const norm = (value) => String(value ?? "").trim().toLowerCase();
+    const fromApi = new Set(apiRows.map((row) => row.personId).filter(Boolean).map(norm));
+    const emailsFromApi = new Set(apiRows.map((row) => norm(row.email)).filter(Boolean));
     return [
         ...apiRows,
-        ...localRows.filter((row) => !row.personId || !fromApi.has(String(row.personId).toLowerCase())),
+        ...localRows.filter((row) => {
+            if (row.personId) return !fromApi.has(norm(row.personId));
+            const email = norm(row.email);
+            return !(email && emailsFromApi.has(email));
+        }),
     ];
 }
 

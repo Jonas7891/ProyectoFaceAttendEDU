@@ -19,7 +19,7 @@ export interface PageOptions {
  *   columns — the database owns those).
  *
  * Soft delete semantics: reads never return rows whose `deleted_at` is set, and
- * `softDelete` only stamps `deleted_at`.
+ * `softDelete` stamps `deleted_at` and, on tables with a boolean `status` / `is_active`, turns it off.
  */
 export interface ICrudRepository<TRecord, TId, TDraft> {
   list(page?: PageOptions): Promise<TRecord[]>;

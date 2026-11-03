@@ -13,10 +13,8 @@
 //  Uso: node tools/qa/api-matrix.mjs [--only=NEG-B,NEG-C] [--skip-slow]
 // ============================================================
 
-import { readFileSync } from "node:fs";
-import path from "node:path";
 import {
-    API, REVISION_DIR, ROLE_USERS, VERDICT, api, excerpt, fetchAll, loadAccounts, login, randomId, sql, sqlOne,
+    API, ROLE_USERS, VERDICT, api, excerpt, fetchAll, loadAccounts, loadNegativeIds, login, randomId, sql, sqlOne,
     summarize, wsHandshake, writeReport,
 } from "./lib.mjs";
 
@@ -591,14 +589,10 @@ const pick = (p) => ({ documentNumber: p.documentNumber, name: p.name, lastName:
 
 // ── Cobertura contra el documento ────────────────────────────
 
-function documentIds() {
-    const text = readFileSync(path.join(REVISION_DIR, "05-negativos.md"), "utf8");
-    const part = text.split("## B. Casos de interfaz")[0];
-    return [...part.matchAll(/^\| (NEG-[A-E]\d{2}) \|/gm)].map((m) => m[1]);
-}
-
 (async () => {
     const started = Date.now();
+    // Falla pronto y con mensaje claro si falta la matriz versionada (docs/revision/05-negativos.md).
+    const documentIds = loadNegativeIds();
     try {
         await setup();
         await takeSnapshots();
@@ -610,7 +604,7 @@ function documentIds() {
     }
     const known = new Set([...covered, ...results.map((r) => r.id.replace(/^(NEG-C17)-.*/, "$1"))]);
     if (!only.length) {
-        for (const id of documentIds()) {
+        for (const id of documentIds) {
             if (!known.has(id) && !results.some((r) => r.id === id)) {
                 push(id, VERDICT.BLOQUEADO, { who: "—", note: "no cubierto por L1 (requiere datos o acción manual): se revisa en L3" });
             }
