@@ -221,6 +221,58 @@ describe('biometric update cases', () => {
     expect((await call('admin1', 'GET', `/api/v1/biometric-update-cases/${own}`)).json().updateStatus).toBe('Pending');
   });
 
+  it('AUD-68: a PUT cannot reassign a case to a person outside the caller scope', async () => {
+    const id = (await call('student1', 'POST', '/api/v1/biometric-update-cases', facial('student1'))).json().caseId;
+    const url = `/api/v1/biometric-update-cases/${id}`;
+    expect((await call('admin1', 'PUT', url, { personId: PERSON('student2') })).statusCode).toBe(403);
+    expect((await call('admin1', 'GET', url)).json().personId).toBe(PERSON('student1'));
+    expect((await call('student1', 'PUT', url, { personId: PERSON('student2') })).statusCode).toBe(403);
+    const sameSchool = await call('admin1', 'PUT', url, { personId: PERSON('admin1') });
+    expect(sameSchool.statusCode).toBe(200);
+    expect(sameSchool.json().personId).toBe(PERSON('admin1'));
+    expect((await call('super', 'PUT', url, { personId: PERSON('student2') })).statusCode).toBe(200);
+  });
+
+  it('AUD-68: a PUT keeps chk_finger_number when the type changes', async () => {
+    const id = (await call('student1', 'POST', '/api/v1/biometric-update-cases', facial('student1'))).json().caseId;
+    const url = `/api/v1/biometric-update-cases/${id}`;
+    expect((await call('student1', 'PUT', url, { biometricType: 'FINGERPRINT' })).statusCode).toBe(400);
+    const fp = await call('student1', 'PUT', url, { biometricType: 'FINGERPRINT', fingerNumber: 4 });
+    expect(fp.statusCode).toBe(200);
+    expect(fp.json()).toMatchObject({ biometricType: 'FINGERPRINT', fingerNumber: 4 });
+    const back = await call('student1', 'PUT', url, { biometricType: 'FACIAL' });
+    expect(back.statusCode).toBe(200);
+    expect(back.json()).toMatchObject({ biometricType: 'FACIAL', fingerNumber: null });
+    const facialWithFinger = await call('student1', 'PUT', url, { fingerNumber: 2 });
+    expect(facialWithFinger.statusCode).toBe(200);
+    expect(facialWithFinger.json().fingerNumber).toBeNull();
+  });
+
+  it('AUD-68: review follows Pending -> In_Review -> Approved|Rejected and a decided case is final', async () => {
+    const mk = async () => (await call('student1', 'POST', '/api/v1/biometric-update-cases', facial('student1'))).json().caseId as string;
+    const review = (id: string, updateStatus: string) => call('admin1', 'PATCH', `/api/v1/biometric-update-cases/${id}/review`, { updateStatus });
+
+    // A direct decision from Pending is what web and mobile send today.
+    const direct = await mk();
+    expect((await review(direct, 'Approved')).statusCode).toBe(200);
+    for (const next of ['In_Review', 'Approved', 'Rejected']) {
+      const res = await review(direct, next);
+      expect(res.statusCode).toBe(409);
+      expect(res.json().message).toMatch(/Approved/);
+    }
+    expect((await call('admin1', 'GET', `/api/v1/biometric-update-cases/${direct}`)).json().updateStatus).toBe('Approved');
+
+    const stepped = await mk();
+    expect((await review(stepped, 'In_Review')).statusCode).toBe(200);
+    expect((await review(stepped, 'In_Review')).statusCode).toBe(409);
+    expect((await review(stepped, 'Rejected')).statusCode).toBe(200);
+    expect((await review(stepped, 'Approved')).statusCode).toBe(409);
+
+    const rejected = await mk();
+    expect((await review(rejected, 'Rejected')).statusCode).toBe(200);
+    expect((await review(rejected, 'In_Review')).statusCode).toBe(409);
+  });
+
   it('a user without a person cannot request anything', async () => {
     const res = await call('ghost', 'POST', '/api/v1/biometric-update-cases', facial('student1'));
     expect(res.statusCode).toBe(403);
