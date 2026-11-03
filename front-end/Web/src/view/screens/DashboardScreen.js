@@ -3,6 +3,10 @@
 // ============================================================
 //  RESPONSABILIDAD: Punto de entrada para la pantalla Dashboard
 //
+//  Sin guard de rol por diseño (AUD-15): el inicio es el destino de todo rol
+//  autenticado ("dashboard" está en visibleTabs de admin, docente y alumno) y
+//  AuthMiddleware ya exige sesión. DashboardView adapta su contenido al rol.
+//
 //  Este componente:
 //  ✓ Actúa como punto de entrada para Dashboard
 //  ✓ Delega toda la presentación a DashboardView

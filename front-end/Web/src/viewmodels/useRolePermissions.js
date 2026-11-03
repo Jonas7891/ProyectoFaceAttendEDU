@@ -150,6 +150,7 @@ export function buildPermissions(role, schoolId = null, roleNames = []) {
     // de la sede: un Administrador cuya sede no se resolvió (sin academic_actor,
     // fallo de red) seguiría siendo Admin de sede, nunca vería Escuelas ni Roles.
     const isSuperAdmin = isAdmin && hasSuperAdminRole(roleNames);
+    const settingsSections = getSettingsSections(role, isSuperAdmin);
 
     return {
         // Estudiantes (HU-IAM-002/007/008/010)
@@ -212,16 +213,18 @@ export function buildPermissions(role, schoolId = null, roleNames = []) {
         canSubmitJustifications: isStudent,
         canReviewJustifications: isAdmin || isTeacher,
 
-        // Información de la sede (lectura los 3 roles, edición solo admin)
-        canViewSchoolInfo: true,
+        // Información de la sede (lectura admin de sede, docente y alumno; edición solo admin).
+        // Misma regla que la sección «Sede» de Configuración: el Super Admin global no tiene sede
+        // propia, así que ni el sidebar ni /app/school-info y /app/contacts se la sirven (AUD-15).
+        canViewSchoolInfo: settingsSections.includes("schoolInfo"),
         canEditSchoolInfo: isAdmin,
 
         // Gestión de escuelas (CRUD de sedes): solo el super admin
         canManageSchools: isSuperAdmin,
 
-        // Sección académica y contactos (solo lectura, los 3 roles)
+        // Sección académica y contactos (solo lectura); contactos sigue la misma regla que la sede.
         canViewAcademic: true,
-        canViewContacts: true,
+        canViewContacts: settingsSections.includes("contacts"),
 
         // Configuración (configuration:manage + HU-CONF-001..008)
         // Granular por sección: Teacher/StudentSettings solo deben usar
@@ -232,7 +235,7 @@ export function buildPermissions(role, schoolId = null, roleNames = []) {
         // Seguridad global (tiempo de sesión): solo el Super Admin la persiste;
         // el backend responde 403 al resto (AUD-49).
         canManageSecurityConfig: isSuperAdmin,
-        settingsSections: getSettingsSections(role, isSuperAdmin),
+        settingsSections,
         canManageNotifications: true,
         canManageJustificationTypes: isAdmin,
         // Tipos globales (school_id NULL): el backend solo deja al Super Admin (AUD-40).

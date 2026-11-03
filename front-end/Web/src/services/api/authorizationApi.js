@@ -5,11 +5,8 @@ import { endpoints } from "../../api/endpoints";
 export const authorizationApi = {
     listRoles: () => request(endpoints.authorization.roles, { method: "GET" }),
     createRole: (b) => request(endpoints.authorization.roles, { method: "POST", body: b }),
-    getRole: (id) => request(endpoints.authorization.roleById(id), { method: "GET" }),
-    updateRole: (id, b) => request(endpoints.authorization.roleById(id), { method: "PUT", body: b }),
     deleteRole: (id) => request(endpoints.authorization.roleById(id), { method: "DELETE" }),
     listPermissions: () => request(endpoints.authorization.permissions, { method: "GET" }),
-    createPermission: (b) => request(endpoints.authorization.permissions, { method: "POST", body: b }),
     rolePermissions: (roleId) =>
         request(endpoints.authorization.rolePermissions(roleId), { method: "GET" }),
     assignPermission: (roleId, permissionId) =>
@@ -24,6 +21,4 @@ export const authorizationApi = {
         request(endpoints.authorization.userRoles(userId), { method: "POST", body: { roleId } }),
     removeRole: (userId, roleId) =>
         request(endpoints.authorization.userRole(userId, roleId), { method: "DELETE" }),
-    evaluate: (params) =>
-        request(endpoints.authorization.evaluate, { method: "GET", query: params }),
 };
