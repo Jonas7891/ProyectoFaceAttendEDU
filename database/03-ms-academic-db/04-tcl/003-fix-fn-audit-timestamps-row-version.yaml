@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: acad-011-fix-fn-audit-timestamps-row-version
+      author: Andres Gutierrez
+      comment: >-
+        AUD-23: the shared academic audit trigger only refreshed updated_at, so
+        row_version stayed at 1 on every UPDATE and optimistic locking could not
+        detect concurrent writes. Recreate the function so INSERT seeds
+        row_version and UPDATE increments it, as every other schema already does.
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              CREATE OR REPLACE FUNCTION academic.fn_audit_timestamps()
+              RETURNS TRIGGER AS $$
+              BEGIN
+                IF TG_OP = 'INSERT' THEN
+                  NEW.created_at := COALESCE(NEW.created_at, NOW());
+                  NEW.updated_at := NOW();
+                  NEW.row_version := COALESCE(NEW.row_version, 1);
+                ELSIF TG_OP = 'UPDATE' THEN
+                  NEW.updated_at := NOW();
+                  NEW.row_version := OLD.row_version + 1;
+                END IF;
+                RETURN NEW;
+              END;
+              $$ LANGUAGE plpgsql;
+      rollback:
+        - sql:
+            splitStatements: false
+            sql: |
+              CREATE OR REPLACE FUNCTION academic.fn_audit_timestamps()
+              RETURNS TRIGGER AS $$
+              BEGIN
+                IF TG_OP = 'INSERT' THEN
+                  NEW.created_at := COALESCE(NEW.created_at, NOW());
+                  NEW.updated_at := NOW();
+                ELSIF TG_OP = 'UPDATE' THEN
+                  NEW.updated_at := NOW();
+                END IF;
+                RETURN NEW;
+              END;
+              $$ LANGUAGE plpgsql;

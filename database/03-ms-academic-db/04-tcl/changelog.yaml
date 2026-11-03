@@ -5,3 +5,6 @@ databaseChangeLog:
   - include:
       file: 002-triggers-enrollment-status-validation.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 003-fix-fn-audit-timestamps-row-version.yaml
+      relativeToChangelogFile: true
