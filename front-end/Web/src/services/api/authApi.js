@@ -93,6 +93,7 @@ export const authApi = {
     // Alta compuesta en el servidor (persona + usuario + actor + matrícula + rol, con compensación).
     provisionUser: (b) => request(endpoints.identity.usersProvision, { method: "POST", body: b, timeoutMs: 60000 }),
     updateUser: (id, b) => request(endpoints.identity.userById(id), { method: "PUT", body: b }),
+    deleteUser: (id) => request(endpoints.identity.userById(id), { method: "DELETE" }),
     setUserStatus: (id, status) =>
         request(endpoints.identity.userStatus(id), { method: "PATCH", query: { status } }),
 
