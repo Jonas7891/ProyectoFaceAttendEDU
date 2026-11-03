@@ -14,7 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.client.ResponseCreator;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.SocketTimeoutException;
@@ -246,8 +245,26 @@ class SchoolProvisioningHttpAdapterTest {
         server.reset();
         roles();
         server.expect(requestTo("http://authorization/api/v1/users/" + USER + "/roles/2")).andRespond(withStatus(HttpStatus.FORBIDDEN));
-        assertThatThrownBy(() -> adapter.removeRole(TOKEN, USER, "Instructor")).isInstanceOf(HttpClientErrorException.class);
+        assertThatThrownBy(() -> adapter.removeRole(TOKEN, USER, "Instructor"))
+                .isInstanceOfSatisfying(DownstreamRejectedException.class, ex -> assertThat(ex.getStatus()).isEqualTo(403));
         server.verify();
+    }
+
+    @Test
+    @DisplayName("AUD-30: the roles of an account are read from authorization with the caller's session")
+    void listsTheRoleNamesOfAnAccount() {
+        server.expect(requestTo("http://authorization/api/v1/users/" + USER + "/roles")).andExpect(method(HttpMethod.GET))
+                .andExpect(header("Authorization", "Bearer " + TOKEN))
+                .andRespond(withSuccess("[{\"roleId\":2,\"roleName\":\"Instructor\"},{\"roleId\":4,\"roleName\":\"Aprendiz\"}]", MediaType.APPLICATION_JSON));
+        assertThat(adapter.listRoleNames(TOKEN, USER)).containsExactly("Instructor", "Aprendiz");
+        server.verify();
+    }
+
+    @Test
+    void anAccountWithoutRolesListsNone() {
+        server.expect(requestTo("http://authorization/api/v1/users/" + USER + "/roles"))
+                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+        assertThat(adapter.listRoleNames(TOKEN, USER)).isEmpty();
     }
 
     @Test

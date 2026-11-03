@@ -4,6 +4,7 @@ import com.faceattend_edu.identity_service.adapter.out.persistence.crypto.Sessio
 import com.faceattend_edu.identity_service.adapter.out.persistence.entity.UserSessionJpaEntity;
 import com.faceattend_edu.identity_service.adapter.out.persistence.mapper.UserSessionPersistenceMapper;
 import com.faceattend_edu.identity_service.adapter.out.persistence.repository.UserSessionJpaRepository;
+import com.faceattend_edu.identity_service.application.port.out.CloseUserSessionsPort;
 import com.faceattend_edu.identity_service.application.port.out.ExpireSessionsPort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserSessionPort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserSessionsPort;
@@ -23,7 +24,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class UserSessionPersistenceAdapter implements LoadUserSessionPort, LoadUserSessionsPort, SaveUserSessionPort, UpdateUserSessionPort, ListUserSessionsPort, ExpireSessionsPort {
+public class UserSessionPersistenceAdapter implements LoadUserSessionPort, LoadUserSessionsPort, SaveUserSessionPort, UpdateUserSessionPort, ListUserSessionsPort, ExpireSessionsPort, CloseUserSessionsPort {
 
     private final UserSessionJpaRepository repository;
     private final UserSessionPersistenceMapper mapper;
@@ -64,6 +65,12 @@ public class UserSessionPersistenceAdapter implements LoadUserSessionPort, LoadU
     @Override
     public void updateUserSession(UserSession session) {
         repository.save(mapper.toEntity(session));
+    }
+
+    @Override
+    @Transactional
+    public int closeActiveSessionsOfUser(UUID userId, LocalDateTime closedAt) {
+        return repository.closeActiveByUser(userId, closedAt, UserSession.STATUS_ACTIVE, UserSession.STATUS_CLOSED);
     }
 
     @Override

@@ -59,4 +59,19 @@ public interface UserSessionJpaRepository extends JpaRepository<UserSessionJpaEn
                          @Param("closedAt") LocalDateTime closedAt,
                          @Param("activeStatus") String activeStatus,
                          @Param("closedStatus") String closedStatus);
+
+    /** Closes every Active session of one user (account deleted); same shape as the batch close above. */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            update UserSessionJpaEntity s
+               set s.sessionStatus = :closedStatus,
+                   s.endDate = :closedAt,
+                   s.updatedAt = :closedAt
+             where s.user.userId = :userId
+               and s.sessionStatus = :activeStatus
+            """)
+    int closeActiveByUser(@Param("userId") UUID userId,
+                          @Param("closedAt") LocalDateTime closedAt,
+                          @Param("activeStatus") String activeStatus,
+                          @Param("closedStatus") String closedStatus);
 }

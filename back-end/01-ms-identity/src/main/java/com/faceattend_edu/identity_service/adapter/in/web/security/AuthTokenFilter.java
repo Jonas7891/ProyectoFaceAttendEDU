@@ -57,7 +57,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     private static final Pattern PERSON_TERMS = Pattern.compile("^/api/v1/persons/([0-9a-fA-F-]{36})/terms$");
     /** Guardian of a minor: third-party data tied to a child, so even reading it needs person administration. */
     private static final Pattern PERSON_GUARDIAN = Pattern.compile("^/api/v1/persons/([0-9a-fA-F-]{36})/guardian(?:/document)?$");
-    /** Cuenta y sub-recursos de escritura: PUT /users/{id}, PATCH .../status, POST .../activate. */
+    /** Cuenta y sub-recursos de escritura: PUT/DELETE /users/{id}, PATCH .../status, POST .../activate. */
     private static final Pattern USER_SCOPED = Pattern.compile("^/api/v1/users/([0-9a-fA-F-]{36})(?:/status|/activate)?$");
     private static final Pattern USER_SESSIONS = Pattern.compile("^/api/v1/sessions/user/([0-9a-fA-F-]{36})$");
     private static final String WRITE = "identity.person:write";
