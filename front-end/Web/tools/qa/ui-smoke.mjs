@@ -20,7 +20,7 @@
 import { existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { chromium } from "playwright-core";
-import { RESULTS_DIR, ROLE_USERS, VERDICT, WEB, excerpt, loadAccounts, sqlOne, writeReport } from "./lib.mjs";
+import { RESULTS_DIR, ROLE_USERS, VERDICT, WEB, emailKey, excerpt, loadAccounts, login, resolveLoginEmail, writeReport } from "./lib.mjs";
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(`--${name}`);
@@ -146,8 +146,10 @@ async function loginUi(page, tracker, role) {
     const username = ROLE_USERS[role];
     const password = accounts[username];
     if (!password) return { verdict: VERDICT.BLOQUEADO, note: `sin contraseña de ${username} en .cuentas.local` };
-    const email = sqlOne(`SELECT p.email FROM identity.person p JOIN identity.app_user u ON u.person_id=p.person_id WHERE u.username='${username.replace(/'/g, "''")}' LIMIT 1`);
-    if (!email) return { verdict: VERDICT.BLOQUEADO, note: `no se encontró el correo de ${username}` };
+    // El formulario solo admite correos y en la base están cifrados: ver lib.resolveLoginEmail.
+    const supToken = (await login(ROLE_USERS.SUP, accounts[ROLE_USERS.SUP]))?.token;
+    const email = await resolveLoginEmail(username, accounts, { fallbackToken: supToken });
+    if (!email) return { verdict: VERDICT.BLOQUEADO, note: `no se obtuvo el correo de ${username} (defina ${emailKey(username)}=… en .cuentas.local)` };
 
     await page.goto(`${WEB}/login`, { waitUntil: "domcontentloaded" });
     const emailInput = page.locator('input[type="email"], input[placeholder*="correo"]').first();

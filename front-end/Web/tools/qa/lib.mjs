@@ -22,17 +22,82 @@ const DB_CONTAINER = process.env.QA_DB_CONTAINER ?? "faceattend-postgres";
 
 // ── Cuentas ──────────────────────────────────────────────────
 
+/** Parsea `clave=valor` por línea (sin comentarios `#` ni líneas vacías). */
+export function parseAccounts(text) {
+    const accounts = {};
+    for (const line of String(text ?? "").split(/\r?\n/)) {
+        const entry = line.trim();
+        if (!entry || entry.startsWith("#")) continue;
+        const at = entry.indexOf("=");
+        if (at > 0) accounts[entry.slice(0, at).trim()] = entry.slice(at + 1);
+    }
+    return accounts;
+}
+
 export function loadAccounts() {
     const file = process.env.QA_ACCOUNTS_FILE ?? path.join(REVISION_DIR, ".cuentas.local");
     if (!existsSync(file)) return {};
-    const accounts = {};
-    for (const line of readFileSync(file, "utf8").split(/\r?\n/)) {
-        const text = line.trim();
-        if (!text || text.startsWith("#")) continue;
-        const at = text.indexOf("=");
-        if (at > 0) accounts[text.slice(0, at).trim()] = text.slice(at + 1);
+    return parseAccounts(readFileSync(file, "utf8"));
+}
+
+// ── Correo de inicio de sesión por formulario ────────────────
+// El API acepta usuario o correo, pero el formulario web solo admite correos
+// (valida el formato) y en la base el correo está cifrado en reposo (`enc:v1:…`),
+// así que leerlo por SQL no sirve. Orden: `correo.<usuario>=…` en el archivo de
+// cuentas y, si no está, el que devuelve el propio API a la cuenta autenticada.
+
+const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Devuelve el primer candidato que sea un correo en claro (descarta vacíos y `enc:v…`). */
+export function pickLoginEmail(...candidates) {
+    for (const candidate of candidates) {
+        const value = String(candidate ?? "").trim();
+        if (value && !/^enc:v\d+:/i.test(value) && EMAIL_SHAPE.test(value)) return value;
     }
-    return accounts;
+    return null;
+}
+
+/** Clave del archivo de cuentas que fija el correo de un usuario: `correo.<usuario>`. */
+export const emailKey = (username) => `correo.${username}`;
+
+/** Consulta el correo de la cuenta por API (sin SQL): login → /auth/me → /persons/{id}. */
+export async function lookupEmailViaApi(username, password, { fallbackToken } = {}) {
+    const session = await login(username, password);
+    if (!session) return null;
+    const me = await api("GET", `/auth/me?username=${encodeURIComponent(username)}`, { token: session.token });
+    const personId = me.json?.personId;
+    if (!personId) return null;
+    for (const token of [session.token, fallbackToken].filter(Boolean)) {
+        const person = await api("GET", `/persons/${personId}`, { token });
+        const email = pickLoginEmail(person.json?.email);
+        if (email) return email;
+    }
+    return null;
+}
+
+/** Correo para el formulario: el del archivo de cuentas o, si no, el que da el API. */
+export async function resolveLoginEmail(username, accounts, opts = {}) {
+    return pickLoginEmail(accounts[emailKey(username)]) ?? (await lookupEmailViaApi(username, accounts[username], opts));
+}
+
+// ── Matriz de negativos ──────────────────────────────────────
+
+export const NEGATIVES_FILE = path.join(REVISION_DIR, "05-negativos.md");
+
+/** Identificadores NEG-<A..E><nn> de la parte A del documento (antes de «## B. Casos de interfaz»). */
+export function parseNegativeIds(text) {
+    const part = String(text ?? "").split("## B. Casos de interfaz")[0];
+    return [...part.matchAll(/^\| (NEG-[A-E]\d{2}) \|/gm)].map((m) => m[1]);
+}
+
+/** Lee la matriz del repo; si falta, falla con un mensaje claro en vez de un ENOENT. */
+export function loadNegativeIds(file = NEGATIVES_FILE) {
+    if (!existsSync(file)) {
+        throw new Error(`Falta la matriz de negativos ${file}. Debe versionarse en docs/revision/05-negativos.md (ver tools/qa/README.md).`);
+    }
+    const ids = parseNegativeIds(readFileSync(file, "utf8"));
+    if (!ids.length) throw new Error(`La matriz ${file} no contiene filas «| NEG-Xnn |» en la parte A.`);
+    return ids;
 }
 
 /** Roles de la revisión → usuario de prueba (ver 00-PROTOCOLO.md §3). */
