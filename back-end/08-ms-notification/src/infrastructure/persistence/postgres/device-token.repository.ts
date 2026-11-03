@@ -26,6 +26,8 @@ export class PostgresDeviceTokenRepository implements IDeviceTokenRepository {
                platform = EXCLUDED.platform,
                locale = EXCLUDED.locale,
                revoked_at = NULL,
+               deleted_at = NULL,
+               deleted_by = NULL,
                updated_at = NOW()
          RETURNING device_token_id`,
         [academicActorId, token, platform, locale],
@@ -41,7 +43,7 @@ export class PostgresDeviceTokenRepository implements IDeviceTokenRepository {
     try {
       const rows = await runQuery(
         `UPDATE ${this.table} SET revoked_at = NOW(), updated_at = NOW()
-         WHERE token = $1 AND academic_actor_id = ANY($2::bigint[]) AND revoked_at IS NULL
+         WHERE token = $1 AND academic_actor_id = ANY($2::bigint[]) AND revoked_at IS NULL AND deleted_at IS NULL
          RETURNING device_token_id`,
         [token, academicActorIds],
       );
@@ -54,7 +56,7 @@ export class PostgresDeviceTokenRepository implements IDeviceTokenRepository {
   async findActiveByActor(academicActorId: number): Promise<ActiveDeviceToken[]> {
     try {
       return await runQuery<ActiveDeviceToken>(
-        `SELECT token, locale FROM ${this.table} WHERE academic_actor_id = $1 AND revoked_at IS NULL`,
+        `SELECT token, locale FROM ${this.table} WHERE academic_actor_id = $1 AND revoked_at IS NULL AND deleted_at IS NULL`,
         [academicActorId],
       );
     } catch (err) {
@@ -67,7 +69,7 @@ export class PostgresDeviceTokenRepository implements IDeviceTokenRepository {
     try {
       await runQuery(
         `UPDATE ${this.table} SET revoked_at = NOW(), updated_at = NOW()
-         WHERE token = ANY($1::text[]) AND revoked_at IS NULL`,
+         WHERE token = ANY($1::text[]) AND revoked_at IS NULL AND deleted_at IS NULL`,
         [tokens],
       );
     } catch (err) {
