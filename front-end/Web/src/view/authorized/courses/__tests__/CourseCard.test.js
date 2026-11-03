@@ -58,6 +58,14 @@ test("with onReportsPress (admin/teacher) the Reportes button is rendered and ca
     expect(onReportsPress).toHaveBeenCalledWith(course);
 });
 
+// AUD-61: un curso desactivado se distinguía solo por una insignia tenue (o ninguna).
+test("an inactive course shows the Inactivo badge; an active one does not", () => {
+    const inactive = textOf(render({ onPress: () => {}, course: { ...course, status: "inactive" } }).toJSON());
+    expect(inactive).toContain("Inactivo");
+    const active = textOf(render({ onPress: () => {}, course: { ...course, status: "active" } }).toJSON());
+    expect(active).not.toContain("Inactivo");
+});
+
 // AUD-18: la tarjeta es un control táctil sin etiqueta propia; debe nombrar el curso.
 test("the card exposes an accessibilityLabel naming the course", () => {
     const root = render({ onPress: () => {} });

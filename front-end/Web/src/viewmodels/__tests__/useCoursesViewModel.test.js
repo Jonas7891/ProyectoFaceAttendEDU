@@ -95,3 +95,50 @@ describe("credits validation", () => {
         expect(validateCourseForm({ ...base, creditHours: "" })).toBeNull();
     });
 });
+
+// AUD-61: un curso desactivado seguía listado sin filtro y su modal de detalle quedaba obsoleto.
+describe("inactive courses (AUD-61)", () => {
+    const active = { id: "1", code: "QBD", name: "Bases de Datos", status: "active" };
+    const inactive = { id: "2", code: "QIA", name: "Inteligencia", status: "inactive" };
+
+    function mountVm() {
+        const ref = { vm: null };
+        function Probe() {
+            ref.vm = useCoursesViewModel();
+            return null;
+        }
+        let root;
+        act(() => {
+            root = create(<Probe />);
+        });
+        const rerender = () => act(() => root.update(<Probe />));
+        return { ref, rerender };
+    }
+
+    it("hides inactive courses by default and shows them with showInactive", () => {
+        mockAppData.courses = [active, inactive];
+        const { ref } = mountVm();
+        expect(ref.vm.filtered.map((c) => c.id)).toEqual(["1"]);
+        expect(ref.vm.visibleCourseCount).toBe(1);
+        act(() => ref.vm.setShowInactive(true));
+        expect(ref.vm.filtered.map((c) => c.id)).toEqual(["1", "2"]);
+        expect(ref.vm.visibleCourseCount).toBe(2);
+    });
+
+    it("the explicit Inactivos status filter still lists them", () => {
+        mockAppData.courses = [active, inactive];
+        const { ref } = mountVm();
+        act(() => ref.vm.setStatusFilter("inactive"));
+        expect(ref.vm.filtered.map((c) => c.id)).toEqual(["2"]);
+    });
+
+    it("the selected course (detail modal) follows the refreshed list after a status change", () => {
+        mockAppData.courses = [active];
+        const { ref, rerender } = mountVm();
+        act(() => ref.vm.selectCourse(active));
+        expect(ref.vm.selected.status).toBe("active");
+        mockAppData.courses = [{ ...active, status: "inactive" }];
+        rerender();
+        expect(ref.vm.selected.status).toBe("inactive");
+    });
+});

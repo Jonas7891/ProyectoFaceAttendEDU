@@ -108,6 +108,10 @@ export function useSchoolInfoViewModel() {
     }, []);
 
     const save = useCallback(async () => {
+        // El diálogo «¿Deseas actualizar?» se cierra siempre: si el guardado
+        // falla, el error del servidor debe verse en el formulario y no invitar
+        // a confirmar de nuevo un cambio fallido (AUD-42).
+        setConfirmOpen(false);
         if (!form.name?.trim()) {
             setFeedback({ type: "error", message: t("El nombre de la sede es obligatorio.") });
             return;

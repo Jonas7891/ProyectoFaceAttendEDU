@@ -68,7 +68,12 @@ export function CourseCard({ course, onPress, onStudentsPress, onReportsPress })
                         >
                             {course.code}
                         </Text>
-                        <Badge variant="primary">{course.semester}</Badge>
+                        <View style={{ flexDirection: "row", gap: 6, alignItems: "center" }}>
+                            {course.status === "inactive" && (
+                                <Badge variant="danger" icon="x-circle">{t("Inactivo")}</Badge>
+                            )}
+                            <Badge variant="primary">{course.semester}</Badge>
+                        </View>
                     </View>
                     <Text
                         style={{
@@ -336,7 +341,7 @@ export function AdminCourses({ vm: vmProp }) {
                                 marginBottom: 8,
                             }}
                         >
-                            {vm.courses.length}
+                            {vm.visibleCourseCount ?? vm.courses.length}
                         </Text>
                         <ProgressBar value={100} color={c.brand.primary} height={4} />
                     </View>
@@ -427,6 +432,23 @@ export function AdminCourses({ vm: vmProp }) {
                     </View>
                 </View>
             </View>
+
+            {/* Los cursos inactivos se ocultan por defecto (AUD-61) */}
+            {vm.setShowInactive && (
+                <TouchableOpacity
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: !!vm.showInactive }}
+                    onPress={() => vm.setShowInactive(!vm.showInactive)}
+                    style={{ flexDirection: "row", alignItems: "center", gap: 8, alignSelf: "flex-start" }}
+                >
+                    <Feather
+                        name={vm.showInactive ? "check-square" : "square"}
+                        size={16}
+                        color={c.text.secondary}
+                    />
+                    <Text style={{ fontSize: 13, color: c.text.secondary }}>{t("Mostrar inactivos")}</Text>
+                </TouchableOpacity>
+            )}
 
             {/* Grid de cards */}
             {vm.filtered.length === 0 ? (
