@@ -238,10 +238,11 @@ async function actorBuckets(academicActorId, sessionDates = new Map(), maxDays =
     const records = listOf(await attendanceApi.recordsByActor(academicActorId).catch(() => []));
     const byDate = new Map();
     for (const record of records) {
-        // captured_at es NULL en registros manuales/justificados: se usa la fecha de su
-        // sesión. Sin ninguna de las dos fechas el registro no se grafica (no se inventa día).
+        // La fecha de la sesión manda: captured_at viaja en UTC y una clase nocturna (después de las 19:00 en
+        // Colombia) caería en el día siguiente. captured_at solo cubre una sesión fuera del alcance cargado.
+        // Sin ninguna de las dos fechas el registro no se grafica (no se inventa día).
         const sessionId = record?.classSessionId ?? record?.class_session_id;
-        const date = recordDateOf(record) || (sessionId != null ? sessionDates.get(String(sessionId)) : "") || "";
+        const date = (sessionId != null ? sessionDates.get(String(sessionId)) : "") || recordDateOf(record) || "";
         if (!date) continue;
         const bucket = byDate.get(date) ?? emptyBucket();
         tally(bucket, recordStatusOf(record));

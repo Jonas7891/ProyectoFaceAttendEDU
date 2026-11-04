@@ -635,6 +635,12 @@ describe("kiosk registration alert", () => {
         expect(hasText(tree, "Llegada tarde")).toBe(false);
     });
 
+    test("a manual registration is labelled Manual, not Rostro", () => {
+        const tree = renderWith({ name: "Valentina Ríos", method: "MANUAL", status: "Present", duplicate: false });
+        expect(hasText(tree, "Registrado mediante: Manual")).toBe(true);
+        expect(hasText(tree, "Registrado mediante: Rostro")).toBe(false);
+    });
+
     test("a repeat identification names the person and says it was already registered", () => {
         const tree = renderWith({ name: "Ana Pérez", method: "FACIAL", status: null, duplicate: true }, "DUPLICATE");
         expect(hasText(tree, "Ana Pérez")).toBe(true);
