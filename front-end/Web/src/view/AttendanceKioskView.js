@@ -723,7 +723,9 @@ function CapturePanel({ kioskVm }) {
 
 // Aviso de quién quedó registrado y con qué método, junto al estado de la clase.
 function RegistrationAlert({ registration, t, c }) {
-    const methodLabel = registration.method === "FINGERPRINT" ? t("Huella") : t("Rostro");
+    // MANUAL es el registro que hace el docente desde la lista: no se presenta como "Rostro".
+    const methodLabels = { FINGERPRINT: t("Huella"), MANUAL: t("Manual") };
+    const methodLabel = methodLabels[registration.method] ?? t("Rostro");
     const late = registration.status === "Late";
     return (
         <View accessibilityRole="alert" style={{ alignItems: "center", gap: 8 }}>
