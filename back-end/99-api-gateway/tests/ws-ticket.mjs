@@ -41,7 +41,7 @@ async function login() {
 const logout = (sid) => post("/auth/logout", { headers: { Authorization: `Bearer ${sid}` } });
 
 /** Handshake de WebSocket sin librerías: { status, protocol } (101 si se aceptó). */
-function handshake(protocols, origin = ORIGIN) {
+function handshake(protocols, origin = ORIGIN, extraHeaders = {}) {
     return new Promise((resolve) => {
         const url = new URL(`${API}/biometric/ws`);
         const request = http.request({
@@ -49,7 +49,7 @@ function handshake(protocols, origin = ORIGIN) {
             headers: {
                 Connection: "Upgrade", Upgrade: "websocket", "Sec-WebSocket-Version": "13",
                 "Sec-WebSocket-Key": randomBytes(16).toString("base64"), "Sec-WebSocket-Protocol": protocols,
-                ...(origin ? { Origin: origin } : {}),
+                ...(origin ? { Origin: origin } : {}), ...extraHeaders,
             },
         });
         request.on("upgrade", (response, socket) => {
@@ -116,6 +116,12 @@ const foreign = await post("/auth/ws-ticket", { headers: { ...web, Origin: EVIL,
 check("…desde un Origin ajeno: 403", 403, foreign.status);
 const cookieTicket = (await viaCookie.json()).ticket;
 check("el ticket pedido por cookie abre el canal: 101", 101, (await handshake(`faceattend.ticket, ${cookieTicket}`)).status);
+// El navegador manda la cookie de sesión también en el handshake cuando web y API comparten host (localhost):
+// el ticket debe canjearse igual y el servidor contestar el subprotocolo ofrecido, o el navegador corta la conexión.
+const ticketWithCookie = await post("/auth/ws-ticket", { headers: { ...web, Cookie: `fae_session=${cookieSid}` } });
+const withCookie = await handshake(`faceattend.ticket, ${(await ticketWithCookie.json()).ticket}`, ORIGIN, { Cookie: `fae_session=${cookieSid}` });
+check("ticket con la cookie de sesión en el handshake: 101", 101, withCookie.status);
+check("…y contesta el subprotocolo que ofreció el navegador", "faceattend.ticket", withCookie.protocol);
 await post("/auth/logout", { headers: { ...web, Cookie: `fae_session=${cookieSid}` } });
 
 // ── la sesión cerrada no sirve ──
