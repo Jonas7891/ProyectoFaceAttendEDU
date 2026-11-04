@@ -72,6 +72,7 @@ class UuidPkTestRepository extends PostgresCrudRepository<{ id: string; name: st
 }
 
 const SELECT_COLUMNS = 'id, name, status, updated_at';
+const ACTOR = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 
 describe('PostgresCrudRepository', () => {
   let repo: TestRepository;
@@ -194,6 +195,40 @@ describe('PostgresCrudRepository', () => {
     it('returns false when no row matched (missing or already deleted)', async () => {
       mockRunCommand.mockResolvedValueOnce(0);
       expect(await repo.softDelete(999)).toBe(false);
+    });
+  });
+
+  describe('audit user stamping (AUD-62)', () => {
+    it('create() writes created_by from the session user', async () => {
+      mockRunQuery.mockResolvedValueOnce([{ id: 1, name: 'Alice', status: 'ACTIVE', updated_at: null }]);
+
+      await repo.create({ name: 'Alice' }, { userId: ACTOR });
+
+      expect(mockRunQuery).toHaveBeenCalledWith(
+        `INSERT INTO test_schema.test_entity (name, created_by) VALUES ($1, $2::uuid) RETURNING ${SELECT_COLUMNS}`,
+        ['Alice', ACTOR],
+      );
+    });
+
+    it('update() writes updated_by from the session user after the patched columns', async () => {
+      mockRunQuery.mockResolvedValueOnce([{ id: 1, name: 'Bob', status: 'ACTIVE', updated_at: null }]);
+
+      await repo.update(1, { name: 'Bob' }, { userId: ACTOR });
+
+      expect(mockRunQuery).toHaveBeenCalledWith(
+        `UPDATE test_schema.test_entity SET name = $1, updated_by = $2::uuid WHERE id = $3 AND deleted_at IS NULL RETURNING ${SELECT_COLUMNS}`,
+        ['Bob', ACTOR, 1],
+      );
+    });
+
+    it('softDelete() writes deleted_by from the session user', async () => {
+      mockRunCommand.mockResolvedValueOnce(1);
+
+      expect(await repo.softDelete(1, { userId: ACTOR })).toBe(true);
+      expect(mockRunCommand).toHaveBeenCalledWith(
+        'UPDATE test_schema.test_entity SET deleted_at = NOW(), deleted_by = $2::uuid WHERE id = $1 AND deleted_at IS NULL',
+        [1, ACTOR],
+      );
     });
   });
 

@@ -236,6 +236,24 @@ describe('academic periods (canonical route and /periods alias)', () => {
     expect((await call('admin1', 'GET', `${base}/${id}`)).statusCode).toBe(404);
   });
 
+  it.each(['/api/v1/academic-periods', '/api/v1/periods'])('%s: rejects inverted, equal or non-date ranges (chk_period_dates) on create and edit', async (base) => {
+    const ok = { schoolId: ids.s1, name: 'rango', startsOn: '2028-01-01', endsOn: '2028-03-31' };
+    for (const bad of [
+      { startsOn: '2028-03-31', endsOn: '2028-01-01' },
+      { startsOn: '2028-01-01', endsOn: '2028-01-01' },
+      { startsOn: 'ayer', endsOn: '2028-01-01' },
+    ]) {
+      const res = await call('admin1', 'POST', base, { ...ok, ...bad });
+      expect(res.statusCode).toBe(400);
+    }
+    const created = await call('admin1', 'POST', base, ok);
+    expect(created.statusCode).toBe(201);
+    const id = created.json().academicPeriodId;
+    expect((await call('admin1', 'PUT', `${base}/${id}`, { endsOn: '2027-12-31' })).statusCode).toBe(400);
+    expect((await call('admin1', 'PUT', `${base}/${id}`, { endsOn: '2028-06-30' })).statusCode).toBe(200);
+    expect((await call('admin1', 'PUT', `${base}/${id}`, { isActive: true })).statusCode).toBe(200);
+  });
+
   it('nested /schools/:id/periods respects the school', async () => {
     const body = { name: '2027-I', startsOn: '2027-01-01', endsOn: '2027-06-30' };
     expect((await call('admin1', 'POST', `/api/v1/schools/${ids.s1}/periods`, body)).statusCode).toBe(201);
@@ -334,6 +352,18 @@ describe('actor types', () => {
     expect((await call('super', 'DELETE', `/api/v1/actor-types/${id}`)).statusCode).toBe(404);
   });
 
+  it('a school Administrador cannot write the global actor-type catalogue', async () => {
+    const created = (await call('super', 'POST', '/api/v1/actor-types', { code: 'TUTOR', name: 'Tutor' })).json();
+    const id = created.actorTypeId;
+    expect((await call('admin1', 'POST', '/api/v1/actor-types', { code: 'X', name: 'X' })).statusCode).toBe(403);
+    expect((await call('admin1', 'PUT', `/api/v1/actor-types/${id}`, { name: 'Hack' })).statusCode).toBe(403);
+    expect((await call('admin1', 'DELETE', `/api/v1/actor-types/${id}`)).statusCode).toBe(403);
+    // Untouched, and still readable by the Administrador.
+    const read = await call('admin1', 'GET', `/api/v1/actor-types/${id}`);
+    expect(read.statusCode).toBe(200);
+    expect(read.json().name).toBe('Tutor');
+  });
+
   it('re-creating a deleted code brings the same type back instead of a duplicate', async () => {
     const first = (await call('super', 'POST', '/api/v1/actor-types', { code: 'TUTOR', name: 'Tutor' })).json();
     await call('super', 'DELETE', `/api/v1/actor-types/${first.actorTypeId}`);
@@ -427,5 +457,20 @@ describe('enrollments', () => {
     expect((await call('admin1', 'PUT', `/api/v1/enrollments/${ids.e1}`, { enrolledOn: '2026-02-01', cohortId: ids.c1, academicActorId: ids.st1 })).json().enrolledOn).toBe('2026-02-01');
     expect((await call('admin1', 'DELETE', `/api/v1/enrollments/${ids.e2}`)).statusCode).toBe(404);
     expect((await call('admin1', 'DELETE', '/api/v1/enrollments/999')).statusCode).toBe(404);
+  });
+});
+
+describe('audit columns (AUD-62)', () => {
+  it('stamps created_by, updated_by and deleted_by with the session user', async () => {
+    const created = await call('admin1', 'POST', '/api/v1/programs', { schoolId: ids.s1, code: 'AUD', name: 'Auditoria' });
+    expect(created.statusCode).toBe(201);
+    const id = created.json().programId;
+    expect(repos.stores.programs.rows.get(id)).toMatchObject({ createdBy: 'admin1' });
+
+    expect((await call('admin1', 'PUT', `/api/v1/programs/${id}`, { name: 'Auditoria 2' })).statusCode).toBe(200);
+    expect(repos.stores.programs.rows.get(id)).toMatchObject({ updatedBy: 'admin1' });
+
+    expect((await call('admin1', 'DELETE', `/api/v1/programs/${id}`)).statusCode).toBe(204);
+    expect(repos.stores.programs.rows.get(id)).toMatchObject({ deletedBy: 'admin1' });
   });
 });

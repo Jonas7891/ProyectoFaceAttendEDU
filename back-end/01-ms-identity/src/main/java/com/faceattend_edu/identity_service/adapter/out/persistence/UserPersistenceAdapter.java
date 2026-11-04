@@ -10,6 +10,7 @@ import com.faceattend_edu.identity_service.application.port.out.LoadUserByIdenti
 import com.faceattend_edu.identity_service.application.port.out.LoadUserByUsernamePort;
 import com.faceattend_edu.identity_service.application.port.out.ListUsersPort;
 import com.faceattend_edu.identity_service.application.port.out.RemoveIdentityPort;
+import com.faceattend_edu.identity_service.application.port.out.SoftDeleteUserPort;
 import com.faceattend_edu.identity_service.adapter.out.persistence.repository.PersonJpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 import com.faceattend_edu.identity_service.domain.model.User;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -26,7 +28,7 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class UserPersistenceAdapter implements LoadUserPort, SaveUserPort, UpdateUserPort, LoadUserByUsernamePort,
-        LoadUserByIdentifierPort, ListUsersPort, RemoveIdentityPort {
+        LoadUserByIdentifierPort, ListUsersPort, RemoveIdentityPort, SoftDeleteUserPort {
 
     private final UserJpaRepository repository;
     private final PersonJpaRepository personRepository;
@@ -38,6 +40,12 @@ public class UserPersistenceAdapter implements LoadUserPort, SaveUserPort, Updat
     public void removeUserAndPerson(UUID userId, UUID personId) {
         if (userId != null) repository.deleteById(userId);
         if (personId != null) personRepository.deleteById(personId);
+    }
+
+    @Override
+    @Transactional
+    public int softDeleteUser(UUID userId, UUID deletedBy, LocalDateTime deletedAt) {
+        return repository.softDelete(userId, deletedBy, deletedAt);
     }
 
     @Override

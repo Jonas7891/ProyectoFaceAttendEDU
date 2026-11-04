@@ -67,7 +67,11 @@ export function EnvironmentCard({ environment, onPress, cohortCodeOf }) {
     };
 
     return (
-        <TouchableOpacity onPress={onPress} style={{ flex: 1, minWidth: 260 }}>
+        <TouchableOpacity
+            onPress={onPress}
+            style={{ flex: 1, minWidth: 260 }}
+            accessibilityLabel={t("Ver detalle de {{name}}", { name: environment.name || environment.number })}
+        >
             <Card padding={0} style={{ overflow: "hidden", height: "100%" }}>
                 {/* Accent bar */}
                 <View style={{ height: 6, backgroundColor: c.brand.primary }} />
@@ -95,12 +99,7 @@ export function EnvironmentCard({ environment, onPress, cohortCodeOf }) {
                                 lineHeight: 18,
                                 fontStyle: environment.description === "Sin descripción" ? "italic" : "normal",
                             }} numberOfLines={2}>
-                                {environment.description === "Sin descripción" ? (
-                                    <>
-                                        <Text style={{ color: c.status.warning }}>*</Text>
-                                        Sin descripción
-                                    </>
-                                ) : environment.description}
+                                {environment.description === "Sin descripción" ? t("Sin descripción") : environment.description}
                             </Text>
                         </View>
                         

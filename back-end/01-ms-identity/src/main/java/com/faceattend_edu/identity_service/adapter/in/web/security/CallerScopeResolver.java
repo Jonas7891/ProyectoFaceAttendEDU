@@ -1,5 +1,6 @@
 package com.faceattend_edu.identity_service.adapter.in.web.security;
 
+import com.faceattend_edu.identity_service.application.port.out.CallerScopeCachePort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserPort;
 import com.faceattend_edu.identity_service.domain.model.User;
 import org.springframework.beans.factory.ObjectProvider;
@@ -29,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Duplicado intencional por MS, igual que AuthTokenFilter.
  */
 @Component
-public class CallerScopeResolver {
+public class CallerScopeResolver implements CallerScopeCachePort {
 
     /** {@code null} en personIds significa sin restricción (solo Super Administrador). */
     public record Scope(Set<UUID> personIds) {
@@ -131,6 +132,12 @@ public class CallerScopeResolver {
         Scope scope = new Scope(Set.copyOf(persons));
         cache.put(userId, new Cached(scope, System.currentTimeMillis() + TTL_MS));
         return scope;
+    }
+
+    /** Forgets the cached scope of {@code userId}: the next request recomputes it from academic. */
+    @Override
+    public void invalidate(UUID userId) {
+        if (userId != null) cache.keySet().removeIf(key -> key.equalsIgnoreCase(userId.toString()));
     }
 
     private static void addPerson(Set<UUID> persons, String personId) {

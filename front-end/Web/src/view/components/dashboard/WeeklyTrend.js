@@ -191,10 +191,13 @@ export function WeeklyTrend({
     // Obtener configuración del período académico
     const periodConfig = getAcademicPeriodConfig(academicPeriod);
 
-    // Calcular tendencia (comparación última vs primera semana visible)
-    const trendDirection = visibleData.length >= 2 
-        ? visibleData[visibleData.length - 1].rate - visibleData[0].rate
-        : 0;
+    // Tendencia: última vs primera semana visible CON datos reales. Las semanas
+    // vacías (placeholders) no cuentan como 0 %; con menos de dos semanas reales
+    // no hay nada que comparar y la tendencia no se muestra.
+    const realVisible = visibleData.filter((week) => !week.isEmpty && Number.isFinite(week.rate));
+    const trendDirection = realVisible.length >= 2
+        ? realVisible[realVisible.length - 1].rate - realVisible[0].rate
+        : null;
 
     // Función para obtener color según rendimiento
     const getColorByRate = (rate) => {
@@ -401,7 +404,8 @@ export function WeeklyTrend({
                         icon={(color) => <Feather name="chevron-left" size={16} color={color} />}
                     />
 
-                    {/* Tendencia central */}
+                    {/* Tendencia central (solo con dos semanas reales) */}
+                    {trendDirection === null ? <View /> : (
                     <View style={{
                         flexDirection: "row",
                         alignItems: "center",
@@ -425,6 +429,7 @@ export function WeeklyTrend({
                             {trendDirection > 0 ? "↑" : trendDirection < 0 ? "↓" : "→"} {Math.abs(trendDirection).toFixed(1)}%
                         </Text>
                     </View>
+                    )}
 
                     {/* Botón siguiente */}
                     <IconButton

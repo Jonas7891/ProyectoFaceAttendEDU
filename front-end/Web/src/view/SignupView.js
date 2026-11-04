@@ -95,7 +95,11 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLandi
     const icon = (name) => <Feather name={name} size={20} color={c.text.secondary} />;
 
     const passwordToggle = (
-        <TouchableOpacity onPress={vm.togglePassword}>
+        <TouchableOpacity
+            onPress={vm.togglePassword}
+            accessibilityRole="button"
+            accessibilityLabel={vm.showPassword ? t("Ocultar contraseña") : t("Mostrar contraseña")}
+        >
             <Feather name={vm.showPassword ? "eye-off" : "eye"} size={20} color={c.text.secondary} />
         </TouchableOpacity>
     );

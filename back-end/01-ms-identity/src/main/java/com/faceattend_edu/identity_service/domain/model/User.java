@@ -30,6 +30,11 @@ public class User {
     private boolean mustChangePassword;
     /** The person asked for an e-mailed code after the password on every login. */
     private boolean twoFactorEnabled;
+    /** Audit columns the account carries so that saving it writes them back unchanged. */
+    private UUID createdBy;
+    private UUID updatedBy;
+    private LocalDateTime deletedAt;
+    private UUID deletedBy;
 
     private static final Set<String> ALLOWED_AUTH_TYPES = new HashSet<>(Arrays.asList("Local", "Windows", "External"));
 
@@ -45,6 +50,11 @@ public class User {
         if (this.authenticationType != null && !ALLOWED_AUTH_TYPES.contains(this.authenticationType)) {
             throw new IllegalArgumentException("User.authenticationType is not supported");
         }
+    }
+
+    /** Soft-deleted accounts (deleted_at set) are gone for every operation except history. */
+    public boolean isDeleted() {
+        return this.deletedAt != null;
     }
 
     public boolean isActive() {

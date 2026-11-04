@@ -14,7 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.client.ResponseCreator;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.SocketTimeoutException;
@@ -56,6 +55,22 @@ class SchoolProvisioningHttpAdapterTest {
         adapter = new SchoolProvisioningHttpAdapter(properties);
         RestTemplate rest = (RestTemplate) ReflectionTestUtils.getField(adapter, "restTemplate");
         server = MockRestServiceServer.bindTo(rest).build();
+    }
+
+    @Test
+    @DisplayName("AUD-60: a rollback DELETE carries no JSON content type (academic answers 400 'Body cannot be empty' otherwise)")
+    void deleteWithoutBodySendsNoContentType() {
+        org.springframework.test.web.client.RequestMatcher noContentType =
+                request -> assertThat(request.getHeaders().getContentType()).isNull();
+        server.expect(requestTo("http://academic/api/v1/academic-actors/30")).andExpect(method(HttpMethod.DELETE))
+                .andExpect(noContentType).andRespond(withSuccess());
+        server.expect(requestTo("http://academic/api/v1/enrollments/50")).andExpect(method(HttpMethod.DELETE))
+                .andExpect(noContentType).andRespond(withSuccess());
+
+        adapter.deleteActor(TOKEN, 30);
+        adapter.deleteEnrollment(TOKEN, 50);
+
+        server.verify();
     }
 
     private void schools(String json) {
@@ -230,8 +245,26 @@ class SchoolProvisioningHttpAdapterTest {
         server.reset();
         roles();
         server.expect(requestTo("http://authorization/api/v1/users/" + USER + "/roles/2")).andRespond(withStatus(HttpStatus.FORBIDDEN));
-        assertThatThrownBy(() -> adapter.removeRole(TOKEN, USER, "Instructor")).isInstanceOf(HttpClientErrorException.class);
+        assertThatThrownBy(() -> adapter.removeRole(TOKEN, USER, "Instructor"))
+                .isInstanceOfSatisfying(DownstreamRejectedException.class, ex -> assertThat(ex.getStatus()).isEqualTo(403));
         server.verify();
+    }
+
+    @Test
+    @DisplayName("AUD-30: the roles of an account are read from authorization with the caller's session")
+    void listsTheRoleNamesOfAnAccount() {
+        server.expect(requestTo("http://authorization/api/v1/users/" + USER + "/roles")).andExpect(method(HttpMethod.GET))
+                .andExpect(header("Authorization", "Bearer " + TOKEN))
+                .andRespond(withSuccess("[{\"roleId\":2,\"roleName\":\"Instructor\"},{\"roleId\":4,\"roleName\":\"Aprendiz\"}]", MediaType.APPLICATION_JSON));
+        assertThat(adapter.listRoleNames(TOKEN, USER)).containsExactly("Instructor", "Aprendiz");
+        server.verify();
+    }
+
+    @Test
+    void anAccountWithoutRolesListsNone() {
+        server.expect(requestTo("http://authorization/api/v1/users/" + USER + "/roles"))
+                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+        assertThat(adapter.listRoleNames(TOKEN, USER)).isEmpty();
     }
 
     @Test

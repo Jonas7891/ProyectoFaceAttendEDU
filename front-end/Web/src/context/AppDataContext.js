@@ -18,6 +18,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { biometricCaptureApi } from "../services/api/biometricCaptureApi";
 import { syncInstitutionConfigFromBackend } from "../services/api/settingsPersistence";
 import { resetReferenceData, setActiveSchool, setUsersListAllowed } from "../services/api/referenceData";
+import { clearDomainCache, purgeForeignDomainCache, setCacheScope } from "../models/data/localCache";
 import { useAuth } from "./AuthContext";
 
 import {
@@ -63,6 +64,7 @@ import { getConfiguredAcademicPeriodType } from "../core/constants/academicPerio
 import { getStudentPeriodFromData } from "../core/utils/studentPeriodCalculator";
 import { onInstitutionConfigChange } from "../core/config/institutionConfig";
 import { hasSuperAdminRole } from "../core/utils/backendRoles";
+import { loadBiometricFlags, withBiometricFlags } from "../core/utils/biometricFlags";
 
 // ── Filas de personal (docentes / administradores) ─────────
 // Los usuarios vienen de la API con role admin|teacher|student;
@@ -73,7 +75,7 @@ function toStaffRow(user) {
     return {
         ...user,
         grade: user.role === "admin" ? "Administrador" : "Docente",
-        attendance: 0, // pendiente de la fase de consulta
+        attendance: null, // el personal no tiene % de asistencia: "—", no 0
         hasFacial: false,
         hasFingerprint: false,
     };
@@ -282,6 +284,8 @@ export function AppDataProvider({ children }) {
             // referencia para que el próximo login vuelva a consultar.
             // El estado cargado se reemplaza entero al iniciar sesión.
             resetReferenceData();
+            setCacheScope(null);
+            void clearDomainCache();
             setLoadError(null);
             return undefined;
         }
@@ -289,6 +293,9 @@ export function AppDataProvider({ children }) {
         // La sede del usuario acota todas las cargas de abajo. Debe fijarse ANTES
         // de pedir nada: setActiveSchool limpia la caché si la sede cambió.
         setActiveSchool(user.schoolId ?? null);
+        // AUD-59: las altas locales pertenecen al usuario y la sede de la sesión; lo de otra sesión se descarta.
+        setCacheScope({ userId: user.id, schoolId: user.schoolId ?? null });
+        void purgeForeignDomainCache();
         // Ajustes de la sede (asistencia mínima, reconocimiento, avisos) para todos los roles.
         syncInstitutionConfigFromBackend(user.schoolId ?? null).catch(() => {});
         // /users exige identity.person:write (solo administración): se prohibe
@@ -314,25 +321,8 @@ export function AppDataProvider({ children }) {
         // Las filas nacen con hasFacial/hasFingerprint en false; lo registrado vive en
         // ms-biometric, así que sin esto la lista vuelve a "Pendiente" al recargar.
         // Si el rol no puede consultarlo (403) o falla, las filas quedan como están.
-        const biometricFlags = biometricCaptureApi
-            .summaryAll()
-            .then((r) => ({
-                face: new Set((r?.face_person_ids ?? []).map(String)),
-                fingerprint: new Set((r?.fingerprint_person_ids ?? []).map(String)),
-            }))
-            .catch(() => null);
-        const withBiometrics = (rows, flags) =>
-            !flags
-                ? rows
-                : rows.map((row) =>
-                      row.personId == null
-                          ? row
-                          : {
-                                ...row,
-                                hasFacial: flags.face.has(String(row.personId)),
-                                hasFingerprint: flags.fingerprint.has(String(row.personId)),
-                            }
-                  );
+        const biometricFlags = loadBiometricFlags(user?.role, biometricCaptureApi.summaryAll);
+        const withBiometrics = withBiometricFlags;
 
         void Promise.allSettled([
             canListUsers ? loadUsers({ includeUnassigned: hasSuperAdminRole(user?.roles) }) : Promise.resolve([]),
@@ -400,18 +390,22 @@ export function AppDataProvider({ children }) {
             const key = course ? String(course.id) : s.course;
 
             if (!map.has(key)) {
-                map.set(key, { attendance: [], active: 0, code: course?.code ?? s.course, name: course?.name ?? s.course });
+                map.set(key, { attendance: [], count: 0, active: 0, code: course?.code ?? s.course, name: course?.name ?? s.course });
             }
             const entry = map.get(key);
-            entry.attendance.push(s.attendance);
+            // Solo alumnos con registros: null no es 0 % y no baja el promedio.
+            if (Number.isFinite(s.attendance)) entry.attendance.push(s.attendance);
+            entry.count += 1;
             if (s.status === "active") entry.active += 1;
         }
         return Array.from(map.values())
-            .map(({ attendance, active, code, name }) => ({
+            .map(({ attendance, count, active, code, name }) => ({
                 name,
                 code, // Incluir el código del curso
-                studentCount: attendance.length,
-                avgAttendance: Math.round(attendance.reduce((a, b) => a + b, 0) / attendance.length),
+                studentCount: count,
+                avgAttendance: attendance.length
+                    ? Math.round(attendance.reduce((a, b) => a + b, 0) / attendance.length)
+                    : null,
                 activeCount: active,
             }))
             .sort((a, b) => a.name.localeCompare(b.name));
@@ -424,7 +418,13 @@ export function AppDataProvider({ children }) {
     // la fila real no aparece hasta esto, porque no hay espejo local que
     // la muestre de inmediato.
     const reloadStudentsFn = useCallback(async () => {
-        const fresh = await loadStudents();
+        // Los indicadores de biometría también se aplican aquí: sin ellos la recarga dejaría a todos los
+        // estudiantes en "Pendiente" hasta recargar la página.
+        const [loaded, flags] = await Promise.all([
+            loadStudents(),
+            loadBiometricFlags(user?.role, biometricCaptureApi.summaryAll),
+        ]);
+        const fresh = withBiometricFlags(loaded, flags);
         setStudents(fresh);
         startProgressiveUserLoading(fresh, courses, users);
     }, [courses, users, startProgressiveUserLoading]);

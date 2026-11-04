@@ -70,3 +70,14 @@ describe("role settings render", () => {
         expect(hints).toMatchSnapshot();
     });
 });
+
+describe("session time is editable only where it is saved on the server (AUD-49)", () => {
+    test.each([
+        ["Administrador de sede", { schoolId: 3, roles: ["Administrador"] }, true],
+        ["Super Admin", { schoolId: null, roles: ["Super Administrador"] }, false],
+    ])("%s", (_name, user, readOnly) => {
+        mockUser = user;
+        const input = render(<AdminSettings section="security" />).root.findByType(SessionTimeInput);
+        expect(Boolean(input.props.readOnly)).toBe(readOnly);
+    });
+});

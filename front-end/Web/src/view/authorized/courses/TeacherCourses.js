@@ -89,7 +89,11 @@ function TeacherCourseCard({ course, meta, onPress, onStudentsPress }) {
     }).filter((s) => s);
 
     return (
-        <TouchableOpacity onPress={onPress} style={{ flex: 1 }}>
+        <TouchableOpacity
+            onPress={onPress}
+            style={{ flex: 1 }}
+            accessibilityLabel={t("Ver detalle de {{name}}", { name: course.name })}
+        >
             <Card padding={0} style={{ overflow: "hidden", height: "100%" }}>
                 <View style={{ height: 5, backgroundColor: course.color }} />
                 <View style={{ padding: 16, flex: 1, gap: 8 }}>
@@ -158,10 +162,9 @@ export function TeacherCourses({ vm: vmProp }) {
         (course) => {
             navigation.navigate("Users", {
                 section: "students",
-                searchQuery: course.code,
+                courseId: course.id,
                 sortBy: "name",
                 sortOrder: "asc",
-                filterColumn: "name",
             });
         },
         [navigation]
@@ -179,7 +182,7 @@ export function TeacherCourses({ vm: vmProp }) {
     const statCards = [
         { label: t("Mis cursos"), value: vm.myStats.total, color: c.brand.primary, icon: "book-open" },
         { label: t("Mis estudiantes"), value: vm.myStats.totalStudents, color: c.status.success, icon: "users" },
-        { label: t("Asistencia prom."), value: `${vm.myStats.avgAttendance}%`, color: c.brand.primary, icon: "percent" },
+        { label: t("Asistencia prom."), value: vm.myStats.avgAttendance == null ? t("Sin datos") : `${vm.myStats.avgAttendance}%`, color: c.brand.primary, icon: "percent" },
         { label: t("Con alerta"), value: vm.myStats.alertCount, color: c.status.warning, icon: "alert-triangle" },
     ];
 

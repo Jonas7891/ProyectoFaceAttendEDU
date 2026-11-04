@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: config-007-fix-configuration-row-version-default
+      author: Andres Gutierrez
+      comment: >-
+        AUD-33: config-001/002 declared defaultValueNumeric inside the column constraints, where Liquibase
+        ignores it, so academic_configuration.row_version and security_configuration.row_version were created
+        NOT NULL without DEFAULT. Sets DEFAULT 1 as AGENTS.md section 2.2 requires. Idempotent; existing rows
+        are untouched. config-001/002 are not edited.
+      changes:
+        - sql:
+            sql: ALTER TABLE configuration.academic_configuration ALTER COLUMN row_version SET DEFAULT 1
+        - sql:
+            sql: ALTER TABLE configuration.security_configuration ALTER COLUMN row_version SET DEFAULT 1
+      rollback:
+        - sql:
+            sql: ALTER TABLE configuration.academic_configuration ALTER COLUMN row_version DROP DEFAULT
+        - sql:
+            sql: ALTER TABLE configuration.security_configuration ALTER COLUMN row_version DROP DEFAULT

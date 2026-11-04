@@ -57,7 +57,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     private static final Pattern PERSON_TERMS = Pattern.compile("^/api/v1/persons/([0-9a-fA-F-]{36})/terms$");
     /** Guardian of a minor: third-party data tied to a child, so even reading it needs person administration. */
     private static final Pattern PERSON_GUARDIAN = Pattern.compile("^/api/v1/persons/([0-9a-fA-F-]{36})/guardian(?:/document)?$");
-    /** Cuenta y sub-recursos de escritura: PUT /users/{id}, PATCH .../status, POST .../activate. */
+    /** Cuenta y sub-recursos de escritura: PUT/DELETE /users/{id}, PATCH .../status, POST .../activate. */
     private static final Pattern USER_SCOPED = Pattern.compile("^/api/v1/users/([0-9a-fA-F-]{36})(?:/status|/activate)?$");
     private static final Pattern USER_SESSIONS = Pattern.compile("^/api/v1/sessions/user/([0-9a-fA-F-]{36})$");
     private static final String WRITE = "identity.person:write";
@@ -100,6 +100,13 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         // A session id is a bearer: listing, minting or revoking other people's sessions
         // would let a school administrator act as anyone, so only the platform role may.
         if (sessionAdminOnly(request.getMethod(), path, caller) && !roles.contains(SUPER_ADMIN_ROLE)) {
+            deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: requires " + SUPER_ADMIN_ROLE, path);
+            return;
+        }
+
+        // One password policy for the whole platform: a school administrator reads it
+        // (identity.person:read) but must not rewrite it for every other school.
+        if (platformConfigWrite(request.getMethod(), path) && !roles.contains(SUPER_ADMIN_ROLE)) {
             deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: requires " + SUPER_ADMIN_ROLE, path);
             return;
         }
@@ -181,6 +188,12 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         if (path.equals("/api/v1/sessions")) return true;
         Matcher own = USER_SESSIONS.matcher(path);
         return own.matches() && !own.group(1).equalsIgnoreCase(caller);
+    }
+
+    /** Writes to the platform-wide password policy (POST/PUT /password-policies...). */
+    static boolean platformConfigWrite(String method, String path) {
+        if (method.equalsIgnoreCase("GET") || method.equalsIgnoreCase("HEAD") || method.equalsIgnoreCase("OPTIONS")) return false;
+        return path.equals("/api/v1/password-policies") || path.startsWith("/api/v1/password-policies/");
     }
 
     static String requiredPermission(String method, String path, String caller) {

@@ -76,7 +76,11 @@ services:
         config:
           origins: ["__CORS_ORIGINS__"]
           methods: [POST, OPTIONS]
-          headers: [Content-Type]
+          # La web (modo cookie) manda estas cabeceras y credentials:"include" en todas sus peticiones,
+          # también en el alta pública: sin ellas el preflight falla y el POST no sale (AUD-19). La ruta
+          # sigue sin sesión (la cookie no llega a identity) y los orígenes son los mismos.
+          headers: [Authorization, Content-Type, X-Requested-With, X-Session-Mode]
+          credentials: true
       - name: rate-limiting
         config:
           minute: 5
@@ -305,10 +309,14 @@ plugins:
           -- ("faceattend.bearer, <token>"), nunca en la URL, que quedaría en
           -- los logs de acceso. Solo el canal biométrico lo admite (el MS lo
           -- valida igual); el resto de rutas exige la cabecera Authorization.
-          if not token and method == "GET" and path == "/api/v1/biometric/ws" then
+          if method == "GET" and path == "/api/v1/biometric/ws" then
             local protocols = kong.request.get_header("sec-websocket-protocol")
-            token = protocols and protocols:match("^%s*faceattend%.bearer%s*,%s*([%x%-]+)%s*$")
-            local ticket = not token and protocols and protocols:match("^%s*faceattend%.ticket%s*,%s*(%x+)%s*$")
+            local bearer = protocols and protocols:match("^%s*faceattend%.bearer%s*,%s*([%x%-]+)%s*$")
+            token = token or bearer
+            -- El ticket se canjea aunque la sesión ya venga de la cookie (en localhost la cookie viaja al API porque
+            -- las cookies no distinguen puertos; con un dominio común para la web y la API pasa igual). Si se
+            -- saltara el canje, el servicio contestaría sin subprotocolo y el navegador descartaría la conexión.
+            local ticket = not bearer and protocols and protocols:match("^%s*faceattend%.ticket%s*,%s*(%x+)%s*$")
             if ticket then
               -- Ticket de un solo uso (S-10, opción A): Vercel no reenvía WebSockets, así que el kiosco abre el canal
               -- directo contra la API, donde la cookie no viaja. Pide antes un ticket (POST /auth/ws-ticket) y lo manda

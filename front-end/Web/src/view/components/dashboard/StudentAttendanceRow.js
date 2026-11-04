@@ -11,6 +11,7 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Badge, Avatar, ProgressBar } from "../common";
+import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { getInstitutionConfig } from "../../../core/config/institutionConfig";
 import { getAttendanceThresholds } from "../../../models/data/userDerivedData";
 
@@ -50,9 +51,11 @@ export function StudentStat({ icon, color, c, children }) {
 export function AbsenceStats({ student, c, t }) {
     return (
         <>
-            <StudentStat icon="x-circle" color={c.status.danger} c={c}>
-                {student.totalAbsences} {t("faltas")}
-            </StudentStat>
+            {student.totalAbsences != null && (
+                <StudentStat icon="x-circle" color={c.status.danger} c={c}>
+                    {student.totalAbsences} {t("faltas")}
+                </StudentStat>
+            )}
             {student.consecutiveAbsences > 0 && (
                 <StudentStat icon="repeat" color={c.status.warning} c={c}>
                     {student.consecutiveAbsences} {t("seguidas")}
@@ -107,9 +110,12 @@ export function StudentAttendanceRow({
     chevronSize = 20,
     children,
 }) {
+    const { t } = useTranslation();
     return (
         <TouchableOpacity
             onPress={onPress}
+            accessibilityRole="button"
+            accessibilityLabel={t("Ver detalle de {{name}}", { name: student.name })}
             style={{
                 flexDirection: "row",
                 alignItems: "center",

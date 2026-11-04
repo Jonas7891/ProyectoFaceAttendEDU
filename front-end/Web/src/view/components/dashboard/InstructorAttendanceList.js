@@ -33,6 +33,8 @@ function InstructorRow({ instructor, isLast, onPress, c, t }) {
     return (
         <TouchableOpacity
             onPress={() => onPress?.(instructor)}
+            accessibilityRole="button"
+            accessibilityLabel={t("Ver detalle de {{name}}", { name: instructor.instructorName })}
             style={{
                 flexDirection: "row",
                 alignItems: "center",

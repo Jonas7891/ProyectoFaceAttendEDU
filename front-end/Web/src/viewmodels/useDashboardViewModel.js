@@ -11,8 +11,56 @@ import {
     getPerfectAttendanceStudents,
     getInstructorAttendance,
     getAttendanceThresholds,
+    averageAttendance,
 } from "../models/data/userDerivedData";
 import { getInstitutionConfig } from "../core/config/institutionConfig";
+
+// Fecha local (YYYY-MM-DD): toISOString() es UTC y en UTC-5 ya es "mañana" desde las 7 pm.
+function localIsoDate(date = new Date()) {
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${date.getFullYear()}-${month}-${day}`;
+}
+
+/**
+ * Variación de la tasa entre las dos últimas semanas con registros reales
+ * (puntos porcentuales, un decimal). Con menos de dos semanas reales no hay
+ * nada que comparar: undefined, y la tarjeta no muestra tendencia.
+ */
+export function weeklyChange(weekly) {
+    const real = (weekly || []).filter((w) => w && !w.isEmpty && Number.isFinite(w.rate));
+    if (real.length < 2) return undefined;
+    const delta = real[real.length - 1].rate - real[real.length - 2].rate;
+    return Math.round(delta * 10) / 10;
+}
+
+/**
+ * Alumnos de un curso y sus métricas. Promedio solo con alumnos que tienen registros
+ * (null si ninguno); en riesgo solo cuenta a quien tiene un porcentaje real bajo el mínimo.
+ */
+function courseMetrics(course, students, minAttendance) {
+    const courseStudents = (students || []).filter(
+        (s) =>
+            (Array.isArray(s.courseIds) && s.courseIds.includes(String(course.id))) ||
+            s.course === course.code ||
+            s.course === course.name ||
+            s.course === course.id
+    );
+    return {
+        totalStudents: courseStudents.length,
+        activeStudents: courseStudents.filter((s) => s.status === "active").length,
+        avgAttendance: averageAttendance(courseStudents),
+        atRiskStudents: courseStudents.filter(
+            (s) => Number.isFinite(s.attendance) && s.attendance < minAttendance
+        ).length,
+    };
+}
+
+/** Registro del día de hoy en la serie diaria, o null si hoy no hay registros. */
+function todayEntry(daily) {
+    const today = localIsoDate();
+    return (daily || []).find((d) => d.date === today) ?? null;
+}
 
 /**
  * Formatear números enteros con separadores de miles
@@ -232,51 +280,28 @@ export function useDashboardViewModel() {
                 const fichaCode = ficha.code;
                 const fichaStudents = students.filter(s => s.course === fichaCode || s.ficha === fichaCode);
                 
-                if (fichaStudents.length > 0) {
-                    // Calcular promedio de asistencia real de los estudiantes de esta ficha
-                    const totalAttendance = fichaStudents.reduce((sum, student) => sum + (student.attendance || 0), 0);
-                    const avgAttendance = totalAttendance / fichaStudents.length;
-                    realFichaAttendance[fichaCode] = avgAttendance;
+                // Solo alumnos con registros: un alumno sin datos no cuenta como 0 %.
+                const fichaAverage = averageAttendance(fichaStudents);
+                if (fichaAverage !== null) {
+                    realFichaAttendance[fichaCode] = fichaAverage;
                 }
             });
         }
-        
-        // Calcular asistencia global con promedios reales
+
+        // Asistencia global: promedio de las fichas que tienen datos; sin ninguna, null.
         const attendanceValues = Object.values(realFichaAttendance);
-        const globalAvgAttendance = attendanceValues.length > 0 
+        const globalAvgAttendance = attendanceValues.length > 0
             ? attendanceValues.reduce((sum, avg) => sum + avg, 0) / attendanceValues.length
-            : 0;
-        
-        // Calcular asistencia del día basándose en estudiantes reales
-        let todayAttendanceStats = { present: 0, late: 0, absent: 0 };
-        
-        if (students && students.length > 0) {
-            // Por ahora usamos los datos mock para simular, pero en producción esto vendría de registros reales
-            // Se puede calcular basándose en los estudiantes activos y sus patrones de asistencia
-            const activeStudentsCount = students.filter(s => s.status === "active").length;
-            
-            if (activeStudentsCount > 0) {
-                // Simular distribución realista basándose en el patrón de asistencia de los estudiantes
-                const avgAttendanceRate = students.reduce((sum, s) => sum + (s.attendance || 0), 0) / students.length;
-                
-                // Calcular distribución proporcional
-                const presentRate = avgAttendanceRate / 100;  // % que normalmente asiste
-                const lateRate = Math.min(0.08, (100 - avgAttendanceRate) / 300); // ~8% máximo tardanzas
-                const absentRate = 1 - presentRate - lateRate;
-                
-                todayAttendanceStats = {
-                    present: Math.round(activeStudentsCount * presentRate),
-                    late: Math.round(activeStudentsCount * lateRate),
-                    absent: Math.round(activeStudentsCount * absentRate)
-                };
-            }
-        }
-        
-        const todayTotalStudents = todayAttendanceStats.present + todayAttendanceStats.late + todayAttendanceStats.absent;
-        const todayPresent = todayAttendanceStats.present + todayAttendanceStats.late;
-        const todayAttendanceRate = todayTotalStudents > 0 
+            : null;
+
+        // Asistencia de hoy: solo los registros reales de hoy en la serie de la sede.
+        // Sin sesiones/registros hoy no hay cifra (antes se simulaba con el promedio).
+        const todayRow = todayEntry(series.daily);
+        const todayPresent = todayRow ? (todayRow.present || 0) + (todayRow.late || 0) : 0;
+        const todayTotalStudents = todayRow ? todayPresent + (todayRow.absent || 0) : 0;
+        const todayAttendanceRate = todayTotalStudents > 0
             ? (todayPresent / todayTotalStudents) * 100
-            : 0;
+            : null;
         
         // Instructores presentes hoy - calcular basándose en asistencia real
         // Consideramos "presente hoy" a instructores con asistencia >= 85%
@@ -316,37 +341,18 @@ export function useDashboardViewModel() {
             ? (activeStudents / totalStudents) * 100
             : 0;
         
-        // Calcular tasa de puntualidad basándose en estudiantes reales
-        // En producción esto vendría de registros de asistencia reales de la semana
-        let weeklyPunctualityStats = { totalPresent: 0, totalLate: 0 };
-        
-        if (students && students.length > 0) {
-            const activeStudentsCount = students.filter(s => s.status === "active").length;
-            
-            if (activeStudentsCount > 0) {
-                // Simular datos de puntualidad semanal basándose en patrones de estudiantes
-                const daysInWeek = 5;
-                const avgAttendanceRate = students.reduce((sum, s) => sum + (s.attendance || 0), 0) / students.length;
-                
-                // Estudiantes que asisten por día (promedio semanal)
-                const avgDailyAttending = Math.round(activeStudentsCount * (avgAttendanceRate / 100));
-                
-                // De los que asisten, calcular cuántos llegan tarde (basado en puntualidad individual)
-                const avgLateRate = 0.08; // ~8% de tardanzas promedio
-                const avgDailyLate = Math.round(avgDailyAttending * avgLateRate);
-                const avgDailyOnTime = avgDailyAttending - avgDailyLate;
-                
-                weeklyPunctualityStats = {
-                    totalPresent: avgDailyOnTime * daysInWeek,
-                    totalLate: avgDailyLate * daysInWeek
-                };
-            }
-        }
-        
-        const totalAttending = weeklyPunctualityStats.totalPresent + weeklyPunctualityStats.totalLate;
-        const punctualityRate = totalAttending > 0 
-            ? (weeklyPunctualityStats.totalPresent / totalAttending) * 100
-            : 0;
+        // Puntualidad: a tiempo / (a tiempo + tarde) sobre los registros reales de la
+        // serie diaria. Sin asistentes registrados no hay tasa (antes se simulaba un 8 % de tardanzas).
+        const punctualityTotals = (series.daily || []).reduce(
+            (acc, d) => ({ onTime: acc.onTime + (d.present || 0), late: acc.late + (d.late || 0) }),
+            { onTime: 0, late: 0 }
+        );
+        const totalAttending = punctualityTotals.onTime + punctualityTotals.late;
+        const punctualityRate = totalAttending > 0
+            ? (punctualityTotals.onTime / totalAttending) * 100
+            : null;
+        const noData = t("Sin datos");
+        const pct = (rate) => (rate == null ? noData : `${formatPercentage(rate)}%`);
 
         // Obtener umbrales dinámicos
         const thresholds = getAttendanceThresholds();
@@ -354,22 +360,22 @@ export function useDashboardViewModel() {
         return [
             {
                 label: t("Asistencia hoy"),
-                value: `${formatPercentage(todayAttendanceRate)}%`,
-                subtitle: `${todayPresent}/${todayTotalStudents} ${t("estudiantes")}`,
-                change: todayAttendanceRate >= thresholds.excellent ? 2.3 : 
-                        todayAttendanceRate >= thresholds.warning ? 1.5 : 
-                        todayAttendanceRate >= thresholds.danger ? 0 : -1.5,
-                color: todayAttendanceRate >= thresholds.warning ? c.status.success : c.status.warning,
+                value: pct(todayAttendanceRate),
+                subtitle: todayAttendanceRate == null
+                    ? t("Sin registros hoy")
+                    : `${todayPresent}/${todayTotalStudents} ${t("estudiantes")}`,
+                color: todayAttendanceRate == null
+                    ? c.text.secondary
+                    : todayAttendanceRate >= thresholds.warning ? c.status.success : c.status.warning,
                 icon: "calendar",
             },
             {
                 label: t("Asistencia global"),
-                value: `${formatPercentage(globalAvgAttendance)}%`,
+                value: pct(globalAvgAttendance),
                 subtitle: t("Promedio general"),
-                change: globalAvgAttendance >= thresholds.warning ? 
-                    Number.parseFloat(Math.min(2.5, (globalAvgAttendance - thresholds.warning + 2) * 0.5).toFixed(1)) : 
-                    Number.parseFloat(Math.max(-2.5, (globalAvgAttendance - thresholds.warning) * 0.3).toFixed(1)),
-                color: globalAvgAttendance >= thresholds.warning ? c.status.success : c.status.warning,
+                color: globalAvgAttendance == null
+                    ? c.text.secondary
+                    : globalAvgAttendance >= thresholds.warning ? c.status.success : c.status.warning,
                 icon: "trending-up",
             },
             {
@@ -409,12 +415,11 @@ export function useDashboardViewModel() {
             },
             {
                 label: t("Tasa de puntualidad"),
-                value: `${formatPercentage(punctualityRate)}%`,
+                value: pct(punctualityRate),
                 subtitle: t("Estudiantes a tiempo"),
-                change: punctualityRate >= 95 ? 1.2 :
-                        punctualityRate >= 90 ? 0.8 : 
-                        punctualityRate >= 85 ? 0.3 : -0.5,
-                color: punctualityRate >= 90 ? c.status.success : c.status.warning,
+                color: punctualityRate == null
+                    ? c.text.secondary
+                    : punctualityRate >= 90 ? c.status.success : c.status.warning,
                 icon: "clock",
             },
         ];
@@ -442,21 +447,25 @@ export function useDashboardViewModel() {
         if (teacherFichas.length === 0) return [];
         const totalStudents = teacherFichas.reduce((sum, f) => sum + (f.totalStudents || 0), 0);
         const activeStudents = teacherFichas.reduce((sum, f) => sum + (f.activeStudents || 0), 0);
-        const avgAttendance = teacherFichas.reduce((sum, f) => sum + (f.avgAttendance || 0), 0) / (teacherFichas.length || 1);
+        // Promedio de los alumnos de sus fichas que tienen registros; sin ninguno, null.
+        const avgAttendance = averageAttendance(
+            (students || []).filter((s) => teacherFichas.some((f) => f.code === s.ficha))
+        );
 
         // Estudiantes en riesgo de mis fichas
         const myAtRiskStudents = atRiskStudents.filter(s =>
             teacherFichas.some(f => f.code === s.ficha)
         );
 
-        // Asistencia hoy de mis fichas (último día con sesión real).
-        const lastDay = series.daily.length > 0 ? series.daily[series.daily.length - 1] : null;
-        const lastTotal = lastDay
-            ? (lastDay.present || 0) + (lastDay.late || 0) + (lastDay.absent || 0)
+        // Asistencia de hoy de mis fichas: solo los registros reales de hoy.
+        // Sin registros hoy no hay cifra (no se reutiliza el último día con sesión).
+        const todayRow = todayEntry(series.daily);
+        const lastTotal = todayRow
+            ? (todayRow.present || 0) + (todayRow.late || 0) + (todayRow.absent || 0)
             : 0;
         const todayAvg = lastTotal > 0
-            ? (((lastDay.present || 0) + (lastDay.late || 0)) / lastTotal) * 100
-            : 0;
+            ? (((todayRow.present || 0) + (todayRow.late || 0)) / lastTotal) * 100
+            : null;
 
         // Clases de hoy (sesiones reales de sus bloques).
         const classesToday = series.meta.sessionsToday || 0;
@@ -465,9 +474,11 @@ export function useDashboardViewModel() {
         return [
             {
                 label: t("Asistencia hoy"),
-                value: `${formatPercentage(todayAvg)}%`,
+                value: todayAvg == null ? t("Sin datos") : `${formatPercentage(todayAvg)}%`,
                 subtitle: `${t("En mis fichas")}`,
-                color: todayAvg >= 85 ? c.status.success : c.status.warning,
+                color: todayAvg == null
+                    ? c.text.secondary
+                    : todayAvg >= 85 ? c.status.success : c.status.warning,
                 icon: "calendar",
             },
             {
@@ -486,12 +497,11 @@ export function useDashboardViewModel() {
             },
             {
                 label: t("Asistencia promedio"),
-                value: `${formatPercentage(avgAttendance)}%`,
+                value: avgAttendance == null ? t("Sin datos") : `${formatPercentage(avgAttendance)}%`,
                 subtitle: t("General"),
-                change: avgAttendance >= thresholds.excellent ? 2.5 : 
-                        avgAttendance >= thresholds.warning ? 1.5 : 
-                        avgAttendance >= thresholds.danger ? 0.5 : -1.0,
-                color: avgAttendance >= thresholds.warning ? c.status.success : c.status.warning,
+                color: avgAttendance == null
+                    ? c.text.secondary
+                    : avgAttendance >= thresholds.warning ? c.status.success : c.status.warning,
                 icon: "trending-up",
             },
             {
@@ -531,11 +541,13 @@ export function useDashboardViewModel() {
                 : ownCourseIds.has(String(course.id))
         );
 
-        // Estado de hoy desde su serie real (último día con registro).
-        const lastDay = series.daily.length > 0 ? series.daily[series.daily.length - 1] : null;
+        // Estado de hoy desde su serie real: solo el registro de HOY (no el último día
+        // con registro). Sin registro de hoy: pendiente si hay clase hoy, "sin clases" si no.
+        const lastDay = todayEntry(series.daily);
+        const sessionsTodayCount = series.meta.sessionsToday || 0;
         const todayStatus =
             !lastDay || (lastDay.present === 0 && lastDay.late === 0 && lastDay.absent === 0)
-                ? "pending"
+                ? sessionsTodayCount > 0 ? "pending" : "noclass"
                 : lastDay.absent > 0 && lastDay.present === 0 && lastDay.late === 0
                     ? "absent"
                     : lastDay.late > 0
@@ -546,6 +558,7 @@ export function useDashboardViewModel() {
             late: t("Tardanza"),
             absent: t("Ausente"),
             pending: t("Pendiente"),
+            noclass: t("Sin clases hoy"),
         }[todayStatus] || t("Pendiente");
 
         const todayStatusColor = {
@@ -553,10 +566,11 @@ export function useDashboardViewModel() {
             late: c.status.warning,
             absent: c.status.danger,
             pending: c.text.secondary,
+            noclass: c.text.secondary,
         }[todayStatus] || c.text.secondary;
 
-        // Asistencia del mes actual
-        const monthAttendance = studentData?.attendance || 0;
+        // Asistencia propia sobre sus sesiones registradas (null si no tiene ninguna).
+        const monthAttendance = Number.isFinite(studentData?.attendance) ? studentData.attendance : null;
 
         // Clases de hoy de su ficha (sesiones reales) y sus registros.
         const classesToday = series.meta.sessionsToday || 0;
@@ -565,16 +579,16 @@ export function useDashboardViewModel() {
             : 0;
         const pendingToday = Math.max(0, classesToday - attendedToday);
 
-        // Clase de hoy según el horario de su ficha; sin clase hoy, el primer curso inscrito.
+        // Clase de hoy según el horario de su ficha. "Ambiente actual" es el aula del
+        // bloque: sin bloque hoy o sin aula resuelta no se sustituye por el código del
+        // curso (eran cosas distintas: QABD... en vez de QAAMB...).
         const todayClass = series.meta.currentClass || null;
         const fallbackCourse = ownCourses[0] || null;
-        const currentClass = todayClass
-            ? {
-                  code: todayClass.environmentCode || todayClass.courseCode,
-                  name: todayClass.environmentName || todayClass.courseName,
-                  professor: todayClass.instructorName,
-              }
-            : fallbackCourse;
+        const environmentCode = todayClass?.environmentCode || null;
+        const environmentName = todayClass?.environmentName || null;
+        const currentClass = {
+            professor: todayClass?.instructorName ?? fallbackCourse?.professor ?? null,
+        };
 
         return [
             {
@@ -588,20 +602,20 @@ export function useDashboardViewModel() {
             },
             {
                 label: t("Mi asistencia"),
-                value: `${formatPercentage(monthAttendance)}%`,
-                subtitle: t("Este mes"),
-                change: monthAttendance >= thresholds.excellent ? 2.4 :
-                        monthAttendance >= (thresholds.warning + thresholds.excellent) / 2 ? 1.8 :
-                        monthAttendance >= thresholds.warning ? 1.0 :
-                        monthAttendance >= thresholds.danger ? 0 : -1.2,
-                color: monthAttendance >= (thresholds.warning + thresholds.excellent) / 2 ? c.status.success : 
-                       monthAttendance >= thresholds.danger ? c.status.warning : c.status.danger,
+                value: monthAttendance == null ? t("Sin datos") : `${formatPercentage(monthAttendance)}%`,
+                subtitle: t("Sesiones registradas"),
+                // Tendencia: solo con dos semanas reales que comparar (puntos entre las dos últimas).
+                change: monthAttendance == null ? undefined : weeklyChange(series.weekly),
+                color: monthAttendance == null
+                    ? c.text.secondary
+                    : monthAttendance >= (thresholds.warning + thresholds.excellent) / 2 ? c.status.success :
+                      monthAttendance >= thresholds.danger ? c.status.warning : c.status.danger,
                 icon: "trending-up",
             },
             {
                 label: t("Ambiente actual"),
-                value: currentClass?.code || "N/A",
-                subtitle: currentClass?.name || t("Sin asignar"),
+                value: environmentCode || "—",
+                subtitle: environmentName || t("Sin asignar"),
                 color: c.brand.primary,
                 icon: "map-pin",
             },
@@ -726,19 +740,9 @@ export function useDashboardViewModel() {
         // CALCULAR FICHAS REALES DINÁMICAMENTE DESDE CURSOS
         // ═══════════════════════════════════════════════════════════════════
         const realCoursesData = courses.map(course => {
-            // Obtener estudiantes de este curso
-            const courseStudents = students.filter(s => 
-                s.course === course.code || s.course === course.name || s.course === course.id
-            );
-            
-            // Calcular métricas del curso
-            const totalStudents = courseStudents.length;
-            const activeStudents = courseStudents.filter(s => s.status === "active").length;
-            const avgAttendance = totalStudents > 0
-                ? courseStudents.reduce((sum, s) => sum + (s.attendance || 0), 0) / totalStudents
-                : 0;
-            const atRiskCount = courseStudents.filter(s => s.attendance < minAttendanceThreshold).length;
-            
+            const { totalStudents, activeStudents, avgAttendance, atRiskStudents: atRiskCount } =
+                courseMetrics(course, students, minAttendanceThreshold);
+
             // Obtener instructor del curso
             const instructor = teachers.find(t => t.id === course.instructor);
             const instructorName = instructor ? instructor.name : "Sin asignar";
@@ -764,12 +768,15 @@ export function useDashboardViewModel() {
             perfectAttendanceStudents: perfectAttendanceStudents || [],
             
             // Top 5 fichas (cursos con mejor asistencia)
-            topFichas: [...realCoursesData]
+            // (solo cursos con datos de asistencia reales)
+            topFichas: realCoursesData
+                .filter((f) => f.avgAttendance != null)
                 .sort((a, b) => b.avgAttendance - a.avgAttendance)
                 .slice(0, 5),
-            
+
             // Bottom 3 fichas (cursos con peor asistencia)
-            bottomFichas: [...realCoursesData]
+            bottomFichas: realCoursesData
+                .filter((f) => f.avgAttendance != null)
                 .sort((a, b) => a.avgAttendance - b.avgAttendance)
                 .slice(0, 3),
         };
@@ -789,22 +796,19 @@ export function useDashboardViewModel() {
         // Validaciones defensivas
         if (!courses || courses.length === 0) return null;
 
-        // CALCULAR CURSOS DEL TEACHER DINÁMICAMENTE
-        // TODO: Filtrar por user.assignedCourses cuando esté implementado
-        const teacherCourses = courses.slice(0, 2).map(course => {
-            // Obtener estudiantes de este curso
-            const courseStudents = students.filter(s => 
-                s.course === course.code || s.course === course.name || s.course === course.id
-            );
-            
-            // Calcular métricas del curso
-            const totalStudents = courseStudents.length;
-            const activeStudents = courseStudents.filter(s => s.status === "active").length;
-            const avgAttendance = totalStudents > 0
-                ? courseStudents.reduce((sum, s) => sum + (s.attendance || 0), 0) / totalStudents
-                : 0;
-            const atRiskCount = courseStudents.filter(s => s.attendance < minAttendanceThreshold).length;
-            
+        // Cursos del docente: solo aquellos donde es instructor de algún bloque
+        // (instructorActorIds), el mismo alcance de «Mis cursos». Antes se tomaban
+        // los dos primeros de la sede, incluido un curso ajeno (AUD-46).
+        const actorId = user?.academicActorId;
+        const ownCourses = actorId == null
+            ? []
+            : courses.filter(
+                  (course) => Array.isArray(course.instructorActorIds) && course.instructorActorIds.includes(actorId)
+              );
+        const teacherCourses = ownCourses.map(course => {
+            const { totalStudents, activeStudents, avgAttendance, atRiskStudents: atRiskCount } =
+                courseMetrics(course, students, minAttendanceThreshold);
+
             // Obtener instructor del curso
             const instructor = teachers.find(t => t.id === course.instructor);
             const instructorName = instructor ? instructor.name : "Sin asignar";

@@ -110,6 +110,35 @@ function getVisibleTabs(role, isSuperAdmin) {
     }
 }
 
+// ── Secciones de Configuración por rol ───────────────────────
+// Debe coincidir con los hijos de "settings" en useDashboardScreenViewModel
+// (adminOnly / hideForSuperAdmin): lo que la barra lateral no ofrece tampoco
+// se alcanza escribiendo la URL (/app/settings/<sección>).
+const SETTINGS_DEFAULT_SECTION = "appearance";
+
+function getSettingsSections(role, isSuperAdmin) {
+    const own = ["notifications", "appearance"];
+    switch (role) {
+        case "admin": {
+            const all = ["general", "facial", ...own, "security"];
+            // El Super Admin global no tiene sede propia.
+            return isSuperAdmin ? all : [...all, "schoolInfo", "contacts"];
+        }
+        case "teacher":
+        case "student":
+            return [...own, "schoolInfo", "contacts"];
+        default:
+            return [];
+    }
+}
+
+/** Sección pedida si el rol puede verla; si no, una permitida (apariencia). */
+export function resolveSettingsSection(permissions, section) {
+    const allowed = permissions?.settingsSections ?? [];
+    if (section && allowed.includes(section)) return section;
+    return SETTINGS_DEFAULT_SECTION;
+}
+
 // ── Cálculo de permisos ──────────────────────────────────────
 
 export function buildPermissions(role, schoolId = null, roleNames = []) {
@@ -121,6 +150,7 @@ export function buildPermissions(role, schoolId = null, roleNames = []) {
     // de la sede: un Administrador cuya sede no se resolvió (sin academic_actor,
     // fallo de red) seguiría siendo Admin de sede, nunca vería Escuelas ni Roles.
     const isSuperAdmin = isAdmin && hasSuperAdminRole(roleNames);
+    const settingsSections = getSettingsSections(role, isSuperAdmin);
 
     return {
         // Estudiantes (HU-IAM-002/007/008/010)
@@ -142,6 +172,8 @@ export function buildPermissions(role, schoolId = null, roleNames = []) {
         canEnrollOwnFace: true,
         canEnrollOthersFace: isAdmin || isTeacher,
         canDeleteBiometrics: isAdmin,
+        // GET /biometric/summary exige attendance.record:write (SEEDS.md: admin e instructor)
+        canViewBiometricSummary: isAdmin || isTeacher,
 
         // Cursos (HU-SCH-001, FR 8.1)
         canViewCourses: true,
@@ -181,16 +213,18 @@ export function buildPermissions(role, schoolId = null, roleNames = []) {
         canSubmitJustifications: isStudent,
         canReviewJustifications: isAdmin || isTeacher,
 
-        // Información de la sede (lectura los 3 roles, edición solo admin)
-        canViewSchoolInfo: true,
+        // Información de la sede (lectura admin de sede, docente y alumno; edición solo admin).
+        // Misma regla que la sección «Sede» de Configuración: el Super Admin global no tiene sede
+        // propia, así que ni el sidebar ni /app/school-info y /app/contacts se la sirven (AUD-15).
+        canViewSchoolInfo: settingsSections.includes("schoolInfo"),
         canEditSchoolInfo: isAdmin,
 
         // Gestión de escuelas (CRUD de sedes): solo el super admin
         canManageSchools: isSuperAdmin,
 
-        // Sección académica y contactos (solo lectura, los 3 roles)
+        // Sección académica y contactos (solo lectura); contactos sigue la misma regla que la sede.
         canViewAcademic: true,
-        canViewContacts: true,
+        canViewContacts: settingsSections.includes("contacts"),
 
         // Configuración (configuration:manage + HU-CONF-001..008)
         // Granular por sección: Teacher/StudentSettings solo deben usar
@@ -198,9 +232,14 @@ export function buildPermissions(role, schoolId = null, roleNames = []) {
         canManageConfiguration: isAdmin,
         canManageGeneralSettings: isAdmin,
         canManageFacialConfig: isAdmin,
-        canManageSecurityConfig: isAdmin,
+        // Seguridad global (tiempo de sesión): solo el Super Admin la persiste;
+        // el backend responde 403 al resto (AUD-49).
+        canManageSecurityConfig: isSuperAdmin,
+        settingsSections,
         canManageNotifications: true,
         canManageJustificationTypes: isAdmin,
+        // Tipos globales (school_id NULL): el backend solo deja al Super Admin (AUD-40).
+        canManageGlobalJustificationTypes: isSuperAdmin,
         // Alertas (notification.alert:read, HU-JUS-003)
         canViewAlerts: true,
         canManageAlerts: isAdmin,
@@ -271,6 +310,8 @@ const GUEST_PERMISSIONS = {
     canManageSecurityConfig: false,
     canManageNotifications: false,
     canManageJustificationTypes: false,
+    canManageGlobalJustificationTypes: false,
+    settingsSections: [],
     canViewAlerts: false,
     canManageAlerts: false,
     canManageRoles: false,

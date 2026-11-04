@@ -41,7 +41,7 @@ export function StudentCourses({ vm: vmProp }) {
     // compartirse con otra ficha distinta).
     const statCards = [
         { label: t("Mis cursos"), value: vm.myStats.total, color: c.brand.primary, icon: "book-open" },
-        { label: t("Asistencia promedio"), value: `${vm.myStats.avgAttendance}%`, color: c.status.success, icon: "percent" },
+        { label: t("Asistencia promedio"), value: vm.myStats.avgAttendance == null ? t("Sin datos") : `${vm.myStats.avgAttendance}%`, color: c.status.success, icon: "percent" },
     ];
 
     return (

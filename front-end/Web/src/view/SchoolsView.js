@@ -65,8 +65,21 @@ function SchoolCard({ school, vm, t, c }) {
                     >
                         {school.name}
                     </Text>
-                    <Badge variant={school.status ? "success" : "default"} size="sm">
-                        {school.status ? t("Activa") : t("Inactiva")}
+                    <Badge
+                        variant={
+                            school.statusKind === "active"
+                                ? "success"
+                                : school.statusKind === "pending"
+                                  ? "warning"
+                                  : "default"
+                        }
+                        size="sm"
+                    >
+                        {school.statusKind === "active"
+                            ? t("Activa")
+                            : school.statusKind === "pending"
+                              ? t("Pendiente")
+                              : t("Inactiva")}
                     </Badge>
                 </View>
 
@@ -372,13 +385,7 @@ export default function SchoolsView() {
                 onClose={vm.closeStatusConfirm}
                 onConfirm={vm.confirmStatusChange}
                 title={vm.statusTarget?.status ? t("Desactivar sede") : t("Activar sede")}
-                message={
-                    vm.statusTarget?.status
-                        ? `${t("¿Desactivar")} ${vm.statusTarget?.name}? ${t(
-                              "Dejará de estar disponible para nuevas operaciones."
-                          )}`
-                        : `${t("¿Activar")} ${vm.statusTarget?.name}?`
-                }
+                message={vm.statusConfirmMessage}
                 variant={vm.statusTarget?.status ? "danger" : "default"}
                 confirmText={vm.statusTarget?.status ? t("Desactivar") : t("Activar")}
                 cancelText={t("Cancelar")}

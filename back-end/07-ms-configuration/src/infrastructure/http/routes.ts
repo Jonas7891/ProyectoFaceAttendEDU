@@ -35,6 +35,17 @@ const reviewBody = z.object({
   resolutionNotes: z.string().optional(),
 });
 
+/** Case fields the server owns: set on creation or by the review route, never by a generic edit. */
+const REVIEW_ONLY_FIELDS = ['updateStatus', 'requestedBy', 'requestedAt', 'reviewedBy', 'reviewedAt', 'resolutionNotes'];
+
+/** Review state machine (AGENTS.md §4.6 / §6.10). Pending may be decided directly: web and mobile do so. */
+const REVIEW_TRANSITIONS: Record<string, readonly string[]> = {
+  Pending: ['In_Review', 'Approved', 'Rejected'],
+  In_Review: ['Approved', 'Rejected'],
+  Approved: [],
+  Rejected: [],
+};
+
 type Req = FastifyRequest;
 type Reply = FastifyReply;
 
@@ -264,8 +275,8 @@ export async function registerConfigurationRoutes(app: FastifyInstance, repos: C
     if (data.biometricType === 'FINGERPRINT' && !data.fingerNumber) {
       return badRequest(reply, undefined, 'fingerNumber required for FINGERPRINT');
     }
-    // The requester is the authenticated user unless the caller states one.
-    const requestedBy = data.requestedBy ?? ((req as any).userId as string | undefined);
+    // The requester is always the authenticated user; a body value is ignored (RN-29).
+    const requestedBy = (req as any).userId as string | undefined;
     if (!requestedBy || !UUID_RE.test(requestedBy)) {
       return badRequest(reply, undefined, 'requestedBy is required');
     }
@@ -306,7 +317,15 @@ export async function registerConfigurationRoutes(app: FastifyInstance, repos: C
     return found;
   });
   app.put('/api/v1/biometric-update-cases/:id', async (req, reply) => {
-    const parsed = caseBody.partial().safeParse((req as any).body ?? {});
+    // Status, requester and reviewer fields only change through POST / PATCH .../review (RN-29).
+    const rawBody = (req as any).body;
+    if (rawBody && typeof rawBody === 'object') {
+      const forbidden = REVIEW_ONLY_FIELDS.filter((f) => f in rawBody);
+      if (forbidden.length > 0) {
+        return badRequest(reply, { fields: forbidden }, 'Status, requester and reviewer fields cannot be edited here; use the review endpoint');
+      }
+    }
+    const parsed = caseBody.omit({ requestedBy: true }).partial().safeParse(rawBody ?? {});
     if (!parsed.success) return badRequest(reply, parsed.error.flatten());
     const id = String((req.params as any).id);
     const found = UUID_RE.test(id) ? await repos.cases.findById(id) : null;
@@ -314,15 +333,27 @@ export async function registerConfigurationRoutes(app: FastifyInstance, repos: C
     const scope = await scopeOf(req, reply);
     if (!scope) return reply;
     if (!caseScopeAllows(scope, found.personId)) return notFound(reply);
-    const updated = await repos.cases.update(id, parsed.data);
+    // Reassigning a case needs the same reach over the NEW person as creating one does.
+    if (parsed.data.personId !== undefined && parsed.data.personId !== found.personId && !caseScopeAllows(scope, parsed.data.personId)) {
+      return reply.code(403).send({ error: 'Forbidden', message: 'You cannot reassign a case to a person outside your scope', timestamp: new Date().toISOString() });
+    }
+    // chk_finger_number on the merged result: 1..10 only with FINGERPRINT, NULL with FACIAL.
+    const biometricType = parsed.data.biometricType ?? found.biometricType;
+    const fingerNumber = 'fingerNumber' in parsed.data ? parsed.data.fingerNumber : found.fingerNumber;
+    if (biometricType === 'FINGERPRINT' && !fingerNumber) {
+      return badRequest(reply, undefined, 'fingerNumber required for FINGERPRINT');
+    }
+    const patch = { ...parsed.data, ...(biometricType === 'FACIAL' ? { fingerNumber: null } : {}) };
+    const updated = await repos.cases.update(id, patch);
     return updated ?? notFound(reply);
   });
   app.patch('/api/v1/biometric-update-cases/:id/review', async (req, reply) => {
     const parsed = reviewBody.safeParse((req as any).body);
     if (!parsed.success) return badRequest(reply, parsed.error.flatten());
     const id = String((req.params as any).id);
-    const reviewer = parsed.data.reviewedBy ?? ((req as any).userId as string | undefined);
+    // The reviewer is the session user; a reviewedBy in the body is ignored.
     const caller = (req as any).userId as string | undefined;
+    const reviewer = caller;
     const found = UUID_RE.test(id) ? await repos.cases.findById(id) : null;
     if (!found) return notFound(reply);
     const scope = await scopeOf(req, reply);
@@ -332,6 +363,13 @@ export async function registerConfigurationRoutes(app: FastifyInstance, repos: C
     // Separation of duties (RN-29): nobody approves or rejects their own request.
     if (caller && found.requestedBy === caller) {
       return reply.code(403).send({ error: 'Forbidden', message: 'You cannot review your own request', timestamp: new Date().toISOString() });
+    }
+    if (!REVIEW_TRANSITIONS[found.updateStatus]?.includes(parsed.data.updateStatus)) {
+      return reply.code(409).send({
+        error: 'Conflict',
+        message: `A case in ${found.updateStatus} cannot move to ${parsed.data.updateStatus}`,
+        timestamp: new Date().toISOString(),
+      });
     }
     const updated = await repos.cases.update(id, {
       updateStatus: parsed.data.updateStatus,

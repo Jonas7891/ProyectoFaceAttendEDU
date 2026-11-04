@@ -73,6 +73,17 @@ class ClassSessionTransitionsTest {
     }
 
     @Test
+    void closingWithoutAResolvedActorFailsExplicitlyInsteadOfLeavingClosedByNull() {
+        existing("Open");
+
+        ValidationException e = assertThrows(ValidationException.class, () -> close.close(ID, null));
+
+        org.junit.jupiter.api.Assertions.assertTrue(e.getMessage().contains("closed_by"), e.getMessage());
+        verify(repository, never()).save(any());
+        verify(eventPublisher, never()).publish(any(), any());
+    }
+
+    @Test
     void closingASessionPublishesTheEventTheNotificationServiceListensTo() {
         existing("Open");
 

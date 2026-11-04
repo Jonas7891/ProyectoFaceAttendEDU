@@ -20,6 +20,7 @@ import { useAppData } from "../context/AppDataContext";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { authApi } from "../services/api/authApi";
+import { academicApi } from "../services/api/academicApi";
 import { authorizationApi } from "../services/api/authorizationApi";
 import { provisionStaff, provisionStudent, credentialsNotice, cohortsForCourseCode, importStudents as bulkImportStudents, personDetails, findExistingStudents, documentTypesForRole } from "../services/api/staffProvisioning";
 import { userByPersonMap } from "../services/api/referenceData";
@@ -198,7 +199,8 @@ export function useUsersViewModel(
     initialSearchQuery = null,
     initialSortBy = null,
     initialSortOrder = null,
-    initialFilterColumn = null
+    initialFilterColumn = null,
+    initialCourseId = null
 ) {
     const appData = useAppData();
     const { user } = useAuth();
@@ -206,7 +208,7 @@ export function useUsersViewModel(
 
     const [search, setSearch] = useState(initialSearchQuery || "");
     const [userTypeFilter, setUserTypeFilter] = useState(USER_TYPES.ALL);
-    const [courseFilter, setCourseFilter] = useState("");
+    const [courseFilter, setCourseFilter] = useState(initialCourseId != null ? String(initialCourseId) : "");
     const [statusFilter, setStatusFilter] = useState("");
     const [selected, setSelected] = useState(null);
     const [showRegisterModal, setShowRegisterModal] = useState(false);
@@ -535,17 +537,17 @@ export function useUsersViewModel(
                     return e?.message || "No se pudo registrar el estudiante en el backend";
                 }
 
-                await appData.addStudent({
-                    ...baseUser,
-                    course: form.course.trim(),
-                    grade: form.role,
-                    attendance: form.attendance || 0,
-                    personId: provisioned?.personId ?? null,
-                    // La biometría se captura al terminar el alta (BiometricEnrollmentModal):
-                    // hasta entonces no hay nada registrado.
-                    hasFacial: false,
-                    hasFingerprint: false,
-                });
+                // Se trae la lista real del backend en vez de guardar una fila espejo local: el espejo
+                // (id s_…) quedaba en el navegador para siempre y, junto a la fila real, el estudiante
+                // salía duplicado. La biometría se captura al terminar el alta (BiometricEnrollmentModal):
+                // hasta entonces la fila real nace sin nada registrado.
+                // Con try/catch: si la recarga falla (p. ej. 429 del rate-limit), el alta ya está hecha y
+                // no debe verse como un error; la fila aparece al recargar la página.
+                try {
+                    await appData.reloadStudents?.();
+                } catch {
+                    /* el usuario puede recargar a mano */
+                }
                 return registrationResult(form, provisioned);
             }
 
@@ -754,45 +756,95 @@ export function useUsersViewModel(
         setSelected(null);
     }
 
-    // Activar/desactivar real (HU-IAM-007): PATCH /users/{id}/status +
-    // PATCH /persons/{id}/status. Soft-delete universal: jamás borrado físico.
+    // Actor académico de la fila: en estudiantes el id de la fila ES el
+    // academic_actor_id; docentes/administradores traen actorId (null sin actor).
+    const actorIdOf = (target) => {
+        const raw = target?.userType === USER_TYPES.STUDENT || !target?.userType
+            ? target?.id
+            : target?.actorId;
+        const n = Number(raw);
+        return Number.isInteger(n) && n > 0 && !isUuid(raw) ? n : null;
+    };
+
+    const patchStatusLocally = useCallback((target, nextActive) => {
+        appData.patchStaff(target.userType || USER_TYPES.STUDENT, target.id, {
+            status: nextActive ? "active" : "inactive",
+        });
+        if (selected?.id === target.id) {
+            setSelected((prev) =>
+                prev ? { ...prev, status: nextActive ? "active" : "inactive" } : prev
+            );
+        }
+    }, [appData, selected]);
+
+    // Activar/desactivar real (HU-IAM-007, AUD-77): PATCH /users/{id}/status +
+    // PATCH /persons/{id}/status + PATCH /academic-actors/{id}/status. Soft-delete
+    // universal: jamás borrado físico. Si falla el actor, se revierte el usuario
+    // y se devuelve el error (la UI no declara éxito a medias).
     const toggleUserStatus = useCallback(
         async (target, nextActive) => {
             const userId = await resolveUserId(target);
-            if (!userId) {
+            const actorId = actorIdOf(target);
+            if (!userId && actorId == null) {
                 return target?.userType === USER_TYPES.STUDENT
                     ? "El estudiante no tiene usuario vinculado"
                     : "Falta el vínculo con el backend";
             }
+            let userChanged = false;
             try {
-                await authApi.setUserStatus(userId, nextActive);
-                await authApi.setPersonStatus(target.personId, nextActive).catch(() => {});
+                if (userId) {
+                    await authApi.setUserStatus(userId, nextActive);
+                    userChanged = true;
+                    await authApi.setPersonStatus(target.personId, nextActive).catch(() => {});
+                }
+                if (actorId != null) {
+                    await academicApi.setActorStatus(actorId, nextActive);
+                }
             } catch (e) {
+                if (userChanged && actorId != null) {
+                    await authApi.setUserStatus(userId, !nextActive).catch(() => {});
+                    await authApi.setPersonStatus(target.personId, !nextActive).catch(() => {});
+                }
                 return e?.message || "No se pudo cambiar el estado en el backend";
             }
-            appData.patchStaff(target.userType || USER_TYPES.STUDENT, target.id, {
-                status: nextActive ? "active" : "inactive",
-            });
-            if (selected?.id === target.id) {
-                setSelected((prev) =>
-                    prev ? { ...prev, status: nextActive ? "active" : "inactive" } : prev
-                );
-            }
+            patchStatusLocally(target, nextActive);
             return null;
         },
-        [appData, selected, resolveUserId]
+        [patchStatusLocally, resolveUserId]
     );
 
-    // Eliminar lógico (HU-IAM-008): desactivar (mismo alcance que el toggle).
-    // Sin DELETE físico (AGENTS.md soft-delete).
+    // Eliminar lógico (HU-IAM-008, AUD-74): desactiva, DELETE del actor académico y
+    // DELETE /users/{id} de identity (borrado lógico del servidor: llena
+    // deleted_at/deleted_by, cierra sus sesiones y retira sus roles). El actor va
+    // antes: si academic lo rechaza (p. ej. matrículas) la cuenta no se toca.
+    // La persona (identity.person) solo queda inactiva: su documento sigue ocupado.
     const removeUser = useCallback(
         async (target) => {
             const err = await toggleUserStatus(target, false);
             if (err) return err;
+            const actorId = actorIdOf(target);
+            if (actorId != null) {
+                try {
+                    await academicApi.deleteActor(actorId);
+                } catch (e) {
+                    return `Se desactivó, pero no se pudo eliminar: ${e?.message || "error del servidor"}`;
+                }
+            }
+            const userId = await resolveUserId(target);
+            if (userId) {
+                try {
+                    await authApi.deleteUser(userId);
+                } catch (e) {
+                    return `Se desactivó, pero no se pudo eliminar la cuenta: ${e?.message || "error del servidor"}`;
+                }
+            }
+            if (actorId != null || userId) {
+                try { await appData.reloadUsers?.(); } catch { /* la lista se refresca al recargar */ }
+            }
             if (selected?.id === target?.id) setSelected(null);
             return null;
         },
-        [toggleUserStatus, selected]
+        [toggleUserStatus, resolveUserId, selected, appData]
     );
 
     // Acción en lote (activate | deactivate | delete) sobre varios usuarios:

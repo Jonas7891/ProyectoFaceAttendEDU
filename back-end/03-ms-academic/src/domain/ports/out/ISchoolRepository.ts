@@ -1,5 +1,5 @@
 import type { School } from '../../entities/School';
-import type { ICrudRepository, Draft } from './ICrudRepository';
+import type { AuditActor, ICrudRepository, Draft } from './ICrudRepository';
 
 export type SchoolDraft = Draft<School, 'schoolId'>;
 
@@ -10,5 +10,5 @@ export interface ISchoolRepository extends ICrudRepository<School, number, Schoo
    * (programs, cohorts, courses, periods, actors, enrollments), atomically.
    * `false` when the school does not exist or is already deleted.
    */
-  softDeleteCascade(id: number): Promise<boolean>;
+  softDeleteCascade(id: number, audit?: AuditActor): Promise<boolean>;
 }

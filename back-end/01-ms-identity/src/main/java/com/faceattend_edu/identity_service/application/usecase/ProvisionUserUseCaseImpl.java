@@ -5,9 +5,12 @@ import com.faceattend_edu.identity_service.application.port.in.CreateUserUseCase
 import com.faceattend_edu.identity_service.application.port.in.ManageConsentUseCase;
 import com.faceattend_edu.identity_service.application.port.in.NotifyUserCredentialsUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ProvisionUserUseCase;
+import com.faceattend_edu.identity_service.application.port.in.ValidatePasswordPolicyUseCase;
+import com.faceattend_edu.identity_service.application.port.out.CallerScopeCachePort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserByUsernamePort;
 import com.faceattend_edu.identity_service.application.port.out.RemoveIdentityPort;
 import com.faceattend_edu.identity_service.application.port.out.UserProvisioningPort;
+import com.faceattend_edu.identity_service.domain.exception.DownstreamRejectedException;
 import com.faceattend_edu.identity_service.domain.exception.DuplicateEntityException;
 import com.faceattend_edu.identity_service.domain.exception.ValidationException;
 import com.faceattend_edu.identity_service.domain.model.Person;
@@ -38,10 +41,13 @@ public class ProvisionUserUseCaseImpl implements ProvisionUserUseCase {
     private final UserProvisioningPort provisioning;
     private final RemoveIdentityPort removeIdentityPort;
     private final ManageConsentUseCase consentUseCase;
+    private final ValidatePasswordPolicyUseCase validatePasswordPolicy;
+    private final CallerScopeCachePort callerScopeCache;
 
     @Override
     public Result provision(Command command, String token, UUID callerUserId) {
         validate(command);
+        validatePasswordPolicy.validate(command.password());
         if (command.consent() == null) throw new ValidationException("consent is required (Ley 1581)");
         if (!consentUseCase.currentPolicyVersion().equals(command.consent().policyVersion())) {
             throw new ValidationException("consent.policyVersion must be the privacy notice in force ("
@@ -73,8 +79,18 @@ public class ProvisionUserUseCaseImpl implements ProvisionUserUseCase {
                     enrollmentId = provisioning.createEnrollment(token, actorId, actor.cohortId());
                 }
             }
+            // Authorization checks the new user's school through identity with the caller's session,
+            // and identity keeps the caller's visible people cached: without this the person just
+            // created is "outside the scope" and the role is refused (AUD-69).
+            callerScopeCache.invalidate(callerUserId);
             roleRequested = true;
-            provisioning.assignRole(token, userId, command.roleName());
+            try {
+                provisioning.assignRole(token, userId, command.roleName());
+            } catch (DownstreamRejectedException ex) {
+                log.warn("Authorization refused the role {} for {}: {}", command.roleName(), userId, ex.getMessage());
+                throw new DownstreamRejectedException(ex.getStatus(), "No se pudo asignar el rol «" + command.roleName()
+                        + "». El alta se canceló y no quedó nada creado; inténtalo de nuevo.");
+            }
 
             String credentials = null;
             if (command.sendCredentials()) {

@@ -24,6 +24,11 @@ public class CloseClassSessionUseCaseImpl implements CloseClassSessionUseCase {
         ClassSession session = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("ClassSession", id));
         if (session.isClosed()) throw new ValidationException("ClassSession already Closed");
         if (session.isCancelled()) throw new ValidationException("Cannot close a Cancelled session");
+        // AGENTS.md 6.8: closing records closed_by/closed_at. Without a resolved academic actor
+        // the close would leave closed_by NULL (AUD-27): refuse instead of closing anonymously.
+        if (closedBy == null) {
+            throw new ValidationException("Cannot close the session: the caller has no academic actor to record in closed_by");
+        }
         session.setSessionStatus("Closed");
         session.setClosedBy(closedBy);
         session.setClosedAt(Instant.now());

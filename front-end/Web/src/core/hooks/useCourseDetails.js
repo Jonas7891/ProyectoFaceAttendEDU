@@ -12,6 +12,7 @@
 // ============================================================
 
 import { useMemo } from "react";
+import { averageAttendance } from "../../models/data/userDerivedData";
 import { useAppData } from "../../context/AppDataContext";
 import { useDateFormat } from "../../view/components/hooks/useDateFormat";
 
@@ -240,10 +241,9 @@ export function useCourseDetails(course) {
                 if (daysUntil <= 2) {
                     return `Próxima clase con ${instructor}`;
                 }
-                // Si la próxima clase está a más de 2 días
-                else {
-                    return `Última vez con ${instructor}`;
-                }
+                // A más de 2 días es una clase futura, no una «última vez» (AUD-48):
+                // solo el nombre del docente, sin rótulo engañoso.
+                return instructor;
             }
         }
         
@@ -310,13 +310,9 @@ export function useCourseDetails(course) {
             student.course === course.id
         );
         
-        if (courseStudents.length === 0) return 0;
-        
-        const totalAttendance = courseStudents.reduce((sum, student) => 
-            sum + (student.attendance || 0), 0
-        );
-        
-        return Math.round(totalAttendance / courseStudents.length);
+        // Solo alumnos con registros; sin ninguno queda 0 (las vistas de curso aún
+        // no tienen estado "Sin datos").
+        return averageAttendance(courseStudents) ?? 0;
     }, [course, students]);
 
     // Jornada del curso (heredada de course.schedule)

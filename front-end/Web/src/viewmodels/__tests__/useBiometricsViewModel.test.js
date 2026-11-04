@@ -95,3 +95,37 @@ test("other errors keep their own message", async () => {
     });
     expect(vm().status.text).toBe("boom");
 });
+
+// AUD-50: el error de cámara denegada no debe seguir visible al cambiar de pestaña.
+import { useClearErrorStatusOnChange } from "../useBiometricsViewModel";
+
+test("an error status is cleared when the tab changes, an ok status is kept", async () => {
+    let vm;
+    let setKey;
+    function Probe() {
+        const [key, k] = React.useState("face-register");
+        setKey = k;
+        vm = useBiometricsViewModel();
+        useClearErrorStatusOnChange(key, vm);
+        return null;
+    }
+    await act(async () => {
+        create(<Probe />);
+    });
+    await act(async () => {
+        vm.setStatus("El permiso de la cámara fue denegado.", "error");
+    });
+    expect(vm.status.tone).toBe("error");
+    await act(async () => {
+        setKey("fingerprint");
+    });
+    expect(vm.status.tone).toBe("info");
+    expect(vm.status.text).not.toMatch(/cámara/);
+    await act(async () => {
+        vm.setStatus("Rostro registrado", "ok");
+    });
+    await act(async () => {
+        setKey("face-register");
+    });
+    expect(vm.status.tone).toBe("ok");
+});

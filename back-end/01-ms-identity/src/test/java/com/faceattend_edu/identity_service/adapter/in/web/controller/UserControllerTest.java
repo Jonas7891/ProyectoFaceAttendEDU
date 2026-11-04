@@ -73,6 +73,8 @@ class UserControllerTest {
     private NotifyUserCredentialsUseCase notifyUserCredentialsUseCase;
     @MockitoBean
     private com.faceattend_edu.identity_service.application.port.in.ProvisionUserUseCase provisionUserUseCase;
+    @MockitoBean
+    private com.faceattend_edu.identity_service.application.port.in.DeleteUserUseCase deleteUserUseCase;
 
     private UUID personId;
     private UUID userId;
@@ -315,6 +317,26 @@ class UserControllerTest {
         }
 
         @Test
+        @DisplayName("givenDeletedAccount_whenUpdateOrChangeStatus_thenReturn404")
+        void givenDeletedAccount_whenUpdateOrChangeStatus_thenReturn404() throws Exception {
+            // El caso de uso trata una cuenta borrada como inexistente (AUD-23).
+            org.mockito.Mockito.doThrow(new EntityNotFoundException("User", userId))
+                    .when(updateUserUseCase).updateUser(any(User.class));
+            org.mockito.Mockito.doThrow(new EntityNotFoundException("User", userId))
+                    .when(changeUserStatusUseCase).changeStatus(userId, true);
+
+            mockMvc.perform(put("/api/v1/users/" + userId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"personId":"%s","username":"carolina.mendoza","authenticationType":"Local","status":true}"""
+                                    .formatted(personId)))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.error").value("NOT_FOUND"));
+            mockMvc.perform(patch("/api/v1/users/" + userId + "/status").param("status", "true"))
+                    .andExpect(status().isNotFound());
+        }
+
+        @Test
         @DisplayName("givenExistingId_whenActivateUser_thenReturn204")
         void givenExistingId_whenActivateUser_thenReturn204() throws Exception {
             // Act & Assert
@@ -372,6 +394,40 @@ class UserControllerTest {
                             .content("{\"username\":\"x\",\"password\":\"Temporal-2026\",\"roleName\":\"Aprendiz\"}"))
                     .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isBadRequest());
             org.mockito.Mockito.verifyNoInteractions(provisionUserUseCase);
+        }
+    }
+
+    @org.junit.jupiter.api.Nested
+    @org.junit.jupiter.api.DisplayName("DELETE /api/v1/users/{id}")
+    class DeleteTests {
+
+        private static final String BEARER = "11111111-2222-3333-4444-555555555555";
+
+        private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder delete() {
+            return org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/v1/users/" + userId);
+        }
+
+        @org.junit.jupiter.api.Test
+        void deletesWithTheCallerSessionAndAnswers204() throws Exception {
+            UUID caller = UUID.randomUUID();
+            mockMvc.perform(delete().header("Authorization", "Bearer " + BEARER).requestAttr("X-User-Id", caller.toString()))
+                    .andExpect(status().isNoContent());
+            verify(deleteUserUseCase).deleteUser(userId, caller, BEARER);
+        }
+
+        @org.junit.jupiter.api.Test
+        void withoutASessionIsRejectedBeforeTheUseCase() throws Exception {
+            mockMvc.perform(delete()).andExpect(status().isUnauthorized());
+            org.mockito.Mockito.verifyNoInteractions(deleteUserUseCase);
+        }
+
+        @org.junit.jupiter.api.Test
+        void unknownUserIs404() throws Exception {
+            UUID caller = UUID.randomUUID();
+            org.mockito.Mockito.doThrow(new EntityNotFoundException("User", userId))
+                    .when(deleteUserUseCase).deleteUser(userId, caller, BEARER);
+            mockMvc.perform(delete().header("Authorization", "Bearer " + BEARER).requestAttr("X-User-Id", caller.toString()))
+                    .andExpect(status().isNotFound());
         }
     }
 }

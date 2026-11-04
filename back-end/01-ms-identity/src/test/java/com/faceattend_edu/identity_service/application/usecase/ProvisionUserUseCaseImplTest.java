@@ -4,6 +4,7 @@ import com.faceattend_edu.identity_service.application.port.in.CreatePersonUseCa
 import com.faceattend_edu.identity_service.application.port.in.CreateUserUseCase;
 import com.faceattend_edu.identity_service.application.port.in.NotifyUserCredentialsUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ProvisionUserUseCase;
+import com.faceattend_edu.identity_service.application.port.out.CallerScopeCachePort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserByUsernamePort;
 import com.faceattend_edu.identity_service.application.port.out.RemoveIdentityPort;
 import com.faceattend_edu.identity_service.application.port.out.UserProvisioningPort;
@@ -28,7 +29,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.InOrder;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -48,6 +51,8 @@ class ProvisionUserUseCaseImplTest {
     @Mock UserProvisioningPort provisioning;
     @Mock RemoveIdentityPort removeIdentity;
     @Mock com.faceattend_edu.identity_service.application.port.in.ManageConsentUseCase consent;
+    @Mock com.faceattend_edu.identity_service.application.port.in.ValidatePasswordPolicyUseCase passwordPolicy;
+    @Mock CallerScopeCachePort callerScopeCache;
     @InjectMocks ProvisionUserUseCaseImpl useCase;
 
     private final UUID personId = UUID.randomUUID();
@@ -104,6 +109,52 @@ class ProvisionUserUseCaseImplTest {
         assertThatThrownBy(() -> useCase.provision(apprentice(), TOKEN, ADMIN)).isInstanceOf(OnboardingUnavailableException.class);
 
         verify(provisioning).removeRole(TOKEN, userId, "Aprendiz");
+        verify(provisioning).deleteEnrollment(TOKEN, 40L);
+        verify(provisioning).deleteActor(TOKEN, 30L);
+        verify(removeIdentity).removeUserAndPerson(userId, personId);
+    }
+
+    @Test
+    @DisplayName("AUD-69: the caller's cached scope is dropped after the actor exists and before the role is requested")
+    void callerScopeIsRefreshedBeforeAssigningTheRole() {
+        when(provisioning.createActor(TOKEN, personId, 1, 4L, "APR-1001")).thenReturn(30L);
+        when(provisioning.createEnrollment(TOKEN, 30L, 9L)).thenReturn(40L);
+
+        useCase.provision(apprentice(), TOKEN, ADMIN);
+
+        InOrder order = inOrder(provisioning, callerScopeCache);
+        order.verify(provisioning).createEnrollment(TOKEN, 30L, 9L);
+        order.verify(callerScopeCache).invalidate(ADMIN);
+        order.verify(provisioning).assignRole(TOKEN, userId, "Aprendiz");
+    }
+
+    @Test
+    @DisplayName("AUD-60: a refused role keeps its status but answers with a stable Spanish message, not the raw one")
+    void roleRejectionHasAStableMessage() {
+        when(provisioning.createActor(TOKEN, personId, 1, 4L, "APR-1001")).thenReturn(30L);
+        when(provisioning.createEnrollment(TOKEN, 30L, 9L)).thenReturn(40L);
+        doThrow(new DownstreamRejectedException(403, "Could not assign the role")).when(provisioning).assignRole(TOKEN, userId, "Aprendiz");
+
+        assertThatThrownBy(() -> useCase.provision(apprentice(), TOKEN, ADMIN))
+                .isInstanceOf(DownstreamRejectedException.class)
+                .hasFieldOrPropertyWithValue("status", 403)
+                .hasMessageContaining("No se pudo asignar el rol")
+                .hasMessageNotContaining("Could not");
+        verify(provisioning).deleteEnrollment(TOKEN, 40L);
+        verify(provisioning).deleteActor(TOKEN, 30L);
+        verify(removeIdentity).removeUserAndPerson(userId, personId);
+    }
+
+    @Test
+    @DisplayName("AUD-60: every compensation step runs even when the role removal is refused")
+    void compensationContinuesWhenRoleRemovalFails() {
+        when(provisioning.createActor(TOKEN, personId, 1, 4L, "APR-1001")).thenReturn(30L);
+        when(provisioning.createEnrollment(TOKEN, 30L, 9L)).thenReturn(40L);
+        doThrow(new DownstreamRejectedException(403, "x")).when(provisioning).assignRole(TOKEN, userId, "Aprendiz");
+        doThrow(new DownstreamRejectedException(403, "x")).when(provisioning).removeRole(TOKEN, userId, "Aprendiz");
+
+        assertThatThrownBy(() -> useCase.provision(apprentice(), TOKEN, ADMIN)).isInstanceOf(DownstreamRejectedException.class);
+
         verify(provisioning).deleteEnrollment(TOKEN, 40L);
         verify(provisioning).deleteActor(TOKEN, 30L);
         verify(removeIdentity).removeUserAndPerson(userId, personId);
@@ -218,5 +269,51 @@ class ProvisionUserUseCaseImplTest {
         assertThatThrownBy(() -> useCase.provision(old, TOKEN, ADMIN)).isInstanceOf(ValidationException.class);
         assertThatThrownBy(() -> useCase.provision(none, TOKEN, ADMIN)).isInstanceOf(ValidationException.class);
         verifyNoInteractions(createPerson, provisioning);
+    }
+
+    @Test
+    @DisplayName("A password that breaks the policy is rejected before any row is created (AUD-70)")
+    void weakPasswordIsRejectedBeforeCreatingAnything() {
+        doThrow(new ValidationException("Password must contain an uppercase letter"))
+                .when(passwordPolicy).validate("Temporal-2026-weak");
+        ProvisionUserUseCase.Command command = new ProvisionUserUseCase.Command(apprentice().person(), "ana.rios",
+                "Temporal-2026-weak", false, "Aprendiz", apprentice().actor(), CONSENT);
+
+        assertThatThrownBy(() -> useCase.provision(command, TOKEN, ADMIN))
+                .isInstanceOf(ValidationException.class)
+                .hasMessageNotContaining("Temporal-2026-weak");
+
+        verifyNoInteractions(createPerson, createUser, provisioning, removeIdentity);
+    }
+
+    private static ProvisionUserUseCase.Command instructorWithEmail() {
+        Person person = new Person();
+        person.setDocumentNumber("2002");
+        person.setName("Luis");
+        person.setLastName("Mora");
+        return new ProvisionUserUseCase.Command(person, "luis.mora", "Temporal-2026", true, "Instructor",
+                new ProvisionUserUseCase.Actor(2, 4L, "DOC-2002", null), CONSENT);
+    }
+
+    @Test
+    @DisplayName("Credentials email not delivered: the account stays and the result says FAILED")
+    void failedCredentialsEmailIsReportedNotHidden() {
+        when(provisioning.createActor(TOKEN, personId, 2, 4L, "DOC-2002")).thenReturn(31L);
+        when(notify.notifyCredentials(userId, "Temporal-2026")).thenReturn(NotifyUserCredentialsUseCase.Status.FAILED);
+
+        ProvisionUserUseCase.Result result = useCase.provision(instructorWithEmail(), TOKEN, ADMIN);
+
+        assertThat(result.credentialsEmail()).isEqualTo("FAILED");
+        assertThat(result.userId()).isEqualTo(userId);
+        verifyNoInteractions(removeIdentity);
+    }
+
+    @Test
+    @DisplayName("Credentials email delivered: the result says SENT")
+    void deliveredCredentialsEmailIsReportedAsSent() {
+        when(provisioning.createActor(TOKEN, personId, 2, 4L, "DOC-2002")).thenReturn(31L);
+        when(notify.notifyCredentials(userId, "Temporal-2026")).thenReturn(NotifyUserCredentialsUseCase.Status.SENT);
+
+        assertThat(useCase.provision(instructorWithEmail(), TOKEN, ADMIN).credentialsEmail()).isEqualTo("SENT");
     }
 }

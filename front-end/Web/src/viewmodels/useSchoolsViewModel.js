@@ -15,8 +15,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../context/AppDataContext";
+import { averageAttendance } from "../models/data/userDerivedData";
 import { useRolePermissions } from "./useRolePermissions";
 import { academicApi } from "../services/api";
+import { changeSchoolAccess, schoolStatusKind } from "../services/api/schoolActivation";
 import { isValidEmail, isValidPhone, normalizePhone } from "../core/utils/validation";
 
 // Umbral de asistencia mínima (mismo criterio de "en riesgo" que Reportes).
@@ -106,8 +108,12 @@ export function useSchoolsViewModel() {
                 { total: 0, active: 0, atRisk: 0, attendanceSum: 0 };
             entry.total += 1;
             if (s.status === "active") entry.active += 1;
-            if (s.attendance < ATTENDANCE_THRESHOLD) entry.atRisk += 1;
-            entry.attendanceSum += s.attendance || 0;
+            // Solo cuentan los alumnos con registros (attendance null = sin datos).
+            if (Number.isFinite(s.attendance)) {
+                if (s.attendance < ATTENDANCE_THRESHOLD) entry.atRisk += 1;
+                entry.attendanceSum += s.attendance;
+                entry.rated = (entry.rated ?? 0) + 1;
+            }
             bySchool.set(key, entry);
         }
         return { bySchool, unassigned };
@@ -122,12 +128,13 @@ export function useSchoolsViewModel() {
                     statsBySchool.bySchool.get(String(school.schoolId)) ?? null;
                 return {
                     ...school,
+                    statusKind: schoolStatusKind(school),
                     students: entry?.total ?? 0,
                     active: entry?.active ?? 0,
                     atRisk: entry?.atRisk ?? 0,
                     avgAttendance:
-                        entry && entry.total
-                            ? Math.round(entry.attendanceSum / entry.total)
+                        entry && entry.rated
+                            ? Math.round(entry.attendanceSum / entry.rated)
                             : null,
                 };
             }),
@@ -148,12 +155,7 @@ export function useSchoolsViewModel() {
     const stats = useMemo(() => {
         const activeSchools = schoolRows.filter((s) => s.status).length;
         const withAttendance = students.filter((s) => s.status === "active");
-        const avgAttendance = withAttendance.length
-            ? Math.round(
-                  withAttendance.reduce((sum, s) => sum + (s.attendance || 0), 0) /
-                      withAttendance.length
-              )
-            : 0;
+        const avgAttendance = averageAttendance(withAttendance) ?? 0;
         return { total: schoolRows.length, activeSchools, avgAttendance };
     }, [schoolRows, students]);
 
@@ -229,25 +231,56 @@ export function useSchoolsViewModel() {
     // ── Activar / desactivar sede ────────────────────────────
     const requestStatusChange = useCallback((school) => setStatusTarget(school), []);
 
+    // Activar/desactivar coordina sede (ms-academic) y administrador (ms-identity):
+    // son dos llamadas y no hay endpoint que las junte (AUD-22). El diálogo las explica.
+    const statusConfirmMessage = useMemo(() => {
+        if (!statusTarget) return "";
+        const name = statusTarget.name;
+        return statusTarget.status
+            ? `${t("¿Desactivar")} ${name}? ${t(
+                  "Se desactivará primero el usuario administrador de la sede (no podrá iniciar sesión) y después la sede, que dejará de estar disponible para nuevas operaciones."
+              )}`
+            : `${t("¿Activar")} ${name}? ${t(
+                  "Se activará primero la sede y después el usuario administrador de la sede, para que pueda iniciar sesión."
+              )}`;
+    }, [statusTarget, t]);
+
     const confirmStatusChange = useCallback(async () => {
         const school = statusTarget;
         if (!school) return;
         setIsToggling(true);
         try {
             const next = !school.status;
-            await academicApi.updateSchoolStatus(school.schoolId, next);
+            const { adminCount } = await changeSchoolAccess(school, next);
             setStatusTarget(null);
-            setFeedback({
-                type: "success",
-                message: next ? t("Sede activada.") : t("Sede desactivada."),
-            });
+            const base = next ? t("Sede activada.") : t("Sede desactivada.");
+            const detail =
+                adminCount === 0
+                    ? t("La sede no tiene un administrador vinculado; no se cambió ningún usuario.")
+                    : next
+                      ? t("Su administrador ya puede iniciar sesión.")
+                      : t("Su administrador ya no puede iniciar sesión.");
+            setFeedback({ type: "success", message: `${base} ${detail}` });
             await load();
         } catch (e) {
-            setFeedback({
-                type: "error",
-                message: e?.message || t("No se pudo cambiar el estado de la sede."),
-            });
+            let message;
+            if (e?.code === "ADMIN_LOOKUP_FAILED") {
+                message = t("No se pudo ubicar al administrador de la sede; no se cambió nada.");
+            } else {
+                const which =
+                    e?.code === "SCHOOL_FAILED"
+                        ? t("No se pudo cambiar el estado de la sede.")
+                        : t("No se pudo cambiar el estado del usuario administrador de la sede.");
+                const tail =
+                    e?.reverted === false
+                        ? t("No se pudo revertir el primer cambio: revisa el estado de la sede y su administrador.")
+                        : t("El primer cambio se revirtió.");
+                message = `${which} ${tail}`;
+            }
+            setFeedback({ type: "error", message });
             setStatusTarget(null);
+            // El estado real pudo cambiar a medias: se vuelve a leer.
+            await load();
         } finally {
             setIsToggling(false);
         }
@@ -305,6 +338,7 @@ export function useSchoolsViewModel() {
         // Estado
         statusTarget,
         requestStatusChange,
+        statusConfirmMessage,
         confirmStatusChange,
         closeStatusConfirm: () => setStatusTarget(null),
         isToggling,

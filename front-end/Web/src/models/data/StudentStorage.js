@@ -12,7 +12,7 @@
 //    esta lista; el detalle biométrico es otra petición)
 // ============================================================
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { readLocalRows, writeLocalRows } from "./localCache";
 import { API_MODE } from "../../config/env";
 import { mockStudents } from "./mockData";
 import {
@@ -43,8 +43,7 @@ function generateId() {
 
 async function localStudents() {
     try {
-        const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        const parsed = raw ? JSON.parse(raw) : null;
+        const parsed = await readLocalRows(STORAGE_KEY);
         if (!Array.isArray(parsed)) return [];
         return parsed.filter(
             (student) => typeof student?.id === "string" && student.id.startsWith(LOCAL_PREFIX)
@@ -118,11 +117,14 @@ async function studentsFromApi() {
         attendanceSummaryFor(students.map((actor) => actor.academicActorId)),
         new Map()
     );
-    // Asistió = no estuvo ausente; la tardanza cuenta como asistencia y la
-    // puntualidad se mide aparte.
+    // Asistencia efectiva sobre las sesiones registradas del propio alumno:
+    // (Present + Late + Justified) / total. Late cuenta como asistencia (la
+    // puntualidad se mide aparte) y Justified también (falta con justificación
+    // aprobada), igual que en FichaStorage y CourseStorage. Sin ningún registro
+    // no hay porcentaje: null ("Sin datos"), nunca 0 ni un valor por defecto.
     const rateOf = (actorId) => {
         const counts = attendance.get(actorId);
-        if (!counts?.total) return 0;
+        if (!counts?.total) return null;
         return Math.round(((counts.present + counts.late + counts.justified) / counts.total) * 100);
     };
 
@@ -158,6 +160,11 @@ async function studentsFromApi() {
                 cohortId: cohortId != null ? String(cohortId) : null,
                 grade: null, // lo rellena AppDataContext con el período del curso
                 attendance: rateOf(actor.academicActorId),
+                // Conteos reales del alumno (0 sin registros): alimentan "faltas" y
+                // "sesiones" en Dashboard y Reportes sin estimarlos.
+                attendanceRecords: attendance.get(actor.academicActorId)?.total ?? 0,
+                absences: attendance.get(actor.academicActorId)?.absent ?? 0,
+                lateCount: attendance.get(actor.academicActorId)?.late ?? 0,
                 status: normalizeStatus(actor.status),
                 hasFacial: false,
                 hasFingerprint: false,
@@ -176,13 +183,35 @@ async function studentsFromApi() {
 }
 
 /**
+ * Une las filas del backend con las locales. Una fila local cuya persona ya viene del backend se
+ * descarta: es el espejo que las altas de la pantalla dejaban guardado en el navegador y, junto a la
+ * fila real, el estudiante salía duplicado para siempre. Los espejos de la versión anterior no
+ * guardaban personId, así que también se descartan los que comparten correo con una fila real (el
+ * correo es único por persona). Las locales sin personId ni correo coincidente, o de alguien que el
+ * backend no devuelve, se conservan.
+ */
+export function mergeLocalStudents(apiRows, localRows) {
+    const norm = (value) => String(value ?? "").trim().toLowerCase();
+    const fromApi = new Set(apiRows.map((row) => row.personId).filter(Boolean).map(norm));
+    const emailsFromApi = new Set(apiRows.map((row) => norm(row.email)).filter(Boolean));
+    return [
+        ...apiRows,
+        ...localRows.filter((row) => {
+            if (row.personId) return !fromApi.has(norm(row.personId));
+            const email = norm(row.email);
+            return !(email && emailsFromApi.has(email));
+        }),
+    ];
+}
+
+/**
  * Carga todos los estudiantes: API primero, mocks como respaldo,
  * fusionados con las altas hechas localmente en la UI.
  */
 export async function loadStudents() {
     const local = await localStudents();
     try {
-        return [...(await studentsFromApi()), ...local];
+        return mergeLocalStudents(await studentsFromApi(), local);
     } catch (error) {
         if (API_MODE === "mock") {
             console.warn("[FaceAttend] loadStudents: API no disponible, uso mock —", error?.message);
@@ -196,7 +225,7 @@ export async function loadStudents() {
 
 export async function saveStudents(students) {
     try {
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(students));
+        await writeLocalRows(STORAGE_KEY, students);
     } catch (error) {
         // fallo silencioso — la UI ya tiene el estado en memoria
     }

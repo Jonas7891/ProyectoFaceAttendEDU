@@ -71,11 +71,14 @@ function dayLabelOf(isoDate) {
 }
 
 function yearWeekOf(isoDate) {
-    // Semana del año (1..53) compatible con el selector del dashboard.
+    // Semana del año con la MISMA numeración que el selector del dashboard
+    // (getCurrentAcademicWeek): semanas de 7 días contadas desde el 1 de enero.
+    // Con otra numeración (p. ej. semanas calendario domingo-sábado) los datos caían
+    // en una fila «Sem N» distinta de la que el selector dibuja para esa fecha.
     const date = new Date(`${isoDate}T12:00:00`);
     const yearStart = new Date(date.getFullYear(), 0, 1);
     const days = Math.floor((date - yearStart) / 86400000);
-    return Math.ceil((days + yearStart.getDay() + 1) / 7);
+    return Math.floor(days / 7) + 1;
 }
 
 function emptyBucket() {
@@ -158,7 +161,9 @@ async function scopedSessions({ maxSessions = 15, instructorActorId = null, coho
         .sort((a, b) =>
             String(a?.startsAt ?? a?.starts_at ?? "").localeCompare(String(b?.startsAt ?? b?.starts_at ?? ""))
         );
-    return { inWindow, todaySessions, closedToday, todayBlocks };
+    // Fecha de cada sesión del alcance: ubica los registros que llegan sin captured_at.
+    const sessionDates = new Map(inScope.map((s) => [String(s.id), s.date]));
+    return { inWindow, todaySessions, closedToday, todayBlocks, sessionDates };
 }
 
 function localIsoDate(date = new Date()) {
@@ -229,20 +234,25 @@ function bucketSessions(sessions, recordsBySession) {
 /**
  * Serie diaria del actor (estudiante): sus registros por fecha.
  */
-async function actorBuckets(academicActorId, maxDays = 30) {
+async function actorBuckets(academicActorId, sessionDates = new Map(), maxDays = 30) {
     const records = listOf(await attendanceApi.recordsByActor(academicActorId).catch(() => []));
     const byDate = new Map();
     for (const record of records) {
-        const date = recordDateOf(record);
+        // La fecha de la sesión manda: captured_at viaja en UTC y una clase nocturna (después de las 19:00 en
+        // Colombia) caería en el día siguiente. captured_at solo cubre una sesión fuera del alcance cargado.
+        // Sin ninguna de las dos fechas el registro no se grafica (no se inventa día).
+        const sessionId = record?.classSessionId ?? record?.class_session_id;
+        const date = (sessionId != null ? sessionDates.get(String(sessionId)) : "") || recordDateOf(record) || "";
         if (!date) continue;
         const bucket = byDate.get(date) ?? emptyBucket();
         tally(bucket, recordStatusOf(record));
         byDate.set(date, bucket);
     }
-    // Los días más recientes con registros.
+    // Los días más recientes con registros, en orden cronológico (el último es el más reciente).
     return [...byDate.entries()]
         .sort(([a], [b]) => (a < b ? 1 : -1))
-        .slice(-maxDays)
+        .slice(0, maxDays)
+        .reverse()
         .map(([date, bucket]) => ({ date, day: dayLabelOf(date), ...bucket }));
 }
 
@@ -321,11 +331,11 @@ export async function instructorClassCounts() {
 export async function dashboardSeries({ role, instructorActorId = null, academicActorId = null, cohortId = null } = {}) {
     const scope =
         role === "student" ? { instructorActorId: null, cohortId } : { instructorActorId: role === "teacher" ? instructorActorId : null, cohortId: null };
-    const { inWindow, todaySessions, closedToday, todayBlocks } = await scopedSessions(scope);
+    const { inWindow, todaySessions, closedToday, todayBlocks, sessionDates } = await scopedSessions(scope);
     const currentClass = role === "student" ? await currentBlockInfo(todayBlocks).catch(() => null) : null;
     const daily =
         role === "student" && academicActorId != null
-            ? await actorBuckets(academicActorId)
+            ? await actorBuckets(academicActorId, sessionDates)
             : await bucketsFromSessions(inWindow);
     return {
         daily,

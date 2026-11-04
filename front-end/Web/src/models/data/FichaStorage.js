@@ -12,7 +12,7 @@
 //    de consulta de asistencia
 // ============================================================
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { readLocalRows, writeLocalRows } from "./localCache";
 import { API_MODE } from "../../config/env";
 import { mockFichas } from "./mockData";
 import { colorAt } from "../../core/constants/dataColors";
@@ -52,8 +52,7 @@ function ensureFichasHaveColors(fichas) {
 
 async function localFichas() {
     try {
-        const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        const parsed = raw ? JSON.parse(raw) : null;
+        const parsed = await readLocalRows(STORAGE_KEY);
         if (!Array.isArray(parsed)) return [];
         return parsed.filter(
             (ficha) => typeof ficha?.id === "string" && ficha.id.startsWith(LOCAL_PREFIX)
@@ -164,7 +163,7 @@ export async function loadFichas() {
 
 export async function saveFichas(fichas) {
     try {
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(fichas));
+        await writeLocalRows(STORAGE_KEY, fichas);
     } catch (error) {
         // fallo silencioso — la UI ya tiene el estado en memoria
     }

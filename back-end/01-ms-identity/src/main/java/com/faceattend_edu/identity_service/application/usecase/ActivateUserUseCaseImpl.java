@@ -22,7 +22,7 @@ public class ActivateUserUseCaseImpl implements ActivateUserUseCase {
     @Override
     public void activateUser(UUID userId) {
         User user = loadUserPort.loadUser(userId);
-        if (user == null) {
+        if (user == null || user.isDeleted()) {
             throw new EntityNotFoundException("User", userId);
         }
         userActivationService.activateUser(user);

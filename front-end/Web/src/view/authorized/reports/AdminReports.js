@@ -7,7 +7,7 @@
 //  - section="historicos": Historial completo de asistencias
 // ============================================================
 
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo } from "react";
 import { View, ScrollView, Text, TouchableOpacity, Animated } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { PageHeader, IconButton, Card, Loader, EmptyState } from "../../components/common";
@@ -16,9 +16,9 @@ import { useTheme } from "../../components/hooks/useTheme";
 import { getTextOnColor } from "../../../core/theme/generateTheme";
 import { useResponsive } from "../../components/hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
-import { useRolePermissions } from "../../../viewmodels/useRolePermissions";
 import { useAttendanceColor } from "../../components/common/badges/StatusBadge";
-import { getAtRiskStudents } from "../../../models/data/userDerivedData";
+import { getAtRiskStudents, studentsInTeacherScope } from "../../../models/data/userDerivedData";
+import { useAuth } from "../../../context/AuthContext";
 import { getInstitutionConfig } from "../../../core/config/institutionConfig";
 import { useAppData } from "../../../context/AppDataContext";
 import { HistoricosSection } from "./sections";
@@ -168,18 +168,24 @@ export function AdminReports({ section, courseFilter }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
     const appData = useAppData();
+    const { user } = useAuth();
     const c = theme.colors;
 
     // Estado y animación para el botón de recargar
     const [isReloading, setIsReloading] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
-    const rotateAnim = useRef(new Animated.Value(0)).current;
-    
+    // Resultado de la última recarga: da un efecto visible al botón (AUD-06).
+    const [reloadStatus, setReloadStatus] = useState(null); // null | "ok" | "error"
+    const [rotateAnim] = useState(() => new Animated.Value(0));
+
     // Crear interpolación una sola vez
-    const rotateInterpolation = rotateAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['0deg', '360deg']
-    });
+    const rotateInterpolation = useMemo(
+        () => rotateAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['0deg', '360deg']
+        }),
+        [rotateAnim]
+    );
 
     // ── IMPORTANTE: Todos los hooks deben estar ANTES de cualquier return early ──
     
@@ -190,7 +196,13 @@ export function AdminReports({ section, courseFilter }) {
     // Lógica de estudiantes en riesgo (se calcula siempre para respetar reglas de hooks)
     const studentsData = useMemo(() => {
         const config = getInstitutionConfig();
-        const atRiskStudents = getAtRiskStudents(appData.students, config.minAttendance);
+        // El instructor solo ve riesgo de sus alumnos (matriculados en sus cursos);
+        // el administrador, toda la sede.
+        const scopedStudents =
+            user?.role === "teacher"
+                ? studentsInTeacherScope(appData.students, appData.courses, user.academicActorId)
+                : appData.students;
+        const atRiskStudents = getAtRiskStudents(scopedStudents, config.minAttendance);
         
         const pendingStudents = atRiskStudents;
         
@@ -223,7 +235,7 @@ export function AdminReports({ section, courseFilter }) {
             isLoading: appData.isLoading,
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [appData.students, appData.isLoading, refreshTrigger]); // refreshTrigger fuerza recálculo
+    }, [appData.students, appData.courses, appData.isLoading, user, refreshTrigger]); // refreshTrigger fuerza recálculo
 
     // ── Handlers (ANTES de cualquier return) ──────────────
     
@@ -238,12 +250,19 @@ export function AdminReports({ section, courseFilter }) {
         if (isReloading) return; // Prevenir múltiples clicks
         
         setIsReloading(true);
+        setReloadStatus(null);
         rotateAnim.setValue(0);
         
         // Marcar inicio del proceso
         const startTime = Date.now();
         
-        // Forzar recálculo
+        // Volver a pedir los datos al servidor y luego forzar recálculo
+        try {
+            await Promise.all([appData.reloadStudents?.(), appData.reloadCourses?.()]);
+            setReloadStatus("ok");
+        } catch {
+            setReloadStatus("error");
+        }
         setRefreshTrigger(prev => prev + 1);
         
         // Esperar al siguiente frame para que React termine de renderizar
@@ -263,7 +282,7 @@ export function AdminReports({ section, courseFilter }) {
             rotateAnim.setValue(0);
             setIsReloading(false);
         });
-    }, [isReloading, rotateAnim]);
+    }, [isReloading, rotateAnim, appData]);
 
     // ── Determinar qué sección mostrar (DESPUÉS de todos los hooks) ──
     const isHistoricos = section === "historicos";
@@ -413,12 +432,19 @@ export function AdminReports({ section, courseFilter }) {
     const students = studentsData.students;
     const studentCount = students.length;
     const studentLabel = studentCount === 1 ? t("estudiante") : t("estudiantes");
+    const reloadSuffix = isReloading && reloadStatus === null
+        ? ` · ${t("Actualizando...")}`
+        : reloadStatus === "ok"
+            ? ` · ${t("Actualizado hace un momento")}`
+            : reloadStatus === "error"
+                ? ` · ${t("No se pudo actualizar")}`
+                : "";
 
     return (
         <>
             <PageHeader
                 title={t("Reportes")}
-                subtitle={`${studentCount} ${studentLabel} ${t("en riesgo por asistencia")}`}
+                subtitle={`${studentCount} ${studentLabel} ${t("en riesgo por asistencia")}${reloadSuffix}`}
                 actions={
                     <IconButton
                         variant="secondary"
@@ -431,9 +457,6 @@ export function AdminReports({ section, courseFilter }) {
                             </Animated.View>
                         )}
                     />
-                }
-            />
-                    )
                 }
             />
 

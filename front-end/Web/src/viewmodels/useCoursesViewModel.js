@@ -13,7 +13,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
-import { getAttendanceThresholds, getAtRiskStudents } from "../models/data/userDerivedData";
+import { averageAttendance, getAttendanceThresholds, getAtRiskStudents } from "../models/data/userDerivedData";
 import { useAuth } from "../context/AuthContext";
 import { createCourse, updateCourse, deleteCourse as deleteCourseApi, importCourses as bulkImportCourses } from "../services/api/courseCreation";
 
@@ -40,6 +40,15 @@ export function parseCreditHours(value) {
     if (!/^\d+$/.test(raw)) return null;
     const n = Number(raw);
     return n <= 32767 ? n : null;
+}
+
+/**
+ * Saneo del campo de créditos al teclear: conserva el signo "-" para que
+ * validateCourseForm rechace un negativo en vez de descartarlo en silencio
+ * (AUD-73: "-5" se guardaba como 5).
+ */
+export function sanitizeCreditsInput(value) {
+    return String(value ?? "").replace(/[^\d-]/g, "");
 }
 
 export function validateCourseForm(form) {
@@ -135,7 +144,9 @@ export function useCoursesViewModel() {
     const [search, setSearch] = useState("");
     const [instructorFilter, setInstructorFilter] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
-    const [selected, setSelected] = useState(null);
+    const [selectedRaw, setSelected] = useState(null);
+    // AUD-61: por defecto no se listan los cursos inactivos (desactivados).
+    const [showInactive, setShowInactive] = useState(false);
     const [showRegisterModal, setShowRegisterModal] = useState(false);
     const [showImportModal, setShowImportModal] = useState(false);
     const [editingCourse, setEditingCourse] = useState(null);
@@ -164,6 +175,13 @@ export function useCoursesViewModel() {
         return appData.courses || [];
     }, [appData.isLoading, appData.courses]);
 
+    // El detalle sigue a la lista refrescada: tras desactivar/activar o editar,
+    // el modal muestra el estado actual y no la copia tomada al abrirlo (AUD-61).
+    const selected = useMemo(
+        () => (selectedRaw == null ? null : courses.find((c) => c.id === selectedRaw.id) ?? selectedRaw),
+        [courses, selectedRaw]
+    );
+
     // ── Instructores únicos para filtro ────────────────────────
     
     const instructors = useMemo(() => {
@@ -186,9 +204,21 @@ export function useCoursesViewModel() {
 
     // ── Cursos filtrados ───────────────────────────────────────
     
+    const includeInactive =
+        showInactive ||
+        statusFilter === "inactive" ||
+        (advancedFilter.column === "status" && advancedFilter.value === "inactive");
+
+    const visibleCourseCount = useMemo(
+        () => (includeInactive ? courses.length : courses.filter((c) => c.status !== "inactive").length),
+        [courses, includeInactive]
+    );
+
     const filtered = useMemo(
         () => {
             let result = courses.filter((course) => {
+                if (!includeInactive && course.status === "inactive") return false;
+
                 // Filtro de búsqueda por nombre o código
                 const matchSearch = !search ||
                     course.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -268,7 +298,7 @@ export function useCoursesViewModel() {
             
             return result;
         },
-        [courses, search, instructorFilter, statusFilter, advancedFilter]
+        [courses, search, instructorFilter, statusFilter, advancedFilter, includeInactive]
     );
 
     // ── Alcance por rol: "mis fichas" (teacher) / "mi ficha" (student) ──
@@ -314,7 +344,7 @@ export function useCoursesViewModel() {
         // duplica cuando dos cursos comparten la misma ficha.
         const mine = new Set(myCourseIds.map(String));
         const seen = new Set();
-        let attSum = 0;
+        const counted = [];
         for (const s of appData.students || []) {
             const ids = Array.isArray(s.courseIds) ? s.courseIds.map(String) : [];
             const match = ids.length
@@ -324,14 +354,22 @@ export function useCoursesViewModel() {
             const key = s.personId ?? s.id;
             if (seen.has(key)) continue;
             seen.add(key);
-            attSum += s.attendance || 0;
+            counted.push(s);
         }
         const totalStudents = seen.size;
-        const avgAttendance =
-            totalStudents === 0 ? 0 : Math.round(attSum / totalStudents);
-        const alertCount = myCourses.filter((x) => (x.avgAttendance || 0) < 80).length;
+        // El alumno ve SU asistencia (no la de sus compañeros de ficha); el
+        // instructor, el promedio de los alumnos que tienen registros. Sin
+        // registros: null ("Sin datos"), nunca 0.
+        const own =
+            user?.role === "student"
+                ? counted.filter((s) => s.personId && s.personId === user.personId)
+                : counted;
+        const avgAttendance = averageAttendance(own);
+        const alertCount = myCourses.filter(
+            (x) => Number.isFinite(x.avgAttendance) && x.avgAttendance > 0 && x.avgAttendance < 80
+        ).length;
         return { total: myCourses.length, totalStudents, avgAttendance, alertCount };
-    }, [myCourses, myCourseIds, appData.students]);
+    }, [myCourses, myCourseIds, appData.students, user]);
 
     // ── Estadísticas derivadas ─────────────────────────────────
     
@@ -359,13 +397,7 @@ export function useCoursesViewModel() {
             courseCodes.has(student.course)
         );
         
-        if (courseStudents.length === 0) return 0;
-        
-        const totalAttendance = courseStudents.reduce((sum, student) => 
-            sum + (student.attendance || 0), 0
-        );
-        
-        return Math.round(totalAttendance / courseStudents.length);
+        return averageAttendance(courseStudents) ?? 0;
     }, [courses, appData.students]);
 
     const alertCount = useMemo(() => {
@@ -584,6 +616,9 @@ export function useCoursesViewModel() {
         instructors,
         statusFilters,
         selected,
+        showInactive,
+        setShowInactive,
+        visibleCourseCount,
         stats,
         
         // Estado de carga

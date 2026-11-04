@@ -227,7 +227,31 @@ public class SchoolProvisioningHttpAdapter implements SchoolProvisioningPort, Us
 
     @Override
     public void removeRole(String token, UUID userId, String roleName) {
-        deleteIgnoringMissing(authorization("/api/v1/users/" + userId + "/roles/" + roleIdByName(token, roleName)), token);
+        try {
+            deleteIgnoringMissing(authorization("/api/v1/users/" + userId + "/roles/" + roleIdByName(token, roleName)), token);
+        } catch (HttpStatusCodeException ex) {
+            throw downstream("withdraw the role", ex);
+        } catch (ResourceAccessException ex) {
+            throw new OnboardingUnavailableException("Could not withdraw the role (no answer)", ex);
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<String> listRoleNames(String token, UUID userId) {
+        try {
+            List<Map<String, Object>> roles = exchangeIdempotent(HttpMethod.GET,
+                    authorization("/api/v1/users/" + userId + "/roles"), token, List.class).getBody();
+            List<String> names = new java.util.ArrayList<>();
+            if (roles != null) {
+                for (Map<String, Object> role : roles) names.add(String.valueOf(role.get("roleName")).trim());
+            }
+            return names;
+        } catch (HttpStatusCodeException ex) {
+            throw downstream("read the roles", ex);
+        } catch (ResourceAccessException ex) {
+            throw new OnboardingUnavailableException("Could not read the roles (no answer)", ex);
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -290,7 +314,8 @@ public class SchoolProvisioningHttpAdapter implements SchoolProvisioningPort, Us
     private <T> ResponseEntity<T> exchange(HttpMethod method, String url, String token, Object body, Class<T> type) {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        // Academic rejects a JSON content type without a body (400), which broke every rollback DELETE.
+        if (body != null) headers.setContentType(MediaType.APPLICATION_JSON);
         return restTemplate.exchange(url, method, new HttpEntity<>(body, headers), type);
     }
 

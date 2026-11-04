@@ -6,6 +6,8 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 jest.mock("../../../viewmodels/useRolePermissions", () => ({ useRolePermissions: jest.fn() }));
 jest.mock("@react-navigation/native", () => ({ useNavigation: () => ({}), useRoute: () => ({}) }));
+// NotAuthorized lee la sesión para decidir entre «Volver al inicio» e «Iniciar sesión».
+jest.mock("../../../context/AuthContext", () => ({ useAuth: () => ({ user: null }) }));
 jest.mock("../../../core/utils/i18n/hooks/useTranslation", () => ({
     useTranslation: () => ({ t: (s) => s }),
 }));
@@ -631,6 +633,12 @@ describe("kiosk registration alert", () => {
         const tree = renderWith({ name: "Luis Gómez", method: "FACIAL", status: "Present", duplicate: false });
         expect(hasText(tree, "Registrado mediante: Rostro")).toBe(true);
         expect(hasText(tree, "Llegada tarde")).toBe(false);
+    });
+
+    test("a manual registration is labelled Manual, not Rostro", () => {
+        const tree = renderWith({ name: "Valentina Ríos", method: "MANUAL", status: "Present", duplicate: false });
+        expect(hasText(tree, "Registrado mediante: Manual")).toBe(true);
+        expect(hasText(tree, "Registrado mediante: Rostro")).toBe(false);
     });
 
     test("a repeat identification names the person and says it was already registered", () => {

@@ -1,4 +1,5 @@
 import type { School } from '../../../domain/entities/School';
+import type { AuditActor } from '../../../domain/ports/out/ICrudRepository';
 import type { ISchoolRepository } from '../../../domain/ports/out/ISchoolRepository';
 import { withTransaction } from '../../db/database';
 import { RepositoryError, translateDbError } from '../errors';
@@ -37,7 +38,7 @@ export class PostgresSchoolRepository extends PostgresCrudRepository<School> imp
     ...AUDIT_FIELDS,
   ];
 
-  async softDeleteCascade(id: number): Promise<boolean> {
+  async softDeleteCascade(id: number, audit?: AuditActor): Promise<boolean> {
     try {
       return await withTransaction(async (client) => {
         const found = await client.query(
@@ -46,21 +47,28 @@ export class PostgresSchoolRepository extends PostgresCrudRepository<School> imp
         );
         if (found.rowCount === 0) return false;
 
+        const params: unknown[] = [id];
+        let deletedBy = '';
+        if (audit?.userId) {
+          params.push(audit.userId);
+          deletedBy = `, deleted_by = $${params.length}::uuid`;
+        }
+
         // Children first; each statement only touches rows that are still alive.
         const programs = 'SELECT program_id FROM academic.program WHERE school_id = $1';
         const cohorts = `SELECT cohort_id FROM academic.cohort WHERE program_id IN (${programs})`;
         const actors = 'SELECT academic_actor_id FROM academic.academic_actor WHERE school_id = $1';
         const cascade = [
-          `UPDATE academic.enrollment SET deleted_at = NOW() WHERE deleted_at IS NULL
+          `UPDATE academic.enrollment SET deleted_at = NOW()${deletedBy} WHERE deleted_at IS NULL
              AND (cohort_id IN (${cohorts}) OR academic_actor_id IN (${actors}))`,
-          `UPDATE academic.cohort SET deleted_at = NOW() WHERE deleted_at IS NULL AND program_id IN (${programs})`,
-          `UPDATE academic.course SET deleted_at = NOW() WHERE deleted_at IS NULL AND program_id IN (${programs})`,
-          'UPDATE academic.program SET deleted_at = NOW() WHERE deleted_at IS NULL AND school_id = $1',
-          'UPDATE academic.academic_period SET deleted_at = NOW() WHERE deleted_at IS NULL AND school_id = $1',
-          'UPDATE academic.academic_actor SET deleted_at = NOW() WHERE deleted_at IS NULL AND school_id = $1',
-          'UPDATE academic.school SET deleted_at = NOW() WHERE deleted_at IS NULL AND school_id = $1',
+          `UPDATE academic.cohort SET deleted_at = NOW(), status = false${deletedBy} WHERE deleted_at IS NULL AND program_id IN (${programs})`,
+          `UPDATE academic.course SET deleted_at = NOW(), status = false${deletedBy} WHERE deleted_at IS NULL AND program_id IN (${programs})`,
+          `UPDATE academic.program SET deleted_at = NOW(), status = false${deletedBy} WHERE deleted_at IS NULL AND school_id = $1`,
+          `UPDATE academic.academic_period SET deleted_at = NOW(), is_active = false${deletedBy} WHERE deleted_at IS NULL AND school_id = $1`,
+          `UPDATE academic.academic_actor SET deleted_at = NOW(), status = false${deletedBy} WHERE deleted_at IS NULL AND school_id = $1`,
+          `UPDATE academic.school SET deleted_at = NOW(), status = false${deletedBy} WHERE deleted_at IS NULL AND school_id = $1`,
         ];
-        for (const sql of cascade) await client.query(sql, [id]);
+        for (const sql of cascade) await client.query(sql, params);
         return true;
       });
     } catch (err) {

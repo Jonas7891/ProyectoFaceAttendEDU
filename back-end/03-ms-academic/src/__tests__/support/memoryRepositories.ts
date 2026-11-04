@@ -4,6 +4,7 @@
  * paging applies only when limit/offset are given.
  */
 import type { AcademicRepositories } from '../../infrastructure/persistence/postgres';
+import type { AuditActor } from '../../domain/ports/out/ICrudRepository';
 
 type Row = Record<string, any>;
 type Page = { limit?: number; offset?: number };
@@ -45,24 +46,34 @@ export class MemoryRepo {
     return (await this.findById(id)) !== null;
   }
 
-  async create(draft: Row) {
+  async create(draft: Row, audit?: AuditActor) {
     const id = this.seq++;
-    const row = { ...draft, [this.idField]: id, createdAt: '2026-10-01T00:00:00.000Z', updatedAt: null, deletedAt: null };
+    const row = {
+      ...draft,
+      [this.idField]: id,
+      createdAt: '2026-10-01T00:00:00.000Z',
+      createdBy: audit?.userId ?? null,
+      updatedAt: null,
+      updatedBy: null,
+      deletedAt: null,
+      deletedBy: null,
+    };
     this.rows.set(id, row);
     return { ...row };
   }
 
-  async update(id: number, patch: Row) {
+  async update(id: number, patch: Row, audit?: AuditActor) {
     const row = this.rows.get(id);
     if (!row || row.deletedAt) return null;
-    Object.assign(row, patch, { updatedAt: '2026-10-02T00:00:00.000Z' });
+    Object.assign(row, patch, { updatedAt: '2026-10-02T00:00:00.000Z', updatedBy: audit?.userId ?? row.updatedBy });
     return { ...row };
   }
 
-  async softDelete(id: number) {
+  async softDelete(id: number, audit?: AuditActor) {
     const row = this.rows.get(id);
     if (!row || row.deletedAt) return false;
     row.deletedAt = '2026-10-03T00:00:00.000Z';
+    row.deletedBy = audit?.userId ?? null;
     return true;
   }
 }
@@ -118,7 +129,9 @@ export function memoryRepositories(): MemoryRepositories {
   const enrollmentsBySchool = inSchool(stores.enrollments, 'cohortId', cohortIdsOf);
 
   const repos = {
-    schools: Object.assign(stores.schools, { softDeleteCascade: (id: number) => stores.schools.softDelete(id) }),
+    schools: Object.assign(stores.schools, {
+      softDeleteCascade: (id: number, audit?: AuditActor) => stores.schools.softDelete(id, audit),
+    }),
     programs: Object.assign(stores.programs, { findBySchool: programsBySchool.find, countBySchool: programsBySchool.count }),
     periods: Object.assign(stores.periods, { findBySchool: periodsBySchool.find, countBySchool: periodsBySchool.count }),
     cohorts: Object.assign(stores.cohorts, {

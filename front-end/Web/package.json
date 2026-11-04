@@ -20,7 +20,8 @@
     "qa": "node tools/qa/run.mjs",
     "qa:rebuild": "node tools/qa/run.mjs --rebuild",
     "qa:api": "node tools/qa/api-matrix.mjs",
-    "qa:ui": "node tools/qa/ui-smoke.mjs"
+    "qa:ui": "node tools/qa/ui-smoke.mjs",
+    "qa:test": "node --test tools/qa/lib.test.mjs"
   },
   "dependencies": {
     "@digitalpersona/fingerprint": "^1.0.0",

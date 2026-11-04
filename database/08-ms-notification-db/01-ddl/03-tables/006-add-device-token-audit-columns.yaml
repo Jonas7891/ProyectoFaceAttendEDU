@@ -1,0 +1,37 @@
+databaseChangeLog:
+  - changeSet:
+      id: notif-008-add-device-token-audit-columns
+      author: Andres Gutierrez
+      comment: >-
+        AUD-33: completes the 7-column audit block (AGENTS.md section 2.2) on device_token, which was created
+        with only created_at/updated_at. deleted_at/created_by/updated_by/deleted_by are nullable (existing rows
+        stay NULL); row_version is NOT NULL DEFAULT 1, so existing rows get 1. revoked_at stays the token
+        revocation marker; deleted_at is the logical delete. Incremental: notif-007 is not edited.
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            schemaName: notification
+            tableName: device_token
+        - not:
+            - columnExists:
+                schemaName: notification
+                tableName: device_token
+                columnName: row_version
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE notification.device_token
+                ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL,
+                ADD COLUMN IF NOT EXISTS created_by UUID NULL,
+                ADD COLUMN IF NOT EXISTS updated_by UUID NULL,
+                ADD COLUMN IF NOT EXISTS deleted_by UUID NULL,
+                ADD COLUMN IF NOT EXISTS row_version BIGINT NOT NULL DEFAULT 1;
+      rollback:
+        - sql:
+            sql: |
+              ALTER TABLE notification.device_token
+                DROP COLUMN IF EXISTS row_version,
+                DROP COLUMN IF EXISTS deleted_by,
+                DROP COLUMN IF EXISTS updated_by,
+                DROP COLUMN IF EXISTS created_by,
+                DROP COLUMN IF EXISTS deleted_at;

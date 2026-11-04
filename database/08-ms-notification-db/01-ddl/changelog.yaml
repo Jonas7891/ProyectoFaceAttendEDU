@@ -17,3 +17,6 @@ databaseChangeLog:
   - include:
       file: 03-tables/005-create-device-token-table.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 03-tables/006-add-device-token-audit-columns.yaml
+      relativeToChangelogFile: true

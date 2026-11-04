@@ -8,6 +8,7 @@ import com.faceattend_edu.identity_service.application.port.in.CreateUserUseCase
 import com.faceattend_edu.identity_service.application.port.in.ManageConsentUseCase;
 import com.faceattend_edu.identity_service.domain.exception.ValidationException;
 import com.faceattend_edu.identity_service.application.port.in.OnboardSchoolUseCase;
+import com.faceattend_edu.identity_service.application.port.in.ValidatePasswordPolicyUseCase;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserByUsernamePort;
 import com.faceattend_edu.identity_service.application.port.out.SchoolProvisioningPort;
 import com.faceattend_edu.identity_service.config.OnboardingProperties;
@@ -48,12 +49,15 @@ public class OnboardSchoolUseCaseImpl implements OnboardSchoolUseCase {
     private final LoadUserByUsernamePort loadUserByUsernamePort;
     private final SchoolProvisioningPort provisioning;
     private final ManageConsentUseCase consentUseCase;
+    private final ValidatePasswordPolicyUseCase validatePasswordPolicy;
 
     @Override
     public Result onboard(School school, Admin admin) {
         if (!properties.enabled()) {
             throw new OnboardingUnavailableException("School registration is not enabled");
         }
+        // Before any session, person or consent row exists: a weak password must leave nothing behind.
+        validatePasswordPolicy.validate(admin.password());
         // Ley 1581: the administrator accepts the privacy notice in force before any data is stored.
         if (!consentUseCase.currentPolicyVersion().equals(admin.privacyPolicyVersion())) {
             throw new ValidationException("privacyPolicyVersion must be the privacy notice in force ("
