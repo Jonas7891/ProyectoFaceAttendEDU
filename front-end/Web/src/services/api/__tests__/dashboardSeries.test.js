@@ -106,6 +106,20 @@ test("student record without capturedAt falls back to its session date", async (
     expect(weekly[0].rate).toBe(100);
 });
 
+// Una clase nocturna (22:00 en Colombia) se captura ya en el día siguiente en UTC: el registro debe quedar en
+// el día de su sesión (martes), no en el de captured_at (miércoles).
+test("student record is placed on its session date, not on the UTC date of capturedAt", async () => {
+    listBlocks.mockResolvedValue([{ scheduleBlockId: 501, courseId: 12, cohortId: 53, instructorActorId: 601 }]);
+    fetchAllPages.mockResolvedValue([{ classSessionId: 1242, scheduleBlockId: 501, sessionDate: "2026-11-03" }]);
+    attendanceApi.recordsByActor.mockResolvedValue([
+        { attendanceRecordId: 80924, classSessionId: 1242, attendanceStatus: "Late", capturedAt: "2026-11-04T03:01:31Z" },
+    ]);
+
+    const { daily } = await dashboardSeries({ role: "student", academicActorId: 1920, cohortId: 53 });
+
+    expect(daily).toEqual([{ date: "2026-11-03", day: "Mar", present: 0, late: 1, absent: 0 }]);
+});
+
 test("student series keeps the most recent days, not the oldest", async () => {
     fetchAllPages.mockResolvedValue([]);
     attendanceApi.recordsByActor.mockResolvedValue(
