@@ -15,14 +15,19 @@ titulares. Contexto de datos y derechos: [PROTECCION_DATOS_LEY_1581.md](PROTECCI
 
 | Rol | Persona | Función |
 |---|---|---|
-| Coordinador del incidente | `TODO` | Decide contención, comunica y cierra |
-| Responsable técnico | `TODO` | Ejecuta contención y recolecta evidencia |
-| Responsable del tratamiento / jurídico | `TODO` | Decide si hay que avisar a la SIC y a los titulares |
+| Coordinador del incidente | Cargo propuesto: líder del proyecto. Nombre y suplente: `TODO` | Decide contención, comunica y cierra |
+| Responsable técnico | Cargo propuesto: responsable de infraestructura y backend del equipo. Nombre y suplente: `TODO` | Ejecuta contención y recolecta evidencia |
+| Responsable del tratamiento / jurídico | Cargo propuesto: la persona que la institución designe como responsable del tratamiento. Nombre: `TODO` | Decide si hay que avisar a la SIC y a los titulares |
+
+Regla: ningún rol puede quedar vacío ni en la misma persona que el coordinador; con tres
+aprendices en el equipo, el tercer rol lo cubre quien designe la institución (instructor o jurídica).
 
 ## 2. Detección y reporte
 
 - Cualquier persona que sospeche un incidente avisa de inmediato al coordinador por el
-  canal interno `TODO`. Los reportes externos llegan según [SECURITY.md](../SECURITY.md).
+  canal interno: **chat del equipo (mensaje directo al coordinador) más correo al buzón
+  institucional de incidentes**; dirección del buzón: `TODO`. Los reportes externos llegan según
+  [SECURITY.md](../SECURITY.md).
 - No pegar credenciales, imágenes de rostros/huellas ni datos personales en el chat, el
   correo ni los tickets: describir el hecho y dónde está la evidencia.
 - Anotar desde el primer momento una cronología (hora de detección, qué se vio, quién
@@ -55,10 +60,17 @@ sensibles. Registrar qué datos y cuántos titulares pudieron verse afectados.
 ## 5. Evaluación y aviso
 
 1. El responsable del tratamiento determina si el incidente afecta datos personales y
-   si debe informarse a la SIC. Plazo y medio de aviso: `TODO` (confirmar con jurídica
-   la norma y el plazo vigentes).
+   si debe informarse a la SIC. Plazos internos propuestos: reporte al coordinador de inmediato;
+   evaluación inicial (¿hay datos personales afectados?) dentro de las 24 horas siguientes a
+   la detección; la contención no espera a esta evaluación. Plazo y medio de aviso a la SIC:
+   referencia de trabajo, a **confirmar con jurídica** contra la norma y la guía vigentes de la
+   SIC (que hoy se entiende como reporte del incidente en el RNBD dentro de los 15 días hábiles
+   siguientes a su detección): `TODO`.
 2. Decidir si hay que informar a los titulares afectados y, si son menores de edad, a
-   sus representantes legales. Contenido y canal: `TODO`.
+   sus representantes legales. Contenido mínimo propuesto: qué ocurrió y cuándo, qué datos
+   se vieron afectados, qué hizo la institución, qué puede hacer el titular y a quién escribir
+   (buzón del §5 de la política). Canal: correo registrado del titular o, para menores, del
+   acudiente. Aprobación del texto: responsable del tratamiento.
 3. Si el incidente involucra proveedores (Neon, AWS, Vercel, Expo, correo), avisarles
    según sus procedimientos.
 
@@ -67,8 +79,11 @@ sensibles. Registrar qué datos y cuántos titulares pudieron verse afectados.
 - Corregir la causa (parche, configuración, credencial) y desplegar por el flujo normal
   (PR a `develop`, CI en verde).
 - Rotar todo secreto que haya podido estar expuesto, aunque no haya evidencia de uso.
-- Restaurar desde respaldo solo si hay una restauración probada (`TODO`: aún no existe
-  procedimiento documentado de respaldo y restauración).
+- Restaurar desde respaldo solo si hay una restauración probada. Los scripts `backup.sh`,
+  `restore.sh` y `verify-restore.sh` existen y se probaron en local; **falta ensayarlos en el
+  servidor real y respaldar PostgreSQL en Neon** (RUNBOOK_OPERACION §3.2, riesgos O-01 y O-02).
+  Mientras no se ensaye y se registre la fecha del ensayo aquí, no asumir que se puede restaurar:
+  `TODO` (registrar fecha y resultado del ensayo).
 
 ## 7. Cierre
 

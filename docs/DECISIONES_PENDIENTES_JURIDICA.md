@@ -72,3 +72,25 @@ Para cada uno jurídica decide: contrato de transmisión o términos del proveed
 ## 7. Grupo sanguíneo (N-11)
 
 Hoy el dato se pide y solo sirve como pregunta de verificación de identidad en la app móvil cuando falla el rostro. Si la institución decide no pedirlo, el cambio de código es pequeño (campo opcional o eliminado, y otra pregunta de verificación). Decisión: conservarlo, hacerlo opcional o quitarlo.
+
+**Decidido el 2026-11-04:** se conserva como dato **facultativo**, solo para la pregunta de verificación de identidad en el móvil (ver Política §2). No hay cambio de código. Falta únicamente la validación de jurídica.
+
+## 8. Estado al 2026-11-04
+
+Todo lo que el equipo podía cerrar por su cuenta ya está escrito. Lo que sigue abierto depende de la institución o de jurídica y está reunido, con las preguntas ya redactadas, en [SOLICITUD_A_JURIDICA.md](SOLICITUD_A_JURIDICA.md).
+
+| Tema | Estado | Qué falta | Quién |
+|---|---|---|---|
+| 1. Datos del responsable | Abierto | Los 6 datos (solicitud A1-A5) | Institución |
+| 2. Plazos de conservación | Propuesta escrita (plantillas 6 meses, respaldos 30 días, resto por la TRD) | Validar plazos; **implementar el borrado definitivo** (trabajo de código nuevo) | Jurídica; equipo |
+| 3. Proveedores | Regiones documentadas; Vercel y Gmail sin región fija | Archivar los DPA, confirmar nivel adecuado de EE. UU. (B5) | Equipo; jurídica |
+| 4. Biometría | Justificación (borrador), formato del acudiente, uso exclusivo y criterio FAR/FRR escritos | Datos de A8, validar el formato (B11), revisar menores previos al PR #309, conclusión y firma de la EIB §7 | Institución; jurídica; equipo |
+| 4. Medición FAR/FRR, sesgo y ataques | Criterio fijado y herramienta lista (`measure_far_frr.py`, probada con datos sintéticos); **sin medir con personas reales** | Reunir ≥ 30 personas con consentimiento y ejecutarla (EIB §6); las pruebas de ataque (foto en pantalla, máscara) se hacen a mano | Equipo |
+| 7. Respaldos | Script de producción con cifrado y retención de 30 días listo (`backup-prod.sh`); probado en seco | Instalar el cron en el servidor, definir destino externo y ensayar una restauración real (RUNBOOK §3.2) | Equipo |
+| 5. Incidentes | Roles por cargo, plazos internos y contenido del aviso escritos | Nombres (A6), plazo legal de aviso a la SIC (B7), ensayo de restauración en el servidor real | Institución; jurídica; equipo |
+| 6. RNBD | Abierto | B6 | Jurídica |
+| 6. Titularidad del software | Abierto | B9 y el acuerdo entre autores | Equipo; institución |
+| 6. Licencia dlib | Aceptada con reserva | Confirmación escrita (B8) | Jurídica |
+| 7. Grupo sanguíneo | **Cerrado** (facultativo) | Validación de jurídica | Jurídica |
+
+**Regla para la entrega:** la biometría con datos reales no se activa hasta cumplir las 7 condiciones de la EIB §7; entre tanto la asistencia se toma por el registro manual (ver EIB §7). Así la entrega no depende de las respuestas de jurídica.

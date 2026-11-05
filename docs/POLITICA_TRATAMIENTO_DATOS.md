@@ -35,12 +35,21 @@ FaceAttend EDU es la herramienta con la que la institución trata los datos; no 
 | Asistencia | Estado por clase (presente, tarde, ausente, justificado), hora y método de captura | Registrar la asistencia, generar reportes y alertas de baja asistencia | Sí |
 | Justificaciones | Motivo y documento de soporte | Tramitar las ausencias justificadas | Solo si el titular justifica |
 | Biométricos (sensibles) | Plantilla del rostro (sin la foto) y muestra de huella, cifradas | Identificar al aprendiz al tomar asistencia | **No: facultativo** |
-| Salud (sensible) | Grupo sanguíneo | `TODO`: decidir si se conserva. Hoy solo se usa como pregunta de verificación de identidad en la app móvil cuando falla el rostro | **No: facultativo** |
+| Salud (sensible) | Grupo sanguíneo | Decisión del equipo (2026-11-04): **se conserva como dato facultativo**. Solo sirve como pregunta de verificación de identidad en la app móvil cuando falla el rostro; no se usa para ninguna otra finalidad y quien no lo indica no pierde ninguna función. Pendiente de validación jurídica | **No: facultativo** |
 | Acudiente de un menor | Nombre, documento, parentesco, contacto y autorización firmada | Cumplir el art. 7 de la Ley 1581 | Sí, para menores que usen biometría |
 | Técnicos | Registros de verificación biométrica, de acceso y de errores | Seguridad, auditoría y soporte | Sí |
 
 Los datos no se usan para fines distintos a los descritos. Cualquier finalidad nueva requiere
 actualizar esta política, la versión del aviso y una nueva autorización.
+
+**Uso exclusivo de la biometría.** Las plantillas de rostro y las muestras de huella se usan
+únicamente para registrar la asistencia en el kiosco de la sede. Quedan prohibidos, sin excepción,
+su uso para vigilancia, control disciplinario, evaluación del desempeño, seguimiento de la
+ubicación de las personas, venta o cesión a terceros, y la combinación con otras bases de datos
+con fines distintos. Quien necesite un uso nuevo debe pedirlo por escrito al responsable del
+tratamiento, que solo puede aprobarlo con una nueva autorización de los titulares y la
+actualización de esta política y de la evaluación de impacto (propuesta del equipo, mitiga el
+riesgo R10; pendiente de aprobación de la institución).
 
 ## 3. Datos sensibles y menores de edad
 
@@ -85,9 +94,9 @@ La institución usa proveedores que tratan los datos solo por su encargo:
 |---|---|---|
 | Neon | Base de datos PostgreSQL (identidad, académico, asistencia) | Estados Unidos (AWS `us-east-2`, Ohio). Verificado el 30 de octubre de 2026 en el proyecto de Neon y en la conexión que usan los servicios |
 | AWS | Servidor de la aplicación, MongoDB (biometría) y archivos (MinIO) | Estados Unidos (`us-east-2`, Ohio). Verificado el 30 de octubre de 2026 en el nombre del host de la instancia |
-| Vercel | Aplicación web | `TODO` |
+| Vercel | Aplicación web (no guarda datos de la base, pero proxea las peticiones de la API) | Red global; sin región de proceso fija. Confirmar en su acuerdo de tratamiento de datos |
 | Expo | Notificaciones al celular | Estados Unidos |
-| Gmail | Envío de correos | `TODO` |
+| Gmail | Envío de correos | Red global de Google; sin región de proceso fija. Confirmar en sus términos de tratamiento de datos |
 
 `TODO` (jurídica): contrato de transmisión o términos de tratamiento de datos con cada proveedor
 (Decreto 1074 de 2015, art. 2.2.2.25.5.2) y confirmar el nivel adecuado de protección del país
@@ -106,13 +115,16 @@ cifrado disponible y restauración probada. Procedimiento ante incidentes: [INCI
 | Datos | Plazo |
 |---|---|
 | Registros de verificación biométrica | 90 días (se eliminan automáticamente) |
-| Plantillas biométricas | Mientras exista la autorización y el vínculo con la institución; se borran al revocar. `TODO`: plazo tras la desvinculación |
-| Datos de identificación, académicos y de asistencia | `TODO` (hallazgo L-NEW-03). Considerar las obligaciones de archivo de la institución |
-| Justificaciones y soportes | `TODO` |
-| Autorizaciones y aceptaciones (prueba de la autorización) | Mientras se conserven los datos que autorizan, más el tiempo que exija la ley `TODO` |
+| Plantillas biométricas | Mientras exista la autorización y el vínculo con la institución; se borran al revocar. **Propuesta del equipo: 6 meses** tras la desvinculación del aprendiz o instructor (a validar por jurídica) |
+| Datos de identificación, académicos y de asistencia | Mientras dure el vínculo y después, el plazo que fije la **tabla de retención documental (TRD)** de la institución (Ley 594 de 2000); vencido, se anonimizan o se borran. Plazo exacto: `TODO` (jurídica o archivo, hallazgo L-NEW-03) |
+| Justificaciones y soportes | El mismo plazo que la asistencia a la que pertenecen |
+| Autorizaciones y aceptaciones (prueba de la autorización) | Mientras se conserven los datos que autorizan, más el plazo de prescripción que indique jurídica `TODO` |
+| Respaldos | **Propuesta del equipo: máximo 30 días** de retención, de modo que un dato borrado desaparece también de los respaldos en ese plazo (a validar) |
 
 Los registros nunca se borran físicamente en la base, salvo la supresión biométrica: se marcan
-como eliminados. `TODO`: definir y automatizar el borrado definitivo al vencer cada plazo.
+como eliminados. El borrado definitivo al vencer cada plazo es trabajo pendiente de
+implementación y queda registrado como deuda técnica con responsable y fecha en la hoja
+[DECISIONES_PENDIENTES_JURIDICA.md](DECISIONES_PENDIENTES_JURIDICA.md).
 
 ## 9. Vigencia y cambios
 

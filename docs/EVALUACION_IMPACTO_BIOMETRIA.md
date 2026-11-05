@@ -49,10 +49,23 @@ finalidad, y por qué se elige la biométrica.
 | Código QR o carné | Sin datos sensibles. | Se presta: no prueba presencia de la persona. |
 | Rostro o huella | Prueba presencia de la persona y es rápida. | Dato sensible permanente: si se filtra, no se puede cambiar como una contraseña. |
 
-`TODO` (institución, con jurídica): **decidir y dejar escrito** por qué la biometría es necesaria
-para esta institución y no basta con las alternativas anteriores (p. ej. evidencia de suplantación
-en el registro manual, tamaño de los grupos). Sin esa justificación el tratamiento no es
-proporcional aunque el consentimiento sea válido.
+**Borrador de justificación (2026-11-04, redactado por el equipo; la institución debe confirmarlo con sus propios datos):**
+
+1. *Finalidad concreta y limitada:* confirmar la presencia física del aprendiz en clase, no
+   identificarlo para otros fines.
+2. *Por qué no basta la lista manual:* en grupos numerosos el instructor tarda varios minutos por
+   clase y un compañero puede responder por otro. Dato a aportar por la institución: tamaño
+   típico de grupo y casos conocidos de suplantación `TODO`.
+3. *Por qué no basta el QR o el carné:* se prestan; no prueban que la persona está presente.
+4. *Por qué es proporcional:* la biometría es **facultativa**; quien no la autoriza se registra
+   manualmente sin consecuencia alguna, no se guarda la foto sino una plantilla cifrada, el acceso
+   se limita a la sede, y se borra al revocar. El uso queda limitado a la asistencia
+   ([POLITICA_TRATAMIENTO_DATOS.md](POLITICA_TRATAMIENTO_DATOS.md) §2).
+5. *Límite de la justificación:* depende de que el sistema supere la medición de §6. Si no la
+   supera, la biometría no se usa con datos reales y se mantiene solo el registro manual.
+
+Sin la confirmación de la institución (punto 2) el tratamiento no se considera aprobado aunque
+el consentimiento sea válido. Aprobación: `TODO`.
 
 Principios que el diseño ya aplica:
 
@@ -69,8 +82,9 @@ Principios que el diseño ya aplica:
 | Revocación | Desde el perfil: borra todas las plantillas y el historial del titular. |
 | Menores (art. 7) | El menor no puede enrolar rostro ni huella hasta que su acudiente esté registrado, haya aceptado los términos en persona ante el administrador y tenga archivada la autorización firmada (PR #309). |
 
-`TODO` (jurídica): redactar el **formato de la autorización firmada** del acudiente y confirmar
-que el texto del aviso de privacidad (versión 2026-11) basta como información previa.
+El **formato de la autorización firmada** del acudiente ya está redactado en
+[FORMATO_AUTORIZACION_ACUDIENTE.md](FORMATO_AUTORIZACION_ACUDIENTE.md). `TODO` (jurídica): validarlo
+y confirmar que el texto del aviso de privacidad (versión 2026-11) basta como información previa.
 
 ## 4. Riesgos y controles
 
@@ -114,7 +128,12 @@ Protocolo propuesto (`TODO`: ejecutarlo con el consentimiento de los participant
 3. **FAR (falsa aceptación):** cada persona se compara con las plantillas de las demás (impostores) en todos los pares posibles. FAR = aceptaciones / comparaciones.
 4. **Curva:** repetir variando el umbral para escoger el punto de operación y documentar el equilibrio.
 5. **Por grupos:** calcular FAR y FRR por grupo (tono, edad, género) y comparar.
-6. **Criterio de aceptación:** definir **antes** de medir los valores máximos tolerables (propuesta inicial a validar: FAR ≤ 0,1 % y FRR ≤ 5 %, con alternativa manual para el resto). `TODO`
+6. **Criterio de aceptación (adoptado por el equipo el 2026-11-04, antes de medir):** FAR ≤ 0,1 % y FRR ≤ 5 %, global y en cada grupo, con alternativa manual para el resto. Una diferencia entre grupos de más de 2 puntos porcentuales en el FRR obliga a decidir antes del piloto (otro umbral, más tomas de enrolamiento o solo registro manual para ese caso). Pendiente de validación de la institución.
+
+Herramienta: `back-end/06-ms-biometric/scripts/measure_far_frr.py` calcula FAR, FRR, la curva por umbral y el
+resultado por grupo a partir de una carpeta `<grupo>/<persona>/<imagen>`, con el mismo codificador del servicio, y
+devuelve una tabla lista para pegar aquí (código de salida 1 si no cumple el criterio). Las imágenes son datos
+biométricos: se recogen con consentimiento escrito, no se suben al repositorio y se borran al terminar.
 
 Registro de resultados: `TODO` (fecha, población, umbral, FAR, FRR, por grupo, responsable).
 
@@ -132,8 +151,15 @@ técnicas que este borrador propone exigir **antes** de usar la biometría con d
 - [ ] Roles y plazos del procedimiento de incidentes confirmados (R9).
 - [ ] Contratos de transmisión con los proveedores (R11).
 
+**Criterio de salida si no se cumple:** mientras alguna casilla esté sin marcar, la biometría
+**no se usa con datos reales**; la asistencia se toma por el registro manual, que ya cuenta igual
+en reportes y alertas. Si la medición de §6 no cumple el criterio, la biometría tampoco se activa
+y se documenta el motivo aquí. Esta regla evita retrasar la entrega por el cumplimiento biométrico.
+
 ## 8. Revisión
 
 Revisar esta evaluación al cambiar el modelo de reconocimiento, los umbrales, el alojamiento de
 los datos, los plazos de conservación o la población (p. ej. nuevas sedes o instructores), y al
-menos una vez al año. `TODO`: responsable y fecha de la próxima revisión.
+menos una vez al año. Responsable propuesto: el responsable del tratamiento de la institución
+(nombre `TODO`). Próxima revisión: a más tardar el 4 de noviembre de 2027, o antes de activar
+la biometría con datos reales.
