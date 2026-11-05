@@ -130,6 +130,11 @@ Protocolo propuesto (`TODO`: ejecutarlo con el consentimiento de los participant
 5. **Por grupos:** calcular FAR y FRR por grupo (tono, edad, género) y comparar.
 6. **Criterio de aceptación (adoptado por el equipo el 2026-11-04, antes de medir):** FAR ≤ 0,1 % y FRR ≤ 5 %, global y en cada grupo, con alternativa manual para el resto. Una diferencia entre grupos de más de 2 puntos porcentuales en el FRR obliga a decidir antes del piloto (otro umbral, más tomas de enrolamiento o solo registro manual para ese caso). Pendiente de validación de la institución.
 
+Herramienta: `back-end/06-ms-biometric/scripts/measure_far_frr.py` calcula FAR, FRR, la curva por umbral y el
+resultado por grupo a partir de una carpeta `<grupo>/<persona>/<imagen>`, con el mismo codificador del servicio, y
+devuelve una tabla lista para pegar aquí (código de salida 1 si no cumple el criterio). Las imágenes son datos
+biométricos: se recogen con consentimiento escrito, no se suben al repositorio y se borran al terminar.
+
 Registro de resultados: `TODO` (fecha, población, umbral, FAR, FRR, por grupo, responsable).
 
 ## 7. Conclusión y decisión

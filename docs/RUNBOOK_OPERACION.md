@@ -115,11 +115,16 @@ Los scripts están en `database/scripts/` y su uso general en [COMPOSE.md §11](
 
 ### 3.2 Producción
 
-- **PostgreSQL (Neon):** `TODO`. Ni `backup.sh` ni el repositorio describen cómo se respalda o restaura Neon
-  (restauración a un punto en el tiempo del proveedor o `pg_dump` con la cadena de conexión). Hay que decidirlo,
-  probarlo y escribirlo aquí.
-- **MongoDB (biometría):** corre en el servidor como `faceattend-mongo`; la parte de Mongo de `backup.sh` sirve.
-  Mientras no exista un script solo para Mongo, `TODO`: comprobar en el servidor el volcado manual equivalente:
+- **Script de producción:** `database/scripts/backup-prod.sh` respalda Neon (`pg_dump` con `NEON_DATABASE_URL`
+  desde un contenedor desechable), Mongo y MinIO, **siempre cifrado** con `BACKUP_PASSPHRASE`, con los mismos
+  nombres de archivo que `backup.sh`, borra respaldos de más de `RETENTION_DAYS` (30 por defecto) y admite
+  `OFFSITE_CMD` para copiar fuera del servidor. `DRY_RUN=1` muestra qué haría sin escribir ni borrar.
+  `TODO`: ejecutarlo una vez en el servidor real y anotar aquí la fecha y el resultado.
+- **PostgreSQL (Neon):** además del script, Neon ofrece restauración a un punto en el tiempo según su plan.
+  `TODO`: confirmar en la consola de Neon la ventana de retención de nuestro plan y anotarla aquí. La
+  restauración de este volcado se hace con `pg_restore` contra una base nueva de Neon, nunca sobre producción
+  sin ensayo previo.
+- **MongoDB (biometría):** corre en el servidor como `faceattend-mongo`; `backup-prod.sh` lo cubre. El volcado manual equivalente es:
 
   ```bash
   docker exec faceattend-mongo mongodump --username "$MONGO_USER" --password "$MONGO_PASSWORD" \
@@ -132,8 +137,9 @@ Los scripts están en `database/scripts/` y su uso general en [COMPOSE.md §11](
 - **Claves:** `PII_ENCRYPTION_KEY`, `PII_HASH_KEY`, `BIOMETRIC_ENCRYPTION_KEY`, `MINIO_KMS_SECRET_KEY` y la
   `BACKUP_PASSPHRASE` se guardan **aparte** del respaldo; sin ellas lo restaurado no se puede leer
   ([DESPLIEGUE.md §3](../DESPLIEGUE.md#3-secretos-de-producción-env_prod_file)).
-- Programación: ningún respaldo es automático. `TODO`: cron en el servidor, retención y destino fuera del
-  servidor.
+- Programación: el script está listo pero **ningún respaldo es automático hasta instalar el cron** en el servidor
+  (línea de ejemplo en la cabecera de `backup-prod.sh`, con los secretos en un archivo de permisos 0600 fuera del
+  repositorio). `TODO`: instalar el cron y definir el destino fuera del servidor (`OFFSITE_CMD`).
 
 ### 3.3 Restaurar (stack con Postgres local)
 

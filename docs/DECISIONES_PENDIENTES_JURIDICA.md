@@ -85,7 +85,8 @@ Todo lo que el equipo podía cerrar por su cuenta ya está escrito. Lo que sigue
 | 2. Plazos de conservación | Propuesta escrita (plantillas 6 meses, respaldos 30 días, resto por la TRD) | Validar plazos; **implementar el borrado definitivo** (trabajo de código nuevo) | Jurídica; equipo |
 | 3. Proveedores | Regiones documentadas; Vercel y Gmail sin región fija | Archivar los DPA, confirmar nivel adecuado de EE. UU. (B5) | Equipo; jurídica |
 | 4. Biometría | Justificación (borrador), formato del acudiente, uso exclusivo y criterio FAR/FRR escritos | Datos de A8, validar el formato (B11), revisar menores previos al PR #309, conclusión y firma de la EIB §7 | Institución; jurídica; equipo |
-| 4. Medición FAR/FRR, sesgo y ataques | Criterio fijado; **sin medir** | Ejecutar el protocolo (EIB §6) con consentimiento de ≥ 30 personas | Equipo |
+| 4. Medición FAR/FRR, sesgo y ataques | Criterio fijado y herramienta lista (`measure_far_frr.py`, probada con datos sintéticos); **sin medir con personas reales** | Reunir ≥ 30 personas con consentimiento y ejecutarla (EIB §6); las pruebas de ataque (foto en pantalla, máscara) se hacen a mano | Equipo |
+| 7. Respaldos | Script de producción con cifrado y retención de 30 días listo (`backup-prod.sh`); probado en seco | Instalar el cron en el servidor, definir destino externo y ensayar una restauración real (RUNBOOK §3.2) | Equipo |
 | 5. Incidentes | Roles por cargo, plazos internos y contenido del aviso escritos | Nombres (A6), plazo legal de aviso a la SIC (B7), ensayo de restauración en el servidor real | Institución; jurídica; equipo |
 | 6. RNBD | Abierto | B6 | Jurídica |
 | 6. Titularidad del software | Abierto | B9 y el acuerdo entre autores | Equipo; institución |
