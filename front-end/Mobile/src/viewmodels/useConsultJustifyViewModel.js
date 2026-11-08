@@ -31,8 +31,8 @@ export function useValidJustificationsViewModel() {
     const updateKey = useLanguageRefresh();
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [inasistenciasData, setInasistenciasData] = useState([]);
-    const [retardosData, setRetardosData] = useState([]);
+    const [absencesData, setInasistenciasData] = useState([]);
+    const [latenessData, setRetardosData] = useState([]);
     const [selectedItem, setSelectedItem] = useState(null);
 
     const JUSTIFICATION_STATUS = {
@@ -131,23 +131,23 @@ export function useValidJustificationsViewModel() {
         fetchData();
     }, [fetchData]);
 
-    const currentData = activeSection === 'inasistencias' ? inasistenciasData : retardosData;
+    const currentData = activeSection === 'inasistencias' ? absencesData : latenessData;
 
     const handleBack = useCallback(() => navigation.goBack(), [navigation]);
 
     const {colors} = useTheme();
-    const getEstadoColor = useCallback((estado) => {
-        if (estado === JUSTIFICATION_STATUS.APPROVED) return colors.success;
-        return estado === JUSTIFICATION_STATUS.REJECTED ? colors.danger : colors.warning;
+    const getStatusColor = useCallback((status) => {
+        if (status === JUSTIFICATION_STATUS.APPROVED) return colors.success;
+        return status === JUSTIFICATION_STATUS.REJECTED ? colors.danger : colors.warning;
     }, [colors]);
 
     const STATUS_LABEL_KEYS = {approved: 'consultJustify.statusApproved', pending: 'consultJustify.statusPending', rejected: 'consultJustify.statusRejected'};
-    const getEstadoLabel = useCallback((estado) => t(STATUS_LABEL_KEYS[estado] || STATUS_LABEL_KEYS.pending), [t]);
+    const getStatusLabel = useCallback((status) => t(STATUS_LABEL_KEYS[status] || STATUS_LABEL_KEYS.pending), [t]);
 
     return {
         activeSection, setActiveSection, updateKey, isLoading, error, retry: fetchData,
-        inasistenciasData, retardosData, currentData,
-        handleBack, getEstadoColor, getEstadoLabel,
+        absencesData, latenessData, currentData,
+        handleBack, getStatusColor, getStatusLabel,
         selectedItem, openDetail: setSelectedItem, closeDetail: () => setSelectedItem(null),
     };
 }

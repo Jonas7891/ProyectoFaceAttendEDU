@@ -29,15 +29,15 @@ export default function ValidJustificationsScreen() {
         activeSection,
         setActiveSection,
         updateKey,
-        inasistenciasData,
-        retardosData,
+        absencesData,
+        latenessData,
         currentData,
         isLoading,
         error,
         retry,
         handleBack,
-        getEstadoColor,
-        getEstadoLabel,
+        getStatusColor,
+        getStatusLabel,
         selectedItem,
         openDetail,
         closeDetail,
@@ -58,7 +58,7 @@ export default function ValidJustificationsScreen() {
         onPress: () => openDetail(item),
         activeOpacity: 0.8,
         accessibilityRole: 'button',
-        accessibilityLabel: `${item.fecha} · ${item.motivo} · ${getEstadoLabel(item.estado)}`,
+        accessibilityLabel: `${item.fecha} · ${item.motivo} · ${getStatusLabel(item.estado)}`,
         accessibilityHint: t('consultJustify.viewDetail'),
     });
 
@@ -66,8 +66,8 @@ export default function ValidJustificationsScreen() {
         <TouchableOpacity style={cardStyle} {...cardA11y(item)}>
             <View style={styles.cardHeader}>
                 <Text style={[styles.cardDate, { color: colors.text }]}>{item.fecha}</Text>
-                <View style={[styles.statusBadge, { backgroundColor: getEstadoColor(item.estado) }]}>
-                    <Text style={[styles.statusText, { color: colors.onPrimary }]}>{getEstadoLabel(item.estado)}</Text>
+                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.estado) }]}>
+                    <Text style={[styles.statusText, { color: colors.onPrimary }]}>{getStatusLabel(item.estado)}</Text>
                 </View>
             </View>
             <Text style={[styles.cardReason, { color: colors.textSecondary }]}>{item.motivo}</Text>
@@ -81,8 +81,8 @@ export default function ValidJustificationsScreen() {
                     <Text style={[styles.cardDate, { color: colors.text }]}>{item.fecha}</Text>
                     <Text style={[styles.cardTime, { color: colors.textSecondary }]}>{item.hora}</Text>
                 </View>
-                <View style={[styles.statusBadge, { backgroundColor: getEstadoColor(item.estado) }]}>
-                    <Text style={[styles.statusText, { color: colors.onPrimary }]}>{getEstadoLabel(item.estado)}</Text>
+                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.estado) }]}>
+                    <Text style={[styles.statusText, { color: colors.onPrimary }]}>{getStatusLabel(item.estado)}</Text>
                 </View>
             </View>
             <Text style={[styles.cardReason, { color: colors.textSecondary }]}>{item.motivo}</Text>
@@ -209,9 +209,9 @@ export default function ValidJustificationsScreen() {
                                 <Text style={[styles.sectionTitle, { color: colors.text }]}>
                                     {t('consultJustify.justifiedAbsences')}
                                 </Text>
-                                {inasistenciasData.length > 0 ? (
+                                {absencesData.length > 0 ? (
                                     <FlatList persistentScrollbar
-                                        data={inasistenciasData}
+                                        data={absencesData}
                                         keyExtractor={(item) => item.id.toString()}
                                         renderItem={renderInasistenciaItem}
                                         scrollEnabled={false}
@@ -241,9 +241,9 @@ export default function ValidJustificationsScreen() {
                                 <Text style={[styles.sectionTitle, { color: colors.text }]}>
                                     {t('consultJustify.justifiedDelays')}
                                 </Text>
-                                {retardosData.length > 0 ? (
+                                {latenessData.length > 0 ? (
                                     <FlatList persistentScrollbar
-                                        data={retardosData}
+                                        data={latenessData}
                                         keyExtractor={(item) => item.id.toString()}
                                         renderItem={renderRetardoItem}
                                         scrollEnabled={false}
@@ -281,8 +281,8 @@ export default function ValidJustificationsScreen() {
                             <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 12 }} accessibilityRole="header">
                                 {t('consultJustify.detailTitle')}
                             </Text>
-                            <View style={[styles.statusBadge, { backgroundColor: getEstadoColor(selectedItem.estado), alignSelf: 'flex-start', marginBottom: 12 }]}>
-                                <Text style={[styles.statusText, { color: colors.onPrimary }]}>{getEstadoLabel(selectedItem.estado)}</Text>
+                            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(selectedItem.estado), alignSelf: 'flex-start', marginBottom: 12 }]}>
+                                <Text style={[styles.statusText, { color: colors.onPrimary }]}>{getStatusLabel(selectedItem.estado)}</Text>
                             </View>
                             <Text style={{ color: colors.textSecondary }}>{t('consultJustify.case')}</Text>
                             <Text style={{ color: colors.text, marginBottom: 10 }}>{selectedItem.motivo}</Text>
