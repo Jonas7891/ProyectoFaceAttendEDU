@@ -4,6 +4,7 @@ import type { IEnrollmentRepository } from '../../../domain/ports/out/IEnrollmen
 import type { PageOptions } from '../../../domain/ports/out/ICrudRepository';
 import { PostgresCrudRepository, dateParam, type FieldSpec, type JsonRecord } from './crud.repository';
 import { AUDIT_FIELDS } from './audit.fields';
+import { todayIso } from '../../localDate';
 
 /** Native PostgreSQL enum — bind parameters must carry an explicit cast. */
 const ENROLLMENT_STATUS_TYPE = 'academic.enrollment_status';
@@ -123,7 +124,7 @@ export class PostgresEnrollmentRepository
     const draft: JsonRecord = {
       academicActorId: e.academicActorId,
       cohortId: e.cohortId,
-      enrolledOn: new Date().toISOString().slice(0, 10),
+      enrolledOn: todayIso(),
       enrollmentStatus: PostgresEnrollmentRepository.isEnrollmentStatus(e.status) ? e.status : 'Active',
     };
     const created = await this.createOrRestore(draft);

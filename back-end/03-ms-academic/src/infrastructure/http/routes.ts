@@ -5,6 +5,7 @@ import type { AuditActor, PageOptions } from '../../domain/ports/out/ICrudReposi
 import type { AcademicRepositories } from '../persistence/postgres';
 import { createCallerSchoolResolver, mayDeleteCourse, ScopeError as SchoolScopeError, type CallerSchool } from './callerSchool';
 import { ownSchoolEdit } from './schoolEditPolicy';
+import { todayIso } from '../localDate';
 
 /**
  * HTTP adapters — 03-ms-academic.
@@ -651,7 +652,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     actorTypeId: z.number().int().default(1),
     schoolId: z.number().int(),
     actorCode: z.string().min(1).max(50),
-    startedOn: z.string().min(1).default(new Date().toISOString().slice(0, 10)),
+    startedOn: z.string().min(1).default(() => todayIso()),
     endedOn: z.string().nullable().optional(),
     status: z.boolean().default(true),
   });
@@ -751,7 +752,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
   const enrollmentBody = z.object({
     academicActorId: z.number().int(),
     cohortId: z.number().int(),
-    enrolledOn: z.string().min(1).default(new Date().toISOString().slice(0, 10)),
+    enrolledOn: z.string().min(1).default(() => todayIso()),
     enrollmentStatus: z.enum(['Active', 'Withdrawn', 'Completed']).default('Active'),
   });
   app.post('/api/v1/enrollments', async (req, reply) => {
