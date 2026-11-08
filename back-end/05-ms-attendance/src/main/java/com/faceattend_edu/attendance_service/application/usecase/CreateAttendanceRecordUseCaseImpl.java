@@ -1,6 +1,7 @@
 package com.faceattend_edu.attendance_service.application.usecase;
 
 import com.faceattend_edu.attendance_service.application.policy.ArrivalStatusPolicy;
+import com.faceattend_edu.attendance_service.application.policy.SessionOpenPolicy;
 import com.faceattend_edu.attendance_service.domain.exception.DuplicateEntityException;
 import com.faceattend_edu.attendance_service.domain.model.AttendanceRecord;
 import com.faceattend_edu.attendance_service.domain.port.in.CreateAttendanceRecordUseCase;
@@ -17,6 +18,7 @@ public class CreateAttendanceRecordUseCaseImpl implements CreateAttendanceRecord
     private final AttendanceRecordRepository repository;
     private final EventPublisherPort eventPublisher;
     private final ArrivalStatusPolicy arrivalPolicy;
+    private final SessionOpenPolicy sessionPolicy;
 
     @Override @Transactional
     public AttendanceRecord create(AttendanceRecord record) {
@@ -25,6 +27,7 @@ public class CreateAttendanceRecordUseCaseImpl implements CreateAttendanceRecord
         // Lateness of a biometric arrival comes from the server clock, not from the status the kiosk sent (N-14).
         record.setAttendanceStatus(arrivalPolicy.resolve(record.getClassSessionId(), record.getAcademicActorId(),
                 record.getAttendanceStatus(), record.getCaptureMethod(), record.getCapturedAt()));
+        sessionPolicy.requireAccepts(record.getClassSessionId(), record.getAttendanceStatus());
         repository.findByClassSessionIdAndAcademicActorId(record.getClassSessionId(), record.getAcademicActorId()).ifPresent(r -> {
             throw new DuplicateEntityException("AttendanceRecord already exists for session=" + record.getClassSessionId() + " actor=" + record.getAcademicActorId());
         });

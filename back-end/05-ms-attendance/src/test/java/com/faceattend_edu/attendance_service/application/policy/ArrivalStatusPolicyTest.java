@@ -106,7 +106,7 @@ class ArrivalStatusPolicyTest {
         when(repository.save(any(AttendanceRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
         // Timing in 2020: whatever time the test runs, the arrival is long past the tolerance.
         ArrivalStatusPolicy lateAlways = policy(Optional.of(new ArrivalTimingPort.Timing(LocalDate.of(2020, 1, 1), LocalTime.of(7, 0), 15)));
-        CreateAttendanceRecordUseCaseImpl create = new CreateAttendanceRecordUseCaseImpl(repository, mock(EventPublisherPort.class), lateAlways);
+        CreateAttendanceRecordUseCaseImpl create = new CreateAttendanceRecordUseCaseImpl(repository, mock(EventPublisherPort.class), lateAlways, new com.faceattend_edu.attendance_service.application.policy.SessionOpenPolicy(id -> java.util.Optional.of("Open")));
 
         AttendanceRecord row = new AttendanceRecord();
         row.setClassSessionId(10L);
@@ -124,7 +124,7 @@ class ArrivalStatusPolicyTest {
         when(repository.findByClassSessionIdAndAcademicActorId(any(), any())).thenReturn(Optional.empty());
         when(repository.save(any(AttendanceRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
         ArrivalStatusPolicy lateAlways = policy(Optional.of(new ArrivalTimingPort.Timing(LocalDate.of(2020, 1, 1), LocalTime.of(7, 0), 15)));
-        RecordAttendanceUseCaseImpl record = new RecordAttendanceUseCaseImpl(repository, lateAlways);
+        RecordAttendanceUseCaseImpl record = new RecordAttendanceUseCaseImpl(repository, lateAlways, new com.faceattend_edu.attendance_service.application.policy.SessionOpenPolicy(id -> java.util.Optional.of("Open")));
 
         assertEquals("Late", record.record(10L, 20L, "Present", "FINGERPRINT", null).getAttendanceStatus());
         assertEquals("Present", record.record(11L, 21L, "Present", "MANUAL", null).getAttendanceStatus());

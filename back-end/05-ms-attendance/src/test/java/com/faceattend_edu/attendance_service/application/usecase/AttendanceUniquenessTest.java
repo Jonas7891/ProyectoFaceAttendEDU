@@ -43,8 +43,8 @@ class AttendanceUniquenessTest {
     void setUp() {
         // Without timing data the policy keeps the status the caller sent, so these tests stay about uniqueness.
         ArrivalStatusPolicy keepsStatus = new ArrivalStatusPolicy((session, actor) -> Optional.empty(), "America/Bogota");
-        create = new CreateAttendanceRecordUseCaseImpl(repository, eventPublisher, keepsStatus);
-        record = new RecordAttendanceUseCaseImpl(repository, keepsStatus);
+        create = new CreateAttendanceRecordUseCaseImpl(repository, eventPublisher, keepsStatus, new com.faceattend_edu.attendance_service.application.policy.SessionOpenPolicy(id -> java.util.Optional.of("Open")));
+        record = new RecordAttendanceUseCaseImpl(repository, keepsStatus, new com.faceattend_edu.attendance_service.application.policy.SessionOpenPolicy(id -> java.util.Optional.of("Open")));
         bulk = new BulkRecordAttendanceUseCaseImpl(record);
     }
 

@@ -1,6 +1,7 @@
 package com.faceattend_edu.attendance_service.application.usecase;
 
 import com.faceattend_edu.attendance_service.application.policy.ArrivalStatusPolicy;
+import com.faceattend_edu.attendance_service.application.policy.SessionOpenPolicy;
 import com.faceattend_edu.attendance_service.domain.exception.DuplicateEntityException;
 import com.faceattend_edu.attendance_service.domain.model.AttendanceRecord;
 import com.faceattend_edu.attendance_service.domain.port.in.RecordAttendanceUseCase;
@@ -17,6 +18,7 @@ import java.time.Instant;
 public class RecordAttendanceUseCaseImpl implements RecordAttendanceUseCase {
     private final AttendanceRecordRepository repository;
     private final ArrivalStatusPolicy arrivalPolicy;
+    private final SessionOpenPolicy sessionPolicy;
 
     @Override @Transactional
     public AttendanceRecord record(Long classSessionId, Long academicActorId, String attendanceStatus, String captureMethod, BigDecimal matchScore) {
@@ -31,6 +33,7 @@ public class RecordAttendanceUseCaseImpl implements RecordAttendanceUseCase {
         r.setAttendanceStatus(arrivalPolicy.resolve(classSessionId, academicActorId, attendanceStatus, captureMethod, r.getCapturedAt()));
         r.validate();
         r.touchCreated();
+        sessionPolicy.requireAccepts(classSessionId, r.getAttendanceStatus());
         repository.findByClassSessionIdAndAcademicActorId(classSessionId, academicActorId).ifPresent(existing -> {
             throw new DuplicateEntityException("Duplicate attendance for session=" + classSessionId + " actor=" + academicActorId);
         });

@@ -37,7 +37,7 @@ class ManualAttendanceWithoutBiometricsTest {
     @BeforeEach
     void setUp() {
         // MANUAL records never go through the arrival policy; no timing data is needed here.
-        record = new RecordAttendanceUseCaseImpl(repository, new ArrivalStatusPolicy((session, actor) -> Optional.empty(), "America/Bogota"));
+        record = new RecordAttendanceUseCaseImpl(repository, new ArrivalStatusPolicy((session, actor) -> Optional.empty(), "America/Bogota"), new com.faceattend_edu.attendance_service.application.policy.SessionOpenPolicy(id -> java.util.Optional.of("Open")));
         when(repository.findByClassSessionIdAndAcademicActorId(SESSION, ACTOR_WITHOUT_BIOMETRICS)).thenReturn(Optional.empty());
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
     }

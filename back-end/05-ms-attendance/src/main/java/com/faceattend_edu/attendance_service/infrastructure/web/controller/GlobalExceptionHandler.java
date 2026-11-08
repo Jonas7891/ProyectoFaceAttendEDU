@@ -1,6 +1,7 @@
 package com.faceattend_edu.attendance_service.infrastructure.web.controller;
 
 import com.faceattend_edu.attendance_service.infrastructure.web.security.ActorScope;
+import com.faceattend_edu.attendance_service.domain.exception.DependencyUnavailableException;
 import com.faceattend_edu.attendance_service.domain.exception.DuplicateEntityException;
 import com.faceattend_edu.attendance_service.domain.exception.EntityNotFoundException;
 import com.faceattend_edu.attendance_service.domain.exception.ValidationException;
@@ -115,6 +116,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleMediaType(HttpMediaTypeNotSupportedException ex) {
         return buildErrorResponse(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "ISO-8.2-VAL-002",
             "Unsupported content type", "8.2", "WARNING");
+    }
+
+    @ExceptionHandler(DependencyUnavailableException.class)
+    public ResponseEntity<Map<String, Object>> handleDependency(DependencyUnavailableException ex) {
+        errorLog.error("Dependency unavailable: {}", ex.getMessage(), ex);
+        return buildErrorResponse(HttpStatus.SERVICE_UNAVAILABLE, "ISO-10.2-NC-004", ex.getMessage(), "10.2", "ERROR");
     }
 
     @ExceptionHandler(MinioDocumentStorageAdapter.StorageUnavailableException.class)
