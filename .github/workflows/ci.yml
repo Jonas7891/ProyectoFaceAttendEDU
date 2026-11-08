@@ -219,9 +219,8 @@ jobs:
       - name: npm ci
         working-directory: front-end/Mobile
         run: npm ci --ignore-scripts
-      # Coverage is measured and published (rubric C1 floor: 70 % of lines).
-      # Add a coverageThreshold to package.json once the measured value is known.
-      - name: npm test (with coverage)
+      # coverageThreshold in package.json fails the job under the measured floor.
+      - name: npm test (with coverage gate)
         working-directory: front-end/Mobile
         run: npm test -- --coverage --coverageReporters=json-summary --coverageReporters=text-summary
       - name: coverage summary
