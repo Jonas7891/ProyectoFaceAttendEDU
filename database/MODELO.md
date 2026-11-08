@@ -70,7 +70,7 @@ sumó después y no está dibujado aquí):
 
 **Diseño clave:** `person` **no tiene** `school_id`. La identidad es agnóstica de sede.
 
-> **Nota — `identity.city`:** `AGENTS.md` la da por deprecada y el DBML no la contiene (las ciudades vienen de la API externa `countriesnow.space`). En Liquibase, `01-ms-identity-db/01-ddl/03-tables/` conserva `001-create-city-table.yaml` y `008-drop-city-table.yaml`; por el nombre, la segunda la elimina, pero no se leyó su contenido ni se comprobó contra una base real. Está pendiente que el equipo confirme que la tabla ya no existe tras migrar y, si procede, retire de las guías cualquier mención residual (p. ej. el ejemplo `001-seed-city-table.yaml` de `CONVENCIONES.md`).
+> **Nota — `identity.city`:** la tabla ya no existe tras migrar. Las ciudades vienen de la API externa `countriesnow.space` y el DBML no la contiene. En Liquibase, `01-ms-identity-db/01-ddl/03-tables/001-create-city-table.yaml` la crea y `008-drop-city-table.yaml` la elimina (`dropTable identity.city`, con rollback que la recrea). `changelog/changelog-master.yaml` incluye ese drop después de `04-tcl`, porque el trigger `trg_city_audit_timestamps` necesita la tabla para crearse, y `DROP TABLE` se lleva el trigger consigo. Los dos changesets se conservan porque ya están aplicados en las bases existentes: borrarlos cambiaría el historial de Liquibase.
 
 ---
 

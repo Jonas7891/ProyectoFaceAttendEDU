@@ -9,7 +9,7 @@
 | Schema | `001-create-{schema}-schema.yaml` | `001-create-identity-schema.yaml` |
 | Tipo/ENUM | `001-create-{tipo}-type.yaml` | `001-create-enrollment-status-type.yaml` |
 | Tabla | `001-create-{tabla}-table.yaml` | `001-create-person-table.yaml` |
-| Seed DML | `001-seed-{tabla}-table.yaml` | `001-seed-city-table.yaml` |
+| Seed DML | `001-seed-{tabla}-table.yaml` | `001-seed-role-table.yaml` |
 | Trigger | `001-triggers-{funcion}.yaml` | `001-triggers-audit-timestamps.yaml` |
 | Vistas | `001-create-{domain}-views.yaml` | `001-create-identity-views.yaml` |
 

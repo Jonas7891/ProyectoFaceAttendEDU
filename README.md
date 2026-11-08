@@ -16,7 +16,7 @@ API Gateway, frontend Web (Expo/React Native Web) y app Mobile (Expo/React Nativ
 
 El modelo relacional, sus convenciones de nombrado y las reglas de negocio
 derivadas están documentados en `database/` y son la fuente de verdad para
-cualquier cambio de esquema (ver `AGENTS.md` en la raíz del proyecto padre).
+cualquier cambio de esquema (ver [database/CONVENCIONES.md](database/CONVENCIONES.md)).
 
 ## Arranque rápido
 
@@ -92,9 +92,16 @@ Administrador los active. El endpoint tiene un límite estricto por IP en Kong.
 | Seeds / catálogos iniciales | [database/SEEDS.md](database/SEEDS.md) |
 | Despliegue (perímetro, secretos, admin inicial) | [DESPLIEGUE.md](DESPLIEGUE.md) |
 
+## Usuarios de prueba por rol
+
+- **Super Administrador:** no hay cuenta por defecto; se crea con
+  `database/scripts/bootstrap-admin.sh` (ver «Primer arranque»).
+- **Administrador, Docente y Estudiante:** con el sistema levantado, ejecute el seed de
+  `tools/seed-api-test-data`. Las cuentas de **uso local**, su sede y sus contraseñas
+  están en [tools/seed-api-test-data/README.md](tools/seed-api-test-data/README.md);
+  las contraseñas se leen de su `.env`, no del código.
+
 ## Estado del proyecto
 
-Este repositorio está en preparación activa para su primer despliegue estable.
-El checklist de hardening pre-producción (tests, seguridad de contenedores,
-consistencia del modelo de datos, CI) se trabaja en la rama
-`chore/production-readiness`.
+La entrega final es el commit `07119ab` («v1.7.0»), etiquetado `final-delivery-2026` en
+`main`. Los cambios posteriores siguen el flujo de [CONTRIBUTING.md](CONTRIBUTING.md).
