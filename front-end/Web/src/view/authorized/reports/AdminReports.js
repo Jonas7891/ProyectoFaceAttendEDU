@@ -21,6 +21,7 @@ import { getAtRiskStudents, studentsInTeacherScope } from "../../../models/data/
 import { useAuth } from "../../../context/AuthContext";
 import { getInstitutionConfig } from "../../../core/config/institutionConfig";
 import { useAppData } from "../../../context/AppDataContext";
+import { useNavigation } from "@react-navigation/native";
 import { HistoricosSection } from "./sections";
 import { getRelativeTime } from "../../../core/utils/dates";
 
@@ -137,7 +138,7 @@ function StudentRow({ student, isLast, onPress }) {
         <StudentAttendanceRow
             student={student}
             isLast={isLast}
-            onPress={() => onPress?.(student.id)}
+            onPress={() => onPress?.(student)}
             c={c}
             attColor={attColor}
             backgroundColor={bgColor}
@@ -169,6 +170,7 @@ export function AdminReports({ section, courseFilter }) {
     const { t } = useTranslation();
     const appData = useAppData();
     const { user } = useAuth();
+    const navigation = useNavigation();
     const c = theme.colors;
 
     // Estado y animación para el botón de recargar
@@ -239,11 +241,13 @@ export function AdminReports({ section, courseFilter }) {
 
     // ── Handlers (ANTES de cualquier return) ──────────────
     
-    // Handler para ver detalles de estudiante
-    const handleViewStudent = React.useCallback((studentId) => {
-        console.log("Ver detalles:", studentId);
-        // TODO: Implementar navegación a detalle de estudiante
-    }, []);
+    // Opens Users > Students already filtered to the at-risk student, the same
+    // way Courses opens the students of a course (see AdminCourses).
+    const handleViewStudent = React.useCallback((student) => {
+        const searchQuery = student?.code || student?.name;
+        if (!searchQuery) return;
+        navigation.navigate("Users", { section: "students", searchQuery });
+    }, [navigation]);
 
     // Handler para recargar la lista
     const handleReload = React.useCallback(async () => {

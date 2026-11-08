@@ -8,6 +8,8 @@ import { AdminReports } from "../AdminReports";
 // Icon fonts cannot load under jest; the icon keeps its name/size/color in the tree.
 jest.mock("@expo/vector-icons", () => ({ Feather: (props) => `Feather:${props.name}:${props.size}:${props.color}` }));
 jest.mock("../sections", () => ({ HistoricosSection: () => null }));
+const mockNavigate = jest.fn();
+jest.mock("@react-navigation/native", () => ({ useNavigation: () => ({ navigate: mockNavigate }) }));
 
 const mockStudents = [];
 const mockCourses = [];
@@ -155,6 +157,21 @@ describe("AdminReports at-risk view render", () => {
         expect(mockReloadStudents).toHaveBeenCalledTimes(1);
         expect(mockReloadCourses).toHaveBeenCalledTimes(1);
         expect(allText()).toContain("Actualizado hace un momento");
+        act(() => root.unmount());
+    });
+
+    // The row used to only console.log the id: pressing it did nothing.
+    test("pressing an at-risk row opens Users filtered to that student", () => {
+        mockNavigate.mockClear();
+        mockAtRisk.push(...ROWS);
+        mockStudents.push(...ROWS.map((r) => ({ id: r.studentId })));
+        const root = render(<AdminReports />);
+        // StudentAttendanceRow (it receives the theme colors as `c`) wraps the press handler.
+        const row = root.root.findAll(
+            (n) => n.props.student?.id === 3 && n.props.c && typeof n.props.onPress === "function",
+        )[0];
+        act(() => { row.props.onPress(); });
+        expect(mockNavigate).toHaveBeenCalledWith("Users", { section: "students", searchQuery: "C-3" });
         act(() => root.unmount());
     });
 
