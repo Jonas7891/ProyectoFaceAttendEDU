@@ -22,6 +22,10 @@ module.exports = defineConfig([
       "jest.global-setup.js",
     ],
     languageOptions: { globals: { ...globals.jest, ...globals.node } },
+    // Tests read a hook through `let vm; function Probe() { vm = useX(); }`.
+    // That reassignment is what react-hooks/globals (a React Compiler rule)
+    // reports, and tests are never compiled by the React Compiler.
+    rules: { "react-hooks/globals": "off" },
   },
   {
     // Build and QA scripts run under Node, not in the browser bundle.
