@@ -293,12 +293,15 @@ export function getTimePlaceholders(shift, existingSchedules = [], selectedDays 
     // Validar que el slot sugerido esté dentro del rango global
     if (suggestedStart + defaultDuration > globalEnd) {
         // No hay espacio suficiente, sugerir el horario por defecto de la jornada
-        // La validación capturará el conflicto cuando intente guardar
+        // La validación capturará el conflicto cuando intente guardar.
+        // Same 12h/24h format as every other branch.
+        const startMinutes = parseTime(range.defaultStart);
+        const endMinutes = parseTime(range.defaultEnd);
         return {
-            startPlaceholder: range.defaultStart,
-            endPlaceholder: range.defaultEnd,
-            suggestedStart: range.defaultStart,
-            suggestedEnd: range.defaultEnd,
+            startPlaceholder: formatTime(startMinutes),
+            endPlaceholder: formatTime(endMinutes),
+            suggestedStart: formatTime(startMinutes),
+            suggestedEnd: formatTime(endMinutes),
         };
     }
     
