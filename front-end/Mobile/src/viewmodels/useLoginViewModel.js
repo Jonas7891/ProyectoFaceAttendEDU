@@ -10,6 +10,7 @@ import {getHighestRole} from "../utils/getHighestRole";
 import AuthResponse from "../models/identity/AuthResponse";
 import {ConsentService} from "../services/consentService";
 import {TERMS_GATE, TermsService} from "../services/termsService";
+import { reportIgnoredError } from '../utils/ignoreError';
 
 const MAX_FAILED_ATTEMPTS = 3;
 
@@ -99,7 +100,7 @@ export function useLoginViewModel({onLogin}) {
             setTermsGate(null);
             try {
                 await removeToken();
-            } catch {}
+            } catch (ignoredError) { reportIgnoredError('useLoginViewModel', ignoredError); }
             setErrorWithTimestamp(t('termsGate.unavailable'));
             return;
         }
@@ -141,7 +142,7 @@ export function useLoginViewModel({onLogin}) {
             name: userData?.name || null,
             roles: userData?.roles ?? [],
           }));
-        } catch {}
+        } catch (ignoredError) { reportIgnoredError('useLoginViewModel', ignoredError); }
         await loadThemeForRole(role);
         await restoreLanguageForRole(role);
 
@@ -207,7 +208,7 @@ export function useLoginViewModel({onLogin}) {
         setTermsError(null);
         try {
             await removeToken();
-        } catch {}
+        } catch (ignoredError) { reportIgnoredError('useLoginViewModel', ignoredError); }
     };
 
     const submit = async () => {
@@ -239,7 +240,7 @@ export function useLoginViewModel({onLogin}) {
             handleError(err);
             try {
                 await removeToken();
-            } catch {}
+            } catch (ignoredError) { reportIgnoredError('useLoginViewModel', ignoredError); }
         } finally {
             setIsLoading(false);
         }
@@ -264,7 +265,7 @@ export function useLoginViewModel({onLogin}) {
             handleError(err);
             try {
                 await removeToken();
-            } catch {}
+            } catch (ignoredError) { reportIgnoredError('useLoginViewModel', ignoredError); }
         } finally {
             setIsLoading(false);
         }

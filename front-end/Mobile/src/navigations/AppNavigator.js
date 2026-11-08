@@ -38,6 +38,7 @@ import BiometricCasesScreen from "../view/screens/BiometricCasesScreen";
 import CustomAlert from '../view/components/common/CustomAlert';
 import {useCustomAlert} from '../view/components/common/useCustomAlert';
 import {PUSH_STORAGE_KEY, registerForPush, routeForNotification, unregisterPush} from '../services/PushService';
+import { reportIgnoredError } from '../utils/ignoreError';
 
 const Stack = createStackNavigator();
 
@@ -206,7 +207,7 @@ export default function App() {
                 // Antes del logout: el DELETE del token necesita la sesión viva.
                 await unregisterPush();
                 await AuthService.logout(sessionId);
-            } catch {}
+            } catch (ignoredError) { reportIgnoredError('AppNavigator', ignoredError); }
             await clearLocalSession();
 
             await i18n.changeLanguage('es');

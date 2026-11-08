@@ -6,6 +6,7 @@ import {request, GET} from '../api/apiClient';
 import {backendGet} from '../api/backend';
 import ENV from '../config/env';
 import {getCurrentUserRole} from '../services/UserService';
+import { reportIgnoredError } from '../utils/ignoreError';
 
 const SUMMARY_MAX_IDS = 300; // tope de /attendance-records/summary
 const REPORT_MAX_IDS = 1000; // tope de /attendance-reports
@@ -79,7 +80,7 @@ export function useAttendanceReportViewModel() {
                             url: `${ENV.ATTENDANCE_BASE_URL}api/v1/attendance-records/summary?${query}`,
                             requiresAuth: true,
                         }));
-                    } catch {}
+                    } catch (ignoredError) { reportIgnoredError('useAttendanceReportViewModel', ignoredError); }
                 }
 
                 if (!isAdmin) actors = actors.filter((a) => summary[String(a.academic_actor_id)]);
@@ -110,7 +111,7 @@ export function useAttendanceReportViewModel() {
                             const person = (personData?.value || personData || [])[0] || {};
                             const full = `${person.name || ''} ${person.last_name || ''}`.trim();
                             if (full) p.name = full;
-                        } catch {}
+                        } catch (ignoredError) { reportIgnoredError('useAttendanceReportViewModel', ignoredError); }
                     }));
                 }
 

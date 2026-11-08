@@ -20,6 +20,7 @@ import {createCommonStyles} from './style/Style';
 import {PersonService} from '../../../services/PersonService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {validateEmail} from '../../../utils/validators';
+import { reportIgnoredError } from '../../../utils/ignoreError';
 
 export default function ProfileUpdateModal({ userInfo = {}, personId = null, onSaved = null }) {
     const { t } = useTranslation();
@@ -114,10 +115,10 @@ export default function ProfileUpdateModal({ userInfo = {}, personId = null, onS
                     profile.name = updated.fullName || name.trim();
                     await AsyncStorage.setItem('userProfile', JSON.stringify(profile));
                 }
-            } catch {}
+            } catch (ignoredError) { reportIgnoredError('ProfileUpdateModal', ignoredError); }
             setProfileLoading(false);
             if (onSaved) {
-                try { await onSaved(); } catch {}
+                try { await onSaved(); } catch (ignoredError) { reportIgnoredError('ProfileUpdateModal', ignoredError); }
             }
             showSuccess(
                 t('profile.profileModal.successTitle'),

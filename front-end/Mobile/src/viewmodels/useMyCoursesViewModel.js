@@ -7,6 +7,7 @@ import { ActorService } from "../services/ActorService";
 import { getHighestRole } from "../utils/getHighestRole";
 import { backendGet } from "../api/backend";
 import ENV from "../config/env";
+import { reportIgnoredError } from '../utils/ignoreError';
 
 const ACAD = () => ENV.ACADEMIC_BASE_URL;
 const SCHED = () => ENV.SCHEDULING_BASE_URL;
@@ -112,7 +113,7 @@ function resolveRole(storedRole) {
   try {
     const parsed = JSON.parse(storedRole);
     if (Array.isArray(parsed)) canonical = getHighestRole(parsed);
-  } catch {}
+  } catch (ignoredError) { reportIgnoredError('useMyCoursesViewModel', ignoredError); }
   const roleLower = String(canonical || "").toLowerCase();
   if (roleLower === "teacher" || roleLower === "docente" || roleLower === "instructor") return "teacher";
   return "student";

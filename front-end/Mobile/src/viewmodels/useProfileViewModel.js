@@ -14,6 +14,7 @@ import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 import {removeToken} from '../storage/TokenStorage';
 import {loadStudentProfileSections, loadTeacherProfileSections} from '../services/profileData';
 import {getDayLabel, resolveLocale} from './useDisplayingAttendanceViewModel';
+import { reportIgnoredError } from '../utils/ignoreError';
 
 const EMPTY_SECTIONS = {
     courses: [],
@@ -75,7 +76,7 @@ export function useProfileViewModel({ onLogout } = {}) {
                 try {
                     const arr = await backendGet(ENV.API_BASE_URL, `api/v1/persons/${current.personId}`);
                     person = arr[0] || null;
-                } catch {}
+                } catch (ignoredError) { reportIgnoredError('useProfileViewModel', ignoredError); }
             }
 
             // Fecha de ingreso: inicio del vínculo académico; si no hay
@@ -85,7 +86,7 @@ export function useProfileViewModel({ onLogout } = {}) {
                 try {
                     const arr = await backendGet(ENV.API_BASE_URL, `api/v1/users/${current.userId}`);
                     userCreatedAt = arr[0]?.created_at || null;
-                } catch {}
+                } catch (ignoredError) { reportIgnoredError('useProfileViewModel', ignoredError); }
             }
 
             let schoolName = '';
@@ -129,7 +130,7 @@ export function useProfileViewModel({ onLogout } = {}) {
                             const top = Object.entries(counts).sort((x, y) => y[1] - x[1] || Number(x[0]) - Number(y[0]))[0];
                             const found = top ? schools?.find((s) => String(s?.schoolId) === String(top[0])) : null;
                             if (found) school = found;
-                        } catch {}
+                        } catch (ignoredError) { reportIgnoredError('useProfileViewModel', ignoredError); }
                         if (school?.schoolId) {
                             schoolName = school?.name || '';
                             const activePeriod = await PeriodService.getActiveBySchool(school.schoolId);
@@ -140,7 +141,7 @@ export function useProfileViewModel({ onLogout } = {}) {
                             };
                         }
                     }
-                } catch {}
+                } catch (ignoredError) { reportIgnoredError('useProfileViewModel', ignoredError); }
             }
             setSchoolInfo(loadedSchoolInfo);
 

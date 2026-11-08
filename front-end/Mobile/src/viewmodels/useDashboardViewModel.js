@@ -9,6 +9,7 @@ import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 import {backendGet} from '../api/backend';
 import {loadScopedAlerts} from '../services/alertFeed';
 import ENV from '../config/env';
+import { reportIgnoredError } from '../utils/ignoreError';
 
 const ATT = () => ENV.ATTENDANCE_BASE_URL;
 const SCHED = () => ENV.SCHEDULING_BASE_URL;
@@ -126,7 +127,7 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                         if (Array.isArray(parsed)) {
                             role = getHighestRole(parsed);
                         }
-                    } catch {}
+                    } catch (ignoredError) { reportIgnoredError('useDashboardViewModel', ignoredError); }
                 }
             }
             setUserRole(role);
@@ -135,7 +136,7 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
             }
             try {
                 setIsSuperAdmin(await checkIsSuperAdmin());
-            } catch {}
+            } catch (ignoredError) { reportIgnoredError('useDashboardViewModel', ignoredError); }
         } catch (error) {
             console.error('Error cargando datos de usuario:', error);
         }
@@ -249,7 +250,7 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
                     let pendingJustifications = 0;
                     try {
                         pendingJustifications = (await backendGet(ATT(), 'api/v1/justifications', { status: 'Pending' })).length;
-                    } catch {}
+                    } catch (ignoredError) { reportIgnoredError('useDashboardViewModel', ignoredError); }
 
                     setTeacherStats({
                         presentesHoy: present,

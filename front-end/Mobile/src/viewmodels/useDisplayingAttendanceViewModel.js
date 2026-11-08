@@ -10,6 +10,7 @@ import {JustificationService} from "../services/JustificationService";
 import {backendGet} from "../api/backend";
 import ENV from "../config/env";
 import {filterAttendance} from "../utils/attendanceFilters";
+import { reportIgnoredError } from '../utils/ignoreError';
 
 function unwrap(data) {
   if (data && Array.isArray(data.value)) return data.value;
@@ -267,7 +268,7 @@ export function useAttendanceViewModel() {
                 activePeriod = myActor?.schoolId
                     ? await PeriodService.getActiveBySchool(myActor.schoolId)
                     : (await PeriodService.getAll({is_active: true}))[0] || null;
-            } catch (e) {}
+            } catch (ignoredError) { reportIgnoredError('useDisplayingAttendanceViewModel', ignoredError); }
 
             // El backend acota las justificaciones al alcance del usuario; si fallan, el histórico sigue sin ellas.
             const justifications = await safe(JustificationService.getAll()) ?? [];

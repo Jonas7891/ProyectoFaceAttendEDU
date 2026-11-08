@@ -7,6 +7,7 @@ import {removeToken} from '../storage/TokenStorage';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {getCurrentUserRole, isSuperAdmin as checkIsSuperAdmin} from "../services/UserService";
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
+import { reportIgnoredError } from '../utils/ignoreError';
 
 export function useMenuViewModel({ onLogout }) {
     const navigation = useNavigation();
@@ -39,7 +40,7 @@ export function useMenuViewModel({ onLogout }) {
             setUserRole(finalRole);
             try {
                 setIsSuperAdmin(await checkIsSuperAdmin());
-            } catch {}
+            } catch (ignoredError) { reportIgnoredError('useMenuViewModel', ignoredError); }
 
             if (finalRole) {
                 await loadThemeForRole(finalRole);
