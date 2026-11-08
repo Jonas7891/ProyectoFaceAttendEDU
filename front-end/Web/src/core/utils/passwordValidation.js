@@ -175,39 +175,3 @@ export function getPasswordStrengthLevel(strength) {
     }
 }
 
-/**
- * Obtiene sugerencias para mejorar la contraseña
- * @param {string} password - Contraseña a evaluar
- * @returns {string[]} Array de sugerencias
- */
-export function getPasswordSuggestions(password) {
-    const suggestions = [];
-
-    if (!password) return ["Ingresa una contraseña"];
-
-    if (password.length < 8) {
-        suggestions.push("Añade más caracteres (mínimo 8)");
-    }
-
-    if (!/[A-Z]/.test(password)) {
-        suggestions.push("Añade letras mayúsculas");
-    }
-
-    if (!/[a-z]/.test(password)) {
-        suggestions.push("Añade letras minúsculas");
-    }
-
-    if (!/[0-9]/.test(password)) {
-        suggestions.push("Añade números");
-    }
-
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-        suggestions.push("Añade caracteres especiales (!@#$%^&*)");
-    }
-
-    if (suggestions.length === 0) {
-        suggestions.push("¡Contraseña segura!");
-    }
-
-    return suggestions;
-}
