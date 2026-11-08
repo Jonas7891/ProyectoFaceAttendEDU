@@ -4,7 +4,7 @@
 // ============================================================
 
 import React, { useState, useEffect, useRef } from "react";
-import { View, ActivityIndicator } from "react-native";
+import { View, Text, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Button, BaseModal, AnimatedDropdown } from "../common";
 import TextInput from "../common/inputs/TextInput";
