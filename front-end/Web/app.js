@@ -17,8 +17,8 @@ import { AuthProvider }     from "./src/context/AuthContext";
 import { PushNotificationProvider } from "./src/view/components/common/feedback/PushNotification";
 import { getInstitutionConfig } from "./src/core/config/institutionConfig";
 import { DataLoadErrorBanner } from "./src/view/components/common/DataLoadErrorBanner";
-import AppNavigator from "./src/navegation/appNavigator";
-import { linkingConfig } from "./src/navegation/linking.config";
+import AppNavigator from "./src/navigation/appNavigator";
+import { linkingConfig } from "./src/navigation/linking.config";
 import LoadingView from "./src/view/LoadingView";
 
 // Wrapper interno para acceder al contexto de idioma
