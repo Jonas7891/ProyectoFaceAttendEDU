@@ -44,8 +44,9 @@ jest.mock("../../../../viewmodels/useStudentsViewModel", () => ({
 jest.mock("../BiometricEnrollmentModal", () => {
     const React = require("react");
     const { Text } = require("react-native");
-    return (props) =>
-        props.visible ? React.createElement(Text, { testID: "enrollment", onPress: props.onClose }, "ENROLL") : null;
+    return function MockEnrollmentModal(props) {
+        return props.visible ? React.createElement(Text, { testID: "enrollment", onPress: props.onClose }, "ENROLL") : null;
+    };
 });
 
 import RegisterStudentModal from "../RegisterStudentModal";

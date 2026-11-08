@@ -21,7 +21,9 @@ jest.mock("../../common", () => {
 jest.mock("../../privacy/TermsPendingNotice", () => {
     const React = require("react");
     const { Text } = require("react-native");
-    return ({ pending }) => React.createElement(Text, null, `PENDING:${pending.step}`);
+    return function MockPendingStep({ pending }) {
+        return React.createElement(Text, null, `PENDING:${pending.step}`);
+    };
 });
 jest.mock("../../privacy/BiometricConsentPrompt", () => {
     const React = require("react");

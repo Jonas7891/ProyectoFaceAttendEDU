@@ -42,12 +42,13 @@ jest.mock("../../../../services/api/biometricCaptureApi", () => ({
 jest.mock("../BiometricEnrollmentModal", () => {
     const React = require("react");
     const { Text } = require("react-native");
-    return (props) =>
-        React.createElement(
+    return function MockEnrollmentModal(props) {
+        return React.createElement(
             Text,
             { testID: "enrollment", onPress: () => props.onFinished({ hasFacial: true, hasFingerprint: false }) },
             `ENROLL:${props.person.personId}:${props.wantFace}:${props.wantFingerprint}`
         );
+    };
 });
 
 import { biometricCaptureApi } from "../../../../services/api/biometricCaptureApi";
