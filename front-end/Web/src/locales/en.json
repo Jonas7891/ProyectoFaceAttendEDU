@@ -2007,5 +2007,13 @@
   "Más": "More",
   "Mostrar inactivos": "Show inactive",
   "Sin registros": "No records",
-  "Los usuarios seleccionados no tienen asistencias en el rango elegido": "The selected users have no attendance records in the chosen range"
+  "Los usuarios seleccionados no tienen asistencias en el rango elegido": "The selected users have no attendance records in the chosen range",
+  "Salón {{name}}": "Room {{name}}",
+  "Entrada: {{time}}": "Check-in: {{time}}",
+  "Salida: {{time}}": "Check-out: {{time}}",
+  "{{period}} • Actual": "{{period}} • Current",
+  "Semanas {{start}}-{{end}}": "Weeks {{start}}-{{end}}",
+  "Retardos": "Late arrivals",
+  "Filtrar por período académico": "Filter by academic period",
+  "Este usuario aún no tiene registros de asistencia": "This user has no attendance records yet"
 }

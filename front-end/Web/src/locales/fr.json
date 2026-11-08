@@ -2007,5 +2007,13 @@
   "Más": "Plus",
   "Mostrar inactivos": "Afficher les inactifs",
   "Sin registros": "Aucun enregistrement",
-  "Los usuarios seleccionados no tienen asistencias en el rango elegido": "Les utilisateurs sélectionnés n’ont aucune présence sur la période choisie"
+  "Los usuarios seleccionados no tienen asistencias en el rango elegido": "Les utilisateurs sélectionnés n’ont aucune présence sur la période choisie",
+  "Salón {{name}}": "Salle {{name}}",
+  "Entrada: {{time}}": "Entrée : {{time}}",
+  "Salida: {{time}}": "Sortie : {{time}}",
+  "{{period}} • Actual": "{{period}} • En cours",
+  "Semanas {{start}}-{{end}}": "Semaines {{start}}-{{end}}",
+  "Retardos": "Retards",
+  "Filtrar por período académico": "Filtrer par période académique",
+  "Este usuario aún no tiene registros de asistencia": "Cet utilisateur n’a encore aucune présence enregistrée"
 }

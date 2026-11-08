@@ -122,7 +122,7 @@ export default function UserHistoryModal({
                                     color: c.text.secondary,
                                     fontWeight: "500",
                                 }}>
-                                    Salón {environment}
+                                    {t("Salón {{name}}", { name: environment })}
                                 </Text>
                             </View>
                         )}
@@ -161,7 +161,7 @@ export default function UserHistoryModal({
                                         color: record.late ? c.status.warning : c.text.secondary,
                                         fontWeight: record.late ? "700" : "500",
                                     }}>
-                                        Entrada: {record.checkInTime}
+                                        {t("Entrada: {{time}}", { time: record.checkInTime })}
                                     </Text>
                                 </View>
                             )}
@@ -174,7 +174,7 @@ export default function UserHistoryModal({
                                     <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
                                         <Feather name="log-out" size={13} color={c.text.secondary} />
                                         <Text style={{ fontSize: 13, color: c.text.secondary, fontWeight: "500" }}>
-                                            Salida: {record.checkOutTime}
+                                            {t("Salida: {{time}}", { time: record.checkOutTime })}
                                         </Text>
                                     </View>
                                 </>
@@ -185,7 +185,7 @@ export default function UserHistoryModal({
 
                 {/* Badge de estado */}
                 <Badge variant={config.variant} size="sm">
-                    {config.label}
+                    {t(config.label)}
                 </Badge>
             </View>
         );
@@ -334,11 +334,11 @@ export default function UserHistoryModal({
         return yearPeriods.map(period => ({
             value: period.id,
             label: period.isCurrent 
-                ? `${formatPeriodLabel(period, academicPeriodType)} • Actual`
+                ? t("{{period}} • Actual", { period: formatPeriodLabel(period, academicPeriodType) })
                 : formatPeriodLabel(period, academicPeriodType),
-            description: `Semanas ${period.startWeek}-${period.endWeek}`,
+            description: t("Semanas {{start}}-{{end}}", { start: period.startWeek, end: period.endWeek }),
         }));
-    }, [yearPeriods, academicPeriodType]);
+    }, [yearPeriods, academicPeriodType, t]);
 
     if (!user || !fullStudent) return null;
 
@@ -448,7 +448,7 @@ export default function UserHistoryModal({
                                     {stats.total}
                                 </Text>
                                 <Text style={{ fontSize: 9, color: c.text.secondary, fontWeight: "600" }}>
-                                    Total
+                                    {t("Total")}
                                 </Text>
                             </View>
 
@@ -467,7 +467,7 @@ export default function UserHistoryModal({
                                     {stats.present}
                                 </Text>
                                 <Text style={{ fontSize: 9, color: c.text.secondary, fontWeight: "600" }}>
-                                    Presentes
+                                    {t("Presentes")}
                                 </Text>
                             </View>
 
@@ -486,7 +486,7 @@ export default function UserHistoryModal({
                                     {stats.absent}
                                 </Text>
                                 <Text style={{ fontSize: 9, color: c.text.secondary, fontWeight: "600" }}>
-                                    Ausentes
+                                    {t("Ausentes")}
                                 </Text>
                             </View>
 
@@ -505,7 +505,7 @@ export default function UserHistoryModal({
                                     {stats.late}
                                 </Text>
                                 <Text style={{ fontSize: 9, color: c.text.secondary, fontWeight: "600" }}>
-                                    Retardos
+                                    {t("Retardos")}
                                 </Text>
                             </View>
 
@@ -524,7 +524,7 @@ export default function UserHistoryModal({
                                     {stats.percentage}%
                                 </Text>
                                 <Text style={{ fontSize: 9, color: c.text.secondary, fontWeight: "600" }}>
-                                    Asistencia
+                                    {t("Asistencia")}
                                 </Text>
                             </View>
                         </View>
@@ -572,7 +572,7 @@ export default function UserHistoryModal({
                                     }}
                                     numberOfLines={1}
                                 >
-                                    Filtrar por período académico
+                                    {t("Filtrar por período académico")}
                                 </Text>
                                 <Text 
                                     style={{
@@ -582,7 +582,7 @@ export default function UserHistoryModal({
                                     }}
                                     numberOfLines={1}
                                 >
-                                    {selectedPeriod ? `Semanas ${selectedPeriod.startWeek}-${selectedPeriod.endWeek}` : ''}
+                                    {selectedPeriod ? t("Semanas {{start}}-{{end}}", { start: selectedPeriod.startWeek, end: selectedPeriod.endWeek }) : ''}
                                 </Text>
                             </View>
                             <View style={{ width: 200, flexShrink: 0 }}>
@@ -613,14 +613,14 @@ export default function UserHistoryModal({
                                 color: c.text.secondary,
                                 marginBottom: 6,
                             }}>
-                                Sin registros de asistencia
+                                {t("Sin registros de asistencia")}
                             </Text>
                             <Text style={{
                                 fontSize: 13,
                                 color: c.text.tertiary,
                                 textAlign: "center",
                             }}>
-                                Este usuario aún no tiene registros de asistencia
+                                {t("Este usuario aún no tiene registros de asistencia")}
                             </Text>
                         </View>
                     ) : (
