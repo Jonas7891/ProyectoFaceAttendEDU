@@ -191,12 +191,12 @@ export function WeeklyAttendanceView({
  * 
  * @param {Array} weeklyData - Datos semanales
  * @param {Array} currentWeekData - Datos de la semana actual
- * @param {string} academicPeriod - Tipo de período académico (TODO: obtener de Settings)
+ * @param {string} academicPeriod - Academic period type configured in Settings (DashboardView passes useAcademicPeriod())
  */
 export function useWeeklyAttendanceController(
     weeklyData = [], 
     currentWeekData = [],
-    academicPeriod // TODO: En el futuro esto vendrá de Settings
+    academicPeriod // configured period, see DashboardView.useAcademicPeriod
 ) {
     const [selectedWeek, setSelectedWeek] = useState(null);
     const [isCurrentWeek, setIsCurrentWeek] = useState(true); // Flag para saber si es la semana actual

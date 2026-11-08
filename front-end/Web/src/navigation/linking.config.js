@@ -113,22 +113,6 @@ export const linkingConfig = {
 };
 
 /**
- * Hook para obtener la URL actual
- * Útil para compartir links o copiar URLs
- */
-export function useCurrentUrl() {
-    const [url, setUrl] = React.useState('');
-    
-    React.useEffect(() => {
-        if (typeof window !== 'undefined') {
-            setUrl(window.location.href);
-        }
-    }, []);
-    
-    return url;
-}
-
-/**
  * Función helper para construir URLs programáticamente
  * 
  * @param {string} screen - Nombre del screen

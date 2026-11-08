@@ -40,7 +40,7 @@ import {
  * @param {Function} onWeekSelect - Callback al seleccionar una semana (recibe weekData)
  * @param {string} selectedWeek - Semana actualmente seleccionada
  * @param {string} academicPeriod - Tipo de período académico (annual, semestral, quarterly, trimestral)
- *                                   TODO: Esto vendrá de Settings en el futuro
+ *                                   Callers pass the period configured in Settings (DashboardView.useAcademicPeriod).
  * @param {Function} onPeriodChange - Callback cuando cambia el período seleccionado (recibe period object)
  * @param {string} title - Título del componente (default: "Tendencia semanal")
  * @param {Function} t - Función de traducción (opcional)
@@ -52,7 +52,7 @@ export function WeeklyTrend({
     colorByPerformance = false,
     onWeekSelect,
     selectedWeek,
-    academicPeriod = DEFAULT_ACADEMIC_PERIOD, // TODO: Obtener de Settings
+    academicPeriod = DEFAULT_ACADEMIC_PERIOD, // fallback when no configured period is passed
     onPeriodChange,
     title,
     t = (key) => key, // Fallback si no se pasa traducción
