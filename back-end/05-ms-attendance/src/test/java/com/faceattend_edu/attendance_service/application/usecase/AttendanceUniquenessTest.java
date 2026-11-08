@@ -4,7 +4,7 @@ import com.faceattend_edu.attendance_service.application.policy.ArrivalStatusPol
 import com.faceattend_edu.attendance_service.domain.exception.DuplicateEntityException;
 import com.faceattend_edu.attendance_service.domain.model.AttendanceRecord;
 import com.faceattend_edu.attendance_service.domain.port.out.AttendanceRecordRepository;
-import com.faceattend_edu.attendance_service.infrastructure.messaging.DomainEventPublisher;
+import com.faceattend_edu.attendance_service.domain.port.out.EventPublisherPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,7 +33,7 @@ class AttendanceUniquenessTest {
     private static final long ACTOR = 20L;
 
     @Mock AttendanceRecordRepository repository;
-    @Mock DomainEventPublisher eventPublisher;
+    @Mock EventPublisherPort eventPublisher;
 
     private CreateAttendanceRecordUseCaseImpl create;
     private RecordAttendanceUseCaseImpl record;

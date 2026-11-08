@@ -5,7 +5,7 @@ import com.faceattend_edu.attendance_service.domain.exception.DuplicateEntityExc
 import com.faceattend_edu.attendance_service.domain.model.AttendanceRecord;
 import com.faceattend_edu.attendance_service.domain.port.in.CreateAttendanceRecordUseCase;
 import com.faceattend_edu.attendance_service.domain.port.out.AttendanceRecordRepository;
-import com.faceattend_edu.attendance_service.infrastructure.messaging.DomainEventPublisher;
+import com.faceattend_edu.attendance_service.domain.port.out.EventPublisherPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CreateAttendanceRecordUseCaseImpl implements CreateAttendanceRecordUseCase {
     private final AttendanceRecordRepository repository;
-    private final DomainEventPublisher eventPublisher;
+    private final EventPublisherPort eventPublisher;
     private final ArrivalStatusPolicy arrivalPolicy;
 
     @Override @Transactional

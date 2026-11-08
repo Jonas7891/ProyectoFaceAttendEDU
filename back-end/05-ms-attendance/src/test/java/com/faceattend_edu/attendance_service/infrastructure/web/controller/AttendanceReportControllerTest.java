@@ -1,5 +1,7 @@
 package com.faceattend_edu.attendance_service.infrastructure.web.controller;
 
+import com.faceattend_edu.attendance_service.application.usecase.GetAttendanceReportUseCaseImpl;
+import com.faceattend_edu.attendance_service.infrastructure.persistence.adapter.AttendanceStatsPersistenceAdapter;
 import com.faceattend_edu.attendance_service.infrastructure.persistence.repository.AttendanceGroupCount;
 import com.faceattend_edu.attendance_service.infrastructure.persistence.repository.AttendanceRecordJpaRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -8,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -30,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = AttendanceReportController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@Import({GetAttendanceReportUseCaseImpl.class, AttendanceStatsPersistenceAdapter.class})
 @DisplayName("IEEE 829 TC-05: Attendance Report HTTP Tests")
 class AttendanceReportControllerTest {
 

@@ -9,7 +9,7 @@ import com.faceattend_edu.attendance_service.domain.port.out.AttendanceRecordRep
 import com.faceattend_edu.attendance_service.domain.port.out.JustificationRepository;
 import com.faceattend_edu.attendance_service.domain.port.out.JustificationTypeRepository;
 import com.faceattend_edu.attendance_service.domain.port.out.SupportingDocumentRepository;
-import com.faceattend_edu.attendance_service.infrastructure.messaging.DomainEventPublisher;
+import com.faceattend_edu.attendance_service.domain.port.out.EventPublisherPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +33,7 @@ public class ReviewJustificationUseCaseImpl implements ReviewJustificationUseCas
     private final JustificationTypeRepository typeRepository;
     private final SupportingDocumentRepository documentRepository;
     private final AttendanceRecordRepository recordRepository;
-    private final DomainEventPublisher eventPublisher;
+    private final EventPublisherPort eventPublisher;
     /** Tópico del catálogo de eventos (fae-docs 09-microservices/event-catalog.md). */
     static final String TOPIC = "attendance.justification.events";
     private static final Set<String> ALLOWED = Set.of("Approved","Rejected","Pending");

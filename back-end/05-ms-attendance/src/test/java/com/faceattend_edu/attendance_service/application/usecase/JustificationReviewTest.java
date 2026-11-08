@@ -11,7 +11,7 @@ import com.faceattend_edu.attendance_service.domain.port.out.AttendanceRecordRep
 import com.faceattend_edu.attendance_service.domain.port.out.JustificationRepository;
 import com.faceattend_edu.attendance_service.domain.port.out.JustificationTypeRepository;
 import com.faceattend_edu.attendance_service.domain.port.out.SupportingDocumentRepository;
-import com.faceattend_edu.attendance_service.infrastructure.messaging.DomainEventPublisher;
+import com.faceattend_edu.attendance_service.domain.port.out.EventPublisherPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,7 +46,7 @@ class JustificationReviewTest {
     @Mock JustificationTypeRepository typeRepository;
     @Mock SupportingDocumentRepository documentRepository;
     @Mock AttendanceRecordRepository recordRepository;
-    @Mock DomainEventPublisher eventPublisher;
+    @Mock EventPublisherPort eventPublisher;
 
     private CreateJustificationUseCaseImpl create;
     private ReviewJustificationUseCaseImpl review;

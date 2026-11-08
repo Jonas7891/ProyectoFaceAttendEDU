@@ -5,7 +5,7 @@ import com.faceattend_edu.attendance_service.application.usecase.RecordAttendanc
 import com.faceattend_edu.attendance_service.domain.model.AttendanceRecord;
 import com.faceattend_edu.attendance_service.domain.port.out.ArrivalTimingPort;
 import com.faceattend_edu.attendance_service.domain.port.out.AttendanceRecordRepository;
-import com.faceattend_edu.attendance_service.infrastructure.messaging.DomainEventPublisher;
+import com.faceattend_edu.attendance_service.domain.port.out.EventPublisherPort;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -106,7 +106,7 @@ class ArrivalStatusPolicyTest {
         when(repository.save(any(AttendanceRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
         // Timing in 2020: whatever time the test runs, the arrival is long past the tolerance.
         ArrivalStatusPolicy lateAlways = policy(Optional.of(new ArrivalTimingPort.Timing(LocalDate.of(2020, 1, 1), LocalTime.of(7, 0), 15)));
-        CreateAttendanceRecordUseCaseImpl create = new CreateAttendanceRecordUseCaseImpl(repository, mock(DomainEventPublisher.class), lateAlways);
+        CreateAttendanceRecordUseCaseImpl create = new CreateAttendanceRecordUseCaseImpl(repository, mock(EventPublisherPort.class), lateAlways);
 
         AttendanceRecord row = new AttendanceRecord();
         row.setClassSessionId(10L);

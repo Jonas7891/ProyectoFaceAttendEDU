@@ -7,7 +7,7 @@ import com.faceattend_edu.attendance_service.domain.port.in.GetJustificationUseC
 import com.faceattend_edu.attendance_service.domain.port.in.UploadSupportingDocumentUseCase;
 import com.faceattend_edu.attendance_service.domain.port.out.DocumentStoragePort;
 import com.faceattend_edu.attendance_service.domain.port.out.SupportingDocumentRepository;
-import com.faceattend_edu.attendance_service.infrastructure.messaging.DomainEventPublisher;
+import com.faceattend_edu.attendance_service.domain.port.out.EventPublisherPort;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +27,7 @@ public class UploadSupportingDocumentUseCaseImpl implements UploadSupportingDocu
     private final GetJustificationUseCase justificationUseCase;
     private final SupportingDocumentRepository repository;
     private final DocumentStoragePort storage;
-    private final DomainEventPublisher eventPublisher;
+    private final EventPublisherPort eventPublisher;
 
     @Override
     public SupportingDocument upload(Long justificationId, String originalFileName, byte[] content) {

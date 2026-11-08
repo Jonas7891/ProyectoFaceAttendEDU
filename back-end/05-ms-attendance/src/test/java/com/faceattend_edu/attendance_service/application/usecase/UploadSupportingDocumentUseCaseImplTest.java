@@ -8,7 +8,7 @@ import com.faceattend_edu.attendance_service.domain.model.SupportingDocumentType
 import com.faceattend_edu.attendance_service.domain.port.in.GetJustificationUseCase;
 import com.faceattend_edu.attendance_service.domain.port.out.DocumentStoragePort;
 import com.faceattend_edu.attendance_service.domain.port.out.SupportingDocumentRepository;
-import com.faceattend_edu.attendance_service.infrastructure.messaging.DomainEventPublisher;
+import com.faceattend_edu.attendance_service.domain.port.out.EventPublisherPort;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,7 +39,7 @@ class UploadSupportingDocumentUseCaseImplTest {
     @Mock GetJustificationUseCase justificationUseCase;
     @Mock SupportingDocumentRepository repository;
     @Mock DocumentStoragePort storage;
-    @Mock DomainEventPublisher eventPublisher;
+    @Mock EventPublisherPort eventPublisher;
     @InjectMocks UploadSupportingDocumentUseCaseImpl useCase;
 
     @Test
