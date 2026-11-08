@@ -1,6 +1,7 @@
 package com.faceattend_edu.scheduling_service.domain.port.out;
 
 import com.faceattend_edu.scheduling_service.domain.model.ScheduleBlock;
+import com.faceattend_edu.scheduling_service.domain.model.ScheduleBlockFilter;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -9,6 +10,9 @@ public interface ScheduleBlockRepository {
     ScheduleBlock save(ScheduleBlock block);
     Optional<ScheduleBlock> findById(Long id);
     List<ScheduleBlock> findAll();
+
+    /** Blocks matching {@code filter}, ordered by id; with {@code schoolId}, only those in a live environment of that school. */
+    List<ScheduleBlock> search(ScheduleBlockFilter filter, Integer schoolId);
     void deleteById(Long id);
     boolean existsById(Long id);
 

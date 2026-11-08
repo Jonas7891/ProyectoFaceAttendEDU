@@ -1,7 +1,8 @@
 package com.faceattend_edu.scheduling_service.application.usecase;
 
+import com.faceattend_edu.scheduling_service.application.access.SchedulingAccessPolicy;
 import com.faceattend_edu.scheduling_service.domain.exception.EntityNotFoundException;
-import com.faceattend_edu.scheduling_service.domain.exception.ValidationException;
+import com.faceattend_edu.scheduling_service.domain.model.Caller;
 import com.faceattend_edu.scheduling_service.domain.model.ClassSession;
 import com.faceattend_edu.scheduling_service.domain.port.in.CancelClassSessionUseCase;
 import com.faceattend_edu.scheduling_service.domain.port.out.ClassSessionRepository;
@@ -13,13 +14,14 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CancelClassSessionUseCaseImpl implements CancelClassSessionUseCase {
     private final ClassSessionRepository repository;
+    private final SchedulingAccessPolicy access;
+
     @Override @Transactional
-    public ClassSession cancel(Long id) {
+    public ClassSession cancel(Caller caller, Long id) {
         ClassSession session = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("ClassSession", id));
-        if (session.isCancelled()) throw new ValidationException("ClassSession already Cancelled");
-        if (session.isClosed()) throw new ValidationException("Cannot cancel a Closed session");
-        session.setSessionStatus("Cancelled");
-        session.touchUpdated();
+        access.requireSessionAccess(caller, session);
+        access.requireIsClassInstructor(caller, session);
+        session.cancel();
         return repository.save(session);
     }
 }

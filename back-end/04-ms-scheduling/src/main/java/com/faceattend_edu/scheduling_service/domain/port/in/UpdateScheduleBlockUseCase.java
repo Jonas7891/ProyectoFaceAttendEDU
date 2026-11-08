@@ -1,7 +1,7 @@
 package com.faceattend_edu.scheduling_service.domain.port.in;
 
+import com.faceattend_edu.scheduling_service.domain.model.Caller;
 import com.faceattend_edu.scheduling_service.domain.model.ScheduleBlock;
-
 public interface UpdateScheduleBlockUseCase {
-    ScheduleBlock update(Long id, ScheduleBlock block);
+    ScheduleBlock update(Caller caller, Long id, ScheduleBlock patch);
 }

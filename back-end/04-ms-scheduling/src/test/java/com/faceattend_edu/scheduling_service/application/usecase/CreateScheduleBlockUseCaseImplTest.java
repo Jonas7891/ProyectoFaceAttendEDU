@@ -1,6 +1,9 @@
 package com.faceattend_edu.scheduling_service.application.usecase;
 
+import com.faceattend_edu.scheduling_service.application.access.SchedulingAccessPolicy;
 import com.faceattend_edu.scheduling_service.domain.exception.DuplicateEntityException;
+import com.faceattend_edu.scheduling_service.domain.model.Caller;
+import com.faceattend_edu.scheduling_service.domain.port.out.EnvironmentRepository;
 import com.faceattend_edu.scheduling_service.domain.model.ScheduleBlock;
 import com.faceattend_edu.scheduling_service.domain.port.out.ScheduleBlockRepository;
 import com.faceattend_edu.scheduling_service.infrastructure.messaging.DomainEventPublisher;
@@ -18,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -31,7 +35,7 @@ class CreateScheduleBlockUseCaseImplTest {
 
     @BeforeEach
     void setUp() {
-        useCase = new CreateScheduleBlockUseCaseImpl(repository, new ScheduleBlockOverlapGuard(repository), eventPublisher);
+        useCase = new CreateScheduleBlockUseCaseImpl(repository, new ScheduleBlockOverlapGuard(repository), eventPublisher, new SchedulingAccessPolicy(repository, mock(EnvironmentRepository.class)));
     }
 
     private ScheduleBlock block(short day, LocalTime start, LocalTime end) {
@@ -53,7 +57,7 @@ class CreateScheduleBlockUseCaseImplTest {
         saved.setScheduleBlockId(99L);
         when(repository.save(input)).thenReturn(saved);
 
-        ScheduleBlock result = useCase.create(input);
+        ScheduleBlock result = useCase.create(Caller.UNRESTRICTED, input);
 
         assertSame(saved, result);
         assertEquals(1L, input.getRowVersion());
@@ -65,7 +69,7 @@ class CreateScheduleBlockUseCaseImplTest {
         ScheduleBlock input = block((short) 2, LocalTime.of(8, 0), LocalTime.of(10, 0));
         when(repository.save(input)).thenThrow(new DataIntegrityViolationException("uq_block_environment_slot"));
 
-        assertThrows(DuplicateEntityException.class, () -> useCase.create(input));
+        assertThrows(DuplicateEntityException.class, () -> useCase.create(Caller.UNRESTRICTED, input));
         verify(eventPublisher, never()).publish(any(), any());
     }
 
@@ -73,7 +77,7 @@ class CreateScheduleBlockUseCaseImplTest {
     void neverReachesTheRepositoryWithAnInvertedTimeRange() {
         ScheduleBlock input = block((short) 2, LocalTime.of(10, 0), LocalTime.of(8, 0));
 
-        assertThrows(IllegalArgumentException.class, () -> useCase.create(input));
+        assertThrows(IllegalArgumentException.class, () -> useCase.create(Caller.UNRESTRICTED, input));
         verify(repository, never()).save(any());
     }
 
@@ -82,7 +86,7 @@ class CreateScheduleBlockUseCaseImplTest {
         ScheduleBlock input = block((short) 2, LocalTime.of(9, 0), LocalTime.of(11, 0));
         when(repository.existsEnvironmentOverlap(3, (short) 2, LocalTime.of(9, 0), LocalTime.of(11, 0), null)).thenReturn(true);
 
-        assertThrows(DuplicateEntityException.class, () -> useCase.create(input));
+        assertThrows(DuplicateEntityException.class, () -> useCase.create(Caller.UNRESTRICTED, input));
         verify(repository, never()).save(any());
     }
 
@@ -91,7 +95,7 @@ class CreateScheduleBlockUseCaseImplTest {
         ScheduleBlock input = block((short) 2, LocalTime.of(9, 0), LocalTime.of(11, 0));
         when(repository.existsInstructorOverlap(4L, (short) 2, LocalTime.of(9, 0), LocalTime.of(11, 0), null)).thenReturn(true);
 
-        assertThrows(DuplicateEntityException.class, () -> useCase.create(input));
+        assertThrows(DuplicateEntityException.class, () -> useCase.create(Caller.UNRESTRICTED, input));
         verify(repository, never()).save(any());
     }
 
@@ -99,7 +103,7 @@ class CreateScheduleBlockUseCaseImplTest {
     void neverReachesTheRepositoryWithAnInvalidDay() {
         ScheduleBlock input = block((short) 8, LocalTime.of(8, 0), LocalTime.of(10, 0));
 
-        assertThrows(IllegalArgumentException.class, () -> useCase.create(input));
+        assertThrows(IllegalArgumentException.class, () -> useCase.create(Caller.UNRESTRICTED, input));
         verify(repository, never()).save(any());
     }
 }

@@ -1,6 +1,7 @@
 package com.faceattend_edu.scheduling_service.infrastructure.persistence.adapter;
 
 import com.faceattend_edu.scheduling_service.domain.model.ScheduleBlock;
+import com.faceattend_edu.scheduling_service.domain.model.ScheduleBlockFilter;
 import com.faceattend_edu.scheduling_service.domain.port.out.ScheduleBlockRepository;
 import com.faceattend_edu.scheduling_service.infrastructure.persistence.mapper.ScheduleBlockPersistenceMapper;
 import com.faceattend_edu.scheduling_service.infrastructure.persistence.repository.ScheduleBlockJpaRepository;
@@ -25,6 +26,15 @@ public class ScheduleBlockPersistenceAdapter implements ScheduleBlockRepository 
     }
     @Override public List<ScheduleBlock> findAll() {
         return jpaRepository.findAll().stream().map(mapper::toDomain).collect(Collectors.toList());
+    }
+    @Override public List<ScheduleBlock> search(ScheduleBlockFilter f, Integer schoolId) {
+        return jpaRepository.search(
+                f.cohortId() != null, f.cohortId() == null ? -1L : f.cohortId(),
+                f.environmentId() != null, f.environmentId() == null ? -1 : f.environmentId(),
+                f.instructorActorId() != null, f.instructorActorId() == null ? -1L : f.instructorActorId(),
+                f.courseId() != null, f.courseId() == null ? -1 : f.courseId(),
+                schoolId != null, schoolId == null ? -1 : schoolId)
+                .stream().map(mapper::toDomain).collect(Collectors.toList());
     }
     @Override public void deleteById(Long id) { jpaRepository.deleteById(id); }
     @Override public boolean existsById(Long id) { return jpaRepository.existsById(id); }

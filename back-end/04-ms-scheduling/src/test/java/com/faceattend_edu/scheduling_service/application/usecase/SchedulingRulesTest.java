@@ -1,6 +1,10 @@
 package com.faceattend_edu.scheduling_service.application.usecase;
 
+import com.faceattend_edu.scheduling_service.application.access.SchedulingAccessPolicy;
 import com.faceattend_edu.scheduling_service.domain.exception.DuplicateEntityException;
+import com.faceattend_edu.scheduling_service.domain.exception.OutOfScopeException;
+import com.faceattend_edu.scheduling_service.domain.exception.ValidationException;
+import com.faceattend_edu.scheduling_service.domain.model.Caller;
 import com.faceattend_edu.scheduling_service.domain.exception.EntityNotFoundException;
 import com.faceattend_edu.scheduling_service.domain.model.ClassSession;
 import com.faceattend_edu.scheduling_service.domain.model.Environment;
@@ -142,11 +146,13 @@ class SchedulingRulesTest {
     class EnvironmentUseCases {
         private final EnvironmentRepository repository = mock(EnvironmentRepository.class);
         private final DomainEventPublisher publisher = mock(DomainEventPublisher.class);
+        private final SchedulingAccessPolicy access = new SchedulingAccessPolicy(mock(ScheduleBlockRepository.class), repository);
+        private final Caller anyone = Caller.UNRESTRICTED;
 
         @Test
         void createRejectsADuplicateCodeInTheSameSchool() {
             when(repository.findBySchoolIdAndCode(1, "A-101")).thenReturn(Optional.of(environment()));
-            assertThatThrownBy(() -> new CreateEnvironmentUseCaseImpl(repository, publisher).create(environment()))
+            assertThatThrownBy(() -> new CreateEnvironmentUseCaseImpl(repository, publisher, access).create(anyone, environment()))
                     .isInstanceOf(DuplicateEntityException.class);
             verify(repository, never()).save(any());
         }
@@ -159,7 +165,7 @@ class SchedulingRulesTest {
                 saved.setEnvironmentId(9);
                 return saved;
             });
-            Environment created = new CreateEnvironmentUseCaseImpl(repository, publisher).create(environment());
+            Environment created = new CreateEnvironmentUseCaseImpl(repository, publisher, access).create(anyone, environment());
             assertThat(created.getEnvironmentId()).isEqualTo(9);
             verify(publisher).publish(eq("environment-events"), contains("\"environmentId\":9"));
         }
@@ -168,8 +174,16 @@ class SchedulingRulesTest {
         void createTurnsAUniqueViolationIntoADuplicate() {
             when(repository.findBySchoolIdAndCode(1, "A-101")).thenReturn(Optional.empty());
             when(repository.save(any())).thenThrow(new DataIntegrityViolationException("uq"));
-            assertThatThrownBy(() -> new CreateEnvironmentUseCaseImpl(repository, publisher).create(environment()))
+            assertThatThrownBy(() -> new CreateEnvironmentUseCaseImpl(repository, publisher, access).create(anyone, environment()))
                     .isInstanceOf(DuplicateEntityException.class);
+        }
+
+        @Test
+        void createInAnotherSchoolLooksLikeAMissingRecord() {
+            Caller ofSchool2 = new Caller(true, 2, 5L, true);
+            assertThatThrownBy(() -> new CreateEnvironmentUseCaseImpl(repository, publisher, access).create(ofSchool2, environment()))
+                    .isInstanceOf(OutOfScopeException.class);
+            verify(repository, never()).save(any());
         }
 
         @Test
@@ -181,7 +195,7 @@ class SchedulingRulesTest {
             Environment patch = new Environment();
             patch.setName("Laboratorio");
             patch.setCapacity((short) 20);
-            Environment updated = new UpdateEnvironmentUseCaseImpl(repository).update(3, patch);
+            Environment updated = new UpdateEnvironmentUseCaseImpl(repository, access).update(anyone, 3, patch);
             assertThat(updated.getName()).isEqualTo("Laboratorio");
             assertThat(updated.getCapacity()).isEqualTo((short) 20);
             assertThat(updated.getCode()).isEqualTo("A-101");
@@ -189,17 +203,28 @@ class SchedulingRulesTest {
 
             Environment all = environment();
             all.setStatus(false);
-            assertThat(new UpdateEnvironmentUseCaseImpl(repository).update(3, all).getStatus()).isFalse();
+            assertThat(new UpdateEnvironmentUseCaseImpl(repository, access).update(anyone, 3, all).getStatus()).isFalse();
             when(repository.findById(4)).thenReturn(Optional.empty());
-            assertThatThrownBy(() -> new UpdateEnvironmentUseCaseImpl(repository).update(4, patch)).isInstanceOf(EntityNotFoundException.class);
+            assertThatThrownBy(() -> new UpdateEnvironmentUseCaseImpl(repository, access).update(anyone, 4, patch)).isInstanceOf(EntityNotFoundException.class);
+        }
+
+        @Test
+        void anAdministratorCannotMoveAnEnvironmentToAnotherSchool() {
+            when(repository.findById(3)).thenReturn(Optional.of(environment()));
+            Environment patch = new Environment();
+            patch.setSchoolId(2);
+            Caller ofSchool1 = new Caller(true, 1, 5L, true);
+            assertThatThrownBy(() -> new UpdateEnvironmentUseCaseImpl(repository, access).update(ofSchool1, 3, patch))
+                    .isInstanceOf(OutOfScopeException.class);
+            verify(repository, never()).save(any());
         }
 
         @Test
         void deleteRefusesAnEnvironmentThatStillHasLiveBlocks() {
             ScheduleBlockRepository blocks = mock(ScheduleBlockRepository.class);
-            when(repository.existsById(3)).thenReturn(true);
+            when(repository.findById(3)).thenReturn(Optional.of(environment()));
             when(blocks.existsByEnvironmentId(3)).thenReturn(true);
-            assertThatThrownBy(() -> new DeleteEnvironmentUseCaseImpl(repository, blocks).delete(3))
+            assertThatThrownBy(() -> new DeleteEnvironmentUseCaseImpl(repository, blocks, access).delete(anyone, 3))
                     .isInstanceOf(DuplicateEntityException.class)
                     .hasMessageContaining("schedule blocks");
             verify(repository, never()).deleteById(3);
@@ -207,19 +232,27 @@ class SchedulingRulesTest {
 
         @Test
         void deleteGetAndListAnswerForExistingEnvironmentsOnly() {
-            when(repository.existsById(3)).thenReturn(true);
-            new DeleteEnvironmentUseCaseImpl(repository, mock(ScheduleBlockRepository.class)).delete(3);
-            verify(repository).deleteById(3);
-            assertThatThrownBy(() -> new DeleteEnvironmentUseCaseImpl(repository, mock(ScheduleBlockRepository.class)).delete(4)).isInstanceOf(EntityNotFoundException.class);
-
             when(repository.findById(3)).thenReturn(Optional.of(environment()));
-            assertThat(new GetEnvironmentUseCaseImpl(repository).getById(3).getCode()).isEqualTo("A-101");
-            assertThatThrownBy(() -> new GetEnvironmentUseCaseImpl(repository).getById(5)).isInstanceOf(EntityNotFoundException.class);
+            new DeleteEnvironmentUseCaseImpl(repository, mock(ScheduleBlockRepository.class), access).delete(anyone, 3);
+            verify(repository).deleteById(3);
+            assertThatThrownBy(() -> new DeleteEnvironmentUseCaseImpl(repository, mock(ScheduleBlockRepository.class), access).delete(anyone, 4)).isInstanceOf(EntityNotFoundException.class);
+
+            assertThat(new GetEnvironmentUseCaseImpl(repository, access).getById(anyone, 3).getCode()).isEqualTo("A-101");
+            assertThatThrownBy(() -> new GetEnvironmentUseCaseImpl(repository, access).getById(anyone, 5)).isInstanceOf(EntityNotFoundException.class);
 
             when(repository.findAll()).thenReturn(List.of(environment()));
             when(repository.findBySchoolId(1)).thenReturn(List.of(environment(), environment()));
-            assertThat(new ListEnvironmentsUseCaseImpl(repository).list()).hasSize(1);
-            assertThat(new ListEnvironmentsUseCaseImpl(repository).listBySchoolId(1)).hasSize(2);
+            assertThat(new ListEnvironmentsUseCaseImpl(repository).list(anyone, null)).hasSize(1);
+            assertThat(new ListEnvironmentsUseCaseImpl(repository).list(anyone, 1)).hasSize(2);
+        }
+
+        @Test
+        void aRestrictedCallerListsOnlyTheirOwnSchoolWhateverTheyAskFor() {
+            when(repository.findBySchoolId(1)).thenReturn(List.of(environment()));
+            assertThat(new ListEnvironmentsUseCaseImpl(repository).list(new Caller(true, 1, null, false), 2)).hasSize(1);
+            assertThat(new ListEnvironmentsUseCaseImpl(repository).list(new Caller(true, null, null, false), null)).isEmpty();
+            verify(repository, never()).findBySchoolId(2);
+            verify(repository, never()).findAll();
         }
     }
 
@@ -228,6 +261,8 @@ class SchedulingRulesTest {
         private final ScheduleBlockRepository blocks = mock(ScheduleBlockRepository.class);
         private final ScheduleBlockOverlapGuard guard = mock(ScheduleBlockOverlapGuard.class);
         private final ClassSessionRepository sessions = mock(ClassSessionRepository.class);
+        private final SchedulingAccessPolicy access = new SchedulingAccessPolicy(blocks, mock(EnvironmentRepository.class));
+        private final Caller anyone = Caller.UNRESTRICTED;
 
         @Test
         void updatingABlockMergesTheChangesAndChecksForDoubleBooking() {
@@ -242,7 +277,7 @@ class SchedulingRulesTest {
             patch.setCourseId(7);
             patch.setEnvironmentId(8);
             patch.setInstructorActorId(9L);
-            ScheduleBlock updated = new UpdateScheduleBlockUseCaseImpl(blocks, guard).update(1L, patch);
+            ScheduleBlock updated = new UpdateScheduleBlockUseCaseImpl(blocks, guard, access).update(anyone, 1L, patch);
             assertThat(updated.getStartsAt()).isEqualTo(LocalTime.of(8, 0));
             assertThat(updated.getInstructorActorId()).isEqualTo(9L);
             verify(guard).check(stored, 1L);
@@ -252,10 +287,10 @@ class SchedulingRulesTest {
         void aBlockUniqueViolationIsADoubleBookingAndAMissingBlockIs404() {
             when(blocks.findById(1L)).thenReturn(Optional.of(block()));
             when(blocks.save(any())).thenThrow(new DataIntegrityViolationException("uq"));
-            assertThatThrownBy(() -> new UpdateScheduleBlockUseCaseImpl(blocks, guard).update(1L, new ScheduleBlock()))
+            assertThatThrownBy(() -> new UpdateScheduleBlockUseCaseImpl(blocks, guard, access).update(anyone, 1L, new ScheduleBlock()))
                     .isInstanceOf(DuplicateEntityException.class).hasMessageContaining("double-booking");
             when(blocks.findById(2L)).thenReturn(Optional.empty());
-            assertThatThrownBy(() -> new UpdateScheduleBlockUseCaseImpl(blocks, guard).update(2L, new ScheduleBlock()))
+            assertThatThrownBy(() -> new UpdateScheduleBlockUseCaseImpl(blocks, guard, access).update(anyone, 2L, new ScheduleBlock()))
                     .isInstanceOf(EntityNotFoundException.class);
         }
 
@@ -264,24 +299,33 @@ class SchedulingRulesTest {
             when(sessions.findById(1L)).thenReturn(Optional.of(session()));
             when(sessions.save(any())).thenAnswer(inv -> inv.getArgument(0));
             ClassSession patch = new ClassSession();
-            patch.setSessionStatus("Closed");
+            patch.setSessionStatus("Open");
             patch.setSessionDate(LocalDate.of(2026, 10, 6));
             patch.setScheduleBlockId(9L);
-            ClassSession updated = new UpdateClassSessionUseCaseImpl(sessions).update(1L, patch);
-            assertThat(updated.getSessionStatus()).isEqualTo("Closed");
+            ClassSession updated = new UpdateClassSessionUseCaseImpl(sessions, access).update(anyone, 1L, patch);
+            assertThat(updated.getSessionDate()).isEqualTo(LocalDate.of(2026, 10, 6));
             assertThat(updated.getScheduleBlockId()).isEqualTo(9L);
-            assertThatThrownBy(() -> new UpdateClassSessionUseCaseImpl(sessions).update(2L, patch)).isInstanceOf(EntityNotFoundException.class);
-            assertThat(new GetClassSessionUseCaseImpl(sessions).getById(1L).getSessionStatus()).isEqualTo("Closed");
+            assertThatThrownBy(() -> new UpdateClassSessionUseCaseImpl(sessions, access).update(anyone, 2L, patch)).isInstanceOf(EntityNotFoundException.class);
+            assertThat(new GetClassSessionUseCaseImpl(sessions, access).getById(anyone, 1L).getSessionStatus()).isEqualTo("Open");
 
-            when(sessions.existsById(1L)).thenReturn(true);
-            new DeleteClassSessionUseCaseImpl(sessions).delete(1L);
+            new DeleteClassSessionUseCaseImpl(sessions, access).delete(anyone, 1L);
             verify(sessions).deleteById(1L);
-            assertThatThrownBy(() -> new DeleteClassSessionUseCaseImpl(sessions).delete(2L)).isInstanceOf(EntityNotFoundException.class);
+            assertThatThrownBy(() -> new DeleteClassSessionUseCaseImpl(sessions, access).delete(anyone, 2L)).isInstanceOf(EntityNotFoundException.class);
 
-            when(blocks.existsById(1L)).thenReturn(true);
-            new DeleteScheduleBlockUseCaseImpl(blocks).delete(1L);
+            when(blocks.findById(1L)).thenReturn(Optional.of(block()));
+            new DeleteScheduleBlockUseCaseImpl(blocks, access).delete(anyone, 1L);
             verify(blocks).deleteById(1L);
-            assertThatThrownBy(() -> new DeleteScheduleBlockUseCaseImpl(blocks).delete(2L)).isInstanceOf(EntityNotFoundException.class);
+            assertThatThrownBy(() -> new DeleteScheduleBlockUseCaseImpl(blocks, access).delete(anyone, 2L)).isInstanceOf(EntityNotFoundException.class);
+        }
+
+        @Test
+        void putNeverChangesTheStatusTheLifecycleEndpointsDoThat() {
+            when(sessions.findById(1L)).thenReturn(Optional.of(session()));
+            ClassSession patch = new ClassSession();
+            patch.setSessionStatus("Closed");
+            assertThatThrownBy(() -> new UpdateClassSessionUseCaseImpl(sessions, access).update(anyone, 1L, patch))
+                    .isInstanceOf(ValidationException.class).hasMessageContaining("/close");
+            verify(sessions, never()).save(any());
         }
     }
 }

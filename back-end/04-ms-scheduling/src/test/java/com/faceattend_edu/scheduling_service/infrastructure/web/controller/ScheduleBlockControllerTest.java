@@ -108,7 +108,7 @@ class ScheduleBlockControllerTest {
         @DisplayName("givenValidRequest_whenCreateScheduleBlock_thenReturn201WithJson")
         void givenValidRequest_whenCreateScheduleBlock_thenReturn201WithJson() throws Exception {
             // Arrange
-            when(createUseCase.create(any(ScheduleBlock.class))).thenReturn(mondayMorning);
+            when(createUseCase.create(any(), any(ScheduleBlock.class))).thenReturn(mondayMorning);
 
             // Act & Assert
             mockMvc.perform(post("/api/v1/schedule-blocks")
@@ -127,7 +127,7 @@ class ScheduleBlockControllerTest {
                     .andExpect(jsonPath("$.endsAt").value("10:00:00"))
                     .andExpect(jsonPath("$.rowVersion").value(1));
 
-            verify(createUseCase).create(any(ScheduleBlock.class));
+            verify(createUseCase).create(any(), any(ScheduleBlock.class));
         }
 
         @Test
@@ -144,7 +144,7 @@ class ScheduleBlockControllerTest {
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error", containsString("dayOfWeek")));
 
-            verify(createUseCase, never()).create(any(ScheduleBlock.class));
+            verify(createUseCase, never()).create(any(), any(ScheduleBlock.class));
         }
 
         @Test
@@ -161,14 +161,14 @@ class ScheduleBlockControllerTest {
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error", containsString("endsAt")));
 
-            verify(createUseCase, never()).create(any(ScheduleBlock.class));
+            verify(createUseCase, never()).create(any(), any(ScheduleBlock.class));
         }
 
         @Test
         @DisplayName("givenOverlappingBlock_whenCreateScheduleBlock_thenReturn409Conflict")
         void givenOverlappingBlock_whenCreateScheduleBlock_thenReturn409Conflict() throws Exception {
             // Arrange: ScheduleBlockOverlapGuard lanza DuplicateEntityException ante doble reserva
-            when(createUseCase.create(any(ScheduleBlock.class)))
+            when(createUseCase.create(any(), any(ScheduleBlock.class)))
                     .thenThrow(new DuplicateEntityException(
                             "Environment 501 is already booked between 08:00:00 and 10:00:00 on day 1"));
 
@@ -191,7 +191,7 @@ class ScheduleBlockControllerTest {
         @DisplayName("givenExistingId_whenGetScheduleBlock_thenReturn200Json")
         void givenExistingId_whenGetScheduleBlock_thenReturn200Json() throws Exception {
             // Arrange
-            when(getUseCase.getById(9L)).thenReturn(mondayMorning);
+            when(getUseCase.getById(any(), eq(9L))).thenReturn(mondayMorning);
 
             // Act & Assert
             mockMvc.perform(get("/api/v1/schedule-blocks/9"))
@@ -206,7 +206,7 @@ class ScheduleBlockControllerTest {
         @DisplayName("givenMissingId_whenGetScheduleBlock_thenReturn404WithErrorMessage")
         void givenMissingId_whenGetScheduleBlock_thenReturn404WithErrorMessage() throws Exception {
             // Arrange
-            when(getUseCase.getById(999L)).thenThrow(new EntityNotFoundException("ScheduleBlock", 999L));
+            when(getUseCase.getById(any(), eq(999L))).thenThrow(new EntityNotFoundException("ScheduleBlock", 999L));
 
             // Act & Assert
             mockMvc.perform(get("/api/v1/schedule-blocks/999"))
@@ -222,15 +222,14 @@ class ScheduleBlockControllerTest {
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error").value("Invalid value for parameter 'id'"));
 
-            verify(getUseCase, never()).getById(any());
+            verify(getUseCase, never()).getById(any(), any());
         }
 
         @Test
         @DisplayName("givenExistingId_whenUpdateScheduleBlock_thenReturn200")
         void givenExistingId_whenUpdateScheduleBlock_thenReturn200() throws Exception {
-            // Arrange: update() now fetches first (ownership check before updating).
-            when(getUseCase.getById(9L)).thenReturn(mondayMorning);
-            when(updateUseCase.update(eq(9L), any(ScheduleBlock.class))).thenReturn(mondayMorning);
+            // Arrange: the ownership check lives in the use case, mocked here.
+            when(updateUseCase.update(any(), eq(9L), any(ScheduleBlock.class))).thenReturn(mondayMorning);
 
             // Act & Assert
             mockMvc.perform(put("/api/v1/schedule-blocks/9")
@@ -241,20 +240,19 @@ class ScheduleBlockControllerTest {
                     .andExpect(jsonPath("$.scheduleBlockId").value(9))
                     .andExpect(jsonPath("$.dayOfWeek").value(1));
 
-            verify(updateUseCase).update(eq(9L), any(ScheduleBlock.class));
+            verify(updateUseCase).update(any(), eq(9L), any(ScheduleBlock.class));
         }
 
         @Test
         @DisplayName("givenExistingId_whenDeleteScheduleBlock_thenReturn204")
         void givenExistingId_whenDeleteScheduleBlock_thenReturn204() throws Exception {
-            // Arrange: delete() now fetches first (ownership check before deleting).
-            when(getUseCase.getById(9L)).thenReturn(mondayMorning);
+            // Arrange: the ownership check lives in the use case, mocked here.
 
             // Act & Assert
             mockMvc.perform(delete("/api/v1/schedule-blocks/9"))
                     .andExpect(status().isNoContent());
 
-            verify(deleteUseCase).delete(9L);
+            verify(deleteUseCase).delete(any(), eq(9L));
         }
     }
 
@@ -267,7 +265,7 @@ class ScheduleBlockControllerTest {
         void givenLimitAndOffset_whenListScheduleBlocks_thenReturnSliceWithTotalCountHeader() throws Exception {
             // Arrange: 3 bloques; Paging.slice recorta [offset, offset+limit) pero
             // X-Total-Count refleja el total de la lista filtrada
-            when(listUseCase.list())
+            when(listUseCase.list(any(), any()))
                     .thenReturn(List.of(numberedBlock(1L), numberedBlock(2L), numberedBlock(3L)));
 
             // Act & Assert
@@ -285,7 +283,7 @@ class ScheduleBlockControllerTest {
         @DisplayName("givenNoPagingParams_whenListScheduleBlocks_thenReturnFullListWithoutHeader")
         void givenNoPagingParams_whenListScheduleBlocks_thenReturnFullListWithoutHeader() throws Exception {
             // Arrange
-            when(listUseCase.list()).thenReturn(List.of(numberedBlock(1L), numberedBlock(2L)));
+            when(listUseCase.list(any(), any())).thenReturn(List.of(numberedBlock(1L), numberedBlock(2L)));
 
             // Act & Assert: sin limit/offset no hay header X-Total-Count (contrato de Paging)
             mockMvc.perform(get("/api/v1/schedule-blocks"))

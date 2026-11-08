@@ -1,5 +1,6 @@
 package com.faceattend_edu.scheduling_service.domain.model;
 
+import com.faceattend_edu.scheduling_service.domain.exception.ValidationException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -53,9 +54,68 @@ public class ClassSession {
         // pre-incrementing it here makes merge() fail with StaleObjectStateException
     }
 
-    public boolean isOpen() { return "Open".equals(sessionStatus); }
-    public boolean isClosed() { return "Closed".equals(sessionStatus); }
-    public boolean isCancelled() { return "Cancelled".equals(sessionStatus); }
+    public boolean isOpen() { return OPEN.equals(sessionStatus); }
+    public boolean isClosed() { return CLOSED.equals(sessionStatus); }
+    public boolean isCancelled() { return CANCELLED.equals(sessionStatus); }
+
+    public static final String OPEN = "Open";
+    public static final String CLOSED = "Closed";
+    public static final String CANCELLED = "Cancelled";
+
+    /** The status spelled as stored ("closed" -> "Closed"), or null when it is not a session status. */
+    public static String canonicalStatus(String status) {
+        if (status == null) return null;
+        return ALLOWED_STATUSES.stream().filter(s -> s.equalsIgnoreCase(status)).findFirst().orElse(null);
+    }
+
+    /**
+     * A session is born Open and its opener is whoever creates it (AUD-67): a Closed or Cancelled
+     * birth would leave closed_by NULL (AUD-27). /close and /cancel are the only way to move on.
+     */
+    public void startOpen(Long openerActorId, Instant at) {
+        if (sessionStatus == null) sessionStatus = OPEN;
+        if (!isOpen()) {
+            throw new ValidationException("A class session is created Open; use /close or /cancel to change its status");
+        }
+        openedBy = openerActorId;
+        openedAt = openerActorId == null ? null : at;
+    }
+
+    /** Status moves only through open/close/cancel, which stamp the acting actor. */
+    public void requireSameStatus(String requestedStatus) {
+        if (requestedStatus != null && !requestedStatus.equals(sessionStatus)) {
+            throw new ValidationException("sessionStatus cannot be changed with PUT; use /open, /close or /cancel");
+        }
+    }
+
+    public void open(Long actorId, Instant at) {
+        if (isOpen()) throw new ValidationException("ClassSession already Open");
+        if (isClosed() || isCancelled()) throw new ValidationException("Cannot open a session that is " + sessionStatus);
+        sessionStatus = OPEN;
+        openedBy = actorId;
+        openedAt = at;
+        touchUpdated();
+    }
+
+    /** AGENTS.md 6.8: closing records closed_by/closed_at, never anonymously (AUD-27). */
+    public void close(Long actorId, Instant at) {
+        if (isClosed()) throw new ValidationException("ClassSession already Closed");
+        if (isCancelled()) throw new ValidationException("Cannot close a Cancelled session");
+        if (actorId == null) {
+            throw new ValidationException("Cannot close the session: the caller has no academic actor to record in closed_by");
+        }
+        sessionStatus = CLOSED;
+        closedBy = actorId;
+        closedAt = at;
+        touchUpdated();
+    }
+
+    public void cancel() {
+        if (isCancelled()) throw new ValidationException("ClassSession already Cancelled");
+        if (isClosed()) throw new ValidationException("Cannot cancel a Closed session");
+        sessionStatus = CANCELLED;
+        touchUpdated();
+    }
 
     @Override public boolean equals(Object o) {
         if (this == o) return true;

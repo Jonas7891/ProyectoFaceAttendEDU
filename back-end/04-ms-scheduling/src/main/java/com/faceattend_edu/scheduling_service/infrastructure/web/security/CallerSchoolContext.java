@@ -1,19 +1,26 @@
 package com.faceattend_edu.scheduling_service.infrastructure.web.security;
 
-import com.faceattend_edu.scheduling_service.domain.exception.EntityNotFoundException;
+import com.faceattend_edu.scheduling_service.domain.model.Caller;
 import com.faceattend_edu.scheduling_service.infrastructure.web.security.CallerSchoolResolver.CallerSchool;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
 /**
- * The current request's {@link CallerSchool} (set by {@link AuthTokenFilter}).
- * Absent (tests without the filter, or the resolver unavailable) means
- * unrestricted — same "no attribute = admin" convention as 05-attendance's
- * ActorScope, so unit tests that bypass the filter keep working.
+ * Translates the current request into the {@link Caller} the use cases decide with: the
+ * {@link CallerSchool} set by {@link AuthTokenFilter} plus the roles it propagates. The access
+ * rules themselves live in {@code application.access.SchedulingAccessPolicy}.
+ *
+ * <p>Absent (tests without the filter, or the resolver unavailable) means unrestricted, the same
+ * "no attribute = admin" convention as 05-attendance's ActorScope.</p>
  */
 public final class CallerSchoolContext {
 
     private CallerSchoolContext() {}
+
+    /** The caller of the current request. */
+    public static Caller caller() {
+        return new Caller(restricted(), ownSchoolId(), ownActorId(), isSchoolAdmin());
+    }
 
     private static CallerSchool current() {
         RequestAttributes attributes = RequestContextHolder.getRequestAttributes();
@@ -35,15 +42,6 @@ public final class CallerSchoolContext {
         return cs == null ? null : cs.schoolId();
     }
 
-    public static boolean allowsSchool(Integer schoolId) {
-        CallerSchool cs = current();
-        return cs == null || cs.isSuperAdmin() || (schoolId != null && schoolId.equals(cs.schoolId()));
-    }
-
-    public static void requireSchool(Integer schoolId) {
-        if (!allowsSchool(schoolId)) throw new ScopeForbiddenException();
-    }
-
     /** Whether the caller administers their school (role propagated by AuthTokenFilter as X-User-Roles). */
     public static boolean isSchoolAdmin() {
         RequestAttributes attributes = RequestContextHolder.getRequestAttributes();
@@ -51,29 +49,9 @@ public final class CallerSchoolContext {
         return roles instanceof java.util.List<?> list && list.contains("Administrador");
     }
 
-    /** The caller's own academic_actor in their school — for stamping opened_by/closed_by. */
+    /** The caller's own academic_actor in their school, for stamping opened_by/closed_by. */
     public static Long ownActorId() {
         CallerSchool cs = current();
         return cs == null ? null : cs.ownActorId();
-    }
-
-    /**
-     * 403, not 404: the session is in the caller's own school (its existence is no secret) but
-     * its class belongs to another instructor.
-     */
-    public static class NotClassInstructorException extends RuntimeException {
-        public NotClassInstructorException() {
-            super("Only the instructor of this class or a school administrator can modify its session");
-        }
-    }
-
-    /**
-     * 404 instead of 403: an entity outside the caller's school must look
-     * exactly like a missing one, never confirm it exists elsewhere.
-     */
-    public static class ScopeForbiddenException extends EntityNotFoundException {
-        public ScopeForbiddenException() {
-            super("Entity", "outside caller's school");
-        }
     }
 }
