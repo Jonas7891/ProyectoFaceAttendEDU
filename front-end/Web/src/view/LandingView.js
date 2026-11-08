@@ -405,7 +405,7 @@ function TestimonialsContent() {
                                 },
                             ]}
                         >
-                            "{testimonial.quote}"
+                            &quot;{testimonial.quote}&quot;
                         </Text>
 
                         {/* Author */}
