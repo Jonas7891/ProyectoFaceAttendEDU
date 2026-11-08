@@ -6,7 +6,7 @@ import com.faceattend_edu.scheduling_service.domain.model.Caller;
 import com.faceattend_edu.scheduling_service.domain.model.ClassSession;
 import com.faceattend_edu.scheduling_service.domain.port.in.CloseClassSessionUseCase;
 import com.faceattend_edu.scheduling_service.domain.port.out.ClassSessionRepository;
-import com.faceattend_edu.scheduling_service.infrastructure.messaging.DomainEventPublisher;
+import com.faceattend_edu.scheduling_service.domain.port.out.EventPublisherPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +19,7 @@ public class CloseClassSessionUseCaseImpl implements CloseClassSessionUseCase {
     public static final String CLOSED_TOPIC = "scheduling.class-session.closed";
 
     private final ClassSessionRepository repository;
-    private final DomainEventPublisher eventPublisher;
+    private final EventPublisherPort eventPublisher;
     private final SchedulingAccessPolicy access;
 
     @Override @Transactional

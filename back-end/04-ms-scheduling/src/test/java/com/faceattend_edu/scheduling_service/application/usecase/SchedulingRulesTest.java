@@ -12,7 +12,7 @@ import com.faceattend_edu.scheduling_service.domain.model.ScheduleBlock;
 import com.faceattend_edu.scheduling_service.domain.port.out.ClassSessionRepository;
 import com.faceattend_edu.scheduling_service.domain.port.out.EnvironmentRepository;
 import com.faceattend_edu.scheduling_service.domain.port.out.ScheduleBlockRepository;
-import com.faceattend_edu.scheduling_service.infrastructure.messaging.DomainEventPublisher;
+import com.faceattend_edu.scheduling_service.domain.port.out.EventPublisherPort;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -145,7 +145,7 @@ class SchedulingRulesTest {
     @Nested
     class EnvironmentUseCases {
         private final EnvironmentRepository repository = mock(EnvironmentRepository.class);
-        private final DomainEventPublisher publisher = mock(DomainEventPublisher.class);
+        private final EventPublisherPort publisher = mock(EventPublisherPort.class);
         private final SchedulingAccessPolicy access = new SchedulingAccessPolicy(mock(ScheduleBlockRepository.class), repository);
         private final Caller anyone = Caller.UNRESTRICTED;
 

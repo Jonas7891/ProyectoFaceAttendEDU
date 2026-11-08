@@ -16,7 +16,7 @@ import com.faceattend_edu.scheduling_service.domain.model.ScheduleBlock;
 import com.faceattend_edu.scheduling_service.domain.port.out.ClassSessionRepository;
 import com.faceattend_edu.scheduling_service.domain.port.out.EnvironmentRepository;
 import com.faceattend_edu.scheduling_service.domain.port.out.ScheduleBlockRepository;
-import com.faceattend_edu.scheduling_service.infrastructure.messaging.DomainEventPublisher;
+import com.faceattend_edu.scheduling_service.domain.port.out.EventPublisherPort;
 import com.faceattend_edu.scheduling_service.infrastructure.web.mapper.ClassSessionWebMapper;
 import com.faceattend_edu.scheduling_service.infrastructure.web.security.AuthTokenFilter;
 import com.faceattend_edu.scheduling_service.infrastructure.web.security.CallerSchoolResolver.CallerSchool;
@@ -83,7 +83,7 @@ class ClassSessionControllerTest {
     @MockitoBean
     private EnvironmentRepository environments;
     @MockitoBean
-    private DomainEventPublisher eventPublisher;
+    private EventPublisherPort eventPublisher;
 
     private ClassSession openSession;
 

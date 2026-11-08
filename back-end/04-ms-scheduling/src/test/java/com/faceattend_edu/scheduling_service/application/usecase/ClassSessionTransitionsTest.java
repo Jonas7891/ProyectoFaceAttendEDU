@@ -7,7 +7,7 @@ import com.faceattend_edu.scheduling_service.application.access.SchedulingAccess
 import com.faceattend_edu.scheduling_service.domain.model.Caller;
 import com.faceattend_edu.scheduling_service.domain.model.ClassSession;
 import com.faceattend_edu.scheduling_service.domain.port.out.ClassSessionRepository;
-import com.faceattend_edu.scheduling_service.infrastructure.messaging.DomainEventPublisher;
+import com.faceattend_edu.scheduling_service.domain.port.out.EventPublisherPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,7 +34,7 @@ class ClassSessionTransitionsTest {
     private static final long ID = 7L;
 
     @Mock ClassSessionRepository repository;
-    @Mock DomainEventPublisher eventPublisher;
+    @Mock EventPublisherPort eventPublisher;
     @Mock SchedulingAccessPolicy access;
 
     private OpenClassSessionUseCaseImpl open;

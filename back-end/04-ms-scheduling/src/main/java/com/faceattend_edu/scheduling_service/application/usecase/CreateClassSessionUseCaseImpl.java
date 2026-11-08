@@ -6,7 +6,7 @@ import com.faceattend_edu.scheduling_service.domain.model.Caller;
 import com.faceattend_edu.scheduling_service.domain.model.ClassSession;
 import com.faceattend_edu.scheduling_service.domain.port.in.CreateClassSessionUseCase;
 import com.faceattend_edu.scheduling_service.domain.port.out.ClassSessionRepository;
-import com.faceattend_edu.scheduling_service.infrastructure.messaging.DomainEventPublisher;
+import com.faceattend_edu.scheduling_service.domain.port.out.EventPublisherPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -16,7 +16,7 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class CreateClassSessionUseCaseImpl implements CreateClassSessionUseCase {
     private final ClassSessionRepository repository;
-    private final DomainEventPublisher eventPublisher;
+    private final EventPublisherPort eventPublisher;
     private final SchedulingAccessPolicy access;
 
     @Override public ClassSession create(Caller caller, ClassSession session) {

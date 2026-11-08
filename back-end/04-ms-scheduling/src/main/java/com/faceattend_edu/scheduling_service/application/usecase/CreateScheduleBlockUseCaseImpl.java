@@ -6,7 +6,7 @@ import com.faceattend_edu.scheduling_service.domain.model.Caller;
 import com.faceattend_edu.scheduling_service.domain.model.ScheduleBlock;
 import com.faceattend_edu.scheduling_service.domain.port.in.CreateScheduleBlockUseCase;
 import com.faceattend_edu.scheduling_service.domain.port.out.ScheduleBlockRepository;
-import com.faceattend_edu.scheduling_service.infrastructure.messaging.DomainEventPublisher;
+import com.faceattend_edu.scheduling_service.domain.port.out.EventPublisherPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 public class CreateScheduleBlockUseCaseImpl implements CreateScheduleBlockUseCase {
     private final ScheduleBlockRepository repository;
     private final ScheduleBlockOverlapGuard overlapGuard;
-    private final DomainEventPublisher eventPublisher;
+    private final EventPublisherPort eventPublisher;
     private final SchedulingAccessPolicy access;
 
     @Override

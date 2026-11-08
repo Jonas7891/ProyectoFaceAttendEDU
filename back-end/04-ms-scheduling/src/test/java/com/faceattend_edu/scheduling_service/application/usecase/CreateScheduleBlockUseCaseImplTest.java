@@ -6,7 +6,7 @@ import com.faceattend_edu.scheduling_service.domain.model.Caller;
 import com.faceattend_edu.scheduling_service.domain.port.out.EnvironmentRepository;
 import com.faceattend_edu.scheduling_service.domain.model.ScheduleBlock;
 import com.faceattend_edu.scheduling_service.domain.port.out.ScheduleBlockRepository;
-import com.faceattend_edu.scheduling_service.infrastructure.messaging.DomainEventPublisher;
+import com.faceattend_edu.scheduling_service.domain.port.out.EventPublisherPort;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,7 +30,7 @@ import static org.mockito.Mockito.when;
 class CreateScheduleBlockUseCaseImplTest {
 
     @Mock ScheduleBlockRepository repository;
-    @Mock DomainEventPublisher eventPublisher;
+    @Mock EventPublisherPort eventPublisher;
     CreateScheduleBlockUseCaseImpl useCase;
 
     @BeforeEach
