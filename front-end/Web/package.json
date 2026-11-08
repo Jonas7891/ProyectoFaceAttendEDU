@@ -85,6 +85,11 @@
     "testPathIgnorePatterns": [
       "/node_modules/",
       "/dist/"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/src/services/api/testing/",
+      "/testUtils/"
     ]
   },
   "overrides": {
