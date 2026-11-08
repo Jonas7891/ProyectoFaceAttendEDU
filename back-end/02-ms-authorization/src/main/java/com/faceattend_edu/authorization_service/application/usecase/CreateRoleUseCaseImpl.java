@@ -4,18 +4,20 @@ import com.faceattend_edu.authorization_service.domain.exception.DuplicateEntity
 import com.faceattend_edu.authorization_service.domain.model.Role;
 import com.faceattend_edu.authorization_service.domain.port.in.CreateRoleUseCase;
 import com.faceattend_edu.authorization_service.domain.port.out.RoleRepository;
-import com.faceattend_edu.authorization_service.infrastructure.messaging.DomainEventPublisher;
+import com.faceattend_edu.authorization_service.domain.port.out.EventPublisherPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class CreateRoleUseCaseImpl implements CreateRoleUseCase {
 
     private final RoleRepository roleRepository;
-    private final DomainEventPublisher eventPublisher;
+    private final EventPublisherPort eventPublisher;
 
     @Override
+    @Transactional
     public Role createRole(String roleName, String description) {
         Role role = new Role();
         role.setRoleName(roleName);

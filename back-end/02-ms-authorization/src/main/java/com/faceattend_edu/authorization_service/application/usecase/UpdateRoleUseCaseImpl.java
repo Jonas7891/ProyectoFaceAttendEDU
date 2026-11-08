@@ -7,6 +7,7 @@ import com.faceattend_edu.authorization_service.domain.port.in.UpdateRoleUseCase
 import com.faceattend_edu.authorization_service.domain.port.out.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -15,6 +16,7 @@ public class UpdateRoleUseCaseImpl implements UpdateRoleUseCase {
     private final RoleRepository roleRepository;
 
     @Override
+    @Transactional
     public Role updateRole(Integer roleId, String roleName, String description) {
         Role existing = roleRepository.findById(roleId)
                 .orElseThrow(() -> new EntityNotFoundException("Role", roleId));

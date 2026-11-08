@@ -1,9 +1,10 @@
 package com.faceattend_edu.authorization_service.infrastructure.web.controller;
 
-import com.faceattend_edu.authorization_service.domain.exception.DuplicateEntityException;
-import com.faceattend_edu.authorization_service.domain.exception.EntityNotFoundException;
+import com.faceattend_edu.authorization_service.application.access.RoleAssignmentPolicy;
+import com.faceattend_edu.authorization_service.application.usecase.AssignRoleToUserUseCaseImpl;
+import com.faceattend_edu.authorization_service.application.usecase.GetUserRolesUseCaseImpl;
+import com.faceattend_edu.authorization_service.infrastructure.client.UserSchoolsAdapter;
 import com.faceattend_edu.authorization_service.domain.model.Role;
-import com.faceattend_edu.authorization_service.domain.port.in.AssignRoleToUserUseCase;
 import com.faceattend_edu.authorization_service.domain.port.in.CheckPermissionUseCase;
 import com.faceattend_edu.authorization_service.domain.port.out.RoleRepository;
 import com.faceattend_edu.authorization_service.domain.port.out.UserRoleRepository;
@@ -53,15 +54,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @WebMvcTest(controllers = UserRoleController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@Import(RoleWebMapper.class)
+@Import({RoleWebMapper.class, AssignRoleToUserUseCaseImpl.class, GetUserRolesUseCaseImpl.class,
+        RoleAssignmentPolicy.class, UserSchoolsAdapter.class})
 @DisplayName("IEEE 829 TC-02-008: UserRoleController REST tests (MockMvc)")
 class UserRoleControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean
-    private AssignRoleToUserUseCase assignRoleToUserUseCase;
     @MockitoBean
     private CheckPermissionUseCase checkPermissionUseCase;
     @MockitoBean
@@ -97,6 +97,7 @@ class UserRoleControllerTest {
         @Test
         @DisplayName("givenValidRole_whenAssignRole_thenReturn201AndVerifyUseCase")
         void givenValidRole_whenAssignRole_thenReturn201AndVerifyUseCase() throws Exception {
+            when(roleRepository.existsById(3)).thenReturn(true);
             // Act & Assert
             mockMvc.perform(post("/api/v1/users/" + userId + "/roles")
                             .requestAttr("X-User-Roles", List.of("Super Administrador"))
@@ -104,12 +105,13 @@ class UserRoleControllerTest {
                             .content("{\"roleId\":3}"))
                     .andExpect(status().isCreated());
 
-            verify(assignRoleToUserUseCase).assignRoleToUser(userId, 3);
+            verify(userRoleRepository).save(any());
         }
 
         @Test
         @DisplayName("givenOperationalRole_whenSchoolAdminOfTheSameSchool_thenAllowed")
         void givenOperationalRole_whenSchoolAdmin_thenAllowed() throws Exception {
+            when(roleRepository.existsById(3)).thenReturn(true);
             when(roleRepository.findById(3)).thenReturn(java.util.Optional.of(role(3, "Aprendiz")));
             when(userSchools.of(ADMIN, TOKEN)).thenReturn(Set.of(7));
             when(userSchools.of(userId.toString(), TOKEN)).thenReturn(Set.of(7));
@@ -143,8 +145,8 @@ class UserRoleControllerTest {
                             .header("Authorization", "Bearer " + TOKEN))
                     .andExpect(status().isForbidden());
 
-            verify(assignRoleToUserUseCase, never()).assignRoleToUser(any(), any());
-            verify(assignRoleToUserUseCase, never()).removeRoleFromUser(any(), any());
+            verify(userRoleRepository, never()).save(any());
+            verify(userRoleRepository, never()).delete(any(), any());
         }
 
         @Test
@@ -173,7 +175,7 @@ class UserRoleControllerTest {
                             .content("{\"roleId\":2}"))
                     .andExpect(status().isForbidden());
 
-            verify(assignRoleToUserUseCase, never()).assignRoleToUser(any(), any());
+            verify(userRoleRepository, never()).save(any());
         }
 
         private Role role(int id, String name) {
@@ -197,15 +199,13 @@ class UserRoleControllerTest {
                     .andExpect(jsonPath("$.error.code").value("ISO-8.2-VAL-002"))
                     .andExpect(jsonPath("$.error.message").value(org.hamcrest.Matchers.containsString("roleId")));
 
-            verify(assignRoleToUserUseCase, never()).assignRoleToUser(any(), any());
+            verify(userRoleRepository, never()).save(any());
         }
 
         @Test
         @DisplayName("givenUnknownRole_whenAssignRole_thenReturn404")
         void givenUnknownRole_whenAssignRole_thenReturn404() throws Exception {
-            // Arrange: la excepcion de negocio real propagada por el caso de uso
-            org.mockito.Mockito.doThrow(new EntityNotFoundException("Role", 999))
-                    .when(assignRoleToUserUseCase).assignRoleToUser(userId, 999);
+            // roleRepository.existsById(999) answers false: the use case reports the missing role.
 
             // Act & Assert
             mockMvc.perform(post("/api/v1/users/" + userId + "/roles")
@@ -220,8 +220,8 @@ class UserRoleControllerTest {
         @DisplayName("givenAlreadyAssignedRole_whenAssignRole_thenReturn409")
         void givenAlreadyAssignedRole_whenAssignRole_thenReturn409() throws Exception {
             // Arrange
-            org.mockito.Mockito.doThrow(new DuplicateEntityException("Role already assigned to user"))
-                    .when(assignRoleToUserUseCase).assignRoleToUser(userId, 3);
+            when(roleRepository.existsById(3)).thenReturn(true);
+            when(userRoleRepository.exists(userId, 3)).thenReturn(true);
 
             // Act & Assert
             mockMvc.perform(post("/api/v1/users/" + userId + "/roles")
@@ -240,20 +240,20 @@ class UserRoleControllerTest {
         @Test
         @DisplayName("givenAssignedRole_whenRemoveRole_thenReturn204")
         void givenAssignedRole_whenRemoveRole_thenReturn204() throws Exception {
+            when(userRoleRepository.exists(userId, 3)).thenReturn(true);
             // Act & Assert
             mockMvc.perform(delete("/api/v1/users/" + userId + "/roles/3")
                             .requestAttr("X-User-Roles", List.of("Super Administrador")))
                     .andExpect(status().isNoContent());
 
-            verify(assignRoleToUserUseCase).removeRoleFromUser(userId, 3);
+            verify(userRoleRepository).delete(userId, 3);
         }
 
         @Test
         @DisplayName("givenMissingAssignment_whenRemoveRole_thenReturn404")
         void givenMissingAssignment_whenRemoveRole_thenReturn404() throws Exception {
             // Arrange
-            org.mockito.Mockito.doThrow(new EntityNotFoundException("UserRole", userId + "-3"))
-                    .when(assignRoleToUserUseCase).removeRoleFromUser(userId, 3);
+            // userRoleRepository.exists(userId, 3) answers false: nothing to remove.
 
             // Act & Assert
             mockMvc.perform(delete("/api/v1/users/" + userId + "/roles/3")

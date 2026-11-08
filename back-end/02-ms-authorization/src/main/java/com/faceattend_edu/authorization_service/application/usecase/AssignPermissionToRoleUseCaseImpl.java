@@ -9,6 +9,7 @@ import com.faceattend_edu.authorization_service.domain.port.out.RolePermissionRe
 import com.faceattend_edu.authorization_service.domain.port.out.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +20,7 @@ public class AssignPermissionToRoleUseCaseImpl implements AssignPermissionToRole
     private final RolePermissionRepository rolePermissionRepository;
 
     @Override
+    @Transactional
     public void assignPermissionToRole(Integer roleId, Integer permissionId) {
         if (!roleRepository.existsById(roleId)) throw new EntityNotFoundException("Role", roleId);
         if (!permissionRepository.existsById(permissionId)) throw new EntityNotFoundException("Permission", permissionId);
@@ -33,6 +35,7 @@ public class AssignPermissionToRoleUseCaseImpl implements AssignPermissionToRole
     }
 
     @Override
+    @Transactional
     public void removePermissionFromRole(Integer roleId, Integer permissionId) {
         if (!rolePermissionRepository.exists(roleId, permissionId)) {
             throw new EntityNotFoundException("RolePermission", roleId + "-" + permissionId);

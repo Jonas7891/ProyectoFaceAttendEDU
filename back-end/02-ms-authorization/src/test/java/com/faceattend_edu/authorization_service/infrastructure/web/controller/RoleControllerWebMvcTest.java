@@ -10,7 +10,7 @@ import com.faceattend_edu.authorization_service.domain.port.in.DeleteRoleUseCase
 import com.faceattend_edu.authorization_service.domain.port.in.GetRoleUseCase;
 import com.faceattend_edu.authorization_service.domain.port.in.ListRolesUseCase;
 import com.faceattend_edu.authorization_service.domain.port.in.UpdateRoleUseCase;
-import com.faceattend_edu.authorization_service.domain.port.out.RolePermissionRepository;
+import com.faceattend_edu.authorization_service.domain.port.in.GetRolePermissionsUseCase;
 import com.faceattend_edu.authorization_service.infrastructure.web.mapper.PermissionWebMapper;
 import com.faceattend_edu.authorization_service.infrastructure.web.mapper.RoleWebMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,7 +66,7 @@ class RoleControllerWebMvcTest {
     @MockitoBean
     private AssignPermissionToRoleUseCase assignPermissionToRoleUseCase;
     @MockitoBean
-    private RolePermissionRepository rolePermissionRepository;
+    private GetRolePermissionsUseCase getRolePermissionsUseCase;
 
     private Role instructorRole;
 
@@ -257,12 +257,11 @@ class RoleControllerWebMvcTest {
         @Test
         @DisplayName("givenExistingRole_whenGetPermissionsForRole_thenReturn200Array")
         void givenExistingRole_whenGetPermissionsForRole_thenReturn200Array() throws Exception {
-            // Arrange: primero valida que el rol existe y luego consulta el PUERTO de salida
+            // Arrange: el caso de uso valida el rol y devuelve sus permisos
             Permission perm = new Permission();
             perm.setPermissionId(10);
             perm.setPermissionName("attendance.record:read");
-            when(getRoleUseCase.getRole(1)).thenReturn(instructorRole);
-            when(rolePermissionRepository.findPermissionsByRoleId(1)).thenReturn(List.of(perm));
+            when(getRolePermissionsUseCase.permissionsOf(1)).thenReturn(List.of(perm));
 
             // Act & Assert
             mockMvc.perform(get("/api/v1/roles/1/permissions"))
@@ -272,18 +271,16 @@ class RoleControllerWebMvcTest {
         }
 
         @Test
-        @DisplayName("givenMissingRole_whenGetPermissionsForRole_thenReturn404AndNeverQueriesPort")
-        void givenMissingRole_whenGetPermissionsForRole_thenReturn404AndNeverQueriesPort() throws Exception {
-            // Arrange: el controller aborta en getRoleUseCase antes de tocar el repositorio
-            when(getRoleUseCase.getRole(999)).thenThrow(new EntityNotFoundException("Role", 999));
+        @DisplayName("givenMissingRole_whenGetPermissionsForRole_thenReturn404")
+        void givenMissingRole_whenGetPermissionsForRole_thenReturn404() throws Exception {
+            // Arrange: el caso de uso responde 404 si el rol no existe
+            when(getRolePermissionsUseCase.permissionsOf(999)).thenThrow(new EntityNotFoundException("Role", 999));
 
             // Act & Assert
             mockMvc.perform(get("/api/v1/roles/999/permissions"))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.error.code").value("ISO-8.5-INT-001"));
 
-            org.mockito.Mockito.verify(rolePermissionRepository, org.mockito.Mockito.never())
-                    .findPermissionsByRoleId(999);
         }
 
         @Test
