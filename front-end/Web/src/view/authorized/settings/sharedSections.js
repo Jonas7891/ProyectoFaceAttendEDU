@@ -35,8 +35,8 @@ export function RoleSecuritySettings({ sessionTime, onSessionTimeChange, shortSe
             header={<OwnSecurityMeter sessionTime={sessionTime} />}
             sections={[
                 ...notices,
-                <TwoFactorSetup />,
-                <SessionTimeInput
+                <TwoFactorSetup key="two-factor-setup-1" />,
+                <SessionTimeInput key="session-time-input-2"
                     value={sessionTime}
                     onChange={onSessionTimeChange}
                     readOnly={sessionTimeReadOnly}
@@ -57,7 +57,7 @@ export function RoleAppearanceSettings({ onColorChanges, onDiscardColors, onSave
         <AppearanceSettings
             title={t("Apariencia")}
             sections={[
-                <AccentBlock
+                <AccentBlock key="accent-block-0"
                     onHasChanges={onColorChanges}
                     onDiscardRegister={onDiscardColors}
                     onSaveSuccessRegister={onSaveSuccessColors}

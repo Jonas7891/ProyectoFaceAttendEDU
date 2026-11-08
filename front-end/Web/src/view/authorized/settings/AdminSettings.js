@@ -231,7 +231,7 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
             <GeneralSettings
                 title={t("General")}
                 sections={[
-                    <InstitutionInfo
+                    <InstitutionInfo key="institution-info-0"
                         institutionName={config.institutionName}
                         onNameChange={(value) => updateConfig("institutionName", value)}
                         institutionSlug={config.institutionSlug}
@@ -241,14 +241,14 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                         isSmall={isSmall}
                         nameLocked={user?.schoolId != null}
                     />,
-                    <LanguageBlock />,
-                    <DateFormatBlock
+                    <LanguageBlock key="language-block-1" />,
+                    <DateFormatBlock key="date-format-block-2"
                         dateFormat={config.dateFormat}
                         onDateFormatChange={(value) => updateConfig("dateFormat", value)}
                         timeFormat24h={config.timeFormat24h}
                         onTimeFormatChange={(value) => updateConfig("timeFormat24h", value)}
                     />,
-                    <PeriodConfig
+                    <PeriodConfig key="period-config-3"
                         periodStartDate={config.periodStartDate}
                         onStartDateChange={(value) => updateConfig("periodStartDate", value)}
                         periodEndDate={config.periodEndDate}
@@ -263,7 +263,7 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                         showExpirationAlert={showExpirationAlert}
                         onDismissExpiration={() => setShowExpirationAlert(false)}
                     />,
-                    <GeneralSummary
+                    <GeneralSummary key="general-summary-4"
                         institutionName={config.institutionName}
                         academicPeriodType={config.academicPeriodType}
                         periodStartDate={config.periodStartDate}
@@ -282,7 +282,7 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
             <FaceSettings
                 title={t("Reconocimiento facial")}
                 sections={[
-                    <AttendanceThresholds
+                    <AttendanceThresholds key="attendance-thresholds-0"
                         minAttendance={config.minAttendance}
                         onMinAttendanceChange={(value) => updateConfig("minAttendance", value)}
                         daysUntilSanction={config.daysUntilSanction}
@@ -292,11 +292,11 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                         tardyToleranceMinutes={config.tardyToleranceMinutes}
                         onTardyToleranceChange={(value) => updateConfig("tardyToleranceMinutes", value)}
                     />,
-                    <ConfidenceSlider
+                    <ConfidenceSlider key="confidence-slider-1"
                         value={config.confidence}
                         onChange={(value) => updateConfig("confidence", value)}
                     />,
-                    <FaceToggles
+                    <FaceToggles key="face-toggles-2"
                         confidence={config.confidence}
                         autoRegister={config.autoRegister}
                         onAutoRegister={() => updateConfig("autoRegister", !config.autoRegister)}
@@ -307,29 +307,29 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
         notifications: (
             <NotificationsSettings
                 sections={[
-                    <FutureNotice message={t("Los correos (ausencias de la clase, estudiantes en riesgo, resumen diario y reporte semanal) llegan a las direcciones registradas de docentes y administradores de la sede, según lo que actives aquí.")} />,
-                    <EmailAlertToggle
+                    <FutureNotice key="future-notice-0" message={t("Los correos (ausencias de la clase, estudiantes en riesgo, resumen diario y reporte semanal) llegan a las direcciones registradas de docentes y administradores de la sede, según lo que actives aquí.")} />,
+                    <EmailAlertToggle key="email-alert-toggle-1"
                         value={config.emailAlert}
                         onToggle={() => updateConfig("emailAlert", !config.emailAlert)}
                         description={t("Envía un correo al docente cuando un estudiante no asiste. Ideal para clases pequeñas o con seguimiento individual.")}
                     />,
-                    <WeeklyReportToggle
+                    <WeeklyReportToggle key="weekly-report-toggle-2"
                         value={config.weeklyReport}
                         onToggle={() => updateConfig("weeklyReport", !config.weeklyReport)}
                         description={t("Resumen automático de asistencia enviado cada lunes a las 8am. Incluye porcentajes por curso.")}
                     />,
-                    <AtRiskAlertToggle
+                    <AtRiskAlertToggle key="at-risk-alert-toggle-3"
                         value={config.atRiskAlert}
                         onToggle={() => updateConfig("atRiskAlert", !config.atRiskAlert)}
                         targetRole="instructor"
                         description={`${t("Notifica cuando un instructor cae por debajo del")} ${config.minAttendance}% ${t("de asistencia mínima configurado en Reconocimiento.")}`}
                     />,
-                    <DailySummaryToggle
+                    <DailySummaryToggle key="daily-summary-toggle-4"
                         value={config.dailySummary}
                         onToggle={() => updateConfig("dailySummary", !config.dailySummary)}
                         description={t("Resumen automático de asistencia al finalizar el día. Puede generar muchas notificaciones en días de muchas clases.")}
                     />,
-                    <PushNotificationToggle
+                    <PushNotificationToggle key="push-notification-toggle-5"
                         enabled={config.pushNotifications}
                         onToggle={() => updateConfig("pushNotifications", !config.pushNotifications)}
                         duration={config.pushDuration}
@@ -337,7 +337,7 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                         description={t("Notificaciones emergentes en tiempo real del sistema.")}
                     />,
                     ...(config.pushNotifications ? [
-                        <PushNotificationLimit
+                        <PushNotificationLimit key="push-notification-limit-0"
                             limit={config.pushNotificationLimit}
                             limitByType={config.pushNotificationLimitByType}
                             onLimitChange={(value) => updateConfig("pushNotificationLimit", value)}
@@ -355,7 +355,7 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                 normalSessionHint={t(" Tiempo razonable para uso normal en aula.")}
                 sessionTimeReadOnly={!canWriteSecurity}
                 notices={!canWriteSecurity ? [
-                    <FutureNotice message={t("El tiempo de sesión es global de la plataforma: lo define el Super Administrador y aquí solo puedes consultarlo.")} />,
+                    <FutureNotice key="future-notice-0" message={t("El tiempo de sesión es global de la plataforma: lo define el Super Administrador y aquí solo puedes consultarlo.")} />,
                 ] : []}
             />
         ),

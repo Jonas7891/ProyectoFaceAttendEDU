@@ -71,13 +71,13 @@ export function StudentSettings({ section, onSave, onDiscard, onDiscardColors, o
         notifications: (
             <NotificationsSettings
                 sections={[
-                    <AtRiskAlertToggle
+                    <AtRiskAlertToggle key="at-risk-alert-toggle-0"
                         value={config.atRiskAlert}
                         onToggle={() => updateConfig("atRiskAlert", !config.atRiskAlert)}
                         targetRole="self"
                         description={`${t("Recibe una notificación cuando tu asistencia cae por debajo del")} ${config.minAttendance}% ${t("mínimo requerido. Te ayuda a estar al tanto de tu progreso académico.")}`}
                     />,
-                    <PushNotificationToggle
+                    <PushNotificationToggle key="push-notification-toggle-1"
                         enabled={config.pushNotifications}
                         onToggle={() => updateConfig("pushNotifications", !config.pushNotifications)}
                         duration={config.pushDuration}
@@ -85,7 +85,7 @@ export function StudentSettings({ section, onSave, onDiscard, onDiscardColors, o
                         description={t("Notificaciones emergentes sobre tu asistencia y actualizaciones del sistema.")}
                     />,
                     ...(config.pushNotifications ? [
-                        <PushNotificationLimit
+                        <PushNotificationLimit key="push-notification-limit-0"
                             limit={config.pushNotificationLimit}
                             limitByType={config.pushNotificationLimitByType}
                             onLimitChange={(value) => updateConfig("pushNotificationLimit", value)}

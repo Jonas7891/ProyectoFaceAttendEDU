@@ -74,24 +74,24 @@ export function TeacherSettings({ section, onSave, onDiscard, onDiscardColors, o
         notifications: (
             <NotificationsSettings
                 sections={[
-                    <FutureNotice message={t("Los correos (ausencias de la clase, estudiantes en riesgo, resumen diario y reporte semanal) llegan a las direcciones registradas de docentes y administradores de la sede, según lo que actives aquí.")} />,
-                    <EmailAlertToggle
+                    <FutureNotice key="future-notice-0" message={t("Los correos (ausencias de la clase, estudiantes en riesgo, resumen diario y reporte semanal) llegan a las direcciones registradas de docentes y administradores de la sede, según lo que actives aquí.")} />,
+                    <EmailAlertToggle key="email-alert-toggle-1"
                         value={config.emailAlert}
                         onToggle={() => updateConfig("emailAlert", !config.emailAlert)}
                         description={t("Envía un correo cuando un estudiante de tus cursos no asiste. Ideal para clases pequeñas o con seguimiento individual.")}
                     />,
-                    <WeeklyReportToggle
+                    <WeeklyReportToggle key="weekly-report-toggle-2"
                         value={config.weeklyReport}
                         onToggle={() => updateConfig("weeklyReport", !config.weeklyReport)}
                         description={t("Resumen automático de asistencia de tus cursos enviado cada lunes a las 8am.")}
                     />,
-                    <AtRiskAlertToggle
+                    <AtRiskAlertToggle key="at-risk-alert-toggle-3"
                         value={config.atRiskAlert}
                         onToggle={() => updateConfig("atRiskAlert", !config.atRiskAlert)}
                         targetRole="student"
                         description={`${t("Notifica cuando un estudiante de tus cursos cae por debajo del")} ${config.minAttendance}% ${t("de asistencia mínima.")}`}
                     />,
-                    <DailySummaryToggle
+                    <DailySummaryToggle key="daily-summary-toggle-4"
                         value={config.dailySummary}
                         onToggle={() => updateConfig("dailySummary", !config.dailySummary)}
                         description={t("Resumen automático de asistencia de tus cursos al finalizar el día.")}
