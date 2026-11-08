@@ -2005,5 +2005,7 @@
   "No se pudo actualizar": "Could not update",
   "Filtros limpiados": "Filters cleared",
   "Más": "More",
-  "Mostrar inactivos": "Show inactive"
+  "Mostrar inactivos": "Show inactive",
+  "Sin registros": "No records",
+  "Los usuarios seleccionados no tienen asistencias en el rango elegido": "The selected users have no attendance records in the chosen range"
 }

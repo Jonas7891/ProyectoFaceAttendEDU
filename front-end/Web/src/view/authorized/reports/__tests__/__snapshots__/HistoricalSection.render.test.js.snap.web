@@ -3976,6 +3976,104 @@ exports[`HistoricosSection render and exports latest record per student 1`] = `
 </div>
 `;
 
+exports[`HistoricosSection render and exports selected rows to excel (detailed, date range: false) 1`] = `
+{
+  "excel": [
+    {
+      "filename": "Historicos_Seleccionados_2026-10-26.xlsx",
+      "sheets": [
+        {
+          "columns": [
+            {
+              "wch": 12,
+            },
+            {
+              "wch": 32,
+            },
+            {
+              "wch": 16,
+            },
+            {
+              "wch": 14,
+            },
+            {
+              "wch": 14,
+            },
+            {
+              "wch": 12,
+            },
+            {
+              "wch": 20,
+            },
+            {
+              "wch": 20,
+            },
+            {
+              "wch": 14,
+            },
+            {
+              "wch": 14,
+            },
+          ],
+          "data": [
+            {
+              "Ambiente": "A-101",
+              "Asistencia (%)": 66.7,
+              "Código": "1001",
+              "Estado": "Ausente",
+              "Fecha": "05/10/2026",
+              "Ficha": "ADSI",
+              "Horario Programado": "07:00 - 12:00",
+              "Nombre": "Ana Pérez",
+              "Registro Real": "N/A",
+              "Total de Registros": 3,
+            },
+            {
+              "Ambiente": "B-202",
+              "Asistencia (%)": 0,
+              "Código": "1002",
+              "Estado": "Ausente",
+              "Fecha": "03/10/2026",
+              "Ficha": "Redes",
+              "Horario Programado": "13:00 - 18:00",
+              "Nombre": "Luis Gómez",
+              "Registro Real": "N/A",
+              "Total de Registros": 1,
+            },
+            {
+              "Ambiente": "A-101",
+              "Asistencia (%)": 100,
+              "Código": "1001",
+              "Estado": "Retardo",
+              "Fecha": "02/10/2026",
+              "Ficha": "ADSI",
+              "Horario Programado": "07:00 - 12:00",
+              "Nombre": "Ana Pérez",
+              "Registro Real": "07:20 - 12:00",
+              "Total de Registros": 2,
+            },
+            {
+              "Ambiente": "A-101",
+              "Asistencia (%)": 100,
+              "Código": "1001",
+              "Estado": "Presente",
+              "Fecha": "01/10/2026",
+              "Ficha": "ADSI",
+              "Horario Programado": "07:00 - 12:00",
+              "Nombre": "Ana Pérez",
+              "Registro Real": "07:02 - 12:00",
+              "Total de Registros": 1,
+            },
+          ],
+          "name": "Históricos de Asistencia",
+        },
+      ],
+    },
+  ],
+  "pdf": [],
+}
+`;
+
 exports[`HistoricosSection render and exports selected rows to excel (simple, date range: false) 1`] = `
 {
   "excel": [

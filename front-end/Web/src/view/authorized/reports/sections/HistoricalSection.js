@@ -78,6 +78,74 @@ function isWithinDateRange(date, range) {
     return day >= start && day <= end;
 }
 
+/**
+ * Rows an export of the selected students contains, shared by Excel and PDF so
+ * both honour the "simple"/"detailed" choice of the export modal.
+ *
+ * - "detailed": one row per attendance date, with the running attendance
+ *   percentage up to that date, most recent first.
+ * - "simple": only the most recent of those rows per student.
+ *
+ * The date range filter applies when both ends are set. Students that are not
+ * in `students` or have no history yield no rows.
+ */
+export function buildExportRecords({ selectedRows, students = [], courses = [], environments = [], dateRange = {}, exportType, t }) {
+    const records = [];
+    const selectedStudentIds = new Set(selectedRows.map(u => u.studentId || u.id));
+
+    selectedStudentIds.forEach(studentId => {
+        const student = students.find(s => s.id === studentId);
+        if (!student || !student.attendanceHistory) return;
+
+        const { fichaName, environmentName, scheduledStartTime, scheduledEndTime, instructorName, instructorId } =
+            resolveCourseContext(student, courses, environments, t);
+
+        const history = dateRange.start && dateRange.end
+            ? student.attendanceHistory.filter(record => isWithinDateRange(record.date, dateRange))
+            : student.attendanceHistory;
+
+        // Ascending order so the running percentage is cumulative.
+        const sortedHistory = [...history].sort((a, b) => new Date(a.date) - new Date(b.date));
+        let presents = 0;
+        sortedHistory.forEach((record, index) => {
+            if (record.present) presents += 1;
+            const total = index + 1;
+            // Same rounding as attendanceUtils.js: one decimal.
+            const attendance = Math.round((presents / total) * 100 * 10) / 10;
+            records.push({
+                id: `${student.id}-${record.date}`,
+                studentId: student.id,
+                studentName: student.name,
+                studentCode: student.code,
+                ficha: student.course,
+                fichaName,
+                environment: environmentName,
+                date: record.date,
+                scheduledStartTime,
+                scheduledEndTime,
+                actualCheckInTime: record.checkInTime || null,
+                actualCheckOutTime: record.checkOutTime || null,
+                instructorName,
+                instructorId,
+                status: record.present ? "present" : "absent",
+                late: record.late || false,
+                totalRecords: total,
+                attendance,
+            });
+        });
+    });
+
+    records.sort((a, b) => new Date(b.date) - new Date(a.date));
+    if (exportType !== "simple") return records;
+
+    // Records are newest first, so the first one seen per student is the latest.
+    const latestByStudent = new Map();
+    records.forEach(record => {
+        if (!latestByStudent.has(record.studentId)) latestByStudent.set(record.studentId, record);
+    });
+    return Array.from(latestByStudent.values());
+}
+
 
 function UserRow({ user, index, isLast, onPress, isExportMode, isSelected, onToggleSelect }) {
     const { theme } = useTheme();
@@ -564,94 +632,32 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
             return;
         }
         
-        // Para AMBAS exportaciones en PDF, necesitamos expandir y recalcular porcentajes correctamente
-        let finalUsersToExport = usersToExport;
-        
-        if (format === "pdf") {
-            // Expandir todos los registros de asistencia de los usuarios seleccionados
-            const expandedUsers = [];
-            const students = appData.students || [];
-            const courses = appData.courses || [];
-            const environments = appData.environments || [];
-            
-            // Obtener IDs únicos de estudiantes seleccionados
-            const selectedStudentIds = new Set(usersToExport.map(u => u.studentId || u.id));
-            
-            selectedStudentIds.forEach(studentId => {
-                const student = students.find(s => s.id === studentId);
-                if (!student || !student.attendanceHistory) return;
-                
-                const { fichaName, environmentName, scheduledStartTime, scheduledEndTime, instructorName, instructorId } =
-                    resolveCourseContext(student, courses, environments, t);
-                
-                // Filtrar historial según rango de fechas si existe
-                let historyToExport = student.attendanceHistory;
-                
-                if (dateRange.start && dateRange.end) {
-                    historyToExport = historyToExport.filter(record => isWithinDateRange(record.date, dateRange));
-}
-                
-                // Ordenar por fecha ascendente para calcular porcentajes acumulados correctamente
-                const sortedHistory = [...historyToExport].sort((a, b) => new Date(a.date) - new Date(b.date));
-                
-                // Crear un registro por cada fecha de asistencia con porcentaje acumulado
-                sortedHistory.forEach((record, index) => {
-                    // Calcular porcentaje acumulado hasta esta fecha
-                    const recordsUpToNow = sortedHistory.slice(0, index + 1);
-                    const presentsUpToNow = recordsUpToNow.filter(r => r.present).length;
-                    const totalUpToNow = recordsUpToNow.length;
-                    // Usar el mismo redondeo que attendanceUtils.js: redondear a 1 decimal
-                    const rawPercentage = totalUpToNow > 0 ? (presentsUpToNow / totalUpToNow) * 100 : 0;
-                    const attendanceUpToNow = Math.round(rawPercentage * 10) / 10;
-                    
-                    expandedUsers.push({
-                        id: `${student.id}-${record.date}`,
-                        studentId: student.id,
-                        studentName: student.name,
-                        studentCode: student.code,
-                        ficha: student.course,
-                        fichaName: fichaName,
-                        environment: environmentName,
-                        date: record.date,
-                        scheduledStartTime,
-                        scheduledEndTime,
-                        actualCheckInTime: record.checkInTime || null,
-                        actualCheckOutTime: record.checkOutTime || null,
-                        instructorName,
-                        instructorId,
-                        status: record.present ? "present" : "absent",
-                        late: record.late || false,
-                        totalRecords: totalUpToNow, // Total acumulado hasta esta fecha
-                        attendance: attendanceUpToNow, // Porcentaje acumulado hasta esta fecha
-                    });
-                });
+        // Excel "simple" keeps the on-screen summary: one row per selected student,
+        // students without records included. Every other combination (Excel
+        // "detailed", both PDFs) exports the attendance records, so Excel no longer
+        // ignores the "detailed" choice of the export modal.
+        const finalUsersToExport = format === "excel" && exportType === "simple"
+            ? usersToExport
+            : buildExportRecords({
+                selectedRows: usersToExport,
+                students: appData.students || [],
+                courses: appData.courses || [],
+                environments: appData.environments || [],
+                dateRange,
+                exportType,
+                t,
             });
-            
-            // Ordenar por fecha descendente (más reciente primero)
-            expandedUsers.sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            // Para exportación DETALLADA: usar todos los registros expandidos
-            // Para exportación SENCILLA: usar solo el registro más reciente por estudiante (primer registro de cada estudiante después de ordenar)
-            if (exportType === "simple") {
-                // Agrupar por estudiante y tomar solo el registro más reciente (el primero de cada grupo)
-                const latestByStudent = new Map();
-                expandedUsers.forEach(record => {
-                    if (!latestByStudent.has(record.studentId)) {
-                        latestByStudent.set(record.studentId, record);
-                    }
-                });
-                finalUsersToExport = Array.from(latestByStudent.values());
-            } else {
-                // Exportación detallada: todos los registros
-                finalUsersToExport = expandedUsers;
-            }
+
+        if (finalUsersToExport.length === 0) {
+            pushNotification.warning(
+                t("Sin registros"),
+                t("Los usuarios seleccionados no tienen asistencias en el rango elegido")
+            );
+            return;
         }
-        
-        // TODO: Implementar lógica según exportType ("simple" o "detailed")
-        console.log(`[HistoricalSection] Exportando ${finalUsersToExport.length} usuarios en formato ${format} con tipo ${exportType}`);
-        
+
         if (format === "excel") {
-            const sheets = buildHistoricosSheets(usersToExport, t, formatDate);
+            const sheets = buildHistoricosSheets(finalUsersToExport, t, formatDate);
 
             const filename = `Historicos_Seleccionados_${formatDate(new Date(), "YYYY-MM-DD")}.xlsx`;
             const result = await exportToExcel(sheets, filename);
@@ -659,7 +665,7 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
             if (result.success) {
                 pushNotification.success(
                     t("Exportación exitosa"),
-                    `${usersToExport.length} ${usersToExport.length === 1 ? t("registro exportado") : t("registros exportados")} a Excel`
+                    `${finalUsersToExport.length} ${finalUsersToExport.length === 1 ? t("registro exportado") : t("registros exportados")} a Excel`
                 );
             } else {
                 pushNotification.error(

@@ -2005,5 +2005,7 @@
   "No se pudo actualizar": "Não foi possível atualizar",
   "Filtros limpiados": "Filtros limpos",
   "Más": "Mais",
-  "Mostrar inactivos": "Mostrar inativos"
+  "Mostrar inactivos": "Mostrar inativos",
+  "Sin registros": "Sem registros",
+  "Los usuarios seleccionados no tienen asistencias en el rango elegido": "Os usuários selecionados não têm registros de presença no período escolhido"
 }

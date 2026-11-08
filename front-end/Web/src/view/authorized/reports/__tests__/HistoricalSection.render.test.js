@@ -119,6 +119,7 @@ describe("HistoricosSection render and exports", () => {
 
     test.each([
         ["excel", "simple", false],
+        ["excel", "detailed", false],
         ["pdf", "simple", false],
         ["pdf", "detailed", false],
         ["pdf", "detailed", true],

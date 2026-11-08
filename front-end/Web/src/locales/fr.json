@@ -2005,5 +2005,7 @@
   "No se pudo actualizar": "Impossible de mettre à jour",
   "Filtros limpiados": "Filtres effacés",
   "Más": "Plus",
-  "Mostrar inactivos": "Afficher les inactifs"
+  "Mostrar inactivos": "Afficher les inactifs",
+  "Sin registros": "Aucun enregistrement",
+  "Los usuarios seleccionados no tienen asistencias en el rango elegido": "Les utilisateurs sélectionnés n’ont aucune présence sur la période choisie"
 }
