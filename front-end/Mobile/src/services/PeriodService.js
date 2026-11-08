@@ -36,13 +36,14 @@ export const PeriodService = {
       .filter((p) => String(p?.schoolId) === String(schoolId));
   },
 
+  // The rows are already AcademicPeriod models: wrapping the match in fromApi
+  // again read snake_case keys from a camelCase object and returned an empty
+  // period (no name, dates, school or isActive).
   getActiveBySchool: async (schoolId) => {
     const data = await request({ method: GET, url: ENDPOINT, requiresAuth: false });
-    return AcademicPeriod.fromApi(
-      unwrap(data)
-        .map((p) => AcademicPeriod.fromApi(toSnakeDeep(p)))
-        .find((p) => String(p?.schoolId) === String(schoolId) && p?.isActive) || null,
-    );
+    return unwrap(data)
+      .map((p) => AcademicPeriod.fromApi(toSnakeDeep(p)))
+      .find((p) => String(p?.schoolId) === String(schoolId) && p?.isActive) || null;
   },
 
   create: async (periodData) => {
