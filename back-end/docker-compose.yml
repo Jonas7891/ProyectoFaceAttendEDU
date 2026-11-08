@@ -326,8 +326,8 @@ services:
       start_period: 60s
 
   # ──────────────────────────────────────────────────────────────
-  # TypeScript — Fastify + Drizzle / pg (ADR-005 §3, §9)
-  # 03 academic 8083 (Drizzle), 07 configuration 8087
+  # TypeScript — Fastify + pg, no ORM (ADR-005 §3, §9)
+  # 03 academic 8083, 07 configuration 8087
   # Hexagonal: _stacks/node-typescript.md
   # ──────────────────────────────────────────────────────────────
   ms-academic:

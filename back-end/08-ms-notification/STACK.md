@@ -1,6 +1,6 @@
 # STACK — 08-ms-notification
 
-> **Stack ADR-005:** `TypeScript 5 + Node 20 + Fastify 4` · **Guía:** `../../fae-docs/_stacks/node-typescript.md`
+> **Stack ADR-005:** `TypeScript 5 + Node 24 + Fastify 5` · **Guía:** `../../fae-docs/_stacks/node-typescript.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md`
 > **Database:** `../database/08-ms-notification-db` (schema `notification`) · **Puerto:** `8088` · **Dominio:** `06-data/domains/07-notification.md`
 

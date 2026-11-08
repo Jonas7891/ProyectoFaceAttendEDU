@@ -26,7 +26,7 @@ Gestionar la estructura academica completa: sedes educativas, programas curricul
 | Componente | Tecnologia | Justificacion |
 |------------|-----------|---------------|
 | Lenguaje | **TypeScript 5** | Type-safe para modelos academicos y reportes |
-| Framework | **Fastify 4** | Alto rendimiento, validacion declarativa con Zod |
+| Framework | **Fastify 5** | Alto rendimiento, validacion declarativa con Zod |
 | Acceso a datos | **pg** con SQL parametrizado | El esquema lo gobierna Liquibase (`database/`); sin ORM ni esquema duplicado en el servicio |
 | Arquitectura | **Hexagonal** | Misma estructura que los demas servicios |
 

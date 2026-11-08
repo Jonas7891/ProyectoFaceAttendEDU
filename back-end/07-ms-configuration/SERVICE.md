@@ -25,7 +25,7 @@ Gestionar parametros configurables del sistema (academicos por sede y de segurid
 | Componente | Tecnologia | Justificacion |
 |------------|-----------|---------------|
 | Lenguaje | **TypeScript 5** | Type-safe, DX moderno |
-| Framework | **Fastify 4** | HTTP framework ultrarapido, validacion con Zod |
+| Framework | **Fastify 5** | HTTP framework ultrarapido, validacion con Zod |
 | Arquitectura | **Hexagonal** | Misma estructura |
 
 ### 3.2 Dependencias Principales

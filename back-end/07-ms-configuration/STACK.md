@@ -28,7 +28,7 @@ src/
 
 ## Dependencias
 
-Fastify 4, `pg` 8, `zod`, `pino`, `typescript` 5.
+Fastify 5, `pg` 8, `zod`, `pino`, `typescript` 5.
 
 ## Ejecución
 

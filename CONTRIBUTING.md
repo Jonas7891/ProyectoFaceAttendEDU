@@ -48,7 +48,7 @@ cd back-end/01-ms-identity
 
 ### Node (Fastify): `03-ms-academic`, `07-ms-configuration`, `08-ms-notification`, `09-ms-quality`
 
-Requiere Node 20 (los `package.json` piden `>=20.19`).
+Requiere Node 24 (los `package.json` de los servicios piden `"node": ">=24"`, igual que las imágenes `node:24-slim` y el CI).
 
 ```bash
 cd back-end/03-ms-academic
@@ -74,7 +74,7 @@ poetry run pytest
 
 ### Web y Mobile
 
-Requieren Node 20.
+Requieren Node 24 (el CI usa `node-version: "24"`).
 
 ```bash
 cd front-end/Web      # o front-end/Mobile

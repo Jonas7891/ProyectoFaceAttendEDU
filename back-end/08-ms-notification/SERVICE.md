@@ -20,7 +20,7 @@ Gestionar tipos de alerta y alertas generadas automaticamente por el sistema sob
 
 | Componente | Tecnologia | Justificacion |
 |------------|-----------|---------------|
-| Lenguaje | **TypeScript 5 / Node.js 20** | Mismo runtime que Academic y Configuration |
+| Lenguaje | **TypeScript 5 / Node.js 24** | Mismo runtime que Academic y Configuration |
 | Framework | **Fastify 5** | Router de alto rendimiento con validacion por esquema |
 | SQL | **pg 8** | SQL parametrizado; el esquema y sus migraciones viven en Liquibase (`database/`) |
 | Arquitectura | **Hexagonal** | Misma estructura que los demas servicios (`src/domain` + `src/infrastructure`) |
@@ -51,7 +51,7 @@ zod           ^4.6.7    // Validacion de payloads
 
 | Herramienta | Uso |
 |-------------|-----|
-| **Node.js 20 + npm** | Build (`tsc`), tests (`jest`), ejecucion (`npm run dev`) |
+| **Node.js 24 + npm** | Build (`tsc`), tests (`jest`), ejecucion (`npm run dev`) |
 | **Docker** | Containerizacion (`node:20-slim`) |
 | **VS Code** | IDE principal |
 | **DBeaver** | Cliente PostgreSQL |
@@ -307,11 +307,11 @@ Cuerpo del POST:
 
 ## 11. Stack Actual
 
-Notification esta implementado en **TypeScript 5 + Fastify 4** con arquitectura hexagonal (reescrito desde Go 1.22 + Gin; ver `STACK.md`).
+Notification esta implementado en **TypeScript 5 + Fastify 5** con arquitectura hexagonal (reescrito desde Go 1.22 + Gin; ver `STACK.md`).
 
 ### Justificacion
 
-- **Mismo runtime que Academic y Configuration (Node 20)**: un solo stack TypeScript para los servicios ligeros de datos.
+- **Mismo runtime que Academic y Configuration (Node 24)**: un solo stack TypeScript para los servicios ligeros de datos.
 - **Fastify**: Router rapido con validacion por esquema.
 - **pg**: SQL parametrizado sobre el schema `notification` (2 tablas: `alert_type`, `alert`).
 - **Canal de correo**: `nodemailer` para el relay SMTP y render propio de plantillas; `firebase-admin` para push y `twilio` para SMS (pendientes).
