@@ -137,6 +137,11 @@ jobs:
       # build-tooling deps with no fix available yet. Dependabot (see
       # .github/dependabot.yml) tracks these over time; this step just keeps
       # them visible on every PR without turning CI red for pre-existing debt.
+      # Rubric D4: a critical advisory in a runtime dependency blocks the build.
+      # Dev/build tooling stays informational in the step below.
+      - name: npm audit (runtime deps, critical blocks)
+        working-directory: back-end/${{ matrix.service }}
+        run: npm audit --omit=dev --audit-level=critical
       - name: npm audit (informational)
         working-directory: back-end/${{ matrix.service }}
         run: npm audit --audit-level=high
@@ -214,9 +219,19 @@ jobs:
       - name: npm ci
         working-directory: front-end/Mobile
         run: npm ci --ignore-scripts
-      - name: npm test
+      # Coverage is measured and published (rubric C1 floor: 70 % of lines).
+      # Add a coverageThreshold to package.json once the measured value is known.
+      - name: npm test (with coverage)
         working-directory: front-end/Mobile
-        run: npm test
+        run: npm test -- --coverage --coverageReporters=json-summary --coverageReporters=text-summary
+      - name: coverage summary
+        if: always()
+        run: python3 .github/scripts/coverage-summary.py jest front-end/Mobile/coverage/coverage-summary.json mobile
+      # Rubric D4: a critical advisory in a runtime dependency blocks the build.
+      # Dev/build tooling stays informational in the step below.
+      - name: npm audit (runtime deps, critical blocks)
+        working-directory: front-end/Mobile
+        run: npm audit --omit=dev --audit-level=critical
       - name: npm audit (informational)
         working-directory: front-end/Mobile
         run: npm audit --audit-level=high
@@ -235,12 +250,22 @@ jobs:
       - name: npm ci
         working-directory: front-end/Web
         run: npm ci --ignore-scripts
-      - name: npm test
+      # Coverage is measured and published (rubric C1 floor: 70 % of lines).
+      # Add a coverageThreshold to package.json once the measured value is known.
+      - name: npm test (with coverage)
         working-directory: front-end/Web
-        run: npm test
+        run: npm test -- --coverage --coverageReporters=json-summary --coverageReporters=text-summary
+      - name: coverage summary
+        if: always()
+        run: python3 .github/scripts/coverage-summary.py jest front-end/Web/coverage/coverage-summary.json web
       - name: expo export --platform web
         working-directory: front-end/Web
         run: ./node_modules/.bin/expo export --platform web
+      # Rubric D4: a critical advisory in a runtime dependency blocks the build.
+      # Dev/build tooling stays informational in the step below.
+      - name: npm audit (runtime deps, critical blocks)
+        working-directory: front-end/Web
+        run: npm audit --omit=dev --audit-level=critical
       - name: npm audit (informational)
         working-directory: front-end/Web
         run: npm audit --audit-level=high
