@@ -56,7 +56,7 @@ Carpetas principales (ubicadas en `src/`):
 
 - [src/api/README.md](src/api/README.md) — Cliente HTTP y configuración (interceptores, base URL, manejo de errores).
 - [src/assets/README.md](src/assets/README.md) — Imágenes, íconos, fuentes y recursos estáticos.
-- [src/model/README.md](src/model/README.md) — DTOs, adaptadores y mapeos de respuestas/peticiones.
+- [src/models/README.md](src/models/README.md) — DTOs, adaptadores y mapeos de respuestas/peticiones.
 - [src/navigations/README.md](src/navigations/README.md) — Definición de flujos y stacks de navegación.
 - [src/services/README.md](src/services/README.md) — Lógica de integración con la API (orquestación, caching ligero).
 - [src/storage/README.md](src/storage/README.md) — Abstracción para persistencia local (tokens, preferencias).
