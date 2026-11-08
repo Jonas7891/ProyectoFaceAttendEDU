@@ -64,6 +64,12 @@ export function PushNotificationProvider({
   const [pendingQueue, setPendingQueue] = useState([]); // Cola de notificaciones pendientes
   const [processedFromQueue, setProcessedFromQueue] = useState(0); // Contador de notificaciones liberadas de cola
 
+  // Latest rendered lists. dismiss() runs from timers created by an earlier
+  // render, so reading the state captured in its closure missed the notification
+  // being dismissed and its onDismiss callback never ran.
+  const notificationsRef = useRef(notifications);
+  notificationsRef.current = notifications;
+
   // Obtener duración por defecto desde configuración
   const getDefaultDuration = () => {
     const config = getInstitutionConfig();
@@ -355,8 +361,8 @@ export function PushNotificationProvider({
   };
 
   const dismiss = async (id, reason = 'manual') => {
-    // Buscar la notificación en las activas
-    const notification = notifications.find(n => n.id === id);
+    // Buscar la notificación en las activas (último render, no el del closure)
+    const notification = notificationsRef.current.find(n => n.id === id);
     
     if (notification?.onDismiss) {
       notification.onDismiss(reason);
@@ -378,29 +384,18 @@ export function PushNotificationProvider({
   };
 
   // Nueva función para cerrar por source (más confiable)
+  // Returns whether an on-screen notification of that source was closed. The
+  // answer used to be read before React ran the state updater that set it, so
+  // it was always false and SessionManager never restarted the session timer.
   const dismissBySource = (source, reason = 'manual') => {
-    let found = false;
-    
-    setNotifications((prev) => {
-      const filtered = prev.filter((n) => {
-        if (n.source === source) {
-          found = true;
-          // Llamar onDismiss si existe
-          if (n.onDismiss) {
-            n.onDismiss(reason);
-          }
-          return false; // Remover esta notificación
-        }
-        return true; // Mantener las demás
-      });
-      
-      return filtered;
-    });
+    const closing = notificationsRef.current.filter((n) => n.source === source);
+    closing.forEach((n) => n.onDismiss?.(reason));
 
+    setNotifications((prev) => prev.filter((n) => n.source !== source));
     // También remover de la cola
     setPendingQueue((prev) => prev.filter((n) => n.source !== source));
-    
-    return found;
+
+    return closing.length > 0;
   };
 
   const dismissAll = () => {
