@@ -1,6 +1,6 @@
 import type { FastifyRequest } from 'fastify';
 import { getJson } from './authGuard';
-import type { AcademicRepositories } from '../persistence/postgres';
+import type { AcademicPorts } from '../../domain/ports/out/AcademicPorts';
 import type { CallerSchool } from '../../application/access/CallerSchool';
 
 export type { CallerSchool };
@@ -27,7 +27,7 @@ export function clearCallerSchoolCache(): void {
  * services, 03-ms-academic owns `academic_actor` itself, so the caller's
  * school is read in-process instead of over HTTP.
  */
-export function createCallerSchoolResolver(repos: AcademicRepositories) {
+export function createCallerSchoolResolver(repos: Pick<AcademicPorts, 'actors'>) {
   return async function resolveCallerSchool(req: FastifyRequest): Promise<CallerSchool> {
     const userId = (req as any).userId as string | undefined;
     const token = (req as any).authToken as string | undefined;
