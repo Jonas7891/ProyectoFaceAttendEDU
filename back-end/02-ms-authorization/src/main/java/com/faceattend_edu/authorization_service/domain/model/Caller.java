@@ -1,5 +1,6 @@
 package com.faceattend_edu.authorization_service.domain.model;
 
+import com.faceattend_edu.shared.auth.Roles;
 import java.util.List;
 
 /**
@@ -8,8 +9,8 @@ import java.util.List;
  */
 public record Caller(String userId, List<String> roleNames) {
 
-    public static final String SUPER_ADMIN = "Super Administrador";
-    public static final String SCHOOL_ADMIN = "Administrador";
+    public static final String SUPER_ADMIN = Roles.SUPER_ADMIN;
+    public static final String SCHOOL_ADMIN = Roles.SCHOOL_ADMIN;
 
     public Caller {
         roleNames = roleNames == null ? List.of() : List.copyOf(roleNames);

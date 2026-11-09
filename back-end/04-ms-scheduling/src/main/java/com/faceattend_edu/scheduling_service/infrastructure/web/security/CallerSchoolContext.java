@@ -1,5 +1,6 @@
 package com.faceattend_edu.scheduling_service.infrastructure.web.security;
 
+import com.faceattend_edu.shared.auth.Roles;
 import com.faceattend_edu.scheduling_service.domain.model.Caller;
 import com.faceattend_edu.scheduling_service.infrastructure.web.security.CallerSchoolResolver.CallerSchool;
 import org.springframework.web.context.request.RequestAttributes;
@@ -46,7 +47,7 @@ public final class CallerSchoolContext {
     public static boolean isSchoolAdmin() {
         RequestAttributes attributes = RequestContextHolder.getRequestAttributes();
         Object roles = attributes == null ? null : attributes.getAttribute("X-User-Roles", RequestAttributes.SCOPE_REQUEST);
-        return roles instanceof java.util.List<?> list && list.contains("Administrador");
+        return roles instanceof java.util.List<?> list && list.contains(Roles.SCHOOL_ADMIN);
     }
 
     /** The caller's own academic_actor in their school, for stamping opened_by/closed_by. */
