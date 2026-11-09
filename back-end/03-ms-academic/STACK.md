@@ -23,13 +23,15 @@
 ```
 src/
 ├── domain/
-│   ├── entities/ School, Program, Cohort, Course, AcademicActor, Enrollment
+│   ├── entities/ School, Program, AcademicPeriod (regla de fechas), Cohort, Course, AcademicActor, Enrollment
 │   ├── value-objects/ AcademicActorType
 │   ├── events/ EnrollmentCreated, CourseCreated
-│   └── ports/in+out/ ICreateEnrollmentUseCase, IEnrollmentRepository
-├── application/use-cases/ CreateEnrollmentUseCase
+│   └── ports/out/ AcademicPorts + un repositorio por agregado
+├── application/
+│   ├── access/ SchoolScopePolicy (aislamiento por sede), schoolEditPolicy, CallerSchool
+│   └── use-cases/ un caso de uso por agregado (School, Program, AcademicPeriod, Cohort, Course, ActorType, AcademicActor, Enrollment)
 └── infrastructure/
-    ├── http/ controllers + routes (Fastify)
+    ├── http/ routes/ un archivo por recurso: solo traducen HTTP (Fastify + zod)
     ├── persistence/ repositorios pg (SQL parametrizado)
     └── messaging/ Kafka publisher
 ```

@@ -1,29 +1,15 @@
 import type { FastifyRequest } from 'fastify';
 import { getJson } from './authGuard';
 import type { AcademicRepositories } from '../persistence/postgres';
+import type { CallerSchool } from '../../application/access/CallerSchool';
 
-/**
- * The school a caller may manage. `isSuperAdmin: true` means unrestricted
- * (Super Administrador, no school of its own). Otherwise `schoolId` is the
- * caller's own school (via their academic_actor), or `null` for a caller
- * without one — which must fail secure (own nothing), never fall back to
- * "manage everything".
- */
-export interface CallerSchool {
-  readonly isSuperAdmin: boolean;
-  readonly schoolId: number | null;
-}
+export type { CallerSchool };
 
 /** Thrown when the scope cannot be resolved; the route answers with this status. */
 export class ScopeError extends Error {
   constructor(readonly statusCode: 403 | 503, message: string) {
     super(message);
   }
-}
-
-/** Course deletion is a platform-level action: only the unrestricted caller may do it. */
-export function mayDeleteCourse(caller: CallerSchool): boolean {
-  return caller.isSuperAdmin;
 }
 
 const SUPER_ADMIN_ROLE = 'Super Administrador';
