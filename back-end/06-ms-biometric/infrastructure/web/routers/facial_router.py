@@ -1,4 +1,4 @@
-﻿"""Facial biometric endpoints (primary adapter).
+"""Facial biometric endpoints (primary adapter).
 
 Route prefix is fixed at `/api/v1/biometric/facial` because the API gateway
 (`back-end/99-api-gateway/kong/kong.yml`, route `biometric-route`) forwards
@@ -17,18 +17,26 @@ separate face-auth path anymore.
 from __future__ import annotations
 
 import logging
-import math
 import time
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
-from domain.entities.facial_embedding import FacialEmbedding
+from application.facial_services import (
+    CallContext,
+    FaceAlreadyEnrolled,
+    FaceTemplateService,
+    IdentifyFaceService,
+    NoActiveTemplate,
+    NoMatch,
+    VerifyFaceService,
+)
+from application.match_audit import record_match
 from domain.entities.match_log import BiometricMatchLog
 from domain.face_encoding import decode_image, face_encoding, liveness_report, validate_liveness
 from domain.ports.out.biometric_repository import BiometricRepositoryPort
 from domain.ports.out.match_log_repository import MatchLogRepositoryPort
-from domain.similarity import cosine, euclidean, face_similarity
+from domain.similarity import cosine
 from domain.value_objects.biometric_type import BiometricType
 from infrastructure.config.dependencies import (
     get_facial_repository,
@@ -48,8 +56,7 @@ from infrastructure.web.liveness import (
     remember_identity,
     verify_liveness_challenge,
 )
-from infrastructure.web.match_audit import record_match
-from infrastructure.web.match_scope import UNRESTRICTED, MatchScope, best_allowed, get_match_scope
+from infrastructure.web.match_scope import MatchScope, get_match_scope
 from infrastructure.web.security import (
     STAFF_PERMISSION,
     bearer_or_none,
@@ -68,13 +75,10 @@ router = APIRouter(prefix="/api/v1/biometric/facial", tags=["facial"])
 STAFF = Depends(require_permission(STAFF_PERMISSION))
 ANY_ROLE = Depends(require_permission("biometric.case:request"))
 
-OPERATION_VERIFY = "VERIFY"
-OPERATION_IDENTIFY = "IDENTIFY"
-OPERATION_ENROLL = "ENROLL"
-OPERATION_DELETE = "DELETE"
 OPERATION_LIVENESS_FAILURE = "LIVENESS_FAILURE"
 NO_ACTIVE_TEMPLATE = "no active facial template"
 NO_MATCH = "no match found"
+FACE_ALREADY_ENROLLED = "This face is already enrolled for a different person"
 FRAMES_PER_ACTION = 6
 
 
@@ -128,49 +132,14 @@ class IdentifyFacialImageRequest(BaseModel):
     challenge_token: str = Field(min_length=1)
 
 
-async def _best_facial_match(
-    encoding: list[float],
-    repository: BiometricRepositoryPort,
-    threshold: float,
-    exclude_person_id: str | None = None,
-    scope: MatchScope = UNRESTRICTED,
-) -> tuple[FacialEmbedding | None, float]:
-    """Shared 1:N face scan (`face_similarity`) used by `/identify` and `/identify-image`.
-
-    Only a person the caller's `scope` allows can match (see `match_scope`): a face of another
-    school answers "no match", exactly like a face that was never enrolled.
-    """
-    scored: list[tuple[float, FacialEmbedding]] = []
-    seen: set[str] = set()
-    for template in await repository.list_active():
-        if template.person_id in seen:
-            continue
-        seen.add(template.person_id)
-        if exclude_person_id is not None and template.person_id == exclude_person_id:
-            continue
-        scored.append((face_similarity(encoding, list(template.encoding)), template))
-    best, score = await best_allowed(scored, threshold, scope)
-    return best, float(max(score, 0.0))
+def _context(request: Request | None, with_actor: bool = False) -> CallContext:
+    if request is None:
+        return CallContext()
+    return CallContext(_correlation_id(request), _actor_user_id(request) if with_actor else None)
 
 
-async def _closest_other_face(
-    encoding: list[float],
-    repository: BiometricRepositoryPort,
-    person_id: str,
-    max_distance: float,
-) -> tuple[FacialEmbedding | None, float]:
-    """Nearest template of a *different* person by Euclidean distance; the
-    template is returned only when it is within `max_distance`."""
-    best: FacialEmbedding | None = None
-    best_distance = math.inf
-    for template in await repository.list_active():
-        if template.person_id == person_id:
-            continue
-        distance = euclidean(encoding, list(template.encoding))
-        if distance < best_distance:
-            best_distance = distance
-            best = template
-    return (best, best_distance) if best is not None and best_distance <= max_distance else (None, best_distance)
+def _templates(repository: BiometricRepositoryPort, match_logs: MatchLogRepositoryPort | None) -> FaceTemplateService:
+    return FaceTemplateService(repository, match_logs)
 
 
 @router.post("/enroll", status_code=status.HTTP_201_CREATED, dependencies=[STAFF])
@@ -183,25 +152,8 @@ async def enroll_facial(
     # REST only: the WebSocket channel checks the authorization itself before calling this.
     if request is not None:
         await ensure_biometric_consent(req.person_id, bearer_or_none(request))
-    template = FacialEmbedding(
-        person_id=req.person_id,
-        encoding=req.encoding,
-        model_version=req.model_version,
-    )
-    stored = await repository.enroll(template)
-    await record_match(
-        match_logs,
-        BiometricMatchLog(
-            biometric_type=BiometricType.FACIAL,
-            operation=OPERATION_ENROLL,
-            matched=True,
-            score=1.0,
-            threshold=0.0,
-            person_id=req.person_id,
-            embedding_id=stored.embedding_id,
-            correlation_id=_correlation_id(request) if request is not None else None,
-            actor_user_id=_actor_user_id(request),
-        ),
+    stored = await _templates(repository, match_logs).enroll(
+        req.person_id, req.encoding, req.model_version, _context(request, with_actor=True)
     )
     return template_response(stored)
 
@@ -239,10 +191,10 @@ async def get_facial(
     repository: BiometricRepositoryPort = Depends(get_facial_repository),
 ):
     await ensure_staff_scope(request, person_id)
-    active = await repository.find_active(person_id)
-    if active is None:
-        raise HTTPException(status_code=404, detail=NO_ACTIVE_TEMPLATE)
-    return template_response(active)
+    try:
+        return template_response(await _templates(repository, None).active(person_id))
+    except NoActiveTemplate as exc:
+        raise HTTPException(status_code=404, detail=NO_ACTIVE_TEMPLATE) from exc
 
 
 @router.get("/{person_id}/history", dependencies=[STAFF])
@@ -252,7 +204,7 @@ async def facial_history(
     repository: BiometricRepositoryPort = Depends(get_facial_repository),
 ):
     await ensure_staff_scope(request, person_id)
-    history = await repository.list_history(person_id)
+    history = await _templates(repository, None).history(person_id)
     return {"history": [template_response(template) for template in history]}
 
 
@@ -264,25 +216,12 @@ async def delete_facial(
     match_logs: MatchLogRepositoryPort = Depends(get_match_log_repository),
 ):
     await ensure_staff_scope(request, person_id)
-    # Soft delete: the document stays, is_active goes false and deleted_at is set.
-    # Covers both "revoke template" and "delete subject" from the merged
-    # 10-ms-face-auth lifecycle endpoints — there is no identity left to keep
-    # separate from the template once that service's own person/app_user layer
-    # is gone, so both collapse onto this one soft-deactivate.
-    if not await repository.deactivate(person_id):
-        raise HTTPException(status_code=404, detail=NO_ACTIVE_TEMPLATE)
-    await record_match(
-        match_logs,
-        BiometricMatchLog(
-            biometric_type=BiometricType.FACIAL,
-            operation=OPERATION_DELETE,
-            matched=False,
-            score=0.0,
-            threshold=0.0,
-            person_id=person_id,
-            correlation_id=_correlation_id(request),
-        ),
-    )
+    # Covers both "revoke template" and "delete subject" from the merged 10-ms-face-auth
+    # lifecycle endpoints: both collapse onto this one soft-deactivate.
+    try:
+        await _templates(repository, match_logs).remove(person_id, _context(request))
+    except NoActiveTemplate as exc:
+        raise HTTPException(status_code=404, detail=NO_ACTIVE_TEMPLATE) from exc
     return None
 
 
@@ -295,30 +234,23 @@ async def verify_facial(
     threshold: float = Depends(get_face_match_threshold),
     match_scope: MatchScope = Depends(get_match_scope),
 ):
-    # A person of another school answers like one without a template: no existence oracle.
-    if not await match_scope.allows(req.person_id):
-        raise HTTPException(status_code=404, detail=NO_ACTIVE_TEMPLATE)
-    active = await repository.find_active(req.person_id)
-    if active is None:
-        raise HTTPException(status_code=404, detail=NO_ACTIVE_TEMPLATE)
-
-    score = face_similarity(req.encoding, list(active.encoding))
-    matched = score >= threshold
-    await record_match(
-        match_logs,
-        BiometricMatchLog(
-            biometric_type=BiometricType.FACIAL,
-            operation=OPERATION_VERIFY,
-            matched=matched,
-            score=score,
-            threshold=threshold,
-            person_id=req.person_id,
-            matched_person_id=req.person_id if matched else None,
-            embedding_id=active.embedding_id,
-            correlation_id=_correlation_id(request),
-        ),
-    )
+    try:
+        matched, score = await VerifyFaceService(repository, match_logs).verify(
+            req.person_id, req.encoding, threshold, match_scope, _context(request)
+        )
+    except NoActiveTemplate as exc:
+        raise HTTPException(status_code=404, detail=NO_ACTIVE_TEMPLATE) from exc
     return {"match": matched, "score": score}
+
+
+async def _identify(encoding, request, repository, match_logs, threshold, match_scope):
+    try:
+        person_id, score = await IdentifyFaceService(repository, match_logs).identify(
+            encoding, threshold, match_scope, _context(request)
+        )
+    except NoMatch as exc:
+        raise HTTPException(status_code=404, detail=NO_MATCH) from exc
+    return {"person_id": person_id, "score": score}
 
 
 @router.post("/identify", dependencies=[STAFF])
@@ -330,23 +262,7 @@ async def identify_facial(
     threshold: float = Depends(get_face_match_threshold),
     match_scope: MatchScope = Depends(get_match_scope),
 ):
-    best, best_score = await _best_facial_match(req.encoding, repository, threshold, scope=match_scope)
-    await record_match(
-        match_logs,
-        BiometricMatchLog(
-            biometric_type=BiometricType.FACIAL,
-            operation=OPERATION_IDENTIFY,
-            matched=best is not None,
-            score=best_score,
-            threshold=threshold,
-            matched_person_id=best.person_id if best is not None else None,
-            embedding_id=best.embedding_id if best is not None else None,
-            correlation_id=_correlation_id(request),
-        ),
-    )
-    if best is None:
-        raise HTTPException(status_code=404, detail=NO_MATCH)
-    return {"person_id": best.person_id, "score": best_score}
+    return await _identify(req.encoding, request, repository, match_logs, threshold, match_scope)
 
 
 IDENTITY_CHANGED = "The face changed during the liveness check"
@@ -448,6 +364,21 @@ async def liveness_step(
     return {"challenge_token": next_token, "completed": next_step >= len(actions), "detected": True}
 
 
+def _encoding_after_liveness(secret: str, token: str, image_base64: str, settings: Settings) -> list[float]:
+    """Consumes the liveness challenge and returns the face of the image (400 otherwise)."""
+    try:
+        consume_liveness_challenge(secret, token)
+        image = decode_image(image_base64, settings.max_image_bytes, settings.max_image_pixels)
+        encoding = face_encoding(image)
+        if encoding is not None:
+            _check_final_identity(secret, token, encoding, settings)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if encoding is None:
+        raise HTTPException(status_code=400, detail="No face found in the image")
+    return encoding
+
+
 @router.post(
     "/enroll-image", status_code=status.HTTP_201_CREATED, dependencies=[ANY_ROLE, Depends(rate_limit("enroll_face"))]
 )
@@ -464,43 +395,19 @@ async def enroll_facial_image(
     active = await repository.find_active(req.person_id)
     await ensure_can_enroll(request, req.person_id, getattr(active, "enrolled_at", None), active is not None)
     await ensure_biometric_consent(req.person_id, bearer_or_none(request))
+    encoding = _encoding_after_liveness(secret, req.challenge_token, req.image_base64, settings)
     try:
-        consume_liveness_challenge(secret, req.challenge_token)
-        image = decode_image(req.image_base64, settings.max_image_bytes, settings.max_image_pixels)
-        encoding = face_encoding(image)
-        if encoding is not None:
-            _check_final_identity(secret, req.challenge_token, encoding, settings)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    if encoding is None:
-        raise HTTPException(status_code=400, detail="No face found in the image")
-
-    duplicate, duplicate_distance = await _closest_other_face(
-        encoding, repository, req.person_id, 1.0 - threshold
-    )
-    if duplicate is not None:
-        raise HTTPException(
-            status_code=409,
-            detail=f"This face is already enrolled for a different person (distance={duplicate_distance:.4f})",
-        )
-
-    template = await repository.enroll(
-        FacialEmbedding(person_id=req.person_id, encoding=encoding, model_version=req.model_version)
-    )
-    await record_match(
-        match_logs,
-        BiometricMatchLog(
-            biometric_type=BiometricType.FACIAL,
-            operation=OPERATION_ENROLL,
-            matched=True,
-            score=1.0,
+        template = await _templates(repository, match_logs).enroll(
+            req.person_id,
+            encoding,
+            req.model_version,
+            _context(request, with_actor=True),
             threshold=threshold,
-            person_id=req.person_id,
-            embedding_id=template.embedding_id,
-            correlation_id=_correlation_id(request),
-            actor_user_id=_actor_user_id(request),
-        ),
-    )
+            reject_duplicates_within=1.0 - threshold,
+        )
+    except FaceAlreadyEnrolled as exc:
+        # No distance in the answer: it would tell the caller how close the other face is.
+        raise HTTPException(status_code=409, detail=FACE_ALREADY_ENROLLED) from exc
     return template_response(template)
 
 
@@ -515,31 +422,5 @@ async def identify_facial_image(
     settings: Settings = Depends(get_settings),
     match_scope: MatchScope = Depends(get_match_scope),
 ):
-    try:
-        consume_liveness_challenge(secret, req.challenge_token)
-        image = decode_image(req.image_base64, settings.max_image_bytes, settings.max_image_pixels)
-        encoding = face_encoding(image)
-        if encoding is not None:
-            _check_final_identity(secret, req.challenge_token, encoding, settings)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    if encoding is None:
-        raise HTTPException(status_code=400, detail="No face found in the image")
-
-    best, best_score = await _best_facial_match(encoding, repository, threshold, scope=match_scope)
-    await record_match(
-        match_logs,
-        BiometricMatchLog(
-            biometric_type=BiometricType.FACIAL,
-            operation=OPERATION_IDENTIFY,
-            matched=best is not None,
-            score=best_score,
-            threshold=threshold,
-            matched_person_id=best.person_id if best is not None else None,
-            embedding_id=best.embedding_id if best is not None else None,
-            correlation_id=_correlation_id(request),
-        ),
-    )
-    if best is None:
-        raise HTTPException(status_code=404, detail=NO_MATCH)
-    return {"person_id": best.person_id, "score": best_score}
+    encoding = _encoding_after_liveness(secret, req.challenge_token, req.image_base64, settings)
+    return await _identify(encoding, request, repository, match_logs, threshold, match_scope)

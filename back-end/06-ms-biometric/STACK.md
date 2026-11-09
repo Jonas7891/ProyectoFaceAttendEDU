@@ -25,10 +25,13 @@ domain/
 ├── entities/ facial_embedding, fingerprint_embedding
 ├── value_objects/ model_version
 ├── events/ facial_enrolled
-└── ports/in_/out/ enroll_use_case, embedding_repository
-application/use_cases/ enroll_facial
+└── ports/out/ biometric_repository, match_log_repository, update_case_repository
+application/
+├── facial_services: FaceTemplateService (enrolar, sin rostro duplicado), VerifyFaceService, IdentifyFaceService
+├── match_selection: el mejor candidato que permite el alcance de quien llama
+└── match_audit: registro de cada comparación
 infrastructure/
-├── web/ routers/facial_router, schemas
+├── web/ routers (solo traducen HTTP; facial_router delega en application), schemas
 ├── persistence/ motor repositories
 └── config/ settings, dependencies
 ```
