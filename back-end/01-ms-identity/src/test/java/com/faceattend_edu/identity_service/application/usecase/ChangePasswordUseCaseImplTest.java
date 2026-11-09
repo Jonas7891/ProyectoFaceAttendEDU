@@ -1,6 +1,8 @@
 package com.faceattend_edu.identity_service.application.usecase;
 
-import com.faceattend_edu.identity_service.adapter.out.messaging.DomainEventPublisher;
+import static org.mockito.Mockito.mock;
+
+import com.faceattend_edu.identity_service.application.port.out.EventPublisherPort;
 import com.faceattend_edu.identity_service.application.port.out.HashPasswordPort;
 import com.faceattend_edu.identity_service.application.port.out.UpdateUserSessionPort;
 import com.faceattend_edu.identity_service.domain.exception.ValidationException;
@@ -73,7 +75,7 @@ class ChangePasswordUseCaseImplTest {
         useCase = new ChangePasswordUseCaseImpl(
                 id -> user, u -> saved = u, hash, new ValidatePasswordPolicyUseCaseImpl(() -> List.of(policy)),
                 token -> token.equals(currentToken) ? current : null,
-                id -> List.of(current, other), sessionUpdate, new DomainEventPublisher(null));
+                id -> List.of(current, other), sessionUpdate, mock(EventPublisherPort.class));
     }
 
     private UserSession session() {

@@ -1,6 +1,6 @@
 package com.faceattend_edu.identity_service.application.usecase;
 
-import com.faceattend_edu.identity_service.adapter.out.messaging.DomainEventPublisher;
+import com.faceattend_edu.identity_service.application.port.out.EventPublisherPort;
 import com.faceattend_edu.identity_service.application.port.in.ChangePasswordUseCase;
 import com.faceattend_edu.identity_service.application.port.out.HashPasswordPort;
 import com.faceattend_edu.identity_service.application.port.in.ValidatePasswordPolicyUseCase;
@@ -31,7 +31,7 @@ public class ChangePasswordUseCaseImpl implements ChangePasswordUseCase {
     private final LoadUserSessionPort loadUserSessionPort;
     private final LoadUserSessionsPort loadUserSessionsPort;
     private final UpdateUserSessionPort updateUserSessionPort;
-    private final DomainEventPublisher eventPublisher;
+    private final EventPublisherPort eventPublisher;
 
     @Override
     @Transactional
@@ -62,7 +62,7 @@ public class ChangePasswordUseCaseImpl implements ChangePasswordUseCase {
                 updateUserSessionPort.updateUserSession(session);
             }
         }
-        eventPublisher.publish("identity-events",
+        eventPublisher.publishAfterCommit("identity-events",
                 "{\"type\":\"PasswordChanged\",\"userId\":\"" + userId + "\",\"occurredAt\":\"" + Instant.now() + "\"}");
     }
 }
