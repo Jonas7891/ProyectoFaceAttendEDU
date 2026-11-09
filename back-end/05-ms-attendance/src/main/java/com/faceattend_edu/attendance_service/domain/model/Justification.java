@@ -7,7 +7,6 @@ import lombok.Setter;
 
 import java.time.Instant;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 
 @Getter @Setter @AllArgsConstructor @NoArgsConstructor
@@ -29,18 +28,16 @@ public class Justification {
     private UUID deletedBy;
     private long rowVersion;
 
-    private static final Set<String> ALLOWED = Set.of("Pending","Approved","Rejected");
-
     public void validate() {
         if (attendanceRecordId == null) throw new IllegalArgumentException("attendanceRecordId is required");
         if (justificationTypeId == null) throw new IllegalArgumentException("justificationTypeId is required");
         if (isBlank(reason)) throw new IllegalArgumentException("reason is required");
-        if (reviewStatus != null && !ALLOWED.contains(reviewStatus)) throw new IllegalArgumentException("reviewStatus must be one of " + ALLOWED);
+        if (reviewStatus != null && ReviewStatus.of(reviewStatus).isEmpty()) throw new IllegalArgumentException("reviewStatus must be one of " + ReviewStatus.labels());
     }
     public void touchCreated() {
         if (createdAt == null) createdAt = Instant.now();
         if (submittedAt == null) submittedAt = Instant.now();
-        if (reviewStatus == null) reviewStatus = "Pending";
+        if (reviewStatus == null) reviewStatus = ReviewStatus.PENDING.label();
         if (rowVersion == 0) rowVersion = 1L;
     }
     public void touchUpdated() {
@@ -48,6 +45,9 @@ public class Justification {
         // row_version is owned by JPA @Version (reinforced by fn_audit_timestamps trigger);
         // pre-incrementing it here makes merge() fail with StaleObjectStateException
     }
+    /** True while nobody has resolved it. */
+    public boolean isPending() { return ReviewStatus.of(reviewStatus).filter(ReviewStatus.PENDING::equals).isPresent(); }
+
     private static boolean isBlank(String s){ return s==null || s.trim().isEmpty(); }
     @Override public boolean equals(Object o){ if(this==o) return true; if(!(o instanceof Justification)) return false; Justification that=(Justification)o; return Objects.equals(justificationId, that.justificationId); }
     @Override public int hashCode(){ return Objects.hash(justificationId); }

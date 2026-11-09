@@ -2,6 +2,7 @@ package com.faceattend_edu.scheduling_service.infrastructure.persistence.adapter
 
 import com.faceattend_edu.scheduling_service.domain.model.ClassSession;
 import com.faceattend_edu.scheduling_service.domain.model.ClassSessionFilter;
+import com.faceattend_edu.scheduling_service.domain.model.ClassSessionStatus;
 import java.time.LocalDate;
 import com.faceattend_edu.scheduling_service.domain.port.out.ClassSessionRepository;
 import com.faceattend_edu.scheduling_service.infrastructure.persistence.mapper.ClassSessionPersistenceMapper;
@@ -37,7 +38,7 @@ public class ClassSessionPersistenceAdapter implements ClassSessionRepository {
                 f.scheduleBlockId() != null, f.scheduleBlockId() == null ? -1L : f.scheduleBlockId(),
                 f.from() != null, f.from() == null ? PLACEHOLDER_DATE : f.from(),
                 f.to() != null, f.to() == null ? PLACEHOLDER_DATE : f.to(),
-                f.sessionStatus() != null, f.sessionStatus() == null ? "Open" : f.sessionStatus(),
+                f.sessionStatus() != null, f.sessionStatus() == null ? ClassSessionStatus.OPEN.label() : f.sessionStatus(),
                 schoolId != null, schoolId == null ? -1 : schoolId)
                 .stream().map(mapper::toDomain).collect(Collectors.toList());
     }

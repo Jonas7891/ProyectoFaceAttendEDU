@@ -1,6 +1,7 @@
 package com.faceattend_edu.attendance_service.infrastructure.persistence.adapter;
 
 import com.faceattend_edu.attendance_service.domain.model.Justification;
+import com.faceattend_edu.attendance_service.domain.model.ReviewStatus;
 import com.faceattend_edu.attendance_service.domain.model.JustificationFilter;
 import com.faceattend_edu.attendance_service.domain.model.JustificationSlice;
 import com.faceattend_edu.attendance_service.infrastructure.persistence.entity.JustificationJpaEntity;
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class JustificationPersistenceAdapter implements JustificationRepository {
     /** Relleno del filtro de estado apagado: valor válido del ENUM review_status (ver AttendanceRecordPersistenceAdapter). */
-    static final String STATUS_PLACEHOLDER = "Pending";
+    static final String STATUS_PLACEHOLDER = ReviewStatus.PENDING.label();
     private final JustificationJpaRepository jpaRepository;
     private final JustificationPersistenceMapper mapper;
     @Override public Justification save(Justification d){ return mapper.toDomain(jpaRepository.save(mapper.toEntity(d))); }

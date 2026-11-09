@@ -9,7 +9,7 @@ import lombok.Setter;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Objects;
-import java.util.Set;
+import java.util.Optional;
 import java.util.UUID;
 
 @Getter
@@ -33,18 +33,16 @@ public class ClassSession {
     private UUID deletedBy;
     private long rowVersion;
 
-    private static final Set<String> ALLOWED_STATUSES = Set.of("Open", "Closed", "Cancelled");
-
     public void validate() {
         if (scheduleBlockId == null) throw new IllegalArgumentException("scheduleBlockId is required");
         if (sessionDate == null) throw new IllegalArgumentException("sessionDate is required");
         if (sessionStatus == null || sessionStatus.isBlank()) throw new IllegalArgumentException("sessionStatus is required");
-        if (!ALLOWED_STATUSES.contains(sessionStatus)) throw new IllegalArgumentException("sessionStatus must be one of " + ALLOWED_STATUSES);
+        if (ClassSessionStatus.of(sessionStatus).isEmpty()) throw new IllegalArgumentException("sessionStatus must be one of " + ClassSessionStatus.labels());
     }
 
     public void touchCreated() {
         if (createdAt == null) createdAt = Instant.now();
-        if (sessionStatus == null) sessionStatus = "Open";
+        if (sessionStatus == null) sessionStatus = ClassSessionStatus.OPEN.label();
         if (rowVersion == 0) rowVersion = 1L;
     }
 
@@ -54,18 +52,21 @@ public class ClassSession {
         // pre-incrementing it here makes merge() fail with StaleObjectStateException
     }
 
-    public boolean isOpen() { return OPEN.equals(sessionStatus); }
-    public boolean isClosed() { return CLOSED.equals(sessionStatus); }
-    public boolean isCancelled() { return CANCELLED.equals(sessionStatus); }
+    /** The status as the domain sees it; empty only for a row that breaks the enum. */
+    public Optional<ClassSessionStatus> status() { return ClassSessionStatus.of(sessionStatus); }
 
-    public static final String OPEN = "Open";
-    public static final String CLOSED = "Closed";
-    public static final String CANCELLED = "Cancelled";
+    public boolean isOpen() { return is(ClassSessionStatus.OPEN); }
+    public boolean isClosed() { return is(ClassSessionStatus.CLOSED); }
+    public boolean isCancelled() { return is(ClassSessionStatus.CANCELLED); }
+
+    private boolean is(ClassSessionStatus expected) { return status().filter(expected::equals).isPresent(); }
+
+    private void moveTo(ClassSessionStatus next) { sessionStatus = next.label(); }
 
     /** The status spelled as stored ("closed" -> "Closed"), or null when it is not a session status. */
     public static String canonicalStatus(String status) {
         if (status == null) return null;
-        return ALLOWED_STATUSES.stream().filter(s -> s.equalsIgnoreCase(status)).findFirst().orElse(null);
+        return ClassSessionStatus.parse(status).map(ClassSessionStatus::label).orElse(null);
     }
 
     /**
@@ -73,7 +74,7 @@ public class ClassSession {
      * birth would leave closed_by NULL (AUD-27). /close and /cancel are the only way to move on.
      */
     public void startOpen(Long openerActorId, Instant at) {
-        if (sessionStatus == null) sessionStatus = OPEN;
+        if (sessionStatus == null) moveTo(ClassSessionStatus.OPEN);
         if (!isOpen()) {
             throw new ValidationException("A class session is created Open; use /close or /cancel to change its status");
         }
@@ -91,7 +92,7 @@ public class ClassSession {
     public void open(Long actorId, Instant at) {
         if (isOpen()) throw new ValidationException("ClassSession already Open");
         if (isClosed() || isCancelled()) throw new ValidationException("Cannot open a session that is " + sessionStatus);
-        sessionStatus = OPEN;
+        moveTo(ClassSessionStatus.OPEN);
         openedBy = actorId;
         openedAt = at;
         touchUpdated();
@@ -104,7 +105,7 @@ public class ClassSession {
         if (actorId == null) {
             throw new ValidationException("Cannot close the session: the caller has no academic actor to record in closed_by");
         }
-        sessionStatus = CLOSED;
+        moveTo(ClassSessionStatus.CLOSED);
         closedBy = actorId;
         closedAt = at;
         touchUpdated();
@@ -113,7 +114,7 @@ public class ClassSession {
     public void cancel() {
         if (isCancelled()) throw new ValidationException("ClassSession already Cancelled");
         if (isClosed()) throw new ValidationException("Cannot cancel a Closed session");
-        sessionStatus = CANCELLED;
+        moveTo(ClassSessionStatus.CANCELLED);
         touchUpdated();
     }
 
