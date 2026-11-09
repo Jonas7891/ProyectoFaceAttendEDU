@@ -4,7 +4,7 @@ import com.faceattend_edu.attendance_service.application.policy.ArrivalStatusPol
 import com.faceattend_edu.attendance_service.domain.exception.DuplicateEntityException;
 import com.faceattend_edu.attendance_service.domain.model.AttendanceRecord;
 import com.faceattend_edu.attendance_service.domain.port.out.AttendanceRecordRepository;
-import com.faceattend_edu.attendance_service.infrastructure.messaging.DomainEventPublisher;
+import com.faceattend_edu.attendance_service.domain.port.out.EventPublisherPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,7 +33,7 @@ class AttendanceUniquenessTest {
     private static final long ACTOR = 20L;
 
     @Mock AttendanceRecordRepository repository;
-    @Mock DomainEventPublisher eventPublisher;
+    @Mock EventPublisherPort eventPublisher;
 
     private CreateAttendanceRecordUseCaseImpl create;
     private RecordAttendanceUseCaseImpl record;
@@ -43,8 +43,8 @@ class AttendanceUniquenessTest {
     void setUp() {
         // Without timing data the policy keeps the status the caller sent, so these tests stay about uniqueness.
         ArrivalStatusPolicy keepsStatus = new ArrivalStatusPolicy((session, actor) -> Optional.empty(), "America/Bogota");
-        create = new CreateAttendanceRecordUseCaseImpl(repository, eventPublisher, keepsStatus);
-        record = new RecordAttendanceUseCaseImpl(repository, keepsStatus);
+        create = new CreateAttendanceRecordUseCaseImpl(repository, eventPublisher, keepsStatus, new com.faceattend_edu.attendance_service.application.policy.SessionOpenPolicy(id -> java.util.Optional.of("Open")));
+        record = new RecordAttendanceUseCaseImpl(repository, keepsStatus, new com.faceattend_edu.attendance_service.application.policy.SessionOpenPolicy(id -> java.util.Optional.of("Open")));
         bulk = new BulkRecordAttendanceUseCaseImpl(record);
     }
 

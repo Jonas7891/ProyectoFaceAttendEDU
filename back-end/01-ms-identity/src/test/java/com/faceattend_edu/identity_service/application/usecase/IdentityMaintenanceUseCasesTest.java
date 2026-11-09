@@ -1,6 +1,6 @@
 package com.faceattend_edu.identity_service.application.usecase;
 
-import com.faceattend_edu.identity_service.adapter.out.messaging.DomainEventPublisher;
+import com.faceattend_edu.identity_service.application.port.out.EventPublisherPort;
 import com.faceattend_edu.identity_service.application.port.out.ListUsersPort;
 import com.faceattend_edu.identity_service.application.port.out.LoadPersonPort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserPort;
@@ -165,7 +165,7 @@ class IdentityMaintenanceUseCasesTest {
     @Test
     void aPasswordPolicyIsValidatedSavedAndAnnounced() {
         SavePasswordPolicyPort save = mock(SavePasswordPolicyPort.class);
-        DomainEventPublisher events = mock(DomainEventPublisher.class);
+        EventPublisherPort events = mock(EventPublisherPort.class);
         PasswordPolicy policy = new PasswordPolicy();
         policy.setMinLength(8);
         policy.setMaxLength(20);
@@ -176,7 +176,7 @@ class IdentityMaintenanceUseCasesTest {
             return saved;
         });
         assertThat(new CreatePasswordPolicyUseCaseImpl(save, events).createPolicy(policy).getCreatedAt()).isNotNull();
-        verify(events).publish(eq("password-policy-events"), contains("\"policyId\":4"));
+        verify(events).publishAfterCommit(eq("password-policy-events"), contains("\"policyId\":4"));
 
         PasswordPolicy invalid = new PasswordPolicy();
         invalid.setMinLength(10);

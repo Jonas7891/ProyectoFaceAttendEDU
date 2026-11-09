@@ -2,6 +2,7 @@ package com.faceattend_edu.authorization_service.infrastructure.web.controller;
 
 import com.faceattend_edu.authorization_service.domain.exception.DuplicateEntityException;
 import com.faceattend_edu.authorization_service.domain.exception.EntityNotFoundException;
+import com.faceattend_edu.authorization_service.domain.exception.ForbiddenException;
 import com.faceattend_edu.authorization_service.domain.exception.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleNotFound(EntityNotFoundException ex) {
         return buildErrorResponse(HttpStatus.NOT_FOUND, "ISO-8.5-INT-001", ex.getMessage(), "8.5", "WARNING");
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<Map<String, Object>> handleForbidden(ForbiddenException ex) {
+        return buildErrorResponse(HttpStatus.FORBIDDEN, "ISO-8.2-AUTH-001", ex.getMessage(), "8.2", "WARNING");
     }
 
     @ExceptionHandler(DuplicateEntityException.class)

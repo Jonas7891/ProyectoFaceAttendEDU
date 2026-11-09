@@ -1,4 +1,4 @@
-import { Enrollment, type EnrollmentRecord, type EnrollmentStatus } from '../../../domain/entities/Enrollment';
+import type { EnrollmentRecord } from '../../../domain/entities/Enrollment';
 import type { AuditActor } from '../../../domain/ports/out/ICrudRepository';
 import type { IEnrollmentRepository } from '../../../domain/ports/out/IEnrollmentRepository';
 import type { PageOptions } from '../../../domain/ports/out/ICrudRepository';
@@ -7,8 +7,6 @@ import { AUDIT_FIELDS } from './audit.fields';
 
 /** Native PostgreSQL enum — bind parameters must carry an explicit cast. */
 const ENROLLMENT_STATUS_TYPE = 'academic.enrollment_status';
-
-const ENROLLMENT_STATUSES: readonly EnrollmentStatus[] = ['Active', 'Withdrawn', 'Completed'];
 
 /** Live ids of a school's cohorts (through their program); $1 = school_id. */
 const COHORTS_OF_SCHOOL =
@@ -40,11 +38,6 @@ export class PostgresEnrollmentRepository
     { field: 'enrollmentStatus', column: 'enrollment_status', cast: ENROLLMENT_STATUS_TYPE },
     ...AUDIT_FIELDS,
   ];
-
-  /** True when `value` is one of the enum's labels. */
-  static isEnrollmentStatus(value: unknown): value is EnrollmentStatus {
-    return typeof value === 'string' && (ENROLLMENT_STATUSES as readonly string[]).includes(value);
-  }
 
   /**
    * Enrolls an actor in a cohort, bringing back a previously deleted enrollment of
@@ -111,24 +104,5 @@ export class PostgresEnrollmentRepository
 
   countByAcademicActor(academicActorId: number): Promise<number> {
     return this.countWhere([this.filterOn('academicActorId', academicActorId)]);
-  }
-
-  /**
-   * Domain-facing write used by `CreateEnrollmentUseCase`.
-   * `Enrollment.create()` carries no date and `enrolled_on` is NOT NULL without a
-   * default, so today's date is supplied here. The generated identity is written
-   * back onto the entity so the use case can return a real id.
-   */
-  async save(e: Enrollment): Promise<void> {
-    const draft: JsonRecord = {
-      academicActorId: e.academicActorId,
-      cohortId: e.cohortId,
-      enrolledOn: new Date().toISOString().slice(0, 10),
-      enrollmentStatus: PostgresEnrollmentRepository.isEnrollmentStatus(e.status) ? e.status : 'Active',
-    };
-    const created = await this.createOrRestore(draft);
-    // `enrollmentId` is `readonly` on the value object; the persistence layer is
-    // the only place that knows the generated identity.
-    (e as { enrollmentId: number }).enrollmentId = created.enrollmentId;
   }
 }

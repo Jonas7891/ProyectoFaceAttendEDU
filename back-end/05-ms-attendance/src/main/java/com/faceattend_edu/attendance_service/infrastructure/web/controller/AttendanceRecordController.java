@@ -6,8 +6,6 @@ import com.faceattend_edu.attendance_service.domain.model.AttendanceRecordFilter
 import com.faceattend_edu.attendance_service.domain.model.AttendanceRecordSlice;
 import com.faceattend_edu.attendance_service.domain.port.in.*;
 import com.faceattend_edu.attendance_service.infrastructure.web.dto.*;
-import com.faceattend_edu.attendance_service.infrastructure.persistence.repository.ActorAttendanceCount;
-import com.faceattend_edu.attendance_service.infrastructure.persistence.repository.AttendanceRecordJpaRepository;
 import com.faceattend_edu.attendance_service.infrastructure.web.Paging;
 import com.faceattend_edu.attendance_service.infrastructure.web.mapper.AttendanceRecordWebMapper;
 import jakarta.validation.Valid;
@@ -18,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -32,42 +29,19 @@ public class AttendanceRecordController {
     private final DeleteAttendanceRecordUseCase deleteUseCase;
     private final BulkRecordAttendanceUseCase bulkUseCase;
     private final AttendanceRecordWebMapper mapper;
-    private final AttendanceRecordJpaRepository recordRepository;
-
-    /** Mantiene la query string dentro de cualquier límite razonable de URL. */
-    private static final int MAX_SUMMARY_ACTORS = 300;
+    private final GetAttendanceReportUseCase reportUseCase;
 
     /**
-     * Resumen por actor, agregado en SQL. Sin esto una vista que quisiera el
-     * porcentaje de asistencia de sus estudiantes tenía que pedir /attendance-records
-     * entero (~81k filas) y contarlo en el cliente; en la práctica nadie lo pedía y
-     * los informes salían todos en 0 %.
+     * Attendance per actor, aggregated in SQL, so a view can show its students' rate without
+     * downloading every record.
      */
     @GetMapping("/summary")
     public ResponseEntity<Map<String, AttendanceSummaryResponse>> summary(
             @RequestParam(name = "academicActorIds", required = false) List<Long> academicActorIds) {
-        if (academicActorIds == null || academicActorIds.isEmpty()) return ResponseEntity.ok(Map.of());
-        if (academicActorIds.size() > MAX_SUMMARY_ACTORS) {
-            throw new IllegalArgumentException(
-                    "academicActorIds accepts at most " + MAX_SUMMARY_ACTORS + " ids per request");
-        }
-
         Map<String, AttendanceSummaryResponse> body = new LinkedHashMap<>();
-        Set<Long> visible = academicActorIds.stream().filter(ActorScope::allows).collect(Collectors.toSet());
-        if (visible.isEmpty()) return ResponseEntity.ok(body);
-        for (ActorAttendanceCount row : recordRepository.summarizeByActors(visible)) {
-            AttendanceSummaryResponse summary =
-                    body.computeIfAbsent(String.valueOf(row.getAcademicActorId()), key -> new AttendanceSummaryResponse());
-            long count = row.getTotal();
-            switch (row.getAttendanceStatus()) {
-                case "Present" -> summary.setPresent(count);
-                case "Late" -> summary.setLate(count);
-                case "Absent" -> summary.setAbsent(count);
-                case "Justified" -> summary.setJustified(count);
-                default -> { }
-            }
-            summary.setTotal(summary.getTotal() + count);
-        }
+        reportUseCase.summaryByActor(academicActorIds, ActorScope.actorIds()).forEach((actorId, c) ->
+                body.put(String.valueOf(actorId), new AttendanceSummaryResponse(
+                        c.getPresent(), c.getLate(), c.getAbsent(), c.getJustified(), c.getTotal())));
         return ResponseEntity.ok(body);
     }
 

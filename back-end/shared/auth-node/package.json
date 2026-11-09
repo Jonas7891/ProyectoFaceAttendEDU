@@ -5,7 +5,7 @@
   "description": "Session + RBAC guard shared by the FaceAttend Node services (no dependencies).",
   "main": "index.js",
   "types": "index.d.ts",
-  "files": ["index.js", "index.d.ts"],
+  "files": ["index.js", "index.d.ts", "callerSchool.js"],
   "engines": { "node": ">=20" },
   "scripts": {
     "test": "node --test --experimental-test-coverage"

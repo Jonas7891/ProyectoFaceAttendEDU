@@ -4,18 +4,20 @@ import com.faceattend_edu.authorization_service.domain.exception.DuplicateEntity
 import com.faceattend_edu.authorization_service.domain.model.Permission;
 import com.faceattend_edu.authorization_service.domain.port.in.CreatePermissionUseCase;
 import com.faceattend_edu.authorization_service.domain.port.out.PermissionRepository;
-import com.faceattend_edu.authorization_service.infrastructure.messaging.DomainEventPublisher;
+import com.faceattend_edu.authorization_service.domain.port.out.EventPublisherPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class CreatePermissionUseCaseImpl implements CreatePermissionUseCase {
 
     private final PermissionRepository permissionRepository;
-    private final DomainEventPublisher eventPublisher;
+    private final EventPublisherPort eventPublisher;
 
     @Override
+    @Transactional
     public Permission createPermission(String permissionName, String description) {
         Permission p = new Permission();
         p.setPermissionName(permissionName);

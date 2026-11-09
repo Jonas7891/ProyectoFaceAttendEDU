@@ -1,4 +1,5 @@
 import type { FastifyRequest } from 'fastify';
+import { ROLES } from '@faceattend/auth';
 
 /**
  * Actor scope of the caller, same rule as the Java services (05-attendance
@@ -17,8 +18,8 @@ export class ScopeError extends Error {
   }
 }
 
-const SUPER_ADMIN_ROLE = 'Super Administrador';
-const SCHOOL_ADMIN_ROLE = 'Administrador';
+const SUPER_ADMIN_ROLE = ROLES.SUPER_ADMIN;
+const SCHOOL_ADMIN_ROLE = ROLES.SCHOOL_ADMIN;
 const ACTOR_PAGE_SIZE = 100;
 const CACHE_TTL_MS = 60_000;
 const RETRY_PAUSE_MS = 250;

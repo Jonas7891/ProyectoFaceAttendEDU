@@ -1,4 +1,4 @@
-import { Enrollment, type EnrollmentRecord } from '../../entities/Enrollment';
+import type { EnrollmentRecord } from '../../entities/Enrollment';
 import type { AuditActor, ICrudRepository, Draft, PageOptions } from './ICrudRepository';
 
 export type EnrollmentDraft = Draft<EnrollmentRecord, 'enrollmentId'>;
@@ -10,14 +10,9 @@ export type EnrollmentDraft = Draft<EnrollmentRecord, 'enrollmentId'>;
  * ('Active','Withdrawn','Completed'); the adapter casts bind parameters to it
  * explicitly and the `fn_validate_enrollment_status()` trigger re-checks the value.
  *
- * Note: `findById` now returns the persisted `EnrollmentRecord` rather than the
- * anemic `Enrollment` value object, because the HTTP layer needs the full row.
- * The domain-facing `save(Enrollment)` member is unchanged.
+ * `findById` returns the persisted `EnrollmentRecord`: the HTTP layer needs the full row.
  */
 export interface IEnrollmentRepository extends ICrudRepository<EnrollmentRecord, number, EnrollmentDraft> {
-  /** Domain write used by `CreateEnrollmentUseCase`; stamps the generated id back onto the entity. */
-  save(e: Enrollment): Promise<void>;
-
   /** Enrolls, or brings back a deleted enrollment of the same actor + cohort (the unique pair counts deleted rows). */
   createOrRestore(draft: EnrollmentDraft, audit?: AuditActor): Promise<EnrollmentRecord>;
 

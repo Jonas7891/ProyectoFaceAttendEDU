@@ -3,7 +3,7 @@ package com.faceattend_edu.attendance_service.application.usecase;
 import com.faceattend_edu.attendance_service.domain.exception.DuplicateEntityException;
 import com.faceattend_edu.attendance_service.domain.model.JustificationType;
 import com.faceattend_edu.attendance_service.domain.port.out.JustificationTypeRepository;
-import com.faceattend_edu.attendance_service.infrastructure.messaging.DomainEventPublisher;
+import com.faceattend_edu.attendance_service.domain.port.out.EventPublisherPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -32,7 +32,7 @@ class CreateJustificationTypeUseCaseImplTest {
     @Mock
     private JustificationTypeRepository repository;
     @Mock
-    private DomainEventPublisher eventPublisher;
+    private EventPublisherPort eventPublisher;
 
     private CreateJustificationTypeUseCaseImpl useCase;
 

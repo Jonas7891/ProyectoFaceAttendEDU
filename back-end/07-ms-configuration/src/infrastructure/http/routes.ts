@@ -1,11 +1,8 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import type { ConfigurationRepositories } from '../persistence/postgres';
-import { resolveCaseScope, caseScopeAllows, ScopeError, type CaseScope } from './caseScope';
 import { resolveCallerSchool, ScopeError as SchoolScopeError, type CallerSchool } from './callerSchool';
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import { registerBiometricCaseRoutes } from './biometricCaseRoutes';
 
 const academicBody = z.object({
   schoolId: z.number().int(),
@@ -20,50 +17,11 @@ const securityBody = z.object({
   description: z.string().optional(),
 });
 
-const caseBody = z.object({
-  personId: z.string().uuid(),
-  biometricType: z.enum(['FACIAL', 'FINGERPRINT']),
-  fingerNumber: z.number().int().min(1).max(10).nullable().optional(),
-  currentEmbeddingRef: z.string().nullable().optional(),
-  reason: z.string().min(1),
-  requestedBy: z.string().uuid().nullable().optional(),
-});
-
-const reviewBody = z.object({
-  updateStatus: z.enum(['In_Review', 'Approved', 'Rejected']),
-  reviewedBy: z.string().uuid().optional(),
-  resolutionNotes: z.string().optional(),
-});
-
-/** Case fields the server owns: set on creation or by the review route, never by a generic edit. */
-const REVIEW_ONLY_FIELDS = ['updateStatus', 'requestedBy', 'requestedAt', 'reviewedBy', 'reviewedAt', 'resolutionNotes'];
-
-/** Review state machine (AGENTS.md §4.6 / §6.10). Pending may be decided directly: web and mobile do so. */
-const REVIEW_TRANSITIONS: Record<string, readonly string[]> = {
-  Pending: ['In_Review', 'Approved', 'Rejected'],
-  In_Review: ['Approved', 'Rejected'],
-  Approved: [],
-  Rejected: [],
-};
-
 type Req = FastifyRequest;
 type Reply = FastifyReply;
 
 function badRequest(reply: Reply, details: unknown, message?: string) {
   return reply.code(400).send({ error: 'BadRequest', ...(message ? { message } : {}), details, timestamp: new Date().toISOString() });
-}
-
-/** Resolves who the caller may see; answers 403/503 itself when it cannot. */
-async function scopeOf(req: Req, reply: Reply): Promise<CaseScope | null> {
-  try {
-    return await resolveCaseScope(req);
-  } catch (err) {
-    if (err instanceof ScopeError) {
-      reply.code(err.statusCode).send({ error: err.statusCode === 403 ? 'Forbidden' : 'ServiceUnavailable', message: err.message, timestamp: new Date().toISOString() });
-      return null;
-    }
-    throw err;
-  }
 }
 
 /** Resolves the school the caller may manage; answers 403/503 itself when it cannot. */
@@ -262,146 +220,5 @@ export async function registerConfigurationRoutes(app: FastifyInstance, repos: C
     );
   });
 
-  // ---------- Biometric update cases ----------
-  app.post('/api/v1/biometric-update-cases', async (req, reply) => {
-    const parsed = caseBody.safeParse((req as any).body);
-    if (!parsed.success) return badRequest(reply, parsed.error.flatten());
-    const data = parsed.data;
-    const scope = await scopeOf(req, reply);
-    if (!scope) return reply;
-    if (!caseScopeAllows(scope, data.personId)) {
-      return reply.code(403).send({ error: 'Forbidden', message: 'You can only request an update for your own biometric data', timestamp: new Date().toISOString() });
-    }
-    if (data.biometricType === 'FINGERPRINT' && !data.fingerNumber) {
-      return badRequest(reply, undefined, 'fingerNumber required for FINGERPRINT');
-    }
-    // The requester is always the authenticated user; a body value is ignored (RN-29).
-    const requestedBy = (req as any).userId as string | undefined;
-    if (!requestedBy || !UUID_RE.test(requestedBy)) {
-      return badRequest(reply, undefined, 'requestedBy is required');
-    }
-    const created = await repos.cases.create({
-      caseId: randomUUID(),
-      personId: data.personId,
-      biometricType: data.biometricType,
-      // chk_finger_number: a facial case never carries a finger.
-      fingerNumber: data.biometricType === 'FACIAL' ? null : data.fingerNumber,
-      currentEmbeddingRef: data.currentEmbeddingRef ?? null,
-      reason: data.reason,
-      updateStatus: 'Pending',
-      requestedBy,
-      requestedAt: new Date().toISOString(),
-    });
-    return reply.code(201).send(created);
-  });
-  app.get('/api/v1/biometric-update-cases', async (req, reply) => {
-    const status = ((req.query as any) ?? {}).status as string | undefined;
-    const scope = await scopeOf(req, reply);
-    if (!scope) return reply;
-    const scopeQuery = scope.all ? {} : 'personIds' in scope ? { personIds: scope.personIds } : { personId: scope.personId };
-    return paged(
-      req,
-      reply,
-      (page) => repos.cases.search({ status, ...scopeQuery, ...page }),
-      () => repos.cases.countMatching({ status, ...scopeQuery }),
-    );
-  });
-  app.get('/api/v1/biometric-update-cases/:id', async (req, reply) => {
-    const id = String((req.params as any).id);
-    const found = UUID_RE.test(id) ? await repos.cases.findById(id) : null;
-    if (!found) return notFound(reply);
-    const scope = await scopeOf(req, reply);
-    if (!scope) return reply;
-    // Someone else's case looks exactly like a missing one.
-    if (!caseScopeAllows(scope, found.personId)) return notFound(reply);
-    return found;
-  });
-  app.put('/api/v1/biometric-update-cases/:id', async (req, reply) => {
-    // Status, requester and reviewer fields only change through POST / PATCH .../review (RN-29).
-    const rawBody = (req as any).body;
-    if (rawBody && typeof rawBody === 'object') {
-      const forbidden = REVIEW_ONLY_FIELDS.filter((f) => f in rawBody);
-      if (forbidden.length > 0) {
-        return badRequest(reply, { fields: forbidden }, 'Status, requester and reviewer fields cannot be edited here; use the review endpoint');
-      }
-    }
-    const parsed = caseBody.omit({ requestedBy: true }).partial().safeParse(rawBody ?? {});
-    if (!parsed.success) return badRequest(reply, parsed.error.flatten());
-    const id = String((req.params as any).id);
-    const found = UUID_RE.test(id) ? await repos.cases.findById(id) : null;
-    if (!found) return notFound(reply);
-    const scope = await scopeOf(req, reply);
-    if (!scope) return reply;
-    if (!caseScopeAllows(scope, found.personId)) return notFound(reply);
-    // Reassigning a case needs the same reach over the NEW person as creating one does.
-    if (parsed.data.personId !== undefined && parsed.data.personId !== found.personId && !caseScopeAllows(scope, parsed.data.personId)) {
-      return reply.code(403).send({ error: 'Forbidden', message: 'You cannot reassign a case to a person outside your scope', timestamp: new Date().toISOString() });
-    }
-    // chk_finger_number on the merged result: 1..10 only with FINGERPRINT, NULL with FACIAL.
-    const biometricType = parsed.data.biometricType ?? found.biometricType;
-    const fingerNumber = 'fingerNumber' in parsed.data ? parsed.data.fingerNumber : found.fingerNumber;
-    if (biometricType === 'FINGERPRINT' && !fingerNumber) {
-      return badRequest(reply, undefined, 'fingerNumber required for FINGERPRINT');
-    }
-    const patch = { ...parsed.data, ...(biometricType === 'FACIAL' ? { fingerNumber: null } : {}) };
-    const updated = await repos.cases.update(id, patch);
-    return updated ?? notFound(reply);
-  });
-  app.patch('/api/v1/biometric-update-cases/:id/review', async (req, reply) => {
-    const parsed = reviewBody.safeParse((req as any).body);
-    if (!parsed.success) return badRequest(reply, parsed.error.flatten());
-    const id = String((req.params as any).id);
-    // The reviewer is the session user; a reviewedBy in the body is ignored.
-    const caller = (req as any).userId as string | undefined;
-    const reviewer = caller;
-    const found = UUID_RE.test(id) ? await repos.cases.findById(id) : null;
-    if (!found) return notFound(reply);
-    const scope = await scopeOf(req, reply);
-    if (!scope) return reply;
-    // Un admin/instructor de otra sede no puede revisar un caso ajeno a la suya.
-    if (!caseScopeAllows(scope, found.personId)) return notFound(reply);
-    // Separation of duties (RN-29): nobody approves or rejects their own request.
-    if (caller && found.requestedBy === caller) {
-      return reply.code(403).send({ error: 'Forbidden', message: 'You cannot review your own request', timestamp: new Date().toISOString() });
-    }
-    if (!REVIEW_TRANSITIONS[found.updateStatus]?.includes(parsed.data.updateStatus)) {
-      return reply.code(409).send({
-        error: 'Conflict',
-        message: `A case in ${found.updateStatus} cannot move to ${parsed.data.updateStatus}`,
-        timestamp: new Date().toISOString(),
-      });
-    }
-    const updated = await repos.cases.update(id, {
-      updateStatus: parsed.data.updateStatus,
-      reviewedBy: reviewer ?? null,
-      reviewedAt: new Date().toISOString(),
-      ...(parsed.data.resolutionNotes !== undefined ? { resolutionNotes: parsed.data.resolutionNotes } : {}),
-    });
-    return updated ?? notFound(reply);
-  });
-  app.delete('/api/v1/biometric-update-cases/:id', async (req, reply) => {
-    const id = String((req.params as any).id);
-    const found = UUID_RE.test(id) ? await repos.cases.findById(id) : null;
-    if (!found) return notFound(reply);
-    const scope = await scopeOf(req, reply);
-    if (!scope) return reply;
-    if (!caseScopeAllows(scope, found.personId)) return notFound(reply);
-    if (!(await repos.cases.softDelete(id))) return notFound(reply);
-    return reply.code(204).send();
-  });
-  app.get('/api/v1/persons/:personId/biometric-cases', async (req, reply) => {
-    const personId = String((req.params as any).personId);
-    if (!UUID_RE.test(personId)) return reply.send([]);
-    const scope = await scopeOf(req, reply);
-    if (!scope) return reply;
-    if (!caseScopeAllows(scope, personId)) {
-      return reply.code(403).send({ error: 'Forbidden', message: 'You can only list your own cases', timestamp: new Date().toISOString() });
-    }
-    return paged(
-      req,
-      reply,
-      (page) => repos.cases.search({ personId, ...page }),
-      () => repos.cases.countMatching({ personId }),
-    );
-  });
+  registerBiometricCaseRoutes(app, repos.cases);
 }

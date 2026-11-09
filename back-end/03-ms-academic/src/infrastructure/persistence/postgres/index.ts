@@ -6,14 +6,7 @@
  * in `domain/ports/out`, never on `pg` or on SQL.
  */
 
-import type { ISchoolRepository } from '../../../domain/ports/out/ISchoolRepository';
-import type { IProgramRepository } from '../../../domain/ports/out/IProgramRepository';
-import type { IAcademicPeriodRepository } from '../../../domain/ports/out/IAcademicPeriodRepository';
-import type { ICohortRepository } from '../../../domain/ports/out/ICohortRepository';
-import type { ICourseRepository } from '../../../domain/ports/out/ICourseRepository';
-import type { IAcademicActorTypeRepository } from '../../../domain/ports/out/IAcademicActorTypeRepository';
-import type { IAcademicActorRepository } from '../../../domain/ports/out/IAcademicActorRepository';
-import type { IEnrollmentRepository } from '../../../domain/ports/out/IEnrollmentRepository';
+import type { AcademicPorts } from '../../../domain/ports/out/AcademicPorts';
 
 import { PostgresSchoolRepository } from './school.repository';
 import { PostgresProgramRepository } from './program.repository';
@@ -24,16 +17,8 @@ import { PostgresAcademicActorTypeRepository } from './academic-actor-type.repos
 import { PostgresAcademicActorRepository } from './academic-actor.repository';
 import { PostgresEnrollmentRepository } from './enrollment.repository';
 
-export interface AcademicRepositories {
-  readonly schools: ISchoolRepository;
-  readonly programs: IProgramRepository;
-  readonly periods: IAcademicPeriodRepository;
-  readonly cohorts: ICohortRepository;
-  readonly courses: ICourseRepository;
-  readonly actorTypes: IAcademicActorTypeRepository;
-  readonly actors: IAcademicActorRepository;
-  readonly enrollments: IEnrollmentRepository;
-}
+/** The PostgreSQL bundle implements every academic port. */
+export type AcademicRepositories = AcademicPorts;
 
 /** Instantiates the PostgreSQL adapter for every academic aggregate. */
 export function createAcademicRepositories(): AcademicRepositories {

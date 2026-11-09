@@ -1,7 +1,6 @@
 import Fastify from 'fastify';
 import { academicPermission } from '../infrastructure/http/permissions';
 import { toDateOnly, toIsoTimestamp } from '../infrastructure/db/database';
-import { CreateEnrollmentUseCase } from '../application/use-cases/CreateEnrollmentUseCase';
 import { Enrollment } from '../domain/entities/Enrollment';
 import { AcademicActor } from '../domain/entities/AcademicActor';
 
@@ -29,13 +28,6 @@ describe('database value normalisation', () => {
 });
 
 describe('enrollment domain', () => {
-  it('the use case saves a new active enrollment for the actor and cohort', async () => {
-    const save = jest.fn().mockResolvedValue(undefined);
-    const id = await new CreateEnrollmentUseCase({ save } as any).execute({ academicActorId: 7, cohortId: 3 });
-    expect(id).toBe(0);
-    expect(save).toHaveBeenCalledWith(expect.objectContaining({ academicActorId: 7, cohortId: 3, status: 'Active' }));
-  });
-
   it('entities start without an id', () => {
     expect(Enrollment.create(1, 2)).toMatchObject({ enrollmentId: 0, status: 'Active' });
     expect(AcademicActor.create('p', 'STUDENT', 4)).toMatchObject({ academicActorId: 0, actorType: 'STUDENT', schoolId: 4 });

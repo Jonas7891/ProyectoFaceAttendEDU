@@ -189,6 +189,9 @@ class TestEnrollImage:
             json={"person_id": PERSON, "image_base64": FAKE_IMAGE, "challenge_token": token2},
         )
         assert response.status_code == 409
+        # The answer never says how close the other face is (B1).
+        assert "already enrolled for a different person" in response.text
+        assert "distance" not in response.text
 
     def test_enroll_image_accepts_a_single_gesture_challenge(self, client, monkeypatch):
         monkeypatch.setattr(facial_router, "face_encoding", lambda image: [1.0, 0.0, 0.0, 0.0])

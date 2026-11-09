@@ -23,14 +23,19 @@
 ```
 src/main/java/com/faceattend_edu/authorization_service/
 ├── domain/
-│   ├── model/ Role, Permission, RolePermission, UserRole
+│   ├── model/ Role, Permission, RolePermission, UserRole, Caller
 │   └── port/in+out/
-├── application/usecase/ AssignRole, CheckPermission
+├── application/
+│   ├── access/ RoleAssignmentPolicy (quién puede asignar qué rol)
+│   └── usecase/ AssignRoleToUser, CheckPermission, CRUD de roles y permisos
 └── infrastructure/
-    ├── web/ RoleController, PermissionController
-    ├── persistence/ RoleJpaEntity, PermissionJpaEntity, Adapter
-    └── config/ SecurityConfig
+    ├── web/ controllers (solo traducen HTTP), security/AuthTokenFilter
+    ├── persistence/ JpaEntity, mapper, Adapter
+    └── messaging/, client/
 ```
+
+Las reglas de capas se verifican en `LayerDependencyRulesTest`. Los nombres de rol vienen de
+`Roles` (`back-end/shared/auth-java`).
 
 ## Dependencias (pom.xml)
 

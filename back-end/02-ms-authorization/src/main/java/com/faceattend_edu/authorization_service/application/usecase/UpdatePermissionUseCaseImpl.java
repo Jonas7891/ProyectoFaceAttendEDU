@@ -7,6 +7,7 @@ import com.faceattend_edu.authorization_service.domain.port.in.UpdatePermissionU
 import com.faceattend_edu.authorization_service.domain.port.out.PermissionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -15,6 +16,7 @@ public class UpdatePermissionUseCaseImpl implements UpdatePermissionUseCase {
     private final PermissionRepository permissionRepository;
 
     @Override
+    @Transactional
     public Permission updatePermission(Integer permissionId, String permissionName, String description) {
         Permission existing = permissionRepository.findById(permissionId)
                 .orElseThrow(() -> new EntityNotFoundException("Permission", permissionId));

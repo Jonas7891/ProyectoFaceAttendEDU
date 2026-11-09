@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -14,6 +16,10 @@ import java.util.UUID;
 @Table(name = "class_session", schema = "scheduling",
         uniqueConstraints = @UniqueConstraint(name = "uq_session_block_date", columnNames = {"schedule_block_id", "session_date"}),
         indexes = @Index(name = "idx_session_date", columnList = "session_date"))
+// Borrado logico (AGENTS.md 2.2), igual que schedule_block: deleteById marca la fila y las lecturas la
+// ocultan. uq_session_block_date es parcial (deleted_at IS NULL), asi que la fecha del bloque queda libre.
+@SQLDelete(sql = "update {h-schema}\"class_session\" set \"deleted_at\" = now(), \"row_version\" = \"row_version\" + 1 where \"class_session_id\" = ? and \"row_version\" = ?")
+@SQLRestriction("\"deleted_at\" is null")
 @Getter @Setter @AllArgsConstructor @NoArgsConstructor
 public class ClassSessionJpaEntity {
     @Id

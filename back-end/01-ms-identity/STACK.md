@@ -22,19 +22,26 @@
 
 ```
 src/main/java/com/faceattend_edu/identity_service/
-├── domain/               # POJO, no Spring
-│   ├── model/            # Person, User, UserSession
-│   ├── event/            # PersonCreated, UserAuthenticated
-│   └── port/in+out/      # UseCase + Repository interfaces
-├── application/usecase/  # CreatePersonService, AuthenticateService
-└── infrastructure/
-    ├── web/              # Controller, dto, mapper
-    ├── persistence/      # JpaEntity, JpaRepository, Adapter
-    ├── messaging/        # KafkaEventPublisher
-    └── config/           # Security, Kafka, AppConfig
+├── domain/               # POJO, no Spring: model, event, exception, service
+├── application/
+│   ├── port/in/          # interfaces de casos de uso
+│   ├── port/out/         # repositorios, EventPublisherPort, clientes externos
+│   └── usecase/          # implementaciones (@Transactional)
+├── adapter/
+│   ├── in/web/           # controllers, dto, security (AuthTokenFilter)
+│   └── out/              # persistence, messaging (DomainEventPublisher), security, storage, provisioning
+└── config/
 ```
 
 Regla: `domain` no importa `org.springframework.*`. Ver `SERVICE.md:148` para layout completo.
+
+Los casos de uso publican eventos por `EventPublisherPort`: `publishAfterCommit` para cambios y
+restablecimientos de contraseña y políticas (no se publica un evento cuya transacción se revirtió) y
+`publish` inmediato para `UserLocked`, porque el bloqueo vive fuera de la BD. No es un outbox: si el
+proceso cae entre el commit y el envío, el evento se pierde (ADR-004, AT-006).
+
+Las reglas de capas se verifican en `LayerDependencyRulesTest`. Los nombres de rol vienen de
+`Roles` (`back-end/shared/auth-java`).
 
 ## Dependencias (pom.xml:32)
 

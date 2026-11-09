@@ -157,9 +157,6 @@ export function memoryRepositories(): MemoryRepositories {
       countByPerson: actorsByPerson.count,
     }),
     enrollments: Object.assign(stores.enrollments, {
-      save: async (e: { academicActorId: number; cohortId: number; status: string }) => {
-        await stores.enrollments.create({ academicActorId: e.academicActorId, cohortId: e.cohortId, enrollmentStatus: e.status });
-      },
       createOrRestore: async (draft: Row) => {
         const gone = [...stores.enrollments.rows.values()].find(
           (r) => r.deletedAt && r.academicActorId === draft.academicActorId && r.cohortId === draft.cohortId,

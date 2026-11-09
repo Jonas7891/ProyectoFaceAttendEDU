@@ -460,6 +460,32 @@ describe('enrollments', () => {
   });
 });
 
+describe('default dates', () => {
+  // Only Date is faked: Fastify's inject still needs real timers and ticks.
+  const fakeDateOnly = (iso: string) =>
+    jest.useFakeTimers({
+      now: new Date(iso),
+      doNotFake: ['nextTick', 'setImmediate', 'clearImmediate', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'queueMicrotask'],
+    });
+  afterEach(() => jest.useRealTimers());
+
+  it('startedOn defaults to the request day, not the day the routes were registered', async () => {
+    fakeDateOnly('2030-03-15T15:00:00Z');
+    const created = await call('admin1', 'POST', '/api/v1/academic-actors', {
+      personId: '66666666-6666-4666-8666-666666666666', schoolId: ids.s1, actorCode: 'LATER',
+    });
+    expect(created.statusCode).toBe(201);
+    expect(created.json().startedOn).toBe('2030-03-15');
+  });
+
+  it('enrolledOn defaults to the Bogota calendar day, even after 19:00 when UTC is already tomorrow', async () => {
+    fakeDateOnly('2030-03-16T02:00:00Z'); // 2030-03-15 21:00 in America/Bogota
+    const created = await call('super', 'POST', '/api/v1/enrollments', { academicActorId: ids.st2, cohortId: ids.c1 });
+    expect(created.statusCode).toBe(201);
+    expect(created.json().enrolledOn).toBe('2030-03-15');
+  });
+});
+
 describe('audit columns (AUD-62)', () => {
   it('stamps created_by, updated_by and deleted_by with the session user', async () => {
     const created = await call('admin1', 'POST', '/api/v1/programs', { schoolId: ids.s1, code: 'AUD', name: 'Auditoria' });

@@ -4,7 +4,7 @@ import com.faceattend_edu.attendance_service.domain.exception.DuplicateEntityExc
 import com.faceattend_edu.attendance_service.domain.model.JustificationType;
 import com.faceattend_edu.attendance_service.domain.port.in.CreateJustificationTypeUseCase;
 import com.faceattend_edu.attendance_service.domain.port.out.JustificationTypeRepository;
-import com.faceattend_edu.attendance_service.infrastructure.messaging.DomainEventPublisher;
+import com.faceattend_edu.attendance_service.domain.port.out.EventPublisherPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CreateJustificationTypeUseCaseImpl implements CreateJustificationTypeUseCase {
     private final JustificationTypeRepository repository;
-    private final DomainEventPublisher eventPublisher;
+    private final EventPublisherPort eventPublisher;
     @Override public JustificationType create(JustificationType type){
         type.validate(); type.touchCreated();
         if (type.getSchoolId() == null) {

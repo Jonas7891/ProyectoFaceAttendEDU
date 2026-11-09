@@ -1,6 +1,6 @@
 package com.faceattend_edu.identity_service.application.usecase;
 
-import com.faceattend_edu.identity_service.adapter.out.messaging.DomainEventPublisher;
+import com.faceattend_edu.identity_service.application.port.out.EventPublisherPort;
 import com.faceattend_edu.identity_service.application.port.in.AuthenticateUserUseCase;
 import com.faceattend_edu.identity_service.application.port.out.HashPasswordPort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserByIdentifierPort;
@@ -31,7 +31,7 @@ public class AuthenticateUserUseCaseImpl implements AuthenticateUserUseCase {
     private final HashPasswordPort hashPasswordPort;
     private final LoginAttemptPort loginAttemptPort;
     private final AuthProperties authProperties;
-    private final DomainEventPublisher eventPublisher;
+    private final EventPublisherPort eventPublisher;
     private final TwoFactorChallenge twoFactorChallenge;
 
     // '#' cannot appear in a username or e-mail, so IP keys never collide with identifiers.
@@ -71,6 +71,8 @@ public class AuthenticateUserUseCaseImpl implements AuthenticateUserUseCase {
                     identifier, authProperties.getMaxLoginAttempts(), authProperties.lockoutDuration());
             if (nowLocked) {
                 if (user != null) {
+                    // At once, not after commit: the lock lives outside the database and the exception
+                    // below rolls the transaction back.
                     eventPublisher.publish("identity-events", "{\"event\":\"UserLocked\",\"userId\":\"" + user.getUserId()
                             + "\",\"reason\":\"TOO_MANY_FAILED_LOGINS\",\"occurredAt\":\"" + Instant.now() + "\"}");
                 }

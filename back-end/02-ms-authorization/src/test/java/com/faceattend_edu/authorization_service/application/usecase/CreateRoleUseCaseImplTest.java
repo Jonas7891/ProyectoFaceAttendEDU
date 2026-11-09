@@ -3,7 +3,7 @@ package com.faceattend_edu.authorization_service.application.usecase;
 import com.faceattend_edu.authorization_service.domain.exception.DuplicateEntityException;
 import com.faceattend_edu.authorization_service.domain.model.Role;
 import com.faceattend_edu.authorization_service.domain.port.out.RoleRepository;
-import com.faceattend_edu.authorization_service.infrastructure.messaging.DomainEventPublisher;
+import com.faceattend_edu.authorization_service.domain.port.out.EventPublisherPort;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 class CreateRoleUseCaseImplTest {
 
     @Mock RoleRepository roleRepository;
-    @Mock DomainEventPublisher eventPublisher;
+    @Mock EventPublisherPort eventPublisher;
 
     private CreateRoleUseCaseImpl useCase;
 

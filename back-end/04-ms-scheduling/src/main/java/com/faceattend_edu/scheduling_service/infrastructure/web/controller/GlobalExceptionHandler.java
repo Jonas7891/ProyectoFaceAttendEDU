@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String,String>> handleNotFound(EntityNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", ex.getMessage()));
     }
-    @ExceptionHandler(com.faceattend_edu.scheduling_service.infrastructure.web.security.CallerSchoolContext.NotClassInstructorException.class)
+    @ExceptionHandler(com.faceattend_edu.scheduling_service.domain.exception.NotClassInstructorException.class)
     public ResponseEntity<Map<String,String>> handleNotClassInstructor(RuntimeException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", ex.getMessage()));
     }

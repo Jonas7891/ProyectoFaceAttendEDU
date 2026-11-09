@@ -3,7 +3,6 @@ package com.faceattend_edu.authorization_service.infrastructure.web.controller;
 import com.faceattend_edu.authorization_service.domain.model.Permission;
 import com.faceattend_edu.authorization_service.domain.model.Role;
 import com.faceattend_edu.authorization_service.domain.port.in.*;
-import com.faceattend_edu.authorization_service.domain.port.out.RolePermissionRepository;
 import com.faceattend_edu.authorization_service.infrastructure.web.dto.*;
 import com.faceattend_edu.authorization_service.infrastructure.web.mapper.PermissionWebMapper;
 import com.faceattend_edu.authorization_service.infrastructure.web.mapper.RoleWebMapper;
@@ -27,7 +26,7 @@ public class RoleController {
     private final ListRolesUseCase listRolesUseCase;
     private final DeleteRoleUseCase deleteRoleUseCase;
     private final AssignPermissionToRoleUseCase assignPermissionToRoleUseCase;
-    private final RolePermissionRepository rolePermissionRepository;
+    private final GetRolePermissionsUseCase getRolePermissionsUseCase;
     private final RoleWebMapper roleWebMapper;
     private final PermissionWebMapper permissionWebMapper;
 
@@ -76,9 +75,7 @@ public class RoleController {
 
     @GetMapping("/{roleId}/permissions")
     public ResponseEntity<List<PermissionResponse>> getPermissionsForRole(@PathVariable Integer roleId) {
-        // verify role exists
-        getRoleUseCase.getRole(roleId);
-        List<Permission> perms = rolePermissionRepository.findPermissionsByRoleId(roleId);
+        List<Permission> perms = getRolePermissionsUseCase.permissionsOf(roleId);
         List<PermissionResponse> resp = perms.stream().map(permissionWebMapper::toResponse).collect(Collectors.toList());
         return ResponseEntity.ok(resp);
     }

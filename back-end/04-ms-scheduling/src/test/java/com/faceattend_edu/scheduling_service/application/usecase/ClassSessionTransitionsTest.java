@@ -3,9 +3,11 @@ package com.faceattend_edu.scheduling_service.application.usecase;
 import com.faceattend_edu.scheduling_service.domain.exception.DuplicateEntityException;
 import com.faceattend_edu.scheduling_service.domain.exception.EntityNotFoundException;
 import com.faceattend_edu.scheduling_service.domain.exception.ValidationException;
+import com.faceattend_edu.scheduling_service.application.access.SchedulingAccessPolicy;
+import com.faceattend_edu.scheduling_service.domain.model.Caller;
 import com.faceattend_edu.scheduling_service.domain.model.ClassSession;
 import com.faceattend_edu.scheduling_service.domain.port.out.ClassSessionRepository;
-import com.faceattend_edu.scheduling_service.infrastructure.messaging.DomainEventPublisher;
+import com.faceattend_edu.scheduling_service.domain.port.out.EventPublisherPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,7 +34,8 @@ class ClassSessionTransitionsTest {
     private static final long ID = 7L;
 
     @Mock ClassSessionRepository repository;
-    @Mock DomainEventPublisher eventPublisher;
+    @Mock EventPublisherPort eventPublisher;
+    @Mock SchedulingAccessPolicy access;
 
     private OpenClassSessionUseCaseImpl open;
     private CloseClassSessionUseCaseImpl close;
@@ -41,10 +44,10 @@ class ClassSessionTransitionsTest {
 
     @BeforeEach
     void setUp() {
-        open = new OpenClassSessionUseCaseImpl(repository);
-        close = new CloseClassSessionUseCaseImpl(repository, eventPublisher);
-        cancel = new CancelClassSessionUseCaseImpl(repository);
-        create = new CreateClassSessionUseCaseImpl(repository, eventPublisher);
+        open = new OpenClassSessionUseCaseImpl(repository, access);
+        close = new CloseClassSessionUseCaseImpl(repository, eventPublisher, access);
+        cancel = new CancelClassSessionUseCaseImpl(repository, access);
+        create = new CreateClassSessionUseCaseImpl(repository, eventPublisher, access);
         lenient().when(repository.save(any(ClassSession.class))).thenAnswer(call -> call.getArgument(0));
     }
 
@@ -65,7 +68,7 @@ class ClassSessionTransitionsTest {
     void closingAnOpenSessionRecordsWhoAndWhen() {
         existing("Open");
 
-        ClassSession result = close.close(ID, 55L);
+        ClassSession result = close.close(Caller.unrestricted(55L), ID);
 
         assertEquals("Closed", result.getSessionStatus());
         assertEquals(55L, result.getClosedBy());
@@ -76,7 +79,7 @@ class ClassSessionTransitionsTest {
     void closingWithoutAResolvedActorFailsExplicitlyInsteadOfLeavingClosedByNull() {
         existing("Open");
 
-        ValidationException e = assertThrows(ValidationException.class, () -> close.close(ID, null));
+        ValidationException e = assertThrows(ValidationException.class, () -> close.close(Caller.UNRESTRICTED, ID));
 
         org.junit.jupiter.api.Assertions.assertTrue(e.getMessage().contains("closed_by"), e.getMessage());
         verify(repository, never()).save(any());
@@ -87,7 +90,7 @@ class ClassSessionTransitionsTest {
     void closingASessionPublishesTheEventTheNotificationServiceListensTo() {
         existing("Open");
 
-        close.close(ID, 55L);
+        close.close(Caller.unrestricted(55L), ID);
 
         org.mockito.ArgumentCaptor<String> payload = org.mockito.ArgumentCaptor.forClass(String.class);
         verify(eventPublisher).publish(org.mockito.ArgumentMatchers.eq("scheduling.class-session.closed"), payload.capture());
@@ -102,7 +105,7 @@ class ClassSessionTransitionsTest {
     void aSessionThatCannotBeClosedPublishesNothing() {
         existing("Closed");
 
-        assertThrows(ValidationException.class, () -> close.close(ID, 1L));
+        assertThrows(ValidationException.class, () -> close.close(Caller.unrestricted(1L), ID));
 
         verify(eventPublisher, never()).publish(any(), any());
     }
@@ -111,15 +114,15 @@ class ClassSessionTransitionsTest {
     void cancellingAnOpenSessionIsAllowed() {
         existing("Open");
 
-        assertEquals("Cancelled", cancel.cancel(ID).getSessionStatus());
+        assertEquals("Cancelled", cancel.cancel(Caller.UNRESTRICTED, ID).getSessionStatus());
     }
 
     @Test
     void aClosedSessionCannotBeCancelledOrClosedAgain() {
         existing("Closed");
 
-        assertThrows(ValidationException.class, () -> cancel.cancel(ID));
-        assertThrows(ValidationException.class, () -> close.close(ID, 1L));
+        assertThrows(ValidationException.class, () -> cancel.cancel(Caller.UNRESTRICTED, ID));
+        assertThrows(ValidationException.class, () -> close.close(Caller.unrestricted(1L), ID));
         verify(repository, never()).save(any());
     }
 
@@ -127,9 +130,9 @@ class ClassSessionTransitionsTest {
     void aCancelledSessionCannotBeClosedOrOpenedAgain() {
         existing("Cancelled");
 
-        assertThrows(ValidationException.class, () -> close.close(ID, 1L));
-        assertThrows(ValidationException.class, () -> open.open(ID, 1L));
-        assertThrows(ValidationException.class, () -> cancel.cancel(ID));
+        assertThrows(ValidationException.class, () -> close.close(Caller.unrestricted(1L), ID));
+        assertThrows(ValidationException.class, () -> open.open(Caller.unrestricted(1L), ID));
+        assertThrows(ValidationException.class, () -> cancel.cancel(Caller.UNRESTRICTED, ID));
         verify(repository, never()).save(any());
     }
 
@@ -137,16 +140,16 @@ class ClassSessionTransitionsTest {
     void anAlreadyOpenSessionCannotBeOpenedTwice() {
         existing("Open");
 
-        assertThrows(ValidationException.class, () -> open.open(ID, 1L));
+        assertThrows(ValidationException.class, () -> open.open(Caller.unrestricted(1L), ID));
     }
 
     @Test
     void transitionsOnAMissingSessionAreNotFound() {
         when(repository.findById(ID)).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> close.close(ID, 1L));
-        assertThrows(EntityNotFoundException.class, () -> cancel.cancel(ID));
-        assertThrows(EntityNotFoundException.class, () -> open.open(ID, 1L));
+        assertThrows(EntityNotFoundException.class, () -> close.close(Caller.unrestricted(1L), ID));
+        assertThrows(EntityNotFoundException.class, () -> cancel.cancel(Caller.UNRESTRICTED, ID));
+        assertThrows(EntityNotFoundException.class, () -> open.open(Caller.unrestricted(1L), ID));
     }
 
     @Test
@@ -154,7 +157,7 @@ class ClassSessionTransitionsTest {
         ClassSession input = sessionIn(null);
         input.setClassSessionId(null);
 
-        ClassSession saved = create.create(input);
+        ClassSession saved = create.create(Caller.UNRESTRICTED, input);
 
         assertEquals("Open", saved.getSessionStatus());
     }
@@ -164,7 +167,7 @@ class ClassSessionTransitionsTest {
         ClassSession input = sessionIn("Open");
         input.setClassSessionId(null);
 
-        ClassSession saved = create.create(input);
+        ClassSession saved = create.create(Caller.UNRESTRICTED, input);
 
         assertEquals("Open", saved.getSessionStatus());
         assertEquals(1L, saved.getRowVersion());
@@ -174,7 +177,7 @@ class ClassSessionTransitionsTest {
     void rejectsAStatusOutsideTheEnum() {
         ClassSession input = sessionIn("Paused");
 
-        assertThrows(IllegalArgumentException.class, () -> create.create(input));
+        assertThrows(ValidationException.class, () -> create.create(Caller.UNRESTRICTED, input));
         verify(repository, never()).save(any());
     }
 
@@ -183,6 +186,6 @@ class ClassSessionTransitionsTest {
         ClassSession input = sessionIn("Open");
         when(repository.save(input)).thenThrow(new DataIntegrityViolationException("uq_session_block_date"));
 
-        assertThrows(DuplicateEntityException.class, () -> create.create(input));
+        assertThrows(DuplicateEntityException.class, () -> create.create(Caller.UNRESTRICTED, input));
     }
 }

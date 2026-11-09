@@ -1,6 +1,8 @@
 package com.faceattend_edu.identity_service.application.usecase;
 
-import com.faceattend_edu.identity_service.adapter.out.messaging.DomainEventPublisher;
+import static org.mockito.Mockito.mock;
+
+import com.faceattend_edu.identity_service.application.port.out.EventPublisherPort;
 import com.faceattend_edu.identity_service.application.port.out.HashPasswordPort;
 import com.faceattend_edu.identity_service.application.port.out.ListPasswordPoliciesPort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserByIdentifierPort;
@@ -48,7 +50,7 @@ class ResetPasswordUseCaseImplTest {
         sessions = new FakeSessions();
         useCase = new ResetPasswordUseCaseImpl(
                 userLookup, recoveryCodes, userUpdate, new FakePasswordHash(),
-                new ValidatePasswordPolicyUseCaseImpl(new FakePolicies()), sessions, sessionUpdate, new DomainEventPublisher(null));
+                new ValidatePasswordPolicyUseCaseImpl(new FakePolicies()), sessions, sessionUpdate, mock(EventPublisherPort.class));
     }
 
     @Test

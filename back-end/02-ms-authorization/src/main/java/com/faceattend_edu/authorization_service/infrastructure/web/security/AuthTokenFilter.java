@@ -1,5 +1,6 @@
 package com.faceattend_edu.authorization_service.infrastructure.web.security;
 
+import com.faceattend_edu.shared.auth.Roles;
 import static com.faceattend_edu.shared.auth.SessionAuthClient.deny;
 import com.faceattend_edu.authorization_service.domain.port.in.CheckPermissionUseCase;
 import com.faceattend_edu.shared.auth.SessionAuthClient;
@@ -50,7 +51,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     private static final Pattern PERMISSION_CATALOG_WRITE_PATH = Pattern.compile("^(/api/v1)?/permissions(/.*)?$");
 
     /** Role name reserved for the unrestricted, school-less administrator. */
-    static final String SUPER_ADMIN_ROLE = "Super Administrador";
+    static final String SUPER_ADMIN_ROLE = Roles.SUPER_ADMIN;
 
     private final SessionAuthClient sessionAuth;
     private final ObjectProvider<CheckPermissionUseCase> checkPermission;

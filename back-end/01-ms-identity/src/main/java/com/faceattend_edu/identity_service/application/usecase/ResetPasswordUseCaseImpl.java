@@ -1,6 +1,6 @@
 package com.faceattend_edu.identity_service.application.usecase;
 
-import com.faceattend_edu.identity_service.adapter.out.messaging.DomainEventPublisher;
+import com.faceattend_edu.identity_service.application.port.out.EventPublisherPort;
 import com.faceattend_edu.identity_service.application.port.in.ResetPasswordUseCase;
 import com.faceattend_edu.identity_service.application.port.out.HashPasswordPort;
 import com.faceattend_edu.identity_service.application.port.in.ValidatePasswordPolicyUseCase;
@@ -37,7 +37,7 @@ public class ResetPasswordUseCaseImpl implements ResetPasswordUseCase {
     private final ValidatePasswordPolicyUseCase validatePasswordPolicy;
     private final LoadUserSessionsPort loadUserSessionsPort;
     private final UpdateUserSessionPort updateUserSessionPort;
-    private final DomainEventPublisher eventPublisher;
+    private final EventPublisherPort eventPublisher;
 
     @Override
     @Transactional
@@ -74,7 +74,7 @@ public class ResetPasswordUseCaseImpl implements ResetPasswordUseCase {
 
         int closed = closeActiveSessions(user.getUserId());
 
-        eventPublisher.publish("identity-events",
+        eventPublisher.publishAfterCommit("identity-events",
                 "{\"type\":\"PasswordChanged\",\"userId\":\"" + user.getUserId()
                         + "\",\"occurredAt\":\"" + Instant.now() + "\"}");
         log.info("Password reset for userId={} activeSessionsClosed={}", user.getUserId(), closed);

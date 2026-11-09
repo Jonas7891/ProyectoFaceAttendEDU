@@ -1,6 +1,8 @@
 package com.faceattend_edu.scheduling_service.application.usecase;
 
+import com.faceattend_edu.scheduling_service.application.access.SchedulingAccessPolicy;
 import com.faceattend_edu.scheduling_service.domain.exception.EntityNotFoundException;
+import com.faceattend_edu.scheduling_service.domain.model.Caller;
 import com.faceattend_edu.scheduling_service.domain.model.ScheduleBlock;
 import com.faceattend_edu.scheduling_service.domain.port.in.GetScheduleBlockUseCase;
 import com.faceattend_edu.scheduling_service.domain.port.out.ScheduleBlockRepository;
@@ -11,7 +13,12 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class GetScheduleBlockUseCaseImpl implements GetScheduleBlockUseCase {
     private final ScheduleBlockRepository repository;
-    @Override public ScheduleBlock getById(Long id) {
-        return repository.findById(id).orElseThrow(() -> new EntityNotFoundException("ScheduleBlock", id));
+    private final SchedulingAccessPolicy access;
+
+    @Override
+    public ScheduleBlock getById(Caller caller, Long id) {
+        ScheduleBlock found = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("ScheduleBlock", id));
+        access.requireBlockAccess(caller, found);
+        return found;
     }
 }

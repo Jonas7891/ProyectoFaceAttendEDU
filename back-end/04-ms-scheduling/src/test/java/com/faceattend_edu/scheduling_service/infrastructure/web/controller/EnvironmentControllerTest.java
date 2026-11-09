@@ -26,6 +26,7 @@ import java.util.List;
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -91,7 +92,7 @@ class EnvironmentControllerTest {
         @DisplayName("givenValidRequest_whenCreateEnvironment_thenReturn201WithJson")
         void givenValidRequest_whenCreateEnvironment_thenReturn201WithJson() throws Exception {
             // Arrange
-            when(createUseCase.create(any(Environment.class))).thenReturn(lab101);
+            when(createUseCase.create(any(), any(Environment.class))).thenReturn(lab101);
 
             // Act & Assert
             mockMvc.perform(post("/api/v1/environments")
@@ -107,7 +108,7 @@ class EnvironmentControllerTest {
                     .andExpect(jsonPath("$.status").value(true))
                     .andExpect(jsonPath("$.rowVersion").value(1));
 
-            verify(createUseCase).create(any(Environment.class));
+            verify(createUseCase).create(any(), any(Environment.class));
         }
 
         @Test
@@ -123,14 +124,14 @@ class EnvironmentControllerTest {
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error", containsString("name")));
 
-            verify(createUseCase, never()).create(any(Environment.class));
+            verify(createUseCase, never()).create(any(), any(Environment.class));
         }
 
         @Test
         @DisplayName("givenDuplicatedCode_whenCreateEnvironment_thenReturn409Conflict")
         void givenDuplicatedCode_whenCreateEnvironment_thenReturn409Conflict() throws Exception {
             // Arrange: el use case lanza DuplicateEntityException ante (schoolId, code) repetido
-            when(createUseCase.create(any(Environment.class)))
+            when(createUseCase.create(any(), any(Environment.class)))
                     .thenThrow(new DuplicateEntityException(
                             "Environment already exists with schoolId=1 code=LAB-101"));
 
@@ -152,7 +153,7 @@ class EnvironmentControllerTest {
         @DisplayName("givenEnvironments_whenListAll_thenReturn200Array")
         void givenEnvironments_whenListAll_thenReturn200Array() throws Exception {
             // Arrange
-            when(listUseCase.list()).thenReturn(List.of(lab101));
+            when(listUseCase.list(any(), isNull())).thenReturn(List.of(lab101));
 
             // Act & Assert
             mockMvc.perform(get("/api/v1/environments"))
@@ -160,15 +161,14 @@ class EnvironmentControllerTest {
                     .andExpect(jsonPath("$.length()").value(1))
                     .andExpect(jsonPath("$[0].code").value("LAB-101"));
 
-            verify(listUseCase).list();
-            verify(listUseCase, never()).listBySchoolId(any());
+            verify(listUseCase).list(any(), isNull());
         }
 
         @Test
         @DisplayName("givenSchoolIdQuery_whenListBySchool_thenReturn200Filtered")
         void givenSchoolIdQuery_whenListBySchool_thenReturn200Filtered() throws Exception {
             // Arrange
-            when(listUseCase.listBySchoolId(7)).thenReturn(List.of(lab101));
+            when(listUseCase.list(any(), eq(7))).thenReturn(List.of(lab101));
 
             // Act & Assert: ruta corta dual + filtro por sede
             mockMvc.perform(get("/environments").param("schoolId", "7"))
@@ -176,8 +176,8 @@ class EnvironmentControllerTest {
                     .andExpect(jsonPath("$.length()").value(1))
                     .andExpect(jsonPath("$[0].schoolId").value(1));
 
-            verify(listUseCase).listBySchoolId(7);
-            verify(listUseCase, never()).list();
+            verify(listUseCase).list(any(), eq(7));
+            verify(listUseCase, never()).list(any(), isNull());
         }
     }
 
@@ -189,7 +189,7 @@ class EnvironmentControllerTest {
         @DisplayName("givenExistingId_whenGetEnvironment_thenReturn200Json")
         void givenExistingId_whenGetEnvironment_thenReturn200Json() throws Exception {
             // Arrange
-            when(getUseCase.getById(10)).thenReturn(lab101);
+            when(getUseCase.getById(any(), eq(10))).thenReturn(lab101);
 
             // Act & Assert
             mockMvc.perform(get("/api/v1/environments/10"))
@@ -203,7 +203,7 @@ class EnvironmentControllerTest {
         @DisplayName("givenMissingId_whenGetEnvironment_thenReturn404WithErrorMessage")
         void givenMissingId_whenGetEnvironment_thenReturn404WithErrorMessage() throws Exception {
             // Arrange
-            when(getUseCase.getById(999)).thenThrow(new EntityNotFoundException("Environment", 999));
+            when(getUseCase.getById(any(), eq(999))).thenThrow(new EntityNotFoundException("Environment", 999));
 
             // Act & Assert: el advice de este modulo devuelve Map plano {"error":"..."}
             mockMvc.perform(get("/api/v1/environments/999"))
@@ -223,8 +223,7 @@ class EnvironmentControllerTest {
             renamed.setCapacity((short) 40);
             renamed.setStatus(true);
             renamed.setRowVersion(2L);
-            when(getUseCase.getById(10)).thenReturn(lab101);
-            when(updateUseCase.update(eq(10), any(Environment.class))).thenReturn(renamed);
+            when(updateUseCase.update(any(), eq(10), any(Environment.class))).thenReturn(renamed);
 
             // Act & Assert
             mockMvc.perform(put("/api/v1/environments/10")
@@ -235,34 +234,33 @@ class EnvironmentControllerTest {
                     .andExpect(jsonPath("$.name").value("Sala Renombrada"))
                     .andExpect(jsonPath("$.rowVersion").value(2));
 
-            verify(updateUseCase).update(eq(10), any(Environment.class));
+            verify(updateUseCase).update(any(), eq(10), any(Environment.class));
         }
 
         @Test
         @DisplayName("givenExistingId_whenDeleteEnvironment_thenReturn204")
         void givenExistingId_whenDeleteEnvironment_thenReturn204() throws Exception {
-            // Arrange: delete() now fetches first (ownership check before deleting).
-            when(getUseCase.getById(10)).thenReturn(lab101);
+            // Arrange: the ownership check lives in the use case, mocked here.
 
             // Act & Assert
             mockMvc.perform(delete("/api/v1/environments/10"))
                     .andExpect(status().isNoContent());
 
-            verify(deleteUseCase).delete(10);
+            verify(deleteUseCase).delete(any(), eq(10));
         }
 
         @Test
         @DisplayName("givenMissingId_whenDeleteEnvironment_thenReturn404")
         void givenMissingId_whenDeleteEnvironment_thenReturn404() throws Exception {
-            // Arrange: the missing-id check now happens on the fetch, before deleteUseCase is ever called.
-            when(getUseCase.getById(999)).thenThrow(new EntityNotFoundException("Environment", 999));
+            // Arrange: the use case answers 404 for a missing id.
+            doThrow(new EntityNotFoundException("Environment", 999)).when(deleteUseCase).delete(any(), eq(999));
 
             // Act & Assert
             mockMvc.perform(delete("/api/v1/environments/999"))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.error").value("Environment not found with identifier=999"));
 
-            verify(deleteUseCase, never()).delete(999);
+            
         }
     }
 }

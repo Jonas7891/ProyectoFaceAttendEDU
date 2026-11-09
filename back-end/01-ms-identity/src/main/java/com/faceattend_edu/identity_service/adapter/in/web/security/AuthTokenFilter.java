@@ -1,5 +1,6 @@
 package com.faceattend_edu.identity_service.adapter.in.web.security;
 
+import com.faceattend_edu.shared.auth.Roles;
 import static com.faceattend_edu.shared.auth.SessionAuthClient.deny;
 import com.faceattend_edu.shared.auth.SessionAuthClient;
 
@@ -61,7 +62,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     private static final Pattern USER_SCOPED = Pattern.compile("^/api/v1/users/([0-9a-fA-F-]{36})(?:/status|/activate)?$");
     private static final Pattern USER_SESSIONS = Pattern.compile("^/api/v1/sessions/user/([0-9a-fA-F-]{36})$");
     private static final String WRITE = "identity.person:write";
-    static final String SUPER_ADMIN_ROLE = "Super Administrador";
+    static final String SUPER_ADMIN_ROLE = Roles.SUPER_ADMIN;
 
     private final SessionAuthClient sessionAuth;
     // Perezoso: los tests @WebMvcTest cargan el filtro sin la capa de persistencia.

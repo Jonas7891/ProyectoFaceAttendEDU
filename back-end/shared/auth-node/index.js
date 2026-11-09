@@ -136,4 +136,6 @@ function clearAuthCache() {
   evalCache.clear();
 }
 
-module.exports = { registerAuthGuard, getJson, clearAuthCache, PUBLIC_PREFIXES };
+const callerSchool = require('./callerSchool');
+
+module.exports = { registerAuthGuard, getJson, clearAuthCache, PUBLIC_PREFIXES, ...callerSchool };

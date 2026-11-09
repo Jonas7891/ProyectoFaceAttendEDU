@@ -1,5 +1,6 @@
 package com.faceattend_edu.identity_service.application.usecase;
 
+import com.faceattend_edu.shared.auth.Roles;
 import com.faceattend_edu.identity_service.application.port.in.CreatePersonUseCase;
 import com.faceattend_edu.identity_service.application.port.in.CreateUserUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ManageConsentUseCase;
@@ -30,9 +31,9 @@ public class ProvisionUserUseCaseImpl implements ProvisionUserUseCase {
 
     /** Role name -> academic actor type it requires. "Super Administrador" is never granted here. */
     static final Map<String, Integer> ROLE_ACTOR_TYPE = Map.of(
-            "Aprendiz", 1,
-            "Instructor", 2,
-            "Administrador", 3);
+            Roles.STUDENT, 1,
+            Roles.INSTRUCTOR, 2,
+            Roles.SCHOOL_ADMIN, 3);
 
     private final CreatePersonUseCase createPersonUseCase;
     private final CreateUserUseCase createUserUseCase;

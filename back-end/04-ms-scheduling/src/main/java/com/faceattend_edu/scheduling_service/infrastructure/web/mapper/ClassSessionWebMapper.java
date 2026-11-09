@@ -1,6 +1,7 @@
 package com.faceattend_edu.scheduling_service.infrastructure.web.mapper;
 
 import com.faceattend_edu.scheduling_service.domain.model.ClassSession;
+import com.faceattend_edu.scheduling_service.domain.model.ClassSessionStatus;
 import com.faceattend_edu.scheduling_service.infrastructure.web.dto.ClassSessionResponse;
 import com.faceattend_edu.scheduling_service.infrastructure.web.dto.CreateClassSessionRequest;
 import com.faceattend_edu.scheduling_service.infrastructure.web.dto.UpdateClassSessionRequest;
@@ -14,7 +15,7 @@ public class ClassSessionWebMapper {
         ClassSession s = new ClassSession();
         s.setScheduleBlockId(req.getScheduleBlockId());
         s.setSessionDate(req.getSessionDate());
-        s.setSessionStatus(req.getSessionStatus() != null ? req.getSessionStatus() : "Open");
+        s.setSessionStatus(req.getSessionStatus() != null ? req.getSessionStatus() : ClassSessionStatus.OPEN.label());
         // Una sesión nace ya "Open" (no hay estado "Creada" en el enum), así
         // que el POST /open explícito que sigue siempre choca con "already
         // Open" y openedBy/openedAt nunca quedaban grabados. Si quien crea

@@ -7,7 +7,7 @@ import com.faceattend_edu.attendance_service.domain.model.Justification;
 import com.faceattend_edu.attendance_service.domain.port.in.CreateJustificationUseCase;
 import com.faceattend_edu.attendance_service.domain.port.out.AttendanceRecordRepository;
 import com.faceattend_edu.attendance_service.domain.port.out.JustificationRepository;
-import com.faceattend_edu.attendance_service.infrastructure.messaging.DomainEventPublisher;
+import com.faceattend_edu.attendance_service.domain.port.out.EventPublisherPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,7 @@ import java.util.Set;
 public class CreateJustificationUseCaseImpl implements CreateJustificationUseCase {
     private final JustificationRepository repository;
     private final AttendanceRecordRepository recordRepository;
-    private final DomainEventPublisher eventPublisher;
+    private final EventPublisherPort eventPublisher;
     /** ERF 6.1: solo se justifican inasistencias y llegadas tarde. */
     private static final Set<String> JUSTIFIABLE = Set.of("Absent", "Late");
     @Override public Justification create(Justification j){

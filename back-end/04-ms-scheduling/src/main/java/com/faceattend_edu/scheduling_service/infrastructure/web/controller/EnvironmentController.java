@@ -11,8 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
+/** HTTP adapter for environments; the school scope is applied by the use cases. */
 @RestController
 @RequestMapping({"/api/v1/environments", "/environments"})
 @RequiredArgsConstructor
@@ -27,49 +27,30 @@ public class EnvironmentController {
 
     @GetMapping
     public ResponseEntity<List<EnvironmentResponse>> list(@RequestParam(required = false) Integer schoolId) {
-        // Administrador/Instructor/Aprendiz: siempre su propia sede, sin importar lo
-        // que pida la query — Super Administrador puede filtrar por cualquiera (o ninguna).
-        List<Environment> list;
-        if (CallerSchoolContext.restricted()) {
-            Integer ownSchoolId = CallerSchoolContext.ownSchoolId();
-            // Sin sede propia: falla seguro (nada), nunca cae a la lista completa.
-            list = ownSchoolId != null ? listUseCase.listBySchoolId(ownSchoolId) : List.of();
-        } else {
-            list = schoolId != null ? listUseCase.listBySchoolId(schoolId) : listUseCase.list();
-        }
-        return ResponseEntity.ok(list.stream().map(mapper::toResponse).collect(Collectors.toList()));
+        return ResponseEntity.ok(listUseCase.list(CallerSchoolContext.caller(), schoolId).stream()
+                .map(mapper::toResponse).toList());
     }
 
     @PostMapping
     public ResponseEntity<EnvironmentResponse> create(@Valid @RequestBody CreateEnvironmentRequest req) {
-        Environment domain = mapper.toDomain(req);
-        CallerSchoolContext.requireSchool(domain.getSchoolId());
-        Environment created = createUseCase.create(domain);
+        Environment created = createUseCase.create(CallerSchoolContext.caller(), mapper.toDomain(req));
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponse(created));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<EnvironmentResponse> get(@PathVariable Integer id) {
-        Environment found = getUseCase.getById(id);
-        CallerSchoolContext.requireSchool(found.getSchoolId());
-        return ResponseEntity.ok(mapper.toResponse(found));
+        return ResponseEntity.ok(mapper.toResponse(getUseCase.getById(CallerSchoolContext.caller(), id)));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<EnvironmentResponse> update(@PathVariable Integer id, @Valid @RequestBody UpdateEnvironmentRequest req) {
-        Environment found = getUseCase.getById(id);
-        CallerSchoolContext.requireSchool(found.getSchoolId());
-        Environment patch = mapper.toDomain(req);
-        if (patch.getSchoolId() != null) CallerSchoolContext.requireSchool(patch.getSchoolId());
-        Environment updated = updateUseCase.update(id, patch);
+        Environment updated = updateUseCase.update(CallerSchoolContext.caller(), id, mapper.toDomain(req));
         return ResponseEntity.ok(mapper.toResponse(updated));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        Environment found = getUseCase.getById(id);
-        CallerSchoolContext.requireSchool(found.getSchoolId());
-        deleteUseCase.delete(id);
+        deleteUseCase.delete(CallerSchoolContext.caller(), id);
         return ResponseEntity.noContent().build();
     }
 }

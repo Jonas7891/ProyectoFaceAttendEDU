@@ -14,7 +14,7 @@ import java.util.TreeMap;
  */
 public final class AttendanceReport {
 
-    /** One grouped row coming from the repository: a count of records per (session, actor, status). */
+    /** One grouped row: a count of records per (session, actor, status); the session is null in per-actor counts. */
     public record Row(Long classSessionId, Long academicActorId, String attendanceStatus, long total) {
     }
 
@@ -58,7 +58,9 @@ public final class AttendanceReport {
         for (Row row : rows) {
             report.totals.add(row.attendanceStatus(), row.total());
             report.byActor.computeIfAbsent(row.academicActorId(), k -> new Counts()).add(row.attendanceStatus(), row.total());
-            report.bySession.computeIfAbsent(row.classSessionId(), k -> new Counts()).add(row.attendanceStatus(), row.total());
+            if (row.classSessionId() != null) {
+                report.bySession.computeIfAbsent(row.classSessionId(), k -> new Counts()).add(row.attendanceStatus(), row.total());
+            }
         }
         return report;
     }

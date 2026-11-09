@@ -22,8 +22,15 @@
 
 ```
 src/
-├── domain/entities/ AcademicConfiguration, SecurityConfiguration, BiometricUpdateCase
-└── infrastructure/persistence/ pg table
+├── domain/
+│   ├── entities/ AcademicConfiguration, SecurityConfiguration, BiometricUpdateCase (máquina de estados y regla chk_finger_number)
+│   └── ports/out/ IBiometricUpdateCaseRepository
+├── application/
+│   ├── access/ CaseScope (qué casos ve quien llama)
+│   └── use-cases/ BiometricUpdateCaseUseCases (solicitar, editar, revisar, borrar)
+└── infrastructure/
+    ├── http/ routes.ts (configuración) + biometricCaseRoutes.ts (solo traducen HTTP)
+    └── persistence/ pg table
 ```
 
 ## Dependencias

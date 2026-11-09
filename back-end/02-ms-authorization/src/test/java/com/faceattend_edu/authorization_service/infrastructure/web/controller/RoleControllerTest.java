@@ -5,7 +5,7 @@ import com.faceattend_edu.authorization_service.domain.port.in.*;
 import com.faceattend_edu.authorization_service.infrastructure.web.dto.*;
 import com.faceattend_edu.authorization_service.infrastructure.web.mapper.RoleWebMapper;
 import com.faceattend_edu.authorization_service.infrastructure.web.mapper.PermissionWebMapper;
-import com.faceattend_edu.authorization_service.domain.port.out.RolePermissionRepository;
+import com.faceattend_edu.authorization_service.domain.port.in.GetRolePermissionsUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -46,7 +46,7 @@ class RoleControllerTest {
     @Mock
     private AssignPermissionToRoleUseCase assignPermissionToRoleUseCase;
     @Mock
-    private RolePermissionRepository rolePermissionRepository;
+    private GetRolePermissionsUseCase getRolePermissionsUseCase;
     @Mock
     private RoleWebMapper roleWebMapper;
     @Mock

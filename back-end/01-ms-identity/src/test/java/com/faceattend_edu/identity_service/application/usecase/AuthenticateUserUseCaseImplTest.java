@@ -1,6 +1,6 @@
 package com.faceattend_edu.identity_service.application.usecase;
 
-import com.faceattend_edu.identity_service.adapter.out.messaging.DomainEventPublisher;
+import com.faceattend_edu.identity_service.application.port.out.EventPublisherPort;
 import com.faceattend_edu.identity_service.adapter.out.security.InMemoryLoginAttemptAdapter;
 import com.faceattend_edu.identity_service.application.port.out.HashPasswordPort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserByIdentifierPort;
@@ -38,7 +38,7 @@ class AuthenticateUserUseCaseImplTest {
     @Mock SaveUserSessionPort saveSession;
     @Mock UpdateUserPort updateUser;
     @Mock HashPasswordPort hasher;
-    @Mock DomainEventPublisher eventPublisher;
+    @Mock EventPublisherPort eventPublisher;
     @Mock TwoFactorChallenge twoFactorChallenge;
 
     private AuthProperties properties;

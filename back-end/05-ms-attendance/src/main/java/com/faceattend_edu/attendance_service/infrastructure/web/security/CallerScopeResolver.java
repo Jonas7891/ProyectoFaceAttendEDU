@@ -1,5 +1,6 @@
 package com.faceattend_edu.attendance_service.infrastructure.web.security;
 
+import com.faceattend_edu.shared.auth.Roles;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -28,8 +29,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class CallerScopeResolver {
 
-    static final String SUPER_ADMIN_ROLE = "Super Administrador";
-    static final String SCHOOL_ADMIN_ROLE = "Administrador";
+    static final String SUPER_ADMIN_ROLE = Roles.SUPER_ADMIN;
+    static final String SCHOOL_ADMIN_ROLE = Roles.SCHOOL_ADMIN;
     private static final long TTL_MS = 60_000;
     private static final int ACTOR_PAGE_SIZE = 100;
 

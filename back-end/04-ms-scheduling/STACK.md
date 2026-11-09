@@ -22,9 +22,22 @@
 
 ```
 src/main/java/com/faceattend_edu/scheduling_service/
-├── domain/model/ Environment, ScheduleBlock, ClassSession
-└── infrastructure/persistence/ JpaEntity with @UniqueConstraint
+├── domain/
+│   ├── model/ Environment, ScheduleBlock, ClassSession, ClassSessionStatus (Open/Closed/Cancelled)
+│   └── port/in+out/ casos de uso, repositorios, EventPublisherPort
+├── application/
+│   ├── access/ SchedulingAccessPolicy (alcance por sede)
+│   └── usecase/ CRUD de ambientes, bloques y sesiones; Open/Close/Cancel; ScheduleBlockOverlapGuard
+└── infrastructure/
+    ├── web/ controllers (solo traducen HTTP), security/ AuthTokenFilter, CallerSchoolResolver
+    ├── persistence/ JpaEntity con @UniqueConstraint, mapper, Adapter
+    └── messaging/ publicación después del commit
 ```
+
+`CallerSchoolResolver` extiende `CallerSchoolLookup` de `back-end/shared/auth-java` (atajo de
+Super Administrador, usuario → persona → actor, caché de 30 s); este servicio solo aporta las URL, el
+tiempo de espera y el actor propio para `opened_by`/`closed_by`. Las reglas de capas se verifican en
+`LayerDependencyRulesTest`.
 
 ## Dependencias
 

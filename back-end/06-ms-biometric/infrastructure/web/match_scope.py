@@ -12,20 +12,15 @@ academic actor matches nobody: fail secure, never "everyone".
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
-from typing import Any, TypeVar
 
 from fastapi import Request
 
+from application.match_selection import MAX_CANDIDATES, best_allowed
 from infrastructure.web import security
 
 logger = logging.getLogger("biometric.match_scope")
 
-T = TypeVar("T")
-
-# Candidates above the threshold whose school is looked up, best first. A face is normally one
-# person; this only bounds the work (one academic lookup each, cached) in degenerate data.
-MAX_CANDIDATES = 5
+__all__ = ["MAX_CANDIDATES", "UNRESTRICTED", "MatchScope", "best_allowed", "get_match_scope"]
 
 _match_allow_cache: dict[tuple[str, str], tuple[bool, float]] = {}
 
@@ -69,19 +64,3 @@ async def get_match_scope(request: Request) -> MatchScope:
         return MatchScope(sees_all=False, school_id=None, token=token)
     sees_all, school_id = await security.resolve_caller_school(user_id, token)
     return MatchScope(sees_all, school_id, token)
-
-
-async def best_allowed(
-    scored: Sequence[tuple[float, T]], threshold: float, scope: MatchScope
-) -> tuple[T | None, Any]:
-    """`(template, score)` of the best candidate at or above `threshold` the caller may see.
-
-    `scored` is every `(score, template)` of the scan. When nothing qualifies the template is
-    `None` and the score is the best raw score, which is only for the server-side audit log.
-    """
-    best_overall = max((score for score, _ in scored), default=0)
-    qualifying = sorted((item for item in scored if item[0] >= threshold), key=lambda item: -item[0])
-    for score, template in qualifying[:MAX_CANDIDATES]:
-        if await scope.allows(template.person_id):
-            return template, score
-    return None, best_overall
