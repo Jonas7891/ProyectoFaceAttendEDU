@@ -125,7 +125,7 @@ Las rutas de API son las de Kong (`/api/v1/...`).
 
 | Código | Requisito | Dónde se implementa | Pruebas | Estado |
 |---|---|---|---|---|
-| NFR-SEG-01 | Autenticación y autorización | sesión opaca validada por identity; RBAC en cada servicio; Kong | `[identity]` AuthTokenFilterTest, SessionTokenHasherTest · `[authorization]` AuthTokenFilterFlowTest · `back-end/shared` SessionAuthClientTest · `[biometric]` test_security · `[gateway]` cookie-session.sh, ws-ticket.mjs · `[notification]` authGuard.integration.test | Cubierto (con tokens opacos, no firmados como dice el criterio) |
+| NFR-SEG-01 | Autenticación y autorización | sesión opaca validada por identity; RBAC en cada servicio; Kong | `[identity]` AuthTokenFilterTest, SessionTokenHasherTest · `[authorization]` AuthTokenFilterFlowTest · `back-end/shared` SessionAuthClientTest, CallerSchoolLookupTest, callerSchool.test.js · `[biometric]` test_security · `[gateway]` cookie-session.sh, ws-ticket.mjs · `[notification]` authGuard.integration.test | Cubierto (con tokens opacos, no firmados como dice el criterio) |
 | NFR-SEG-02 | Inyección y XSS | validación en servicios; CSP en `vercel.json` | `[identity]` PersonValidationTest · `[web]` exportHelpers.escaping.test, linearRegex.test | Parcial: sin prueba automática de la CSP |
 | NFR-PRIV-01 | Datos biométricos seguros | AES-256-GCM, consentimiento | `[biometric]` test_ley1581, test_enablement · `[identity]` PiiCipherTest, ManageConsentUseCaseImplTest, PersonPiiPersistenceTest | Parcial: la retención de plantillas no está definida (REGISTRO_RIESGOS B-07) |
 | NFR-PRIV-02 | Minimización en logs | enmascarado de correos y tokens | `[identity]` LogMaskTest · `[notification]` logMask.test | Cubierto |
@@ -135,7 +135,7 @@ Las rutas de API son las de Kong (`/api/v1/...`).
 | NFR-AVL-01 | Disponibilidad | `tools/monitor/check.sh` | — | Hueco: sin objetivo acordado ni medición (REGISTRO_RIESGOS O-06, O-07) |
 | NFR-USU-01 | Menos de cinco pasos para marcar asistencia | — | — | Hueco: sin prueba |
 | NFR-ACC-01 | WCAG 2.2 básico | contraste de paletas | `[móvil]` palettes.contrast.test · `[web]` getTextOnColor.test, textTertiary.test | Parcial: solo contraste; sin pruebas de teclado ni etiquetas |
-| NFR-MNT-01 | Modularidad | un servicio por contexto | (cada servicio tiene su propia suite) | Cubierto |
+| NFR-MNT-01 | Modularidad | un servicio por contexto; reglas hexagonales por servicio (dominio sin dependencias hacia fuera, aplicación sin adaptadores, controladores y rutas solo hacia casos de uso) | `[identity]` `[authorization]` `[scheduling]` `[attendance]` LayerDependencyRulesTest · `[academic]` `[configuration]` layerRules.test · `[biometric]` test_layer_rules | Cubierto dentro de cada servicio; los imports entre servicios no se verifican |
 | NFR-PORT-01 | Android e iOS | app Expo | — | Hueco: solo se genera APK; versiones mínimas no definidas (DESPLIEGUE §19.5) |
 | NFR-AUD-01 | Log inmutable de cambios críticos | — | — | Hueco: igual que ERF 5.2 |
 | NFR-IOT-01 | Heartbeat IoT | — | — | Hueco: no hay IoT |

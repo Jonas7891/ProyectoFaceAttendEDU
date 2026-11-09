@@ -58,7 +58,7 @@ mapstruct-processor              <!-- Anotacion processor MapStruct -->
 | **Testcontainers** | Tests de integracion con PostgreSQL real | Tests confiables contra BD real en Docker |
 | **WireMock** | Mock de servicios externos en tests | Simula respuestas de otros microservicios |
 | **Awaitility** | Tests asincronos | Verifica resultados de operaciones asincronas (Kafka) |
-| **ArchUnit** | Tests de arquitectura | Valida reglas hexagonales (dependencias de paquetes) |
+| **LayerDependencyRulesTest** | Tests de arquitectura | Valida reglas hexagonales leyendo los `import` del código (sin dependencia extra; las excepciones conocidas van en una lista explícita) |
 | **Resilience4j** | Circuit breaker, retry | Proteccion contra fallos de servicios dependientes |
 | **Micrometer** | Metrics | Integracion con Prometheus/Grafana |
 | **Spring Boot Actuator** | Health, info, metrics | Observabilidad del servicio |
@@ -82,7 +82,7 @@ mapstruct-processor              <!-- Anotacion processor MapStruct -->
 | Unit Tests | JUnit 5 + Mockito | Pruebas de dominio y use cases |
 | Integration | Spring Boot Test + Testcontainers | Pruebas con BD real |
 | API Tests | MockMvc / WebTestClient | Pruebas de endpoints |
-| Architecture | ArchUnit | Validar reglas de paquetes |
+| Architecture | JUnit 5 (`LayerDependencyRulesTest`) | Dominio sin dependencias hacia fuera, aplicación sin adaptadores, controladores solo hacia casos de uso |
 
 ---
 

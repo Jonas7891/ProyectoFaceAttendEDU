@@ -22,9 +22,20 @@
 
 ```
 src/main/java/com/faceattend_edu/attendance_service/
-├── domain/model/ AttendanceRecord, Justification
-└── application/usecase/ RecordAttendanceUseCase @Transactional
+├── domain/
+│   ├── model/ AttendanceRecord, Justification, ReviewStatus (Pending/Approved/Rejected)
+│   └── port/in+out/ casos de uso, repositorios, EventPublisherPort
+├── application/
+│   ├── policy/ ArrivalStatusPolicy, SessionOpenPolicy (solo sesiones abiertas; falla cerrado)
+│   └── usecase/ RecordAttendance @Transactional, ReviewJustification, GetAttendanceReport, ...
+└── infrastructure/
+    ├── web/ controllers (solo traducen HTTP), security/ AuthTokenFilter, CallerSchoolResolver
+    ├── persistence/, storage/ (MinIO), messaging/
 ```
+
+`CallerSchoolResolver` extiende `CallerSchoolLookup` de `back-end/shared/auth-java`; este servicio
+añade un reintento ante fallos transitorios de E/S. Las reglas de capas se verifican en
+`LayerDependencyRulesTest`.
 
 ## Dependencias
 
