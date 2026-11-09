@@ -1,4 +1,5 @@
 import type { FastifyRequest } from 'fastify';
+import { ROLES } from '@faceattend/auth';
 import { getJson } from './authGuard';
 import type { CaseScope } from '../../application/access/CaseScope';
 
@@ -10,7 +11,7 @@ export class ScopeError extends Error {
 }
 
 const REVIEW_PERMISSION = 'biometric.case:review';
-const SUPER_ADMIN_ROLE = 'Super Administrador';
+const SUPER_ADMIN_ROLE = ROLES.SUPER_ADMIN;
 const CACHE_TTL_MS = 30_000;
 const ACTOR_PAGE_SIZE = 100;
 
