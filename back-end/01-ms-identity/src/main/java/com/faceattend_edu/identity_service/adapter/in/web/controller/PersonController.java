@@ -4,6 +4,7 @@ import com.faceattend_edu.identity_service.adapter.in.web.dto.PageResponse;
 import com.faceattend_edu.identity_service.adapter.in.web.dto.PersonDto;
 import com.faceattend_edu.identity_service.adapter.in.web.mapper.PersonWebMapper;
 import com.faceattend_edu.identity_service.adapter.in.web.security.AuthTokenFilter;
+import com.faceattend_edu.identity_service.adapter.in.web.security.PersonFieldRedactor;
 import com.faceattend_edu.identity_service.application.port.in.ChangePersonStatusUseCase;
 import com.faceattend_edu.identity_service.application.port.in.CreatePersonUseCase;
 import com.faceattend_edu.identity_service.application.port.in.GetPersonUseCase;
@@ -65,6 +66,7 @@ public class PersonController {
             Set<UUID> personIds = scope.stream().map(id -> (UUID) id).collect(Collectors.toSet());
             List<PersonDto> pageItems = listPersonsUseCase.listPersons(safePage - 1, safeLimit, personIds).stream()
                     .map(personWebMapper::toDto)
+                    .map(person -> PersonFieldRedactor.apply(person, request))
                     .collect(Collectors.toList());
             return ResponseEntity.ok(PageResponse.ofSlice(pageItems, safePage, safeLimit,
                     listPersonsUseCase.countPersons(personIds)));
@@ -77,8 +79,8 @@ public class PersonController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PersonDto> getPerson(@PathVariable UUID id) {
-        return ResponseEntity.ok(personWebMapper.toDto(getPersonUseCase.getPerson(id)));
+    public ResponseEntity<PersonDto> getPerson(@PathVariable UUID id, HttpServletRequest request) {
+        return ResponseEntity.ok(PersonFieldRedactor.apply(personWebMapper.toDto(getPersonUseCase.getPerson(id)), request));
     }
 
     @PutMapping("/{id}")

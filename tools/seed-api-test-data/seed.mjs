@@ -1,6 +1,7 @@
 // Seed test data into FaceAttendEDU microservices.
 // Run: npm run seed (Node >= 20, no dependencies).
-// Targets direct microservice URLs (see .env.example) to bypass Kong JWT.
+// Targets direct microservice URLs (see .env.example) instead of going through Kong;
+// each service still validates the opaque session id against ms-identity.
 //
 // Scale: 2 colombian high schools (bachillerato), 1600 students + 80 teachers,
 // ~1210 class sessions and ~81k attendance records inside a pinned 4-week
@@ -69,14 +70,15 @@ const M = {
   updateCases: new Set(),   // personIds with a pending biometric update case
 };
 
-async function call(service, method, path, body, allow404 = false) {
+// allow404 accepts a 404 (probes: "not there yet"); the caller then gets null.
+async function call(service, method, path, body, allow404 = false, token = TOKEN) {
   const url = `${U[service]}${path}`;
   const label = `${method} ${service}${path}`;
   try {
     const multipart = body instanceof FormData;
     // FormData sets its own multipart Content-Type (with the boundary).
     const headers = multipart ? {} : { "Content-Type": "application/json" };
-    if (TOKEN) headers.Authorization = `Bearer ${TOKEN}`;
+    if (token) headers.Authorization = `Bearer ${token}`;
     const res = await fetch(url, {
       method,
       headers,
@@ -93,7 +95,7 @@ async function call(service, method, path, body, allow404 = false) {
     results.push({ label, status: res.status, ok });
     if (!ok) console.log(`FAIL ${res.status} ${label}`);
     else if (VERBOSE) console.log(`ok   ${res.status}${res.status === 409 ? " (exists)" : ""} ${label}`);
-    return ok ? data : null;
+    return res.ok || res.status === 409 ? data : null;
   } catch (e) {
     results.push({ label, status: 0, ok: false });
     console.log(`FAIL conn ${label} (${e.cause?.code ?? e.message})`);
@@ -401,6 +403,12 @@ function buildTeachers() {
 
 const STUDENTS = buildStudents();
 const TEACHERS = buildTeachers();
+// The demo logins of README / installation manual appendix C need an academic
+// profile, or the instructor and the student sign in to empty screens: the
+// demo students join the first cohort of the first school, and the demo
+// instructor teaches there (first in line when blocks are assigned).
+const DEMO_STUDENTS = PEOPLE.map((p) => ({ ...p, schoolIdx: 0, cohortCode: cohortCodeOf(0, 0) }));
+const DEMO_INSTRUCTOR = { ...STAFF.find((s) => s.key === "instructor"), schoolIdx: 0, actorCode: `DOC-${SCHOOLS[0].prefix}-DEMO` };
 
 // Login as bootstrap admin: protected endpoints require Bearer + permissions.
 // Runs before any seed step; without TOKEN the calls below fail with 401/403.
@@ -505,9 +513,8 @@ async function seedIdentity() {
     if (userId && l.key) ids[l.key] = userId;
     tickUsers();
   });
-  await get("identity", `/api/v1/auth/me?username=${SEED_USERNAME}`);
-  await get("identity", `/api/v1/auth/me?username=${INSTRUCTOR_USERNAME}`);
-  await get("identity", `/api/v1/auth/me?username=${STUDENT_USERNAME}`);
+  // /auth/me only resolves the caller's own account (any other username is a 404).
+  await get("identity", `/api/v1/auth/me?username=${encodeURIComponent(BOOTSTRAP_USERNAME)}`);
   done();
 }
 
@@ -641,7 +648,8 @@ async function seedAcademic() {
   // identity.person, no FK): it must be the UUID from seedIdentity(), not the
   // biometric string id (which lives only in MongoDB).
   const actorJobs = [
-    ...STUDENTS.map((s) => ({ personKey: s.documentNumber, actorTypeId: 1, schoolIdx: s.schoolIdx, actorCode: s.actorCode })),
+    ...[...DEMO_STUDENTS, ...STUDENTS].map((s) => ({ personKey: s.documentNumber, actorTypeId: 1, schoolIdx: s.schoolIdx, actorCode: s.actorCode })),
+    { personKey: DEMO_INSTRUCTOR.documentNumber, actorTypeId: 2, schoolIdx: 0, actorCode: DEMO_INSTRUCTOR.actorCode },
     ...TEACHERS.map((t) => ({ personKey: t.documentNumber, actorTypeId: 2, schoolIdx: t.schoolIdx, actorCode: t.actorCode })),
     ...(adminActorTypeId == null ? [] : SCHOOL_ADMINS.map((a) => ({
       personKey: a.documentNumber, actorTypeId: adminActorTypeId, schoolIdx: a.schoolIdx, actorCode: a.actorCode,
@@ -679,7 +687,7 @@ async function seedAcademic() {
 
   // Roster per cohort feeds roll call (attendance) and blocks (scheduling).
   ids.rosterByCohort = new Map();
-  for (const s of STUDENTS) {
+  for (const s of [...DEMO_STUDENTS, ...STUDENTS]) {
     const actorId = M.actors.get(s.actorCode);
     if (actorId == null) continue;
     const roster = ids.rosterByCohort.get(s.cohortCode) ?? [];
@@ -688,7 +696,7 @@ async function seedAcademic() {
   }
 
   const enrollmentJobs = [];
-  for (const s of STUDENTS) {
+  for (const s of [...DEMO_STUDENTS, ...STUDENTS]) {
     const actorId = M.actors.get(s.actorCode);
     const cohortId = M.cohorts.get(s.cohortCode);
     if (actorId == null || cohortId == null) continue;
@@ -734,7 +742,8 @@ async function seedAcademic() {
     }
   }
   ids.teacherActorIdsBySchool = [0, 1].map((schoolIdx) =>
-    TEACHERS.filter((t) => t.schoolIdx === schoolIdx).map((t) => M.actors.get(t.actorCode)).filter((v) => v != null));
+    [...(schoolIdx === 0 ? [DEMO_INSTRUCTOR] : []), ...TEACHERS.filter((t) => t.schoolIdx === schoolIdx)]
+      .map((t) => M.actors.get(t.actorCode)).filter((v) => v != null));
 
   await get("academic", "/api/v1/schools");
   const firstCohort = ids.cohorts.find((c) => c.id != null);
@@ -837,6 +846,7 @@ async function seedScheduling() {
   // Sessions: one list per block, create the missing dates, then enforce the
   // status policy (past Closed with the block's instructor, SEED_TODAY Open).
   ids.sessionCtx = [];
+  ids.sessionsToClose = [];
   const sessionJobs = blockDescs.map((d) => ({ ...d, blockId: M.blocks.get(d.mapKey), dates: sessionDatesFor(d.dayOfWeek) })).filter((j) => j.blockId != null);
   const tickSessions = progress(sessionJobs.length, 100, "blocks w/ sessions");
   await pooled(sessionJobs, CONCURRENCY, async (job) => {
@@ -859,11 +869,15 @@ async function seedScheduling() {
       if (sid == null) continue;
       const status = pick(row, "sessionStatus", "session_status", "status");
       if (date !== SEED_TODAY && status !== "Closed") {
-        await post("scheduling", `/api/v1/class-sessions/${sid}/close`, { closedBy: job.instructorActorId });
+        // Closed after the roll call (closePastSessions): closing first would let
+        // ms-notification mark the whole cohort Absent before the records exist.
+        ids.sessionsToClose.push({ id: sid, instructorActorId: job.instructorActorId });
       } else if (date === SEED_TODAY && status !== "Open") {
         await post("scheduling", `/api/v1/class-sessions/${sid}/open`);
       }
-      ids.sessionCtx.push({ id: sid, cohortCode: job.cohortCode, date });
+      // A session closed by an earlier run already took its roll call; attendance
+      // only accepts records on Open sessions, so a rerun leaves it alone.
+      ids.sessionCtx.push({ id: sid, cohortCode: job.cohortCode, date, alreadyClosed: status === "Closed" });
     }
     tickSessions();
   });
@@ -873,6 +887,39 @@ async function seedScheduling() {
 
 // Attendance: roll call per session (bulk, ~81k records) plus justifications
 // over a deterministic sample of absences.
+// Only the instructor of a class may open, close or cancel it (closed_by must be
+// truthful), so each past session is closed with its own teacher's session.
+async function closePastSessions() {
+  const done = banner("close past sessions");
+  const loginByActor = new Map([
+    [M.actors.get(DEMO_INSTRUCTOR.actorCode), { username: INSTRUCTOR_USERNAME, password: INSTRUCTOR_PASSWORD }],
+    ...TEACHERS.map((t) => [M.actors.get(t.actorCode), { username: t.username, password: TEACHER_PASSWORD }]),
+  ]);
+  const tokens = new Map(); // instructorActorId -> Promise<session id | null>
+  const tokenFor = (actorId) => {
+    if (!tokens.has(actorId)) {
+      const login = loginByActor.get(actorId);
+      tokens.set(actorId, login
+        ? post("identity", "/api/v1/auth/login", login)
+            .then((r) => (r ? String(pick(r, "sessionId", "session_id", "id")) : null))
+        : Promise.resolve(null));
+    }
+    return tokens.get(actorId);
+  };
+  const jobs = ids.sessionsToClose ?? [];
+  const tick = progress(jobs.length, 200, "closes");
+  await pooled(jobs, CONCURRENCY, async (j) => {
+    const token = await tokenFor(j.instructorActorId);
+    if (!token) {
+      results.push({ label: `POST scheduling/api/v1/class-sessions/${j.id}/close (no teacher session)`, status: 0, ok: false });
+    } else {
+      await call("scheduling", "POST", `/api/v1/class-sessions/${j.id}/close`, undefined, false, token);
+    }
+    tick();
+  });
+  done();
+}
+
 async function seedAttendance() {
   const done = banner("attendance");
   for (const jt of asArray(await get("attendance", "/api/v1/justification-types"))) {
@@ -927,8 +974,9 @@ async function seedAttendance() {
 
   // attendance_status is the native enum ('Present','Absent','Late','Justified') and
   // capture_method is ('FACIAL','MANUAL','FINGERPRINT','IMPORT'); casing must match exactly.
-  const tickBulk = progress(ids.sessionCtx.length, 200, "roll calls");
-  await pooled(ids.sessionCtx, CONCURRENCY, async (job) => {
+  const rollCalls = ids.sessionCtx.filter((job) => !job.alreadyClosed);
+  const tickBulk = progress(rollCalls.length, 200, "roll calls");
+  await pooled(rollCalls, CONCURRENCY, async (job) => {
     const roster = ids.rosterByCohort.get(job.cohortCode) ?? [];
     if (roster.length) {
       const sIdx = Number(job.id) % 97; // stable per session: rerun-free random-looking rotation
@@ -1046,34 +1094,41 @@ async function seedBiometric() {
   const done = banner("biometric");
   const base = [0.12, 0.45, 0.78, 0.23, 0.56, 0.89, 0.34, 0.67];
   const encodingFor = (i) => base.map((v, j) => +(v + (i % 100) * 0.01 + j * 0.001).toFixed(4));
-  // Legacy id kept for backward compatibility with existing frontends/dashboards.
-  await post("biometric", "/api/v1/biometric/facial/enroll", {
-    person_id: "seed-student-01", encoding: base, model_version: "seed-v1",
-  });
-  for (let i = 0; i < PEOPLE.length; i++) {
-    await post("biometric", "/api/v1/biometric/facial/enroll", {
-      person_id: PEOPLE[i].biometricId, encoding: encodingFor(i), model_version: "seed-v1",
-    });
-  }
-  const first = PEOPLE[0].biometricId;
-  await post("biometric", "/api/v1/biometric/facial/verify", { person_id: first, encoding: encodingFor(0) });
-  await post("biometric", "/api/v1/biometric/facial/identify", { encoding: encodingFor(0) });
-  await get("biometric", `/api/v1/biometric/facial/${first}/history`);
-
   const enrollJobs = [
     ...STUDENTS.map((s, i) => ({ personId: M.persons.get(s.documentNumber), seq: i })),
     ...TEACHERS.map((t, i) => ({ personId: M.persons.get(t.documentNumber), seq: 1000 + i })),
   ].filter((j) => j.personId != null);
   const tick = progress(enrollJobs.length, 400, "enrolls");
+  let enrolled = 0;
+  let withoutConsent = 0;
+  const withTemplate = []; // jobs whose person ends up with an active template
   await pooled(enrollJobs, CONCURRENCY, async (j) => {
     const active = await getProbe("biometric", `/api/v1/biometric/facial/${j.personId}`);
-    if (!active) { // null = 404, person not enrolled yet
-      await post("biometric", "/api/v1/biometric/facial/enroll", {
+    if (active) withTemplate.push(j);
+    else { // null = 404, person not enrolled yet
+      // No biometric data without the holder's prior authorization (Ley 1581):
+      // only the person gives it, from the app, so the seed skips whoever has not.
+      const consent = await get("identity", `/api/v1/persons/${j.personId}/consent`);
+      if (consent?.biometricAuthorized !== true) {
+        withoutConsent++;
+      } else if (await post("biometric", "/api/v1/biometric/facial/enroll", {
         person_id: j.personId, encoding: encodingFor(j.seq), model_version: "seed-v1",
-      });
+      })) {
+        enrolled++;
+        withTemplate.push(j);
+      }
     }
     tick();
   });
+  console.log(`    ${enrolled} facial templates enrolled, ${withoutConsent} people skipped without biometric authorization`);
+  // verify, identify and history need a real identity.person (a UUID) that has a
+  // template: the enrolled person with the lowest sequence, if there is any.
+  const sample = withTemplate.sort((a, b) => a.seq - b.seq)[0];
+  if (sample) {
+    await post("biometric", "/api/v1/biometric/facial/verify", { person_id: sample.personId, encoding: encodingFor(sample.seq) });
+    await post("biometric", "/api/v1/biometric/facial/identify", { encoding: encodingFor(sample.seq) });
+    await get("biometric", `/api/v1/biometric/facial/${sample.personId}/history`);
+  }
   done();
 }
 
@@ -1157,7 +1212,7 @@ async function seedNotification() {
   }
   const existingAlerts = [];
   for (const a of await listPaged("notification", "/api/v1/alerts")) {
-    M.alerts.add(`${pick(a, "AcademicActorID", "academic_actor_id")}:${pick(a, "AlertTypeID", "alert_type_id")}`);
+    M.alerts.add(`${pick(a, "academicActorId", "AcademicActorID", "academic_actor_id")}:${pick(a, "alertTypeId", "AlertTypeID", "alert_type_id")}`);
     existingAlerts.push(a);
   }
 
@@ -1180,7 +1235,7 @@ async function seedNotification() {
   }
   const tick = progress(alertJobs.length, 100, "alerts");
   await pooled(alertJobs, CONCURRENCY, async (a, i) => {
-    const created = await post("notification", "/api/v1/alerts", { academic_actor_id: a.actorId, alert_type_id: a.typeId });
+    const created = await post("notification", "/api/v1/alerts", { academicActorId: a.actorId, alertTypeId: a.typeId });
     M.alerts.add(a.key);
     // 1 de cada 3 se cierra: antes quedaban 493 abiertas y ninguna resuelta, con
     // lo que el tablero no tenia historial y resolved_at era NULL en todas.
@@ -1196,7 +1251,7 @@ async function seedNotification() {
   const legacyTypeIds = new Set(
     LEGACY_ALERT_TYPE_CODES.map((code) => M.alertTypes.get(code)).filter((v) => v != null)
   );
-  const orphans = existingAlerts.filter((a) => legacyTypeIds.has(pick(a, "AlertTypeID", "alert_type_id")));
+  const orphans = existingAlerts.filter((a) => legacyTypeIds.has(pick(a, "alertTypeId", "AlertTypeID", "alert_type_id")));
   if (orphans.length) {
     const tickDel = progress(orphans.length, 100, "duplicate alerts");
     await pooled(orphans, CONCURRENCY, async (a) => {
@@ -1208,7 +1263,7 @@ async function seedNotification() {
   // Y se cierra 1 de cada 3 de las que siguen abiertas: el bucle de creacion solo
   // resuelve las nuevas, asi que en una base ya sembrada no se cerraba ninguna.
   const openAlerts = existingAlerts.filter(
-    (a) => !legacyTypeIds.has(pick(a, "AlertTypeID", "alert_type_id")) && !pick(a, "ResolvedAt", "resolved_at")
+    (a) => !legacyTypeIds.has(pick(a, "alertTypeId", "AlertTypeID", "alert_type_id")) && !pick(a, "resolvedAt", "ResolvedAt", "resolved_at")
   );
   // Se decide por el id de la alerta, no por su posicion: filtrar sobre el conjunto
   // de abiertas (que encoge en cada corrida) cerraba otro tercio cada vez hasta
@@ -1262,6 +1317,7 @@ async function main() {
   await seedAcademic();
   await seedScheduling();
   await seedAttendance();
+  await closePastSessions();
   await seedBiometric();
   await seedConfiguration();
   await seedNotification();

@@ -23,3 +23,5 @@ export class RetryableError extends RepositoryError {
   constructor(message: string);
 }
 export function translateDbError(err: unknown, entity?: string): RepositoryError;
+/** Client-facing table name: no schema, no underscores. */
+export function publicName(entity?: string): string;

@@ -3,7 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { registerServiceBasics, errorNameFor } = require('./http');
-const { ConflictError } = require('./errors');
+const { ConflictError, RepositoryError } = require('./errors');
 
 /** Captures what registerServiceBasics installs on a Fastify instance. */
 function fakeApp() {
@@ -60,7 +60,12 @@ test('server errors hide their message; client errors and repository details pas
   app.errorHandler(new ConflictError('academic.school', 'uq_school_code', { detail: 'Key (code)=(S1)' }), req, conflict);
   assert.equal(conflict.statusCode, 409);
   assert.equal(conflict.body.error, 'Conflict');
-  assert.deepEqual(conflict.body.details, { entity: 'academic.school', constraint: 'uq_school_code' });
+  assert.deepEqual(conflict.body.details, { entity: 'school', constraint: 'uq_school_code' });
+
+  const drift = fakeReply();
+  app.errorHandler(new RepositoryError(500, 'InternalError', 'Database schema mismatch for course', { code: '42P01' }), req, drift);
+  assert.equal(drift.statusCode, 500);
+  assert.equal(drift.body.details, undefined);
 
   const notFound = fakeReply();
   app.notFoundHandler({ method: 'GET', url: '/nope' }, notFound);

@@ -1,6 +1,12 @@
 package com.faceattend_edu.identity_service.adapter.in.web.controller;
 
 import com.faceattend_edu.identity_service.adapter.in.web.security.AuthTokenFilter;
+import com.faceattend_edu.identity_service.adapter.in.web.security.PersonFieldRedactor;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Set;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import com.faceattend_edu.identity_service.domain.model.Person;
 import org.mockito.ArgumentCaptor;
 import java.util.UUID;
@@ -163,5 +169,66 @@ class PersonControllerTest {
         assertEquals("hacker@colegio.edu", sent.getValue().getEmail());
         assertEquals("123", sent.getValue().getDocumentNumber());
         assertEquals(Boolean.TRUE, sent.getValue().getStatus());
+    }
+
+    private Person sensitivePerson(UUID id) {
+        Person person = storedPerson(id);
+        person.setDocumentNumber("1098765432");
+        person.setBloodType(com.faceattend_edu.identity_service.domain.model.BloodType.O_POSITIVE);
+        person.setAddress("Calle 1 # 2-3");
+        person.setBirthDate(LocalDate.of(2010, 5, 4));
+        return person;
+    }
+
+    @Test
+    void anInstructorGetsAnotherPersonWithoutHealthOrHomeData() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(getPersonUseCase.getPerson(id)).thenReturn(sensitivePerson(id));
+
+        mockMvc.perform(get("/api/v1/persons/" + id)
+                        .requestAttr(PersonFieldRedactor.LIMITED_VIEW_ATTRIBUTE, UUID.randomUUID().toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Ana"))
+                .andExpect(jsonPath("$.documentNumber").value("******5432"))
+                .andExpect(jsonPath("$.bloodType").doesNotExist())
+                .andExpect(jsonPath("$.address").doesNotExist())
+                .andExpect(jsonPath("$.birthDate").doesNotExist());
+    }
+
+    @Test
+    void theCallerAlwaysGetsTheirOwnRecordComplete() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(getPersonUseCase.getPerson(id)).thenReturn(sensitivePerson(id));
+
+        mockMvc.perform(get("/api/v1/persons/" + id)
+                        .requestAttr(PersonFieldRedactor.LIMITED_VIEW_ATTRIBUTE, id.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.documentNumber").value("1098765432"))
+                .andExpect(jsonPath("$.bloodType").value("O+"));
+    }
+
+    @Test
+    void anAdministratorGetsEveryField() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(getPersonUseCase.getPerson(id)).thenReturn(sensitivePerson(id));
+
+        mockMvc.perform(get("/api/v1/persons/" + id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.documentNumber").value("1098765432"))
+                .andExpect(jsonPath("$.address").value("Calle 1 # 2-3"));
+    }
+
+    @Test
+    void theScopedListIsLimitedToo() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(listPersonsUseCase.listPersons(anyInt(), anyInt(), any())).thenReturn(List.of(sensitivePerson(id)));
+        when(listPersonsUseCase.countPersons(any(Set.class))).thenReturn(1L);
+
+        mockMvc.perform(get("/api/v1/persons")
+                        .requestAttr(AuthTokenFilter.PERSON_SCOPE_ATTRIBUTE, Set.of(id))
+                        .requestAttr(PersonFieldRedactor.LIMITED_VIEW_ATTRIBUTE, ""))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].bloodType").doesNotExist())
+                .andExpect(jsonPath("$.data[0].documentNumber").value("******5432"));
     }
 }

@@ -564,10 +564,12 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
             return;
         }
         
-        // Para AMBAS exportaciones en PDF, necesitamos expandir y recalcular porcentajes correctamente
+        // Excel y PDF exportan las mismas filas: se expanden los registros y se
+        // recalculan los porcentajes; exportType decide si va uno por estudiante
+        // (sencilla) o todos (detallada).
         let finalUsersToExport = usersToExport;
         
-        if (format === "pdf") {
+        if (format === "pdf" || format === "excel") {
             // Expandir todos los registros de asistencia de los usuarios seleccionados
             const expandedUsers = [];
             const students = appData.students || [];
@@ -647,11 +649,8 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
             }
         }
         
-        // TODO: Implementar lógica según exportType ("simple" o "detailed")
-        console.log(`[HistoricalSection] Exportando ${finalUsersToExport.length} usuarios en formato ${format} con tipo ${exportType}`);
-        
         if (format === "excel") {
-            const sheets = buildHistoricosSheets(usersToExport, t, formatDate);
+            const sheets = buildHistoricosSheets(finalUsersToExport, t, formatDate);
 
             const filename = `Historicos_Seleccionados_${formatDate(new Date(), "YYYY-MM-DD")}.xlsx`;
             const result = await exportToExcel(sheets, filename);
@@ -659,7 +658,7 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
             if (result.success) {
                 pushNotification.success(
                     t("Exportación exitosa"),
-                    `${usersToExport.length} ${usersToExport.length === 1 ? t("registro exportado") : t("registros exportados")} a Excel`
+                    `${finalUsersToExport.length} ${finalUsersToExport.length === 1 ? t("registro exportado") : t("registros exportados")} a Excel`
                 );
             } else {
                 pushNotification.error(

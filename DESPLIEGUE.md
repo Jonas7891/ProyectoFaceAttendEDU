@@ -150,7 +150,13 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --force-rec
 
 ## 7. Alta pública de sedes
 
-`POST /api/v1/onboarding/schools` abre una sesión interna como la cuenta de servicio `ONBOARDING_SERVICE_USER_ID` (un `user_id` de un Super Administrador dedicado, nunca el de una persona). Sin esa variable el endpoint responde 503. Créela con `bootstrap-admin.sh` (usuario propio, contraseña aleatoria que nadie usa) y copie su `user_id` al secret.
+`POST /api/v1/onboarding/schools` abre una sesión interna como la cuenta de servicio `ONBOARDING_SERVICE_USER_ID` (un `user_id` de un Super Administrador dedicado, nunca el de una persona). Sin esa variable el endpoint responde 503. `database/scripts/service-accounts.sh` la crea junto con la de ms-notification (contraseñas aleatorias que no imprime) y escribe las tres variables en el archivo que se le pase:
+
+```bash
+export PSQL="psql <cadena de conexión de Neon, tomada del gestor de secretos>"
+SERVICE_ACCOUNT_EMAIL_DOMAIN=<dominio institucional> ./database/scripts/service-accounts.sh .env.prod
+gh secret set ENV_PROD_FILE --env production < .env.prod
+```
 
 ---
 
