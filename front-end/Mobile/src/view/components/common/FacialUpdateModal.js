@@ -53,10 +53,7 @@ export const FacialUpdateModal = ({visible, onClose, onSuccess}) => {
                 onClose();
                 setSelectedChange(null);
             },
-            () => {
-                // Cancelado
-                console.log('Actualización facial cancelada');
-            }
+            () => {} // Cancelado: no hay nada que deshacer
         );
     };
 

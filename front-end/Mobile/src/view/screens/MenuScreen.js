@@ -59,9 +59,7 @@ export default function MenuScreen({ onLogout }) {
                     );
                 }
             },
-            () => {
-                console.log('Logout cancelado por el usuario');
-            }
+            () => {} // Cancelado: la sesión sigue abierta
         );
     };
 
