@@ -37,6 +37,7 @@ jest.mock("../components/dashboard", () => {
 
 let mockVm = {};
 jest.mock("../../viewmodels/useDashboardViewModel", () => ({ useDashboardViewModel: () => mockVm }));
+jest.mock("../components/users/StudentDetailModal", () => (props) => require("react").createElement("StudentDetailModal", props));
 jest.mock("../../viewmodels/useRolePermissions", () => ({ useRolePermissions: () => ({ canRegisterFace: true }) }));
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -107,5 +108,16 @@ describe("DashboardView render", () => {
     test.each(Object.keys(ROLES))("%s panel while its data loads", (role) => {
         mockVm = { ...BASE, userRole: role, isLoading: true };
         expect(render().toJSON()).toMatchSnapshot();
+    });
+
+    test("pressing an at-risk student opens their detail read-only", () => {
+        const record = { id: 7, name: "Ana" };
+        mockVm = { ...BASE, userRole: "admin", ...ROLES.admin, findStudent: (id) => (id === 7 ? record : null) };
+        const root = render();
+        expect(root.root.findAllByType("StudentDetailModal")).toHaveLength(0);
+        act(() => root.root.findByType("AtRiskStudentsList").props.onStudentPress({ studentId: 7 }));
+        const modal = root.root.findByType("StudentDetailModal");
+        expect(modal.props.student).toBe(record);
+        expect([modal.props.canManage, modal.props.canToggleStatus, modal.props.canDeleteUser]).toEqual([false, false, false]);
     });
 });

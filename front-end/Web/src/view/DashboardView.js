@@ -52,6 +52,7 @@ import {
     getConfiguredAcademicPeriodType
 } from "../core/constants/academicPeriods";
 import { onInstitutionConfigChange } from "../core/config/institutionConfig";
+import StudentDetailModal from "./components/users/StudentDetailModal";
 
 // ──────────────────────────────────────────────────────────────
 // HELPERS
@@ -284,7 +285,7 @@ function PanelDataState({ isLoading, t }) {
 // ADMIN DASHBOARD — Vista completa del sistema
 // ──────────────────────────────────────────────────────────────
 
-function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
+function AdminDashboard({ vm, permissions, isSmall, c, t, navigation, onStudentPress }) {
     // Período académico reactivo a cambios en Settings
     const academicPeriod = useAcademicPeriod();
 
@@ -327,9 +328,7 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                 <InstructorAttendanceList
                     instructors={vm.adminData.instructorAttendance}
                     maxItems={5}
-                    onInstructorPress={(instructor) => {
-                        console.log("Ver detalle instructor:", instructor);
-                    }}
+                    onInstructorPress={() => navigation.navigate("Users", { section: "teachers" })}
                 />
             </View>
 
@@ -357,9 +356,7 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                         fichas={vm.adminData.fichas}
                         mode="top"
                         maxItems={5}
-                        onFichaPress={(ficha) => {
-                            console.log("Ver detalle ficha:", ficha);
-                        }}
+                        onFichaPress={() => navigation.navigate("Courses")}
                     />
                 </View>
 
@@ -385,9 +382,7 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                         fichas={vm.adminData.fichas}
                         mode="bottom"
                         maxItems={3}
-                        onFichaPress={(ficha) => {
-                            console.log("Ver detalle ficha:", ficha);
-                        }}
+                        onFichaPress={() => navigation.navigate("Courses")}
                     />
                 </View>
             </View>
@@ -482,9 +477,7 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                         students={vm.adminData.atRiskStudents}
                         maxItems={5}
                         navigation={navigation}
-                        onStudentPress={(student) => {
-                            console.log("Ver detalle estudiante:", student);
-                        }}
+                        onStudentPress={onStudentPress}
                     />
                 </View>
 
@@ -506,9 +499,7 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                         students={vm.adminData.perfectAttendanceStudents}
                         maxItems={5}
                         navigation={navigation}
-                        onStudentPress={(student) => {
-                            console.log("Ver detalle estudiante:", student);
-                        }}
+                        onStudentPress={onStudentPress}
                     />
                 </View>
             </View>
@@ -520,7 +511,7 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
 // TEACHER DASHBOARD — Vista de cursos del instructor
 // ──────────────────────────────────────────────────────────────
 
-function TeacherDashboard({ vm, permissions, isSmall, c, t, navigation }) {
+function TeacherDashboard({ vm, permissions, isSmall, c, t, navigation, onStudentPress }) {
     // Período académico reactivo a cambios en Settings
     const academicPeriod = useAcademicPeriod();
 
@@ -548,9 +539,7 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                     fichas={vm.teacherData.myFichas}
                     mode="top"
                     maxItems={10}
-                    onFichaPress={(ficha) => {
-                        console.log("Ver detalle ficha:", ficha);
-                    }}
+                    onFichaPress={() => navigation.navigate("Courses")}
                 />
             </View>
 
@@ -569,7 +558,6 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                         maxWeeks={5}
                         showTrend={true}
                         colorByPerformance={true}
-                        onWeekSelect={(weekData) => console.log("Semana seleccionada:", weekData)}
                         selectedWeek={null}
                         academicPeriod={academicPeriod}
                     />
@@ -606,9 +594,7 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                         students={vm.teacherData.myAtRiskStudents}
                         maxItems={10}
                         navigation={navigation}
-                        onStudentPress={(student) => {
-                            console.log("Ver detalle estudiante:", student);
-                        }}
+                        onStudentPress={onStudentPress}
                     />
                 </View>
             )}
@@ -778,6 +764,14 @@ export default function DashboardView({ navigation: navigationProp }) {
     const { t }       = useTranslation();
     const permissions = useRolePermissions();
 
+    // Pressing a student opens the same detail as Users, read-only: the dashboard
+    // edits, disables and deletes nobody.
+    const [selectedStudent, setSelectedStudent] = useState(null);
+    const openStudent = (row) => {
+        const id = row?.studentId ?? row?.id;
+        setSelectedStudent(vm.findStudent?.(id) ?? null);
+    };
+
     // Determinar título según rol
     const dashboardTitle = {
         admin: t("Panel de Administración"),
@@ -823,6 +817,7 @@ export default function DashboardView({ navigation: navigationProp }) {
                     c={c}
                     t={t}
                     navigation={navigation}
+                    onStudentPress={openStudent}
                 />
             )}
 
@@ -834,6 +829,7 @@ export default function DashboardView({ navigation: navigationProp }) {
                     c={c}
                     t={t}
                     navigation={navigation}
+                    onStudentPress={openStudent}
                 />
             )}
 
@@ -847,6 +843,17 @@ export default function DashboardView({ navigation: navigationProp }) {
                 />
             )}
             </ScrollView>
+
+            {selectedStudent && (
+            <StudentDetailModal
+                student={selectedStudent}
+                onClose={() => setSelectedStudent(null)}
+                canManage={false}
+                canRegisterFace={false}
+                canToggleStatus={false}
+                canDeleteUser={false}
+            />
+            )}
         </View>
     );
 }

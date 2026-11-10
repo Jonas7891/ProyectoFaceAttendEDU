@@ -202,13 +202,6 @@ export function useLoginViewModel(onSuccess) {
         const err = isError ? result : null;
         const redirectRoute = !isError && result?.redirectRoute ? result.redirectRoute : null;
 
-        console.log('[useAuthViewModel] Login result processed:', { 
-            isError, 
-            err, 
-            redirectRoute, 
-            fullResult: result 
-        });
-
         if (err) {
             // Resetear progreso
             setEmailProgress(0);
@@ -240,7 +233,6 @@ export function useLoginViewModel(onSuccess) {
             }, 300);
         } else {
             // Login exitoso - completar progreso y marcar como válido
-            console.log('[useAuthViewModel] Login successful, redirectRoute:', redirectRoute);
             setEmailProgress(100);
             setPasswordProgress(100);
             setEmailValid(true);
@@ -248,7 +240,6 @@ export function useLoginViewModel(onSuccess) {
             
             // Pequeño delay para mostrar el verde antes de redirigir
             setTimeout(() => {
-                console.log('[useAuthViewModel] Calling onSuccess with redirectRoute:', redirectRoute);
                 onSuccess(redirectRoute); // Pasar la ruta de redirección al callback
             }, 200);
         }

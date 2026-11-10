@@ -246,7 +246,6 @@ export function AuthProvider({ children }) {
     // ============================================================
     
     const handleSessionTimeout = useCallback(async () => {
-        console.log('[AuthContext] Session timeout triggered');
         
         // Marcar que fue por timeout y limpiar sesión
         await setTimeoutFlag(true); 
@@ -463,7 +462,6 @@ export function AuthProvider({ children }) {
         // ── Sesión limpia (trabajo propio: timeout + ruta deseada) ──
         // Obtener ruta deseada ANTES de limpiar estados
         const redirectRoute = await consumeIntendedRoute();
-        console.log('[AuthContext] Login: redirectRoute obtained:', redirectRoute);
 
         // LIMPIAR COMPLETAMENTE cualquier estado anterior antes de establecer nueva sesión
         if (sessionTimeout && sessionTimeout.clearTimer) {
@@ -484,7 +482,6 @@ export function AuthProvider({ children }) {
 
         // El timer se reiniciará automáticamente cuando enabled=true (user !== null)
 
-        console.log('[AuthContext] Login successful, returning:', { success: true, redirectRoute });
         return { success: true, redirectRoute };
     }, [consumeIntendedRoute, sessionTimeout]);
 

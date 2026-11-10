@@ -247,7 +247,6 @@ export function onInstitutionConfigChange(callback) {
 export function exportInstitutionConfig() {
     const config = getInstitutionConfig();
     const json = JSON.stringify(config, null, 2);
-    console.log("Institution Config:", json);
     return json;
 }
 
