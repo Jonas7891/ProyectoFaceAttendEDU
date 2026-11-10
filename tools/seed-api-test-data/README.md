@@ -46,7 +46,7 @@ Dates are **pinned constants** so reruns request the same data:
 | Academic period `2026-II` | `2026-09-07` → `2026-12-18` (active) |
 | Enrollments / actor start (`enrolledOn`, `startedOn`) | `2026-09-07` |
 | Class sessions | every block weekday between `2026-09-07` and `2026-10-05` |
-| Session status | older sessions `Closed` (with `closedBy`), `2026-10-05` stays `Open` |
+| Session status | older sessions `Closed` after their roll call, each one by its own instructor (only the class instructor may close it); `2026-10-05` stays `Open` |
 
 The API does not accept backdated timestamps for attendance `capturedAt`,
 justification `submittedAt` or alert `raisedAt` (the server stamps them), so
@@ -55,8 +55,9 @@ historical reporting comes from the session dates those records hang on.
 ## Why direct microservice URLs
 
 The script targets microservice ports (`8081`-`8089`) instead of the
-Kong gateway (`:8000`) because most gateway routes require a JWT. Apps keep
-using the gateway. Override any target in `.env` (`IDENTITY_URL`, ...); the
+Kong gateway (`:8000`), so it does not depend on the gateway rate limits.
+Every service still validates the opaque session id against ms-identity and
+applies the same role and school rules. Apps keep using the gateway. Override any target in `.env` (`IDENTITY_URL`, ...); the
 local `.env` is loaded automatically (older Node versions fall back to the
 built-in defaults).
 
@@ -87,7 +88,7 @@ alerts and quality instruments created below.
 | academic `:8083` | 2 schools (`ICT-01` Bogotá, `SMP-02` Medellín; legacy `ANDES-01`/`SAM-02`/`ROS-03`/`SEED-SCH` soft-disabled), 4 programs (2 énfasis per school), period `2026-II`, 24 cohorts (grados 6°-11° A/B, ≈67 students each), 48 courses, 1680 actors (`EST-*`/`DOC-*`), 1600 enrollments (~95% Active, ~3% Withdrawn, ~2% Completed) |
 | scheduling `:8084` | 24 environments (12 per school), 288 weekly blocks (12 per cohort), ~1210 sessions (4-5 dates per block) |
 | attendance `:8085` | roll call per session via bulk (~81k records, 80% Present / 8% Late / 12% Absent; Present/Late mix FACIAL/MANUAL/FINGERPRINT/IMPORT with a match score only on FACIAL, absences are MANUAL/IMPORT with no capture), 3 justification types (plus legacy ones disabled), ~300 justifications split ~45% Approved / ~20% Rejected / rest Pending |
-| biometric `:8086` | facial enroll for every student and teacher (person UUID) + legacy `seed-student-01`/`est-2026-00x`, verify, identify, history |
+| biometric `:8086` | facial enroll only for the students and teachers who have authorized biometric processing (Ley 1581; on a fresh install nobody has, so nothing is enrolled and the run says how many were skipped), then verify, identify and history on one enrolled person |
 | configuration `:8087` | 3 attendance configs per school, 3 security configs, up to 10 pending biometric update cases |
 | notification `:8088` | reuses the Liquibase catalog types `ATTENDANCE_ABSENTEEISM`/`ATTENDANCE_TARDINESS`/`ATTENDANCE_LOW` (it no longer creates duplicates), ~467 alerts (rules: seq % 7 / % 11 / % 17), 1 in 3 resolved |
 | quality `:8089` | 2 projects, characteristics/process/istqb instruments |
@@ -114,7 +115,9 @@ Scoped to a school — the web app reads the school from the account's
 | Estudiante | Camilo Torres | Valentina García Ortiz | `est.ict` | `Estudiante2026*` |
 | Estudiante | San Martín | Valentina Rendón Ortiz | `est.smp` | `Estudiante2026*` |
 
-Not scoped — these have no `academic_actor`, so they see every school:
+Demo logins. The administrator has no `academic_actor` and sees every school; the
+instructor teaches in the first cohort of `ICT-01` (`DOC-ICT-DEMO`) and the student
+is enrolled there (`EST-2026-001`), so both see their own classes and records:
 
 | Rol | Persona | Username | Password |
 |---|---|---|---|
