@@ -290,10 +290,7 @@ export default function AddValidJustificationScreen() {
                 // Confirmado: ejecutar guardado
                 handleSave();
             },
-            () => {
-                // Cancelado
-                console.log("Guardado cancelado por el usuario");
-            }
+            () => {} // Cancelado: no se guarda nada
         );
     };
 

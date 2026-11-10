@@ -19,10 +19,7 @@ export function useCodeVerification({ email, onSuccess }) {
     const canSubmit = isComplete && !isLoading && !isLockedOut;
 
     const verifyCode = useCallback(async () => {
-        if (!canSubmit) {
-            console.log('[verifyCode] Bloqueado → canSubmit:', canSubmit, '| code:', JSON.stringify(code));
-            return;
-        }
+        if (!canSubmit) return;
 
         setError(null);
         setIsLoading(true);
@@ -32,8 +29,6 @@ export function useCodeVerification({ email, onSuccess }) {
             await VerificationService.verifyRecoveryCode(email, trimmed);
             onSuccess(); // ← abre el modal de nueva contraseña
         } catch (err) {
-            console.log('[verifyCode] Error capturado:', err?.type ?? err?.message);
-
             const newAttempts = attempts + 1;
             setAttempts(newAttempts);
 

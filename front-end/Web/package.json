@@ -85,7 +85,16 @@
     "testPathIgnorePatterns": [
       "/node_modules/",
       "/dist/"
-    ]
+    ],
+    "coverageReporters": [
+      "text-summary",
+      "json-summary"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "lines": 55
+      }
+    }
   },
   "overrides": {
     "brace-expansion@^1": "^1.1.21",

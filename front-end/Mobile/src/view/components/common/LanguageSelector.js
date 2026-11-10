@@ -32,7 +32,6 @@ const LanguageSelector = ({ isVisible, onClose }) => {
 
       if (role) {
         await saveLanguageForRole(role, languageCode);
-        console.log(`✅ Idioma guardado desde LanguageSelector: ${role} → ${languageCode}`);
       } else {
         await AsyncStorage.setItem('appLanguage', languageCode);
       }

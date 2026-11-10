@@ -30,6 +30,6 @@ AsyncStorage.getItem('appLanguage').then(savedLanguage => {
   if (savedLanguage && savedLanguage !== 'es') {
     i18n.changeLanguage(savedLanguage);
   }
-}).catch(error => console.log('Error:', error));
+}).catch(error => console.warn('i18n: could not restore the saved language', error));
 
 export default i18n;

@@ -9,7 +9,6 @@ export const saveLanguageForRole = async (role, language) => {
     try {
         await AsyncStorage.setItem(LANGUAGE_KEY(role), language);
         await AsyncStorage.setItem('appLanguage', language);
-        console.log(`✅ Idioma guardado: ${role} → ${language}`);
     } catch (error) {
         console.error('Error guardando idioma:', error);
     }
@@ -21,8 +20,6 @@ export const restoreLanguageForRole = async (role, fallback = 'es') => {
     try {
         const savedLanguage = await AsyncStorage.getItem(LANGUAGE_KEY(role));
         const languageToUse = savedLanguage || fallback;
-
-        console.log(`🔄 Restaurando idioma: ${languageToUse} (guardado: ${savedLanguage})`);
 
         if (i18n.language !== languageToUse) {
             await i18n.changeLanguage(languageToUse);

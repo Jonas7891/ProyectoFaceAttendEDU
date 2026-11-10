@@ -61,7 +61,16 @@
     "testPathIgnorePatterns": [
       "/node_modules/",
       "/dist/"
-    ]
+    ],
+    "coverageReporters": [
+      "text-summary",
+      "json-summary"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "lines": 55
+      }
+    }
   },
   "overrides": {
     "follow-redirects": "^1.16.1",
