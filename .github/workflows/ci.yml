@@ -214,9 +214,13 @@ jobs:
       - name: npm ci
         working-directory: front-end/Mobile
         run: npm ci --ignore-scripts
-      - name: npm test
+      # coverageThreshold in package.json fails the job under the app's floor.
+      - name: npm test (with coverage gate)
         working-directory: front-end/Mobile
-        run: npm test
+        run: npm test -- --coverage
+      - name: coverage summary
+        if: always()
+        run: python3 .github/scripts/coverage-summary.py jest front-end/Mobile/coverage/coverage-summary.json mobile
       - name: npm audit (informational)
         working-directory: front-end/Mobile
         run: npm audit --audit-level=high
@@ -235,9 +239,13 @@ jobs:
       - name: npm ci
         working-directory: front-end/Web
         run: npm ci --ignore-scripts
-      - name: npm test
+      # coverageThreshold in package.json fails the job under the app's floor.
+      - name: npm test (with coverage gate)
         working-directory: front-end/Web
-        run: npm test
+        run: npm test -- --coverage
+      - name: coverage summary
+        if: always()
+        run: python3 .github/scripts/coverage-summary.py jest front-end/Web/coverage/coverage-summary.json web
       - name: expo export --platform web
         working-directory: front-end/Web
         run: ./node_modules/.bin/expo export --platform web
