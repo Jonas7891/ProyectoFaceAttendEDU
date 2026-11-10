@@ -4018,7 +4018,7 @@ exports[`HistoricosSection render and exports selected rows to excel (simple, da
           "data": [
             {
               "Ambiente": "A-101",
-              "Asistencia (%)": 90,
+              "Asistencia (%)": 66.7,
               "Código": "1001",
               "Estado": "Ausente",
               "Fecha": "05/10/2026",
@@ -4030,7 +4030,7 @@ exports[`HistoricosSection render and exports selected rows to excel (simple, da
             },
             {
               "Ambiente": "B-202",
-              "Asistencia (%)": 50,
+              "Asistencia (%)": 0,
               "Código": "1002",
               "Estado": "Ausente",
               "Fecha": "03/10/2026",
@@ -4039,18 +4039,6 @@ exports[`HistoricosSection render and exports selected rows to excel (simple, da
               "Nombre": "Luis Gómez",
               "Registro Real": "N/A",
               "Total de Registros": 1,
-            },
-            {
-              "Ambiente": "Sin ambiente",
-              "Asistencia (%)": 0,
-              "Código": "1003",
-              "Estado": "Ausente",
-              "Fecha": "Sin registro",
-              "Ficha": "Sin curso",
-              "Horario Programado": "N/A",
-              "Nombre": "Eva Ruiz",
-              "Registro Real": "N/A",
-              "Total de Registros": 0,
             },
           ],
           "name": "Históricos de Asistencia",

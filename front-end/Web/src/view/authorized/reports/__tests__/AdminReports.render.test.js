@@ -8,6 +8,12 @@ import { AdminReports } from "../AdminReports";
 // Icon fonts cannot load under jest; the icon keeps its name/size/color in the tree.
 jest.mock("@expo/vector-icons", () => ({ Feather: (props) => `Feather:${props.name}:${props.size}:${props.color}` }));
 jest.mock("../sections", () => ({ HistoricosSection: () => null }));
+// The detail modal pulls the biometric and user services; the test only needs its props.
+const mockDetailProps = { current: null };
+jest.mock("../../../components/users/StudentDetailModal", () => (props) => {
+    mockDetailProps.current = props;
+    return null;
+});
 
 const mockStudents = [];
 const mockCourses = [];
@@ -155,6 +161,24 @@ describe("AdminReports at-risk view render", () => {
         expect(mockReloadStudents).toHaveBeenCalledTimes(1);
         expect(mockReloadCourses).toHaveBeenCalledTimes(1);
         expect(allText()).toContain("Actualizado hace un momento");
+        act(() => root.unmount());
+    });
+
+    // Ver detalle solo escribía en consola; ahora abre el detalle en solo lectura.
+    test("pressing a row opens the read-only student detail", () => {
+        mockAtRisk.push(...ROWS);
+        mockStudents.push(...ROWS.map((r) => ({ id: r.studentId, name: r.name })));
+        const root = render(<AdminReports />);
+        expect(mockDetailProps.current.student).toBeNull();
+
+        // The touchable inside the row, which calls onPress(student.id) on its own.
+        const row = root.root.findAll((n) => n.props.onPress && n.props.student?.id === ROWS[0].studentId).at(-1);
+        act(() => row.props.onPress());
+
+        expect(mockDetailProps.current.student).toEqual({ id: ROWS[0].studentId, name: ROWS[0].name });
+        expect(mockDetailProps.current).toMatchObject({ canManage: false, canToggleStatus: false, canDeleteUser: false, canRegisterFace: false });
+        act(() => mockDetailProps.current.onClose());
+        expect(mockDetailProps.current.student).toBeNull();
         act(() => root.unmount());
     });
 

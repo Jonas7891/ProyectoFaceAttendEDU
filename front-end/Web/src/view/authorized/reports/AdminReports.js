@@ -22,6 +22,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { getInstitutionConfig } from "../../../core/config/institutionConfig";
 import { useAppData } from "../../../context/AppDataContext";
 import { HistoricosSection } from "./sections";
+import StudentDetailModal from "../../components/users/StudentDetailModal";
 import { getRelativeTime } from "../../../core/utils/dates";
 
 // ── Fila de estudiante en riesgo (misma fila que el dashboard) ────
@@ -174,6 +175,7 @@ export function AdminReports({ section, courseFilter }) {
     // Estado y animación para el botón de recargar
     const [isReloading, setIsReloading] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+    const [selectedStudent, setSelectedStudent] = useState(null);
     // Resultado de la última recarga: da un efecto visible al botón (AUD-06).
     const [reloadStatus, setReloadStatus] = useState(null); // null | "ok" | "error"
     const [rotateAnim] = useState(() => new Animated.Value(0));
@@ -239,11 +241,11 @@ export function AdminReports({ section, courseFilter }) {
 
     // ── Handlers (ANTES de cualquier return) ──────────────
     
-    // Handler para ver detalles de estudiante
+    // Abre el mismo detalle de Usuarios, en solo lectura: desde Reportes no se
+    // edita, desactiva ni elimina a nadie.
     const handleViewStudent = React.useCallback((studentId) => {
-        console.log("Ver detalles:", studentId);
-        // TODO: Implementar navegación a detalle de estudiante
-    }, []);
+        setSelectedStudent((appData.students || []).find((s) => s.id === studentId) ?? null);
+    }, [appData.students]);
 
     // Handler para recargar la lista
     const handleReload = React.useCallback(async () => {
@@ -507,6 +509,15 @@ export function AdminReports({ section, courseFilter }) {
                     )}
                 </Card>
             </ScrollView>
+
+            <StudentDetailModal
+                student={selectedStudent}
+                onClose={() => setSelectedStudent(null)}
+                canManage={false}
+                canRegisterFace={false}
+                canToggleStatus={false}
+                canDeleteUser={false}
+            />
         </>
     );
 }
