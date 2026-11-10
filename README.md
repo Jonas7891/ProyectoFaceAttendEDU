@@ -46,8 +46,20 @@ docker compose down                   # detener (conserva los datos)
    BOOTSTRAP_ADMIN_USERNAME=admin.sede BOOTSTRAP_ADMIN_EMAIL=admin@sede.edu.co    BOOTSTRAP_ADMIN_PASSWORD='<12+ caracteres>' ./database/scripts/bootstrap-admin.sh
    ```
 
-   Debe cambiar la contraseña en su primer ingreso. Detalle en [database/SEEDS.md](database/SEEDS.md).
-3. Cada microservicio entra a PostgreSQL con su propio usuario (`<servicio>_app`), que solo
+   Debe cambiar la contraseña en su primer ingreso (entre 12 y 20 caracteres). Detalle en
+   [database/SEEDS.md](database/SEEDS.md).
+3. Cree las dos cuentas de servicio y recree los servicios que las leen. **Sin este paso,
+   cerrar una clase no marca a nadie como ausente** y el alta pública de sedes responde 503:
+
+   ```bash
+   SERVICE_ACCOUNT_EMAIL_DOMAIN=sede.edu.co ./database/scripts/service-accounts.sh
+   docker compose up -d --force-recreate ms-identity ms-notification
+   ```
+
+   El script crea `svc.notification` y `svc.onboarding` con contraseñas aleatorias que no
+   imprime, y escribe en `.env` `NOTIFICATION_SERVICE_USERNAME`,
+   `NOTIFICATION_SERVICE_PASSWORD` y `ONBOARDING_SERVICE_USER_ID`. Se puede repetir.
+4. Cada microservicio entra a PostgreSQL con su propio usuario (`<servicio>_app`), que solo
    puede leer y escribir su esquema. En local los crea el contenedor `db-service-logins`
    después de las migraciones; para comprobarlo:
    `./database/scripts/verify-schema-isolation.sh`.
@@ -59,16 +71,8 @@ sede y su administrador sin una sesión previa. Para hacerlo, ms-identity abre u
 interna corta como una **cuenta de servicio** con rol Super Administrador, nunca la de
 una persona. Mientras `ONBOARDING_SERVICE_USER_ID` esté vacío el endpoint responde 503.
 
-Para activarlo:
-
-```bash
-# 1. Cuenta de servicio dedicada, con una contraseña aleatoria que nadie usa
-BOOTSTRAP_ADMIN_USERNAME=svc.onboarding BOOTSTRAP_ADMIN_EMAIL=onboarding@sede.edu.co BOOTSTRAP_ADMIN_PASSWORD="$(openssl rand -hex 24)" ./database/scripts/bootstrap-admin.sh
-# 2. Su user_id
-docker exec faceattend-postgres psql -U postgres -d faceattend_db -tAc   "select user_id from identity.app_user where username = 'svc.onboarding'"
-# 3. ONBOARDING_SERVICE_USER_ID=<ese user_id> en .env (en producción, en ENV_PROD_FILE)
-docker compose up -d ms-identity
-```
+En local la crea `database/scripts/service-accounts.sh` (paso 3 del primer arranque). En
+producción el `user_id` va en `ENV_PROD_FILE`; ver [DESPLIEGUE.md](DESPLIEGUE.md) §7.
 
 La sede y su administrador quedan **pendientes de activación** hasta que un Super
 Administrador los active. El endpoint tiene un límite estricto por IP en Kong.
