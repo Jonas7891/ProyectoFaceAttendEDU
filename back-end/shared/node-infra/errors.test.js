@@ -50,8 +50,8 @@ test('the driver detail and message never reach the client-facing details', () =
     message: 'duplicate key value violates unique constraint',
   };
   const conflict = translateDbError(driver, 'identity.person');
-  assert.equal(conflict.message, 'identity.person already exists (uq_person_email)');
-  assert.deepEqual(conflict.details, { entity: 'identity.person', constraint: 'uq_person_email' });
+  assert.equal(conflict.message, 'person already exists (uq_person_email)');
+  assert.deepEqual(conflict.details, { entity: 'person', constraint: 'uq_person_email' });
   assert.equal(conflict.cause, driver); // kept for the server log only
   assert.doesNotMatch(JSON.stringify(conflict.details), /victim@example\.com/);
 
@@ -59,26 +59,31 @@ test('the driver detail and message never reach the client-facing details', () =
   assert.equal(unreachable.details, undefined);
   assert.doesNotMatch(unreachable.message, /10\.0\.0\.5/);
 
-  const badValue = translateDbError({ code: '22P02', message: 'invalid input syntax for type uuid: "x"' }, 'academic.actor');
-  assert.deepEqual(badValue.details, { code: '22P02' });
+  // An out-of-range id once answered SQLSTATE 22003 and "academic.academic_actor".
+  const badValue = translateDbError({ code: '22003', message: 'value "99999999999999999999" is out of range' }, 'academic.academic_actor');
+  assert.equal(badValue.statusCode, 400);
+  assert.equal(badValue.message, 'Invalid value supplied for academic actor');
+  assert.equal(badValue.details, undefined);
+  assert.equal(badValue.cause.code, '22003'); // still in the server log
 });
 
 test('a missing reference names the constraint, defaulting when the driver omits it', () => {
   assert.deepEqual(translateDbError({ code: '23503' }, 'academic.cohort').details, {
-    entity: 'academic.cohort',
+    entity: 'cohort',
     constraint: 'unknown constraint',
   });
 });
 
 test('missing or too long values name the column', () => {
-  assert.match(translateDbError({ code: '23502', column: 'name' }, 'academic.program').message, /'name' on academic.program/);
+  assert.match(translateDbError({ code: '23502', column: 'name' }, 'academic.program').message, /'name' on program$/);
   assert.match(translateDbError({ code: '22001' }, 'academic.program').message, /too long for column 'unknown constraint'/);
 });
 
 test('schema drift and unknown errors are 500 without the driver message', () => {
   const drift = translateDbError({ code: '42P01', message: 'relation "x" does not exist' }, 'academic.course');
   assert.equal(drift.statusCode, 500);
-  assert.equal(drift.message, 'Database schema mismatch for academic.course');
+  assert.equal(drift.message, 'Database schema mismatch for course');
+  assert.equal(drift.details, undefined);
   const unknown = translateDbError(new Error('boom'));
   assert.equal(unknown.statusCode, 500);
   assert.equal(unknown.message, 'Unexpected database error');
@@ -89,7 +94,8 @@ test('repository errors pass through and keep their identity', () => {
   const notFound = new NotFoundError('academic.school', 7);
   assert.equal(translateDbError(notFound), notFound);
   assert.equal(notFound.statusCode, 404);
-  assert.deepEqual(notFound.details, { entity: 'academic.school', id: '7' });
+  assert.deepEqual(notFound.details, { entity: 'school', id: '7' });
+  assert.equal(notFound.message, "school '7' was not found");
   assert.ok(notFound instanceof RepositoryError && notFound instanceof Error);
   assert.equal(new RetryableError('retry').statusCode, 503);
 });

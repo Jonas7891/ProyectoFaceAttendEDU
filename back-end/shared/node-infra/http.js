@@ -51,7 +51,8 @@ function registerServiceBasics(app, { service, healthCheck }) {
   app.setErrorHandler((error, req, reply) => {
     const status = error.statusCode && error.statusCode >= 400 ? error.statusCode : 500;
     req.log.error({ err: error, path: req.url }, 'unhandled error');
-    const details = error instanceof RepositoryError ? error.details : undefined;
+    // A server-side failure answers no details either: only client errors explain themselves.
+    const details = error instanceof RepositoryError && status < 500 ? error.details : undefined;
     reply.code(status).send({
       error: errorNameFor(status),
       // Never echo a raw driver message for a server-side failure.

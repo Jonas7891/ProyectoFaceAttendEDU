@@ -12,6 +12,16 @@
  * exist is a bad request.
  */
 
+/**
+ * The name a client sees for a table: no schema and no underscores
+ * ("academic.academic_actor" -> "academic actor"). The qualified name stays in the
+ * server log through `cause`; the response does not reveal the database layout.
+ */
+function publicName(entity) {
+  const name = String(entity ?? 'record');
+  return name.slice(name.lastIndexOf('.') + 1).replace(/_/g, ' ');
+}
+
 class RepositoryError extends Error {
   constructor(statusCode, errorCode, message, details, cause) {
     super(message);
@@ -26,7 +36,7 @@ class RepositoryError extends Error {
 /** Requested row is absent (or soft-deleted). */
 class NotFoundError extends RepositoryError {
   constructor(entity, id) {
-    super(404, 'NotFound', `${entity} '${String(id)}' was not found`, { entity, id: String(id) });
+    super(404, 'NotFound', `${publicName(entity)} '${String(id)}' was not found`, { entity: publicName(entity), id: String(id) });
     this.name = 'NotFoundError';
   }
 }
@@ -34,7 +44,7 @@ class NotFoundError extends RepositoryError {
 /** A UNIQUE constraint already holds the value the client sent. */
 class ConflictError extends RepositoryError {
   constructor(entity, constraint, cause) {
-    super(409, 'Conflict', `${entity} already exists (${constraint})`, { entity, constraint }, cause);
+    super(409, 'Conflict', `${publicName(entity)} already exists (${constraint})`, { entity: publicName(entity), constraint }, cause);
     this.name = 'ConflictError';
   }
 }
@@ -42,7 +52,7 @@ class ConflictError extends RepositoryError {
 /** A referenced parent row does not exist. 4xx by design, never a 500. */
 class InvalidReferenceError extends RepositoryError {
   constructor(entity, constraint, cause) {
-    super(400, 'BadRequest', `Referenced record for ${entity} does not exist (${constraint})`, { entity, constraint }, cause);
+    super(400, 'BadRequest', `Referenced record for ${publicName(entity)} does not exist (${constraint})`, { entity: publicName(entity), constraint }, cause);
     this.name = 'InvalidReferenceError';
   }
 }
@@ -102,6 +112,7 @@ function translateDbError(err, entity = 'record') {
   if (err instanceof RepositoryError) return err;
 
   const pgErr = err ?? {};
+  const label = publicName(entity);
   const code = pgErr.code ?? '';
   const constraint = pgErr.constraint ?? 'unknown constraint';
 
@@ -115,17 +126,17 @@ function translateDbError(err, entity = 'record') {
 
     case SQLSTATE.NOT_NULL_VIOLATION:
       return new InvalidValueError(
-        `Missing required value for '${pgErr.column ?? constraint}' on ${entity}`,
+        `Missing required value for '${pgErr.column ?? constraint}' on ${label}`,
         { constraint, column: pgErr.column },
         err,
       );
 
     case SQLSTATE.CHECK_VIOLATION:
-      return new InvalidValueError(`Value rejected by check constraint '${constraint}' on ${entity}`, { constraint }, err);
+      return new InvalidValueError(`Value rejected by check constraint '${constraint}' on ${label}`, { constraint }, err);
 
     case SQLSTATE.STRING_DATA_RIGHT_TRUNCATION:
       return new InvalidValueError(
-        `Value too long for column '${pgErr.column ?? constraint}' on ${entity}`,
+        `Value too long for column '${pgErr.column ?? constraint}' on ${label}`,
         { column: pgErr.column },
         err,
       );
@@ -136,7 +147,8 @@ function translateDbError(err, entity = 'record') {
     case SQLSTATE.INVALID_TEXT_REPRESENTATION:
     case SQLSTATE.INVALID_PARAMETER_VALUE:
     case SQLSTATE.INVALID_REGULAR_EXPRESSION:
-      return new InvalidValueError(`Invalid value supplied for ${entity}`, { code }, err);
+      // The SQLSTATE stays in the log (cause); the client only learns the value was invalid.
+      return new InvalidValueError(`Invalid value supplied for ${label}`, undefined, err);
 
     case SQLSTATE.DEADLOCK_DETECTED:
     case SQLSTATE.SERIALIZATION_FAILURE:
@@ -150,10 +162,10 @@ function translateDbError(err, entity = 'record') {
     case SQLSTATE.UNDEFINED_COLUMN:
     case SQLSTATE.UNDEFINED_TABLE:
       // Schema drift between the service and Liquibase: an operator problem.
-      return new RepositoryError(500, 'InternalError', `Database schema mismatch for ${entity}`, { code }, err);
+      return new RepositoryError(500, 'InternalError', `Database schema mismatch for ${label}`, undefined, err);
 
     default:
-      return new RepositoryError(500, 'InternalError', 'Unexpected database error', { code }, err);
+      return new RepositoryError(500, 'InternalError', 'Unexpected database error', undefined, err);
   }
 }
 
@@ -166,4 +178,5 @@ module.exports = {
   DatabaseUnavailableError,
   RetryableError,
   translateDbError,
+  publicName,
 };
