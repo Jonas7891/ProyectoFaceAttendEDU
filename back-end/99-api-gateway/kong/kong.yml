@@ -187,6 +187,21 @@ services:
         paths: [/api/v1/alert-types, /api/v1/alerts, /api/v1/device-tokens]
         strip_path: false
     # Sin plugins propios: el enforcement lo hace el MS.
+  # Gateway liveness for monitors and the mobile app (DESPLIEGUE.md, RUNBOOK_OPERACION.md):
+  # Kong answers it itself, so a 200 means the gateway is up, whatever the services do.
+  - name: gateway-health
+    url: http://127.0.0.1:8000
+    routes:
+      - name: gateway-health-route
+        paths: ["~/api/v1/health$"]
+        methods: [GET, HEAD]
+        strip_path: false
+    plugins:
+      - name: request-termination
+        config:
+          status_code: 200
+          content_type: application/json
+          body: '{"status":"UP","component":"gateway"}'
   # /health/quality (informe ISO 9001 de cada servicio) ya no se publica en Internet:
   # solo se consulta dentro de la red Docker o por el puerto local de cada servicio.
   # ── Quality Service (ISO 25010/29110) ──────────────────────

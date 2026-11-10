@@ -1155,13 +1155,8 @@ async function seedConfiguration() {
     });
     tick();
   });
-  for (const [configurationName, configurationValue] of [
-    ["jwt.ttl.seconds", "3600"],
-    ["session.timeout.minutes", "480"],
-    ["login.max.attempts", "5"],
-  ]) {
-    await post("configuration", "/api/v1/configurations/security", { configurationName, configurationValue });
-  }
+  // Security settings are catalog data (session_timeout_minutes, max_login_attempts,
+  // lockout_duration_minutes) created by the migrations; the seed adds none.
 
   const pending = asArray(await get("configuration", "/api/v1/biometric-update-cases?status=Pending"));
   for (const c of pending) {
