@@ -17,6 +17,14 @@ import type { AlertDeps } from '../../application/attendanceAlerts/deps';
 
 export const CLASS_SESSION_CONSUMER_GROUP = 'notification-service-class-session';
 
+/**
+ * fromBeginning only applies while the group has no committed offset. The topic is created by
+ * the first class that closes, before this group can subscribe to it, so starting from the end
+ * dropped that first event and its absences were never recorded. Reading from the start is safe:
+ * the handler claims `session:<id>` and skips a session that was already handled.
+ */
+export const CLASS_SESSION_SUBSCRIPTION = { topic: CLASS_SESSION_CLOSED_TOPIC, fromBeginning: true } as const;
+
 const MAX_BACKOFF_MS = 30_000;
 
 export function backoffMs(attempt: number): number {
@@ -78,7 +86,7 @@ async function startClassSessionConsumer(brokers: string[], deps: AlertDeps): Pr
 
   try {
     await consumer.connect();
-    await consumer.subscribe({ topic: CLASS_SESSION_CLOSED_TOPIC, fromBeginning: false });
+    await consumer.subscribe(CLASS_SESSION_SUBSCRIPTION);
   } catch (err) {
     await consumer.disconnect().catch(() => undefined);
     throw err;
