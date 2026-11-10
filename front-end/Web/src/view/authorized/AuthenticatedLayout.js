@@ -397,7 +397,6 @@ export default function AuthenticatedLayout({ children }) {
     React.useEffect(() => {
         if (!isRouteTrackingActive) return;
         
-        //console.log('[AuthenticatedLayout] Starting navigation listener for route tracking');
         
         const unsubscribe = navigation.addListener('focus', () => {
             // Obtener el estado del navigation stack
@@ -407,14 +406,12 @@ export default function AuthenticatedLayout({ children }) {
                 const routeName = activeRoute?.name || "Dashboard";
                 const routeParams = activeRoute?.params || {};
                 
-                console.log('[AuthenticatedLayout] Current route:', routeName, routeParams);
                 
                 // Guardar TODAS las rutas autenticadas para redirección futura
                 const routeInfo = {
                     name: routeName,
                     params: routeParams
                 };
-                console.log('[AuthenticatedLayout] Saving route for future redirect:', routeInfo);
                 saveIntendedRoute(routeInfo);
             }
         });

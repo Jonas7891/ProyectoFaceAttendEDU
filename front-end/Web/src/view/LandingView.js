@@ -152,10 +152,12 @@ function HeroContent({ fadeLeft, slideLeft, fadeRight, slideRight, onNavigate })
     const c = theme.colors;
     const badgePos = isSmall ? BadgePositionsMobile : BadgePositions;
 
+    // Facts the product can show, not measurements nobody has made: there is no
+    // FAR/FRR study behind an accuracy or speed figure yet.
     const STATS = [
-        { value: "99%", label: t("Precisión") },
-        { value: "<1s", label: t("Detección") },
-        { value: "∞", label: t("estudiantes") },
+        { value: "2", label: t("métodos biométricos") },
+        { value: "4", label: t("roles") },
+        { value: "PDF", label: t("y Excel") },
     ];
 
     const BADGES = [
@@ -321,122 +323,6 @@ function FeaturesContent() {
     );
 }
 
-// ── Testimonials Section ─────────────────────────────────────
-
-function TestimonialsContent() {
-    const { sp, fs } = useResponsive();
-    const { theme } = useTheme();
-    const { t } = useTranslation();
-    const c = theme.colors;
-    const T = getTypography(fs);
-
-    const TESTIMONIALS = [
-        {
-            quote: t("FaceAttend transformó completamente nuestra gestión de asistencia. Ahorramos horas de trabajo manual cada semana."),
-            author: t("María González"),
-            role: t("Coordinadora Académica"),
-            institution: t("SENA - Centro Industrial"),
-            rating: 5,
-        },
-        {
-            quote: t("La precisión del reconocimiento facial es impresionante. Nunca más problemas con falsificación de asistencia."),
-            author: t("Carlos Ramírez"),
-            role: t("Instructor SENA"),
-            institution: t("Centro de Manufactura"),
-            rating: 5,
-        },
-        {
-            quote: t("Los reportes detallados nos ayudan a identificar estudiantes en riesgo temprano. Excelente herramienta."),
-            author: t("Ana Martínez"),
-            role: t("Directora de Formación"),
-            institution: t("SENA Regional"),
-            rating: 5,
-        },
-    ];
-
-    return (
-        <SectionContainer>
-            <SectionHeading
-                eyebrow={t("TESTIMONIOS")}
-                title={t("Instituciones que confían en nosotros")}
-                badgeColor={c.brand.primaryLight}
-                eyebrowColor={c.brand.primary}
-                titleColor={c.text.primary}
-                titleMaxWidth={700}
-            />
-            {/* Testimonial Cards */}
-            <CardRow>
-                {TESTIMONIALS.map((testimonial, index) => (
-                    <Card
-                        key={index}
-                        style={{
-                            flex: 1,
-                            padding: sp(28),
-                            backgroundColor: c.background.surface,
-                        }}
-                    >
-                        {/* Rating Stars */}
-                        <View
-                            style={{
-                                flexDirection: "row",
-                                gap: sp(4),
-                                marginBottom: sp(16),
-                            }}
-                        >
-                            {[...Array(testimonial.rating)].map((_, i) => (
-                                <Feather
-                                    key={i}
-                                    name="star"
-                                    size={16}
-                                    color={c.status.warning}
-                                    style={{ opacity: 1 }}
-                                />
-                            ))}
-                        </View>
-
-                        {/* Quote */}
-                        <Text
-                            style={[
-                                T.bodyLG,
-                                {
-                                    color: c.text.primary,
-                                    marginBottom: sp(20),
-                                    lineHeight: 26,
-                                },
-                            ]}
-                        >
-                            "{testimonial.quote}"
-                        </Text>
-
-                        {/* Author */}
-                        <View>
-                            <Text
-                                style={[
-                                    T.bodyMD,
-                                    { fontWeight: "600", color: c.text.primary },
-                                ]}
-                            >
-                                {testimonial.author}
-                            </Text>
-                            <Text style={[T.bodySM, { color: c.text.secondary }]}>
-                                {testimonial.role}
-                            </Text>
-                            <Text
-                                style={[
-                                    T.bodySM,
-                                    { color: c.text.tertiary, marginTop: sp(4) },
-                                ]}
-                            >
-                                {testimonial.institution}
-                            </Text>
-                        </View>
-                    </Card>
-                ))}
-            </CardRow>
-        </SectionContainer>
-    );
-}
-
 // ── CTA Section ──────────────────────────────────────────────
 
 function CTAContent({ onNavigate }) {
@@ -520,12 +406,9 @@ function Footer({ onNavigate }) {
     const FOOTER_LINKS = {
         product: [
             { label: t("Características"), href: "#features" },
-            { label: t("Precios"), href: "#pricing" },
-            { label: t("Testimonios"), href: "#testimonials" },
         ],
         company: [
             { label: t("Acerca de"), href: "#about" },
-            { label: t("Blog"), href: "#blog" },
             { label: t("Contacto"), href: "#contact" },
         ],
         legal: [
@@ -651,7 +534,6 @@ export default function LandingView({ onNavigate }) {
 
     // Obtener configuraciones de fondo personalizadas
     const heroBg = getSectionBackground("hero");
-    const testimonialsBg = getSectionBackground("testimonials");
 
     return (
         <SafeAreaView
@@ -683,12 +565,7 @@ export default function LandingView({ onNavigate }) {
                     <FeaturesContent />
                 </View>
 
-                {/* Sección 3: Testimonials */}
-                <BackgroundSection background={testimonialsBg} minHeight={SECTION_HEIGHT}>
-                    <TestimonialsContent />
-                </BackgroundSection>
-
-                {/* Sección 4: CTA + Footer */}
+                {/* Sección 3: CTA + Footer */}
                 <View
                     style={{
                         minHeight: SECTION_HEIGHT,

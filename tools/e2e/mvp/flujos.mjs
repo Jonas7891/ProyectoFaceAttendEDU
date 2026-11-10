@@ -247,7 +247,7 @@ export async function flujoAsistencia(ctx, step) {
   const absent = await waitFor("el aprendiz sin registro queda Absent al cerrar", async () => {
     const r = recordFor(await recordsOf(ctx, ctx.adminToken), ctx.ausente);
     return r?.attendanceStatus === "Absent" ? r : null;
-  });
+  }, { timeoutMs: 180_000 }); // a restarted consumer can wait on the Kafka group coordinator
   ctx.absentRecordId = pick(absent, "attendanceRecordId", "id");
   const present = recordFor(await recordsOf(ctx, ctx.adminToken), ctx.presente);
   check("el presente sigue Present", present?.attendanceStatus === "Present", present?.attendanceStatus);

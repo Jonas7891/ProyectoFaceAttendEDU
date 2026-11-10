@@ -16,7 +16,7 @@ import { useTheme } from "../hooks/useTheme";
  * 
  * @example
  * <HeroStats stats={[
- *   { value: "99%", label: "Precisión", color: theme.colors.status.success },
+ *   { value: "2", label: "métodos biométricos", color: theme.colors.status.success },
  *   { value: "<1s", label: "Velocidad" },
  *   { value: "1000+", label: "Usuarios" }
  * ]} />

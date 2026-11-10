@@ -1,4 +1,4 @@
-import { backoffMs, processClassSessionMessage } from '../classSession.consumer';
+import { backoffMs, CLASS_SESSION_SUBSCRIPTION, processClassSessionMessage } from '../classSession.consumer';
 import { msUntilNextRun, riskHourFromEnv } from '../../scheduler/riskScheduler';
 import type { AlertDeps } from '../../../application/attendanceAlerts/deps';
 
@@ -49,6 +49,12 @@ describe('processClassSessionMessage', () => {
   it('caps the backoff', () => {
     expect(backoffMs(0)).toBe(1000);
     expect(backoffMs(9)).toBe(30_000);
+  });
+});
+
+describe('class-session subscription', () => {
+  it('reads a new group from the start, so the event that created the topic is not lost', () => {
+    expect(CLASS_SESSION_SUBSCRIPTION).toEqual({ topic: 'scheduling.class-session.closed', fromBeginning: true });
   });
 });
 

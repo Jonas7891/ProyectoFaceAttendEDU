@@ -5734,7 +5734,6 @@ exports[`DashboardView render teacher panel 1`] = `
                   ]
                 }
                 maxWeeks={5}
-                onWeekSelect={[Function]}
                 selectedWeek={null}
                 showTrend={true}
               />
@@ -6631,7 +6630,6 @@ exports[`DashboardView render teacher panel on the current week 1`] = `
                   ]
                 }
                 maxWeeks={5}
-                onWeekSelect={[Function]}
                 selectedWeek={null}
                 showTrend={true}
               />

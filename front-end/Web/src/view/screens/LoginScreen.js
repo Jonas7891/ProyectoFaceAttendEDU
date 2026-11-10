@@ -27,13 +27,10 @@ export default function LoginScreen() {
 
     // ── Navegación post-login exitoso ────────────────────────
     function onLoginSuccess(redirectRoute = null) {
-        console.log('[LoginScreen] Login success callback:', { redirectRoute });
         
         if (redirectRoute) {
-            console.log('[LoginScreen] Navigating with redirect to:', redirectRoute.name);
             navigation.replace(redirectRoute.name, redirectRoute.params);
         } else {
-            console.log('[LoginScreen] Navigating to dashboard (no redirect)');
             navigation.replace("Dashboard");
         }
     }

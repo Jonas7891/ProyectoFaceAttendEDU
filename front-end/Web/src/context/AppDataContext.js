@@ -133,7 +133,6 @@ export function AppDataProvider({ children }) {
         const cleanup = onInstitutionConfigChange((newConfig) => {
             // Actualizar el tipo de período si cambió
             if (newConfig.academicPeriodType && newConfig.academicPeriodType !== periodType) {
-                console.log('[AppDataContext] Tipo de período cambió:', newConfig.academicPeriodType);
                 setPeriodType(newConfig.academicPeriodType);
                 // Forzar recálculo de datos enriquecidos
                 forceRefresh();
@@ -550,7 +549,6 @@ export function AppDataProvider({ children }) {
 
     const updateUserFn = useCallback(
         async (id, patch) => {
-            console.log('updateUserFn: Actualizando usuario', id, 'con patch:', patch);
             const updated = await storageUpdateUser(users, id, patch);
             setUsers(updated);
             

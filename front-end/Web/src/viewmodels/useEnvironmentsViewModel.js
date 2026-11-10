@@ -333,7 +333,6 @@ export function useEnvironmentsViewModel() {
     // Escuchar eventos de avance de período para refrescar los ambientes
     useEffect(() => {
         const handlePeriodAdvanced = () => {
-            console.log("[EnvironmentsViewModel] Período avanzado detectado, recargando ambientes...");
             // El AppData se recargará automáticamente al cambiar el localStorage
             // Forzar limpieza de selección actual
             setSelected(null);

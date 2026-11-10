@@ -35,7 +35,6 @@ export function useAutomaticPeriodAdvance(enabled = true, checkIntervalMinutes =
                 
                 // Solo avanzar si está en modo automático
                 if (!config.isAutomaticPeriod) {
-                    console.log("[PeriodAdvance] Modo manual activado, no se avanzará automáticamente");
                     return;
                 }
 
@@ -43,12 +42,10 @@ export function useAutomaticPeriodAdvance(enabled = true, checkIntervalMinutes =
                 const expiration = checkPeriodExpiration();
                 
                 if (expiration.hasExpired) {
-                    console.log(`[PeriodAdvance] Período expirado hace ${expiration.daysOverdue} días. Avanzando al próximo período...`);
                     
                     const dates = await advanceToNextPeriod();
 
                     if (dates) {
-                        console.log("[PeriodAdvance] ✅ Período avanzado exitosamente");
                         await onAdvanced?.(dates);
                         
                         // Emitir evento custom para notificar a componentes
@@ -61,10 +58,6 @@ export function useAutomaticPeriodAdvance(enabled = true, checkIntervalMinutes =
                     } else {
                         console.warn("[PeriodAdvance] ⚠️ No se pudo avanzar el período automáticamente");
                     }
-                } else if (expiration.isExpiringSoon) {
-                    console.log(`[PeriodAdvance] Período expira en ${expiration.daysRemaining} días`);
-                } else {
-                    console.log(`[PeriodAdvance] Período activo. Quedan ${expiration.daysRemaining} días`);
                 }
             } catch (error) {
                 console.error("[PeriodAdvance] Error al verificar/avanzar período:", error);
@@ -78,12 +71,10 @@ export function useAutomaticPeriodAdvance(enabled = true, checkIntervalMinutes =
         const intervalMs = checkIntervalMinutes * 60 * 1000;
         const interval = setInterval(checkAndAdvance, intervalMs);
 
-        console.log(`[PeriodAdvance] Verificación automática configurada cada ${checkIntervalMinutes} minutos`);
 
         // Cleanup
         return () => {
             clearInterval(interval);
-            console.log("[PeriodAdvance] Verificación automática detenida");
         };
     }, [enabled, checkIntervalMinutes]);
 }

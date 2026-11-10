@@ -224,12 +224,6 @@ export default function UserHistoryModal({
     
     // Actualizar el período seleccionado cuando cambian los yearPeriods o el tipo de período
     useEffect(() => {
-        console.log('[UserHistoryModal] Actualizando período seleccionado:', {
-            academicPeriodType,
-            currentPeriod: currentPeriod?.label,
-            selectedPeriod: selectedPeriod?.label
-        });
-        
         // SIEMPRE resetear al período actual cuando cambia el tipo de período académico
         setSelectedPeriod(currentPeriod);
     }, [academicPeriodType, currentPeriod]);

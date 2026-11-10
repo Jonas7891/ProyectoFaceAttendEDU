@@ -863,6 +863,8 @@ export function useDashboardViewModel() {
     return {
         // Datos comunes
         userRole,
+        // Full roster record behind a dashboard row (rows carry studentId).
+        findStudent: (id) => (students || []).find((s) => s.id === id) ?? null,
         isLoading, // AppDataContext todavía cargando el padrón de la sede
         todayLabel,
         stats: stats || [],
