@@ -417,6 +417,15 @@ plugins:
           if kong.ctx.plugin.ws_ticket and kong.response.get_header("sec-websocket-protocol") == "faceattend.bearer" then
             kong.response.set_header("Sec-WebSocket-Protocol", "faceattend.ticket")
           end
+        - |
+          -- A stopped service makes Kong fail the DNS lookup of its host and answer 500
+          -- ("failed the initial dns/balancer resolve"). The service is unavailable, not
+          -- broken: answer 503 so clients retry. A 500 sent by the service itself
+          -- (source "service") is left alone.
+          if kong.response.get_status() == 500 and kong.response.get_source() ~= "service" then
+            kong.response.set_status(503)
+            kong.response.set_header("Retry-After", "5")
+          end
   - name: cors
     config:
       # Solo los orígenes de KONG_CORS_ORIGINS (el compose los inserta en
