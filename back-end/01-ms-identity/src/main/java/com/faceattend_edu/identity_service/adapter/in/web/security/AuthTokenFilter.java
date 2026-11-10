@@ -256,7 +256,19 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             }
         }
         request.setAttribute(PERSON_SCOPE_ATTRIBUTE, scope.personIds());
+        if (!roles.contains(Roles.SCHOOL_ADMIN)) {
+            // Instructor or learner: the people in scope come without health and home data.
+            request.setAttribute(PersonFieldRedactor.LIMITED_VIEW_ATTRIBUTE, ownPersonId(caller));
+        }
         return true;
+    }
+
+    /** The caller's own person id ("" when the account has none, so every record is limited). */
+    private String ownPersonId(String caller) {
+        LoadUserPort port = loadUserPort.getIfAvailable();
+        User user = port == null ? null : port.loadUser(UUID.fromString(caller));
+        return user == null || user.getPersonId() == null || user.getPersonId().getPersonId() == null
+                ? "" : user.getPersonId().getPersonId().toString();
     }
 
     /**
